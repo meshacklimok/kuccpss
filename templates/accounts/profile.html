@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+{% load widget_tweaks %}
+{% load static %}
+
+{% block title %}My Profile — KUCCPSS{% endblock %}
+
+{% block content %}
+<div class="page-hero">
+  <div class="container">
+    <h1><i class="fas fa-user-circle me-2"></i>My Profile</h1>
+    <p class="mb-0">Update your personal information and KCSE details.</p>
+  </div>
+</div>
+
+<div class="container pb-5">
+  <div class="row justify-content-center">
+    <div class="col-lg-8">
+
+      <form method="POST" enctype="multipart/form-data" novalidate>
+        {% csrf_token %}
+
+        <div class="row g-4">
+
+          <!-- Left: Avatar -->
+          <div class="col-md-3 text-center">
+            <div class="mb-3">
+              {% if user.profile_picture %}
+              <img src="{{ user.profile_picture.url }}"
+                   class="rounded-circle border border-4 border-success shadow-sm"
+                   style="width:120px;height:120px;object-fit:cover;" alt="Profile picture">
+              {% else %}
+              <div class="rounded-circle d-flex align-items-center justify-content-center mx-auto border border-4 border-success shadow-sm"
+                   style="width:120px;height:120px;background:linear-gradient(135deg,#1e3a8a,#2563eb);">
+                <span class="fw-bold text-white" style="font-size:2.5rem;">
+                  {{ user.full_name|first|upper|default:user.email|first|upper }}
+                </span>
+              </div>
+              {% endif %}
+            </div>
+            <label class="btn btn-outline-success btn-sm w-100" for="{{ form.profile_picture.id_for_label }}">
+              <i class="fas fa-camera me-1"></i>Change Photo
+            </label>
+            <div class="d-none">{{ form.profile_picture }}</div>
+            {% if form.profile_picture.errors %}
+            <div class="text-danger small mt-1">{{ form.profile_picture.errors.0 }}</div>
+            {% endif %}
+            <p class="text-muted small mt-2">JPG, PNG — max 5 MB</p>
+          </div>
+
+          <!-- Right: Fields -->
+          <div class="col-md-9">
+            <div class="card p-4">
+
+              <!-- Read-only email -->
+              <div class="mb-3">
+                <label class="form-label fw-bold small text-muted">Email Address</label>
+                <input type="email" class="form-control bg-light" value="{{ user.email }}" readonly>
+              </div>
+
+              <!-- Full Name -->
+              <div class="mb-3">
+                <label for="{{ form.full_name.id_for_label }}" class="form-label fw-bold small">Full Name</label>
+                {{ form.full_name|add_class:"form-control" }}
+                {% if form.full_name.errors %}
+                <div class="text-danger small mt-1">{{ form.full_name.errors.0 }}</div>
+                {% endif %}
+              </div>
+
+              <!-- Phone + County row -->
+              <div class="row g-3 mb-3">
+                <div class="col-md-6">
+                  <label for="{{ form.phone_number.id_for_label }}" class="form-label fw-bold small">Phone Number</label>
+                  {{ form.phone_number|add_class:"form-control" }}
+                  {% if form.phone_number.errors %}
+                  <div class="text-danger small mt-1">{{ form.phone_number.errors.0 }}</div>
+                  {% endif %}
+                </div>
+                <div class="col-md-6">
+                  <label for="{{ form.county.id_for_label }}" class="form-label fw-bold small">County</label>
+                  {{ form.county|add_class:"form-control" }}
+                  {% if form.county.errors %}
+                  <div class="text-danger small mt-1">{{ form.county.errors.0 }}</div>
+                  {% endif %}
+                </div>
+              </div>
+
+              <!-- KCSE Year -->
+              <div class="mb-4">
+                <label for="{{ form.kcse_year.id_for_label }}" class="form-label fw-bold small">KCSE Year</label>
+                {{ form.kcse_year|add_class:"form-control" }}
+                <div class="form-text">The year you sat your KCSE — used to show relevant cut-off data.</div>
+                {% if form.kcse_year.errors %}
+                <div class="text-danger small mt-1">{{ form.kcse_year.errors.0 }}</div>
+                {% endif %}
+              </div>
+
+              <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-gradient-success px-4 fw-bold">
+                  <i class="fas fa-save me-1"></i>Save Changes
+                </button>
+                <a href="{% url 'accounts:dashboard' %}" class="btn btn-outline-secondary">Cancel</a>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+      </form>
+
+      <!-- Password Change link -->
+      <div class="card p-3 mt-3 d-flex flex-row align-items-center justify-content-between gap-3">
+        <div>
+          <strong class="small">Password</strong>
+          <p class="text-muted small mb-0">Change your login password.</p>
+        </div>
+        <a href="{% url 'accounts:change_password' %}" class="btn btn-outline-secondary btn-sm flex-shrink-0">
+          <i class="fas fa-key me-1"></i>Change Password
+        </a>
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}

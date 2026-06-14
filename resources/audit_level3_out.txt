@@ -1,0 +1,316 @@
+﻿=== TVET Craft Certificate (Level 3) Audit ===
+Total courses:   152
+Total offerings: 4794
+
+--- Courses with ZERO offerings: 4 ---
+  [1199] Artisan Certificate in Food Processing Technology
+  [1202] Artisan Certificate in Leather Work
+  [1188] Artisan Certificate in Mechanical Engineering (Plant)
+  [1192] Artisan Certificate in Painting and Decoration
+
+--- Courses with wrong-type names: 143 ---
+  [1196] Artisan Certificate in Agricultural Mechanics  (1 offerings)
+  [1182] Artisan Certificate in Appropriate Carpentry and Joinery  (9 offerings)
+  [1183] Artisan Certificate in Building Technology  (16 offerings)
+  [1203] Artisan Certificate in Clerk-Typist  (3 offerings)
+  [1185] Artisan Certificate in Electrical Installation  (99 offerings)
+  [1184] Artisan Certificate in Electrical and Electronics Technology  (1 offerings)
+  [1200] Artisan Certificate in Fashion Design and Garment Making  (47 offerings)
+  [1199] Artisan Certificate in Food Processing Technology  (0 offerings)
+  [1198] Artisan Certificate in Food and Beverage  (76 offerings)
+  [1197] Artisan Certificate in General Agriculture  (41 offerings)
+  [1186] Artisan Certificate in General Fitter  (2 offerings)
+  [1201] Artisan Certificate in Hairdressing and Beauty Therapy  (19 offerings)
+  [1206] Artisan Certificate in Information Communication Technology  (3 offerings)
+  [1202] Artisan Certificate in Leather Work  (0 offerings)
+  [1187] Artisan Certificate in Masonry  (42 offerings)
+  [1188] Artisan Certificate in Mechanical Engineering (Plant)  (0 offerings)
+  [1189] Artisan Certificate in Metal Processing Technology  (1 offerings)
+  [1190] Artisan Certificate in Motor Vehicle Mechanics  (56 offerings)
+  [1191] Artisan Certificate in Motor Vehicle Technology  (4 offerings)
+  [1192] Artisan Certificate in Painting and Decoration  (0 offerings)
+  [1193] Artisan Certificate in Plumbing  (65 offerings)
+  [1194] Artisan Certificate in Refrigeration and Air Conditioning  (1 offerings)
+  [1204] Artisan Certificate in Salesmanship  (4 offerings)
+  [1207] Artisan Certificate in Seafarers  (1 offerings)
+  [1205] Artisan Certificate in Storekeeping  (23 offerings)
+  [1195] Artisan Certificate in Welding and Fabrication  (32 offerings)
+  [1798] Artisan in General Agriculture  (14 offerings)
+  [1703] Certificate in Accountancy  (56 offerings)
+  [1796] Certificate in Agricultural Engineering  (12 offerings)
+  [1704] Certificate in Agricultural Mechanics  (3 offerings)
+  [1705] Certificate in Agriculture  (45 offerings)
+  [1706] Certificate in Agriculture and Community Development  (19 offerings)
+  [1809] Certificate in Animal Health and Production  (4 offerings)
+  [1707] Certificate in Aquaculture  (5 offerings)
+  [1708] Certificate in Automotive Engineering  (77 offerings)
+  [1709] Certificate in Baking Technology  (27 offerings)
+  [1710] Certificate in Banking  (22 offerings)
+  [1690] Certificate in Broadcast Journalism  (1 offerings)
+  [1805] Certificate in Building Construction Technology Level I  (10 offerings)
+  [1712] Certificate in Building Technology  (109 offerings)
+  [1711] Certificate in Building and Construction Technology  (89 offerings)
+  [1713] Certificate in Business Administration  (48 offerings)
+  [1714] Certificate in Business Management  (106 offerings)
+  [1698] Certificate in Carpentry and Furniture Technology  (2 offerings)
+  [1715] Certificate in Carpentry and Joinery  (65 offerings)
+  [1716] Certificate in Catering and Accomodation  (65 offerings)
+  [1726] Certificate in Child Care Protection  (3 offerings)
+  [1717] Certificate in Civil Engineering  (20 offerings)
+  [1718] Certificate in Clerical Operations  (8 offerings)
+  [1719] Certificate in Clothing Technology  (8 offerings)
+  [1813] Certificate in Community Health Assistant  (13 offerings)
+  [1720] Certificate in Community Wildlife Management  (2 offerings)
+  [1721] Certificate in Computer Programming  (146 offerings)
+  [1722] Certificate in Computer Studies  (10 offerings)
+  [1723] Certificate in Computer Web Design and Development  (49 offerings)
+  [1724] Certificate in Computerized Secretarial Studies  (79 offerings)
+  [1799] Certificate in Construction Plant Mechanics  (1 offerings)
+  [1725] Certificate in Cooperative Management  (67 offerings)
+  [1696] Certificate in Customs Administration  (2 offerings)
+  [1727] Certificate in Electrical Engineering  (118 offerings)
+  [1732] Certificate in Electrical Installation  (77 offerings)
+  [1733] Certificate in Electrical Instrumentation and Control  (5 offerings)
+  [1728] Certificate in Electrical and Electronic Engineering  (29 offerings)
+  [1729] Certificate in Electrical and Electronic Engineering (power Option)  (116 offerings)
+  [1730] Certificate in Electrical and Electronic Engineering (telecommunication)  (22 offerings)
+  [1731] Certificate in Electrical and Electronic Technology  (70 offerings)
+  [1790] Certificate in Electrical and Electronics Engineering (instrumentation and Control Option)  (6 offerings)
+  [1734] Certificate in Entrepreneural Agriculture  (34 offerings)
+  [1694] Certificate in Entrepreneurship  (6 offerings)
+  [1736] Certificate in Fashion Design and Garment Making  (68 offerings)
+  [1735] Certificate in Fashion and Design  (93 offerings)
+  [1692] Certificate in Film/video Programmes Production (directing Option)  (1 offerings)
+  [1737] Certificate in Financial Management  (1 offerings)
+  [1808] Certificate in Firefighter 1  (1 offerings)
+  [1738] Certificate in Fisheries Technology  (4 offerings)
+  [1741] Certificate in Food Preparation and Culinary Arts  (81 offerings)
+  [1742] Certificate in Food Science Technology  (27 offerings)
+  [1739] Certificate in Food and Beverage Production  (65 offerings)
+  [1740] Certificate in Food and Beverage Production, Sales and Services  (76 offerings)
+  [1792] Certificate in Forestry  (1 offerings)
+  [1791] Certificate in Front Office Operations  (26 offerings)
+  [1743] Certificate in Garment Making  (7 offerings)
+  [1744] Certificate in General Agriculture  (97 offerings)
+  [1745] Certificate in Hairdressing and Beauty Therapy  (109 offerings)
+  [1811] Certificate in Health Records and Information Technology  (6 offerings)
+  [1746] Certificate in Human Resources Management  (125 offerings)
+  [1747] Certificate in Information Communication Technology  (97 offerings)
+  [1701] Certificate in Information Science  (36 offerings)
+  [1748] Certificate in Information Studies  (23 offerings)
+  [1702] Certificate in Information Studies (library Science)  (12 offerings)
+  [1749] Certificate in Information Technology  (35 offerings)
+  [1750] Certificate in Journalism and Mass Media  (3 offerings)
+  [1751] Certificate in Land Survey  (48 offerings)
+  [1793] Certificate in Lathe Machine Operator  (2 offerings)
+  [1752] Certificate in Laundry and Housekeeping  (31 offerings)
+  [1700] Certificate in Leatherwork Technology  (3 offerings)
+  [1753] Certificate in Library Archival Studies  (2 offerings)
+  [1754] Certificate in Library Archives and Information Management  (7 offerings)
+  [1755] Certificate in Library Information Science  (22 offerings)
+  [1756] Certificate in Marine Engineering  (2 offerings)
+  [1757] Certificate in Marketing  (13 offerings)
+  [1758] Certificate in Masonry  (53 offerings)
+  [1759] Certificate in Mechanical Engineering  (34 offerings)
+  [1760] Certificate in Mechanical Engineering (production Option)  (86 offerings)
+  [1810] Certificate in Medical Engineering  (2 offerings)
+  [1762] Certificate in Motor Vehicle Mechanic  (45 offerings)
+  [1761] Certificate in Motor Vehicle Technology  (6 offerings)
+  [1804] Certificate in Motor Vehicle Technology Level I  (2 offerings)
+  [1763] Certificate in Nature Interpretation and Tour Administration  (2 offerings)
+  [1764] Certificate in Nutrition and Dietetics  (24 offerings)
+  [1765] Certificate in Pastry and Baking Technology  (8 offerings)
+  [1695] Certificate in Petroleum Geoscience  (6 offerings)
+  [1766] Certificate in Plumbing  (79 offerings)
+  [1769] Certificate in Plumbing Technology  (18 offerings)
+  [1767] Certificate in Plumbing and Bulding Services  (119 offerings)
+  [1768] Certificate in Plumbing and Water Services  (30 offerings)
+  [1689] Certificate in Printing Technology  (1 offerings)
+  [1770] Certificate in Project Management  (15 offerings)
+  [1812] Certificate in Public Health  (1 offerings)
+  [1771] Certificate in Purchasing and Supply Management  (69 offerings)
+  [1691] Certificate in Radio & Television Presentation Techniques  (1 offerings)
+  [1772] Certificate in Road Construction  (9 offerings)
+  [1773] Certificate in Road Construction Technology  (6 offerings)
+  [1774] Certificate in Sales and Marketing  (45 offerings)
+  [1775] Certificate in Science Laboratory Technology  (43 offerings)
+  [1776] Certificate in Secretarial Studies  (75 offerings)
+  [1777] Certificate in Social Development  (82 offerings)
+  [1778] Certificate in Social Work  (10 offerings)
+  [1779] Certificate in Social Work and Community Development  (123 offerings)
+  [1780] Certificate in Supply Chain Management  (138 offerings)
+  [1781] Certificate in Sustainable Agriculture  (21 offerings)
+  [1699] Certificate in Tannery and Leather Technology  (2 offerings)
+  [1697] Certificate in Tax Administration  (1 offerings)
+  [1782] Certificate in Telecommunication Engineering  (4 offerings)
+  [1783] Certificate in Tour Guide  (19 offerings)
+  [1784] Certificate in Tour Guiding and Operations  (18 offerings)
+  [1785] Certificate in Tour Guiding and Travel  (10 offerings)
+  [1786] Certificate in Transport Management  (4 offerings)
+  [1787] Certificate in Vehicle Engineering  (1 offerings)
+  [1807] Certificate in Water & Wastewater Laboratory Technology  (2 offerings)
+  [1688] Certificate in Water Engineering  (5 offerings)
+  [1788] Certificate in Water Technology  (7 offerings)
+  [1789] Certificate in Welding and Fabrication  (92 offerings)
+
+--- Duplicate course names: 0 ---
+
+--- Offerings at non-TVET institutions ---
+  Count: 3
+  Artisan Certificate in Electrical Installation @ Taita Taveta University [Public University]
+  Artisan Certificate in Motor Vehicle Mechanics @ Taita Taveta University [Public University]
+  Artisan Certificate in Fashion Design and Garment  @ Taita Taveta University [Public University]
+
+--- All courses (offerings | name) ---
+     1  Artisan Certificate in Agricultural Mechanics
+     9  Artisan Certificate in Appropriate Carpentry and Joinery
+    16  Artisan Certificate in Building Technology
+     3  Artisan Certificate in Clerk-Typist
+    99  Artisan Certificate in Electrical Installation
+     1  Artisan Certificate in Electrical and Electronics Technology
+    47  Artisan Certificate in Fashion Design and Garment Making
+     0  Artisan Certificate in Food Processing Technology *** NO OFFERINGS ***
+    76  Artisan Certificate in Food and Beverage
+    41  Artisan Certificate in General Agriculture
+     2  Artisan Certificate in General Fitter
+    19  Artisan Certificate in Hairdressing and Beauty Therapy
+     3  Artisan Certificate in Information Communication Technology
+     0  Artisan Certificate in Leather Work *** NO OFFERINGS ***
+    42  Artisan Certificate in Masonry
+     0  Artisan Certificate in Mechanical Engineering (Plant) *** NO OFFERINGS ***
+     1  Artisan Certificate in Metal Processing Technology
+    56  Artisan Certificate in Motor Vehicle Mechanics
+     4  Artisan Certificate in Motor Vehicle Technology
+     0  Artisan Certificate in Painting and Decoration *** NO OFFERINGS ***
+    65  Artisan Certificate in Plumbing
+     1  Artisan Certificate in Refrigeration and Air Conditioning
+     4  Artisan Certificate in Salesmanship
+     1  Artisan Certificate in Seafarers
+    23  Artisan Certificate in Storekeeping
+    32  Artisan Certificate in Welding and Fabrication
+    14  Artisan in General Agriculture
+    56  Certificate in Accountancy
+    12  Certificate in Agricultural Engineering
+     3  Certificate in Agricultural Mechanics
+    45  Certificate in Agriculture
+    19  Certificate in Agriculture and Community Development
+     4  Certificate in Animal Health and Production
+     5  Certificate in Aquaculture
+    77  Certificate in Automotive Engineering
+    27  Certificate in Baking Technology
+    22  Certificate in Banking
+     1  Certificate in Broadcast Journalism
+    10  Certificate in Building Construction Technology Level I
+   109  Certificate in Building Technology
+    89  Certificate in Building and Construction Technology
+    48  Certificate in Business Administration
+   106  Certificate in Business Management
+     2  Certificate in Carpentry and Furniture Technology
+    65  Certificate in Carpentry and Joinery
+    65  Certificate in Catering and Accomodation
+     3  Certificate in Child Care Protection
+    20  Certificate in Civil Engineering
+     8  Certificate in Clerical Operations
+     8  Certificate in Clothing Technology
+    13  Certificate in Community Health Assistant
+     2  Certificate in Community Wildlife Management
+   146  Certificate in Computer Programming
+    10  Certificate in Computer Studies
+    49  Certificate in Computer Web Design and Development
+    79  Certificate in Computerized Secretarial Studies
+     1  Certificate in Construction Plant Mechanics
+    67  Certificate in Cooperative Management
+     2  Certificate in Customs Administration
+   118  Certificate in Electrical Engineering
+    77  Certificate in Electrical Installation
+     5  Certificate in Electrical Instrumentation and Control
+    29  Certificate in Electrical and Electronic Engineering
+   116  Certificate in Electrical and Electronic Engineering (power Option)
+    22  Certificate in Electrical and Electronic Engineering (telecommunication)
+    70  Certificate in Electrical and Electronic Technology
+     6  Certificate in Electrical and Electronics Engineering (instrumentation and Control Option)
+    34  Certificate in Entrepreneural Agriculture
+     6  Certificate in Entrepreneurship
+    68  Certificate in Fashion Design and Garment Making
+    93  Certificate in Fashion and Design
+     1  Certificate in Film/video Programmes Production (directing Option)
+     1  Certificate in Financial Management
+     1  Certificate in Firefighter 1
+     4  Certificate in Fisheries Technology
+    81  Certificate in Food Preparation and Culinary Arts
+    27  Certificate in Food Science Technology
+    65  Certificate in Food and Beverage Production
+    76  Certificate in Food and Beverage Production, Sales and Services
+     1  Certificate in Forestry
+    26  Certificate in Front Office Operations
+     7  Certificate in Garment Making
+    97  Certificate in General Agriculture
+   109  Certificate in Hairdressing and Beauty Therapy
+     6  Certificate in Health Records and Information Technology
+   125  Certificate in Human Resources Management
+    97  Certificate in Information Communication Technology
+    36  Certificate in Information Science
+    23  Certificate in Information Studies
+    12  Certificate in Information Studies (library Science)
+    35  Certificate in Information Technology
+     3  Certificate in Journalism and Mass Media
+    48  Certificate in Land Survey
+     2  Certificate in Lathe Machine Operator
+    31  Certificate in Laundry and Housekeeping
+     3  Certificate in Leatherwork Technology
+     2  Certificate in Library Archival Studies
+     7  Certificate in Library Archives and Information Management
+    22  Certificate in Library Information Science
+     2  Certificate in Marine Engineering
+    13  Certificate in Marketing
+    53  Certificate in Masonry
+    34  Certificate in Mechanical Engineering
+    86  Certificate in Mechanical Engineering (production Option)
+     2  Certificate in Medical Engineering
+    45  Certificate in Motor Vehicle Mechanic
+     6  Certificate in Motor Vehicle Technology
+     2  Certificate in Motor Vehicle Technology Level I
+     2  Certificate in Nature Interpretation and Tour Administration
+    24  Certificate in Nutrition and Dietetics
+     8  Certificate in Pastry and Baking Technology
+     6  Certificate in Petroleum Geoscience
+    79  Certificate in Plumbing
+    18  Certificate in Plumbing Technology
+   119  Certificate in Plumbing and Bulding Services
+    30  Certificate in Plumbing and Water Services
+     1  Certificate in Printing Technology
+    15  Certificate in Project Management
+     1  Certificate in Public Health
+    69  Certificate in Purchasing and Supply Management
+     1  Certificate in Radio & Television Presentation Techniques
+     9  Certificate in Road Construction
+     6  Certificate in Road Construction Technology
+    45  Certificate in Sales and Marketing
+    43  Certificate in Science Laboratory Technology
+    75  Certificate in Secretarial Studies
+    82  Certificate in Social Development
+    10  Certificate in Social Work
+   123  Certificate in Social Work and Community Development
+   138  Certificate in Supply Chain Management
+    21  Certificate in Sustainable Agriculture
+     2  Certificate in Tannery and Leather Technology
+     1  Certificate in Tax Administration
+     4  Certificate in Telecommunication Engineering
+    19  Certificate in Tour Guide
+    18  Certificate in Tour Guiding and Operations
+    10  Certificate in Tour Guiding and Travel
+     4  Certificate in Transport Management
+     1  Certificate in Vehicle Engineering
+     2  Certificate in Water & Wastewater Laboratory Technology
+     5  Certificate in Water Engineering
+     7  Certificate in Water Technology
+    92  Certificate in Welding and Fabrication
+    71  Craft Certificate in Automotive Engineering
+    21  Craft Certificate in Automotive Engineering Level Five(tvet-cdacc)
+     1  Craft Certificate in Freight Management
+     3  Craft Certificate in Maritime Transport Logistics
+     1  Craft Certificate in Nautical Science
+     5  Craft in Agricultural Engineering
+     7  Craft in Automobile Engineering
+     7  Craft in Building and Civil Engineering
+    20  Craft in Plumbing

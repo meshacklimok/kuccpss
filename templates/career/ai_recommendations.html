@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+
+{% block title %}AI Career Recommendations{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-lg-12 text-center">
+            <h1 class="display-6 fw-bold">AI Career Recommendations</h1>
+            <p class="lead">Based on your KCSE results, our AI engine suggests the best courses and pathways for you.</p>
+        </div>
+    </div>
+
+    <!-- AI Advice Section -->
+    <div class="row mb-5">
+        <div class="col-lg-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">AI Advice</h5>
+                </div>
+                <div class="card-body">
+                    {% if ai %}
+                        <p>{{ ai.advice_text|linebreaks }}</p>
+                        <small class="text-muted">Generated on: {{ ai.created_at|date:"D, M d, Y H:i" }}</small>
+                    {% else %}
+                        <p class="text-muted">No AI recommendations available. Please submit your KCSE grades first.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Top Recommended Courses -->
+    {% if matches %}
+    <div class="row mb-5">
+        <div class="col-lg-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">Top Recommended Courses</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for match in matches %}
+                        <div class="col-lg-4 col-md-6 mb-3">
+                            <div class="card h-100">
+                                <div class="card-body d-flex flex-column">
+                                    <h5 class="card-title">{{ match.course.name|default:match.tvet_course.name|default:match.kmc_course.name|default:match.ttc_course.name }}</h5>
+                                    <p class="card-text mb-1"><strong>Type:</strong> 
+                                        {% if match.course %}Degree / Diploma{% elif match.tvet_course %}TVET{% elif match.kmc_course %}KMTC{% elif match.ttc_course %}TTC{% endif %}
+                                    </p>
+                                    <p class="card-text mb-1"><strong>University / Campus:</strong> {{ match.university.name|default:"-" }}</p>
+                                    <p class="card-text mb-1">
+                                        <strong>Admission Chance:</strong>
+                                        {% if match.admission_chance == "VERY HIGH" %}
+                                            <span class="badge bg-success">{{ match.admission_chance }}</span>
+                                        {% elif match.admission_chance == "HIGH" %}
+                                            <span class="badge bg-info">{{ match.admission_chance }}</span>
+                                        {% elif match.admission_chance == "MEDIUM" %}
+                                            <span class="badge bg-warning text-dark">{{ match.admission_chance }}</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">{{ match.admission_chance }}</span>
+                                        {% endif %}
+                                    </p>
+                                    <p class="card-text mb-3"><strong>Match Score:</strong> {{ match.match_score|floatformat:1 }}%</p>
+                                    <a href="{% url 'career:course_detail' match.id %}" class="btn btn-outline-primary mt-auto">View Details</a>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Filter and Search Section -->
+    <div class="row mb-4">
+        <div class="col-lg-12">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <form method="get" action="{% url 'career:filter_ai_matches' %}" class="row g-3 align-items-center">
+                        <div class="col-md-3">
+                            <label for="admission_chance_filter" class="form-label">Admission Chance</label>
+                            <select name="admission_chance" id="admission_chance_filter" class="form-select">
+                                <option value="">All</option>
+                                <option value="VERY HIGH">VERY HIGH</option>
+                                <option value="HIGH">HIGH</option>
+                                <option value="MEDIUM">MEDIUM</option>
+                                <option value="LOW">LOW</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="course_type_filter" class="form-label">Course Type</label>
+                            <select name="course_type" id="course_type_filter" class="form-select">
+                                <option value="">All</option>
+                                <option value="Degree">Degree</option>
+                                <option value="Diploma">Diploma</option>
+                                <option value="TVET">TVET</option>
+                                <option value="KMTC">KMTC</option>
+                                <option value="TTC">TTC</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="university_filter" class="form-label">University / Campus</label>
+                            <input type="text" name="university" id="university_filter" class="form-control" placeholder="Search by university">
+                        </div>
+                        <div class="col-md-3 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary me-2">Filter</button>
+                            <a href="{% url 'career:ai_recommendations' %}" class="btn btn-secondary">Reset</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    {% if is_paginated %}
+    <div class="row">
+        <div class="col-lg-12">
+            <nav aria-label="Page navigation">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}" aria-label="Previous">
+                            <span aria-hidden="true">&laquo;</span>
+                        </a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled"><span class="page-link">&laquo;</span></li>
+                    {% endif %}
+                    {% for num in paginator.page_range %}
+                        {% if page_obj.number == num %}
+                            <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                        {% else %}
+                            <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+                        {% endif %}
+                    {% endfor %}
+                    {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}" aria-label="Next">
+                            <span aria-hidden="true">&raquo;</span>
+                        </a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled"><span class="page-link">&raquo;</span></li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Back to KCSE Input -->
+    <div class="row mt-5 mb-5">
+        <div class="col-lg-12 text-center">
+            <a href="{% url 'career:kcse_input' %}" class="btn btn-secondary btn-lg">Back to KCSE Input</a>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    console.log("AI Recommendations page loaded.");
+</script>
+{% endblock %}

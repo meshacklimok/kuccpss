@@ -1,0 +1,148 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Career Guidance | Input Form{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <h2 class="mb-4 text-primary">Career Guidance</h2>
+    <p class="mb-4">Follow the steps to check your eligible courses.</p>
+
+    <form id="careerForm">
+        {% csrf_token %}
+
+        <!-- Step 1: Course Type Selection -->
+        <div class="step step-1">
+            <h4>Step 1: Choose Course Type</h4>
+            <div class="mb-3">
+                <select name="course_type" class="form-select" required>
+                    <option value="">Select Course Type</option>
+                    <option value="degree">Degree</option>
+                    <option value="diploma">Diploma</option>
+                    <option value="certificate">Certificate</option>
+                    <option value="kmtc">KMTC</option>
+                    <option value="tvet">TVET College</option>
+                    <option value="ttc">Teacher Training College</option>
+                </select>
+            </div>
+            <button type="button" class="btn btn-primary next-step">Next</button>
+        </div>
+
+        <!-- Step 2: Cluster Points (auto or manual) -->
+        <div class="step step-2 d-none">
+            <h4>Step 2: Enter Your KCSE Results / Cluster Points</h4>
+
+            <div class="mb-3">
+                <p>If you know your cluster points, enter them below:</p>
+                <input type="number" step="0.01" name="cluster_points" class="form-control" placeholder="Enter cluster points">
+            </div>
+
+            <p class="text-center">OR</p>
+
+            <button type="button" class="btn btn-info mb-3" id="calculateClusterBtn">
+                Calculate Your Cluster Points Automatically
+            </button>
+
+            <div id="kcseResultsContainer" class="mt-3">
+                <!-- Dynamically generated KCSE subjects form if auto-calculation -->
+            </div>
+
+            <button type="button" class="btn btn-secondary prev-step">Back</button>
+            <button type="button" class="btn btn-primary next-step">Next</button>
+        </div>
+
+        <!-- Step 3: Optional Filters & Interests -->
+        <div class="step step-3 d-none">
+            <h4>Step 3: Optional Filters</h4>
+
+            <div class="mb-3">
+                <label>Preferred Institution Types (optional)</label>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="institution_type[]" value="public" id="instPublic">
+                    <label class="form-check-label" for="instPublic">Public University</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="institution_type[]" value="private" id="instPrivate">
+                    <label class="form-check-label" for="instPrivate">Private University</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="institution_type[]" value="tvet" id="instTVET">
+                    <label class="form-check-label" for="instTVET">TVET College</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="institution_type[]" value="ttc" id="instTTC">
+                    <label class="form-check-label" for="instTTC">Teacher Training College</label>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label>Your Interests / Skills</label>
+                <textarea name="interests" class="form-control" rows="3" placeholder="E.g., Science, IT, Arts"></textarea>
+            </div>
+
+            <button type="button" class="btn btn-secondary prev-step">Back</button>
+            <button type="submit" class="btn btn-success">Check Eligibility</button>
+        </div>
+    </form>
+
+    <!-- Loading / Status -->
+    <div id="loadingStatus" class="mt-4 d-none">
+        <div class="alert alert-info">
+            <span id="loadingMessage">Finding best courses...</span>
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const steps = document.querySelectorAll('.step');
+    let currentStep = 0;
+
+    function showStep(index) {
+        steps.forEach((s,i) => s.classList.toggle('d-none', i !== index));
+    }
+
+    document.querySelectorAll('.next-step').forEach(btn => {
+        btn.addEventListener('click', () => {
+            currentStep++;
+            if(currentStep >= steps.length) currentStep = steps.length - 1;
+            showStep(currentStep);
+        });
+    });
+
+    document.querySelectorAll('.prev-step').forEach(btn => {
+        btn.addEventListener('click', () => {
+            currentStep--;
+            if(currentStep < 0) currentStep = 0;
+            showStep(currentStep);
+        });
+    });
+
+    // KCSE auto-calc placeholder
+    document.getElementById('calculateClusterBtn')?.addEventListener('click', () => {
+        const container = document.getElementById('kcseResultsContainer');
+        container.innerHTML = `<div class="alert alert-warning">KCSE calculation form will appear here dynamically (20 subjects).</div>`;
+    });
+
+    // Form submit: AJAX
+    document.getElementById('careerForm')?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const formData = new FormData(e.target);
+        document.getElementById('loadingStatus').classList.remove('d-none');
+        const response = await fetch("{% url 'career:input_form' %}", {
+            method: 'POST',
+            body: formData,
+            headers: { 'X-CSRFToken': formData.get('csrfmiddlewaretoken') }
+        });
+        const data = await response.text();
+        document.open();
+        document.write(data);
+        document.close();
+    });
+});
+</script>
+{% endblock %}

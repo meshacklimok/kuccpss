@@ -1,0 +1,190 @@
+{% extends 'base.html' %}
+{% block title %}{{ institution.name }} — KUCCPSS{% endblock %}
+
+{% block content %}
+<div class="page-hero">
+  <div class="container">
+    <nav aria-label="breadcrumb" class="mb-2">
+      <ol class="breadcrumb mb-0" style="font-size:0.85rem;">
+        <li class="breadcrumb-item"><a href="{% url 'institutions:institution_types_list' %}" class="text-white-50">Institutions</a></li>
+        <li class="breadcrumb-item">
+          <a href="{% url 'institutions:institution_type_detail' type_slug=institution.institution_type.slug %}" class="text-white-50">
+            {{ institution.institution_type.name }}
+          </a>
+        </li>
+        <li class="breadcrumb-item active text-white">
+          {% if institution.abbreviation %}{{ institution.abbreviation }}{% else %}{{ institution.name }}{% endif %}
+        </li>
+      </ol>
+    </nav>
+    <div class="d-flex align-items-center gap-3">
+      {% if institution.logo %}
+      <img src="{{ institution.logo.url }}" alt="" style="width:64px;height:64px;object-fit:contain;border-radius:8px;background:#fff;padding:4px;">
+      {% endif %}
+      <div>
+        <h1 class="mb-0">{{ institution.name }}</h1>
+        {% if institution.abbreviation %}
+        <span class="badge mt-1" style="background:rgba(255,255,255,0.2);font-size:0.9rem;">{{ institution.abbreviation }}</span>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="container pb-5">
+
+  {% if request.user.is_staff %}
+  <div class="mb-3">
+    <a href="{% url 'admin:institutions_institution_change' institution.id %}" class="btn btn-sm btn-outline-secondary">
+      <i class="fas fa-edit me-1"></i>Edit in Admin
+    </a>
+  </div>
+  {% endif %}
+
+  <div class="row g-4">
+
+    <!-- ── Main column ── -->
+    <div class="col-lg-8">
+
+      {% if institution.description %}
+      <div class="card p-4 mb-4">
+        <h5 class="fw-bold mb-2"><i class="fas fa-info-circle me-2 text-primary"></i>About</h5>
+        <p class="text-muted mb-0">{{ institution.description }}</p>
+      </div>
+      {% endif %}
+
+      <!-- Courses offered -->
+      <div class="card p-4 mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h5 class="fw-bold mb-0"><i class="fas fa-book-open me-2 text-success"></i>Courses Offered</h5>
+          <span class="badge rounded-pill px-3 py-2" style="background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0;">
+            {{ total_courses }} course{{ total_courses|pluralize }}
+          </span>
+        </div>
+
+        {% if grouped_offerings %}
+          {% for course_type, categories in grouped_offerings.items %}
+          <div class="mb-4">
+            <h6 class="fw-bold text-uppercase mb-2" style="font-size:0.78rem;letter-spacing:0.06em;color:#64748b;border-bottom:1px solid #e2e8f0;padding-bottom:4px;">
+              {{ course_type }}
+            </h6>
+
+            {% for category, offerings in categories.items %}
+            {% if category != 'General' %}
+            <p class="fw-semibold text-dark mb-1 mt-2" style="font-size:0.85rem;">{{ category }}</p>
+            {% endif %}
+            <ul class="list-unstyled mb-2 ps-2">
+              {% for offering in offerings %}
+              <li class="py-1 d-flex justify-content-between align-items-center" style="border-bottom:1px solid #f1f5f9;">
+                <div>
+                  {% if offering.course.category %}
+                  <a href="{% url 'courses:course_detail' type_slug=offering.course.course_type.slug category_slug=offering.course.category.slug course_slug=offering.course.slug %}"
+                     class="text-dark fw-semibold" style="font-size:0.88rem;text-decoration:none;">
+                    {{ offering.course.name }}
+                  </a>
+                  {% else %}
+                  <a href="{% url 'courses:course_detail_no_category' type_slug=offering.course.course_type.slug course_slug=offering.course.slug %}"
+                     class="text-dark fw-semibold" style="font-size:0.88rem;text-decoration:none;">
+                    {{ offering.course.name }}
+                  </a>
+                  {% endif %}
+                  {% if offering.programme_code %}
+                  <code class="ms-2 text-muted" style="font-size:0.78rem;">{{ offering.programme_code }}</code>
+                  {% endif %}
+                </div>
+                {% with lc=offering.latest_cutoff %}
+                {% if lc %}
+                <span class="badge rounded-pill ms-2"
+                      style="background:{% if lc >= 70 %}#dcfce7;color:#16a34a{% elif lc >= 55 %}#fef3c7;color:#d97706{% else %}#fee2e2;color:#dc2626{% endif %};font-size:0.75rem;white-space:nowrap;">
+                  {{ lc }} pts
+                </span>
+                {% elif offering.course.minimum_mean_grade %}
+                <span class="badge rounded-pill ms-2" style="background:#fee2e2;color:#dc2626;font-size:0.75rem;">
+                  Min {{ offering.course.minimum_mean_grade }}
+                </span>
+                {% endif %}
+                {% endwith %}
+              </li>
+              {% endfor %}
+            </ul>
+            {% endfor %}
+
+          </div>
+          {% endfor %}
+
+        {% else %}
+        <div class="text-center py-4 text-muted">
+          <i class="fas fa-book fa-2x mb-2 d-block opacity-50"></i>
+          No courses linked to this institution yet.
+        </div>
+        {% endif %}
+      </div>
+
+    </div><!-- /col-lg-8 -->
+
+    <!-- ── Sidebar ── -->
+    <div class="col-lg-4">
+
+      <!-- Quick facts -->
+      <div class="card p-4 mb-4">
+        <h6 class="fw-bold mb-3 text-muted text-uppercase" style="font-size:0.75rem;letter-spacing:0.05em;">Institution Details</h6>
+        <ul class="list-unstyled mb-0">
+          <li class="d-flex justify-content-between py-2 border-bottom">
+            <span class="text-muted">Type</span>
+            <span class="fw-semibold">{{ institution.institution_type.name }}</span>
+          </li>
+          {% if institution.abbreviation %}
+          <li class="d-flex justify-content-between py-2 border-bottom">
+            <span class="text-muted">Abbreviation</span>
+            <span class="fw-semibold">{{ institution.abbreviation }}</span>
+          </li>
+          {% endif %}
+          {% if institution.location %}
+          <li class="d-flex justify-content-between py-2 border-bottom">
+            <span class="text-muted">Location</span>
+            <span class="fw-semibold text-end" style="max-width:60%;">{{ institution.location }}</span>
+          </li>
+          {% endif %}
+          {% if institution.website %}
+          <li class="d-flex justify-content-between py-2 border-bottom">
+            <span class="text-muted">Website</span>
+            <a href="{{ institution.website }}" target="_blank" rel="noopener"
+               class="fw-semibold text-primary" style="font-size:0.85rem;word-break:break-all;">
+              {{ institution.website|truncatechars:30 }}
+            </a>
+          </li>
+          {% endif %}
+          {% if institution.email %}
+          <li class="d-flex justify-content-between py-2 border-bottom">
+            <span class="text-muted">Email</span>
+            <a href="mailto:{{ institution.email }}" class="fw-semibold" style="font-size:0.85rem;">{{ institution.email }}</a>
+          </li>
+          {% endif %}
+          {% if institution.phone %}
+          <li class="d-flex justify-content-between py-2 border-bottom">
+            <span class="text-muted">Phone</span>
+            <span class="fw-semibold">{{ institution.phone }}</span>
+          </li>
+          {% endif %}
+          <li class="d-flex justify-content-between py-2">
+            <span class="text-muted">Courses</span>
+            <span class="fw-semibold">{{ total_courses }}</span>
+          </li>
+        </ul>
+      </div>
+
+      <!-- PDF brochure -->
+      {% if institution.pdf_file %}
+      <div class="card p-4 mb-4">
+        <h6 class="fw-bold mb-3"><i class="fas fa-file-pdf me-2 text-danger"></i>Brochure / Prospectus</h6>
+        <a href="{{ institution.pdf_file.url }}" target="_blank" class="btn btn-outline-danger w-100">
+          <i class="fas fa-download me-2"></i>Download PDF
+        </a>
+      </div>
+      {% endif %}
+
+    </div><!-- /col-lg-4 -->
+
+  </div><!-- /row -->
+</div>
+{% endblock %}

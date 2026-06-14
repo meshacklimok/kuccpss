@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% block title %}Saved Courses — KUCCPSS{% endblock %}
+
+{% block content %}
+<div class="page-hero">
+  <div class="container">
+    <h1><i class="fas fa-bookmark me-2"></i>Saved Courses</h1>
+    <p class="mb-0">Courses you've bookmarked for later.</p>
+  </div>
+</div>
+
+<div class="container pb-5">
+  {% if saved %}
+  <div class="row g-3">
+    {% for saved in saved %}
+    <div class="col-md-6 col-lg-4">
+      <div class="card h-100 p-4">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+          <h6 class="fw-bold mb-0">{{ saved.course.name }}</h6>
+          <button class="btn btn-sm btn-warning remove-saved" data-course-id="{{ saved.course.pk }}">
+            <i class="fas fa-bookmark"></i>
+          </button>
+        </div>
+        <div class="d-flex gap-2 flex-wrap mb-2">
+          <span class="badge bg-primary bg-opacity-10 text-primary small">
+            {{ saved.course.course_type.name }}
+          </span>
+          {% if saved.course.category %}
+          <span class="badge bg-secondary bg-opacity-10 text-secondary small">
+            {{ saved.course.category.name }}
+          </span>
+          {% endif %}
+        </div>
+        {% if saved.course.institutions.exists %}
+        <p class="text-muted small mb-3">
+          <i class="fas fa-university me-1"></i>
+          {% for inst in saved.course.institutions.all|slice:":2" %}
+            {{ inst.name }}{% if not forloop.last %}, {% endif %}
+          {% endfor %}
+        </p>
+        {% endif %}
+        <p class="text-muted small mb-0">
+          <i class="fas fa-clock me-1"></i>Saved {{ saved.saved_at|date:"d M Y" }}
+        </p>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="text-center py-5">
+    <i class="fas fa-bookmark fa-4x text-muted mb-3"></i>
+    <h5 class="text-muted">No saved courses yet</h5>
+    <p class="text-muted small">Browse courses and click the bookmark icon to save them here.</p>
+    <a href="{% url 'clusterpoints:eligible_courses' %}" class="btn btn-gradient-success">
+      <i class="fas fa-check-circle me-1"></i>View Eligible Courses
+    </a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.querySelectorAll('.remove-saved').forEach(btn => {
+  btn.addEventListener('click', function() {
+    const courseId = this.dataset.courseId;
+    const card = this.closest('.col-md-6, .col-lg-4, [class*="col-"]');
+    fetch(`/accounts/save-course/${courseId}/`, {
+      method: 'POST',
+      headers: {'X-CSRFToken': '{{ csrf_token }}', 'Content-Type': 'application/json'},
+    })
+    .then(r => r.json())
+    .then(data => {
+      if (!data.saved) {
+        card.style.opacity = '0';
+        card.style.transition = 'opacity .3s';
+        setTimeout(() => card.remove(), 300);
+      }
+    });
+  });
+});
+</script>
+{% endblock %}

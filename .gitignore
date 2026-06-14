@@ -1,0 +1,62 @@
+# Environment & secrets
+.env
+
+# Database
+db.sqlite3
+data.json
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg
+*.egg-info/
+dist/
+build/
+eggs/
+parts/
+var/
+sdist/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+.installed.cfg
+lib/
+lib64/
+.eggs/
+
+# Virtual environments
+venv/
+env/
+ENV/
+.venv/
+
+# Django
+*.log
+local_settings.py
+media/
+
+# Static collected files
+staticfiles/
+static_root/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Claude Code settings
+.claude/
+
+# Source PDFs (large binary files)
+*.pdf
+
+# CSV data files
+tveta_offerings.csv

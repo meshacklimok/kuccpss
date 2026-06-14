@@ -1,0 +1,204 @@
+{% extends "base.html" %}
+{% block title %}{{ profile.title }} — KUCCPSS{% endblock %}
+
+{% block content %}
+<!-- Hero -->
+<div class="page-hero">
+  <div class="container">
+    <nav aria-label="breadcrumb" class="mb-2">
+      <ol class="breadcrumb breadcrumb-dark mb-0">
+        <li class="breadcrumb-item"><a href="{% url 'career:career_profiles' %}" class="text-white-50">Careers</a></li>
+        <li class="breadcrumb-item active text-white">{{ profile.title }}</li>
+      </ol>
+    </nav>
+    <div class="row align-items-center">
+      <div class="col-md-8">
+        <h1 class="mb-1">{{ profile.title }}</h1>
+        <div class="d-flex gap-2 flex-wrap">
+          <span class="badge rounded-pill
+            {% if profile.demand_level == 'high' %}bg-success
+            {% elif profile.demand_level == 'medium' %}bg-warning text-dark
+            {% else %}bg-secondary{% endif %}">
+            {{ profile.get_demand_level_display }} Demand
+          </span>
+          {% if profile.average_salary %}
+          <span class="badge bg-white text-primary">
+            <i class="fas fa-coins me-1"></i>{{ profile.average_salary }}
+          </span>
+          {% endif %}
+        </div>
+      </div>
+      <div class="col-md-4 text-md-end mt-3 mt-md-0">
+        {% if request.user.is_authenticated %}
+        <button id="saveCareerBtn" class="btn {% if is_saved %}btn-warning{% else %}btn-outline-light{% endif %} me-2"
+                data-career-id="{{ profile.pk }}">
+          <i class="{% if is_saved %}fas{% else %}far{% endif %} fa-heart me-1"></i>
+          <span id="saveLabel">{% if is_saved %}Saved{% else %}Save Career{% endif %}</span>
+        </button>
+        {% endif %}
+        <a href="{% url 'career:quiz' %}" class="btn btn-gradient-success">
+          <i class="fas fa-clipboard-list me-1"></i>Find Your Match
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="container pb-5">
+  <div class="row g-4">
+
+    <!-- Main Content -->
+    <div class="col-lg-8">
+
+      {% if profile.image %}
+      <img src="{{ profile.image.url }}" class="w-100 rounded-3 mb-4" style="max-height:320px;object-fit:cover;" alt="{{ profile.title }}">
+      {% endif %}
+
+      <!-- About -->
+      <div class="card p-4 mb-4">
+        <h5 class="fw-bold mb-3"><i class="fas fa-info-circle me-2 text-primary"></i>About This Career</h5>
+        <p>{{ profile.description }}</p>
+      </div>
+
+      <!-- Duties -->
+      {% if profile.duties %}
+      <div class="card p-4 mb-4">
+        <h5 class="fw-bold mb-3"><i class="fas fa-tasks me-2 text-success"></i>Key Duties & Responsibilities</h5>
+        <div style="white-space:pre-line;">{{ profile.duties }}</div>
+      </div>
+      {% endif %}
+
+      <!-- Skills Required -->
+      {% if profile.skills_required %}
+      <div class="card p-4 mb-4">
+        <h5 class="fw-bold mb-3"><i class="fas fa-tools me-2 text-warning"></i>Skills Required</h5>
+        <div style="white-space:pre-line;">{{ profile.skills_required }}</div>
+      </div>
+      {% endif %}
+
+      <!-- Educational Pathway -->
+      {% if profile.educational_pathway %}
+      <div class="card p-4 mb-4">
+        <h5 class="fw-bold mb-3"><i class="fas fa-graduation-cap me-2 text-info"></i>Educational Pathway</h5>
+        <div style="white-space:pre-line;">{{ profile.educational_pathway }}</div>
+      </div>
+      {% endif %}
+
+      <!-- Job Opportunities -->
+      {% if profile.job_opportunities %}
+      <div class="card p-4 mb-4">
+        <h5 class="fw-bold mb-3"><i class="fas fa-building me-2 text-primary"></i>Where You Can Work</h5>
+        <div style="white-space:pre-line;">{{ profile.job_opportunities }}</div>
+      </div>
+      {% endif %}
+
+      <!-- Related Courses -->
+      {% if profile.related_courses.exists %}
+      <div class="card p-4 mb-4">
+        <h5 class="fw-bold mb-3"><i class="fas fa-book me-2 text-success"></i>Related Courses</h5>
+        <div class="row g-2">
+          {% for course in profile.related_courses.all %}
+          <div class="col-md-6">
+            <div class="border rounded-3 p-3 d-flex align-items-center gap-2">
+              <i class="fas fa-graduation-cap text-primary"></i>
+              <div>
+                <div class="fw-bold small">{{ course.name }}</div>
+                <div class="text-muted" style="font-size:0.75rem;">{{ course.course_type.name }}</div>
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+
+    </div>
+
+    <!-- Right Sidebar -->
+    <div class="col-lg-4">
+
+      <!-- Quick Stats -->
+      <div class="card p-4 mb-4">
+        <h6 class="fw-bold mb-3">Career Snapshot</h6>
+        {% if profile.average_salary %}
+        <div class="d-flex justify-content-between py-2 border-bottom">
+          <span class="text-muted small">Average Salary</span>
+          <span class="fw-bold small text-success">{{ profile.average_salary }}</span>
+        </div>
+        {% endif %}
+        <div class="d-flex justify-content-between py-2 border-bottom">
+          <span class="text-muted small">Job Demand</span>
+          <span class="badge rounded-pill
+            {% if profile.demand_level == 'high' %}bg-success
+            {% elif profile.demand_level == 'medium' %}bg-warning text-dark
+            {% else %}bg-secondary{% endif %}">
+            {{ profile.get_demand_level_display }}
+          </span>
+        </div>
+        {% if profile.future_outlook %}
+        <div class="py-2">
+          <div class="text-muted small mb-1">Future Outlook</div>
+          <p class="small mb-0">{{ profile.future_outlook }}</p>
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- Related Careers -->
+      {% if related %}
+      <div class="card p-4 mb-4">
+        <h6 class="fw-bold mb-3">Similar Careers</h6>
+        {% for rel in related %}
+        <a href="{% url 'career:career_profile_detail' rel.slug %}"
+           class="d-flex align-items-center gap-3 p-2 rounded-3 text-decoration-none mb-1"
+           onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background=''">
+          <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
+               style="width:36px;height:36px;background:#e8f0fe;color:var(--primary);">
+            <i class="{{ rel.icon|default:'fas fa-briefcase' }} fa-sm"></i>
+          </div>
+          <span class="small fw-bold text-dark">{{ rel.title }}</span>
+        </a>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      <!-- CTA -->
+      <div class="card p-4" style="background:linear-gradient(135deg,#1e3a8a,#2563eb);">
+        <h6 class="text-white fw-bold mb-2">Is this your path?</h6>
+        <p class="text-white-75 small mb-3">Calculate your cluster points to see which courses lead here.</p>
+        <a href="{% url 'clusterpoints:calculator' %}" class="btn btn-gradient-success btn-sm w-100">
+          <i class="fas fa-calculator me-1"></i>Check My Points
+        </a>
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{% if request.user.is_authenticated %}
+<script>
+document.getElementById('saveCareerBtn')?.addEventListener('click', function() {
+  const careerId = this.dataset.careerId;
+  fetch(`/accounts/save-career/${careerId}/`, {
+    method: 'POST',
+    headers: {'X-CSRFToken': '{{ csrf_token }}', 'Content-Type': 'application/json'},
+  })
+  .then(r => r.json())
+  .then(data => {
+    const icon  = this.querySelector('i');
+    const label = document.getElementById('saveLabel');
+    if (data.saved) {
+      icon.className  = 'fas fa-heart me-1';
+      label.textContent = 'Saved';
+      this.classList.replace('btn-outline-light', 'btn-warning');
+    } else {
+      icon.className  = 'far fa-heart me-1';
+      label.textContent = 'Save Career';
+      this.classList.replace('btn-warning', 'btn-outline-light');
+    }
+  });
+});
+</script>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Degree Cluster Points{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <h2 class="mb-4 text-center">Degree Career Step</h2>
+    <form method="post" id="degreeForm">
+        {% csrf_token %}
+        {{ form.as_p }}
+
+        <small class="text-muted d-block mb-2">If using automatic KCSE calculation, make sure to enter grades in JSON.</small>
+
+        <button type="submit" class="btn btn-success w-100 mt-3">Next</button>
+    </form>
+</div>
+
+<script>
+document.getElementById("degreeForm").addEventListener("submit", function(){
+    const btn = this.querySelector("button");
+    btn.disabled = true;
+    btn.innerText = "Processing...";
+});
+</script>
+{% endblock %}

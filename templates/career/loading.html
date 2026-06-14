@@ -1,0 +1,697 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Finding Your Courses...{% endblock %}
+
+{% block content %}
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+
+<style>
+*, *::before, *::after { box-sizing: border-box; }
+
+/* ══════════════════════════════════
+   ANIMATED BACKGROUND
+══════════════════════════════════ */
+body {
+    margin: 0;
+    background: #060c1a;
+    min-height: 100vh;
+    overflow-x: hidden;
+}
+.l-bg {
+    position: fixed; inset: 0; z-index: 0;
+    background: linear-gradient(-45deg, #06091a, #0d1630, #10063a, #060d1a);
+    background-size: 400% 400%;
+    animation: bgShift 20s ease infinite;
+}
+@keyframes bgShift {
+    0%   { background-position: 0% 50%; }
+    50%  { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+/* floating orbs */
+.l-orb {
+    position: fixed; border-radius: 50%; pointer-events: none;
+    filter: blur(80px); will-change: transform;
+}
+.l-orb-1 {
+    width: 600px; height: 600px; top: -200px; left: -150px;
+    background: radial-gradient(circle, rgba(79,70,229,0.14), transparent 70%);
+    animation: orbA 25s ease-in-out infinite;
+}
+.l-orb-2 {
+    width: 500px; height: 500px; bottom: -200px; right: -100px;
+    background: radial-gradient(circle, rgba(6,182,212,0.12), transparent 70%);
+    animation: orbB 20s ease-in-out infinite;
+}
+.l-orb-3 {
+    width: 350px; height: 350px; top: 40%; right: 20%;
+    background: radial-gradient(circle, rgba(139,92,246,0.09), transparent 70%);
+    animation: orbC 30s ease-in-out infinite;
+}
+@keyframes orbA { 0%,100%{transform:translate(0,0) scale(1)} 33%{transform:translate(60px,40px) scale(1.05)} 66%{transform:translate(-30px,60px) scale(0.95)} }
+@keyframes orbB { 0%,100%{transform:translate(0,0) scale(1)} 50%{transform:translate(-50px,-40px) scale(1.08)} }
+@keyframes orbC { 0%,100%{transform:translate(0,0)} 25%{transform:translate(30px,-20px)} 75%{transform:translate(-20px,30px)} }
+
+/* star particles */
+.l-stars { position: fixed; inset: 0; overflow: hidden; pointer-events: none; z-index: 0; }
+.star {
+    position: absolute; border-radius: 50%;
+    background: rgba(255,255,255,0.6);
+    animation: starTwinkle 3s ease-in-out infinite;
+}
+@keyframes starTwinkle {
+    0%,100% { opacity: 0.2; transform: scale(1); }
+    50%      { opacity: 0.8; transform: scale(1.4); }
+}
+
+/* ══════════════════════════════════
+   LAYOUT
+══════════════════════════════════ */
+.l-wrap {
+    position: relative; z-index: 10;
+    min-height: calc(100vh - 56px);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: 2rem 1rem;
+    gap: 1.5rem;
+}
+
+/* top label */
+.l-title-area { text-align: center; }
+.l-pathway-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 0.68rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase;
+    background: rgba(99,102,241,0.18); border: 1px solid rgba(99,102,241,0.35);
+    color: #a5b4fc; border-radius: 20px; padding: 4px 14px; margin-bottom: 0.75rem;
+}
+.l-main-title {
+    font-size: clamp(1.35rem, 3.5vw, 2rem); font-weight: 900; color: #fff;
+    margin: 0 0 0.35rem; letter-spacing: -0.02em; line-height: 1.2;
+}
+.l-main-title .hl {
+    background: linear-gradient(90deg, #818cf8, #22d3ee);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+}
+.l-subtitle { font-size: 0.85rem; color: rgba(255,255,255,0.45); margin: 0; }
+
+/* ══ MAIN CARD ══ */
+.l-card {
+    width: 100%; max-width: 860px;
+    background: rgba(13,21,45,0.75);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 1.5rem;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    box-shadow: 0 32px 80px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05);
+    overflow: hidden;
+}
+@media (min-width: 700px) {
+    .l-card { display: grid; grid-template-columns: 260px 1fr; }
+}
+
+/* ── Tier 1: Ring panel ── */
+.l-tier1 {
+    padding: 2.5rem 1.75rem 2rem;
+    background: linear-gradient(160deg, rgba(30,42,120,0.5) 0%, transparent 100%);
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1rem;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+@media (min-width: 700px) {
+    .l-tier1 { border-bottom: none; border-right: 1px solid rgba(255,255,255,0.05); }
+}
+@media (max-width: 699px) {
+    .l-tier1 { padding: 1.75rem 1.5rem; }
+}
+
+/* ring */
+.ring-outer {
+    position: relative;
+    width: 200px; height: 200px;
+    flex-shrink: 0;
+}
+@media (max-width: 699px) {
+    .ring-outer { width: 160px; height: 160px; }
+}
+.ring-svg {
+    width: 100%; height: 100%;
+    transform: rotate(-90deg);
+    overflow: visible;
+}
+/* track */
+.rt { fill: none; stroke: rgba(255,255,255,0.05); stroke-width: 8; }
+/* decorative outer dashed ring */
+.ro {
+    fill: none; stroke: rgba(255,255,255,0.06); stroke-width: 1.5;
+    stroke-dasharray: 6 8;
+    transform-origin: 100px 100px;
+    animation: ringOuterSpin 30s linear infinite;
+}
+/* decorative inner thin ring */
+.ri {
+    fill: none; stroke: rgba(255,255,255,0.04); stroke-width: 1;
+    transform-origin: 100px 100px;
+    animation: ringOuterSpin 20s linear infinite reverse;
+}
+@keyframes ringOuterSpin { to { transform: rotate(360deg); } }
+/* progress ring */
+.rf {
+    fill: none;
+    stroke: url(#ringGrad);
+    stroke-width: 10;
+    stroke-linecap: round;
+    stroke-dasharray: 534;
+    stroke-dashoffset: 534;
+    transition: stroke-dashoffset 0.7s cubic-bezier(0.4,0,0.2,1);
+    filter: drop-shadow(0 0 10px rgba(99,102,241,0.7));
+}
+/* ring glow state (updated by JS) */
+.rf.complete {
+    stroke: url(#ringGradDone);
+    filter: drop-shadow(0 0 18px rgba(34,197,94,0.8));
+}
+
+/* ring center */
+.ring-center {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    pointer-events: none;
+}
+.ring-pct {
+    font-size: 2.5rem; font-weight: 900; color: #fff; line-height: 1;
+    letter-spacing: -0.03em;
+    background: linear-gradient(135deg, #fff 60%, rgba(255,255,255,0.7));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+}
+@media (max-width: 699px) { .ring-pct { font-size: 2rem; } }
+.ring-sub {
+    font-size: 0.65rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+    color: rgba(255,255,255,0.35); margin-top: 4px;
+}
+.ring-icon {
+    font-size: 1.1rem; margin-bottom: 2px; opacity: 0;
+    transition: opacity 0.4s;
+    color: #4ade80;
+}
+.ring-icon.visible { opacity: 1; }
+
+/* status text */
+.l-status {
+    font-size: 0.85rem; font-weight: 600; color: rgba(255,255,255,0.75);
+    text-align: center; min-height: 1.3em;
+    transition: opacity 0.35s;
+}
+
+/* pulse ring effect */
+@keyframes ringPulse {
+    0%,100% { opacity: 0; transform: scale(1); }
+    50%      { opacity: 1; transform: scale(1.08); }
+}
+.ring-pulse {
+    position: absolute; inset: -4px;
+    border-radius: 50%;
+    border: 2px solid rgba(99,102,241,0.25);
+    animation: ringPulse 2s ease-in-out infinite;
+    pointer-events: none;
+}
+.ring-pulse-2 {
+    position: absolute; inset: -12px;
+    border-radius: 50%;
+    border: 1.5px solid rgba(99,102,241,0.12);
+    animation: ringPulse 2s ease-in-out 0.4s infinite;
+    pointer-events: none;
+}
+
+/* ── Tier 2: Steps + Facts ── */
+.l-tier2 { padding: 1.75rem 1.75rem 1.5rem; display: flex; flex-direction: column; }
+@media (max-width: 699px) { .l-tier2 { padding: 1.25rem; } }
+
+.l-steps-title {
+    font-size: 0.65rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase;
+    color: rgba(255,255,255,0.25); margin-bottom: 1rem;
+    display: flex; align-items: center; gap: 0.4rem;
+}
+
+/* step items */
+.l-step {
+    display: flex; align-items: center; gap: 0.75rem;
+    padding: 0.55rem 0; border-bottom: 1px solid rgba(255,255,255,0.04);
+    animation: stepSlideIn 0.4s ease both;
+    transition: all 0.3s;
+}
+.l-step:last-child { border-bottom: none; }
+@keyframes stepSlideIn {
+    from { opacity: 0; transform: translateX(16px); }
+    to   { opacity: 1; transform: translateX(0); }
+}
+.l-step-icon {
+    width: 28px; height: 28px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.75rem; font-weight: 800; flex-shrink: 0;
+    transition: all 0.3s;
+}
+.l-step.pending .l-step-icon { background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.25); }
+.l-step.active  .l-step-icon { background: rgba(99,102,241,0.3); border: 1.5px solid #6366f1; color: #a5b4fc; }
+.l-step.done    .l-step-icon { background: rgba(34,197,94,0.2);  border: 1.5px solid #22c55e; color: #4ade80; }
+.l-step-text {
+    font-size: 0.8rem; font-weight: 500; flex: 1;
+    transition: color 0.3s; line-height: 1.35;
+}
+.l-step.pending .l-step-text { color: rgba(255,255,255,0.22); }
+.l-step.active  .l-step-text { color: #e2e8f0; font-weight: 700; }
+.l-step.done    .l-step-text { color: rgba(134,239,172,0.85); }
+.l-step-time {
+    font-size: 0.66rem; font-weight: 700; color: #4ade80;
+    opacity: 0; transition: opacity 0.3s; flex-shrink: 0;
+}
+.l-step.done .l-step-time { opacity: 1; }
+
+/* active step glow */
+.l-step.active .l-step-text {
+    text-shadow: 0 0 20px rgba(165,180,252,0.3);
+}
+
+/* spin */
+@keyframes spin { to { transform: rotate(360deg); } }
+.spin { animation: spin 0.8s linear infinite; display: inline-block; }
+
+/* ── fact card ── */
+.l-fact {
+    margin-top: 1.25rem;
+    border-radius: 12px;
+    padding: 1rem;
+    cursor: pointer;
+    position: relative;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid transparent;
+    background-clip: padding-box;
+    overflow: hidden;
+    min-height: 80px;
+}
+/* gradient border via pseudo-element */
+.l-fact::before {
+    content: '';
+    position: absolute; inset: 0;
+    border-radius: 12px;
+    padding: 1px;
+    background: linear-gradient(135deg, rgba(99,102,241,0.5), rgba(6,182,212,0.3), rgba(139,92,246,0.4));
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+    animation: borderRotate 6s linear infinite;
+    background-size: 200% 200%;
+}
+@keyframes borderRotate {
+    0%   { background-position: 0% 50%; }
+    50%  { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+.l-fact-label {
+    font-size: 0.6rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase;
+    color: #a5b4fc; margin-bottom: 0.4rem;
+    display: flex; align-items: center; gap: 0.4rem;
+}
+.l-fact-label span { margin-left: auto; font-size: 0.58rem; opacity: 0.6; }
+.l-fact-text {
+    font-size: 0.8rem; color: rgba(255,255,255,0.65); line-height: 1.55;
+    transition: opacity 0.3s, transform 0.3s;
+}
+.l-fact-text.fade-out { opacity: 0; transform: translateY(4px); }
+.l-fact-dots { display: flex; gap: 4px; margin-top: 0.6rem; }
+.l-fdot {
+    width: 5px; height: 5px; border-radius: 50%;
+    background: rgba(255,255,255,0.15); transition: all 0.3s;
+}
+.l-fdot.active { background: #818cf8; transform: scale(1.3); }
+
+/* ── overall progress bar ── */
+.l-bar-wrap {
+    width: 100%; max-width: 860px;
+    padding: 0 0.5rem;
+}
+.l-bar {
+    height: 3px; background: rgba(255,255,255,0.06);
+    border-radius: 3px; overflow: hidden; margin-bottom: 0.5rem;
+}
+.l-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #4f46e5, #06b6d4, #22c55e);
+    background-size: 200% 100%;
+    width: 0%; border-radius: 3px;
+    transition: width 0.6s ease;
+    animation: barShimmer 3s linear infinite;
+}
+@keyframes barShimmer {
+    0%   { background-position: 0% 0%; }
+    100% { background-position: 200% 0%; }
+}
+.l-bar-label { font-size: 0.7rem; color: rgba(255,255,255,0.25); text-align: center; }
+
+/* no-refresh notice */
+.l-notice {
+    font-size: 0.72rem; color: rgba(255,255,255,0.2);
+    display: flex; align-items: center; gap: 0.4rem;
+}
+
+/* completion flash */
+@keyframes completeFlash {
+    0%   { box-shadow: 0 0 0 rgba(34,197,94,0); }
+    50%  { box-shadow: 0 0 60px rgba(34,197,94,0.25); }
+    100% { box-shadow: 0 0 0 rgba(34,197,94,0); }
+}
+.l-card.complete { animation: completeFlash 1s ease; }
+</style>
+
+<!-- ══════ BACKGROUND LAYERS ══════ -->
+<div class="l-bg"></div>
+<div class="l-orb l-orb-1"></div>
+<div class="l-orb l-orb-2"></div>
+<div class="l-orb l-orb-3"></div>
+<div class="l-stars" id="starsContainer"></div>
+
+<!-- ══════ MAIN WRAPPER ══════ -->
+<div class="l-wrap">
+
+    <!-- Title area -->
+    <div class="l-title-area">
+        <div class="l-pathway-badge">
+            <i class="bi bi-cpu-fill"></i>
+            KUCCPS Matching Engine
+        </div>
+        <h2 class="l-main-title">
+            {% if pathway == 'degree' %}Finding Your <span>University Courses</span>
+            {% elif pathway == 'kmtc' %}Finding Your <span>KMTC Programmes</span>
+            {% elif pathway == 'diploma' %}Finding Your <span>Diploma Courses</span>
+            {% elif pathway == 'certificate' %}Finding Your <span>Certificate Programmes</span>
+            {% elif pathway == 'artisan' %}Finding Your <span>Artisan Courses</span>
+            {% elif pathway == 'ttc' %}Finding Your <span>TTC Programmes</span>
+            {% else %}Finding Your <span>Course Matches</span>{% endif %}
+        </h2>
+        <p class="l-subtitle">Stay on this page — your personalised results are being prepared</p>
+    </div>
+
+    <!-- Main card -->
+    <div class="l-card" id="mainCard">
+
+        <!-- ── Tier 1: Ring ── -->
+        <div class="l-tier1">
+            <div class="ring-outer" id="ringOuter">
+                <div class="ring-pulse"></div>
+                <div class="ring-pulse-2"></div>
+                <svg class="ring-svg" viewBox="0 0 200 200">
+                    <defs>
+                        <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                            <stop offset="0%"   stop-color="#4f46e5"/>
+                            <stop offset="40%"  stop-color="#3b82f6"/>
+                            <stop offset="75%"  stop-color="#06b6d4"/>
+                            <stop offset="100%" stop-color="#22c55e"/>
+                        </linearGradient>
+                        <linearGradient id="ringGradDone" x1="0%" y1="0%" x2="100%" y2="0%">
+                            <stop offset="0%"   stop-color="#22c55e"/>
+                            <stop offset="100%" stop-color="#4ade80"/>
+                        </linearGradient>
+                    </defs>
+                    <!-- outer dashed decorative ring -->
+                    <circle class="ro" cx="100" cy="100" r="95"/>
+                    <!-- inner decorative ring -->
+                    <circle class="ri" cx="100" cy="100" r="76"/>
+                    <!-- track -->
+                    <circle class="rt" cx="100" cy="100" r="85"/>
+                    <!-- progress -->
+                    <circle class="rf" cx="100" cy="100" r="85" id="ringFill"/>
+                </svg>
+                <div class="ring-center">
+                    <div class="ring-icon" id="ringIcon"><i class="bi bi-check-circle-fill"></i></div>
+                    <div class="ring-pct" id="pctLabel">0%</div>
+                    <div class="ring-sub">Complete</div>
+                </div>
+            </div>
+            <div class="l-status" id="statusText">Initialising...</div>
+        </div>
+
+        <!-- ── Tier 2: Steps + Facts ── -->
+        <div class="l-tier2">
+            <div class="l-steps-title">
+                <i class="bi bi-list-check"></i>
+                Processing Steps
+            </div>
+            <div id="stepList"></div>
+
+            <!-- Fact card -->
+            <div class="l-fact" id="factCard" onclick="nextFact()">
+                <div class="l-fact-label">
+                    <i class="bi bi-lightbulb-fill"></i>
+                    Did You Know?
+                    <span>tap for next →</span>
+                </div>
+                <div class="l-fact-text" id="factText">Loading...</div>
+                <div class="l-fdots" id="factDots" style="display:flex;gap:4px;margin-top:0.6rem;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Overall bar -->
+    <div class="l-bar-wrap">
+        <div class="l-bar"><div class="l-bar-fill" id="barFill"></div></div>
+        <div class="l-bar-label" id="barLabel">Preparing your analysis...</div>
+    </div>
+
+    <div class="l-notice">
+        <i class="bi bi-shield-exclamation"></i>
+        Do not refresh or close this tab while processing
+    </div>
+
+</div>
+
+{% block extra_js %}
+<script>
+/* ── Config ── */
+const REDIRECT = "{{ results_url }}";
+const PATHWAY  = "{{ pathway }}";
+
+/* ── Generate star particles ── */
+(function () {
+    const container = document.getElementById('starsContainer');
+    for (let i = 0; i < 50; i++) {
+        const star = document.createElement('div');
+        star.className = 'star';
+        const size = Math.random() * 2.5 + 0.5;
+        star.style.cssText = `
+            width:${size}px; height:${size}px;
+            top:${Math.random() * 100}%;
+            left:${Math.random() * 100}%;
+            animation-delay:${Math.random() * 4}s;
+            animation-duration:${2 + Math.random() * 3}s;
+        `;
+        container.appendChild(star);
+    }
+})();
+
+/* ── Step definitions ── */
+const STEP_SETS = {
+    degree: [
+        { label: "Loading your KCSE subject grades",         time: "0.3s" },
+        { label: "Computing cluster points from grades",     time: "0.8s" },
+        { label: "Scanning 958 degree programmes",           time: "1.2s" },
+        { label: "Applying subject requirements filter",     time: "0.6s" },
+        { label: "Ranking matches by admission chance",      time: "0.7s" },
+        { label: "Building your personalised list",          time: "0.4s" },
+    ],
+    kmtc: [
+        { label: "Loading your mean grade",                  time: "0.3s" },
+        { label: "Connecting to KMTC database",              time: "0.8s" },
+        { label: "Checking minimum entry requirements",      time: "1.0s" },
+        { label: "Filtering eligible programmes",            time: "0.7s" },
+        { label: "Ranking by admission chance",              time: "0.6s" },
+        { label: "Building your KMTC results",               time: "0.4s" },
+    ],
+    diploma: [
+        { label: "Loading your KCSE grades",                 time: "0.3s" },
+        { label: "Computing your mean grade",                time: "0.8s" },
+        { label: "Scanning diploma programmes",              time: "1.0s" },
+        { label: "Applying minimum grade filter",            time: "0.7s" },
+        { label: "Ranking eligible courses",                 time: "0.6s" },
+        { label: "Building your diploma results",            time: "0.4s" },
+    ],
+    certificate: [
+        { label: "Loading your KCSE grades",                 time: "0.3s" },
+        { label: "Computing your mean grade",                time: "0.8s" },
+        { label: "Scanning certificate programmes",          time: "1.0s" },
+        { label: "Applying minimum grade filter",            time: "0.7s" },
+        { label: "Ranking eligible courses",                 time: "0.6s" },
+        { label: "Building your certificate results",        time: "0.4s" },
+    ],
+    ttc: [
+        { label: "Loading your mean grade",                  time: "0.3s" },
+        { label: "Connecting to TTC database",               time: "0.8s" },
+        { label: "Checking teacher training requirements",   time: "1.0s" },
+        { label: "Filtering eligible programmes",            time: "0.7s" },
+        { label: "Ranking by admission chance",              time: "0.6s" },
+        { label: "Building your TTC results",                time: "0.4s" },
+    ],
+    artisan: [
+        { label: "Loading your mean grade",                  time: "0.3s" },
+        { label: "Connecting to artisan courses database",   time: "0.8s" },
+        { label: "Checking entry requirements",              time: "1.0s" },
+        { label: "Filtering eligible programmes",            time: "0.7s" },
+        { label: "Ranking by location and chance",           time: "0.6s" },
+        { label: "Building your results",                    time: "0.4s" },
+    ],
+};
+const STEPS = STEP_SETS[PATHWAY] || STEP_SETS.degree;
+
+const STATUS_MSGS = [
+    "Reading your submitted data...",
+    "Calculating scores and weights...",
+    "Cross-referencing course database...",
+    "Checking entry requirements...",
+    "Ranking your best matches...",
+    "Almost done — building your list!",
+];
+
+const FACTS = [
+    "KUCCPS places students in universities, KMTCs, TVETs and TTCs through a centralised portal.",
+    "Kenya has over 60 public and private universities offering KUCCPS-linked degree programmes.",
+    "Your cluster points are computed from 4 subjects — the best-weighted combination per cluster.",
+    "KMTC offers over 60 medical and paramedical programmes across 50+ campuses countrywide.",
+    "The maximum cluster points score is 48 — achieved with four A grades in the right subjects.",
+    "Over 500,000 KCSE candidates apply for placement through KUCCPS each year.",
+    "Technical universities require Physics and Maths for most engineering programmes.",
+    "Agriculture courses often require Biology and Chemistry as mandatory subjects.",
+    "Diploma programmes typically require a minimum mean grade of C– (minus).",
+    "KUCCPS uses previous-year cut-off points as a guide — not a guarantee of placement.",
+];
+
+/* ── Ring setup ── */
+const CIRCUMFERENCE = 2 * Math.PI * 85; // ≈ 534
+const ringEl  = document.getElementById('ringFill');
+const pctEl   = document.getElementById('pctLabel');
+const fillEl  = document.getElementById('barFill');
+const labelEl = document.getElementById('barLabel');
+const statEl  = document.getElementById('statusText');
+const iconEl  = document.getElementById('ringIcon');
+ringEl.style.strokeDasharray  = CIRCUMFERENCE;
+ringEl.style.strokeDashoffset = CIRCUMFERENCE;
+
+function setPct(pct) {
+    const offset = CIRCUMFERENCE - (pct / 100) * CIRCUMFERENCE;
+    ringEl.style.strokeDashoffset = offset;
+    pctEl.textContent = Math.round(pct) + '%';
+    fillEl.style.width = pct + '%';
+}
+
+/* ── Build step list ── */
+const stepList = document.getElementById('stepList');
+STEPS.forEach((s, i) => {
+    const el = document.createElement('div');
+    el.className = 'l-step pending';
+    el.id = 'step-' + i;
+    el.style.animationDelay = (i * 80) + 'ms';
+    el.innerHTML = `
+        <div class="l-step-icon" id="sicon-${i}">
+            <span style="font-size:.72rem;">${i + 1}</span>
+        </div>
+        <div class="l-step-text">${s.label}</div>
+        <div class="l-step-time">${s.time}</div>`;
+    stepList.appendChild(el);
+});
+
+function setStep(i, state) {
+    const el   = document.getElementById('step-' + i);
+    const icon = document.getElementById('sicon-' + i);
+    if (!el) return;
+    el.className = 'l-step ' + state;
+    if (state === 'active') {
+        icon.innerHTML = '<i class="bi bi-arrow-clockwise spin"></i>';
+    } else if (state === 'done') {
+        icon.innerHTML = '<i class="bi bi-check-lg"></i>';
+    } else {
+        icon.innerHTML = '<span style="font-size:.72rem;">' + (i + 1) + '</span>';
+    }
+}
+
+/* ── Facts carousel ── */
+let factIdx = 0;
+const factText = document.getElementById('factText');
+const factDots = document.getElementById('factDots');
+
+FACTS.forEach((_, i) => {
+    const d = document.createElement('div');
+    d.className = 'l-fdot' + (i === 0 ? ' active' : '');
+    d.id = 'fdot-' + i;
+    factDots.appendChild(d);
+});
+
+function showFact(idx) {
+    factText.classList.add('fade-out');
+    setTimeout(() => {
+        factText.textContent = FACTS[idx];
+        factText.classList.remove('fade-out');
+        document.querySelectorAll('.l-fdot').forEach((d, i) => {
+            d.className = 'l-fdot' + (i === idx ? ' active' : '');
+        });
+    }, 250);
+}
+showFact(0);
+function nextFact() {
+    factIdx = (factIdx + 1) % FACTS.length;
+    showFact(factIdx);
+}
+setInterval(nextFact, 4500);
+
+/* ── Animate status text ── */
+function setStatus(msg) {
+    statEl.style.opacity = '0';
+    setTimeout(() => {
+        statEl.textContent = msg;
+        statEl.style.opacity = '1';
+    }, 200);
+}
+
+/* ── Main sequence ── */
+const N       = STEPS.length;
+const TOTAL   = 9000;
+const PER     = TOTAL / N;
+
+function runStep(i) {
+    if (i >= N) return;
+    if (i > 0) setStep(i - 1, 'done');
+    setStep(i, 'active');
+    setStatus(STATUS_MSGS[i] || STATUS_MSGS[STATUS_MSGS.length - 1]);
+    labelEl.textContent = STEPS[i].label;
+
+    const startPct = (i / N) * 100;
+    const endPct   = ((i + 1) / N) * 100;
+    let elapsed = 0;
+    const TICK = 40;
+    const iv = setInterval(() => {
+        elapsed += TICK;
+        const t = Math.min(elapsed / PER, 1);
+        const eased = t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
+        setPct(startPct + eased * (endPct - startPct));
+        if (elapsed >= PER) {
+            clearInterval(iv);
+            if (i + 1 < N) {
+                setTimeout(() => runStep(i + 1), 80);
+            } else {
+                // Complete
+                setStep(N - 1, 'done');
+                setPct(100);
+                ringEl.classList.add('complete');
+                iconEl.classList.add('visible');
+                pctEl.style.cssText = 'background:linear-gradient(135deg,#4ade80,#22c55e);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;';
+                document.getElementById('mainCard').classList.add('complete');
+                setStatus("Done! Loading your results...");
+                labelEl.textContent = "Analysis complete — redirecting now";
+                setTimeout(() => { window.location.href = REDIRECT; }, 800);
+            }
+        }
+    }, TICK);
+}
+
+runStep(0);
+</script>
+{% endblock %}
+{% endblock %}

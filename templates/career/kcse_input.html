@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+
+{% block title %}KCSE Input - Career Guidance{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-lg-12 text-center">
+            <h1 class="display-6 fw-bold">Enter Your KCSE Grades</h1>
+            <p class="lead">Input your KCSE results to receive personalized career guidance and AI recommendations.</p>
+        </div>
+    </div>
+
+    <!-- Career Pathway Selection -->
+    <div class="row mb-4">
+        <div class="col-lg-12">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <form method="post" action="{% url 'career:kcse_input' %}">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="pathway" class="form-label fw-bold">Select Career Pathway</label>
+                            <select class="form-select" id="pathway" name="pathway" required>
+                                <option value="" selected disabled>Select Pathway</option>
+                                <option value="Degree" {% if pathway == "Degree" %}selected{% endif %}>Degree</option>
+                                <option value="Diploma" {% if pathway == "Diploma" %}selected{% endif %}>Diploma</option>
+                                <option value="Certificate" {% if pathway == "Certificate" %}selected{% endif %}>Certificate</option>
+                                <option value="KMTC" {% if pathway == "KMTC" %}selected{% endif %}>KMTC</option>
+                                <option value="Artisan" {% if pathway == "Artisan" %}selected{% endif %}>Artisan</option>
+                                <option value="ShortCourse" {% if pathway == "ShortCourse" %}selected{% endif %}>Short Courses</option>
+                            </select>
+                        </div>
+
+                        <!-- TVET Category (Conditional) -->
+                        <div class="mb-4" id="tvet_category_div" style="display: {% if pathway == 'TVET' %}block{% else %}none{% endif %};">
+                            <label for="tvet_category" class="form-label fw-bold">Select TVET Category</label>
+                            <select class="form-select" id="tvet_category" name="tvet_category">
+                                <option value="" selected disabled>Select Category</option>
+                                {% for category in tvet_categories %}
+                                <option value="{{ category.name }}" {% if tvet_category == category.name %}selected{% endif %}>{{ category.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <!-- KCSE Subjects Input -->
+                        <div class="mb-4">
+                            <h5 class="fw-bold mb-3">Enter Your Grades</h5>
+                            <div class="row g-3">
+                                {% for subject in subjects %}
+                                <div class="col-md-3 col-sm-6">
+                                    <label for="subject_{{ subject.id }}" class="form-label">{{ subject.name }}</label>
+                                    <select class="form-select" id="subject_{{ subject.id }}" name="grades[{{ subject.name }}]" required>
+                                        <option value="" selected disabled>Grade</option>
+                                        {% for grade in grades %}
+                                        <option value="{{ grade }}" {% if kcse_grades.subject.name == grade %}selected{% endif %}>{{ grade }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <div class="mb-5 text-center">
+                            <button type="submit" class="btn btn-primary btn-lg">Get Career Recommendations</button>
+                        </div>
+
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI Recommendation Preview (Optional) -->
+    {% if ai %}
+    <div class="row mb-5">
+        <div class="col-lg-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">AI Recommendation Preview</h5>
+                </div>
+                <div class="card-body">
+                    <p>{{ ai.advice_text|linebreaks }}</p>
+                    <small class="text-muted">Generated on: {{ ai.created_at|date:"D, M d, Y H:i" }}</small>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Helpful Tips Section -->
+    <div class="row mb-5">
+        <div class="col-lg-12">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="fw-bold mb-3">Tips for Accurate Input</h5>
+                    <ul>
+                        <li>Ensure you select the correct grade for each KCSE subject.</li>
+                        <li>For TVET, select the correct category to get relevant courses.</li>
+                        <li>Double-check your pathway choice – Degree, Diploma, TVET, KMTC, or TTC.</li>
+                        <li>The AI engine uses your grades to match you with courses and universities.</li>
+                        <li>For Degree pathway, cluster points are automatically calculated based on required subjects.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Show/hide TVET category dynamically based on pathway
+    const pathwaySelect = document.getElementById('pathway');
+    const tvetDiv = document.getElementById('tvet_category_div');
+
+    pathwaySelect.addEventListener('change', function() {
+        if (this.value === 'TVET') {
+            tvetDiv.style.display = 'block';
+        } else {
+            tvetDiv.style.display = 'none';
+        }
+    });
+</script>
+{% endblock %}

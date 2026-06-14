@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}TVET / KMTC / TTC{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <h2 class="mb-4 text-center">TVET / KMTC / TTC</h2>
+    <form method="post" id="tvetForm">
+        {% csrf_token %}
+        {{ form.as_p }}
+
+        <button type="submit" class="btn btn-warning w-100 mt-3">Next</button>
+    </form>
+</div>
+
+<script>
+document.getElementById("tvetForm").addEventListener("submit", function(){
+    const btn = this.querySelector("button");
+    btn.disabled = true;
+    btn.innerText = "Processing...";
+});
+</script>
+{% endblock %}

@@ -1,0 +1,193 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Paste Cluster Points — Career Guidance{% endblock %}
+
+{% block content %}
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+
+<style>
+body { background: #f0f4ff; }
+.paste-card {
+    max-width: 680px;
+    margin: 0 auto;
+    background: #fff;
+    border-radius: 1.2rem;
+    box-shadow: 0 8px 32px rgba(30,58,138,0.10);
+}
+.paste-area {
+    font-family: 'Courier New', monospace;
+    font-size: 0.92rem;
+    border: 2px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 0.9rem 1rem;
+    min-height: 160px;
+    resize: vertical;
+    width: 100%;
+    color: #1e293b;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+.paste-area:focus {
+    outline: none;
+    border-color: #059669;
+    box-shadow: 0 0 0 3px rgba(5,150,105,0.12);
+}
+.example-box {
+    background: #f8fafc;
+    border: 1.5px dashed #cbd5e1;
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    font-family: 'Courier New', monospace;
+    font-size: 0.82rem;
+    color: #475569;
+    margin-top: 0.5rem;
+}
+.btn-paste {
+    background: #059669;
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    font-weight: 700;
+    padding: 0.65rem 2rem;
+    font-size: 0.95rem;
+    transition: opacity 0.2s;
+}
+.btn-paste:hover { opacity: 0.9; color: #fff; }
+
+.cluster-preview {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 0.4rem;
+    margin-top: 0.75rem;
+    max-height: 220px;
+    overflow-y: auto;
+}
+.cluster-chip {
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 4px 8px;
+    border-radius: 6px;
+    border: 1.5px solid #e2e8f0;
+    background: #f8fafc;
+    color: #374151;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 4px;
+}
+.cluster-chip .val { font-weight: 800; }
+.cluster-chip.filled { border-color: #a7f3d0; background: #ecfdf5; color: #065f46; }
+</style>
+
+<div class="container py-4">
+
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'career:home' %}" class="text-decoration-none">Career Guidance</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'career:degree_entry' %}" class="text-decoration-none">Degree</a></li>
+            <li class="breadcrumb-item active">Copy &amp; Paste Points</li>
+        </ol>
+    </nav>
+
+    <div class="paste-card p-4 p-md-5">
+
+        <!-- Header -->
+        <div class="d-flex align-items-center gap-3 mb-4">
+            <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
+                 style="width:52px;height:52px;background:#ecfdf5;">
+                <i class="bi bi-clipboard2-data-fill" style="font-size:1.5rem;color:#059669;"></i>
+            </div>
+            <div>
+                <h4 class="fw-bold mb-1">Paste Your Cluster Points</h4>
+                <p class="text-muted small mb-0">
+                    Paste up to 20 cluster point values separated by spaces, commas, or new lines.
+                    Values must be between <strong>0 – 48</strong>.
+                </p>
+            </div>
+        </div>
+
+        <!-- Messages -->
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible d-flex gap-2 align-items-start mb-3"
+             style="border-radius:10px;" role="alert">
+            <i class="bi bi-exclamation-triangle-fill text-warning mt-1 flex-shrink-0"></i>
+            <span class="small">{{ message }}</span>
+            <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+
+        <form method="post" id="pasteForm">
+            {% csrf_token %}
+
+            <div class="mb-3">
+                <label class="form-label fw-semibold">
+                    Cluster Points <span class="text-danger">*</span>
+                </label>
+                <textarea
+                    class="paste-area"
+                    name="cluster_data"
+                    id="pasteArea"
+                    placeholder="Paste your cluster points here...&#10;Example: 32.5 28.0 41.2 ..."
+                    oninput="livePreview(this.value)"
+                    required></textarea>
+
+                <div class="example-box mt-2">
+                    <strong>Format examples:</strong><br>
+                    <span class="text-muted">Space-separated:</span> <code>32.5 28.0 41.2 35.0 ...</code><br>
+                    <span class="text-muted">Comma-separated:</span> <code>32.5, 28.0, 41.2, 35.0</code><br>
+                    <span class="text-muted">One per line:</span>
+                    <code>32.5<br>28.0<br>41.2</code>
+                </div>
+            </div>
+
+            <!-- Live preview -->
+            <div id="preview-section" style="display:none;" class="mb-4">
+                <div class="d-flex align-items-center justify-content-between mb-1">
+                    <span class="small fw-semibold text-muted">Preview (<span id="val-count">0</span> values detected)</span>
+                    <span class="small text-muted">Values map to clusters in order (Cluster 1 → Cluster 20)</span>
+                </div>
+                <div class="cluster-preview" id="cluster-preview"></div>
+            </div>
+
+            <div class="d-flex gap-3 align-items-center flex-wrap border-top pt-4">
+                <button type="submit" class="btn btn-paste">
+                    <i class="bi bi-arrow-right-circle me-2"></i>Process Cluster Points
+                </button>
+                <a href="{% url 'career:degree_entry' %}" class="btn btn-outline-secondary" style="border-radius:10px;">
+                    <i class="bi bi-arrow-left me-1"></i>Back
+                </a>
+                <a href="{% url 'career:degree_calculate' %}" class="btn btn-link text-muted small ms-auto">
+                    Calculate from grades instead →
+                </a>
+            </div>
+        </form>
+
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+function livePreview(raw) {
+    const vals = raw.trim().split(/[\s,;]+/).filter(v => v.trim() !== '');
+    const nums = vals.map(v => parseFloat(v)).filter(n => !isNaN(n) && n >= 0 && n <= 48);
+
+    const section = document.getElementById('preview-section');
+    const preview = document.getElementById('cluster-preview');
+    const count   = document.getElementById('val-count');
+
+    if (nums.length === 0) { section.style.display = 'none'; return; }
+
+    section.style.display = 'block';
+    count.textContent = nums.length;
+    preview.innerHTML = '';
+    nums.forEach((n, i) => {
+        const chip = document.createElement('div');
+        chip.className = 'cluster-chip filled';
+        chip.innerHTML = `<span>C${i + 1}</span><span class="val">${n.toFixed(1)}</span>`;
+        preview.appendChild(chip);
+    });
+}
+</script>
+{% endblock %}
+{% endblock %}

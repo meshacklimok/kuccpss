@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Diploma / Certificate Step{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <h2 class="mb-4 text-center">Diploma / Certificate</h2>
+    <form method="post" id="diplomaForm">
+        {% csrf_token %}
+        {{ form.as_p }}
+
+        <small class="text-muted d-block mb-2">Enter subjects and grades separated by commas.</small>
+
+        <button type="submit" class="btn btn-info w-100 mt-3">Next</button>
+    </form>
+</div>
+
+<script>
+document.getElementById("diplomaForm").addEventListener("submit", function(){
+    const btn = this.querySelector("button");
+    btn.disabled = true;
+    btn.innerText = "Processing...";
+});
+</script>
+{% endblock %}

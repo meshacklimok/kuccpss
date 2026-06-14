@@ -1,0 +1,398 @@
+{% extends 'base.html' %}
+{% load custom_filters %}
+{% block title %}{{ course.name }} — KUCCPSS{% endblock %}
+
+{% block content %}
+<div class="page-hero">
+  <div class="container">
+    <nav aria-label="breadcrumb" class="mb-2">
+      <ol class="breadcrumb mb-0" style="font-size:0.85rem;">
+        <li class="breadcrumb-item"><a href="{% url 'courses:course_types_list' %}" class="text-white-50">Courses</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'courses:course_type_detail' type_slug=course.course_type.slug %}" class="text-white-50">{{ course.course_type.name }}</a></li>
+        {% if course.category %}
+        <li class="breadcrumb-item"><a href="{% url 'courses:course_category_detail' type_slug=course.course_type.slug category_slug=course.category.slug %}" class="text-white-50">{{ course.category.name }}</a></li>
+        {% endif %}
+        <li class="breadcrumb-item active text-white">{{ course.name }}</li>
+      </ol>
+    </nav>
+    <h1 class="mb-1"><i class="fas fa-graduation-cap me-2"></i>{{ course.name }}</h1>
+    <p class="mb-0 opacity-75">{{ course.course_type.name }}{% if course.category %} &middot; {{ course.category.name }}{% endif %}{% if course.cluster %} &middot; {{ course.cluster.name }}{% endif %}</p>
+  </div>
+</div>
+
+<div class="container pb-5">
+  {% if request.user.is_staff %}
+  <div class="mb-3">
+    <a href="{% url 'admin:courses_course_change' course.id %}" class="btn btn-sm btn-outline-secondary">
+      <i class="fas fa-edit me-1"></i>Edit in Admin
+    </a>
+  </div>
+  {% endif %}
+
+  <div class="row g-4">
+
+    <!-- ── Main column ── -->
+    <div class="col-lg-8">
+
+      {% if course.description %}
+      <div class="card p-4 mb-4">
+        <h5 class="fw-bold mb-3"><i class="fas fa-info-circle me-2 text-primary"></i>About this Course</h5>
+        <p class="text-muted mb-0">{{ course.description }}</p>
+      </div>
+      {% endif %}
+
+      {% if course.course_type.name == 'KMTC' or course.course_type.name == 'TTC' %}
+
+      {% with is_ttc=course.course_type.name|stringformat:"s" %}
+      {% with accent_color=course.course_type.color_code|default:"#dc2626" %}
+
+      <!-- KMTC/TTC: Minimum Mean Grade -->
+      {% if course.minimum_mean_grade %}
+      <div class="card p-4 mb-4">
+        <h5 class="fw-bold mb-3">
+          <i class="fas fa-graduation-cap me-2" style="color:{{ accent_color }};"></i>Minimum Mean Grade
+        </h5>
+        <p class="mb-0">
+          <span class="badge fs-5 px-4 py-2" style="background:{{ accent_color }}; color:#fff; border-radius:0.5rem;">
+            {{ course.minimum_mean_grade }}
+          </span>
+          <span class="text-muted ms-3" style="font-size:0.88rem;">
+            KCSE overall mean grade required for admission.
+            {% if course.course_type.name == 'TTC' %}Placement is by Teachers Service Commission (TSC) via KUCCPS.{% endif %}
+          </span>
+        </p>
+      </div>
+      {% endif %}
+
+      <!-- KMTC/TTC: Subject Requirements -->
+      {% if course.subject_requirements %}
+      <div class="card p-4 mb-4">
+        <h5 class="fw-bold mb-3">
+          <i class="fas fa-list-check me-2" style="color:{{ accent_color }};"></i>Subject Requirements
+        </h5>
+        <div class="table-responsive">
+          <table class="table table-sm align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th style="width:3rem;">#</th>
+                <th>Subject(s)</th>
+                <th class="text-center" style="width:7rem;">Min Grade</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for req in course.subject_requirements %}
+              <tr>
+                <td class="text-muted fw-semibold">{{ req.slot }}</td>
+                <td>{{ req.subjects_str }}</td>
+                <td class="text-center">
+                  <span class="badge rounded-pill px-3" style="background:#fef2f2; color:{{ accent_color }}; border:1px solid #fca5a5; font-size:0.85rem;">
+                    {{ req.min_grade }}
+                  </span>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        <p class="text-muted mt-2 mb-0" style="font-size:0.8rem;">
+          <i class="fas fa-info-circle me-1"></i>
+          Where multiple subjects are listed (e.g. ENG/KIS), any one of them satisfies that slot.
+        </p>
+      </div>
+      {% endif %}
+
+      <!-- KMTC/TTC: Institutions -->
+      <div class="card p-4 mb-4">
+        <h5 class="fw-bold mb-3">
+          <i class="fas fa-{% if course.course_type.name == 'TTC' %}chalkboard-teacher{% else %}hospital{% endif %} me-2" style="color:{{ accent_color }};"></i>
+          {% if course.course_type.name == 'TTC' %}TTCs Offering This Programme{% else %}Campuses Offering This Programme{% endif %}
+        </h5>
+        {% if offerings %}
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>{% if course.course_type.name == 'TTC' %}College{% else %}Campus{% endif %}</th>
+                <th>Location</th>
+                <th class="text-center">Programme Code</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for offering in offerings %}
+              <tr>
+                <td class="fw-semibold">{{ offering.institution.name }}</td>
+                <td class="text-muted" style="font-size:0.85rem;">
+                  {% if offering.institution.location %}
+                  <i class="fas fa-map-marker-alt me-1 opacity-50"></i>{{ offering.institution.location }}
+                  {% else %}—{% endif %}
+                </td>
+                <td class="text-center">
+                  {% if offering.programme_code %}
+                  <code style="font-size:0.85rem;">{{ offering.programme_code }}</code>
+                  {% else %}—{% endif %}
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <div class="text-center py-4 text-muted">
+          <i class="fas fa-database fa-2x mb-2 d-block opacity-50"></i>
+          No institution data available yet.
+        </div>
+        {% endif %}
+      </div>
+
+      {% endwith %}
+      {% endwith %}
+
+      {% elif "TVET" in course.course_type.name %}
+
+      <!-- TVET: Minimum Mean Grade -->
+      {% if course.minimum_mean_grade %}
+      <div class="card p-4 mb-4">
+        <h5 class="fw-bold mb-3"><i class="fas fa-graduation-cap me-2" style="color:#059669;"></i>Minimum Mean Grade</h5>
+        <p class="mb-0">
+          <span class="badge fs-5 px-4 py-2" style="background:#059669; color:#fff; border-radius:0.5rem;">
+            {{ course.minimum_mean_grade }}
+          </span>
+          <span class="text-muted ms-3" style="font-size:0.88rem;">KCSE overall mean grade required for admission.</span>
+        </p>
+      </div>
+      {% endif %}
+
+      <!-- TVET: Subject Requirements -->
+      {% if course.subject_requirements %}
+      <div class="card p-4 mb-4">
+        <h5 class="fw-bold mb-3"><i class="fas fa-list-check me-2" style="color:#059669;"></i>Subject Requirements</h5>
+        <div class="table-responsive">
+          <table class="table table-sm align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th style="width:3rem;">#</th>
+                <th>Subject(s)</th>
+                <th class="text-center" style="width:7rem;">Min Grade</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for req in course.subject_requirements %}
+              <tr>
+                <td class="text-muted fw-semibold">{{ req.slot }}</td>
+                <td>{{ req.subjects_str }}</td>
+                <td class="text-center">
+                  <span class="badge rounded-pill px-3" style="background:#ecfdf5; color:#059669; border:1px solid #6ee7b7; font-size:0.85rem;">
+                    {{ req.min_grade }}
+                  </span>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        <p class="text-muted mt-2 mb-0" style="font-size:0.8rem;">
+          <i class="fas fa-info-circle me-1"></i>
+          Where multiple subjects are listed (e.g. ENG/KIS), any one of them satisfies that slot.
+        </p>
+      </div>
+      {% endif %}
+
+      <!-- TVET: Institutions offering this programme -->
+      <div class="card p-4 mb-4">
+        <h5 class="fw-bold mb-3"><i class="fas fa-tools me-2" style="color:#059669;"></i>TVET Institutions Offering This Programme</h5>
+        {% if offerings %}
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>Institution</th>
+                <th>Location</th>
+                <th class="text-center">Code</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for offering in offerings %}
+              <tr>
+                <td>
+                  <a href="{% url 'institutions:institution_detail' type_slug=offering.institution.institution_type.slug institution_slug=offering.institution.slug %}"
+                     class="fw-semibold text-decoration-none">
+                    {{ offering.institution.name }}
+                  </a>
+                  {% if offering.institution.abbreviation %}
+                  <span class="badge ms-1" style="background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;font-size:0.72rem;">
+                    {{ offering.institution.abbreviation }}
+                  </span>
+                  {% endif %}
+                </td>
+                <td class="text-muted" style="font-size:0.85rem;">
+                  {% if offering.institution.location %}
+                  <i class="fas fa-map-marker-alt me-1" style="color:#6b7280;"></i>{{ offering.institution.location }}
+                  {% else %}—{% endif %}
+                </td>
+                <td class="text-center">
+                  {% if offering.programme_code %}
+                  <code style="font-size:0.82rem;">{{ offering.programme_code }}</code>
+                  {% else %}—{% endif %}
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <div class="text-center py-4 text-muted">
+          <i class="fas fa-database fa-2x mb-2 d-block opacity-50"></i>
+          No institution data available yet.
+        </div>
+        {% endif %}
+      </div>
+
+      {% else %}
+
+      <!-- University/Degree: Cut-off points per institution -->
+      <div class="card p-4 mb-4">
+        <h5 class="fw-bold mb-3"><i class="fas fa-chart-bar me-2 text-success"></i>Cut-off Points by Institution</h5>
+
+        {% if offerings %}
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>Institution</th>
+                <th class="text-center">2024</th>
+                <th class="text-center">2023</th>
+                <th class="text-center">2022</th>
+                <th class="text-center">2021</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for offering in offerings %}
+              <tr>
+                <td>
+                  <div class="fw-semibold">{{ offering.institution.name }}</div>
+                  <small class="text-muted">{{ offering.institution.institution_type }}</small>
+                </td>
+                {% for year in '2024,2023,2022,2021'|split:',' %}
+                <td class="text-center">
+                  {% with pts=offering.cutoff_points|default_if_none:'' %}
+                    {% if pts %}
+                      {% with val=pts|get_item:year %}
+                        {% if val %}
+                        <span class="badge rounded-pill fw-semibold"
+                              style="background: {% if val >= 70 %}#16a34a{% elif val >= 55 %}#d97706{% else %}#dc2626{% endif %}; font-size:0.8rem; padding:4px 10px;">
+                          {{ val }}
+                        </span>
+                        {% else %}
+                        <span class="text-muted">—</span>
+                        {% endif %}
+                      {% endwith %}
+                    {% else %}
+                    <span class="text-muted">—</span>
+                    {% endif %}
+                  {% endwith %}
+                </td>
+                {% endfor %}
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        <p class="text-muted mt-2 mb-0" style="font-size:0.8rem;">
+          <i class="fas fa-info-circle me-1"></i>
+          Cut-off points are out of 84 (KCSE aggregate). Source: KUCCPS placement data.
+        </p>
+        {% else %}
+        <div class="text-center py-4 text-muted">
+          <i class="fas fa-database fa-2x mb-2 d-block opacity-50"></i>
+          No cut-off data available yet.
+        </div>
+        {% endif %}
+      </div>
+
+      {% endif %}
+
+      <!-- Core Subjects -->
+      {% if course.core_subjects.all %}
+      <div class="card p-4 mb-4">
+        <h5 class="fw-bold mb-3"><i class="fas fa-book me-2 text-primary"></i>Required Core Subjects</h5>
+        <div class="d-flex flex-wrap gap-2">
+          {% for subject in course.core_subjects.all %}
+          <span class="badge rounded-pill px-3 py-2" style="background:#eff6ff; color:var(--primary); border:1px solid #bfdbfe; font-size:0.85rem;">
+            {{ subject.name }}
+          </span>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+
+    </div><!-- /col-lg-8 -->
+
+    <!-- ── Sidebar ── -->
+    <div class="col-lg-4">
+
+      <!-- Quick info card -->
+      <div class="card p-4 mb-4">
+        <h6 class="fw-bold mb-3 text-muted text-uppercase" style="font-size:0.75rem; letter-spacing:0.05em;">Course Details</h6>
+        <ul class="list-unstyled mb-0">
+          <li class="d-flex justify-content-between py-2 border-bottom">
+            <span class="text-muted">Type</span>
+            <span class="fw-semibold">{{ course.course_type.name }}</span>
+          </li>
+          {% if course.category %}
+          <li class="d-flex justify-content-between py-2 border-bottom">
+            <span class="text-muted">Category</span>
+            <span class="fw-semibold">{{ course.category.name }}</span>
+          </li>
+          {% endif %}
+          {% if course.cluster %}
+          <li class="d-flex justify-content-between py-2 border-bottom">
+            <span class="text-muted">Cluster</span>
+            <span class="fw-semibold">{{ course.cluster.name }}</span>
+          </li>
+          {% endif %}
+          {% if course.minimum_mean_grade %}
+          <li class="d-flex justify-content-between py-2 border-bottom">
+            <span class="text-muted">Min. Mean Grade</span>
+            <span class="fw-semibold" style="color:#dc2626;">{{ course.minimum_mean_grade }}</span>
+          </li>
+          {% endif %}
+          <li class="d-flex justify-content-between py-2">
+            <span class="text-muted">{% if course.course_type.name == 'KMTC' %}Campuses{% elif course.course_type.name == 'TTC' %}Colleges{% elif "TVET" in course.course_type.name %}TVET Institutions{% else %}Institutions{% endif %}</span>
+            <span class="fw-semibold">{{ offerings|length }}</span>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Institutions list (not shown for TVET/KMTC — those use the main table) -->
+      {% if offerings and course.course_type.name != 'KMTC' and course.course_type.name != 'TTC' and "TVET" not in course.course_type.name %}
+      <div class="card p-4 mb-4">
+        <h6 class="fw-bold mb-3"><i class="fas fa-university me-2 text-primary"></i>Offered At</h6>
+        <ul class="list-unstyled mb-0">
+          {% for offering in offerings %}
+          <li class="py-2 {% if not forloop.last %}border-bottom{% endif %}">
+            <div class="fw-semibold" style="font-size:0.9rem;">{{ offering.institution.name }}</div>
+            {% with lc=offering.latest_cutoff %}
+            {% if lc %}
+            <small class="text-muted">Latest cutoff: <strong>{{ lc }}</strong> pts</small>
+            {% endif %}
+            {% endwith %}
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
+      {% endif %}
+
+      <!-- PDF download -->
+      {% if course.pdf_file %}
+      <div class="card p-4">
+        <h6 class="fw-bold mb-3"><i class="fas fa-file-pdf me-2 text-danger"></i>Course Brochure</h6>
+        <a href="{{ course.pdf_file.url }}" target="_blank" class="btn btn-outline-danger w-100">
+          <i class="fas fa-download me-2"></i>Download PDF
+        </a>
+      </div>
+      {% endif %}
+
+    </div><!-- /col-lg-4 -->
+  </div><!-- /row -->
+</div>
+{% endblock %}

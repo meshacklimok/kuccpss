@@ -1,0 +1,317 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ pathway }} Course Matches — Career Guidance{% endblock %}
+
+{% block content %}
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+
+<style>
+.results-hero {
+    background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%);
+    color: #fff;
+    padding: 2rem 0 1.5rem;
+    margin-bottom: 0;
+}
+.hero-stat { text-align: center; }
+.hero-stat .number { font-size: 2rem; font-weight: 800; line-height: 1; }
+.hero-stat .label  { font-size: 0.75rem; opacity: 0.8; text-transform: uppercase; letter-spacing: 0.06em; }
+
+.filter-bar {
+    background: #fff;
+    border-bottom: 1px solid #e2e8f0;
+    padding: 0.9rem 0;
+    position: sticky;
+    top: 56px;
+    z-index: 100;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+.chance-badge {
+    display: inline-block;
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 20px;
+    white-space: nowrap;
+}
+.chance-VERY-HIGH { background: #dcfce7; color: #15803d; }
+.chance-HIGH      { background: #dbeafe; color: #1d4ed8; }
+.chance-MEDIUM    { background: #fef9c3; color: #854d0e; }
+.chance-LOW       { background: #fee2e2; color: #991b1b; }
+
+.result-card {
+    background: #fff;
+    border-radius: 12px;
+    border: 1.5px solid #e2e8f0;
+    padding: 1.1rem 1.25rem;
+    transition: border-color 0.18s, box-shadow 0.18s;
+    position: relative;
+    overflow: hidden;
+}
+.result-card:hover {
+    border-color: #a5b4fc;
+    box-shadow: 0 4px 16px rgba(79,70,229,0.1);
+}
+.result-card .course-name {
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: #1e293b;
+    line-height: 1.35;
+    margin-bottom: 2px;
+}
+.result-card .inst-name {
+    font-size: 0.8rem;
+    color: #64748b;
+    font-weight: 500;
+}
+.result-card .meta-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-top: 0.6rem;
+}
+.meta-chip {
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 6px;
+    background: #f1f5f9;
+    color: #475569;
+}
+.pts-diff {
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 6px;
+}
+.pts-diff.pos { background: #dcfce7; color: #15803d; }
+.pts-diff.neg { background: #fee2e2; color: #991b1b; }
+.pts-diff.zero { background: #dbeafe; color: #1d4ed8; }
+
+.chance-stripe {
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 4px;
+}
+.stripe-success { background: #22c55e; }
+.stripe-primary { background: #3b82f6; }
+.stripe-warning { background: #f59e0b; }
+.stripe-danger  { background: #ef4444; }
+
+.filter-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    padding: 5px 12px;
+    border-radius: 20px;
+    border: 1.5px solid #e2e8f0;
+    background: #fff;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-decoration: none;
+    color: #374151;
+}
+.filter-chip:hover, .filter-chip.active {
+    border-color: #4f46e5;
+    background: #eef2ff;
+    color: #3730a3;
+}
+.filter-chip.chance-active-VERY-HIGH { border-color: #22c55e; background: #dcfce7; color: #15803d; }
+.filter-chip.chance-active-HIGH      { border-color: #3b82f6; background: #dbeafe; color: #1d4ed8; }
+.filter-chip.chance-active-MEDIUM    { border-color: #f59e0b; background: #fef9c3; color: #854d0e; }
+.filter-chip.chance-active-LOW       { border-color: #ef4444; background: #fee2e2; color: #991b1b; }
+</style>
+
+<!-- Hero stats bar -->
+<div class="results-hero">
+    <div class="container">
+        <div class="d-flex align-items-center gap-3 mb-3 flex-wrap">
+            <a href="{% url 'career:home' %}" class="text-white text-decoration-none small opacity-75">
+                <i class="bi bi-arrow-left me-1"></i>Career Guidance
+            </a>
+            <span class="opacity-50">/</span>
+            <span class="small fw-semibold">{{ pathway }} Results</span>
+        </div>
+        <div class="row g-3">
+            <div class="col-6 col-md-3 hero-stat">
+                <div class="number">{{ total_count }}</div>
+                <div class="label">Matches Found</div>
+            </div>
+            <div class="col-6 col-md-3 hero-stat">
+                <div class="number">{{ pathway }}</div>
+                <div class="label">Pathway</div>
+            </div>
+            {% if pathway == 'Degree' %}
+            <div class="col-6 col-md-3 hero-stat">
+                <div class="number">{{ cluster_pts_single|floatformat:1 }}</div>
+                <div class="label">Cluster Points / 48</div>
+            </div>
+            {% else %}
+            <div class="col-6 col-md-3 hero-stat">
+                <div class="number">{{ mean_grade|default:"—" }}</div>
+                <div class="label">Mean Grade</div>
+            </div>
+            {% endif %}
+            <div class="col-6 col-md-3 hero-stat">
+                <div class="number">{{ page_obj.paginator.num_pages }}</div>
+                <div class="label">Pages</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filter bar -->
+<div class="filter-bar">
+    <div class="container">
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+            <!-- Search -->
+            <form method="get" class="d-flex" style="flex:1;min-width:180px;max-width:300px;">
+                {% if filter_chance %}<input type="hidden" name="chance" value="{{ filter_chance }}">{% endif %}
+                {% if sort_by %}<input type="hidden" name="sort" value="{{ sort_by }}">{% endif %}
+                <div class="input-group input-group-sm">
+                    <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-muted"></i></span>
+                    <input type="text" name="q" class="form-control border-start-0"
+                           placeholder="Search courses..." value="{{ search_q }}"
+                           style="border-radius:0 8px 8px 0;">
+                </div>
+            </form>
+
+            <!-- Admission chance filters -->
+            <div class="d-flex gap-1 flex-wrap">
+                <a href="?sort={{ sort_by }}{% if search_q %}&q={{ search_q }}{% endif %}"
+                   class="filter-chip {% if not filter_chance %}active{% endif %}">All</a>
+                <a href="?chance=VERY+HIGH&sort={{ sort_by }}{% if search_q %}&q={{ search_q }}{% endif %}"
+                   class="filter-chip {% if filter_chance == 'VERY HIGH' %}chance-active-VERY-HIGH{% endif %}">
+                    <span style="width:8px;height:8px;border-radius:50%;background:#22c55e;display:inline-block;"></span>
+                    Very High
+                </a>
+                <a href="?chance=HIGH&sort={{ sort_by }}{% if search_q %}&q={{ search_q }}{% endif %}"
+                   class="filter-chip {% if filter_chance == 'HIGH' %}chance-active-HIGH{% endif %}">
+                    <span style="width:8px;height:8px;border-radius:50%;background:#3b82f6;display:inline-block;"></span>
+                    High
+                </a>
+                <a href="?chance=MEDIUM&sort={{ sort_by }}{% if search_q %}&q={{ search_q }}{% endif %}"
+                   class="filter-chip {% if filter_chance == 'MEDIUM' %}chance-active-MEDIUM{% endif %}">
+                    <span style="width:8px;height:8px;border-radius:50%;background:#f59e0b;display:inline-block;"></span>
+                    Medium
+                </a>
+                <a href="?chance=LOW&sort={{ sort_by }}{% if search_q %}&q={{ search_q }}{% endif %}"
+                   class="filter-chip {% if filter_chance == 'LOW' %}chance-active-LOW{% endif %}">
+                    <span style="width:8px;height:8px;border-radius:50%;background:#ef4444;display:inline-block;"></span>
+                    Low
+                </a>
+            </div>
+
+            <!-- Sort -->
+            <div class="ms-auto">
+                <select class="form-select form-select-sm"
+                        style="width:auto;border-radius:8px;font-size:0.8rem;"
+                        onchange="location.href='?sort='+this.value+'{% if filter_chance %}&chance={{ filter_chance }}{% endif %}{% if search_q %}&q={{ search_q }}{% endif %}'">
+                    <option value="chance"      {% if sort_by == 'chance'      %}selected{% endif %}>Sort: Best Match</option>
+                    <option value="institution" {% if sort_by == 'institution' %}selected{% endif %}>Sort: Institution</option>
+                    <option value="course"      {% if sort_by == 'course'      %}selected{% endif %}>Sort: Course Name</option>
+                </select>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Payment gate -->
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-7 col-md-9">
+
+            {% if total_count > 0 %}
+            <!-- Blurred preview cards (decorative) -->
+            <div class="position-relative mb-4" style="pointer-events:none;user-select:none;">
+                <div class="row g-2">
+                    {% for i in "123" %}
+                    <div class="col-12">
+                        <div class="result-card" style="filter:blur(5px);opacity:0.55;">
+                            <div class="chance-stripe stripe-success"></div>
+                            <div class="ps-2">
+                                <div class="course-name">██████████████████████████</div>
+                                <div class="inst-name"><i class="bi bi-building me-1"></i>████████████████</div>
+                                <div class="meta-row mt-2">
+                                    <span class="chance-badge chance-VERY-HIGH">VERY HIGH</span>
+                                    <span class="meta-chip">████████</span>
+                                    <span class="meta-chip">████████</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                <!-- Lock overlay -->
+                <div class="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center"
+                     style="background:linear-gradient(to bottom, rgba(245,247,250,0) 0%, rgba(245,247,250,0.6) 30%, rgba(245,247,250,1) 70%);pointer-events:none;">
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Lock card -->
+            <div class="card border-0 text-center shadow" style="border-radius:1.25rem;overflow:hidden;">
+                <div style="background:linear-gradient(135deg,#1e3a8a,#4f46e5);padding:2rem 1.5rem 1.5rem;">
+                    <div style="width:64px;height:64px;background:rgba(255,255,255,0.15);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 1rem;font-size:1.75rem;color:#fff;">
+                        <i class="bi bi-lock-fill"></i>
+                    </div>
+                    {% if total_count > 0 %}
+                    <h4 class="fw-bold text-white mb-1">{{ total_count }} Courses Found For You</h4>
+                    <p class="mb-0" style="color:rgba(255,255,255,0.8);font-size:0.9rem;">
+                        Your results are ready — unlock them to see which courses you qualify for.
+                    </p>
+                    {% else %}
+                    <h4 class="fw-bold text-white mb-1">Your Results Are Ready</h4>
+                    <p class="mb-0" style="color:rgba(255,255,255,0.8);font-size:0.9rem;">
+                        Unlock your personalised course matches.
+                    </p>
+                    {% endif %}
+                </div>
+
+                <div class="card-body px-4 py-4">
+                    <!-- Feature list -->
+                    <ul class="list-unstyled text-start mb-4" style="max-width:320px;margin:0 auto;">
+                        <li class="d-flex align-items-center gap-2 mb-2 small">
+                            <i class="bi bi-check-circle-fill text-success flex-shrink-0"></i>
+                            Full list of courses you qualify for
+                        </li>
+                        <li class="d-flex align-items-center gap-2 mb-2 small">
+                            <i class="bi bi-check-circle-fill text-success flex-shrink-0"></i>
+                            Admission chance for each course
+                        </li>
+                        <li class="d-flex align-items-center gap-2 mb-2 small">
+                            <i class="bi bi-check-circle-fill text-success flex-shrink-0"></i>
+                            Institution details and cut-off points
+                        </li>
+                        <li class="d-flex align-items-center gap-2 small">
+                            <i class="bi bi-check-circle-fill text-success flex-shrink-0"></i>
+                            Subject requirement breakdown
+                        </li>
+                    </ul>
+
+                    <div class="d-grid gap-2" style="max-width:280px;margin:0 auto;">
+                        <a href="{% url 'accounts:register' %}" class="btn btn-lg fw-bold text-white"
+                           style="background:#4f46e5;border:none;border-radius:10px;">
+                            <i class="bi bi-unlock-fill me-2"></i>Unlock My Results
+                        </a>
+                        <a href="{% url 'career:home' %}" class="btn btn-outline-secondary"
+                           style="border-radius:10px;font-size:0.9rem;">
+                            <i class="bi bi-arrow-left me-1"></i>Try Another Pathway
+                        </a>
+                    </div>
+
+                    <p class="text-muted mt-3 mb-0" style="font-size:0.75rem;">
+                        <i class="bi bi-shield-check me-1"></i>
+                        Coming soon — payments will be introduced shortly
+                    </p>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}

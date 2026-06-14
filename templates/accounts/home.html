@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container text-center my-5">
+    <div class="p-5 bg-light rounded shadow" 
+         style="background-image: url('/static/images/home-bg.jpg'); background-size: cover; background-position: center;">
+        
+        <h1 class="display-4 fw-bold text-dark">Welcome to Kuccpss!</h1>
+        <p class="lead text-dark">Your countrywide platform for accounts, login, and profile management.</p>
+
+        <!-- Conditional buttons depending on login status -->
+        {% if user.is_authenticated %}
+            <a href="{% url 'accounts:dashboard' %}" class="btn btn-success btn-lg mt-3">Go to Dashboard</a>
+            <a href="{% url 'accounts:logout' %}" class="btn btn-danger btn-lg mt-3">Logout</a>
+        {% else %}
+            <a href="{% url 'accounts:login' %}" class="btn btn-primary btn-lg mt-3">Login</a>
+            <a href="{% url 'accounts:register' %}" class="btn btn-secondary btn-lg mt-3">Register</a>
+        {% endif %}
+        
+    </div>
+</div>
+{% endblock %}

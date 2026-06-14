@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+{% load custom_filters %}
+{% block title %}Articles & Tips — KUCCPSS{% endblock %}
+
+{% block content %}
+<div class="page-hero">
+  <div class="container">
+    <h1><i class="fas fa-newspaper me-2"></i>Articles & Tips</h1>
+    <p class="mb-0">Advice, guides, and insights for your placement journey.</p>
+  </div>
+</div>
+
+<div class="container pb-5">
+
+  <!-- Section switcher -->
+  <div class="d-flex gap-2 mb-4">
+    <a href="{% url 'resources:resource_list' %}" class="btn btn-outline-secondary btn-sm">
+      <i class="fas fa-file-pdf me-1 text-danger"></i>Guides &amp; PDFs
+    </a>
+    <span class="btn btn-success btn-sm disabled">
+      <i class="fas fa-newspaper me-1"></i>Articles &amp; Tips
+    </span>
+  </div>
+
+  <!-- Tag filter bar -->
+  <div class="d-flex gap-2 flex-wrap mb-4">
+    <a href="{% url 'resources:article_list' %}"
+       class="btn btn-sm {% if not active_tag %}btn-success{% else %}btn-outline-secondary{% endif %}">
+      All
+    </a>
+    {% for tag in "university,career,tips,tvet,kmtc,scholarships,placement"|split:"," %}
+    <a href="?tag={{ tag }}"
+       class="btn btn-sm {% if active_tag == tag %}btn-success{% else %}btn-outline-secondary{% endif %}">
+      {{ tag|title }}
+    </a>
+    {% endfor %}
+    {% if active_tag %}
+    <a href="{% url 'resources:article_list' %}" class="btn btn-sm btn-outline-danger">
+      <i class="fas fa-times me-1"></i>Clear
+    </a>
+    {% endif %}
+  </div>
+
+  {% if page_obj %}
+  <div class="row g-4">
+    {% for article in page_obj %}
+    <div class="col-md-6 col-lg-4">
+      <div class="card h-100 p-0 overflow-hidden">
+        {% if article.thumbnail %}
+        <img src="{{ article.thumbnail.url }}" class="card-img-top"
+             style="height:160px;object-fit:cover;" alt="{{ article.title }}">
+        {% else %}
+        <div class="d-flex align-items-center justify-content-center"
+             style="height:160px;background:linear-gradient(135deg,#1e3a8a 0%,#16a34a 100%);">
+          <i class="fas fa-pen-nib fa-3x text-white opacity-50"></i>
+        </div>
+        {% endif %}
+        <div class="p-3 d-flex flex-column h-100">
+          {% if article.tags %}
+          <div class="mb-2">
+            {% for tag in article.get_tags_list|slice:":3" %}
+            <a href="?tag={{ tag }}" class="badge bg-success bg-opacity-10 text-success text-decoration-none small me-1">
+              {{ tag }}
+            </a>
+            {% endfor %}
+          </div>
+          {% endif %}
+          <h6 class="fw-bold mb-1">{{ article.title }}</h6>
+          {% if article.excerpt %}
+          <p class="text-muted small mb-3">{{ article.excerpt|truncatechars:100 }}</p>
+          {% endif %}
+          <div class="mt-auto d-flex align-items-center justify-content-between">
+            <small class="text-muted">
+              {% if article.author %}<i class="fas fa-user me-1"></i>{{ article.author }}{% endif %}
+              <span class="mx-1">·</span>
+              {{ article.created_at|date:"d M Y" }}
+            </small>
+            <a href="{% url 'resources:article_detail' article.slug %}"
+               class="btn btn-sm btn-outline-success">
+              Read <i class="fas fa-arrow-right ms-1"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- Pagination -->
+  {% if page_obj.has_other_pages %}
+  <nav class="mt-4">
+    <ul class="pagination justify-content-center">
+      {% if page_obj.has_previous %}
+      <li class="page-item">
+        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if active_tag %}&tag={{ active_tag }}{% endif %}">
+          <i class="fas fa-chevron-left"></i>
+        </a>
+      </li>
+      {% endif %}
+      {% for num in page_obj.paginator.page_range %}
+      <li class="page-item {% if num == page_obj.number %}active{% endif %}">
+        <a class="page-link" href="?page={{ num }}{% if active_tag %}&tag={{ active_tag }}{% endif %}">{{ num }}</a>
+      </li>
+      {% endfor %}
+      {% if page_obj.has_next %}
+      <li class="page-item">
+        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if active_tag %}&tag={{ active_tag }}{% endif %}">
+          <i class="fas fa-chevron-right"></i>
+        </a>
+      </li>
+      {% endif %}
+    </ul>
+  </nav>
+  {% endif %}
+
+  {% else %}
+  <div class="text-center py-5">
+    <i class="fas fa-newspaper fa-4x text-muted mb-3"></i>
+    <h5 class="text-muted">No articles found</h5>
+    <p class="text-muted small">
+      {% if active_tag %}No articles tagged "{{ active_tag }}".{% else %}Check back soon.{% endif %}
+    </p>
+    {% if active_tag %}
+    <a href="{% url 'resources:article_list' %}" class="btn btn-outline-primary">View All Articles</a>
+    {% endif %}
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}

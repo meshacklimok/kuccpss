@@ -1,0 +1,395 @@
+tveta_course_id,tveta_course_name,tveta_level,exam_body
+KNC114,Agricultural Mechanics,Artisan,KNEC
+KNC115,Appropriate Carpentry and Joinery,Artisan,KNEC
+KNC116,Building Technology,Artisan,KNEC
+KNC117,Clerk-Typist,Artisan,KNEC
+KNC118,Electrical and Electronics Technology,Artisan,KNEC
+KNC119,Electrical Installation,Artisan,KNEC
+KNC120,Fashion Design and Garment Making,Artisan,KNEC
+KNC121,Food and Beverage,Artisan,KNEC
+KNC122,Food Processing Technology,Artisan,KNEC
+KNC124,General Agriculture,Artisan,KNEC
+KNC125,General Fitter,Artisan,KNEC
+KNC126,Hairdressing and Beauty Therapy,Artisan,KNEC
+KNC127,Information Communication Technology,Artisan,KNEC
+KNC128,Leather Work,Artisan,KNEC
+KNC129,Masonry,Artisan,KNEC
+KNC130,Mechanical Engineering (Plant Option),Artisan,KNEC
+KNC131,Metal Processing Technology,Artisan,KNEC
+KNC132,Motor Vehicle Mechanics,Artisan,KNEC
+KNC133,Motor Vehicle Technology,Artisan,KNEC
+KNC134,Painting and Decoration,Artisan,KNEC
+KNC135,Plumbing,Artisan,KNEC
+KNC136,Refrigeration and Air Conditioning Technology,Artisan,KNEC
+KNC137,Salesmanship,Artisan,KNEC
+KNC138,Seafarers,Artisan,KNEC
+KNC139,Storekeeping,Artisan,KNEC
+KNC140,Welding and Fabrication,Artisan,KNEC
+KSB102,Accounting and Management Skills,Craft,KASNEB
+KSB103,Information Communication Technology,Craft,KASNEB
+KWS102,Aquaculture,Craft,Kenya Wildlife Service Training Institute
+KWS103,Community Wildlife Management,Craft,Kenya Wildlife Service Training Institute
+KWS104,Nature Interpretation and Tour Administration,Craft,Kenya Wildlife Service Training Institute
+KNC141,Accountancy,Craft,KNEC
+KNC142,Agricultural Engineering (Farm Power and Machinery),Craft,KNEC
+KNC143,Agricultural Mechanics,Craft,KNEC
+KNC144,Automotive Engineering,Craft,KNEC
+KNC145,Baking Technology,Craft,KNEC
+KNC146,Banking and Finance,Craft,KNEC
+KNC147,Building Technology,Craft,KNEC
+KNC148,Business Administration,Craft,KNEC
+KNC149,Business Management,Craft,KNEC
+KNC150,Carpentry and Joinery,Craft,KNEC
+KNC151,Cartography,Craft,KNEC
+KNC152,Catering and Accommodation Operations,Craft,KNEC
+KNC153,Child Care and Protection,Craft,KNEC
+KNC154,Clerical Operations,Craft,KNEC
+KNC155,Construction plant Technology,Craft,KNEC
+KNC156,Co-operative Management,Craft,KNEC
+KNC157,Electrical and Electronics Technology,Craft,KNEC
+KNC158,Electrical and Electronics Technology (Power),Craft,KNEC
+KNC159,Electrical and Electronics Technology (Telecommunication),Craft,KNEC
+KNC160,Electrical Installation,Craft,KNEC
+KNC161,Fashion Design and Garment Making,Craft,KNEC
+KNC162,Fisheries Science and Technology,Craft,KNEC
+KNC163,Food and Beverage Production and Service,Craft,KNEC
+KNC164,Food Processing and Preservation,Craft,KNEC
+KNC165,Food Processing and Preservation Technology,Craft,KNEC
+KNC166,Food Processing Technology,Craft,KNEC
+KNC168,General Agriculture,Craft,KNEC
+KNC169,Housekeeping and Laundry,Craft,KNEC
+KNC170,Human Resource Management,Craft,KNEC
+KNC171,Information Communication Technology,Craft,KNEC
+KNC172,Information Studies,Craft,KNEC
+KNC173,Information Technology,Craft,KNEC
+KNC174,Investment Management,Craft,KNEC
+KNC175,Land Surveying,Craft,KNEC
+KNC176,"Library, Archives and Information Studies",Craft,KNEC
+KNC177,Marine Engineering,Craft,KNEC
+KNC178,Maritime Transport Logistics,Craft,KNEC
+KNC179,Maritime Transport Operations,Craft,KNEC
+KNC180,Marketing,Craft,KNEC
+KNC181,Masonry,Craft,KNEC
+KNC182,Mechanical Engineering,Craft,KNEC
+KNC183,Mechanical Engineering (Construction),Craft,KNEC
+KNC184,Mechanical Engineering (Plant),Craft,KNEC
+KNC185,Mechanical Engineering (Production),Craft,KNEC
+KNC186,Medical Laboratory Technology,Craft,KNEC
+KNC187,Motor Vehicle Mechanics,Craft,KNEC
+KNC188,Motor Vehicle Technology,Craft,KNEC
+KNC189,Social Development,Craft,KNEC
+KNC190,Nautical Science,Craft,KNEC
+KNC191,Marine Engineering,Craft,KNEC
+KNC192,Nutrition and Dietetics,Craft,KNEC
+KNC193,Personnel Management,Craft,KNEC
+KNC194,Petroleum Geosciences,Craft,KNEC
+KNC195,Photogrammetry,Craft,KNEC
+KNC196,Plumbing,Craft,KNEC
+KNC197,Printing Technology,Craft,KNEC
+KNC198,Project Management,Craft,KNEC
+KNC199,Radio Servicing,Craft,KNEC
+KNC200,Road Construction,Craft,KNEC
+KNC201,Road Transport Management,Craft,KNEC
+KNC202,Sales and Marketing,Craft,KNEC
+KNC203,Science Laboratory Technology,Craft,KNEC
+KNC204,Secretarial Studies,Craft,KNEC
+KNC205,Social Work and Community Development,Craft,KNEC
+KNC206,Supplies Management,Craft,KNEC
+KNC207,Supply Chain Management,Craft,KNEC
+KNC208,Tannery and Leatherwork,Craft,KNEC
+KNC209,Tour Guiding and Travel Operations,Craft,KNEC
+KNC210,Tour Guiding Operations,Craft,KNEC
+KNC211,Transport Management,Craft,KNEC
+KNC212,Water Engineering,Craft,KNEC
+KNC213,Water Technology,Craft,KNEC
+KNC214,Welding and Fabrication,Craft,KNEC
+HRM102,Human Resource Management,Level 5,HRMPEB
+KRCT102,Advanced Emergency Medical Technician,Level 5,Kenya Red Cross Training Institute
+KWS101,Paramilitary and Wildlife Law Enforcement,Level 5,Kenya Wildlife Service Training Institute
+KTLNP105,Electrical Installation,Level 5,Kitale National Polytechnic
+KTLNP106,Food Processing,Level 5,Kitale National Polytechnic
+KTLNP108,Health Records,Level 5,Kitale National Polytechnic
+KTLNP110,Information Communication Technology,Level 5,Kitale National Polytechnic
+KTLNP114,Motor Vehicle Body Repair,Level 5,Kitale National Polytechnic
+KTLNP117,Plumbing,Level 5,Kitale National Polytechnic
+KTLNP120,Solar Installation,Level 5,Kitale National Polytechnic
+KTLNP121,Tour and Travel Operations,Level 5,Kitale National Polytechnic
+KTLNP124,Welding and Fabrocation,Level 5,Kitale National Polytechnic
+MMUST108,Sports coaching,Level 5,MMUST
+MMUST110,Social Work and Community Development,Level 5,MMUST
+MMUST111,Mortuary Science,Level 5,MMUST
+MMUST114,Criminology and Criminal Justice,Level 5,MMUST
+MMUST118,General Agriculture,Level 5,MMUST
+NYANP101,Automotive Technology,Level 5,Nyandarua National Polytechnic
+NYANP111,Electrical Technology,Level 5,Nyandarua National Polytechnic
+NYANP115,Fire Fighting Technology,Level 5,Nyandarua National Polytechnic
+NYANP116,Food Processing,Level 5,Nyandarua National Polytechnic
+NYANP121,Science Laboratory Practice,Level 5,Nyandarua National Polytechnic
+NYANP123,Solar PV,Level 5,Nyandarua National Polytechnic
+TUM117,Building and Civil Engineering,Level 5,Technical University of Mombasa
+TUM118,Community Health,Level 5,Technical University of Mombasa
+TUM119,Information Communication Technology,Level 5,Technical University of Mombasa
+ELNP102,General Agriculture,Level 5,The Eldoret National Polytechnic
+ELNP105,Beauty Therapy,Level 5,The Eldoret National Polytechnic
+ELNP111,Hair Dressing,Level 5,The Eldoret National Polytechnic
+ELNP143,Cosmetology,Level 5,The Eldoret National Polytechnic
+ELNP144,Motorcycle Mechanics,Level 5,The Eldoret National Polytechnic
+ELNP145,Road Construction,Level 5,The Eldoret National Polytechnic
+ELNP146,Science Laboratory Technology,Level 5,The Eldoret National Polytechnic
+KCNP106,Marine Welding and Fabrication,Level 5,The Kenya Coast National Polytechnic
+KCNP107,Cruise animation,Level 5,The Kenya Coast National Polytechnic
+KCNP110,Human Resource Management,Level 5,The Kenya Coast National Polytechnic
+KSINP102,Animal health and production,Level 5,The Kisii National Polytechnic
+KSINP104,Carpentry Technology,Level 5,The Kisii National Polytechnic
+KSINP106,Community Health,Level 5,The Kisii National Polytechnic
+KSINP110,Dairy Plant Technology,Level 5,The Kisii National Polytechnic
+KSINP113,Food Processing Technology,Level 5,The Kisii National Polytechnic
+KSINP121,Masonry,Level 5,The Kisii National Polytechnic
+KSINP122,Medical Engineering Technology,Level 5,The Kisii National Polytechnic
+KSINP125,Horticulture Production,Level 5,The Kisii National Polytechnic
+KSMNP101,Spinning Machine Maintenance Technician,Level 5,The Kisumu National Polytechnic
+KSMNP104,Weaving Machine Maintenance Technology,Level 5,The Kisumu National Polytechnic
+KSMNP113,Electrical Security System Technician,Level 5,The Kisumu National Polytechnic
+KSMNP114,Electrical Solar Installation Technician,Level 5,The Kisumu National Polytechnic
+KSMNP120,Fashion and Apparel Design,Level 5,The Kisumu National Polytechnic
+KSMNP124,Hair Dressing Operations Technology,Level 5,The Kisumu National Polytechnic
+KSMNP126,Information and Communication Technology,Level 5,The Kisumu National Polytechnic
+KSMNP129,Masonry,Level 5,The Kisumu National Polytechnic
+KSMNP131,Plumbing,Level 5,The Kisumu National Polytechnic
+KSMNP133,Science Laboratory Technology with Instrumentation,Level 5,The Kisumu National Polytechnic
+KSMNP139,Aquaculture Technology,Level 5,The Kisumu National Polytechnic
+KSMNP142,Fisheries Technology,Level 5,The Kisumu National Polytechnic
+MRNP101,Agricultural Extension Technology,Level 5,The Meru National Polytechnic
+MRNP103,Building Technology,Level 5,The Meru National Polytechnic
+MRNP106,Data Communication and Computer Network Technician,Level 5,The Meru National Polytechnic
+NYNP102,Science Laboratory Technology,Level 5,The Nyeri National Polytechnic
+NYNP104,Automotive Technology,Level 5,The Nyeri National Polytechnic
+NYNP107,Electrical Operation (Power Option),Level 5,The Nyeri National Polytechnic
+NYNP109,Fashion Design Operation,Level 5,The Nyeri National Polytechnic
+NYNP112,Mechanical Production Technology,Level 5,The Nyeri National Polytechnic
+NYNP113,Plumbing,Level 5,The Nyeri National Polytechnic
+NYNP115,Tourism Management,Level 5,The Nyeri National Polytechnic
+NYNP117,Information Communication Technology,Level 5,The Nyeri National Polytechnic
+NYNP119,Business Management,Level 5,The Nyeri National Polytechnic
+NYNP120,Electrical and Electronic Engineering Technology,Level 5,The Nyeri National Polytechnic
+NYNP129,Cooperative Management,Level 5,The Nyeri National Polytechnic
+NYNP131,Front  Office Operation,Level 5,The Nyeri National Polytechnic
+NYNP133,Office Administration,Level 5,The Nyeri National Polytechnic
+NYNP138,Food Processing Technology,Level 5,The Nyeri National Polytechnic
+NYNP141,Building Technology,Level 5,The Nyeri National Polytechnic
+NYNP153,Cosmetology,Level 5,The Nyeri National Polytechnic
+NYNP160,Food and Beverage,Level 5,The Nyeri National Polytechnic
+NYNP163,Tour Guide,Level 5,The Nyeri National Polytechnic
+NYNP164,Tour Operation,Level 5,The Nyeri National Polytechnic
+NYNP168,Record Management,Level 5,The Nyeri National Polytechnic
+NYNP170,Social Work and Community Development,Level 5,The Nyeri National Polytechnic
+NYNP171,Automotive Mechatronics Technology,Level 5,The Nyeri National Polytechnic
+NYNP185,Welding and Fabrication,Level 5,The Nyeri National Polytechnic
+NYNP187,Community Health,Level 5,The Nyeri National Polytechnic
+SIGNP105,Cosmetology,Level 5,The Sigalagala National Polytechnic
+SIGNP110,Fashion Design,Level 5,The Sigalagala National Polytechnic
+SIGNP113,Health Records and Information Technology,Level 5,The Sigalagala National Polytechnic
+SIGNP117,Science Laboratory Technology,Level 5,The Sigalagala National Polytechnic
+SIGNP118,Store Management,Level 5,The Sigalagala National Polytechnic
+CDC102,Building Technology,Level 5,TVET - CDACC
+CDC257,Addiction Counselling,Level 5,TVET - CDACC
+CDC258,Agripreneurship,Level 5,TVET - CDACC
+CDC259,Air Cargo Management,Level 5,TVET - CDACC
+CDC260,Animation and Digital Media,Level 5,TVET - CDACC
+CDC261,Apiculture,Level 5,TVET - CDACC
+CDC262,Apiculture (Bee Technology),Level 5,TVET - CDACC
+CDC263,Aquaculture,Level 5,TVET - CDACC
+CDC264,Architectural draftsmanship,Level 5,TVET - CDACC
+CDC265,Automotive Engineering,Level 5,TVET - CDACC
+CDC266,Automotive Technology,Level 5,TVET - CDACC
+CDC267,Baking Technology,Level 5,TVET - CDACC
+CDC268,Baking Technology- cake decoration,Level 5,TVET - CDACC
+CDC270,Biotechnology,Level 5,TVET - CDACC
+CDC271,Business Management,Level 5,TVET - CDACC
+CDC272,Carpentry and joinery,Level 5,TVET - CDACC
+CDC273,Ceramics Technology,Level 5,TVET - CDACC
+CDC274,Child Protection,Level 5,TVET - CDACC
+CDC275,Christian Chaplaincy,Level 5,TVET - CDACC
+CDC276,Community Health,Level 5,TVET - CDACC
+CDC277,Community Policing,Level 5,TVET - CDACC
+CDC278,Construction Management Foreperson,Level 5,TVET - CDACC
+CDC279,Cooperative management,Level 5,TVET - CDACC
+CDC280,Counselling psychology,Level 5,TVET - CDACC
+CDC281,Credit officer,Level 5,TVET - CDACC
+CDC282,Nutrition and Dietetics,Level 5,TVET - CDACC
+CDC283,Criminal Justice Management,Level 5,TVET - CDACC
+CDC284,Customs Administration,Level 5,TVET - CDACC
+CDC285,Cyber Security,Level 5,TVET - CDACC
+CDC286,Dairy Farm Management,Level 5,TVET - CDACC
+CDC287,Dairy Plant Management,Level 5,TVET - CDACC
+CDC288,Distribution sales,Level 5,TVET - CDACC
+CDC291,Electronics,Level 5,TVET - CDACC
+CDC292,Electronics Technology (Devices and Systems),Level 5,TVET - CDACC
+CDC293,Fashion design Technology,Level 5,TVET - CDACC
+CDC294,Financial Sales,Level 5,TVET - CDACC
+CDC295,Fine Arts,Level 5,TVET - CDACC
+CDC296,Fingerprint and Biometrics Technology,Level 5,TVET - CDACC
+CDC297,Fisheries Technology,Level 5,TVET - CDACC
+CDC300,Food Production,Level 5,TVET - CDACC
+CDC301,Food production culinary arts,Level 5,TVET - CDACC
+CDC302,Food Technology,Level 5,TVET - CDACC
+CDC303,Footwear production,Level 5,TVET - CDACC
+CDC304,Forensic Investigation,Level 5,TVET - CDACC
+CDC305,Forest Management,Level 5,TVET - CDACC
+CDC306,Forex and Securities,Level 5,TVET - CDACC
+CDC307,Freight Operations,Level 5,TVET - CDACC
+CDC308,Gemology,Level 5,TVET - CDACC
+CDC309,Geophysical Exploration,Level 5,TVET - CDACC
+CDC310,Graphic Design,Level 5,TVET - CDACC
+CDC312,Health Records and Information Technology,Level 5,TVET - CDACC
+CDC313,Healthcare Support Services,Level 5,TVET - CDACC
+CDC314,Health Systems Support Services,Level 5,TVET - CDACC
+CDC315,Home Care Management,Level 5,TVET - CDACC
+CDC319,Catering and Accommodation Operations,Level 5,TVET - CDACC
+CDC320,Human Resource Management,Level 5,TVET - CDACC
+CDC321,Industrial Plant Operations,Level 5,TVET - CDACC
+CDC322,Information Communication Technology,Level 5,TVET - CDACC
+CDC323,Instrumentation and Control,Level 5,TVET - CDACC
+CDC324,Insurance,Level 5,TVET - CDACC
+CDC325,Integrated Pest Management,Level 5,TVET - CDACC
+CDC326,Interior Design,Level 5,TVET - CDACC
+CDC327,Interior Design Finishing,Level 5,TVET - CDACC
+CDC328,Land Surveying,Level 5,TVET - CDACC
+CDC329,Leather Goods Production,Level 5,TVET - CDACC
+CDC331,Marine Engineering,Level 5,TVET - CDACC
+CDC332,Marketing,Level 5,TVET - CDACC
+CDC333,Marriage and family therapy,Level 5,TVET - CDACC
+CDC334,Meat Processing,Level 5,TVET - CDACC
+CDC335,Mechanical Heavy & Light Machinery Operations,Level 5,TVET - CDACC
+CDC336,Mechanical Plant Engineering,Level 5,TVET - CDACC
+CDC337,Mechanical Production Technician,Level 5,TVET - CDACC
+CDC338,Mechanical Technology and Maintenance,Level 5,TVET - CDACC
+CDC339,Mechatronics,Level 5,TVET - CDACC
+CDC340,Medical Engineering,Level 5,TVET - CDACC
+CDC341,Music Art,Level 5,TVET - CDACC
+CDC342,Office Administration,Level 5,TVET - CDACC
+CDC343,Oil Pipeline Fire Officer,Level 5,TVET - CDACC
+CDC344,Oil Pipeline Instrumentation and Control,Level 5,TVET - CDACC
+CDC345,Oil Pipeline Laboratory Technology,Level 5,TVET - CDACC
+CDC346,Oil Pipeline Mechanical Maintenance,Level 5,TVET - CDACC
+CDC347,Oil Pipeline Operations,Level 5,TVET - CDACC
+CDC348,Operation Theatre Technology,Level 5,TVET - CDACC
+CDC349,Perioperative Theatre Technology,Level 5,TVET - CDACC
+CDC350,Plant and Service Engineering,Level 5,TVET - CDACC
+CDC351,Plumbing,Level 5,TVET - CDACC
+CDC352,Point of Care Ultrasound,Level 5,TVET - CDACC
+CDC353,Post press,Level 5,TVET - CDACC
+CDC354,Poultry Breeding Operations,Level 5,TVET - CDACC
+CDC355,Poultry Processing Operator,Level 5,TVET - CDACC
+CDC356,Pre-press,Level 5,TVET - CDACC
+CDC357,Press printing technician,Level 5,TVET - CDACC
+CDC358,Product Design,Level 5,TVET - CDACC
+CDC359,Project Management,Level 5,TVET - CDACC
+CDC361,Refrigeration and air Conditioning,Level 5,TVET - CDACC
+CDC362,Road Transport Management,Level 5,TVET - CDACC
+CDC363,Scaffolding,Level 5,TVET - CDACC
+CDC364,Security Management,Level 5,TVET - CDACC
+CDC365,Social Work,Level 5,TVET - CDACC
+CDC366,Soft furnishing,Level 5,TVET - CDACC
+CDC367,Soil management,Level 5,TVET - CDACC
+CDC368,Solar PV Installation,Level 5,TVET - CDACC
+CDC369,Spinning,Level 5,TVET - CDACC
+CDC370,Store Keeping,Level 5,TVET - CDACC
+CDC371,Supply Chain Management,Level 5,TVET - CDACC
+CDC372,Sustainable Agriculture for Rural Development,Level 5,TVET - CDACC
+CDC373,Technical trainer,Level 5,TVET - CDACC
+CDC374,Textile Processing,Level 5,TVET - CDACC
+CDC375,Tour Guide,Level 5,TVET - CDACC
+CDC376,Tour and Travel Operations,Level 5,TVET - CDACC
+CDC377,Welding Technology,Level 5,TVET - CDACC
+CDC378,Wine Technology,Level 5,TVET - CDACC
+CDC537,Orthopedic and Trauma Medicine,Level 5,TVET - CDACC
+CDC541,Christian Ministry,Level 5,TVET - CDACC
+CDC544,Leather Processing (Tanning),Level 5,TVET - CDACC
+CDC548,Science Laboratory Technology,Level 5,TVET - CDACC
+CDC549,Wildlife Management,Level 5,TVET - CDACC
+CDC554,Tax Administration,Level 5,TVET - CDACC
+CDC555,Agricultural Extension,Level 5,TVET - CDACC
+CDC563,Cosmetology,Level 5,TVET - CDACC
+CDC565,Electrical Engineering,Level 5,TVET - CDACC
+CDC567,Environmental Technology,Level 5,TVET - CDACC
+CDC571,Food and Beverage Operations,Level 5,TVET - CDACC
+CDC574,Horticulture,Level 5,TVET - CDACC
+CDC577,Library and Information Studies,Level 5,TVET - CDACC
+CDC581,Animal Production,Level 5,TVET - CDACC
+CDC583,Auto Body Technology,Level 5,TVET - CDACC
+CDC586,Construction Plant Technology,Level 5,TVET - CDACC
+CDC590,Industrial Automation and Robotics Technology,Level 5,TVET - CDACC
+CDC597,Network System Administration,Level 5,TVET - CDACC
+CDC602,Road construction,Level 5,TVET - CDACC
+CDC604,Software Development,Level 5,TVET - CDACC
+CDC609,Telecommunication Engineering,Level 5,TVET - CDACC
+CDC613,Nautical Science,Level 5,TVET - CDACC
+CDC616,Nautical Science,Level 5,TVET - CDACC
+CDC618,Electrotechnical Engineering,Level 5,TVET - CDACC
+CDC622,Records and Archives,Level 5,TVET - CDACC
+KANP103,Industrial Automation and Robotics,Level 5,The Kabete National Polytechnic
+KANP130,Building Technology,Level 5,The Kabete National Polytechnic
+KANP131,Carpentry and Joinery,Level 5,The Kabete National Polytechnic
+KANP132,Food and Beverage Technology,Level 5,The Kabete National Polytechnic
+KANP133,Food Processing Technology,Level 5,The Kabete National Polytechnic
+KANP139,Plumbing Craftsmanship,Level 5,The Kabete National Polytechnic
+KANP140,Science Laboratory Technology,Level 5,The Kabete National Polytechnic
+KANP141,Sustainable Rural and Urban Agriculture,Level 5,The Kabete National Polytechnic
+ICM102,Tourism and Business Studies,Level 5,ICM - UK
+ICM104,Office Management,Level 5,ICM - UK
+RVNP157,Animal Health and Production,Level 5,Rift Valley National Polytechnic
+RVNP158,Animal Production,Level 5,Rift Valley National Polytechnic
+RVNP159,Applied Biology,Level 5,Rift Valley National Polytechnic
+RVNP160,Aquaculture,Level 5,Rift Valley National Polytechnic
+RVNP161,Automotive Engineering Technology,Level 5,Rift Valley National Polytechnic
+RVNP162,Biomedical Engineering Technology,Level 5,Rift Valley National Polytechnic
+RVNP163,Building Technology,Level 5,Rift Valley National Polytechnic
+RVNP164,Business Management,Level 5,Rift Valley National Polytechnic
+RVNP165,Carpentry and Joinery,Level 5,Rift Valley National Polytechnic
+RVNP166,Catering and Accommodation practitioner,Level 5,Rift Valley National Polytechnic
+RVNP167,Chain Supply Management,Level 5,Rift Valley National Polytechnic
+RVNP168,Community Health,Level 5,Rift Valley National Polytechnic
+RVNP169,Construction Plant,Level 5,Rift Valley National Polytechnic
+RVNP170,Cooperative Management,Level 5,Rift Valley National Polytechnic
+RVNP171,Cosmetology,Level 5,Rift Valley National Polytechnic
+RVNP172,Credit Management,Level 5,Rift Valley National Polytechnic
+RVNP173,Dairy Technology,Level 5,Rift Valley National Polytechnic
+RVNP174,Electrical Engineering Technology,Level 5,Rift Valley National Polytechnic
+RVNP175,Environmental Technology,Level 5,Rift Valley National Polytechnic
+RVNP176,Fashion Design,Level 5,Rift Valley National Polytechnic
+RVNP177,Food and Beverage Production and service,Level 5,Rift Valley National Polytechnic
+RVNP178,Food Technology,Level 5,Rift Valley National Polytechnic
+RVNP179,General Agriculture and Extension,Level 5,Rift Valley National Polytechnic
+RVNP180,Horticulture Farm Technology,Level 5,Rift Valley National Polytechnic
+RVNP181,Industrial Automation and Robotics,Level 5,Rift Valley National Polytechnic
+RVNP182,Information Communication Technology,Level 5,Rift Valley National Polytechnic
+RVNP183,Instrumentation and Control Technology,Level 5,Rift Valley National Polytechnic
+RVNP184,Land Surveying,Level 5,Rift Valley National Polytechnic
+RVNP185,Library and Information Management,Level 5,Rift Valley National Polytechnic
+RVNP186,Mechanical Plant Technology,Level 5,Rift Valley National Polytechnic
+RVNP187,Mechanical Production Technology,Level 5,Rift Valley National Polytechnic
+RVNP188,Motorcycle Mechanics,Level 5,Rift Valley National Polytechnic
+RVNP189,Network System Administrator,Level 5,Rift Valley National Polytechnic
+RVNP190,Nutrition and Dietetics,Level 5,Rift Valley National Polytechnic
+RVNP191,Office Administration,Level 5,Rift Valley National Polytechnic
+RVNP192,Plumbing,Level 5,Rift Valley National Polytechnic
+RVNP193,Road Construction,Level 5,Rift Valley National Polytechnic
+RVNP194,Science Laboratory Technology,Level 5,Rift Valley National Polytechnic
+RVNP195,Social Work,Level 5,Rift Valley National Polytechnic
+RVNP196,Software Development,Level 5,Rift Valley National Polytechnic
+RVNP197,Solar PV Installation Technology,Level 5,Rift Valley National Polytechnic
+RVNP198,Tour Guide,Level 5,Rift Valley National Polytechnic
+RVNP199,Welding and Fabrication,Level 5,Rift Valley National Polytechnic
+SPU001,Business Management,Level 5,St. Paul's University
+SPU003,Marketing Management,Level 5,St. Paul's University
+SPU005,Human Resource Management,Level 5,St. Paul's University
+SPU008,Social Work,Level 5,St. Paul's University
+SPU010,Counselling,Level 5,St. Paul's University
+SPU014,Health Care Support,Level 5,St. Paul's University
+SPU015,Community Health,Level 5,St. Paul's University
+SPU019,Cosmetology,Level 5,St. Paul's University
+SPU024,Information Communication Technology,Level 5,St. Paul's University
+SPU026,Software Development,Level 5,St. Paul's University
+SPU028,Network System Technology,Level 5,St. Paul's University
+SPU030,Supply Chain Management,Level 5,St. Paul's University

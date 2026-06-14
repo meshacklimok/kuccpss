@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% block title %}Premium Feature — KUCCPSS{% endblock %}
+
+{% block content %}
+<div class="page-hero">
+  <div class="container text-center">
+    <i class="fas fa-lock fa-3x mb-3 opacity-75"></i>
+    <h1>Premium Feature</h1>
+    <p class="mb-0">Unlock full access with a one-time payment via M-Pesa.</p>
+  </div>
+</div>
+
+<div class="container pb-5">
+  <div class="row justify-content-center">
+    <div class="col-lg-7">
+
+      <!-- Feature locked card -->
+      <div class="card p-4 mb-4 text-center border-0 shadow-sm">
+        <div class="rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3"
+             style="width:80px;height:80px;background:#fee2e2;">
+          <i class="fas fa-lock fa-2x text-danger"></i>
+        </div>
+        <h4 class="fw-bold mb-2">
+          {% if feature == 'view_eligible_courses' %}View Eligible Courses
+          {% elif feature == 'premium_career_report' %}Premium Career Report
+          {% elif feature == 'advanced_analysis' %}Advanced Career Analysis
+          {% elif feature == 'view_cluster_points' %}Detailed Cluster Points
+          {% else %}This Feature{% endif %}
+        </h4>
+        <p class="text-muted mb-3">
+          This feature requires a premium subscription.
+          Unlock it once and access it for your entire KCSE journey.
+        </p>
+        <div class="d-flex gap-3 justify-content-center flex-wrap">
+          <div class="text-center">
+            <div class="fw-bold text-success fs-4">KES 99</div>
+            <div class="small text-muted">One-time payment</div>
+          </div>
+          <div class="text-center">
+            <div class="fw-bold text-success fs-4"><i class="fas fa-infinity"></i></div>
+            <div class="small text-muted">Lifetime access</div>
+          </div>
+          <div class="text-center">
+            <div class="fw-bold text-success fs-4"><i class="fas fa-shield-alt"></i></div>
+            <div class="small text-muted">Secure M-Pesa</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- What you get -->
+      <div class="card p-4 mb-4">
+        <h5 class="fw-bold mb-3"><i class="fas fa-star me-2 text-warning"></i>What You Get</h5>
+        <ul class="list-unstyled mb-0">
+          <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>View all courses you qualify for across all universities</li>
+          <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>See your cluster points compared to cut-off thresholds</li>
+          <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>AI-powered career recommendations tailored to your grades</li>
+          <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Download PDF reports of your eligible courses</li>
+          <li><i class="fas fa-check-circle text-success me-2"></i>Priority access to new features</li>
+        </ul>
+      </div>
+
+      <!-- Payment form placeholder -->
+      <div class="card p-4 border-success">
+        <h5 class="fw-bold mb-1"><i class="fas fa-mobile-alt me-2 text-success"></i>Pay via M-Pesa</h5>
+        <p class="text-muted small mb-3">Enter your Safaricom number to receive an STK push prompt.</p>
+
+        <div class="alert alert-info small mb-3">
+          <i class="fas fa-info-circle me-1"></i>
+          <strong>Coming soon:</strong> M-Pesa STK Push integration is currently being set up.
+          For early access, contact us at <strong>support@kuccpss.co.ke</strong>.
+        </div>
+
+        <form method="POST" action="#" class="opacity-50" style="pointer-events:none;">
+          {% csrf_token %}
+          <input type="hidden" name="feature" value="{{ feature }}">
+          <div class="mb-3">
+            <label class="form-label fw-bold small">M-Pesa Phone Number</label>
+            <div class="input-group">
+              <span class="input-group-text">+254</span>
+              <input type="tel" class="form-control" placeholder="712 345 678" pattern="[0-9]{9}">
+            </div>
+          </div>
+          <button type="submit" class="btn btn-gradient-success w-100 py-2 fw-bold">
+            <i class="fas fa-lock-open me-2"></i>Pay KES 99 &amp; Unlock
+          </button>
+        </form>
+      </div>
+
+      <div class="text-center mt-3">
+        <a href="javascript:history.back()" class="btn btn-outline-secondary btn-sm">
+          <i class="fas fa-arrow-left me-1"></i>Go Back
+        </a>
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block title %}Payment History — KUCCPSS{% endblock %}
+
+{% block content %}
+<div class="page-hero">
+  <div class="container">
+    <h1><i class="fas fa-receipt me-2"></i>Payment History</h1>
+    <p class="mb-0">Your M-Pesa transactions and active unlocks.</p>
+  </div>
+</div>
+
+<div class="container pb-5">
+  <div class="row justify-content-center">
+    <div class="col-lg-9">
+
+      {% if payments %}
+      <div class="table-responsive">
+        <table class="table table-hover align-middle">
+          <thead class="table-light">
+            <tr>
+              <th>Feature</th>
+              <th>Amount</th>
+              <th>Status</th>
+              <th>Reference</th>
+              <th>Date</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for payment in payments %}
+            <tr>
+              <td>
+                <span class="fw-semibold">{{ payment.get_feature_display }}</span>
+              </td>
+              <td>KES {{ payment.amount }}</td>
+              <td>
+                <span class="badge rounded-pill
+                  {% if payment.status == 'completed' %}bg-success
+                  {% elif payment.status == 'pending' %}bg-warning text-dark
+                  {% elif payment.status == 'failed' %}bg-danger
+                  {% else %}bg-secondary{% endif %}">
+                  {{ payment.get_status_display }}
+                </span>
+              </td>
+              <td class="text-muted small">
+                {% with txn=payment.transactions.first %}
+                  {{ txn.mpesa_ref|default:"—" }}
+                {% endwith %}
+              </td>
+              <td class="text-muted small">{{ payment.created_at|date:"d M Y, H:i" }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      {% else %}
+      <div class="text-center py-5">
+        <i class="fas fa-receipt fa-4x text-muted mb-3"></i>
+        <h5 class="text-muted">No payments yet</h5>
+        <p class="text-muted small">You haven't made any payments. Unlock premium features to get started.</p>
+        <a href="{% url 'clusterpoints:eligible_courses' %}" class="btn btn-gradient-success">
+          <i class="fas fa-unlock me-1"></i>Explore Premium Features
+        </a>
+      </div>
+      {% endif %}
+
+    </div>
+  </div>
+</div>
+{% endblock %}

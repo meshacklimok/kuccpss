@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+{% block title %}Your Career Matches — KUCCPSS{% endblock %}
+
+{% block content %}
+<div class="page-hero">
+  <div class="container">
+    <h1><i class="fas fa-star me-2"></i>Your Career Matches</h1>
+    <p class="mb-0">Based on your quiz answers, here are the careers that suit you best.</p>
+  </div>
+</div>
+
+<div class="container pb-5">
+
+  {% if top_matches %}
+
+  <!-- Top Match Highlight -->
+  {% with top=top_matches.0 %}
+  {% if top %}
+  <div class="card p-4 mb-5" style="background:linear-gradient(135deg,#1e3a8a 0%,#2563eb 100%);color:#fff;">
+    <div class="row align-items-center">
+      <div class="col-md-8">
+        <span class="badge bg-warning text-dark mb-2"><i class="fas fa-trophy me-1"></i>Best Match</span>
+        <h3 class="fw-bold mb-1">{{ top.profile.title }}</h3>
+        <p class="opacity-75 mb-3">{{ top.profile.description|truncatewords:30 }}</p>
+        {% if top.profile.average_salary %}
+        <p class="mb-0"><i class="fas fa-coins me-1"></i><strong>Salary:</strong> {{ top.profile.average_salary }}</p>
+        {% endif %}
+      </div>
+      <div class="col-md-4 text-md-end mt-3 mt-md-0">
+        <div class="display-4 fw-bold opacity-75 mb-2">{{ top.score }}<small class="fs-5"> pts</small></div>
+        <a href="{% url 'career:career_profile_detail' top.profile.slug %}"
+           class="btn btn-gradient-success">
+          <i class="fas fa-arrow-right me-1"></i>Explore Career
+        </a>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+  {% endwith %}
+
+  <!-- All Matches Grid -->
+  <h5 class="fw-bold mb-3">All Your Matches</h5>
+  <div class="row g-4">
+    {% for match in top_matches %}
+    <div class="col-md-6 col-lg-4">
+      <div class="card h-100 p-4">
+        <div class="d-flex align-items-center gap-3 mb-3">
+          <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
+               style="width:48px;height:48px;background:#e8f0fe;color:var(--primary);">
+            <i class="{{ match.profile.icon|default:'fas fa-briefcase' }}"></i>
+          </div>
+          <div>
+            <h6 class="fw-bold mb-0">{{ match.profile.title }}</h6>
+            <span class="badge rounded-pill
+              {% if match.profile.demand_level == 'high' %}bg-success
+              {% elif match.profile.demand_level == 'medium' %}bg-warning text-dark
+              {% else %}bg-secondary{% endif %}">
+              {{ match.profile.get_demand_level_display }} demand
+            </span>
+          </div>
+        </div>
+
+        <!-- Match Score Bar -->
+        <div class="mb-3">
+          <div class="d-flex justify-content-between small mb-1">
+            <span class="text-muted">Match strength</span>
+            <span class="fw-bold" style="color:var(--primary);">{{ match.score }} pts</span>
+          </div>
+          <div class="progress" style="height:6px;">
+            <div class="progress-bar" role="progressbar"
+                 style="width:{% widthratio match.score top_matches.0.score 100 %}%;background:var(--primary);">
+            </div>
+          </div>
+        </div>
+
+        <p class="text-muted small flex-grow-1">{{ match.profile.description|truncatewords:18 }}</p>
+
+        <a href="{% url 'career:career_profile_detail' match.profile.slug %}"
+           class="btn btn-sm btn-outline-primary mt-2">
+          Learn More <i class="fas fa-arrow-right ms-1"></i>
+        </a>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- Actions -->
+  <div class="text-center mt-5">
+    <a href="{% url 'career:quiz' %}" class="btn btn-outline-secondary me-2">
+      <i class="fas fa-redo me-1"></i>Retake Quiz
+    </a>
+    <a href="{% url 'career:career_profiles' %}" class="btn btn-primary-custom">
+      <i class="fas fa-compass me-1"></i>Browse All Careers
+    </a>
+  </div>
+
+  {% else %}
+  <div class="text-center py-5">
+    <i class="fas fa-question-circle fa-4x text-muted mb-3"></i>
+    <h4>No matches found</h4>
+    <p class="text-muted">We couldn't score careers from your answers. Try the quiz again.</p>
+    <a href="{% url 'career:quiz' %}" class="btn btn-gradient-success px-5">
+      <i class="fas fa-redo me-1"></i>Retake Quiz
+    </a>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}

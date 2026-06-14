@@ -1,0 +1,435 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}KUCCPSS — Kenya Career Guidance{% endblock %}</title>
+
+    <link rel="shortcut icon" href="{% static 'images/favicon.ico' %}" type="image/x-icon">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+
+    <style>
+        :root {
+            --primary:       #1e3a8a;
+            --primary-light: #2563eb;
+            --primary-dark:  #1e2d6e;
+            --accent:        #16a34a;
+            --accent-dark:   #15803d;
+            --bg:            #f0f4ff;
+            --white:         #ffffff;
+            --text:          #1e293b;
+            --muted:         #64748b;
+            --border:        #e2e8f0;
+            --shadow:        rgba(30,58,138,0.12);
+        }
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        /* ── NAVBAR ── */
+        .site-navbar {
+            background: var(--primary) !important;
+            box-shadow: 0 2px 16px var(--shadow);
+        }
+        .site-navbar .navbar-brand {
+            font-weight: 800;
+            font-size: 1.3rem;
+            color: var(--white) !important;
+            letter-spacing: -0.5px;
+        }
+        .site-navbar .navbar-brand span { color: #93c5fd; }
+        .site-navbar .nav-link {
+            color: rgba(255,255,255,0.85) !important;
+            font-weight: 500;
+            font-size: 0.9rem;
+            padding: 0.5rem 0.85rem;
+            border-radius: 6px;
+            transition: background 0.2s, color 0.2s;
+        }
+        .site-navbar .nav-link:hover,
+        .site-navbar .nav-link.active {
+            background: rgba(255,255,255,0.12);
+            color: var(--white) !important;
+        }
+        .site-navbar .navbar-toggler {
+            border-color: rgba(255,255,255,0.3);
+        }
+        .site-navbar .navbar-toggler-icon {
+            filter: invert(1);
+        }
+        .site-navbar .dropdown-menu {
+            border: none;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+            border-radius: 12px;
+            padding: 0.5rem;
+        }
+        .site-navbar .dropdown-item {
+            border-radius: 8px;
+            font-size: 0.875rem;
+            padding: 0.5rem 1rem;
+        }
+        .site-navbar .dropdown-item:hover {
+            background: #eff6ff;
+            color: var(--primary);
+        }
+        .notif-badge {
+            font-size: 0.65rem;
+            padding: 2px 5px;
+            border-radius: 999px;
+            background: #ef4444;
+            color: white;
+            vertical-align: top;
+            margin-left: -6px;
+            margin-top: -2px;
+            display: inline-block;
+        }
+
+        /* ── BUTTONS ── */
+        .btn-primary-custom {
+            background: linear-gradient(135deg, var(--primary-light), var(--primary));
+            color: var(--white);
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            padding: 0.5rem 1.4rem;
+            transition: all 0.25s;
+        }
+        .btn-primary-custom:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(37,99,235,0.35);
+            color: var(--white);
+        }
+        .btn-gradient-success {
+            background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+            color: var(--white);
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            transition: all 0.25s;
+        }
+        .btn-gradient-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(22,163,74,0.35);
+            color: var(--white);
+        }
+        .btn-outline-primary-custom {
+            border: 2px solid var(--primary);
+            color: var(--primary);
+            border-radius: 10px;
+            font-weight: 600;
+            background: transparent;
+            transition: all 0.25s;
+        }
+        .btn-outline-primary-custom:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        /* ── CARDS ── */
+        .card {
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            background: var(--white);
+            box-shadow: 0 2px 12px var(--shadow);
+            transition: transform 0.25s, box-shadow 0.25s;
+        }
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 32px rgba(30,58,138,0.16);
+        }
+        .card-accent-blue { border-top: 4px solid var(--primary-light); }
+        .card-accent-green { border-top: 4px solid var(--accent); }
+        .card-accent-orange { border-top: 4px solid #f97316; }
+        .card-accent-purple { border-top: 4px solid #8b5cf6; }
+
+        /* ── BADGES ── */
+        .badge-eligible    { background: #dcfce7; color: #15803d; font-weight: 600; }
+        .badge-nearly      { background: #fef9c3; color: #854d0e; font-weight: 600; }
+        .badge-not-eligible{ background: #fee2e2; color: #991b1b; font-weight: 600; }
+
+        /* ── FORMS ── */
+        .form-control:focus, .form-select:focus {
+            border-color: var(--primary-light);
+            box-shadow: 0 0 0 3px rgba(37,99,235,0.15);
+        }
+        .form-label { font-weight: 500; font-size: 0.875rem; color: var(--text); }
+
+        /* ── SECTION HEADER ── */
+        .section-header {
+            font-size: 1.75rem;
+            font-weight: 800;
+            color: var(--primary);
+            letter-spacing: -0.5px;
+        }
+        .section-sub {
+            color: var(--muted);
+            font-size: 1rem;
+        }
+
+        /* ── PAGE HERO ── */
+        .page-hero {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            color: white;
+            padding: 3rem 0 2.5rem;
+            margin-bottom: 2rem;
+        }
+        .page-hero h1 { font-weight: 800; font-size: 2rem; }
+        .page-hero p  { opacity: 0.85; }
+
+        /* ── ALERTS ── */
+        .messages-container { position: fixed; top: 72px; right: 1rem; z-index: 9999; min-width: 280px; }
+
+        /* ── FOOTER ── */
+        .site-footer {
+            background: var(--primary-dark);
+            color: rgba(255,255,255,0.75);
+            padding: 2.5rem 0 1.5rem;
+            margin-top: 4rem;
+        }
+        .site-footer a { color: rgba(255,255,255,0.75); text-decoration: none; }
+        .site-footer a:hover { color: white; }
+        .footer-brand { font-weight: 800; color: white; font-size: 1.2rem; }
+        .footer-brand span { color: #93c5fd; }
+
+        /* ── ANIMATIONS ── */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        .fade-in-up { animation: fadeInUp 0.6s ease forwards; }
+
+        /* ── RESPONSIVE ── */
+        @media (max-width: 768px) {
+            .page-hero h1 { font-size: 1.5rem; }
+            .section-header { font-size: 1.4rem; }
+        }
+    </style>
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+
+    <!-- ── FLASH MESSAGES ── -->
+    {% if messages %}
+    <div class="messages-container">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show shadow-sm rounded-3 mb-2" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- ── NAVBAR ── -->
+    <nav class="navbar navbar-expand-lg site-navbar sticky-top">
+        <div class="container">
+
+            <a class="navbar-brand" href="{% url 'home' %}">
+                KUCCP<span>SS</span>
+            </a>
+
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#mainNav" aria-controls="mainNav"
+                    aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="mainNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'clusterpoints:calculator' %}">
+                            <i class="fas fa-calculator me-1"></i>Calculator
+                        </a>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
+                            <i class="fas fa-graduation-cap me-1"></i>Courses
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="{% url 'courses:course_types_list' %}">
+                                <i class="fas fa-list me-2 text-primary"></i>Browse Courses
+                            </a></li>
+                            <li><a class="dropdown-item" href="{% url 'clusterpoints:eligible_courses' %}">
+                                <i class="fas fa-check-circle me-2 text-success"></i>My Eligible Courses
+                            </a></li>
+                            <li><a class="dropdown-item" href="{% url 'clusters:cluster_list' %}">
+                                <i class="fas fa-layer-group me-2 text-info"></i>Clusters
+                            </a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
+                            <i class="fas fa-briefcase me-1"></i>Careers
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="{% url 'career:career_profiles' %}">
+                                <i class="fas fa-user-tie me-2 text-primary"></i>Career Profiles
+                            </a></li>
+                            <li><a class="dropdown-item" href="{% url 'career:quiz' %}">
+                                <i class="fas fa-clipboard-question me-2 text-warning"></i>Career Quiz
+                            </a></li>
+                            <li><a class="dropdown-item" href="{% url 'career:home' %}">
+                                <i class="fas fa-compass me-2 text-success"></i>Guidance Engine
+                            </a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
+                            <i class="fas fa-university me-1"></i>Institutions
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="{% url 'institutions:institution_types_list' %}">
+                                <i class="fas fa-building me-2 text-primary"></i>All Institutions
+                            </a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
+                            <i class="fas fa-book-open me-1"></i>Resources
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="{% url 'resources:resource_list' %}">
+                                <i class="fas fa-file-pdf me-2 text-danger"></i>Guides &amp; PDFs
+                            </a></li>
+                            <li><a class="dropdown-item" href="{% url 'resources:article_list' %}">
+                                <i class="fas fa-newspaper me-2 text-info"></i>Articles &amp; Tips
+                            </a></li>
+                        </ul>
+                    </li>
+                </ul>
+
+                <ul class="navbar-nav align-items-center">
+                    {% if user.is_authenticated %}
+                    <li class="nav-item">
+                        <a class="nav-link position-relative" href="{% url 'accounts:notifications' %}">
+                            <i class="fas fa-bell"></i>
+                            {% if unread_notification_count %}
+                            <span class="notif-badge">{{ unread_notification_count }}</span>
+                            {% endif %}
+                        </a>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle d-flex align-items-center gap-2" href="#" data-bs-toggle="dropdown">
+                            {% if user.profile_picture %}
+                            <img src="{{ user.profile_picture.url }}" width="28" height="28"
+                                 class="rounded-circle border border-white" style="object-fit:cover;">
+                            {% else %}
+                            <div class="rounded-circle bg-white d-flex align-items-center justify-content-center"
+                                 style="width:28px;height:28px;font-size:0.75rem;color:var(--primary);font-weight:700;">
+                                {{ user.full_name|first|upper|default:user.email|first|upper }}
+                            </div>
+                            {% endif %}
+                            <span class="d-none d-lg-inline">{{ user.full_name|default:user.email }}</span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="{% url 'accounts:dashboard' %}">
+                                <i class="fas fa-tachometer-alt me-2 text-primary"></i>Dashboard
+                            </a></li>
+                            <li><a class="dropdown-item" href="{% url 'accounts:profile' %}">
+                                <i class="fas fa-user me-2 text-muted"></i>Profile
+                            </a></li>
+                            <li><a class="dropdown-item" href="{% url 'accounts:saved_courses' %}">
+                                <i class="fas fa-bookmark me-2 text-warning"></i>Saved Courses
+                            </a></li>
+                            <li><a class="dropdown-item" href="{% url 'accounts:applications' %}">
+                                <i class="fas fa-file-alt me-2 text-info"></i>Applications
+                            </a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            {% if user.is_staff %}
+                            <li><a class="dropdown-item" href="/admin/">
+                                <i class="fas fa-cog me-2 text-secondary"></i>Admin Panel
+                            </a></li>
+                            {% endif %}
+                            <li><a class="dropdown-item text-danger" href="{% url 'accounts:logout' %}">
+                                <i class="fas fa-sign-out-alt me-2"></i>Logout
+                            </a></li>
+                        </ul>
+                    </li>
+                    {% else %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'accounts:login' %}">Login</a>
+                    </li>
+                    <li class="nav-item ms-2">
+                        <a class="btn btn-gradient-success px-4 py-2 fw-semibold"
+                           href="{% url 'accounts:register' %}">
+                            Get Started
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- ── MAIN CONTENT ── -->
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- ── FOOTER ── -->
+    <footer class="site-footer">
+        <div class="container">
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="footer-brand mb-2">KUCCP<span>SS</span></div>
+                    <p class="small mb-0">Kenya's #1 career guidance and university placement platform for KCSE graduates.</p>
+                </div>
+                <div class="col-md-2">
+                    <p class="fw-600 text-white mb-2 small text-uppercase">Platform</p>
+                    <ul class="list-unstyled small">
+                        <li><a href="{% url 'clusterpoints:calculator' %}">Cluster Calculator</a></li>
+                        <li><a href="{% url 'courses:course_types_list' %}">Courses</a></li>
+                        <li><a href="{% url 'career:career_profiles' %}">Careers</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-2">
+                    <p class="fw-600 text-white mb-2 small text-uppercase">Resources</p>
+                    <ul class="list-unstyled small">
+                        <li><a href="{% url 'resources:resource_list' %}">Guides & PDFs</a></li>
+                        <li><a href="{% url 'resources:article_list' %}">Articles</a></li>
+                        <li><a href="{% url 'institutions:institution_types_list' %}">Institutions</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4">
+                    <p class="fw-600 text-white mb-2 small text-uppercase">Account</p>
+                    {% if user.is_authenticated %}
+                    <ul class="list-unstyled small">
+                        <li><a href="{% url 'accounts:dashboard' %}">Dashboard</a></li>
+                        <li><a href="{% url 'accounts:profile' %}">Profile</a></li>
+                    </ul>
+                    {% else %}
+                    <a href="{% url 'accounts:register' %}" class="btn btn-gradient-success btn-sm me-2">Register Free</a>
+                    <a href="{% url 'accounts:login' %}" class="btn btn-outline-light btn-sm">Login</a>
+                    {% endif %}
+                </div>
+            </div>
+            <hr class="border-secondary mt-4">
+            <div class="d-flex flex-wrap justify-content-between align-items-center small">
+                <span>&copy; {% now "Y" %} KUCCPSS. All rights reserved.</span>
+                <span>Built for Kenyan students <i class="fas fa-heart text-danger"></i></span>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="{% static 'js/main.js' %}"></script>
+    <script>
+        // Auto-dismiss flash messages after 5 seconds
+        setTimeout(() => {
+            document.querySelectorAll('.messages-container .alert').forEach(el => {
+                new bootstrap.Alert(el).close();
+            });
+        }, 5000);
+    </script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
