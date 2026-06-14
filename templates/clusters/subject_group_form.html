@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<h1>{{ title }}</h1>
+
+<form method="POST" class="mb-3">
+    {% csrf_token %}
+    {{ form.non_field_errors }}
+    <div class="mb-3">
+        {{ form.name.label_tag }} {{ form.name }}
+        {{ form.name.errors }}
+    </div>
+    <div class="mb-3">
+        {{ form.required.label_tag }} {{ form.required }}
+        {{ form.required.errors }}
+    </div>
+    <div class="mb-3">
+        {{ form.priority.label_tag }} {{ form.priority }}
+        {{ form.priority.errors }}
+    </div>
+    <div class="mb-3">
+        {{ form.subjects.label_tag }} {{ form.subjects }}
+        {{ form.subjects.errors }}
+    </div>
+    <button type="submit" class="btn btn-primary">Save</button>
+</form>
+
+<a href="{{ cluster.get_absolute_url }}" class="btn btn-secondary">Back to Cluster</a>
+{% endblock %}

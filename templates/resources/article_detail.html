@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% block title %}{{ article.title }} — KUCCPSS{% endblock %}
+
+{% block content %}
+<div class="page-hero">
+  <div class="container">
+    <nav aria-label="breadcrumb" class="mb-2">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'resources:article_list' %}" class="text-white-50">Articles</a></li>
+        <li class="breadcrumb-item active text-white">{{ article.title|truncatechars:50 }}</li>
+      </ol>
+    </nav>
+    <h1 class="mb-2">{{ article.title }}</h1>
+    <div class="d-flex gap-3 align-items-center flex-wrap">
+      {% if article.author %}
+      <span class="text-white-50 small"><i class="fas fa-user me-1"></i>{{ article.author }}</span>
+      {% endif %}
+      <span class="text-white-50 small"><i class="fas fa-calendar me-1"></i>{{ article.created_at|date:"d M Y" }}</span>
+      {% if article.tags %}
+      <div>
+        {% for tag in article.get_tags_list %}
+        <a href="{% url 'resources:article_list' %}?tag={{ tag }}"
+           class="badge bg-white bg-opacity-20 text-white text-decoration-none me-1 small">
+          {{ tag }}
+        </a>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<div class="container pb-5">
+  <div class="row g-4">
+
+    <!-- Article body -->
+    <div class="col-lg-8">
+      {% if article.thumbnail %}
+      <img src="{{ article.thumbnail.url }}" class="img-fluid rounded-3 mb-4"
+           style="max-height:380px;width:100%;object-fit:cover;" alt="{{ article.title }}">
+      {% endif %}
+
+      <div class="card p-4 p-lg-5">
+        {% if article.excerpt %}
+        <p class="lead text-muted border-start border-4 border-success ps-3 mb-4">
+          {{ article.excerpt }}
+        </p>
+        {% endif %}
+        <div class="article-content" style="line-height:1.8;white-space:pre-line;">{{ article.content }}</div>
+      </div>
+
+      <!-- Back link -->
+      <div class="mt-3">
+        <a href="{% url 'resources:article_list' %}" class="btn btn-outline-secondary btn-sm">
+          <i class="fas fa-arrow-left me-1"></i>Back to Articles
+        </a>
+      </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="col-lg-4">
+      {% if related %}
+      <div class="card p-3 mb-3">
+        <h6 class="fw-bold mb-3"><i class="fas fa-bookmark me-1 text-success"></i>Related Articles</h6>
+        {% for r in related %}
+        <a href="{% url 'resources:article_detail' r.slug %}"
+           class="d-flex align-items-start gap-2 text-decoration-none text-dark mb-3 pb-2
+                  {% if not forloop.last %}border-bottom{% endif %}">
+          {% if r.thumbnail %}
+          <img src="{{ r.thumbnail.url }}" class="rounded flex-shrink-0"
+               style="width:52px;height:52px;object-fit:cover;" alt="">
+          {% else %}
+          <div class="rounded flex-shrink-0 d-flex align-items-center justify-content-center"
+               style="width:52px;height:52px;background:linear-gradient(135deg,#1e3a8a,#16a34a);">
+            <i class="fas fa-pen-nib text-white small"></i>
+          </div>
+          {% endif %}
+          <div>
+            <div class="small fw-semibold lh-sm">{{ r.title|truncatechars:60 }}</div>
+            <div class="small text-muted">{{ r.created_at|date:"d M Y" }}</div>
+          </div>
+        </a>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      <div class="card p-3" style="background:linear-gradient(135deg,#1e3a8a,#2563eb);">
+        <h6 class="text-white fw-bold mb-2">
+          <i class="fas fa-calculator me-1"></i>Calculate Your Points
+        </h6>
+        <p class="text-white-50 small mb-3">Find out which courses you qualify for based on your KCSE results.</p>
+        <a href="{% url 'clusterpoints:calculator' %}" class="btn btn-light btn-sm fw-bold">
+          Start Calculator <i class="fas fa-arrow-right ms-1"></i>
+        </a>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

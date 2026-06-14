@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% block title %}My Applications — KUCCPSS{% endblock %}
+
+{% block content %}
+<div class="page-hero">
+  <div class="container">
+    <div class="d-flex justify-content-between align-items-center">
+      <div>
+        <h1><i class="fas fa-file-alt me-2"></i>My Applications</h1>
+        <p class="mb-0">Track your university and college application progress.</p>
+      </div>
+      <a href="{% url 'accounts:application_add' %}" class="btn btn-gradient-success">
+        <i class="fas fa-plus me-1"></i>Add Application
+      </a>
+    </div>
+  </div>
+</div>
+
+<div class="container pb-5">
+
+  {% if applications %}
+  <div class="table-responsive">
+    <table class="table table-hover align-middle">
+      <thead class="table-light">
+        <tr>
+          <th>Course</th>
+          <th>Institution</th>
+          <th>Status</th>
+          <th>Deadline</th>
+          <th>Notes</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for app in applications %}
+        <tr>
+          <td class="fw-bold">{{ app.course_name }}</td>
+          <td class="text-muted">{{ app.institution_name|default:"—" }}</td>
+          <td>
+            <span class="badge rounded-pill
+              {% if app.status == 'accepted' %}bg-success
+              {% elif app.status == 'rejected' %}bg-danger
+              {% elif app.status == 'submitted' %}bg-primary
+              {% elif app.status == 'under_review' %}bg-info
+              {% elif app.status == 'waitlisted' %}bg-warning text-dark
+              {% else %}bg-secondary{% endif %}">
+              {{ app.get_status_display }}
+            </span>
+          </td>
+          <td>{{ app.deadline|date:"d M Y"|default:"—" }}</td>
+          <td class="text-muted small">{{ app.notes|truncatechars:40|default:"—" }}</td>
+          <td>
+            <a href="{% url 'accounts:application_update' app.pk %}"
+               class="btn btn-sm btn-outline-primary me-1">
+              <i class="fas fa-edit"></i>
+            </a>
+            <form action="{% url 'accounts:application_delete' app.pk %}" method="POST" class="d-inline"
+                  onsubmit="return confirm('Delete this application?')">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-sm btn-outline-danger">
+                <i class="fas fa-trash"></i>
+              </button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="text-center py-5">
+    <i class="fas fa-file-alt fa-4x text-muted mb-3"></i>
+    <h5 class="text-muted">No applications yet</h5>
+    <p class="text-muted small">Track your university applications to stay organised.</p>
+    <a href="{% url 'accounts:application_add' %}" class="btn btn-gradient-success">
+      <i class="fas fa-plus me-1"></i>Add Your First Application
+    </a>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}

@@ -1,0 +1,41 @@
+﻿conda : Traceback (most recent call last):
+At line:1 char:1
++ conda run python manage.py seed_tvet_programmes --dry-run 2>&1 | Out- ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Traceback (most recent call last)::String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+  File "C:\Users\user\OneDrive\Desktop\webdev2025\kuccpss\manage.py", line 22, in <module>
+    main()
+    ~~~~^^
+  File "C:\Users\user\OneDrive\Desktop\webdev2025\kuccpss\manage.py", line 18, in main
+    execute_from_command_line(sys.argv)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "C:\Users\user\anaconda3\Lib\site-packages\django\core\management\__init__.py", line 443, in 
+execute_from_command_line
+    utility.execute()
+    ~~~~~~~~~~~~~~~^^
+  File "C:\Users\user\anaconda3\Lib\site-packages\django\core\management\__init__.py", line 437, in execute
+    self.fetch_command(subcommand).run_from_argv(self.argv)
+    ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+  File "C:\Users\user\anaconda3\Lib\site-packages\django\core\management\__init__.py", line 276, in fetch_command
+    klass = load_command_class(app_name, subcommand)
+  File "C:\Users\user\anaconda3\Lib\site-packages\django\core\management\__init__.py", line 48, in load_command_class
+    module = import_module("%s.management.commands.%s" % (app_name, name))
+  File "C:\Users\user\anaconda3\Lib\importlib\__init__.py", line 88, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen importlib._bootstrap>", line 1387, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 1360, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 1331, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 935, in _load_unlocked
+  File "<frozen importlib._bootstrap_external>", line 1023, in exec_module
+  File "<frozen importlib._bootstrap_external>", line 1161, in get_code
+  File "<frozen importlib._bootstrap_external>", line 1091, in source_to_code
+  File "<frozen importlib._bootstrap>", line 488, in _call_with_frames_removed
+  File "C:\Users\user\OneDrive\Desktop\webdev2025\kuccpss\courses\management\commands\seed_tvet_programmes.py", line 99
+    for ch in (‘"’, ",", "."):
+               ^
+SyntaxError: invalid character '‘' (U+2018)
+ERROR conda.cli.main_run:execute(142): `conda run python manage.py seed_tvet_programmes --dry-run` failed. (See above 
+for error)

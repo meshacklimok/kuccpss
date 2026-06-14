@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+{% load widget_tweaks %}
+{% load static %}
+{% load socialaccount %}  {# <-- Important for provider_login_url #}
+
+{% block title %}Login | MyWebsite{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-center align-items-center min-vh-100 bg-wallpaper" style="background-size: cover; background-position: center;">
+    <div class="card p-4 login-card fade-in-up">
+        
+        <!-- Header -->
+        <div class="text-center mb-4">
+            <h2 class="fw-bold">Welcome Back</h2>
+            <p class="text-muted">Securely login to your account</p>
+        </div>
+
+        <!-- Login Form -->
+        <form method="POST" novalidate>
+            {% csrf_token %}
+
+            <!-- Email -->
+            <div class="form-floating mb-3">
+                {{ form.email|add_class:"form-control" }}
+                <label for="{{ form.email.id_for_label }}">Email address</label>
+                {% if form.email.errors %}
+                    <div class="text-danger small mt-1">{{ form.email.errors|striptags }}</div>
+                {% endif %}
+            </div>
+
+            <!-- Password -->
+            <div class="form-floating mb-3">
+                {{ form.password|add_class:"form-control" }}
+                <label for="{{ form.password.id_for_label }}">Password</label>
+                {% if form.password.errors %}
+                    <div class="text-danger small mt-1">{{ form.password.errors|striptags }}</div>
+                {% endif %}
+            </div>
+
+            <!-- Remember Me & Forgot Password -->
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div class="form-check">
+                    {{ form.remember_me|add_class:"form-check-input" }}
+                    <label class="form-check-label" for="{{ form.remember_me.id_for_label }}">
+                        Remember Me
+                    </label>
+                </div>
+                <a href="{% url 'account_reset_password' %}" class="small text-decoration-none">Forgot Password?</a>
+            </div>
+
+            <!-- Submit -->
+            <button type="submit" class="btn btn-gradient-success w-100 py-2 fw-bold mb-3">
+                Login Securely
+            </button>
+        </form>
+
+        <hr class="my-3">
+
+        <!-- Google Login -->
+        <a href="{% provider_login_url 'google' method='oauth2' %}" class="btn btn-outline-dark w-100 py-2 mb-3 d-flex align-items-center justify-content-center hover-scale">
+            <img src="https://cdn-icons-png.flaticon.com/512/2991/2991148.png" width="20" class="me-2">
+            Continue with Google
+        </a>
+
+        <!-- Register Link -->
+        <div class="text-center">
+            <small>
+                Don't have an account? 
+                <a href="{% url 'accounts:register' %}" class="fw-semibold text-success">Register</a>
+            </small>
+        </div>
+
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_head %}
+<style>
+/* ======================================
+   LOGIN CARD STYLES
+====================================== */
+.login-card {
+    max-width: 420px;
+    width: 100%;
+    border-radius: 20px;
+    backdrop-filter: blur(18px);
+    background: rgba(255, 255, 255, 0.92);
+    box-shadow: 0 16px 40px rgba(0,0,0,0.1);
+    animation: fadeInUp 0.8s ease;
+}
+
+/* ======================================
+   FORM FLOATING LABELS
+====================================== */
+.form-floating > .form-control {
+    border-radius: 12px;
+    padding: 1rem 1rem;
+}
+.form-floating > label {
+    padding-left: 1rem;
+}
+
+/* ======================================
+   BUTTONS
+====================================== */
+.btn-gradient-success {
+    background: linear-gradient(135deg, #16a34a, #15803d);
+    border: none;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+}
+.btn-gradient-success:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(22,163,74,0.35);
+    opacity: 0.95;
+}
+
+.btn-outline-dark {
+    border-radius: 12px;
+    transition: all 0.3s ease;
+}
+.btn-outline-dark:hover {
+    background-color: #f8f9fa;
+    transform: scale(1.03);
+}
+
+/* ======================================
+   LINKS & HOVER EFFECTS
+====================================== */
+a:hover {
+    text-decoration: none;
+    color: #16a34a !important;
+}
+.hover-scale {
+    transition: transform 0.3s ease;
+}
+.hover-scale:hover {
+    transform: scale(1.05);
+}
+
+/* ======================================
+   ANIMATIONS
+====================================== */
+@keyframes fadeInUp {
+    from {opacity: 0; transform: translateY(30px);}
+    to {opacity: 1; transform: translateY(0);}
+}
+.fade-in-up {
+    animation: fadeInUp 0.8s ease forwards;
+}
+
+/* ======================================
+   RESPONSIVE
+====================================== */
+@media (max-width: 576px) {
+    .login-card {
+        margin: 1rem;
+        padding: 2rem;
+    }
+}
+</style>
+{% endblock %}

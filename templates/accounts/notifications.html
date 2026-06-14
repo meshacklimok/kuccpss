@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block title %}Notifications — KUCCPSS{% endblock %}
+
+{% block content %}
+<div class="page-hero">
+  <div class="container">
+    <div class="d-flex justify-content-between align-items-center">
+      <div>
+        <h1><i class="fas fa-bell me-2"></i>Notifications</h1>
+        <p class="mb-0">Stay up to date with your placement activity.</p>
+      </div>
+      {% if notifications %}
+      <form action="{% url 'accounts:mark_notifications_read' %}" method="POST">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-outline-light btn-sm">
+          <i class="fas fa-check-double me-1"></i>Mark All Read
+        </button>
+      </form>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<div class="container pb-5">
+  <div class="row justify-content-center">
+    <div class="col-lg-8">
+
+      {% if notifications %}
+      {% for notif in notifications %}
+      <div class="card p-3 mb-2 d-flex flex-row align-items-start gap-3
+                  {% if not notif.is_read %}border-start border-4 border-warning{% endif %}">
+        <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
+             style="width:40px;height:40px;background:
+               {% if notif.notif_type == 'success' %}#dcfce7
+               {% elif notif.notif_type == 'warning' %}#fef9c3
+               {% elif notif.notif_type == 'deadline' %}#fee2e2
+               {% else %}#e8f0fe{% endif %};">
+          <i class="fas fa-
+            {% if notif.notif_type == 'success' %}check-circle text-success
+            {% elif notif.notif_type == 'warning' %}exclamation-triangle text-warning
+            {% elif notif.notif_type == 'deadline' %}clock text-danger
+            {% elif notif.notif_type == 'system' %}cog text-secondary
+            {% else %}info-circle{% endif %}" style="color:{% if notif.notif_type == 'info' %}var(--primary){% endif %};">
+          </i>
+        </div>
+        <div class="flex-grow-1">
+          <p class="mb-1">{{ notif.message }}</p>
+          <small class="text-muted">{{ notif.created_at|date:"d M Y, H:i" }}</small>
+        </div>
+        {% if not notif.is_read %}
+        <span class="badge bg-warning text-dark align-self-center">New</span>
+        {% endif %}
+      </div>
+      {% endfor %}
+
+      {% else %}
+      <div class="text-center py-5">
+        <i class="fas fa-bell-slash fa-4x text-muted mb-3"></i>
+        <h5 class="text-muted">No notifications</h5>
+        <p class="text-muted small">You're all caught up!</p>
+        <a href="{% url 'accounts:dashboard' %}" class="btn btn-outline-primary">
+          Back to Dashboard
+        </a>
+      </div>
+      {% endif %}
+
+    </div>
+  </div>
+</div>
+{% endblock %}

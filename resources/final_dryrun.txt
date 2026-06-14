@@ -1,0 +1,67 @@
+﻿Building institution lookup…
+  807 institutions in DB
+
+============================================================
+[DRY RUN] DIPLOMA → TVET Diploma (Level 6)
+  File: C:\Users\user\OneDrive\Desktop\webdev2025\kuccpss\DIPLOMA_PROGRAMMES.pdf
+  Parsed 2128 rows from PDF
+  New courses:   0
+  New offerings: 1989
+  Unmatched institutions: 25
+
+============================================================
+[DRY RUN] CERTIFICATE → TVET Certificate (Level 5)
+  File: C:\Users\user\OneDrive\Desktop\webdev2025\kuccpss\resources\CERTIFICATE_PROGRAMMES.pdf
+  Parsed 1361 rows from PDF
+  New courses:   0
+  New offerings: 1267
+  Unmatched institutions: 0
+
+============================================================
+[DRY RUN] ARTISAN → TVET Artisan Certificate (Level 4)
+  File: C:\Users\user\OneDrive\Desktop\webdev2025\kuccpss\ARTISAN_18_03_2024_RV2.pdf
+  Parsed 2747 rows from PDF
+  New courses:   0
+  New offerings: 2558
+  Unmatched institutions: 0
+
+============================================================
+[DRY RUN] CRAFT → TVET Craft Certificate (Level 3)
+  File: C:\Users\user\OneDrive\Desktop\webdev2025\kuccpss\CRAFT_18_03_2024_RV2.pdf
+  Parsed 4608 rows from PDF
+  New courses:   0
+  New offerings: 124
+  Unmatched institutions: 0
+
+============================================================
+[DRY RUN] Done.
+  Total new courses:   0
+  Total new offerings: 5938
+  Unmatched institutions: 25
+
+Unmatched institutions (first 40):
+  'ABERDARE TEACHERS TRAINING COLLEGE'
+  'ASUMBI TEACHERS TRAINING COLLEGE'
+  'BISHOP MAHON TEACHERS TRAINING COLLEGE'
+  'BORABU TEACHERS TRAINING COLLEGE'
+  'CHESTA TEACHERS TRAINING COLLEGE'
+  'EGOJI TEACHERS TRAINING COLLEGE'
+  'KAGUMO TEACHERS TRAINING COLLEGE'
+  'KAIMOSI TEACHERS TRAINING COLLEGE'
+  'KAMWENJA TEACHERS TRAINING COLLEGE'
+  'KENYENYA TEACHERS TRAINING COLLEGE'
+  "KERICHO TEACHERS' COLLEGE"
+  'KIBABII DIPLOMA TEACHERS TRAINING COLLEGE'
+  'LUGARI DIPLOMA TEACHERS TRAINING COLLEGE'
+  'MACHAKOS TEACHERS TRAINING COLLEGE'
+  'MANDERA TEACHERS TRAINING COLLEGE'
+  'MERU TEACHERS TRAINING COLLEGE'
+  'MOI TEACHERS COLLEGE - BARINGO'
+  'MOSORIOT TEACHERS TRAINING COLLEGE'
+  "MURANG'A TEACHERS TRAINING COLLEGE"
+  'NAROK TEACHERS TRAINING COLLEGE'
+  'SHANZU TEACHERS TRAINING COLLEGE'
+  'ST. AUGUSTINE TEACHERS TRAINING COLLEGE - EREGI'
+  "ST. JOHN'S TEACHERS TRAINING COLLEGE - KILIMAMBOGO"
+  'ST. MARKS TEACHERS TRAINING COLLEGE-KIGARI'
+  'THOGOTO TEACHERS TRAINING COLLEGE'

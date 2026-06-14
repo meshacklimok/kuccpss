@@ -1,0 +1,238 @@
+﻿=== TVET Artisan Certificate (Level 4) Audit ===
+Total courses:   114
+Total offerings: 3878
+
+--- Courses with ZERO offerings: 11 ---
+  [1130] Craft Certificate in Agricultural Engineering
+  [1131] Craft Certificate in Agricultural Mechanics
+  [1142] Craft Certificate in Mechanical Engineering (Construction)
+  [1146] Craft Certificate in Motor Vehicle Technology
+  [1120] Craft Certificate in Personnel Management
+  [1171] Craft Certificate in Photogrammetry
+  [1148] Craft Certificate in Printing Technology
+  [1149] Craft Certificate in Radio Servicing
+  [1125] Craft Certificate in Supplies Management
+  [1168] Craft Certificate in Tannery and Leatherwork
+  [1151] Craft Certificate in Water Engineering
+
+--- Courses with wrong-type names: 80 ---
+  [1663] Certificate in Building Technology  (4 offerings)
+  [1111] Craft Certificate in Accountancy  (22 offerings)
+  [1130] Craft Certificate in Agricultural Engineering  (0 offerings)
+  [1131] Craft Certificate in Agricultural Mechanics  (0 offerings)
+  [1132] Craft Certificate in Automotive Engineering  (45 offerings)
+  [1159] Craft Certificate in Baking Technology  (7 offerings)
+  [1112] Craft Certificate in Banking and Finance  (14 offerings)
+  [1133] Craft Certificate in Building Technology  (74 offerings)
+  [1113] Craft Certificate in Business Administration  (11 offerings)
+  [1114] Craft Certificate in Business Management  (119 offerings)
+  [1134] Craft Certificate in Carpentry and Joinery  (10 offerings)
+  [1169] Craft Certificate in Cartography  (1 offerings)
+  [1160] Craft Certificate in Catering and Accommodation Operations  (41 offerings)
+  [1179] Craft Certificate in Child Care and Protection  (5 offerings)
+  [1115] Craft Certificate in Clerical Operations  (4 offerings)
+  [1116] Craft Certificate in Co-operative Management  (18 offerings)
+  [1135] Craft Certificate in Construction Plant Technology  (1 offerings)
+  [1139] Craft Certificate in Electrical Installation  (5 offerings)
+  [1136] Craft Certificate in Electrical and Electronics Technology  (4 offerings)
+  [1137] Craft Certificate in Electrical and Electronics Technology (Power)  (105 offerings)
+  [1138] Craft Certificate in Electrical and Electronics Technology (Telecommunication)  (8 offerings)
+  [1167] Craft Certificate in Fashion Design and Garment Making  (58 offerings)
+  [1154] Craft Certificate in Fisheries Science and Technology  (1 offerings)
+  [1163] Craft Certificate in Food Processing Technology  (8 offerings)
+  [1162] Craft Certificate in Food Processing and Preservation  (8 offerings)
+  [1161] Craft Certificate in Food and Beverage Production and Service  (93 offerings)
+  [1155] Craft Certificate in General Agriculture  (72 offerings)
+  [1164] Craft Certificate in Housekeeping and Laundry  (6 offerings)
+  [1117] Craft Certificate in Human Resource Management  (82 offerings)
+  [1127] Craft Certificate in Information Communication Technology  (176 offerings)
+  [1129] Craft Certificate in Information Studies  (29 offerings)
+  [1128] Craft Certificate in Information Technology  (4 offerings)
+  [1118] Craft Certificate in Investment Management  (1 offerings)
+  [1170] Craft Certificate in Land Surveying  (17 offerings)
+  [1178] Craft Certificate in Library, Archives and Information Studies  (13 offerings)
+  [1172] Craft Certificate in Marine Engineering  (2 offerings)
+  [1173] Craft Certificate in Maritime Transport Logistics  (1 offerings)
+  [1174] Craft Certificate in Maritime Transport Operations  (1 offerings)
+  [1119] Craft Certificate in Marketing  (2 offerings)
+  [1140] Craft Certificate in Masonry  (23 offerings)
+  [1141] Craft Certificate in Mechanical Engineering  (26 offerings)
+  [1142] Craft Certificate in Mechanical Engineering (Construction)  (0 offerings)
+  [1143] Craft Certificate in Mechanical Engineering (Plant)  (2 offerings)
+  [1144] Craft Certificate in Mechanical Engineering (Production)  (14 offerings)
+  [1156] Craft Certificate in Medical Laboratory Technology  (6 offerings)
+  [1145] Craft Certificate in Motor Vehicle Mechanics  (15 offerings)
+  [1146] Craft Certificate in Motor Vehicle Technology  (0 offerings)
+  [1175] Craft Certificate in Nautical Science  (1 offerings)
+  [1157] Craft Certificate in Nutrition and Dietetics  (8 offerings)
+  [1120] Craft Certificate in Personnel Management  (0 offerings)
+  [1181] Craft Certificate in Petroleum Geosciences  (5 offerings)
+  [1171] Craft Certificate in Photogrammetry  (0 offerings)
+  [1147] Craft Certificate in Plumbing  (61 offerings)
+  [1148] Craft Certificate in Printing Technology  (0 offerings)
+  [1121] Craft Certificate in Project Management  (14 offerings)
+  [1149] Craft Certificate in Radio Servicing  (0 offerings)
+  [1150] Craft Certificate in Road Construction  (9 offerings)
+  [1176] Craft Certificate in Road Transport Management  (2 offerings)
+  [1122] Craft Certificate in Sales and Marketing  (42 offerings)
+  [1158] Craft Certificate in Science Laboratory Technology  (32 offerings)
+  [1123] Craft Certificate in Secretarial Studies  (85 offerings)
+  [1124] Craft Certificate in Social Development  (111 offerings)
+  [1180] Craft Certificate in Social Work and Community Development  (2 offerings)
+  [1125] Craft Certificate in Supplies Management  (0 offerings)
+  [1126] Craft Certificate in Supply Chain Management  (94 offerings)
+  [1168] Craft Certificate in Tannery and Leatherwork  (0 offerings)
+  [1166] Craft Certificate in Tour Guiding Operations  (11 offerings)
+  [1165] Craft Certificate in Tour Guiding and Travel Operations  (14 offerings)
+  [1177] Craft Certificate in Transport Management  (1 offerings)
+  [1151] Craft Certificate in Water Engineering  (0 offerings)
+  [1152] Craft Certificate in Water Technology  (4 offerings)
+  [1153] Craft Certificate in Welding and Fabrication  (32 offerings)
+  [1653] Grade Iii in Carpentry and Joinery  (43 offerings)
+  [1673] Grade Iii in Electrical  (81 offerings)
+  [1648] Grade Iii in Electrical Wireman  (41 offerings)
+  [1672] Grade Iii in Fashion Design and Hair Dressing  (4 offerings)
+  [1645] Grade Iii in Hairdressing  (97 offerings)
+  [1669] Grade Iii in Pipe Fitting and Plumbing  (43 offerings)
+  [1674] Grade Iii in Refrigeration and Air Conditioning  (5 offerings)
+  [1649] Grade Iii in Tailoring & Dressmaking  (60 offerings)
+
+--- Duplicate course names: 0 ---
+
+--- Offerings at non-TVET institutions ---
+  Count: 19
+  Craft Certificate in Business Management @ Taita Taveta University [Public University]
+  Craft Certificate in Clerical Operations @ Taita Taveta University [Public University]
+  Craft Certificate in Human Resource Management @ Taita Taveta University [Public University]
+  Craft Certificate in Project Management @ Taita Taveta University [Public University]
+  Craft Certificate in Secretarial Studies @ Taita Taveta University [Public University]
+  Craft Certificate in Social Development @ Taita Taveta University [Public University]
+  Craft Certificate in Supply Chain Management @ Taita Taveta University [Public University]
+  Craft Certificate in Information Communication Tec @ Taita Taveta University [Public University]
+  Craft Certificate in Automotive Engineering @ Taita Taveta University [Public University]
+  Craft Certificate in Building Technology @ Taita Taveta University [Public University]
+  Craft Certificate in Electrical and Electronics Te @ Taita Taveta University [Public University]
+  Craft Certificate in Electrical and Electronics Te @ Taita Taveta University [Public University]
+  Craft Certificate in Welding and Fabrication @ Taita Taveta University [Public University]
+  Craft Certificate in General Agriculture @ Taita Taveta University [Public University]
+  Craft Certificate in Science Laboratory Technology @ Taita Taveta University [Public University]
+  Craft Certificate in Catering and Accommodation Op @ Taita Taveta University [Public University]
+  Craft Certificate in Food and Beverage Production  @ Taita Taveta University [Public University]
+  Craft Certificate in Food Processing and Preservat @ Taita Taveta University [Public University]
+  Craft Certificate in Tour Guiding Operations @ Taita Taveta University [Public University]
+
+--- All courses (offerings | name) ---
+    82  Artisan in Automotive Engineering
+    32  Artisan in Automotive Vehicle Mechanics
+   102  Artisan in Building Technology
+    17  Artisan in Catering and Accommodation
+     6  Artisan in Dressmaking and Tailoring
+    79  Artisan in Electrical
+    15  Artisan in Electrical Engineering
+   136  Artisan in Electrical Installation
+    67  Artisan in Electrical and Electronics
+    47  Artisan in Entrpreneurial Agriculture
+    92  Artisan in Fashion Design & Garment Making Level 4 ( Cdacc )
+    57  Artisan in Fashion Design and Garment Making
+    78  Artisan in Food Beverage Production and Services
+    47  Artisan in Food Processing
+    81  Artisan in Food and Beverage
+   148  Artisan in Garment Making
+    71  Artisan in General Agriculture
+     4  Artisan in General Fitters
+   112  Artisan in Hair Dressing& Beauty Therapy Level I
+     5  Artisan in Human Resource Management
+    32  Artisan in Information Communication Technology
+     3  Artisan in Information Technology
+     9  Artisan in Land Survey
+   119  Artisan in Masonry
+    43  Artisan in Mechanical Engineering
+    14  Artisan in Metal Processing Technology Level I
+     5  Artisan in Motor Vehicle Technology
+    53  Artisan in Office Assistance Level Four (tvet-cdacc)
+   163  Artisan in Plumbing
+    22  Artisan in Secretarial
+    19  Artisan in Social Work
+    49  Artisan in Storekeeping
+     7  Artisan in Supply Chain Management
+     2  Artisan in Water Operators Course(meter Reading and Installation)
+     4  Certificate in Building Technology
+    22  Craft Certificate in Accountancy
+     0  Craft Certificate in Agricultural Engineering *** NO OFFERINGS ***
+     0  Craft Certificate in Agricultural Mechanics *** NO OFFERINGS ***
+    45  Craft Certificate in Automotive Engineering
+     7  Craft Certificate in Baking Technology
+    14  Craft Certificate in Banking and Finance
+    74  Craft Certificate in Building Technology
+    11  Craft Certificate in Business Administration
+   119  Craft Certificate in Business Management
+    10  Craft Certificate in Carpentry and Joinery
+     1  Craft Certificate in Cartography
+    41  Craft Certificate in Catering and Accommodation Operations
+     5  Craft Certificate in Child Care and Protection
+     4  Craft Certificate in Clerical Operations
+    18  Craft Certificate in Co-operative Management
+     1  Craft Certificate in Construction Plant Technology
+     5  Craft Certificate in Electrical Installation
+     4  Craft Certificate in Electrical and Electronics Technology
+   105  Craft Certificate in Electrical and Electronics Technology (Power)
+     8  Craft Certificate in Electrical and Electronics Technology (Telecommunication)
+    58  Craft Certificate in Fashion Design and Garment Making
+     1  Craft Certificate in Fisheries Science and Technology
+     8  Craft Certificate in Food Processing Technology
+     8  Craft Certificate in Food Processing and Preservation
+    93  Craft Certificate in Food and Beverage Production and Service
+    72  Craft Certificate in General Agriculture
+     6  Craft Certificate in Housekeeping and Laundry
+    82  Craft Certificate in Human Resource Management
+   176  Craft Certificate in Information Communication Technology
+    29  Craft Certificate in Information Studies
+     4  Craft Certificate in Information Technology
+     1  Craft Certificate in Investment Management
+    17  Craft Certificate in Land Surveying
+    13  Craft Certificate in Library, Archives and Information Studies
+     2  Craft Certificate in Marine Engineering
+     1  Craft Certificate in Maritime Transport Logistics
+     1  Craft Certificate in Maritime Transport Operations
+     2  Craft Certificate in Marketing
+    23  Craft Certificate in Masonry
+    26  Craft Certificate in Mechanical Engineering
+     0  Craft Certificate in Mechanical Engineering (Construction) *** NO OFFERINGS ***
+     2  Craft Certificate in Mechanical Engineering (Plant)
+    14  Craft Certificate in Mechanical Engineering (Production)
+     6  Craft Certificate in Medical Laboratory Technology
+    15  Craft Certificate in Motor Vehicle Mechanics
+     0  Craft Certificate in Motor Vehicle Technology *** NO OFFERINGS ***
+     1  Craft Certificate in Nautical Science
+     8  Craft Certificate in Nutrition and Dietetics
+     0  Craft Certificate in Personnel Management *** NO OFFERINGS ***
+     5  Craft Certificate in Petroleum Geosciences
+     0  Craft Certificate in Photogrammetry *** NO OFFERINGS ***
+    61  Craft Certificate in Plumbing
+     0  Craft Certificate in Printing Technology *** NO OFFERINGS ***
+    14  Craft Certificate in Project Management
+     0  Craft Certificate in Radio Servicing *** NO OFFERINGS ***
+     9  Craft Certificate in Road Construction
+     2  Craft Certificate in Road Transport Management
+    42  Craft Certificate in Sales and Marketing
+    32  Craft Certificate in Science Laboratory Technology
+    85  Craft Certificate in Secretarial Studies
+   111  Craft Certificate in Social Development
+     2  Craft Certificate in Social Work and Community Development
+     0  Craft Certificate in Supplies Management *** NO OFFERINGS ***
+    94  Craft Certificate in Supply Chain Management
+     0  Craft Certificate in Tannery and Leatherwork *** NO OFFERINGS ***
+    11  Craft Certificate in Tour Guiding Operations
+    14  Craft Certificate in Tour Guiding and Travel Operations
+     1  Craft Certificate in Transport Management
+     0  Craft Certificate in Water Engineering *** NO OFFERINGS ***
+     4  Craft Certificate in Water Technology
+    32  Craft Certificate in Welding and Fabrication
+    43  Grade Iii in Carpentry and Joinery
+    81  Grade Iii in Electrical
+    41  Grade Iii in Electrical Wireman
+     4  Grade Iii in Fashion Design and Hair Dressing
+    97  Grade Iii in Hairdressing
+    43  Grade Iii in Pipe Fitting and Plumbing
+     5  Grade Iii in Refrigeration and Air Conditioning
+    60  Grade Iii in Tailoring & Dressmaking

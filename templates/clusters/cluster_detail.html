@@ -1,0 +1,199 @@
+{% extends 'base.html' %}
+{% block title %}{{ cluster.name }} — Clusters — KUCCPSS{% endblock %}
+
+{% block content %}
+
+<!-- Hero -->
+<div class="page-hero">
+  <div class="container">
+    <nav aria-label="breadcrumb" class="mb-3">
+      <ol class="breadcrumb mb-0" style="--bs-breadcrumb-divider-color:rgba(255,255,255,.5)">
+        <li class="breadcrumb-item"><a href="{% url 'clusters:cluster_list' %}" class="text-white-50 text-decoration-none">Clusters</a></li>
+        {% if main_label %}
+        <li class="breadcrumb-item text-white-50">{{ main_label }}</li>
+        {% endif %}
+        <li class="breadcrumb-item active text-white">{{ cluster.name }}</li>
+      </ol>
+    </nav>
+    <div class="d-flex align-items-center gap-3">
+      <div class="cluster-num-badge-lg">{{ main_num }}</div>
+      <div>
+        <h1 class="mb-1 fw-800">{{ cluster.name }}</h1>
+        {% if main_label %}
+        <p class="mb-0 opacity-75">{{ main_label }}</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="container pb-5">
+
+  <!-- Stats bar -->
+  <div class="row g-3 mb-4">
+    <div class="col-auto">
+      <div class="stat-chip">
+        <i class="fas fa-book-open me-2 text-primary"></i>
+        <strong>{{ courses.count }}</strong> programme{{ courses.count|pluralize }}
+      </div>
+    </div>
+    {% if subject_groups.count %}
+    <div class="col-auto">
+      <div class="stat-chip">
+        <i class="fas fa-list-check me-2 text-success"></i>
+        <strong>{{ subject_groups.count }}</strong> subject group{{ subject_groups.count|pluralize }}
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
+  <div class="row g-4">
+
+    <!-- Left: Programmes list -->
+    <div class="col-lg-8">
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white border-bottom d-flex justify-content-between align-items-center py-3 px-4">
+          <h5 class="mb-0 fw-700"><i class="fas fa-graduation-cap me-2 text-primary"></i>Programmes</h5>
+          {% if courses %}
+          <input type="text" id="courseSearch" class="form-control form-control-sm w-auto"
+                 placeholder="Search..." style="min-width:180px;">
+          {% endif %}
+        </div>
+
+        <div class="card-body p-0">
+          {% if courses %}
+          <ul class="list-group list-group-flush" id="courseList">
+            {% for course in courses %}
+            <li class="list-group-item course-item px-4 py-3 d-flex justify-content-between align-items-center">
+              <div>
+                <span class="fw-600 course-name">{{ course.name }}</span>
+                <span class="badge bg-light text-muted ms-2 small">{{ course.course_type }}</span>
+              </div>
+              <a href="{% url 'courses:course_detail_no_category' course.course_type.slug course.slug %}"
+                 class="btn btn-sm btn-outline-primary ms-3 flex-shrink-0">
+                Details
+              </a>
+            </li>
+            {% endfor %}
+          </ul>
+          <div id="noResults" class="text-center py-4 text-muted d-none">
+            <i class="fas fa-search me-2"></i>No programmes match your search.
+          </div>
+          {% else %}
+          <div class="text-center py-5 text-muted">
+            <i class="fas fa-inbox fa-2x mb-3 opacity-25"></i>
+            <p class="mb-0">No programmes linked to this cluster yet.</p>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: Requirements sidebar -->
+    <div class="col-lg-4">
+
+      {% if requirements %}
+      <div class="card border-0 shadow-sm mb-3">
+        <div class="card-header bg-white border-bottom py-3 px-4">
+          <h6 class="mb-0 fw-700">
+            <i class="fas fa-clipboard-check me-2 text-warning"></i>Minimum Subject Requirements
+          </h6>
+        </div>
+        <div class="card-body p-3">
+          <p class="small text-muted mb-2">Minimum grade in each subject below:</p>
+          <div class="d-flex flex-column gap-2">
+            {% for req in requirements %}
+            <div class="req-badge d-flex align-items-start gap-2">
+              <i class="fas fa-check-circle text-success mt-1 flex-shrink-0" style="font-size:.75rem;"></i>
+              <span class="small fw-600">{{ req }}</span>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+      {% endif %}
+
+      {% if subject_groups %}
+      <div class="card border-0 shadow-sm mb-3">
+        <div class="card-header bg-white border-bottom py-3 px-4">
+          <h6 class="mb-0 fw-700"><i class="fas fa-layer-group me-2 text-info"></i>Subject Groups</h6>
+        </div>
+        <div class="card-body p-3">
+          {% for group in subject_groups %}
+          <div class="mb-3">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+              <span class="small fw-600">{{ group.name }}</span>
+              {% if group.required %}
+              <span class="badge bg-success-subtle text-success small">Required</span>
+              {% else %}
+              <span class="badge bg-secondary-subtle text-secondary small">Optional</span>
+              {% endif %}
+            </div>
+            <div class="d-flex flex-wrap gap-1">
+              {% for subject in group.subjects.all %}
+              <span class="badge bg-light text-muted border">{{ subject.name }}</span>
+              {% endfor %}
+            </div>
+          </div>
+          {% if not forloop.last %}<hr class="my-2">{% endif %}
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Back to cluster list -->
+      <a href="{% url 'clusters:cluster_list' %}" class="btn btn-outline-secondary w-100">
+        <i class="fas fa-arrow-left me-2"></i>All Clusters
+      </a>
+    </div>
+
+  </div>
+</div>
+
+<style>
+.cluster-num-badge-lg {
+  width: 56px; height: 56px; border-radius: 50%;
+  background: rgba(255,255,255,.2);
+  border: 2px solid rgba(255,255,255,.5);
+  color: #fff;
+  font-size: 1.4rem; font-weight: 800;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.stat-chip {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 6px 16px;
+  font-size: .875rem;
+  display: inline-flex; align-items: center;
+  box-shadow: 0 1px 4px var(--shadow);
+}
+.fw-600 { font-weight: 600; }
+.fw-700 { font-weight: 700; }
+.fw-800 { font-weight: 800; }
+.course-item { transition: background .15s; }
+.course-item:hover { background: #f8faff; }
+</style>
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const input = document.getElementById('courseSearch');
+  if (!input) return;
+  input.addEventListener('input', function () {
+    const q = this.value.toLowerCase().trim();
+    const items = document.querySelectorAll('.course-item');
+    let visible = 0;
+    items.forEach(li => {
+      const name = li.querySelector('.course-name').textContent.toLowerCase();
+      const show = !q || name.includes(q);
+      li.style.display = show ? '' : 'none';
+      if (show) visible++;
+    });
+    document.getElementById('noResults').classList.toggle('d-none', visible > 0);
+  });
+});
+</script>
+{% endblock %}
+{% endblock %}

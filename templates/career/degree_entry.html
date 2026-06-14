@@ -1,0 +1,231 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Degree Pathway — Career Guidance{% endblock %}
+
+{% block content %}
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+
+<style>
+body { background: #f0f4ff; }
+
+.hero-band {
+    background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%);
+    color: #fff;
+    padding: 2.5rem 0 2rem;
+}
+.hero-band h1 { font-size: 1.9rem; font-weight: 800; margin-bottom: 0.4rem; }
+.hero-band p  { opacity: 0.85; font-size: 0.95rem; margin: 0; }
+
+/* ── Steps row ── */
+.steps-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+    max-width: 980px;
+    margin: 0 auto;
+}
+@media (max-width: 767px) {
+    .steps-row { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 420px) {
+    .steps-row { grid-template-columns: 1fr; }
+}
+
+.step-card {
+    background: #fff;
+    border-radius: 1.1rem;
+    border: 2px solid #e2e8f0;
+    padding: 1.6rem 1.2rem 1.4rem;
+    text-align: center;
+    text-decoration: none;
+    color: inherit;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.7rem;
+    transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+    position: relative;
+    cursor: pointer;
+}
+.step-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 16px 40px rgba(30,58,138,0.13);
+    text-decoration: none;
+    color: inherit;
+}
+
+.step-num {
+    position: absolute;
+    top: -14px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    font-size: 0.78rem;
+    font-weight: 800;
+    display: flex; align-items: center; justify-content: center;
+    border: 2.5px solid #fff;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+.step-icon {
+    width: 72px; height: 72px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.8rem;
+    flex-shrink: 0;
+}
+
+.step-label {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #1e293b;
+    line-height: 1.3;
+}
+.step-desc {
+    font-size: 0.78rem;
+    color: #64748b;
+    line-height: 1.45;
+    margin: 0;
+}
+
+/* Colour themes per step */
+.step-card.s1 { border-color: #c7d2fe; }
+.step-card.s1:hover { border-color: #4f46e5; }
+.step-card.s1 .step-num  { background: #4f46e5; color: #fff; }
+.step-card.s1 .step-icon { background: #eef2ff; color: #4f46e5; }
+
+.step-card.s2 { border-color: #bae6fd; }
+.step-card.s2:hover { border-color: #0891b2; }
+.step-card.s2 .step-num  { background: #0891b2; color: #fff; }
+.step-card.s2 .step-icon { background: #ecfeff; color: #0891b2; }
+
+.step-card.s3 { border-color: #a7f3d0; }
+.step-card.s3:hover { border-color: #059669; }
+.step-card.s3 .step-num  { background: #059669; color: #fff; }
+.step-card.s3 .step-icon { background: #ecfdf5; color: #059669; }
+
+.step-card.s4 { border-color: #fed7aa; }
+.step-card.s4:hover { border-color: #d97706; }
+.step-card.s4 .step-num  { background: #d97706; color: #fff; }
+.step-card.s4 .step-icon { background: #fffbeb; color: #d97706; }
+
+.rec-pill {
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 20px;
+    background: #eef2ff;
+    color: #4f46e5;
+    margin-top: auto;
+}
+
+/* connector dots between cards (desktop only) */
+.connector-row {
+    display: flex;
+    align-items: center;
+    max-width: 980px;
+    margin: 0 auto 1.5rem;
+    padding: 0 1rem;
+    justify-content: space-between;
+}
+.connector-dot { color: #c7d2fe; font-size: 1.2rem; }
+
+/* Info strip */
+.info-strip {
+    max-width: 980px;
+    margin: 1.5rem auto 0;
+    background: #fff;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 1rem 1.25rem;
+    font-size: 0.83rem;
+    color: #475569;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+}
+</style>
+
+<!-- Hero -->
+<div class="hero-band">
+    <div class="container">
+        <nav aria-label="breadcrumb" class="mb-3">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item">
+                    <a href="{% url 'career:home' %}" class="text-white text-decoration-none opacity-75">Career Guidance</a>
+                </li>
+                <li class="breadcrumb-item active text-white">Degree</li>
+            </ol>
+        </nav>
+        <div class="d-flex align-items-center gap-3">
+            <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
+                 style="width:52px;height:52px;background:rgba(255,255,255,0.15);">
+                <i class="bi bi-mortarboard-fill fs-3"></i>
+            </div>
+            <div>
+                <h1 class="mb-1">Degree Pathway</h1>
+                <p>Choose how you want to provide your KUCCPS cluster points — pick any step below.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container py-5" style="padding-top: 2.5rem !important;">
+
+    <!-- 4-step cards -->
+    <div class="steps-row mb-4" style="padding-top: 1.2rem;">
+
+        <!-- Step 1: Calculate -->
+        <a href="{{ url_calculate }}" class="step-card s1">
+            <span class="step-num">1</span>
+            <div class="step-icon"><i class="bi bi-calculator-fill"></i></div>
+            <div class="step-label">Calculate from Grades</div>
+            <p class="step-desc">Enter your KCSE subject grades and we compute cluster points automatically.</p>
+            <span class="rec-pill">⭐ Recommended</span>
+        </a>
+
+        <!-- Step 2: Upload Slip -->
+        <a href="{{ url_upload }}" class="step-card s2">
+            <span class="step-num">2</span>
+            <div class="step-icon"><i class="bi bi-image-fill"></i></div>
+            <div class="step-label">Upload Result Slip</div>
+            <p class="step-desc">Upload a photo of your KCSE results slip — OCR reads your grades for you.</p>
+            <span class="rec-pill" style="background:#ecfeff;color:#0891b2;">📷 Image Upload</span>
+        </a>
+
+        <!-- Step 3: Copy & Paste -->
+        <a href="{{ url_paste }}" class="step-card s3">
+            <span class="step-num">3</span>
+            <div class="step-icon"><i class="bi bi-clipboard2-data-fill"></i></div>
+            <div class="step-label">Copy &amp; Paste Points</div>
+            <p class="step-desc">Paste your cluster points as a list of numbers (e.g. from the KUCCPS portal).</p>
+            <span class="rec-pill" style="background:#ecfdf5;color:#059669;">📋 Quick Paste</span>
+        </a>
+
+        <!-- Step 4: Manual Entry -->
+        <a href="{{ url_manual }}" class="step-card s4">
+            <span class="step-num">4</span>
+            <div class="step-icon"><i class="bi bi-pencil-square"></i></div>
+            <div class="step-label">Enter Manually</div>
+            <p class="step-desc">Type each cluster's points directly into the form — full control over every value.</p>
+            <span class="rec-pill" style="background:#fffbeb;color:#d97706;">✏️ Manual Entry</span>
+        </a>
+
+    </div>
+
+    <!-- Info strip -->
+    <div class="info-strip">
+        <i class="bi bi-info-circle-fill text-primary mt-1 flex-shrink-0" style="font-size:1.1rem;"></i>
+        <span>
+            <strong>Cluster points range from 0 – 48.</strong>
+            They are computed from your KCSE grades using the official KUCCPS weighted formula and determine
+            which university programmes you qualify for. If you already used the
+            <a href="{% url 'clusterpoints:calculator' %}" class="text-primary">Cluster Points Calculator</a>,
+            pick <em>Copy &amp; Paste</em> or <em>Enter Manually</em> to bring your results across.
+        </span>
+    </div>
+
+</div>
+{% endblock %}

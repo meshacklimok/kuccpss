@@ -1,0 +1,307 @@
+{% extends "base.html" %}
+{% load static %}
+{% load widget_tweaks %}
+{% load custom_filters %}
+
+{% block title %}KUCCPS Cluster Points Calculator{% endblock %}
+
+{% block content %}
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+body { background: #f5f7fa; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+
+/* SUBJECT CARDS */
+#compulsory-subjects, #optional-subjects-list {
+    display: flex; flex-wrap: wrap; gap: 1rem; justify-content: center;
+}
+.subject-card {
+    flex: 1 1 120px; min-width: 120px; max-width: 180px;
+    padding: 1rem; border-radius: 0.8rem;
+    background: linear-gradient(145deg, #fff, #e9ecef);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    position: relative; transition: transform 0.25s, box-shadow 0.25s, background 0.25s;
+}
+.subject-card:hover { transform: translateY(-4px); box-shadow: 0 8px 20px rgba(0,0,0,0.15); background: linear-gradient(145deg, #e0f7fa, #d0f0ff); }
+.subject-card label { font-weight: 600; margin-bottom: 0.5rem; text-align: center; font-size: 0.95rem; }
+.subject-card select { width: 90px; margin-bottom: 0.5rem; text-align: center; }
+.remove-subject { position: absolute; top: 5px; right: 8px; cursor: pointer; color: #dc3545; font-size: 1.2rem; transition: color 0.2s; }
+.remove-subject:hover { color: #a71d2a; }
+
+/* CLUSTER CARDS */
+.cluster-container { display: flex; flex-wrap: wrap; gap: 1rem; justify-content: center; margin-top: 2rem; }
+.cluster-card {
+    flex: 1 1 180px; min-width: 180px;
+    padding: 1rem; border-radius: 0.8rem;
+    background: #fff; box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+    transition: transform 0.25s, box-shadow 0.25s;
+    text-align: center;
+}
+.cluster-card:hover { transform: translateY(-6px); box-shadow: 0 12px 28px rgba(0,0,0,0.2); }
+.cluster-title { font-size: 1rem; font-weight: 600; color: #555; }
+.cluster-name { font-size: 1.25rem; font-weight: 700; margin-bottom: 0.5rem; }
+
+/* TOTAL POINTS */
+#total-points { font-size: 1.3rem; }
+
+/* CHART CONTAINER */
+#clusterChartContainer { max-width: 600px; margin: 2rem auto; }
+
+/* GRADE SCALE */
+.grade-scale-grid {
+    display: flex; flex-wrap: wrap; gap: 4px;
+}
+.grade-chip {
+    display: flex; flex-direction: column; align-items: center;
+    background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 6px;
+    padding: 4px 8px; min-width: 48px;
+    transition: background .15s;
+}
+.grade-chip.active {
+    background: #1d4ed8; border-color: #1d4ed8; color: #fff;
+}
+.grade-label { font-size: .8rem; font-weight: 700; line-height: 1; }
+.grade-range { font-size: .65rem; color: inherit; opacity: .7; line-height: 1.2; }
+.grade-chip.active .grade-range { opacity: .85; }
+.fw-600 { font-weight: 600; }
+
+/* MOBILE */
+@media (max-width: 576px) {
+    .subject-card, .cluster-card { flex: 1 1 100%; min-width: unset; max-width: unset; }
+    .grade-scale-table { width: 100%; }
+}
+</style>
+
+<div class="container py-5">
+    <h1 class="text-center mb-5 fw-bold text-dark">KUCCPS Cluster Points Calculator</h1>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <form method="post" id="kcse-form">
+        {% csrf_token %}
+
+        <!-- COMPULSORY SUBJECTS (Group I core) -->
+        <h5 class="mb-3">Compulsory Subjects</h5>
+        <div id="compulsory-subjects">
+            {% for field in form %}
+                {% if field.label in form.compulsory_subjects %}
+                    <div class="subject-card text-center">
+                        <label>{{ field.label }}</label>
+                        <select name="{{ field.name }}" class="form-select grade-select" required>
+                            <option value="">Grade</option>
+                            {% for points, grade in grade_choices %}
+                                <option value="{{ points }}" {% if form_data|get_item:field.name == points|stringformat:"s" %}selected{% endif %}>{{ grade }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                {% endif %}
+            {% endfor %}
+        </div>
+
+        <!-- OPTIONAL SUBJECTS (already entered on POST) -->
+        <h5 class="mt-4 mb-2">Optional Subjects <small class="text-muted fw-normal">(add any you sat)</small></h5>
+        <div id="optional-subjects-list">
+            {% for field in form %}
+                {% if field.label not in form.compulsory_subjects and form_data|get_item:field.name %}
+                    <div class="subject-card text-center" id="wrapper-{{ field.name }}">
+                        <label>{{ field.label }}</label>
+                        <input type="hidden" name="{{ field.name }}" value="{{ form_data|get_item:field.name }}">
+                        <select class="form-select grade-select" onchange="this.previousElementSibling.value=this.value;">
+                            <option value="">Grade</option>
+                            {% for points, grade in grade_choices %}
+                                <option value="{{ points }}" {% if form_data|get_item:field.name == points|stringformat:"s" %}selected{% endif %}>{{ grade }}</option>
+                            {% endfor %}
+                        </select>
+                        <i class="bi bi-trash-fill remove-subject" onclick="removeSubject('{{ field.name }}')"></i>
+                    </div>
+                {% endif %}
+            {% endfor %}
+        </div>
+
+        <!-- Grouped dropdown for adding optional subjects -->
+        <select id="optional-subject-dropdown" class="form-select mb-3">
+            <option value="">Add a subject...</option>
+            {% for group_label, fields in form.grouped_optional_fields %}
+                <optgroup label="{{ group_label }}">
+                    {% for field_name, label in fields %}
+                        <option value="{{ field_name }}">{{ label }}</option>
+                    {% endfor %}
+                </optgroup>
+            {% endfor %}
+        </select>
+
+        <div class="text-center mb-4">
+            <button type="submit" class="btn btn-primary btn-lg px-5">Calculate Cluster Points</button>
+            {% if kcse_result %}
+                <a href="{% url 'clusterpoints:export_cluster_pdf' kcse_result.id %}" class="btn btn-danger btn-lg px-4 ms-3">Export PDF</a>
+            {% endif %}
+        </div>
+    </form>
+
+    <!-- TOTAL POINTS + MEAN GRADE -->
+    {% if total_points %}
+    <div class="card border-0 shadow-sm mb-4" id="total-points">
+        <div class="card-body py-3 px-4">
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+                <div class="d-flex align-items-center gap-3">
+                    <div>
+                        <div class="text-muted small mb-1">Total KCSE Points (out of 84)</div>
+                        <div class="fw-bold fs-3 text-success">{{ total_points }}</div>
+                    </div>
+                    {% if mean_grade %}
+                    <div class="ms-3 ps-3 border-start">
+                        <div class="text-muted small mb-1">Mean Grade</div>
+                        <div class="fw-bold fs-2 text-primary">{{ mean_grade }}</div>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Grade scale reference -->
+                <div class="grade-scale-table">
+                    <div class="text-muted small fw-600 mb-1">KCSE Mean Grade Scale</div>
+                    <div class="grade-scale-grid">
+                        {% for lo, hi, grade in grade_bands %}
+                        <div class="grade-chip {% if mean_grade == grade %}active{% endif %}">
+                            <span class="grade-label">{{ grade }}</span>
+                            <span class="grade-range">{{ lo }}–{{ hi }}</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- CLUSTER POINTS -->
+    {% if results %}
+        <h2 class="fw-bold text-dark text-center mt-5">Cluster Points Summary</h2>
+        <div class="cluster-container" id="cluster-container">
+            {% for r in results %}
+                <div class="cluster-card">
+                    <div class="cluster-title">Cluster {{ forloop.counter }}</div>
+                    <div class="cluster-name">{{ r.cluster.name }}</div>
+                    <div class="fw-bold fs-5">{{ r.cluster_points }}</div>
+                </div>
+            {% endfor %}
+        </div>
+
+        <!-- CHART.JS RADAR -->
+        <div id="clusterChartContainer">
+            <canvas id="clusterChart"></canvas>
+        </div>
+    {% endif %}
+</div>
+
+<script>
+// =================== OPTIONAL SUBJECTS DYNAMIC ADD/REMOVE ===================
+const optionalSubjectsList = document.getElementById('optional-subjects-list');
+const optionalDropdown = document.getElementById('optional-subject-dropdown');
+const addedSubjects = new Set();
+
+function removeSubject(name){
+    const wrapper = document.getElementById('wrapper-' + name);
+    if(wrapper){ 
+        wrapper.remove(); 
+        addedSubjects.delete(name); 
+        const opt = optionalDropdown.querySelector(`option[value="${name}"]`);
+        if(opt){ opt.style.display='block'; }
+    }
+}
+
+optionalDropdown.addEventListener('change', function() {
+    const selected = this.value;
+    if (!selected || addedSubjects.has(selected)) return;
+
+    const label = this.options[this.selectedIndex].text;
+    const wrapper = document.createElement('div');
+    wrapper.className = 'subject-card text-center';
+    wrapper.id = 'wrapper-' + selected;
+
+    const hiddenInput = document.createElement('input');
+    hiddenInput.type = 'hidden';
+    hiddenInput.name = selected;
+    hiddenInput.value = '';
+
+    const gradeSelect = document.createElement('select');
+    gradeSelect.className = 'form-select grade-select';
+    gradeSelect.required = true;
+    gradeSelect.innerHTML = `
+        <option value="">Grade</option>
+        <option value="12">A</option>
+        <option value="11">A-</option>
+        <option value="10">B+</option>
+        <option value="9">B</option>
+        <option value="8">B-</option>
+        <option value="7">C+</option>
+        <option value="6">C</option>
+        <option value="5">C-</option>
+        <option value="4">D+</option>
+        <option value="3">D</option>
+        <option value="2">D-</option>
+        <option value="1">E</option>
+    `;
+    gradeSelect.addEventListener('change', ()=>hiddenInput.value=gradeSelect.value);
+
+    const deleteBtn = document.createElement('i');
+    deleteBtn.className='bi bi-trash-fill remove-subject';
+    deleteBtn.addEventListener('click', ()=>removeSubject(selected));
+
+    wrapper.appendChild(hiddenInput);
+    wrapper.appendChild(document.createTextNode(label));
+    wrapper.appendChild(gradeSelect);
+    wrapper.appendChild(deleteBtn);
+
+    optionalSubjectsList.appendChild(wrapper);
+    addedSubjects.add(selected);
+    this.querySelector(`option[value="${selected}"]`).style.display='none';
+    this.value='';
+});
+
+// =================== CHART.JS RADAR ===================
+document.addEventListener('DOMContentLoaded', ()=>{
+    const results = [
+        {% for r in results %}
+            { name: "{{ r.cluster.name }}", points: {{ r.cluster_points }} },
+        {% endfor %}
+    ];
+    const ctx = document.getElementById('clusterChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'radar',
+        data: {
+            labels: results.map(r=>r.name),
+            datasets: [{
+                label: 'Cluster Points',
+                data: results.map(r=>r.points),
+                backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                borderColor: 'rgba(54, 162, 235, 1)',
+                pointBackgroundColor: 'rgba(54, 162, 235, 1)'
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                r: {
+                    beginAtZero: true,
+                    min: 0,
+                    max: 50,
+                    ticks: { stepSize: 5 }
+                }
+            }
+        }
+    });
+});
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+{% endblock %}

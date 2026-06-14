@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terms and Conditions | MyWebsite</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            background-color: #f9f9f9;
+            color: #333;
+        }
+        .container {
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.05);
+        }
+        h1, h2 {
+            color: #222;
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        p {
+            margin-bottom: 15px;
+        }
+        ul {
+            margin-left: 20px;
+        }
+        a {
+            color: #0066cc;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Terms and Conditions</h1>
+        <p>Welcome to MyWebsite! By accessing or using our services, you agree to comply with the following terms and conditions.</p>
+
+        <h2>1. Acceptance of Terms</h2>
+        <p>By using this website, you accept and agree to be bound by these terms and conditions. If you do not agree, please do not use our site.</p>
+
+        <h2>2. Use of Services</h2>
+        <ul>
+            <li>You must be at least 18 years old to use this site.</li>
+            <li>You agree not to misuse our services or engage in illegal activity.</li>
+            <li>All content provided is for informational purposes only.</li>
+        </ul>
+
+        <h2>3. Intellectual Property</h2>
+        <p>All content, logos, and trademarks on this site are property of MyWebsite or its licensors. You may not use them without permission.</p>
+
+        <h2>4. Privacy</h2>
+        <p>Your use of our website is also subject to our <a href="{% url 'accounts:privacy' %}">Privacy Policy</a>.</p>
+
+        <h2>5. Limitation of Liability</h2>
+        <p>MyWebsite is not responsible for any direct, indirect, or consequential damages arising from your use of the site.</p>
+
+        <h2>6. Changes to Terms</h2>
+        <p>We may update these terms at any time. Continued use of the website constitutes acceptance of the updated terms.</p>
+
+        <h2>7. Contact Us</h2>
+        <p>If you have questions about these terms, please <a href="{% url 'accounts:contact' %}">contact us</a>.</p>
+
+        <p style="text-align:center; margin-top:30px;">&copy; {{ year }} MyWebsite. All rights reserved.</p>
+    </div>
+</body>
+</html>

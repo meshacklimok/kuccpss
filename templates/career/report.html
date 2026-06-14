@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Career Guidance Report</title>
+<style>
+body { font-family: Arial, sans-serif; margin: 20px; }
+h2 { color: #0d6efd; }
+.card { border: 1px solid #ccc; border-radius: 5px; padding: 10px; margin-bottom: 10px; }
+.card-success { background-color: #d1e7dd; }
+.card-warning { background-color: #fff3cd; }
+.card-danger { background-color: #f8d7da; }
+</style>
+</head>
+<body>
+<h2>Career Guidance Report</h2>
+<p>Cluster Points: {{ cluster_points }}</p>
+<p>Course Type: {{ course_type|title }}</p>
+
+{% for item in eligible_courses %}
+<div class="card {% if item.status == 'qualified' %}card-success{% elif item.status == 'borderline' %}card-warning{% else %}card-danger{% endif %}">
+    <h4>{{ item.course.name }}</h4>
+    <p>{{ item.course.institution.name }} - {{ item.course.institution.get_type_display }}</p>
+    <p>Min Points: {{ item.course.min_cluster_points }}</p>
+    <p>Status: {{ item.status|title }}</p>
+</div>
+{% endfor %}
+
+{% if ai_response %}
+<h3>AI Guidance</h3>
+<p>{{ ai_response }}</p>
+{% endif %}
+</body>
+</html>

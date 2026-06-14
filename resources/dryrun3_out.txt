@@ -1,0 +1,54 @@
+﻿Building institution lookup…
+  786 institutions in DB
+
+============================================================
+[DRY RUN] DIPLOMA → TVET Diploma (Level 6)
+  File: C:\Users\user\OneDrive\Desktop\webdev2025\kuccpss\DIPLOMA_PROGRAMMES.pdf
+  Parsed 2128 rows from PDF
+  New courses:   201
+  New offerings: 907
+  Unmatched institutions: 11
+
+============================================================
+[DRY RUN] CERTIFICATE → TVET Certificate (Level 5)
+  File: C:\Users\user\OneDrive\Desktop\webdev2025\kuccpss\resources\CERTIFICATE_PROGRAMMES.pdf
+  Parsed 1361 rows from PDF
+  New courses:   112
+  New offerings: 139
+  Unmatched institutions: 3
+
+============================================================
+[DRY RUN] ARTISAN → TVET Artisan Certificate (Level 4)
+  File: C:\Users\user\OneDrive\Desktop\webdev2025\kuccpss\ARTISAN_18_03_2024_RV2.pdf
+  Parsed 2747 rows from PDF
+  New courses:   43
+  New offerings: 0
+  Unmatched institutions: 0
+
+============================================================
+[DRY RUN] CRAFT → TVET Craft Certificate (Level 3)
+  File: C:\Users\user\OneDrive\Desktop\webdev2025\kuccpss\CRAFT_18_03_2024_RV2.pdf
+  Parsed 4608 rows from PDF
+  New courses:   126
+  New offerings: 0
+  Unmatched institutions: 0
+
+============================================================
+[DRY RUN] Done.
+  Total new courses:   482
+  Total new offerings: 1046
+  Unmatched institutions: 12
+
+Unmatched institutions (first 40):
+  'BUMBE TECHNICAL TRAINING INSTITUTE'
+  'DAVID M WAMBULI TECHNICAL VOCATIONAL COLLEGE'
+  'JEREMIAH NYAGAH TECHNICAL INSTITUTE'
+  'KATINE TECHNICAL TRAINING INSTITUTE'
+  'KIMININI TECHNICAL AND VOCATIONAL COLLEGE'
+  'KIRINYAGA CENTRAL TECHNICAL& VOCATIONAL COLLEGE'
+  'KITUTU CHACHE TECHNICAL & VOCATIONAL COLLEGE'
+  "MURANG'A UNIVERSITY OF TECHNOLOGY TVET INSTITUTE"
+  "OL'LESSOS TECHNICAL TRAINING INSTITUTE"
+  'SEME TECHNICAL AND VOCATIONAL COLLEGE'
+  'SOTIK TECHNICAL TRAINING INSTITUTE'
+  "ST JOSEPH'S TECHNICAL INSTITUTE FOR THE DEAF NYANG'OMA"

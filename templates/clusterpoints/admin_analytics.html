@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Admin Analytics Dashboard{% endblock %}
+
+{% block content %}
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+body { background: #f5f7fa; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+
+.analytics-card {
+    background: #fff;
+    border-radius: 0.8rem;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    text-align: center;
+    transition: transform 0.25s, box-shadow 0.25s;
+}
+.analytics-card:hover { transform: translateY(-4px); box-shadow: 0 8px 20px rgba(0,0,0,0.15); }
+
+.analytics-title { font-size: 1rem; color: #555; font-weight: 600; margin-bottom: 0.5rem; }
+.analytics-value { font-size: 1.5rem; font-weight: 700; color: #007bff; }
+.chart-container { max-width: 800px; margin: 2rem auto; }
+
+@media (max-width: 768px){
+    .analytics-card { margin-bottom: 1rem; }
+}
+</style>
+
+<div class="container py-5">
+    <h1 class="text-center mb-5 fw-bold text-dark">Admin Analytics Dashboard</h1>
+
+    <!-- STAT CARDS -->
+    <div class="row">
+        <div class="col-md-4">
+            <div class="analytics-card">
+                <div class="analytics-title">Total KCSE Attempts</div>
+                <div class="analytics-value">{{ total_attempts }}</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="analytics-card">
+                <div class="analytics-title">Average Total Points</div>
+                <div class="analytics-value">{{ average_points|floatformat:2 }}</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="analytics-card">
+                <div class="analytics-title">Total Users</div>
+                <div class="analytics-value">{{ total_users }}</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CLUSTER AVERAGE CHART -->
+    <h3 class="text-center mt-5 mb-3">Average Cluster Points per Cluster</h3>
+    <div class="chart-container">
+        <canvas id="clusterBarChart"></canvas>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', ()=>{
+    const clusters = [
+        {% for c in cluster_averages %}
+            "{{ c.cluster.name }}",
+        {% endfor %}
+    ];
+    const averages = [
+        {% for c in cluster_averages %}
+            {{ c.avg_points|floatformat:2 }},
+        {% endfor %}
+    ];
+
+    const ctx = document.getElementById('clusterBarChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: clusters,
+            datasets: [{
+                label: 'Average Points',
+                data: averages,
+                backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                borderColor: 'rgba(54, 162, 235, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 50,
+                    ticks: { stepSize: 5 }
+                }
+            }
+        }
+    });
+});
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+{% endblock %}

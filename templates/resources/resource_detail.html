@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+{% block title %}{{ resource.title }} — KUCCPSS{% endblock %}
+
+{% block content %}
+<div class="page-hero">
+  <div class="container">
+    <nav aria-label="breadcrumb" class="mb-2">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'resources:resource_list' %}" class="text-white-50">Resources</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'resources:resource_list' %}?category={{ resource.category.slug }}" class="text-white-50">{{ resource.category.name }}</a></li>
+        <li class="breadcrumb-item active text-white">{{ resource.title|truncatechars:40 }}</li>
+      </ol>
+    </nav>
+    <div class="d-flex align-items-start gap-3">
+      <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
+           style="width:56px;height:56px;background:rgba(255,255,255,0.15);">
+        <i class="fas fa-{% if resource.resource_type == 'pdf' %}file-pdf{% elif resource.resource_type == 'video' %}play-circle{% else %}link{% endif %} fa-xl text-white"></i>
+      </div>
+      <div>
+        <h1 class="mb-1">{{ resource.title }}</h1>
+        <div class="d-flex gap-2 flex-wrap">
+          <span class="badge bg-white bg-opacity-20 text-white">{{ resource.get_resource_type_display }}</span>
+          <span class="badge bg-white bg-opacity-20 text-white">
+            <i class="fas fa-folder me-1"></i>{{ resource.category.name }}
+          </span>
+          {% if not resource.is_free %}
+          <span class="badge bg-warning text-dark"><i class="fas fa-lock me-1"></i>Premium</span>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="container pb-5">
+  <div class="row g-4">
+
+    <!-- Main content -->
+    <div class="col-lg-8">
+      {% if resource.thumbnail %}
+      <img src="{{ resource.thumbnail.url }}" class="img-fluid rounded-3 mb-4"
+           style="max-height:320px;width:100%;object-fit:cover;" alt="{{ resource.title }}">
+      {% endif %}
+
+      <div class="card p-4 mb-4">
+        <h5 class="fw-bold mb-3">About This Resource</h5>
+        {% if resource.description %}
+        <p class="text-muted">{{ resource.description }}</p>
+        {% else %}
+        <p class="text-muted fst-italic">No description available.</p>
+        {% endif %}
+      </div>
+
+      <!-- Download / View CTA -->
+      <div class="card p-4 text-center"
+           style="background:linear-gradient(135deg,#1e3a8a,#2563eb);">
+        {% if resource.resource_type == 'pdf' and resource.pdf_file %}
+        <i class="fas fa-file-pdf fa-3x text-white mb-3 opacity-75"></i>
+        <h5 class="text-white mb-2">Download PDF</h5>
+        <p class="text-white-50 small mb-3">Free download — {{ resource.download_count }} downloads so far</p>
+        <a href="{{ resource.pdf_file.url }}" class="btn btn-light fw-bold px-5" download>
+          <i class="fas fa-download me-2"></i>Download Now
+        </a>
+        {% elif resource.resource_type == 'video' and resource.external_url %}
+        <i class="fas fa-play-circle fa-3x text-white mb-3 opacity-75"></i>
+        <h5 class="text-white mb-2">Watch Video</h5>
+        <p class="text-white-50 small mb-3">Opens in a new tab</p>
+        <a href="{{ resource.external_url }}" target="_blank" rel="noopener"
+           class="btn btn-light fw-bold px-5">
+          <i class="fas fa-external-link-alt me-2"></i>Watch Now
+        </a>
+        {% elif resource.external_url %}
+        <i class="fas fa-link fa-3x text-white mb-3 opacity-75"></i>
+        <h5 class="text-white mb-2">Visit Resource</h5>
+        <a href="{{ resource.external_url }}" target="_blank" rel="noopener"
+           class="btn btn-light fw-bold px-5">
+          <i class="fas fa-external-link-alt me-2"></i>Open Link
+        </a>
+        {% else %}
+        <p class="text-white-50">No downloadable file attached yet.</p>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="col-lg-4">
+      <div class="card p-3 mb-3">
+        <h6 class="fw-bold mb-3">Resource Info</h6>
+        <ul class="list-unstyled small text-muted mb-0">
+          <li class="mb-2"><i class="fas fa-tag me-2 text-success"></i><strong>Type:</strong> {{ resource.get_resource_type_display }}</li>
+          <li class="mb-2"><i class="fas fa-folder me-2 text-success"></i><strong>Category:</strong> {{ resource.category.name }}</li>
+          <li class="mb-2"><i class="fas fa-download me-2 text-success"></i><strong>Downloads:</strong> {{ resource.download_count }}</li>
+          <li class="mb-2"><i class="fas fa-calendar me-2 text-success"></i><strong>Added:</strong> {{ resource.created_at|date:"d M Y" }}</li>
+          <li><i class="fas fa-{% if resource.is_free %}unlock{% else %}lock{% endif %} me-2 text-success"></i>
+            <strong>Access:</strong> {% if resource.is_free %}Free{% else %}Premium{% endif %}</li>
+        </ul>
+      </div>
+
+      <div class="card p-3">
+        <h6 class="fw-bold mb-3">More in {{ resource.category.name }}</h6>
+        {% with related=resource.category.resources.all %}
+        {% for r in related %}
+        {% if r.pk != resource.pk %}
+        <a href="{% url 'resources:resource_detail' r.slug %}"
+           class="d-flex align-items-center gap-2 text-decoration-none text-dark mb-2 py-1">
+          <i class="fas fa-{% if r.resource_type == 'pdf' %}file-pdf text-danger{% elif r.resource_type == 'video' %}video text-primary{% else %}link text-info{% endif %} small"></i>
+          <span class="small">{{ r.title|truncatechars:45 }}</span>
+        </a>
+        {% endif %}
+        {% empty %}
+        <p class="text-muted small mb-0">No other resources in this category.</p>
+        {% endfor %}
+        {% endwith %}
+        <a href="{% url 'resources:resource_list' %}?category={{ resource.category.slug }}"
+           class="btn btn-outline-success btn-sm w-100 mt-2">
+          Browse All <i class="fas fa-arrow-right ms-1"></i>
+        </a>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

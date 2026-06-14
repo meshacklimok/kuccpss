@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Import KCSE Slip — Career Guidance{% endblock %}
+
+{% block content %}
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+
+<style>
+.upload-zone {
+    border: 2.5px dashed #94a3b8;
+    border-radius: 1.2rem;
+    background: #f8fafc;
+    transition: border-color 0.2s, background 0.2s;
+    cursor: pointer;
+    padding: 3rem 2rem;
+    text-align: center;
+}
+.upload-zone:hover, .upload-zone.dragover {
+    border-color: #0891b2;
+    background: #ecfeff;
+}
+.upload-zone input[type="file"] { display: none; }
+#preview-img {
+    max-width: 100%;
+    max-height: 320px;
+    border-radius: 0.75rem;
+    border: 2px solid #e2e8f0;
+    display: none;
+    margin: 1rem auto 0;
+}
+</style>
+
+<div class="container py-4" style="max-width:700px;">
+
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'career:home' %}" class="text-decoration-none">Career Guidance</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'career:degree_entry' %}" class="text-decoration-none">Degree</a></li>
+            <li class="breadcrumb-item active">Import from Slip</li>
+        </ol>
+    </nav>
+
+    <!-- Coming Soon banner -->
+    <div class="alert d-flex align-items-center gap-3 mb-4"
+         style="background:#fefce8;border:1.5px solid #fde047;border-radius:12px;">
+        <i class="bi bi-stars" style="color:#d97706;font-size:1.4rem;flex-shrink:0;"></i>
+        <div>
+            <strong>OCR Feature Coming Soon</strong><br>
+            <span class="small text-muted">
+                Automatic grade extraction from your KCSE slip image is under development.
+                Upload your image now and we'll redirect you to confirm your cluster points manually.
+            </span>
+        </div>
+    </div>
+
+    <div class="card shadow-sm border-0" style="border-radius:1rem;">
+        <div class="card-body p-4 p-md-5">
+
+            <h4 class="fw-bold mb-1">Upload Your KCSE Results Slip</h4>
+            <p class="text-muted small mb-4">Accepted formats: JPG, PNG, PDF &mdash; max 10 MB</p>
+
+            <form method="post" enctype="multipart/form-data" id="uploadForm">
+                {% csrf_token %}
+
+                <!-- Drop zone -->
+                <label class="upload-zone d-block" id="dropZone" for="slipInput">
+                    <i class="bi bi-cloud-upload" style="font-size:2.8rem;color:#0891b2;"></i>
+                    <p class="fw-semibold mt-3 mb-1" style="color:#0f172a;">Drag & drop your slip here</p>
+                    <p class="text-muted small mb-3">or click to browse files</p>
+                    <span class="badge" style="background:#ecfeff;color:#0891b2;font-size:0.78rem;padding:6px 14px;">
+                        Select Image
+                    </span>
+                    <input type="file" id="slipInput" name="slip_image"
+                           accept="image/*,.pdf" onchange="previewFile(this)">
+                </label>
+
+                <!-- Preview -->
+                <img id="preview-img" alt="Slip preview">
+                <p id="file-name" class="text-center text-muted small mt-2"></p>
+
+                <!-- Submit -->
+                <div class="d-flex gap-3 flex-wrap mt-4">
+                    <button type="submit" class="btn btn-lg px-5 fw-bold text-white"
+                            style="background:#0891b2;border-radius:10px;border:none;">
+                        <i class="bi bi-arrow-right-circle me-2"></i>Continue
+                    </button>
+                    <a href="{% url 'career:degree_entry' %}" class="btn btn-outline-secondary btn-lg" style="border-radius:10px;">
+                        Back
+                    </a>
+                </div>
+            </form>
+
+        </div>
+    </div>
+
+    <!-- Alternative path -->
+    <div class="text-center mt-4">
+        <span class="text-muted small">
+            Already have your cluster points?
+            <a href="{% url 'career:degree_manual' %}" class="fw-semibold text-decoration-none" style="color:#059669;">
+                Enter them manually &rarr;
+            </a>
+        </span>
+    </div>
+
+</div>
+
+{% block extra_js %}
+<script>
+function previewFile(input) {
+    const file = input.files[0];
+    if (!file) return;
+    document.getElementById('file-name').textContent = file.name + ' (' + (file.size / 1024).toFixed(0) + ' KB)';
+    if (file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = e => {
+            const img = document.getElementById('preview-img');
+            img.src = e.target.result;
+            img.style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+    }
+}
+
+const zone = document.getElementById('dropZone');
+zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('dragover'); });
+zone.addEventListener('dragleave', () => zone.classList.remove('dragover'));
+zone.addEventListener('drop', e => {
+    e.preventDefault();
+    zone.classList.remove('dragover');
+    const file = e.dataTransfer.files[0];
+    if (file) {
+        const dt = new DataTransfer();
+        dt.items.add(file);
+        document.getElementById('slipInput').files = dt.files;
+        previewFile(document.getElementById('slipInput'));
+    }
+});
+</script>
+{% endblock %}
+{% endblock %}

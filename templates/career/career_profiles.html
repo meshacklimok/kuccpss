@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+{% block title %}Career Profiles — KUCCPSS{% endblock %}
+
+{% block content %}
+<div class="page-hero">
+  <div class="container">
+    <div class="row align-items-center">
+      <div class="col-md-8">
+        <h1><i class="fas fa-compass me-2"></i>Career Profiles</h1>
+        <p class="mb-0">Explore careers that match your interests, strengths, and qualifications.</p>
+      </div>
+      <div class="col-md-4 text-md-end mt-3 mt-md-0">
+        <a href="{% url 'career:quiz' %}" class="btn btn-gradient-success">
+          <i class="fas fa-clipboard-list me-2"></i>Take Career Quiz
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="container pb-5">
+
+  <!-- Filter Bar -->
+  <form method="GET" class="card p-3 mb-4">
+    <div class="row g-2 align-items-end">
+      <div class="col-md-6">
+        <input type="text" name="q" class="form-control" placeholder="Search careers…" value="{{ query }}">
+      </div>
+      <div class="col-md-4">
+        <select name="demand" class="form-select">
+          <option value="">All Demand Levels</option>
+          {% for val, label in demand_choices %}
+          <option value="{{ val }}" {% if active_demand == val %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-2">
+        <button type="submit" class="btn btn-primary-custom w-100">Filter</button>
+      </div>
+    </div>
+  </form>
+
+  <!-- Results Count -->
+  <p class="text-muted small mb-3">
+    Showing {{ page_obj.start_index }}–{{ page_obj.end_index }} of {{ page_obj.paginator.count }} profiles
+  </p>
+
+  <!-- Career Cards Grid -->
+  {% if page_obj.object_list %}
+  <div class="row g-4">
+    {% for profile in page_obj %}
+    <div class="col-md-6 col-lg-4">
+      <div class="card h-100 p-0 overflow-hidden" style="transition:transform .2s,box-shadow .2s;"
+           onmouseover="this.style.transform='translateY(-4px)';this.style.boxShadow='0 12px 32px rgba(30,58,138,.12)'"
+           onmouseout="this.style.transform='';this.style.boxShadow=''">
+
+        {% if profile.image %}
+        <img src="{{ profile.image.url }}" alt="{{ profile.title }}"
+             class="w-100" style="height:160px;object-fit:cover;">
+        {% else %}
+        <div class="d-flex align-items-center justify-content-center"
+             style="height:120px;background:linear-gradient(135deg,#1e3a8a 0%,#2563eb 100%);">
+          <i class="{{ profile.icon|default:'fas fa-briefcase' }} fa-3x text-white opacity-75"></i>
+        </div>
+        {% endif %}
+
+        <div class="card-body d-flex flex-column">
+          <div class="d-flex justify-content-between align-items-start mb-2">
+            <h6 class="fw-bold mb-0">{{ profile.title }}</h6>
+            <span class="badge rounded-pill
+              {% if profile.demand_level == 'high' %}bg-success
+              {% elif profile.demand_level == 'medium' %}bg-warning text-dark
+              {% else %}bg-secondary{% endif %} ms-2 flex-shrink-0">
+              {{ profile.get_demand_level_display }}
+            </span>
+          </div>
+
+          <p class="text-muted small flex-grow-1" style="line-height:1.5;">
+            {{ profile.description|truncatewords:20 }}
+          </p>
+
+          {% if profile.average_salary %}
+          <p class="small mb-2">
+            <i class="fas fa-coins text-success me-1"></i>
+            <strong>Avg. Salary:</strong> {{ profile.average_salary }}
+          </p>
+          {% endif %}
+
+          <a href="{% url 'career:career_profile_detail' profile.slug %}"
+             class="btn btn-primary-custom btn-sm mt-auto">
+            Explore Career <i class="fas fa-arrow-right ms-1"></i>
+          </a>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- Pagination -->
+  {% if page_obj.has_other_pages %}
+  <nav class="mt-4">
+    <ul class="pagination justify-content-center">
+      {% if page_obj.has_previous %}
+      <li class="page-item">
+        <a class="page-link" href="?page={{ page_obj.previous_page_number }}&q={{ query }}&demand={{ active_demand }}">
+          &laquo; Prev
+        </a>
+      </li>
+      {% endif %}
+      {% for num in page_obj.paginator.page_range %}
+      <li class="page-item {% if num == page_obj.number %}active{% endif %}">
+        <a class="page-link" href="?page={{ num }}&q={{ query }}&demand={{ active_demand }}">{{ num }}</a>
+      </li>
+      {% endfor %}
+      {% if page_obj.has_next %}
+      <li class="page-item">
+        <a class="page-link" href="?page={{ page_obj.next_page_number }}&q={{ query }}&demand={{ active_demand }}">
+          Next &raquo;
+        </a>
+      </li>
+      {% endif %}
+    </ul>
+  </nav>
+  {% endif %}
+
+  {% else %}
+  <div class="text-center py-5">
+    <i class="fas fa-search fa-3x text-muted mb-3"></i>
+    <h5 class="text-muted">No career profiles found</h5>
+    <p class="text-muted small">
+      {% if query or active_demand %}Try adjusting your filters.{% else %}No careers have been added yet.{% endif %}
+    </p>
+    {% if query or active_demand %}
+    <a href="{% url 'career:career_profiles' %}" class="btn btn-outline-secondary">Clear filters</a>
+    {% endif %}
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}

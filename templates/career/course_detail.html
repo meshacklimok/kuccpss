@@ -1,0 +1,210 @@
+{% extends "base.html" %}
+
+{% block title %}Course Details - {{ course.name|default:tv_course.name|default:kmtc_course.name|default:ttc_course.name }}{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-lg-12 text-center">
+            <h1 class="display-6 fw-bold">{{ course.name|default:tv_course.name|default:kmtc_course.name|default:ttc_course.name }}</h1>
+            <p class="lead">Detailed information about this course and its career opportunities.</p>
+        </div>
+    </div>
+
+    <!-- Course Basic Info -->
+    <div class="row mb-5">
+        <div class="col-lg-12">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <p><strong>Category:</strong> 
+                        {% if course %}{{ course.category.name }}{% elif tv_course %}{{ tv_course.category.name }}{% elif kmtc_course %}KMTC{% elif ttc_course %}TTC{% endif %}
+                    </p>
+                    <p><strong>Description:</strong></p>
+                    <p>{{ course.description|default:tv_course.description|default:kmtc_course.description|default:ttc_course.description }}</p>
+
+                    <p><strong>Career Paths / Recommended Fields:</strong></p>
+                    <ul>
+                        {% for path in (course.career_paths|default:tv_course.career_paths|default:kmtc_course.career_paths|default:ttc_course.career_paths).splitlines %}
+                        <li>{{ path }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cluster / Required Subjects -->
+    <div class="row mb-5">
+        <div class="col-lg-12">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="fw-bold">Required Subjects</h5>
+                    <div class="row g-2">
+                        {% if course and course.cluster_subjects.all %}
+                            {% for sub in course.cluster_subjects.all %}
+                                <div class="col-md-3 col-sm-6">
+                                    <span class="badge bg-primary">{{ sub.name }}</span>
+                                </div>
+                            {% endfor %}
+                        {% elif tv_course and tv_course.required_subjects.all %}
+                            {% for sub in tv_course.required_subjects.all %}
+                                <div class="col-md-3 col-sm-6">
+                                    <span class="badge bg-secondary">{{ sub.name }}</span>
+                                </div>
+                            {% endfor %}
+                        {% elif kmtc_course and kmtc_course.required_subjects.all %}
+                            {% for sub in kmtc_course.required_subjects.all %}
+                                <div class="col-md-3 col-sm-6">
+                                    <span class="badge bg-success">{{ sub.name }}</span>
+                                </div>
+                            {% endfor %}
+                        {% elif ttc_course and ttc_course.required_subjects.all %}
+                            {% for sub in ttc_course.required_subjects.all %}
+                                <div class="col-md-3 col-sm-6">
+                                    <span class="badge bg-warning text-dark">{{ sub.name }}</span>
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            <p class="text-muted">No specific subjects required.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- University / Campus Availability -->
+    <div class="row mb-5">
+        <div class="col-lg-12">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="fw-bold">Available At</h5>
+                    <ul>
+                        {% if course %}
+                            {% for cutoff in course.cutoffs.all %}
+                                <li>{{ cutoff.university.name }} - Cutoff: {{ cutoff.cutoff_points }} pts ({{ cutoff.year }})</li>
+                            {% endfor %}
+                        {% elif tv_course %}
+                            <li>TVET Category: {{ tv_course.category.name }}</li>
+                        {% elif kmtc_course %}
+                            {% for campus in kmtc_course.campuses.all %}
+                                <li>{{ campus.name }} - County: {{ campus.county|default:"-" }}</li>
+                            {% endfor %}
+                        {% elif ttc_course %}
+                            {% for college in ttc_course.colleges.all %}
+                                <li>{{ college.name }} - County: {{ college.county|default:"-" }}</li>
+                            {% endfor %}
+                        {% endif %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Historical Cutoff Trends -->
+    {% if course and course.cutoff_history.all %}
+    <div class="row mb-5">
+        <div class="col-lg-12">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="fw-bold">Historical Cutoff Trends</h5>
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Year</th>
+                                <th>University</th>
+                                <th>Cutoff Points</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for history in course.cutoff_history.all %}
+                            <tr>
+                                <td>{{ history.year }}</td>
+                                <td>{{ history.university.name }}</td>
+                                <td>{{ history.cutoff_points }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Career Insights -->
+    {% if course or tv_course or kmtc_course or ttc_course %}
+    <div class="row mb-5">
+        <div class="col-lg-12">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="fw-bold">Career Insights</h5>
+                    {% if course and course.career_insights.all %}
+                        {% for insight in course.career_insights.all %}
+                            <p><strong>Demand Level:</strong> {{ insight.demand_level|default:"-" }}</p>
+                            <p><strong>Average Salary:</strong> {{ insight.average_salary|default:"-" }}</p>
+                            <p><strong>Career Fields:</strong></p>
+                            <ul>
+                                {% for field in insight.career_fields.splitlines %}
+                                    <li>{{ field }}</li>
+                                {% endfor %}
+                            </ul>
+                        {% endfor %}
+                    {% elif tv_course and tv_course.career_insights.all %}
+                        {% for insight in tv_course.career_insights.all %}
+                            <p><strong>Demand Level:</strong> {{ insight.demand_level|default:"-" }}</p>
+                            <p><strong>Average Salary:</strong> {{ insight.average_salary|default:"-" }}</p>
+                            <p><strong>Career Fields:</strong></p>
+                            <ul>
+                                {% for field in insight.career_fields.splitlines %}
+                                    <li>{{ field }}</li>
+                                {% endfor %}
+                            </ul>
+                        {% elif kmtc_course and kmtc_course.career_insights.all %}
+                        {% for insight in kmtc_course.career_insights.all %}
+                            <p><strong>Demand Level:</strong> {{ insight.demand_level|default:"-" }}</p>
+                            <p><strong>Average Salary:</strong> {{ insight.average_salary|default:"-" }}</p>
+                            <p><strong>Career Fields:</strong></p>
+                            <ul>
+                                {% for field in insight.career_fields.splitlines %}
+                                    <li>{{ field }}</li>
+                                {% endfor %}
+                            </ul>
+                        {% elif ttc_course and ttc_course.career_insights.all %}
+                        {% for insight in ttc_course.career_insights.all %}
+                            <p><strong>Demand Level:</strong> {{ insight.demand_level|default:"-" }}</p>
+                            <p><strong>Average Salary:</strong> {{ insight.average_salary|default:"-" }}</p>
+                            <p><strong>Career Fields:</strong></p>
+                            <ul>
+                                {% for field in insight.career_fields.splitlines %}
+                                    <li>{{ field }}</li>
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
+                    {% else %}
+                        <p class="text-muted">No career insights available for this course yet.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Back Button -->
+    <div class="row mb-5">
+        <div class="col-lg-12 text-center">
+            <a href="{% url 'career:ai_recommendations' %}" class="btn btn-secondary btn-lg">Back to Recommendations</a>
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    console.log("Course detail page loaded.");
+</script>
+{% endblock %}

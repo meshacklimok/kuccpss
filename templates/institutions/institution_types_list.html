@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+{% block title %}Institutions — KUCCPSS{% endblock %}
+
+{% block content %}
+<div class="page-hero">
+  <div class="container">
+    <h1><i class="fas fa-university me-2"></i>Institutions</h1>
+    <p class="mb-0">Browse Public Universities, Private Universities, KMTCs, TVETs, TTCs and more.</p>
+  </div>
+</div>
+
+<div class="container pb-5">
+
+  {% if types %}
+  <div class="row g-4 justify-content-center">
+    {% for type in types %}
+    <div class="col-6 col-md-4 col-lg-2">
+      <a href="{% url 'institutions:institution_type_detail' type_slug=type.slug %}" class="text-decoration-none">
+        <div class="inst-type-card card h-100 text-center p-4"
+             style="border-top: 4px solid {{ type.color_code }};">
+          <div class="mx-auto mb-3 d-flex align-items-center justify-content-center"
+               style="width:64px;height:64px;border-radius:50%;background:{{ type.bg_color }};">
+            <i class="{{ type.icon }} fa-2x" style="color:{{ type.color_code }};"></i>
+          </div>
+          <h6 class="fw-bold mb-1" style="font-size:0.95rem;">{{ type.name }}</h6>
+          <div class="text-muted" style="font-size:0.8rem;">
+            {{ type.inst_count }} institution{{ type.inst_count|pluralize }}
+          </div>
+        </div>
+      </a>
+      {% if request.user.is_staff %}
+      <div class="text-center mt-1">
+        <a href="{% url 'admin:institutions_institutiontype_change' type.id %}"
+           class="btn btn-sm btn-outline-secondary" style="font-size:0.72rem;">Edit</a>
+      </div>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+
+  {% else %}
+  <div class="text-center py-5">
+    <i class="fas fa-university fa-4x text-muted mb-3"></i>
+    <h5 class="text-muted">No institution types available yet</h5>
+    {% if request.user.is_staff %}
+    <a href="/admin/institutions/institutiontype/add/" class="btn btn-primary mt-2">
+      <i class="fas fa-plus me-1"></i>Add Institution Type
+    </a>
+    {% endif %}
+  </div>
+  {% endif %}
+
+</div>
+
+<style>
+.inst-type-card {
+  transition: transform 0.2s, box-shadow 0.2s;
+  border-radius: 1rem;
+}
+.inst-type-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 12px 28px rgba(0,0,0,0.12) !important;
+}
+</style>
+{% endblock %}

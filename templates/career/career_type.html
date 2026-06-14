@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Select Career Type{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <h2 class="mb-4 text-center">Select Your Career Type</h2>
+    <form method="post" id="careerTypeForm">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn btn-primary w-100 mt-3">Next</button>
+    </form>
+</div>
+
+<script>
+document.getElementById("careerTypeForm").addEventListener("submit", function(){
+    // Optional: disable button to prevent double submit
+    this.querySelector("button").disabled = true;
+});
+</script>
+{% endblock %}

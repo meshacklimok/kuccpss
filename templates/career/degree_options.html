@@ -1,0 +1,192 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Choose How to Enter Your Cluster Points{% endblock %}
+
+{% block content %}
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+
+<style>
+body { background: #f5f7fa; }
+
+.options-wrap {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 2.5rem 1rem 3rem;
+}
+
+.step-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: #dcfce7;
+    color: #15803d;
+    border-radius: 20px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    padding: 4px 14px;
+    margin-bottom: 1rem;
+}
+
+.opt-card {
+    background: #fff;
+    border: 2px solid #e2e8f0;
+    border-radius: 14px;
+    padding: 1.4rem 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    cursor: pointer;
+    transition: border-color 0.18s, box-shadow 0.18s, transform 0.15s;
+    text-decoration: none;
+    color: inherit;
+    width: 100%;
+    text-align: left;
+    margin-bottom: 0.85rem;
+}
+.opt-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.09);
+    text-decoration: none;
+    color: inherit;
+}
+.opt-card.primary {
+    border-color: #4f46e5;
+    background: linear-gradient(135deg, #f5f3ff 0%, #eef2ff 100%);
+}
+.opt-card.primary:hover { box-shadow: 0 6px 24px rgba(79,70,229,0.18); }
+.opt-card.upload:hover  { border-color: #06b6d4; }
+.opt-card.paste:hover   { border-color: #10b981; }
+.opt-card.manual:hover  { border-color: #f59e0b; }
+
+.opt-icon {
+    width: 52px; height: 52px;
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.4rem;
+    flex-shrink: 0;
+}
+.opt-card.primary .opt-icon { background: #4f46e5; color: #fff; }
+.opt-card.upload  .opt-icon { background: #ecfeff; color: #0891b2; }
+.opt-card.paste   .opt-icon { background: #ecfdf5; color: #059669; }
+.opt-card.manual  .opt-icon { background: #fffbeb; color: #d97706; }
+
+.opt-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 2px;
+}
+.opt-card.primary .opt-title { color: #3730a3; }
+.opt-desc {
+    font-size: 0.8rem;
+    color: #64748b;
+    line-height: 1.4;
+}
+
+.recommended-badge {
+    font-size: 0.65rem;
+    font-weight: 700;
+    background: #4f46e5;
+    color: #fff;
+    border-radius: 4px;
+    padding: 2px 7px;
+    margin-left: 8px;
+    vertical-align: middle;
+    letter-spacing: 0.04em;
+}
+
+.opt-arrow {
+    margin-left: auto;
+    color: #94a3b8;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+}
+.opt-card.primary .opt-arrow { color: #4f46e5; }
+</style>
+
+<div class="options-wrap">
+
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'career:home' %}" class="text-decoration-none">Career Guidance</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'career:degree_calculate' %}" class="text-decoration-none">Enter Grades</a></li>
+            <li class="breadcrumb-item active">Choose Method</li>
+        </ol>
+    </nav>
+
+    <!-- Step indicator -->
+    {% if has_grades %}
+    <div class="step-badge">
+        <i class="bi bi-check-circle-fill"></i>
+        Grades saved — subject requirements will be applied to your results
+    </div>
+    {% endif %}
+
+    <h2 class="fw-bold mb-1" style="color:#1e293b;">How would you like to get your cluster points?</h2>
+    <p class="text-muted mb-4" style="font-size:0.9rem;">
+        Choose the most convenient option below. Your KCSE grades are already saved.
+    </p>
+
+    <!-- Option 1: Use the calculator (primary) -->
+    <form method="post">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="calculate">
+        <button type="submit" class="opt-card primary">
+            <div class="opt-icon"><i class="bi bi-calculator-fill"></i></div>
+            <div>
+                <div class="opt-title">
+                    Use Our Calculator
+                    <span class="recommended-badge">RECOMMENDED</span>
+                </div>
+                <div class="opt-desc">We automatically compute your cluster points from the grades you just entered. Fast and accurate.</div>
+            </div>
+            <i class="bi bi-arrow-right opt-arrow"></i>
+        </button>
+    </form>
+
+    <!-- Option 2: Upload KCSE slip -->
+    <form method="post">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="upload">
+        <button type="submit" class="opt-card upload">
+            <div class="opt-icon"><i class="bi bi-camera-fill"></i></div>
+            <div>
+                <div class="opt-title">Upload KCSE Slip</div>
+                <div class="opt-desc">Take a photo or upload an image of your official KCSE result slip — we'll read the points automatically.</div>
+            </div>
+            <i class="bi bi-arrow-right opt-arrow"></i>
+        </button>
+    </form>
+
+    <!-- Option 3: Paste cluster values -->
+    <form method="post">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="paste">
+        <button type="submit" class="opt-card paste">
+            <div class="opt-icon"><i class="bi bi-clipboard2-fill"></i></div>
+            <div>
+                <div class="opt-title">Paste Cluster Values</div>
+                <div class="opt-desc">Already know your cluster points? Paste the values directly from your KUCCPS result.</div>
+            </div>
+            <i class="bi bi-arrow-right opt-arrow"></i>
+        </button>
+    </form>
+
+    <!-- Option 4: Enter manually -->
+    <form method="post">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="manual">
+        <button type="submit" class="opt-card manual">
+            <div class="opt-icon"><i class="bi bi-sliders"></i></div>
+            <div>
+                <div class="opt-title">Enter Cluster Points Manually</div>
+                <div class="opt-desc">Type in your cluster point values yourself, one cluster group at a time.</div>
+            </div>
+            <i class="bi bi-arrow-right opt-arrow"></i>
+        </button>
+    </form>
+
+</div>
+{% endblock %}

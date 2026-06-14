@@ -1,0 +1,321 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — KUCCPSS{% endblock %}
+
+{% block content %}
+<div class="page-hero">
+  <div class="container">
+    <div class="d-flex align-items-center gap-3">
+      {% if user.profile_picture %}
+      <img src="{{ user.profile_picture.url }}" width="64" height="64"
+           class="rounded-circle border border-white shadow" style="object-fit:cover;" alt="">
+      {% else %}
+      <div class="rounded-circle bg-white d-flex align-items-center justify-content-center shadow"
+           style="width:64px;height:64px;font-size:1.6rem;color:var(--primary);font-weight:800;">
+        {{ user.full_name|first|upper|default:user.email|first|upper }}
+      </div>
+      {% endif %}
+      <div>
+        <h1 class="mb-0">Welcome back, {{ user.full_name|default:user.email }}!</h1>
+        <p class="mb-0 opacity-75">
+          {% if user.county %}{{ user.county }} · {% endif %}
+          {% if user.kcse_year %}KCSE {{ user.kcse_year }} · {% endif %}
+          {{ user.email }}
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="container pb-5">
+
+  <!-- Summary Cards -->
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-xl-2">
+      <a href="{% url 'clusterpoints:eligible_courses' %}" class="text-decoration-none">
+        <div class="card card-accent-green p-3 text-center h-100">
+          <div class="fs-2 fw-bold text-success">{{ eligible_count|default:"0" }}</div>
+          <div class="small text-muted">Eligible Courses</div>
+        </div>
+      </a>
+    </div>
+    <div class="col-6 col-xl-2">
+      <a href="{% url 'accounts:saved_courses' %}" class="text-decoration-none">
+        <div class="card card-accent-blue p-3 text-center h-100">
+          <div class="fs-2 fw-bold" style="color:var(--primary);">{{ saved_count|default:"0" }}</div>
+          <div class="small text-muted">Saved Courses</div>
+        </div>
+      </a>
+    </div>
+    <div class="col-6 col-xl-2">
+      <a href="{% url 'accounts:applications' %}" class="text-decoration-none">
+        <div class="card p-3 text-center h-100">
+          <div class="fs-2 fw-bold text-warning">{{ applications|length|default:"0" }}</div>
+          <div class="small text-muted">Applications</div>
+        </div>
+      </a>
+    </div>
+    <div class="col-6 col-xl-2">
+      <a href="{% url 'career:career_profiles' %}" class="text-decoration-none">
+        <div class="card p-3 text-center h-100">
+          <div class="fs-2 fw-bold" style="color:#7c3aed;">{{ recommended_careers|length|default:"0" }}</div>
+          <div class="small text-muted">Career Picks</div>
+        </div>
+      </a>
+    </div>
+    <div class="col-6 col-xl-2">
+      <a href="{% url 'resources:resource_list' %}" class="text-decoration-none">
+        <div class="card p-3 text-center h-100">
+          <div class="fs-2 fw-bold text-info"><i class="fas fa-book-open"></i></div>
+          <div class="small text-muted">Resources</div>
+        </div>
+      </a>
+    </div>
+    <div class="col-6 col-xl-2">
+      <a href="{% url 'accounts:notifications' %}" class="text-decoration-none">
+        <div class="card p-3 text-center h-100 position-relative">
+          <div class="fs-2 fw-bold text-secondary"><i class="fas fa-bell"></i></div>
+          {% if unread_count %}
+          <span class="position-absolute top-0 end-0 badge bg-danger rounded-pill m-2">
+            {{ unread_count }}
+          </span>
+          {% endif %}
+          <div class="small text-muted">Notifications</div>
+        </div>
+      </a>
+    </div>
+  </div>
+
+  <div class="row g-4">
+
+    <!-- Left Column -->
+    <div class="col-lg-8">
+
+      <!-- Cluster Points Chart -->
+      {% if latest_result and cluster_results %}
+      <div class="card mb-4 p-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h5 class="fw-bold mb-0">
+            <i class="fas fa-chart-bar me-2 text-primary"></i>Your Cluster Points
+          </h5>
+          <div>
+            <span class="badge bg-primary bg-opacity-10 text-primary me-2">
+              Aggregate: {{ latest_result.total_points }} / 84 pts
+            </span>
+            <a href="{% url 'clusterpoints:calculator' %}" class="btn btn-sm btn-outline-primary">
+              <i class="fas fa-sync me-1"></i>Recalculate
+            </a>
+          </div>
+        </div>
+        <canvas id="clusterChart" height="120"></canvas>
+      </div>
+      {% else %}
+      <div class="card mb-4 p-5 text-center">
+        <i class="fas fa-calculator fa-3x text-muted mb-3"></i>
+        <h5>No KCSE Results Yet</h5>
+        <p class="text-muted mb-3">Enter your grades to calculate cluster points and see eligible courses.</p>
+        <a href="{% url 'clusterpoints:calculator' %}" class="btn btn-gradient-success px-5">
+          <i class="fas fa-calculator me-2"></i>Start Calculator
+        </a>
+      </div>
+      {% endif %}
+
+      <!-- Quick Actions -->
+      <div class="card mb-4 p-4">
+        <h5 class="fw-bold mb-3"><i class="fas fa-bolt me-2 text-warning"></i>Quick Actions</h5>
+        <div class="row g-2">
+          <div class="col-6 col-md-3">
+            <a href="{% url 'clusterpoints:calculator' %}"
+               class="btn btn-outline-primary w-100 d-flex flex-column align-items-center py-3 gap-1">
+              <i class="fas fa-calculator fa-lg"></i>
+              <small>Calculator</small>
+            </a>
+          </div>
+          <div class="col-6 col-md-3">
+            <a href="{% url 'clusterpoints:eligible_courses' %}"
+               class="btn btn-outline-success w-100 d-flex flex-column align-items-center py-3 gap-1">
+              <i class="fas fa-check-circle fa-lg"></i>
+              <small>Eligible Courses</small>
+            </a>
+          </div>
+          <div class="col-6 col-md-3">
+            <a href="{% url 'career:quiz' %}"
+               class="btn btn-outline-warning w-100 d-flex flex-column align-items-center py-3 gap-1">
+              <i class="fas fa-clipboard-list fa-lg"></i>
+              <small>Career Quiz</small>
+            </a>
+          </div>
+          <div class="col-6 col-md-3">
+            <a href="{% url 'resources:resource_list' %}"
+               class="btn btn-outline-info w-100 d-flex flex-column align-items-center py-3 gap-1">
+              <i class="fas fa-download fa-lg"></i>
+              <small>Guides</small>
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Applications -->
+      <div class="card mb-4 p-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h5 class="fw-bold mb-0">
+            <i class="fas fa-file-alt me-2 text-info"></i>My Applications
+          </h5>
+          <a href="{% url 'accounts:application_add' %}" class="btn btn-sm btn-gradient-success">
+            <i class="fas fa-plus me-1"></i>Add
+          </a>
+        </div>
+        {% if applications %}
+        <div class="table-responsive">
+          <table class="table table-hover table-sm align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>Course</th><th>Institution</th><th>Status</th><th>Deadline</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for app in applications|slice:":5" %}
+              <tr>
+                <td class="fw-500">{{ app.course_name|default:"—" }}</td>
+                <td class="text-muted small">{{ app.institution_name|default:"—" }}</td>
+                <td>
+                  <span class="badge rounded-pill
+                    {% if app.status == 'accepted' %}bg-success
+                    {% elif app.status == 'rejected' %}bg-danger
+                    {% elif app.status == 'submitted' %}bg-primary
+                    {% elif app.status == 'waitlisted' %}bg-warning text-dark
+                    {% else %}bg-secondary{% endif %}">
+                    {{ app.get_status_display }}
+                  </span>
+                </td>
+                <td class="text-muted small">{{ app.deadline|date:"d M Y"|default:"—" }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% if applications|length > 5 %}
+        <a href="{% url 'accounts:applications' %}" class="btn btn-sm btn-outline-secondary mt-2">
+          View all {{ applications|length }} applications
+        </a>
+        {% endif %}
+        {% else %}
+        <p class="text-muted small mb-0">No applications tracked yet.
+          <a href="{% url 'accounts:application_add' %}">Add your first one.</a>
+        </p>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Right Column -->
+    <div class="col-lg-4">
+
+      <!-- Profile Card -->
+      <div class="card mb-4 p-4 text-center">
+        {% if user.profile_picture %}
+        <img src="{{ user.profile_picture.url }}" width="80" height="80"
+             class="rounded-circle mx-auto mb-2 shadow" style="object-fit:cover;" alt="">
+        {% else %}
+        <div class="rounded-circle d-flex align-items-center justify-content-center mx-auto mb-2 shadow"
+             style="width:80px;height:80px;font-size:2rem;font-weight:800;background:#e8f0fe;color:var(--primary);">
+          {{ user.full_name|first|upper|default:user.email|first|upper }}
+        </div>
+        {% endif %}
+        <h6 class="fw-bold mb-0">{{ user.full_name|default:"Complete your profile" }}</h6>
+        <p class="text-muted small">{{ user.email }}</p>
+        {% if user.county or user.kcse_year %}
+        <p class="small text-muted mb-2">
+          {% if user.county %}<i class="fas fa-map-marker-alt me-1"></i>{{ user.county }}{% endif %}
+          {% if user.kcse_year %} · KCSE {{ user.kcse_year }}{% endif %}
+        </p>
+        {% endif %}
+        <a href="{% url 'accounts:profile' %}" class="btn btn-sm btn-outline-primary">
+          <i class="fas fa-edit me-1"></i>Edit Profile
+        </a>
+      </div>
+
+      <!-- Recommended Careers -->
+      <div class="card mb-4 p-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h6 class="fw-bold mb-0">
+            <i class="fas fa-compass me-2 text-primary"></i>Career Ideas
+          </h6>
+          <a href="{% url 'career:career_profiles' %}" class="small" style="color:var(--primary);">See all</a>
+        </div>
+        {% for career in recommended_careers %}
+        <a href="{% url 'career:career_profile_detail' career.slug %}"
+           class="d-flex align-items-center gap-3 p-2 rounded-3 text-decoration-none mb-1"
+           style="transition:background 0.15s;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background=''">
+          <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
+               style="width:40px;height:40px;background:#e8f0fe;color:var(--primary);">
+            <i class="{{ career.icon|default:'fas fa-briefcase' }}"></i>
+          </div>
+          <div>
+            <div class="fw-bold small text-dark">{{ career.title }}</div>
+            <div class="text-muted" style="font-size:0.75rem;">{{ career.average_salary|default:"View details" }}</div>
+          </div>
+        </a>
+        {% empty %}
+        <p class="text-muted small">
+          <a href="{% url 'career:quiz' %}">Take the career quiz</a> to get personalised suggestions.
+        </p>
+        {% endfor %}
+        <a href="{% url 'career:quiz' %}" class="btn btn-sm btn-gradient-success w-100 mt-2">
+          <i class="fas fa-clipboard-list me-1"></i>Take Career Quiz
+        </a>
+      </div>
+
+      <!-- Notifications -->
+      {% if notifications %}
+      <div class="card p-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h6 class="fw-bold mb-0">
+            <i class="fas fa-bell me-2 text-warning"></i>Notifications
+          </h6>
+          <a href="{% url 'accounts:notifications' %}" class="small" style="color:var(--primary);">View all</a>
+        </div>
+        {% for notif in notifications %}
+        <div class="d-flex gap-2 mb-2 p-2 rounded-3" style="background:#fffbeb;">
+          <i class="fas fa-circle-info text-warning mt-1 flex-shrink-0"></i>
+          <p class="small mb-0 text-dark">{{ notif.message }}</p>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{% if cluster_results %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+const labels = [{% for r in cluster_results %}"{{ r.cluster.name|truncatechars:20 }}"{% if not forloop.last %},{% endif %}{% endfor %}];
+const data   = [{% for r in cluster_results %}{{ r.cluster_points }}{% if not forloop.last %},{% endif %}{% endfor %}];
+const colors = data.map(v => v >= 40 ? '#16a34a' : v >= 30 ? '#2563eb' : v >= 20 ? '#f97316' : '#94a3b8');
+
+new Chart(document.getElementById('clusterChart'), {
+  type: 'bar',
+  data: {
+    labels,
+    datasets: [{
+      label: 'Cluster Points',
+      data,
+      backgroundColor: colors,
+      borderRadius: 6,
+      borderSkipped: false,
+    }]
+  },
+  options: {
+    responsive: true,
+    plugins: { legend: { display: false } },
+    scales: {
+      y: { beginAtZero: true, max: 48, grid: { color: '#f1f5f9' } },
+      x: { ticks: { font: { size: 10 } } }
+    }
+  }
+});
+</script>
+{% endif %}
+{% endblock %}

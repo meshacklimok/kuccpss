@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% block title %}Career Assessment Quiz — KUCCPSS{% endblock %}
+
+{% block content %}
+<div class="page-hero">
+  <div class="container">
+    <h1><i class="fas fa-clipboard-list me-2"></i>Career Assessment Quiz</h1>
+    <p class="mb-0">Answer a few questions and discover careers that match your personality and interests.</p>
+  </div>
+</div>
+
+<div class="container pb-5">
+  <div class="row justify-content-center">
+    <div class="col-lg-8">
+
+      {% if questions %}
+      <form method="POST" id="quizForm">
+        {% csrf_token %}
+
+        {% regroup questions by category as category_groups %}
+
+        {% for group in category_groups %}
+        <div class="mb-4">
+          <h5 class="fw-bold mb-3 text-capitalize" style="color:var(--primary);">
+            <i class="fas fa-
+              {% if group.grouper == 'interest' %}star
+              {% elif group.grouper == 'strength' %}dumbbell
+              {% elif group.grouper == 'personality' %}user-circle
+              {% else %}heart{% endif %} me-2"></i>
+            {{ group.grouper|capfirst }} Questions
+          </h5>
+
+          {% for question in group.list %}
+          <div class="card p-4 mb-3">
+            <p class="fw-bold mb-3">{{ forloop.parentloop.counter }}.{{ forloop.counter }}. {{ question.text }}</p>
+            <div class="row g-2">
+              {% for option in question.options.all %}
+              <div class="col-md-6">
+                <label class="d-flex align-items-start gap-2 p-3 border rounded-3 cursor-pointer"
+                       style="cursor:pointer;transition:all .15s;"
+                       onmouseover="this.style.borderColor='var(--primary)';this.style.background='#e8f0fe'"
+                       onmouseout="if(!this.querySelector('input').checked){this.style.borderColor='';this.style.background=''}">
+                  <input type="radio" name="q_{{ question.pk }}" value="{{ option.pk }}"
+                         class="mt-1 quiz-radio" required
+                         onchange="highlightSelected(this)">
+                  <span class="small">{{ option.text }}</span>
+                </label>
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+        {% endfor %}
+
+        <div class="text-center mt-4">
+          <button type="submit" class="btn btn-gradient-success btn-lg px-5">
+            <i class="fas fa-magic me-2"></i>See My Career Matches
+          </button>
+        </div>
+      </form>
+
+      {% else %}
+      <div class="text-center py-5">
+        <i class="fas fa-clipboard-list fa-4x text-muted mb-3"></i>
+        <h4>No quiz questions yet</h4>
+        <p class="text-muted">Check back later — we're building your assessment.</p>
+        <a href="{% url 'career:career_profiles' %}" class="btn btn-primary-custom">
+          Browse Career Profiles Instead
+        </a>
+      </div>
+      {% endif %}
+
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function highlightSelected(radio) {
+  const group = radio.closest('.row');
+  group.querySelectorAll('label').forEach(l => {
+    l.style.borderColor = '';
+    l.style.background  = '';
+  });
+  const lbl = radio.closest('label');
+  lbl.style.borderColor = 'var(--primary)';
+  lbl.style.background  = '#e8f0fe';
+}
+
+// Restore selection state on page back
+document.querySelectorAll('.quiz-radio:checked').forEach(r => highlightSelected(r));
+</script>
+{% endblock %}

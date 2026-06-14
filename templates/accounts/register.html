@@ -1,0 +1,197 @@
+{% extends "base.html" %}
+{% load widget_tweaks %}
+{% load static %}
+{% load socialaccount %}
+
+{% block title %}Register — KUCCPSS{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-center align-items-center min-vh-100 bg-wallpaper" style="background-size: cover; background-position: center;">
+    <div class="card p-4 register-card fade-in-up">
+
+        <!-- Header -->
+        <div class="text-center mb-4">
+            <h2 class="fw-bold">Create Account</h2>
+            <p class="text-muted">Join KUCCPSS and find your ideal course</p>
+        </div>
+
+        <!-- Registration Form -->
+        <form method="POST" novalidate>
+            {% csrf_token %}
+
+            <!-- Full Name -->
+            <div class="form-floating mb-3">
+                {{ form.full_name|add_class:"form-control" }}
+                <label for="{{ form.full_name.id_for_label }}">Full Name</label>
+                {% if form.full_name.errors %}
+                    <div class="text-danger small mt-1">{{ form.full_name.errors|striptags }}</div>
+                {% endif %}
+            </div>
+
+            <!-- Email -->
+            <div class="form-floating mb-3">
+                {{ form.email|add_class:"form-control" }}
+                <label for="{{ form.email.id_for_label }}">Email Address</label>
+                {% if form.email.errors %}
+                    <div class="text-danger small mt-1">{{ form.email.errors|striptags }}</div>
+                {% endif %}
+            </div>
+
+            <!-- Password -->
+            <div class="form-floating mb-3">
+                {{ form.password1|add_class:"form-control" }}
+                <label for="{{ form.password1.id_for_label }}">Password</label>
+                {% if form.password1.errors %}
+                    <div class="text-danger small mt-1">{{ form.password1.errors|striptags }}</div>
+                {% endif %}
+            </div>
+
+            <!-- Confirm Password -->
+            <div class="form-floating mb-3">
+                {{ form.password2|add_class:"form-control" }}
+                <label for="{{ form.password2.id_for_label }}">Confirm Password</label>
+                {% if form.password2.errors %}
+                    <div class="text-danger small mt-1">{{ form.password2.errors|striptags }}</div>
+                {% endif %}
+            </div>
+
+            <!-- Phone Number -->
+            <div class="form-floating mb-3">
+                {{ form.phone_number|add_class:"form-control" }}
+                <label for="{{ form.phone_number.id_for_label }}">Phone Number <span class="text-muted small">(optional)</span></label>
+                {% if form.phone_number.errors %}
+                    <div class="text-danger small mt-1">{{ form.phone_number.errors|striptags }}</div>
+                {% endif %}
+            </div>
+
+            <!-- County + KCSE Year row -->
+            <div class="row g-2 mb-3">
+                <div class="col-7">
+                    <div class="form-floating">
+                        {{ form.county|add_class:"form-control" }}
+                        <label for="{{ form.county.id_for_label }}">County <span class="text-muted small">(optional)</span></label>
+                        {% if form.county.errors %}
+                            <div class="text-danger small mt-1">{{ form.county.errors|striptags }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="col-5">
+                    <div class="form-floating">
+                        {{ form.kcse_year|add_class:"form-control" }}
+                        <label for="{{ form.kcse_year.id_for_label }}">KCSE Year</label>
+                        {% if form.kcse_year.errors %}
+                            <div class="text-danger small mt-1">{{ form.kcse_year.errors|striptags }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Terms & Conditions -->
+            <div class="form-check mb-3">
+                {{ form.agreed_terms|add_class:"form-check-input" }}
+                <label class="form-check-label" for="{{ form.agreed_terms.id_for_label }}">
+                    I agree to the <a href="{% url 'accounts:terms' %}" class="text-success">Terms & Conditions</a>
+                </label>
+                {% if form.agreed_terms.errors %}
+                    <div class="text-danger small mt-1">{{ form.agreed_terms.errors|striptags }}</div>
+                {% endif %}
+            </div>
+
+            <!-- Submit Button -->
+            <button type="submit" class="btn btn-gradient-success w-100 py-2 fw-bold mb-3">
+                Register
+            </button>
+        </form>
+
+        <hr class="my-3">
+
+        <!-- Google Signup -->
+        <a href="{% provider_login_url 'google' method='oauth2' %}" class="btn btn-outline-dark w-100 py-2 mb-3 d-flex align-items-center justify-content-center hover-scale">
+            <img src="https://cdn-icons-png.flaticon.com/512/2991/2991148.png" width="20" class="me-2">
+            Continue with Google
+        </a>
+
+        <!-- Login Link -->
+        <div class="text-center">
+            <small>
+                Already have an account? 
+                <a href="{% url 'accounts:login' %}" class="fw-semibold text-success">Login</a>
+            </small>
+        </div>
+
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_head %}
+<style>
+/* ======================================
+   REGISTER CARD STYLES
+====================================== */
+.register-card {
+    max-width: 450px;
+    width: 100%;
+    border-radius: 20px;
+    backdrop-filter: blur(18px);
+    background: rgba(255, 255, 255, 0.92);
+    box-shadow: 0 16px 40px rgba(0,0,0,0.1);
+    animation: fadeInUp 0.8s ease;
+}
+
+/* FORM FLOATING LABELS */
+.form-floating > .form-control {
+    border-radius: 12px;
+    padding: 1rem 1rem;
+}
+.form-floating > label {
+    padding-left: 1rem;
+}
+
+/* BUTTONS */
+.btn-gradient-success {
+    background: linear-gradient(135deg, #16a34a, #15803d);
+    border: none;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+}
+.btn-gradient-success:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(22,163,74,0.35);
+    opacity: 0.95;
+}
+
+.btn-outline-dark {
+    border-radius: 12px;
+    transition: all 0.3s ease;
+}
+.btn-outline-dark:hover {
+    background-color: #f8f9fa;
+    transform: scale(1.03);
+}
+
+/* HOVER EFFECTS */
+.hover-scale {
+    transition: transform 0.3s ease;
+}
+.hover-scale:hover {
+    transform: scale(1.05);
+}
+
+/* ANIMATIONS */
+@keyframes fadeInUp {
+    from {opacity: 0; transform: translateY(30px);}
+    to {opacity: 1; transform: translateY(0);}
+}
+.fade-in-up {
+    animation: fadeInUp 0.8s ease forwards;
+}
+
+/* RESPONSIVE */
+@media (max-width: 576px) {
+    .register-card {
+        margin: 1rem;
+        padding: 2rem;
+    }
+}
+</style>
+{% endblock %}

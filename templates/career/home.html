@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Career Guidance Engine{% endblock %}
+
+{% block content %}
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+
+<style>
+body { background: #f5f7fa; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+
+.pathway-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+@media (max-width: 768px) {
+    .pathway-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 480px) {
+    .pathway-grid { grid-template-columns: 1fr 1fr; gap: 1rem; }
+}
+
+.pathway-card {
+    background: #fff;
+    border-radius: 1rem;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+    padding: 2rem 1rem;
+    text-align: center;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+    text-decoration: none;
+    color: inherit;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+}
+.pathway-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 12px 28px rgba(0,0,0,0.15);
+    text-decoration: none;
+    color: inherit;
+}
+.pathway-card.degree    { border-color: #4f46e5; }
+.pathway-card.diploma   { border-color: #0891b2; }
+.pathway-card.certificate { border-color: #059669; }
+.pathway-card.kmtc      { border-color: #dc2626; }
+.pathway-card.artisan   { border-color: #d97706; }
+.pathway-card.short-courses { border-color: #7c3aed; }
+
+.pathway-icon {
+    width: 64px; height: 64px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.75rem;
+}
+.degree    .pathway-icon { background: #eef2ff; color: #4f46e5; }
+.diploma   .pathway-icon { background: #ecfeff; color: #0891b2; }
+.certificate .pathway-icon { background: #ecfdf5; color: #059669; }
+.kmtc      .pathway-icon { background: #fef2f2; color: #dc2626; }
+.artisan   .pathway-icon { background: #fffbeb; color: #d97706; }
+.short-courses .pathway-icon { background: #f5f3ff; color: #7c3aed; }
+
+.pathway-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #1e293b;
+    line-height: 1.3;
+}
+.pathway-subtitle {
+    font-size: 0.78rem;
+    color: #64748b;
+    line-height: 1.4;
+}
+</style>
+
+<div class="container py-5">
+
+    <!-- Hero -->
+    <div class="text-center mb-5">
+        <h1 class="fw-bold text-dark mb-2">Career Guidance Engine</h1>
+        <p class="text-muted fs-5 mb-0">Choose your educational pathway to get started</p>
+    </div>
+
+    <!-- 6-box grid -->
+    <div class="pathway-grid">
+
+        <!-- Degree -->
+        <a href="{% url 'career:degree_calculate' %}" class="pathway-card degree">
+            <div class="pathway-icon"><i class="bi bi-mortarboard-fill"></i></div>
+            <div class="pathway-title">Degree</div>
+            <div class="pathway-subtitle">Bachelor's degree programmes at universities</div>
+        </a>
+
+        <!-- Diploma -->
+        <a href="{% url 'career:pathway_input' 'diploma' %}" class="pathway-card diploma">
+            <div class="pathway-icon"><i class="bi bi-award-fill"></i></div>
+            <div class="pathway-title">Diploma</div>
+            <div class="pathway-subtitle">Diploma courses at universities & colleges</div>
+        </a>
+
+        <!-- Certificate -->
+        <a href="{% url 'career:pathway_input' 'certificate' %}" class="pathway-card certificate">
+            <div class="pathway-icon"><i class="bi bi-patch-check-fill"></i></div>
+            <div class="pathway-title">Certificate</div>
+            <div class="pathway-subtitle">Certificate programmes at TVETs & colleges</div>
+        </a>
+
+        <!-- KMTC -->
+        <a href="{% url 'career:pathway_input' 'kmtc' %}" class="pathway-card kmtc">
+            <div class="pathway-icon"><i class="bi bi-hospital-fill"></i></div>
+            <div class="pathway-title">KMTC</div>
+            <div class="pathway-subtitle">Kenya Medical Training College courses</div>
+        </a>
+
+        <!-- Artisan -->
+        <a href="{% url 'career:pathway_input' 'artisan' %}" class="pathway-card artisan">
+            <div class="pathway-icon"><i class="bi bi-tools"></i></div>
+            <div class="pathway-title">Artisan</div>
+            <div class="pathway-subtitle">Craft & trade courses at TVET institutes</div>
+        </a>
+
+        <!-- Short Courses -->
+        <a href="{% url 'career:pathway_input' 'shortcourse' %}" class="pathway-card short-courses">
+            <div class="pathway-icon"><i class="bi bi-clock-history"></i></div>
+            <div class="pathway-title">Short Courses</div>
+            <div class="pathway-subtitle">Skills-based short training programmes</div>
+        </a>
+
+    </div>
+
+</div>
+{% endblock %}

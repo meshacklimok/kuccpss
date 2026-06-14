@@ -1,0 +1,172 @@
+{% extends 'base.html' %}
+{% block title %}{{ course_type.name }} Courses — KUCCPSS{% endblock %}
+
+{% block content %}
+<div class="page-hero">
+  <div class="container">
+    <nav aria-label="breadcrumb" class="mb-2">
+      <ol class="breadcrumb mb-0" style="font-size:0.85rem;">
+        <li class="breadcrumb-item"><a href="{% url 'courses:course_types_list' %}" class="text-white-50">Courses</a></li>
+        <li class="breadcrumb-item active text-white">{{ course_type.name }}</li>
+      </ol>
+    </nav>
+    <h1 class="mb-1">
+      <i class="{{ course_type.display_icon }} me-2"></i>{{ course_type.name }}
+    </h1>
+    {% if course_type.description %}
+    <p class="mb-0 opacity-75">{{ course_type.description }}</p>
+    {% endif %}
+  </div>
+</div>
+
+<div class="container pb-5">
+
+  {% if request.user.is_staff %}
+  <div class="mb-3">
+    <a href="{% url 'admin:courses_coursetype_change' course_type.id %}" class="btn btn-sm btn-outline-secondary">
+      <i class="fas fa-edit me-1"></i>Edit Course Type
+    </a>
+  </div>
+  {% endif %}
+
+  <!-- Search bar -->
+  <div class="row mb-4">
+    <div class="col-lg-6 col-md-8">
+      <form method="get" action="">
+        <div class="input-group shadow-sm">
+          <input type="text" name="q" value="{{ q }}" class="form-control form-control-lg"
+                 placeholder="Search {{ course_type.name }} courses…" autocomplete="off" autofocus>
+          <button class="btn btn-primary px-4" type="submit">
+            <i class="fas fa-search"></i>
+          </button>
+          {% if q %}
+          <a href="?" class="btn btn-outline-secondary" title="Clear search">
+            <i class="fas fa-times"></i>
+          </a>
+          {% endif %}
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- When searching: show matching courses across all categories -->
+  {% if q %}
+    <p class="text-muted mb-3">
+      {% if courses %}
+        {{ courses|length }} result{{ courses|length|pluralize }} for "<strong>{{ q }}</strong>"
+      {% else %}
+        No courses found for "<strong>{{ q }}</strong>"
+      {% endif %}
+    </p>
+    {% if courses %}
+    <div class="row g-3">
+      {% for course in courses %}
+      <div class="col-12 col-md-6 col-lg-4">
+        <div class="card h-100 shadow-sm p-3">
+          <div class="d-flex justify-content-between align-items-start mb-1">
+            <h6 class="fw-bold mb-0" style="line-height:1.35;">{{ course.name }}</h6>
+            {% if course.minimum_mean_grade %}
+            <span class="badge ms-2 flex-shrink-0" style="background:#dc2626;color:#fff;">{{ course.minimum_mean_grade }}</span>
+            {% endif %}
+          </div>
+          {% if course.category %}
+          <small class="text-muted mb-2">{{ course.category.name }}</small>
+          {% endif %}
+          {% if course.description %}
+          <p class="text-muted small mb-2" style="font-size:0.82rem;">{{ course.description|truncatewords:15 }}</p>
+          {% endif %}
+          <div class="mt-auto pt-2">
+            {% if course.category %}
+            <a href="{% url 'courses:course_detail' type_slug=course_type.slug category_slug=course.category.slug course_slug=course.slug %}"
+               class="btn btn-sm btn-primary">View Details</a>
+            {% else %}
+            <a href="{% url 'courses:course_detail_no_category' type_slug=course_type.slug course_slug=course.slug %}"
+               class="btn btn-sm btn-primary">View Details</a>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="text-center py-5 text-muted">
+      <i class="fas fa-search fa-3x mb-3 opacity-50"></i>
+      <h5>No courses matched your search</h5>
+      <p class="small">Try a different keyword or <a href="?">browse all {{ course_type.name }} courses</a>.</p>
+    </div>
+    {% endif %}
+
+  {% else %}
+
+  <!-- No search query: show categories or course list -->
+  {% if categories %}
+  <h5 class="fw-bold mb-3">Browse by Category</h5>
+  <div class="row g-3 mb-4">
+    {% for cat in categories %}
+    <div class="col-6 col-md-4 col-lg-3">
+      <a href="{% url 'courses:course_category_detail' type_slug=course_type.slug category_slug=cat.slug %}" class="text-decoration-none">
+        <div class="card h-100 shadow-sm text-center p-3" style="transition:transform 0.2s,box-shadow 0.2s;">
+          <h6 class="fw-bold mb-1">{{ cat.name }}</h6>
+          {% if cat.description %}
+          <p class="text-muted small mb-0" style="font-size:0.8rem;">{{ cat.description|truncatewords:12 }}</p>
+          {% endif %}
+        </div>
+      </a>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  {% if courses %}
+  {% if not categories %}
+  <!-- No categories — full course listing (e.g. KMTC) -->
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h5 class="fw-bold mb-0">All {{ course_type.name }} Programmes <span class="text-muted fw-normal fs-6">({{ courses|length }})</span></h5>
+  </div>
+  <div class="row g-3">
+    {% for course in courses %}
+    <div class="col-12 col-md-6 col-lg-4">
+      <div class="card h-100 shadow-sm p-3">
+        <div class="d-flex justify-content-between align-items-start mb-1">
+          <h6 class="fw-bold mb-0" style="line-height:1.35;">{{ course.name }}</h6>
+          {% if course.minimum_mean_grade %}
+          <span class="badge ms-2 flex-shrink-0" style="background:#dc2626;color:#fff;">{{ course.minimum_mean_grade }}</span>
+          {% endif %}
+        </div>
+        {% if course.description %}
+        <p class="text-muted small mb-2" style="font-size:0.82rem;">{{ course.description|truncatewords:15 }}</p>
+        {% endif %}
+        <div class="mt-auto pt-2 d-flex gap-2 align-items-center">
+          <a href="{% url 'courses:course_detail_no_category' type_slug=course_type.slug course_slug=course.slug %}"
+             class="btn btn-sm btn-primary">View Details</a>
+          {% if request.user.is_staff %}
+          <a href="{% url 'admin:courses_course_change' course.id %}" class="btn btn-sm btn-outline-secondary">Edit</a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+  {% else %}
+  {% if not categories %}
+  <div class="text-center py-5 text-muted">
+    <i class="fas fa-graduation-cap fa-3x mb-3 opacity-50"></i>
+    <h5>No courses available yet</h5>
+    {% if request.user.is_staff %}
+    <a href="/admin/courses/course/add/" class="btn btn-primary mt-2">
+      <i class="fas fa-plus me-1"></i>Add Course
+    </a>
+    {% endif %}
+  </div>
+  {% endif %}
+  {% endif %}
+
+  {% endif %}{# end if q #}
+
+</div>
+
+<style>
+.card:hover { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(0,0,0,0.1) !important; }
+</style>
+{% endblock %}
