@@ -405,6 +405,48 @@
     </nav>
     {% endwith %}
 
+    <!-- ── PWA INSTALL BANNER (Android / Desktop) ── -->
+    <div id="pwa-install-banner" class="pwa-banner" hidden aria-live="polite" role="dialog" aria-label="Install CareerNext app">
+        <div class="pwa-banner-inner">
+            <img src="{% static 'images/icon-192.png' %}" alt="" width="48" height="48" class="pwa-banner-icon">
+            <div class="pwa-banner-text">
+                <strong>Install CareerNext</strong>
+                <span>Quick access from your home screen</span>
+            </div>
+            <div class="pwa-banner-actions">
+                <button id="pwa-install-btn" class="pwa-btn-install">Install</button>
+                <button id="pwa-dismiss-btn" class="pwa-btn-dismiss">Later</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── PWA INSTALL MODAL (iOS Safari) ── -->
+    <div id="pwa-ios-modal" class="pwa-ios-overlay" hidden>
+        <div class="pwa-ios-sheet">
+            <button id="pwa-ios-close" class="pwa-ios-close" aria-label="Close">&times;</button>
+            <img src="{% static 'images/icon-192.png' %}" alt="CareerNext" width="64" height="64" class="pwa-ios-icon">
+            <h5 class="pwa-ios-title">Install CareerNext</h5>
+            <p class="pwa-ios-body">Add to your home screen for quick access.</p>
+            <div class="pwa-ios-steps">
+                <div class="pwa-ios-step">
+                    <span class="pwa-ios-num">1</span>
+                    Tap the <strong>Share</strong> button
+                    <i class="fas fa-arrow-up-from-bracket pwa-ios-share-icon"></i>
+                    at the bottom of Safari
+                </div>
+                <div class="pwa-ios-step">
+                    <span class="pwa-ios-num">2</span>
+                    Scroll down and tap <strong>"Add to Home Screen"</strong>
+                </div>
+                <div class="pwa-ios-step">
+                    <span class="pwa-ios-num">3</span>
+                    Tap <strong>"Add"</strong> — done!
+                </div>
+            </div>
+            <div class="pwa-ios-arrow-down">↓ tap Share below</div>
+        </div>
+    </div>
+
     <!-- Back to top button -->
     <button id="back-to-top" title="Back to top"
             style="display:none;position:fixed;bottom:80px;right:20px;z-index:999;
