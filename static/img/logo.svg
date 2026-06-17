@@ -1,0 +1,22 @@
+<svg width="248" height="64" viewBox="0 0 248 64" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="CareerNext logo">
+  <defs>
+    <linearGradient id="cnGradL" x1="4" y1="4" x2="60" y2="60" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#2563eb"/>
+      <stop offset="0.55" stop-color="#1e3a8a"/>
+      <stop offset="1" stop-color="#16a34a"/>
+    </linearGradient>
+  </defs>
+  <!-- Mark -->
+  <g transform="translate(4,4) scale(0.875)">
+    <rect x="0" y="0" width="64" height="64" rx="16" fill="url(#cnGradL)"/>
+    <g stroke="#ffffff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" fill="none">
+      <path d="M16 48 Q 30 48 34 34 T 48 16"/>
+      <path d="M48 26 L48 16 L38 16"/>
+    </g>
+    <circle cx="16" cy="48" r="5" fill="#ffffff"/>
+  </g>
+  <!-- Wordmark -->
+  <text x="76" y="41" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="30" font-weight="800" letter-spacing="-0.8">
+    <tspan fill="#1e293b">Career</tspan><tspan fill="#16a34a">Next</tspan>
+  </text>
+</svg>

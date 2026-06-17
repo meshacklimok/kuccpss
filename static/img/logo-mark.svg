@@ -1,0 +1,19 @@
+<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="CareerNext">
+  <defs>
+    <linearGradient id="cnGrad" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#2563eb"/>
+      <stop offset="0.55" stop-color="#1e3a8a"/>
+      <stop offset="1" stop-color="#16a34a"/>
+    </linearGradient>
+  </defs>
+  <!-- Rounded tile -->
+  <rect x="0" y="0" width="64" height="64" rx="16" fill="url(#cnGrad)"/>
+  <!-- Rising career path: from "you now" up to your "next" step -->
+  <g stroke="#ffffff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <path d="M16 48 Q 30 48 34 34 T 48 16"/>
+    <!-- forward / next arrowhead -->
+    <path d="M48 26 L48 16 L38 16"/>
+  </g>
+  <!-- starting point node -->
+  <circle cx="16" cy="48" r="5" fill="#ffffff"/>
+</svg>

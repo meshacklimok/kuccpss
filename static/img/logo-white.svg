@@ -1,0 +1,16 @@
+<svg width="248" height="64" viewBox="0 0 248 64" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="CareerNext logo">
+  <!-- Mark: white-on-translucent for dark backgrounds (navbar) -->
+  <g transform="translate(4,4) scale(0.875)">
+    <rect x="0" y="0" width="64" height="64" rx="16" fill="#ffffff" fill-opacity="0.14"/>
+    <rect x="0.75" y="0.75" width="62.5" height="62.5" rx="15.25" fill="none" stroke="#ffffff" stroke-opacity="0.30" stroke-width="1.5"/>
+    <g stroke="#ffffff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" fill="none">
+      <path d="M16 48 Q 30 48 34 34 T 48 16"/>
+      <path d="M48 26 L48 16 L38 16"/>
+    </g>
+    <circle cx="16" cy="48" r="5" fill="#ffffff"/>
+  </g>
+  <!-- Wordmark -->
+  <text x="76" y="41" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="30" font-weight="800" letter-spacing="-0.8">
+    <tspan fill="#ffffff">Career</tspan><tspan fill="#4ade80">Next</tspan>
+  </text>
+</svg>
