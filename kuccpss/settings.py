@@ -215,6 +215,13 @@ SOCIALACCOUNT_PROVIDERS = {'google': _google_provider}
 
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
 
+# Web Push (VAPID)
+import base64 as _b64
+VAPID_PUBLIC_KEY  = os.environ.get("VAPID_PUBLIC_KEY", "")
+_vapid_priv_b64   = os.environ.get("VAPID_PRIVATE_KEY", "")
+VAPID_PRIVATE_KEY = _b64.b64decode(_vapid_priv_b64).decode() if _vapid_priv_b64 else ""
+VAPID_MAILTO      = os.environ.get("VAPID_MAILTO", "info@careernext.co.ke")
+
 # Render / production database — overrides individual DB_* vars if set
 _DATABASE_URL = os.environ.get('DATABASE_URL')
 if _DATABASE_URL:
