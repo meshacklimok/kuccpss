@@ -179,6 +179,7 @@ body { background: #f0f4ff; }
 .cc-degree   { --g1:#4f46e5; --g2:#818cf8; --ic-bg:#eef2ff; --ic-cl:#4f46e5; --cnt-bg:#eef2ff; --cnt-cl:#4f46e5; --arr-bg:#eef2ff; --arr-cl:#4f46e5; }
 .cc-kmtc     { --g1:#dc2626; --g2:#f87171; --ic-bg:#fef2f2; --ic-cl:#dc2626; --cnt-bg:#fef2f2; --cnt-cl:#dc2626; --arr-bg:#fef2f2; --arr-cl:#dc2626; }
 .cc-ttc      { --g1:#d97706; --g2:#fbbf24; --ic-bg:#fffbeb; --ic-cl:#d97706; --cnt-bg:#fffbeb; --cnt-cl:#d97706; --arr-bg:#fffbeb; --arr-cl:#d97706; }
+.cc-cert     { --g1:#059669; --g2:#34d399; --ic-bg:#ecfdf5; --ic-cl:#059669; --cnt-bg:#ecfdf5; --cnt-cl:#059669; --arr-bg:#ecfdf5; --arr-cl:#059669; }
 
 .ct-main-gradient { background: linear-gradient(90deg, var(--g1), var(--g2)); }
 .ct-main-icon-wrap { background: var(--ic-bg); color: var(--ic-cl); }
@@ -345,11 +346,12 @@ body { background: #f0f4ff; }
 
     <div class="ct-main-grid">
     {% for type in main_types %}
-    {% with sl=type.slug|lower %}
+    {% with sl=type.slug|lower label=type.display_name|default:type.name desc=type.display_desc|default:"" %}
     <a href="{% url 'courses:course_type_detail' type_slug=type.slug %}"
        class="ct-main-card
            {% if 'degree' in sl %}cc-degree
            {% elif 'kmtc' in sl %}cc-kmtc
+           {% elif 'tvet-certificate' in sl %}cc-cert
            {% else %}cc-ttc
            {% endif %}">
 
@@ -360,25 +362,29 @@ body { background: #f0f4ff; }
                     <i class="bi bi-mortarboard-fill"></i>
                 {% elif 'kmtc' in sl %}
                     <i class="bi bi-hospital-fill"></i>
-                {% elif 'ttc' in sl or 'teacher' in sl %}
+                {% elif 'ttc' in sl and 'tvet' not in sl %}
                     <i class="bi bi-pencil-fill"></i>
+                {% elif 'tvet-certificate' in sl %}
+                    <i class="bi bi-patch-check-fill"></i>
                 {% else %}
                     <i class="bi bi-book-fill"></i>
                 {% endif %}
             </div>
 
-            <div class="ct-main-title">{{ type.name }}</div>
+            <div class="ct-main-title">{{ label }}</div>
             <div class="ct-main-desc">
                 {% if 'degree' in sl %}
                     University & college degree programmes across all disciplines and clusters.
                 {% elif 'kmtc' in sl %}
                     Kenya Medical Training College diploma & certificate health programmes.
-                {% elif 'ttc' in sl or 'teacher' in sl %}
+                {% elif 'ttc' in sl and 'tvet' not in sl %}
                     Teacher Training College programmes for primary and early childhood education.
+                {% elif desc %}
+                    {{ desc }}
                 {% elif type.description %}
                     {{ type.description|truncatewords:12 }}
                 {% else %}
-                    Browse all {{ type.name }} programmes available through KUCCPS.
+                    Browse all {{ label }} programmes available through KUCCPS.
                 {% endif %}
             </div>
 
