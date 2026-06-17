@@ -34,7 +34,7 @@ def normalise_phone(phone: str) -> str:
     return phone
 
 
-def initiate_stk_push(phone_number: str, amount: int, payment_ref: str, narrative: str = "KUCCPSS") -> str:
+def initiate_stk_push(phone_number: str, amount: int, payment_ref: str, narrative: str = "CareerNext") -> str:
     """
     Fire an M-Pesa STK push via IntaSend.
     Returns the IntaSend checkout_id on success, raises requests.HTTPError on failure.

@@ -198,7 +198,7 @@ def quick_pdf(request):
         c.rect(0, H - 2*cm, W, 2*cm, fill=1, stroke=0)
         c.setFillColor(colors.white)
         c.setFont("Helvetica-Bold", 14)
-        c.drawString(1.5*cm, H - 1.3*cm, "KUCCPSS — Predicted 2026 Eligibility Report")
+        c.drawString(1.5*cm, H - 1.3*cm, "CareerNext — Predicted 2026 Eligibility Report")
         c.setFont("Helvetica", 9)
         c.drawRightString(W - 1.5*cm, H - 1.3*cm, f"Page {page_num}")
         c.setFillColor(colors.black)
@@ -368,7 +368,7 @@ def full_report_pdf(request):
         c.rect(0, H - 1.8*cm, W, 1.8*cm, fill=1, stroke=0)
         c.setFillColor(colors.white)
         c.setFont("Helvetica-Bold", 12)
-        c.drawString(1.5*cm, H - 1.15*cm, "KUCCPSS Placement Report 2026")
+        c.drawString(1.5*cm, H - 1.15*cm, "CareerNext — Placement Report 2026")
         if title:
             c.setFont("Helvetica", 9)
             c.drawString(1.5*cm, H - 1.55*cm, title)
@@ -380,8 +380,9 @@ def full_report_pdf(request):
 
         c.setFont("Helvetica-Oblique", 7)
         c.setFillColor(SLATE)
-        c.drawCentredString(W / 2, 0.6*cm,
-            "KUCCPSS Predicted Report — For planning purposes only. "
+        c.drawCentredString(W / 2, 0.85*cm, "careernext.co.ke  |  CareerNext — Empowering Kenyan Students")
+        c.drawCentredString(W / 2, 0.45*cm,
+            "CareerNext Predicted Report — For planning purposes only. "
             "Verify all cutoffs on the official KUCCPS portal (kuccps.net) before submitting applications.")
         c.setFillColor(colors.black)
         return H - 2.4*cm
@@ -590,8 +591,8 @@ def full_report_pdf(request):
         "2. Choose 3 degree programmes — list your strongest High Likelihood/Likely course first.",
         "3. Add at least one safe fallback choice (a Likely course in a lower-cutoff programme).",
         "4. Select up to 3 KMTC and 3 TVET options as alternative pathways.",
-        "5. Use the KUCCPSS Eligible Courses page to cross-check official cutoffs as they are released.",
-        "6. Return to KUCCPSS when 2025 data is published — predictions will auto-improve.",
+        "5. Use the CareerNext Eligible Courses page to cross-check official cutoffs as they are released.",
+        "6. Return to CareerNext when 2025 data is published — predictions will auto-improve.",
     ]
     c.setFont("Helvetica", 8.5)
     c.setFillColor(colors.black)
@@ -611,7 +612,7 @@ def full_report_pdf(request):
         "This report is generated for planning purposes only. Predicted cutoff points are estimated "
         "using a weighted average and linear trend of historical KUCCPS data from 2021 to 2024. "
         "Actual 2026 cutoffs depend on cohort performance, institutional capacity, and KUCCPS "
-        "policy — factors that cannot be predicted with certainty. KUCCPSS accepts no liability "
+        "policy — factors that cannot be predicted with certainty. CareerNext accepts no liability "
         "for placement outcomes based on this report. Always verify current cutoff points on the "
         "official KUCCPS portal at kuccps.net before submitting your course choices."
     )

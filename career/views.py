@@ -724,7 +724,7 @@ def ajax_ai_chat(request):
     db_context = _build_ai_db_context(request)
 
     system_prompt = (
-        "You are KUCCPSS AI, a Kenyan KUCCPS career guidance assistant. "
+        "You are CareerNext AI, a Kenyan KUCCPS career guidance assistant. "
         "You have access to this student's REAL matched course data from the database:\n\n"
         f"{db_context}\n\n"
         "Answer questions using ONLY this real data. Be specific — name actual courses and institutions. "

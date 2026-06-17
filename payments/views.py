@@ -67,7 +67,7 @@ def initiate_payment(request):
             phone_number=phone,
             amount=amount,
             payment_ref=str(payment.pk),
-            narrative=f"KUCCPSS {payment.get_feature_display()}",
+            narrative=f"CareerNext {payment.get_feature_display()}",
         )
         payment.checkout_id = checkout_id
         payment.save(update_fields=["checkout_id"])
