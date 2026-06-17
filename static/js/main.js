@@ -1,4 +1,4 @@
-// KUCCPSS — Global JavaScript
+// CareerNext — Global JavaScript
 
 document.addEventListener('DOMContentLoaded', function () {
 
@@ -119,6 +119,69 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
 });
+
+// ── PWA Install Prompt ──────────────────────────────────────────────────────
+(function () {
+  var DISMISS_KEY  = 'cn-install-dismissed';
+  var DISMISS_DAYS = 30;
+
+  // Already installed (running standalone) — do nothing
+  if (window.matchMedia('(display-mode: standalone)').matches) return;
+  if (window.navigator.standalone === true) return; // iOS standalone
+
+  // Dismissed recently?
+  var ts = parseInt(localStorage.getItem(DISMISS_KEY) || '0', 10);
+  if (ts && Date.now() - ts < DISMISS_DAYS * 864e5) return;
+
+  var banner       = document.getElementById('pwa-install-banner');
+  var installBtn   = document.getElementById('pwa-install-btn');
+  var dismissBtn   = document.getElementById('pwa-dismiss-btn');
+  var iosModal     = document.getElementById('pwa-ios-modal');
+  var iosClose     = document.getElementById('pwa-ios-close');
+  var deferredEvt  = null;
+
+  function dismiss() {
+    localStorage.setItem(DISMISS_KEY, Date.now().toString());
+    if (banner) banner.hidden = true;
+    if (iosModal) iosModal.hidden = true;
+  }
+
+  // Android / Desktop Chrome — capture the event
+  window.addEventListener('beforeinstallprompt', function (e) {
+    e.preventDefault();
+    deferredEvt = e;
+    if (!banner) return;
+    setTimeout(function () { banner.hidden = false; }, 4000);
+  });
+
+  if (installBtn) {
+    installBtn.addEventListener('click', function () {
+      if (!deferredEvt) return;
+      deferredEvt.prompt();
+      deferredEvt.userChoice.then(function (choice) {
+        if (choice.outcome === 'accepted') dismiss();
+        deferredEvt = null;
+        if (banner) banner.hidden = true;
+      });
+    });
+  }
+
+  if (dismissBtn) dismissBtn.addEventListener('click', dismiss);
+
+  // iOS Safari — no beforeinstallprompt, show manual modal instead
+  var isIos = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  var isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+  if (isIos && isSafari && iosModal) {
+    setTimeout(function () { iosModal.hidden = false; }, 5000);
+    if (iosClose) iosClose.addEventListener('click', dismiss);
+    iosModal.addEventListener('click', function (e) {
+      if (e.target === iosModal) dismiss();
+    });
+  }
+
+  // Hide banner once the app is installed
+  window.addEventListener('appinstalled', function () { dismiss(); });
+})();
 
 function getCsrf() {
   var cookie = document.cookie.split(';').find(function (c) { return c.trim().startsWith('csrftoken='); });
