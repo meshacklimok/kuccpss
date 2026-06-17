@@ -757,7 +757,7 @@ document.addEventListener('click', function (e) {
     .finally(function() { btn.disabled = false; });
 });
 
-// ── KUCCPSS AI Career Assistant — Professional Widget ───────────────
+// ── CareerNext AI Career Assistant — Professional Widget ───────────────
 const AI_CHAT_URL    = '{% url "career:ajax_ai_chat" %}';
 const AI_INSIGHT_URL = '{% url "career:ajax_ai_insight" %}';
 const CSRF           = (document.cookie.match(/(?:^|;\s*)csrftoken=([^;]+)/) || [])[1] || '{{ csrf_token }}';
@@ -963,7 +963,7 @@ document.body.insertAdjacentHTML('beforeend', `
         <div class="aip-status-dot"></div>
       </div>
       <div>
-        <div class="aip-title">KUCCPSS AI Advisor</div>
+        <div class="aip-title">CareerNext AI Advisor</div>
         <div class="aip-subtitle"><i class="fas fa-circle" style="font-size:0.45rem;color:#22c55e;"></i> Online &bull; Powered by GPT-4o-mini</div>
       </div>
       <button class="aip-close" onclick="aipToggle()"><i class="fas fa-times"></i></button>
@@ -1065,7 +1065,7 @@ function aipGreet() {
     .then(r => r.json())
     .then(data => {
       aipRemoveTyping();
-      const msg = data.insight || 'Hi! I\'m your KUCCPSS AI Advisor. Ask me anything about your career results.';
+      const msg = data.insight || 'Hi! I\'m your CareerNext AI Advisor. Ask me anything about your career results.';
       chatHistory.push({role:'assistant', content: msg});
       aipAddMsg(msg, 'bot');
       if (!widgetOpen) {
@@ -1075,7 +1075,7 @@ function aipGreet() {
     })
     .catch(() => {
       aipRemoveTyping();
-      aipAddMsg('Hi! I\'m your KUCCPSS AI Advisor. Ask me anything about your career results.', 'bot');
+      aipAddMsg('Hi! I\'m your CareerNext AI Advisor. Ask me anything about your career results.', 'bot');
     });
   // Pre-fetch greeting even if panel is closed
   setTimeout(() => {

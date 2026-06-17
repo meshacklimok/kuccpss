@@ -1,10 +1,10 @@
 {% extends "base.html" %}
 
-{% block title %}{{ article.title }} — KUCCPSS{% endblock %}
+{% block title %}{{ article.title }} — CareerNext{% endblock %}
 
 {% block meta %}<meta name="description" content="{{ article.excerpt|default:article.title }}">{% endblock %}
 {% block og_meta %}
-<meta property="og:title" content="{{ article.title }} — KUCCPSS">
+<meta property="og:title" content="{{ article.title }} — CareerNext">
 <meta property="og:description" content="{{ article.excerpt|default:article.title }}">
 {% if article.thumbnail %}<meta property="og:image" content="{{ request.scheme }}://{{ request.get_host }}{{ article.thumbnail.url }}">{% endif %}
 {% endblock %}

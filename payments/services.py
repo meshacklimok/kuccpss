@@ -61,4 +61,20 @@ def initiate_stk_push(phone_number: str, amount: int, payment_ref: str, narrativ
 
 
 def price_for_feature(feature: str) -> int:
-    return FEATURE_PRICES.get(feature, 0)
+    try:
+        from .models import PaymentFeature
+        obj = PaymentFeature.objects.get(feature=feature)
+        if not obj.is_enabled:
+            return 0
+        return obj.price
+    except Exception:
+        return FEATURE_PRICES.get(feature, 0)
+
+
+def is_feature_enabled(feature: str) -> bool:
+    try:
+        from .models import PaymentFeature
+        obj = PaymentFeature.objects.get(feature=feature)
+        return obj.is_enabled and obj.price > 0
+    except Exception:
+        return FEATURE_PRICES.get(feature, 0) > 0

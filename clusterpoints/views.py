@@ -271,6 +271,11 @@ def export_cluster_pdf(request, result_id):
             p.showPage()
             y_pos = height - 2*cm
 
+    # Footer on last page
+    p.setFont("Helvetica", 7)
+    p.setFillColorRGB(0.58, 0.63, 0.69)
+    p.drawCentredString(width/2, 1.5*cm, "careernext.co.ke  |  CareerNext — Empowering Kenyan Students")
+    p.drawCentredString(width/2, 1*cm, "Apply officially at kuccps.ac.ke")
     p.showPage()
     p.save()
     return response
