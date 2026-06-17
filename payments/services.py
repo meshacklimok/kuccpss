@@ -7,9 +7,14 @@ PROD_BASE = "https://payment.intasend.com/api/v1"
 FEATURE_PRICES = {
     "view_cluster_points": 0,
     "view_eligible_courses": 0,
-    "premium_career_report": 99,
+    "premium_career_report": 50,
     "advanced_analysis": 149,
 }
+
+
+def has_paid_for_feature(user, feature: str) -> bool:
+    from .models import Payment
+    return Payment.objects.filter(user=user, feature=feature, status="completed").exists()
 
 
 def get_base_url():

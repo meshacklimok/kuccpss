@@ -19,7 +19,8 @@ logger = logging.getLogger(__name__)
 @login_required
 def payment_required(request):
     feature = request.GET.get("feature", "")
-    return render(request, "payments/payment_required.html", {"feature": feature})
+    price = price_for_feature(feature)
+    return render(request, "payments/payment_required.html", {"feature": feature, "price": price})
 
 
 @login_required

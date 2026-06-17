@@ -1625,6 +1625,16 @@ def loading_page(request, pathway):
 def career_results(request):
     from courses.models import CourseOffering, CourseType
     from predictor.services import predict_cutoff as _predict_cutoff, TREND_ICON, TREND_COLOR, TREND_TIP
+    from payments.services import has_paid_for_feature
+
+    # Require login
+    if not request.user.is_authenticated:
+        messages.info(request, "Please log in or register to view your career results.")
+        return redirect(f"/accounts/login/?next=/career/results/")
+
+    # Require payment
+    if not has_paid_for_feature(request.user, 'premium_career_report'):
+        return redirect("/payments/required/?feature=premium_career_report")
 
     pathway             = request.session.get('career_pathway', '')
     filter_chance       = request.GET.get('chance', '')
