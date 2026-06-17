@@ -122,16 +122,18 @@ document.addEventListener('DOMContentLoaded', function () {
 
 // ── PWA Install Prompt ──────────────────────────────────────────────────────
 (function () {
-  var DISMISS_KEY  = 'cn-install-dismissed';
-  var DISMISS_DAYS = 30;
+  var DISMISS_KEY   = 'cn-install-dismissed';
+  var DISMISS_COUNT = 'cn-install-dismiss-count';
 
   // Already installed (running standalone) — do nothing
   if (window.matchMedia('(display-mode: standalone)').matches) return;
   if (window.navigator.standalone === true) return; // iOS standalone
 
-  // Dismissed recently?
-  var ts = parseInt(localStorage.getItem(DISMISS_KEY) || '0', 10);
-  if (ts && Date.now() - ts < DISMISS_DAYS * 864e5) return;
+  // Dismissed recently? 1st dismiss = 7 days, 2nd+ = 4 days
+  var ts    = parseInt(localStorage.getItem(DISMISS_KEY) || '0', 10);
+  var count = parseInt(localStorage.getItem(DISMISS_COUNT) || '0', 10);
+  var wait  = count >= 1 ? 4 : 7;
+  if (ts && Date.now() - ts < wait * 864e5) return;
 
   var banner       = document.getElementById('pwa-install-banner');
   var installBtn   = document.getElementById('pwa-install-btn');
@@ -141,6 +143,8 @@ document.addEventListener('DOMContentLoaded', function () {
   var deferredEvt  = null;
 
   function dismiss() {
+    var n = parseInt(localStorage.getItem(DISMISS_COUNT) || '0', 10);
+    localStorage.setItem(DISMISS_COUNT, (n + 1).toString());
     localStorage.setItem(DISMISS_KEY, Date.now().toString());
     if (banner) banner.hidden = true;
     if (iosModal) iosModal.hidden = true;
