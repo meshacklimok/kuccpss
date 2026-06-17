@@ -1,12 +1,12 @@
 {% extends "base.html" %}
-{% block title %}Premium Feature — KUCCPSS{% endblock %}
+{% block title %}Unlock Premium — CareerNext{% endblock %}
 
 {% block content %}
 <div class="page-hero">
   <div class="container text-center">
     <i class="fas fa-lock fa-3x mb-3 opacity-75"></i>
     <h1>Premium Feature</h1>
-    <p class="mb-0">Unlock full access with a one-time payment via M-Pesa.</p>
+    <p class="mb-0">Unlock full access with a one-time M-Pesa payment.</p>
   </div>
 </div>
 
@@ -14,27 +14,25 @@
   <div class="row justify-content-center">
     <div class="col-lg-7">
 
-      <!-- Feature locked card -->
+      <!-- Feature card -->
       <div class="card p-4 mb-4 text-center border-0 shadow-sm">
         <div class="rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3"
              style="width:80px;height:80px;background:#fee2e2;">
           <i class="fas fa-lock fa-2x text-danger"></i>
         </div>
         <h4 class="fw-bold mb-2">
-          {% if feature == 'view_eligible_courses' %}View Eligible Courses
-          {% elif feature == 'premium_career_report' %}Premium Career Report
+          {% if feature == 'premium_career_report' %}Premium Career Report
           {% elif feature == 'advanced_analysis' %}Advanced Career Analysis
-          {% elif feature == 'view_cluster_points' %}Detailed Cluster Points
-          {% else %}This Feature{% endif %}
+          {% elif feature == 'view_eligible_courses' %}Full Eligible Courses
+          {% else %}Premium Feature{% endif %}
         </h4>
-        <p class="text-muted mb-3">
-          This feature requires a premium subscription.
-          Unlock it once and access it for your entire KCSE journey.
-        </p>
-        <div class="d-flex gap-3 justify-content-center flex-wrap">
+        <p class="text-muted mb-3">One-time payment. Lifetime access to this feature.</p>
+        <div class="d-flex gap-4 justify-content-center flex-wrap">
           <div class="text-center">
-            <div class="fw-bold text-success fs-4">KES 99</div>
-            <div class="small text-muted">One-time payment</div>
+            <div class="fw-bold text-success fs-3">
+              KES {% if feature == 'advanced_analysis' %}149{% else %}99{% endif %}
+            </div>
+            <div class="small text-muted">One-time</div>
           </div>
           <div class="text-center">
             <div class="fw-bold text-success fs-4"><i class="fas fa-infinity"></i></div>
@@ -51,48 +49,179 @@
       <div class="card p-4 mb-4">
         <h5 class="fw-bold mb-3"><i class="fas fa-star me-2 text-warning"></i>What You Get</h5>
         <ul class="list-unstyled mb-0">
-          <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>View all courses you qualify for across all universities</li>
-          <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>See your cluster points compared to cut-off thresholds</li>
-          <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>AI-powered career recommendations tailored to your grades</li>
+          <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>All courses you qualify for across every university & college</li>
+          <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Your cluster points vs cut-off thresholds at a glance</li>
+          <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>AI-powered career recommendations based on your grades</li>
           <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Download PDF reports of your eligible courses</li>
           <li><i class="fas fa-check-circle text-success me-2"></i>Priority access to new features</li>
         </ul>
       </div>
 
-      <!-- Payment form placeholder -->
-      <div class="card p-4 border-success">
+      <!-- Payment form -->
+      <div class="card p-4 border-success" id="payment-card">
         <h5 class="fw-bold mb-1"><i class="fas fa-mobile-alt me-2 text-success"></i>Pay via M-Pesa</h5>
-        <p class="text-muted small mb-3">Enter your Safaricom number to receive an STK push prompt.</p>
+        <p class="text-muted small mb-3">Enter your Safaricom number — you'll get an STK push prompt on your phone.</p>
 
-        <div class="alert alert-info small mb-3">
-          <i class="fas fa-info-circle me-1"></i>
-          <strong>Coming soon:</strong> M-Pesa STK Push integration is currently being set up.
-          For early access, contact us at <strong>support@kuccpss.co.ke</strong>.
-        </div>
-
-        <form method="POST" action="#" class="opacity-50" style="pointer-events:none;">
-          {% csrf_token %}
-          <input type="hidden" name="feature" value="{{ feature }}">
+        <!-- Step 1: Phone form -->
+        <div id="step-phone">
           <div class="mb-3">
             <label class="form-label fw-bold small">M-Pesa Phone Number</label>
             <div class="input-group">
               <span class="input-group-text">+254</span>
-              <input type="tel" class="form-control" placeholder="712 345 678" pattern="[0-9]{9}">
+              <input type="tel" id="phone-input" class="form-control form-control-lg"
+                     placeholder="712 345 678" maxlength="9" pattern="[0-9]{9}">
             </div>
+            <div class="form-text">e.g. 0712 345 678 → enter 712345678</div>
           </div>
-          <button type="submit" class="btn btn-gradient-success w-100 py-2 fw-bold">
-            <i class="fas fa-lock-open me-2"></i>Pay KES 99 &amp; Unlock
+          <div id="pay-error" class="alert alert-danger d-none small"></div>
+          <button id="pay-btn" class="btn btn-gradient-success w-100 py-2 fw-bold">
+            <i class="fas fa-lock-open me-2"></i>
+            Pay KES {% if feature == 'advanced_analysis' %}149{% else %}99{% endif %} &amp; Unlock
           </button>
-        </form>
+        </div>
+
+        <!-- Step 2: Waiting for M-Pesa -->
+        <div id="step-waiting" class="text-center d-none">
+          <div class="mb-3">
+            <div class="spinner-border text-success" style="width:3rem;height:3rem;"></div>
+          </div>
+          <h6 class="fw-bold">Check your phone!</h6>
+          <p class="text-muted small mb-0">An M-Pesa STK push has been sent to your phone.<br>Enter your PIN to complete payment.</p>
+          <p class="text-muted small mt-2">Waiting for confirmation<span id="dots">...</span></p>
+        </div>
+
+        <!-- Step 3: Success -->
+        <div id="step-success" class="text-center d-none">
+          <div class="mb-3">
+            <i class="fas fa-check-circle fa-4x text-success"></i>
+          </div>
+          <h5 class="fw-bold text-success">Payment Successful!</h5>
+          <p class="text-muted small">Your feature has been unlocked. Redirecting you now...</p>
+        </div>
+
+        <!-- Step 4: Failed -->
+        <div id="step-failed" class="text-center d-none">
+          <div class="mb-3">
+            <i class="fas fa-times-circle fa-4x text-danger"></i>
+          </div>
+          <h6 class="fw-bold text-danger">Payment Failed</h6>
+          <p class="text-muted small">The M-Pesa payment was not completed.</p>
+          <button class="btn btn-outline-success btn-sm" onclick="resetForm()">Try Again</button>
+        </div>
       </div>
 
       <div class="text-center mt-3">
         <a href="javascript:history.back()" class="btn btn-outline-secondary btn-sm">
           <i class="fas fa-arrow-left me-1"></i>Go Back
         </a>
+        <a href="{% url 'payments:payment_history' %}" class="btn btn-outline-secondary btn-sm ms-2">
+          <i class="fas fa-receipt me-1"></i>Payment History
+        </a>
       </div>
 
     </div>
   </div>
 </div>
+
+<script>
+const FEATURE = "{{ feature }}";
+const INITIATE_URL = "{% url 'payments:initiate_payment' %}";
+const CSRF_TOKEN = "{{ csrf_token }}";
+let pollInterval = null;
+let dotsInterval = null;
+
+document.getElementById("pay-btn").addEventListener("click", initiatePayment);
+
+async function initiatePayment() {
+  const rawPhone = document.getElementById("phone-input").value.trim().replace(/\s/g, "");
+  const errEl = document.getElementById("pay-error");
+
+  if (!/^\d{9}$/.test(rawPhone)) {
+    errEl.textContent = "Enter a valid 9-digit Safaricom number (e.g. 712345678).";
+    errEl.classList.remove("d-none");
+    return;
+  }
+  errEl.classList.add("d-none");
+
+  const phone = "0" + rawPhone; // normalise to 07XXXXXXXX
+
+  document.getElementById("pay-btn").disabled = true;
+  document.getElementById("pay-btn").innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Sending STK push...';
+
+  try {
+    const res = await fetch(INITIATE_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-CSRFToken": CSRF_TOKEN },
+      body: JSON.stringify({ feature: FEATURE, phone: phone }),
+    });
+    const data = await res.json();
+
+    if (data.success) {
+      showStep("waiting");
+      startPolling(data.payment_id);
+    } else {
+      errEl.textContent = data.message || "Something went wrong. Please try again.";
+      errEl.classList.remove("d-none");
+      document.getElementById("pay-btn").disabled = false;
+      document.getElementById("pay-btn").innerHTML = '<i class="fas fa-lock-open me-2"></i>Pay & Unlock';
+    }
+  } catch (e) {
+    errEl.textContent = "Network error. Please check your connection and try again.";
+    errEl.classList.remove("d-none");
+    document.getElementById("pay-btn").disabled = false;
+    document.getElementById("pay-btn").innerHTML = '<i class="fas fa-lock-open me-2"></i>Pay & Unlock';
+  }
+}
+
+function startPolling(paymentId) {
+  let attempts = 0;
+  const statusUrl = `/payments/status/${paymentId}/`;
+
+  // Animate dots
+  dotsInterval = setInterval(() => {
+    const el = document.getElementById("dots");
+    if (el) el.textContent = el.textContent.length >= 3 ? "." : el.textContent + ".";
+  }, 500);
+
+  pollInterval = setInterval(async () => {
+    attempts++;
+    try {
+      const res = await fetch(statusUrl);
+      const data = await res.json();
+
+      if (data.status === "completed") {
+        clearIntervals();
+        showStep("success");
+        setTimeout(() => { window.location.href = "/accounts/dashboard/"; }, 2000);
+      } else if (data.status === "failed") {
+        clearIntervals();
+        showStep("failed");
+      } else if (attempts >= 40) {
+        // Timeout after ~2 minutes
+        clearIntervals();
+        showStep("failed");
+      }
+    } catch (e) { /* keep polling */ }
+  }, 3000);
+}
+
+function clearIntervals() {
+  if (pollInterval) clearInterval(pollInterval);
+  if (dotsInterval) clearInterval(dotsInterval);
+}
+
+function showStep(step) {
+  ["phone", "waiting", "success", "failed"].forEach(s => {
+    document.getElementById(`step-${s}`).classList.add("d-none");
+  });
+  document.getElementById(`step-${step}`).classList.remove("d-none");
+}
+
+function resetForm() {
+  clearIntervals();
+  document.getElementById("pay-btn").disabled = false;
+  document.getElementById("pay-btn").innerHTML = '<i class="fas fa-lock-open me-2"></i>Pay & Unlock';
+  showStep("phone");
+}
+</script>
 {% endblock %}
