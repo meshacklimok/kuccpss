@@ -2175,7 +2175,7 @@ def career_results_pdf_quick(request):
     best_pts    = max(numeric_pts, default=cluster_pts_single) if pathway == 'Degree' else None
 
     response = HttpResponse(content_type="application/pdf")
-    response["Content-Disposition"] = 'attachment; filename="kuccpss_career_matches.pdf"'
+    response["Content-Disposition"] = 'attachment; filename="careernext_career_matches.pdf"'
 
     c = canvas.Canvas(response, pagesize=landscape(A4))
     W, H = landscape(A4)
@@ -2208,11 +2208,12 @@ def career_results_pdf_quick(request):
         c.rect(0, H - 1.5*cm, W, 1.5*cm, fill=1, stroke=0)
         c.setFillColor(colors.white)
         c.setFont("Helvetica-Bold", 12)
-        c.drawString(1.5*cm, H - 0.95*cm, "KUCCPSS — Career Course Matches Summary")
+        c.drawString(1.5*cm, H - 0.95*cm, "CareerNext — Career Course Matches Summary")
         c.setFont("Helvetica", 9)
         c.drawRightString(W - 1.5*cm, H - 0.95*cm, f"Page {page_num[0]}")
         c.setFont("Helvetica-Oblique", 7)
         c.setFillColor(SLATE)
+        c.drawCentredString(W / 2, 0.85*cm, "careernext.co.ke  |  CareerNext — Empowering Kenyan Students")
         c.drawCentredString(W / 2, 0.45*cm,
             "For guidance only. Verify all cutoffs on the official KUCCPS portal (kuccps.net) before applying.")
         c.setFillColor(colors.black)
@@ -2426,7 +2427,7 @@ def career_results_pdf_detailed(request):
     best_pts    = max(numeric_pts, default=cluster_pts_single) if pathway == 'Degree' else None
 
     response = HttpResponse(content_type="application/pdf")
-    response["Content-Disposition"] = 'attachment; filename="kuccpss_career_report.pdf"'
+    response["Content-Disposition"] = 'attachment; filename="careernext_career_report.pdf"'
 
     c = canvas.Canvas(response, pagesize=landscape(A4))
     W, H = landscape(A4)   # ~29.7 × 21 cm
@@ -2469,7 +2470,7 @@ def career_results_pdf_detailed(request):
         c.rect(0, H - 1.85*cm, W, 0.07*cm, fill=1, stroke=0)
         c.setFillColor(colors.white)
         c.setFont("Helvetica-Bold", 12)
-        c.drawString(1.5*cm, H - 1.15*cm, "KUCCPSS Career Placement Report 2026")
+        c.drawString(1.5*cm, H - 1.15*cm, "CareerNext — Career Placement Report 2026")
         if subtitle:
             c.setFont("Helvetica", 8)
             c.drawString(1.5*cm, H - 1.55*cm, subtitle)
@@ -2477,6 +2478,7 @@ def career_results_pdf_detailed(request):
         c.drawRightString(W - 1.5*cm, H - 1.15*cm, f"Page {page_num[0]}")
         c.setFont("Helvetica-Oblique", 7)
         c.setFillColor(SLATE)
+        c.drawCentredString(W / 2, 0.85*cm, "careernext.co.ke  |  CareerNext — Empowering Kenyan Students")
         c.drawCentredString(W / 2, 0.45*cm,
             "For planning purposes only. Verify all cutoffs on the official KUCCPS portal (kuccps.net) before submitting applications.")
         c.setFillColor(colors.black)
@@ -2493,7 +2495,7 @@ def career_results_pdf_detailed(request):
     c.roundRect(1.5*cm, y - 3.8*cm, W - 3*cm, 3.5*cm, 8, fill=1, stroke=0)
     c.setFillColor(NAVY)
     c.setFont("Helvetica-Bold", 16)
-    c.drawString(2.2*cm, y - 1.1*cm, "KCSE Career Placement Report")
+    c.drawString(2.2*cm, y - 1.1*cm, "CareerNext — KCSE Career Placement Report")
     c.setFont("Helvetica", 9)
     c.setFillColor(SLATE)
     c.drawString(2.2*cm, y - 1.7*cm,  f"Prepared for: {user_label}")

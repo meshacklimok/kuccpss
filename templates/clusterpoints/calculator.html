@@ -692,6 +692,10 @@ updateGlobal();
     });
 })();
 {% endif %}
+// Prevent "Confirm Form Resubmission" dialog on page refresh after POST
+if (window.history.replaceState) {
+    window.history.replaceState(null, null, window.location.href);
+}
 </script>
 {% endblock %}
 {% endblock %}
