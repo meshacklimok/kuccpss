@@ -1,0 +1,1642 @@
+[
+{
+  "model": "career.careerprofile",
+  "pk": 1,
+  "fields": {
+    "title": "Software Developer",
+    "slug": "software-developer",
+    "description": "Software developers design, build, and maintain the applications and systems that power our digital world — from mobile banking apps to hospital management systems.",
+    "duties": "• Write, test, and debug code in languages such as Python, JavaScript, Java, or Kotlin\n• Design software architecture and database schemas\n• Collaborate with product managers and designers\n• Review code written by peers and mentor junior developers\n• Deploy and monitor applications in cloud environments (AWS, GCP, Azure)\n• Maintain and improve existing systems to ensure reliability and performance",
+    "skills_required": "• Proficiency in at least one programming language (Python, JavaScript, Java)\n• Problem-solving and logical thinking\n• Version control with Git\n• Knowledge of databases (SQL/NoSQL)\n• Communication and teamwork skills",
+    "educational_pathway": "1. KCSE — Aim for B+ or above, especially in Mathematics and Sciences\n2. Bachelor of Science in Computer Science / Software Engineering (4 years)\n   — Available at UoN, KU, JKUAT, Strathmore, Maseno\n3. Industry certifications: AWS, Google Cloud, Meta Developer\n4. Build a portfolio of 3–5 real projects on GitHub\n5. Internship or attachment during 3rd year\n6. Entry-level roles: Junior Developer → Mid-level → Senior → Tech Lead",
+    "job_opportunities": "• Fintech companies (M-Pesa, Equity Bank, KCB, Safaricom)\n• Tech startups in Silicon Savannah (Nairobi)\n• Global companies via remote work (Google, Microsoft, Amazon)\n• Government agencies (eCitizen, NTSA, IEBC)\n• NGOs and development organisations (USAID, UNICEF)\n• Freelance & consultancy work",
+    "average_salary": "KSh 80,000 – 350,000/month",
+    "demand_level": "very_high",
+    "future_outlook": "Kenya's tech sector is booming. Nairobi's Silicon Savannah is Africa's leading startup hub, and demand for software developers is growing 30% annually. Remote work has opened global opportunities with USD-denominated salaries. AI and cloud skills will be critical by 2030.",
+    "icon": "fas fa-code",
+    "image": "",
+    "career_tags": "technology,engineering",
+    "created_at": "2026-06-15T12:12:05.511Z",
+    "updated_at": "2026-06-15T12:12:05.511Z",
+    "related_courses": []
+  }
+},
+{
+  "model": "career.careerprofile",
+  "pk": 2,
+  "fields": {
+    "title": "Data Scientist",
+    "slug": "data-scientist",
+    "description": "Data scientists extract insights from large datasets to drive business decisions, using statistics, machine learning, and programming to turn raw data into actionable intelligence.",
+    "duties": "• Collect, clean, and process large datasets from multiple sources\n• Build machine learning and AI models for prediction and classification\n• Create data visualisations and dashboards for stakeholders\n• Collaborate with engineering teams to deploy ML models\n• Write reports and present findings to non-technical executives\n• Stay current with AI/ML research and best practices",
+    "skills_required": "• Python or R programming\n• Statistics and probability\n• Machine learning frameworks (TensorFlow, scikit-learn, PyTorch)\n• SQL and big data tools (Spark, BigQuery)\n• Data visualisation (Tableau, Power BI, Matplotlib)",
+    "educational_pathway": "1. KCSE — Mathematics and Sciences are essential\n2. BSc Statistics / Mathematics / Computer Science / Data Science (4 years)\n   — JKUAT, UoN, Strathmore offer relevant programmes\n3. MSc Data Science (optional but competitive advantage)\n4. Online certifications: Google Data Analytics, Coursera ML Specialisation\n5. Kaggle competitions to build public portfolio\n6. Internship at a bank, telco, or research org",
+    "job_opportunities": "• Commercial banks (Equity, KCB, Cooperative Bank)\n• Telecommunications (Safaricom, Airtel)\n• Government statistical agencies (KNBS, KRA)\n• International NGOs and research institutions\n• E-commerce platforms (Jumia, Glovo)\n• Global remote roles with USD salaries",
+    "average_salary": "KSh 120,000 – 450,000/month",
+    "demand_level": "very_high",
+    "future_outlook": "AI and data science are the fastest-growing fields globally. In Kenya, banks, telcos, and government agencies are investing heavily in data infrastructure. Professionals with Python + ML skills command the highest salaries in the tech sector.",
+    "icon": "fas fa-brain",
+    "image": "",
+    "career_tags": "technology,science",
+    "created_at": "2026-06-15T12:12:05.527Z",
+    "updated_at": "2026-06-15T12:12:05.527Z",
+    "related_courses": []
+  }
+},
+{
+  "model": "career.careerprofile",
+  "pk": 3,
+  "fields": {
+    "title": "Cybersecurity Analyst",
+    "slug": "cybersecurity-analyst",
+    "description": "Cybersecurity analysts protect organisations' digital assets from hackers, data breaches, and cyber threats — a critical role as Kenya's digital economy grows rapidly.",
+    "duties": "• Monitor networks and systems for security breaches and intrusions\n• Conduct vulnerability assessments and penetration tests\n• Respond to security incidents and coordinate recovery\n• Develop and enforce security policies\n• Train staff on cybersecurity awareness\n• Research emerging threats and recommend countermeasures",
+    "skills_required": "• Network fundamentals (TCP/IP, firewalls, VPNs)\n• Security tools: Wireshark, Metasploit, Nmap, SIEM\n• Programming knowledge (Python, Bash scripting)\n• Risk assessment and threat modelling\n• Incident response and digital forensics",
+    "educational_pathway": "1. KCSE — Mathematics and Physics are important\n2. BSc Information Technology / Computer Science / Cybersecurity (4 years)\n3. Professional certifications: CEH, CompTIA Security+, CISSP, OSCP\n4. Practice on platforms: TryHackMe, HackTheBox, PicoCTF\n5. Entry roles: Security Analyst → Senior Analyst → CISO",
+    "job_opportunities": "• Banks and financial institutions\n• Government agencies (KRA, NTSA, Communications Authority)\n• Telecommunications companies\n• Cybersecurity firms and consulting companies\n• International organisations and embassies\n• Remote security roles for global firms",
+    "average_salary": "KSh 100,000 – 400,000/month",
+    "demand_level": "very_high",
+    "future_outlook": "Cybercrime is growing globally and Kenya is no exception. The Communications Authority has mandated cybersecurity standards for all critical infrastructure. Demand for qualified security professionals far exceeds supply — making this one of the most lucrative and future-proof career paths in Kenya's tech sector.",
+    "icon": "fas fa-shield-alt",
+    "image": "",
+    "career_tags": "technology",
+    "created_at": "2026-06-15T12:12:05.533Z",
+    "updated_at": "2026-06-15T12:12:05.533Z",
+    "related_courses": []
+  }
+},
+{
+  "model": "career.careerprofile",
+  "pk": 4,
+  "fields": {
+    "title": "Network Engineer",
+    "slug": "network-engineer",
+    "description": "Network engineers design, implement, and maintain the communication networks that connect people and organisations — from enterprise LAN networks to national fibre infrastructure.",
+    "duties": "• Design and implement LAN, WAN, and wireless network infrastructure\n• Configure routers, switches, firewalls, and access points\n• Monitor network performance and troubleshoot connectivity issues\n• Plan network capacity and upgrades\n• Maintain documentation of network topology\n• Support voice over IP (VoIP) and video conferencing systems",
+    "skills_required": "• Networking protocols (TCP/IP, BGP, OSPF, VLANs)\n• Cisco, Juniper, or Huawei hardware configuration\n• Network security fundamentals\n• Linux and Windows Server administration\n• Problem-solving under pressure",
+    "educational_pathway": "1. KCSE — Mathematics and Physics essential\n2. BSc Telecommunications / Computer Science / IT (4 years)\n3. Certifications: CCNA, CCNP, CompTIA Network+\n4. Entry roles: Network Support Technician → Network Administrator → Network Engineer",
+    "job_opportunities": "• Internet Service Providers (Safaricom, Telkom, Airtel, Faiba)\n• Banks and financial institutions\n• Government ICT departments\n• Large corporations with multi-site networks\n• ISPs and data centres\n• Telecommunications consulting firms",
+    "average_salary": "KSh 70,000 – 250,000/month",
+    "demand_level": "high",
+    "future_outlook": "Kenya's broadband expansion and the roll-out of 5G networks will require thousands of network engineers over the next decade. Cloud networking and SD-WAN skills are becoming increasingly critical as organisations move to hybrid cloud infrastructure.",
+    "icon": "fas fa-network-wired",
+    "image": "",
+    "career_tags": "technology,engineering",
+    "created_at": "2026-06-15T12:12:05.538Z",
+    "updated_at": "2026-06-15T12:12:05.538Z",
+    "related_courses": []
+  }
+},
+{
+  "model": "career.careerprofile",
+  "pk": 5,
+  "fields": {
+    "title": "Medical Doctor (Physician)",
+    "slug": "medical-doctor-physician",
+    "description": "Medical doctors diagnose and treat illnesses, prescribe medication, and guide patients through preventive care — one of the most respected and impactful careers in Kenya.",
+    "duties": "• Examine patients and take detailed medical histories\n• Diagnose diseases and order diagnostic tests\n• Prescribe and administer treatments and medications\n• Perform minor surgical procedures\n• Refer complex cases to specialists\n• Document patient records and maintain confidentiality\n• Educate patients and communities on disease prevention",
+    "skills_required": "• Deep knowledge of human anatomy, physiology, and pharmacology\n• Clinical examination and diagnostic skills\n• Empathy and excellent communication\n• Decision-making under pressure\n• Attention to detail and analytical thinking",
+    "educational_pathway": "1. KCSE — Minimum B+ (mean grade); Biology, Chemistry essential\n2. MBChB (Bachelor of Medicine and Bachelor of Surgery) — 6 years\n   — University of Nairobi, Moi University, Egerton, KU, Mt Kenya University\n3. 1-year internship (mandatory, government hospitals)\n4. 2-year community service (mandatory)\n5. Optional: Postgraduate specialisation (3–5 years) — Surgery, Paediatrics, etc.\n6. Registration with Kenya Medical Practitioners Board (KMPDB)",
+    "job_opportunities": "• Government hospitals (KNH, Moi Teaching, county hospitals)\n• Private hospitals (Aga Khan, Nairobi Hospital, MP Shah, Avenue)\n• NGO health programmes (MSF, AMREF, Red Cross)\n• International organisations (WHO, UNICEF)\n• Private clinical practice\n• Medical research institutions",
+    "average_salary": "KSh 150,000 – 600,000/month",
+    "demand_level": "very_high",
+    "future_outlook": "Kenya faces a severe doctor shortage — 1 doctor per 10,000 people versus the WHO recommended 1 per 1,000. Universal Health Coverage (UHC) implementation is creating unprecedented demand. Specialist doctors in surgery, oncology, and cardiology are especially needed.",
+    "icon": "fas fa-user-md",
+    "image": "",
+    "career_tags": "health,science",
+    "created_at": "2026-06-15T12:12:05.543Z",
+    "updated_at": "2026-06-15T12:12:05.543Z",
+    "related_courses": []
+  }
+},
+{
+  "model": "career.careerprofile",
+  "pk": 6,
+  "fields": {
+    "title": "Clinical Officer",
+    "slug": "clinical-officer",
+    "description": "Clinical officers provide primary healthcare services, diagnose common illnesses, and manage outpatient care — they are the backbone of Kenya's healthcare system.",
+    "duties": "• Conduct patient consultations and physical examinations\n• Diagnose and treat common diseases (malaria, TB, diabetes, hypertension)\n• Prescribe medications and manage treatment plans\n• Conduct minor surgical procedures\n• Refer complex cases to doctors or specialists\n• Provide maternal and child health services\n• Maintain accurate patient records",
+    "skills_required": "• Clinical examination and diagnostic skills\n• Knowledge of pharmacology and treatment protocols\n• Emergency response and patient management\n• Communication and patient counselling\n• Teamwork in clinical settings",
+    "educational_pathway": "1. KCSE — Minimum C+ (mean grade); Biology and Chemistry essential\n2. Diploma in Clinical Medicine & Surgery (3 years) at KMTC\n3. Or Upgrade to Bachelor of Science in Clinical Medicine (2 more years)\n4. Registration with Clinical Officers Council of Kenya (COC-K)\n5. Specialisation options: Anaesthesia, Orthopaedics, Ophthalmology",
+    "job_opportunities": "• Ministry of Health hospitals and dispensaries\n• County health facilities across Kenya\n• KMTC campuses as clinical instructors\n• NGO health programmes in underserved areas\n• Private clinics and health centres\n• Military and National Police health services",
+    "average_salary": "KSh 60,000 – 180,000/month",
+    "demand_level": "very_high",
+    "future_outlook": "Clinical officers fill a critical gap in Kenya's healthcare system. With over 88 KMTC campuses producing graduates, there is growing demand especially in rural and underserved areas under UHC. Specialised COs in anaesthesia command significantly higher pay.",
+    "icon": "fas fa-stethoscope",
+    "image": "",
+    "career_tags": "health",
+    "created_at": "2026-06-15T12:12:05.553Z",
+    "updated_at": "2026-06-15T12:12:05.553Z",
+    "related_courses": []
+  }
+},
+{
+  "model": "career.careerprofile",
+  "pk": 7,
+  "fields": {
+    "title": "Registered Nurse",
+    "slug": "registered-nurse",
+    "description": "Nurses provide compassionate direct patient care, administer treatments, monitor health, and are the largest professional group in Kenya's health workforce.",
+    "duties": "• Administer medications and monitor vital signs\n• Provide wound care, IV therapy, and bedside care\n• Collaborate with doctors on treatment plans\n• Educate patients and families on health management\n• Maintain accurate nursing records\n• Support patients during surgeries and procedures\n• Respond to medical emergencies on the ward",
+    "skills_required": "• Clinical nursing skills and patient assessment\n• Compassion and emotional resilience\n• Communication with patients and multidisciplinary teams\n• Critical thinking in emergencies\n• Infection control and patient safety protocols",
+    "educational_pathway": "1. KCSE — Minimum C+ (mean grade); Biology and Chemistry are key\n2. Option A: Kenya Registered Community Health Nursing (KRCHN) — 3 years at KMTC\n3. Option B: BSc Nursing — 4 years (Moi, UoN, JKUAT, KU)\n4. Option C: Kenya Enrolled Nurse (KEN) — 2 years at KMTC (entry with C-)\n5. Registration with Nursing Council of Kenya (NCK)\n6. Specialisation: ICU, Midwifery, Paediatric Nursing, Oncology",
+    "job_opportunities": "• Government and county hospitals\n• Private hospitals and nursing homes\n• Community health programmes\n• International health missions (MSF, Red Cross)\n• Diaspora nursing in UK, USA, UAE, Canada (highly sought after)\n• School and corporate occupational health",
+    "average_salary": "KSh 45,000 – 150,000/month",
+    "demand_level": "very_high",
+    "future_outlook": "Kenya has a critical nursing shortage, and international demand is equally high. Thousands of Kenyan nurses work abroad (UK NHS, US hospitals) earning significantly higher salaries. Specialised nurses in ICU, theatre, and midwifery earn the most.",
+    "icon": "fas fa-heartbeat",
+    "image": "",
+    "career_tags": "health",
+    "created_at": "2026-06-15T12:12:05.561Z",
+    "updated_at": "2026-06-15T12:12:05.561Z",
+    "related_courses": []
+  }
+},
+{
+  "model": "career.careerprofile",
+  "pk": 8,
+  "fields": {
+    "title": "Pharmacist",
+    "slug": "pharmacist",
+    "description": "Pharmacists ensure safe medication use by dispensing prescriptions, counselling patients, and advising healthcare teams on drug therapy — a science-heavy, patient-facing role.",
+    "duties": "• Dispense prescription medications accurately\n• Counsel patients on correct dosage, side effects, and interactions\n• Review prescriptions for errors or contraindications\n• Manage pharmaceutical inventory and cold chain\n• Collaborate with doctors on complex medication regimens\n• Compound specialised medications as needed\n• Ensure compliance with pharmaceutical regulations",
+    "skills_required": "• Deep knowledge of pharmacology and therapeutics\n• Attention to detail (medication errors can be fatal)\n• Patient communication and counselling\n• Chemistry knowledge\n• Inventory management and business skills (for pharmacy owners)",
+    "educational_pathway": "1. KCSE — Minimum B (mean grade); Chemistry, Biology, Mathematics essential\n2. Bachelor of Pharmacy (BPharm) — 5 years (UoN, MTRH, Strathmore SMPC)\n3. 1-year internship in a registered pharmacy or hospital\n4. Registration with Pharmacy and Poisons Board Kenya\n5. Optional: Masters in Clinical Pharmacy or Pharmaceutical Sciences",
+    "job_opportunities": "• Hospital pharmacies (KNH, Aga Khan, private hospitals)\n• Community pharmacies (Chain pharmacies: Goodlife, Haltons, Medivet)\n• Pharmaceutical manufacturing companies\n• KEMSA and drug regulatory authorities\n• NGO health supply chain programmes\n• Academic and research institutions",
+    "average_salary": "KSh 80,000 – 250,000/month",
+    "demand_level": "high",
+    "future_outlook": "The pharmaceutical sector in Kenya is growing with local manufacturing expanding and UHC driving increased medicine access. Community pharmacy ownership is highly lucrative for entrepreneurial pharmacists. Global demand, especially in the Gulf states, also offers excellent opportunities.",
+    "icon": "fas fa-pills",
+    "image": "",
+    "career_tags": "health,science",
+    "created_at": "2026-06-15T12:12:05.570Z",
+    "updated_at": "2026-06-15T12:12:05.570Z",
+    "related_courses": []
+  }
+},
+{
+  "model": "career.careerprofile",
+  "pk": 9,
+  "fields": {
+    "title": "Civil Engineer",
+    "slug": "civil-engineer",
+    "description": "Civil engineers plan, design, and supervise the construction of Kenya's infrastructure — roads, bridges, dams, buildings, and water systems that drive national development.",
+    "duties": "• Design and draft engineering plans for structures and infrastructure\n• Conduct site surveys and soil/material testing\n• Supervise construction projects and manage contractors\n• Ensure structures meet safety and environmental standards\n• Prepare cost estimates and project schedules\n• Conduct structural inspections and quality control\n• Liaise with government, clients, and project stakeholders",
+    "skills_required": "• Mathematics, physics, and structural analysis\n• AutoCAD and civil engineering design software\n• Project management and leadership\n• Knowledge of building codes and regulations\n• Problem-solving and decision-making",
+    "educational_pathway": "1. KCSE — Minimum B+ (mean grade); Mathematics and Physics are critical\n2. BSc Civil Engineering — 5 years (UoN, JKUAT, TU-K, Dedan Kimathi)\n3. Graduate Engineer attachment/internship\n4. Graduate membership: Engineers Board of Kenya (EBK)\n5. Professional Engineer (PE) registration after 3 years experience\n6. Optional: MSc Structural / Geotechnical / Water Resources Engineering",
+    "job_opportunities": "• Ministry of Public Works and Housing\n• Kenya National Highways Authority (KeNHA)\n• Construction companies and real estate developers\n• Consulting engineering firms (Arup, Knight Frank, Mott MacDonald Kenya)\n• County governments for infrastructure projects\n• NGOs and development banks (World Bank, AfDB projects)",
+    "average_salary": "KSh 90,000 – 350,000/month",
+    "demand_level": "high",
+    "future_outlook": "Kenya's infrastructure boom — Vision 2030 projects, affordable housing programme, and SGR expansion — means sustained high demand for civil engineers. Specialising in structural or transport engineering and getting registered PE status significantly boosts earning potential.",
+    "icon": "fas fa-hard-hat",
+    "image": "",
+    "career_tags": "engineering,construction",
+    "created_at": "2026-06-15T12:12:05.577Z",
+    "updated_at": "2026-06-15T12:12:05.577Z",
+    "related_courses": []
+  }
+},
+{
+  "model": "career.careerprofile",
+  "pk": 10,
+  "fields": {
+    "title": "Electrical Engineer",
+    "slug": "electrical-engineer",
+    "description": "Electrical engineers design and maintain electrical systems — from power generation and distribution networks to electronic control systems and renewable energy installations.",
+    "duties": "• Design electrical systems for buildings, factories, and power plants\n• Install and maintain transformers, switchgear, and distribution panels\n• Work on solar PV, wind, and hydro renewable energy projects\n• Troubleshoot electrical faults and power quality issues\n• Ensure compliance with electrical safety regulations\n• Supervise electrical contractors and technicians",
+    "skills_required": "• Circuit design and power systems analysis\n• AutoCAD Electrical and ETAP software\n• Knowledge of Kenya Power grid standards\n• Renewable energy systems (solar, wind)\n• Safety standards and electrical codes",
+    "educational_pathway": "1. KCSE — Mathematics and Physics are essential\n2. BSc Electrical Engineering / Electrical & Electronics Engineering — 5 years\n   (JKUAT, UoN, TU-K, Dedan Kimathi University)\n3. Graduate engineer registration with Engineers Board of Kenya (EBK)\n4. Renewable energy certifications: SEAI, IRENA training\n5. Professional Engineer registration after 3 years",
+    "job_opportunities": "• Kenya Power & Lighting Company (KPLC)\n• Kenya Electricity Generating Company (KenGen)\n• Rural Electrification Authority\n• Solar energy companies (Solar Africa, Azuri Technologies)\n• Construction and real estate firms\n• Manufacturing plants and industrial facilities",
+    "average_salary": "KSh 80,000 – 300,000/month",
+    "demand_level": "high",
+    "future_outlook": "Kenya's renewable energy target (100% clean energy by 2030) and the Last Mile Connectivity project are creating massive demand for electrical engineers. Solar energy is booming with off-grid electrification projects expanding across rural Kenya.",
+    "icon": "fas fa-bolt",
+    "image": "",
+    "career_tags": "engineering",
+    "created_at": "2026-06-15T12:12:05.586Z",
+    "updated_at": "2026-06-15T12:12:05.586Z",
+    "related_courses": []
+  }
+},
+{
+  "model": "career.careerprofile",
+  "pk": 11,
+  "fields": {
+    "title": "Accountant (CPA)",
+    "slug": "accountant-cpa",
+    "description": "Accountants manage financial records, prepare reports, ensure tax compliance, and help organisations make sound financial decisions — a core role in every business.",
+    "duties": "• Prepare financial statements (income statement, balance sheet, cash flow)\n• Manage accounts payable and receivable\n• Conduct internal and external audits\n• Prepare and file tax returns (PAYE, VAT, Corporate Tax)\n• Advise management on cost control and financial planning\n• Maintain compliance with IFRS and Kenya Revenue Authority rules\n• Prepare payroll and benefits administration",
+    "skills_required": "• Financial reporting and analysis\n• Accounting software (QuickBooks, Sage, SAP, Xero)\n• Tax legislation knowledge (Kenya Revenue Authority)\n• Attention to detail and integrity\n• Communication and presentation skills",
+    "educational_pathway": "1. KCSE — Mathematics B+ recommended; Commerce subjects helpful\n2. Option A: BCom / BSc Accounting (4 years) — KU, USIU, Strathmore, UoN\n3. Option B: CPA Kenya (Certified Public Accountant) — KASNEB exams (3 levels)\n4. ICPAK membership after completing CPA-K\n5. Optional: ACCA, CIMA for international credibility\n6. MBA for senior management roles",
+    "job_opportunities": "• Audit firms (Deloitte, KPMG, PWC, EY — 'Big Four' in Nairobi)\n• Banks and financial institutions\n• Manufacturing and retail companies\n• Government ministries and parastatals\n• NGOs and development organisations\n• Entrepreneurial: Start your own CPA practice",
+    "average_salary": "KSh 60,000 – 250,000/month",
+    "demand_level": "high",
+    "future_outlook": "Every organisation needs accountants. ICPAK membership significantly raises earning potential. Big Four audit firms are the gateway to top careers. Kenya's growing SME sector creates huge demand for affordable accounting services — entrepreneurial CPAs can build thriving practices.",
+    "icon": "fas fa-calculator",
+    "image": "",
+    "career_tags": "finance,business",
+    "created_at": "2026-06-15T12:12:05.594Z",
+    "updated_at": "2026-06-15T12:12:05.594Z",
+    "related_courses": []
+  }
+},
+{
+  "model": "career.careerprofile",
+  "pk": 12,
+  "fields": {
+    "title": "Advocate / Lawyer",
+    "slug": "advocate-lawyer",
+    "description": "Advocates advise clients on legal matters, draft contracts and legal documents, and represent clients in courts — a prestigious career at the heart of justice.",
+    "duties": "• Advise clients on their legal rights and obligations\n• Draft contracts, wills, and legal agreements\n• Represent clients in civil and criminal court proceedings\n• Conduct legal research and build case arguments\n• Negotiate settlements and mediate disputes\n• Ensure compliance with Kenyan statutes and regulations\n• Protect client confidentiality at all times",
+    "skills_required": "• Deep knowledge of Kenyan law (Constitutional, Commercial, Criminal, Family)\n• Analytical reasoning and research skills\n• Oral and written advocacy\n• Negotiation and persuasion\n• Time management across multiple cases",
+    "educational_pathway": "1. KCSE — Minimum B+ (mean grade); Languages and Arts subjects beneficial\n2. LLB (Bachelor of Laws) — 4 years (UoN, KU, Strathmore, USIU, Kabarak)\n3. Kenya School of Law (KSL) — 1-year Advocates Training Programme (ATP)\n4. Bar Examination and admission to the Roll of Advocates\n5. Pupillage at a law firm (6 months)\n6. Optional: LLM for specialisation (Commercial Law, International Law, IP)",
+    "job_opportunities": "• Private law firms (Oraro, Anjarwalla, Kaplan & Stratton)\n• Corporate legal departments (banks, multinationals)\n• State Law Office (Attorney General's office)\n• DPP and prosecution services\n• NGOs and human rights organisations\n• Judiciary (Magistrate → Judge pathway)",
+    "average_salary": "KSh 80,000 – 500,000/month",
+    "demand_level": "high",
+    "future_outlook": "Kenya's growing economy and complex regulatory environment create strong demand for commercial lawyers. Specialisation in fintech, land law, or environmental law is highly lucrative. Senior partners at top firms earn millions monthly.",
+    "icon": "fas fa-balance-scale",
+    "image": "",
+    "career_tags": "law,governance",
+    "created_at": "2026-06-15T12:12:05.603Z",
+    "updated_at": "2026-06-15T12:12:05.603Z",
+    "related_courses": []
+  }
+},
+{
+  "model": "career.careerprofile",
+  "pk": 13,
+  "fields": {
+    "title": "Secondary School Teacher",
+    "slug": "secondary-school-teacher",
+    "description": "Secondary school teachers shape the next generation by teaching KCSE subjects, mentoring students, and preparing them for higher education and life.",
+    "duties": "• Prepare and deliver lessons aligned to the Kenya Curriculum (KICD)\n• Evaluate student progress through assignments, tests, and exams\n• Provide individualised support to struggling learners\n• Prepare students for KCSE national examinations\n• Maintain student records and communicate with parents\n• Participate in school co-curricular activities and administration\n• Continuously update subject knowledge and teaching methodology",
+    "skills_required": "• Deep subject knowledge in teaching specialisation\n• Lesson planning and curriculum delivery\n• Classroom management and student motivation\n• Assessment and feedback skills\n• Patience, empathy, and communication",
+    "educational_pathway": "1. KCSE — Minimum C+ (mean grade); Strong grades in chosen subjects\n2. Bachelor of Education (BEd) — 4 years, choose 2 teaching subjects\n   — KU, Moi, Egerton, UoN, TU-K, Maseno, many private universities\n3. Teacher Service Commission (TSC) registration and certification\n4. Optional: MEd for HOD, Deputy Principal, or Principal roles\n5. International teaching options: UK, Middle East with international schools",
+    "job_opportunities": "• TSC-employed public secondary schools (47 counties)\n• Private secondary schools and international schools\n• National schools (Starehe, Alliance, Mang'u, Limuru)\n• International schools in Nairobi (IB, IGCSE curriculum)\n• Online tutoring platforms\n• Teacher training colleges",
+    "average_salary": "KSh 30,000 – 120,000/month",
+    "demand_level": "high",
+    "future_outlook": "CBC implementation is creating demand for retrained and newly-qualified teachers. International schools in Kenya pay significantly more than TSC scales. Diaspora teaching in the UK, Middle East, and East Asia is a growing trend for Kenyan teachers seeking higher income.",
+    "icon": "fas fa-chalkboard-teacher",
+    "image": "",
+    "career_tags": "education",
+    "created_at": "2026-06-15T12:12:05.614Z",
+    "updated_at": "2026-06-15T12:12:05.614Z",
+    "related_courses": []
+  }
+},
+{
+  "model": "career.careerprofile",
+  "pk": 14,
+  "fields": {
+    "title": "Economist",
+    "slug": "economist",
+    "description": "Economists analyse economic data, model policy impacts, forecast trends, and advise governments, corporations, and international organisations on financial and social policy.",
+    "duties": "• Analyse economic indicators: inflation, GDP, employment, trade balance\n• Build econometric models to forecast economic trends\n• Assess the impact of government policies\n• Prepare economic research reports and policy briefs\n• Advise on pricing, investment, and resource allocation decisions\n• Monitor global economic developments and their local impact",
+    "skills_required": "• Statistical analysis and econometrics (STATA, R, Python)\n• Economic theory (micro and macro)\n• Research and report writing\n• Data visualisation and presentation\n• Critical thinking and policy analysis",
+    "educational_pathway": "1. KCSE — Strong Mathematics is essential\n2. BSc Economics or BA Economics — 4 years (UoN, KU, Strathmore, USIU, Moi)\n3. MSc Economics or MBA for senior roles\n4. Professional certifications: CFA (Chartered Financial Analyst)\n5. PhD for research or university positions",
+    "job_opportunities": "• Central Bank of Kenya (CBK)\n• Kenya Revenue Authority (KRA)\n• World Bank, IMF, UN Economic Commission for Africa\n• Commercial banks and investment firms\n• Research institutions (KIPPRA, IPAR)\n• Consulting firms (McKinsey, Deloitte, KPMG)",
+    "average_salary": "KSh 80,000 – 350,000/month",
+    "demand_level": "high",
+    "future_outlook": "Kenya's integration into regional and global markets, combined with complex policy challenges (debt management, inflation, poverty reduction), creates strong demand for well-trained economists. International organisations pay extremely competitive salaries.",
+    "icon": "fas fa-chart-line",
+    "image": "",
+    "career_tags": "finance,business,governance",
+    "created_at": "2026-06-15T12:12:05.623Z",
+    "updated_at": "2026-06-15T12:12:05.623Z",
+    "related_courses": []
+  }
+},
+{
+  "model": "career.careerprofile",
+  "pk": 15,
+  "fields": {
+    "title": "Agronomist",
+    "slug": "agronomist",
+    "description": "Agronomists apply science to improve crop production — advising farmers on seeds, soil, fertilisers, and pest management to boost yields and food security in Kenya.",
+    "duties": "• Conduct soil testing and analysis\n• Advise farmers on crop selection and rotation for their land\n• Recommend fertiliser and irrigation programmes\n• Diagnose and treat crop pests and diseases\n• Conduct field trials on new seed varieties\n• Train smallholder farmers on modern farming methods\n• Work with agri-input companies to introduce new products",
+    "skills_required": "• Soil science and plant biology\n• Crop protection (IPM, pesticide management)\n• GIS and precision agriculture tools\n• Communication and farmer training skills\n• Business acumen for agribusiness roles",
+    "educational_pathway": "1. KCSE — Biology, Chemistry, Agriculture subjects are important\n2. BSc Agronomy / Agriculture / Crop Science — 4 years (Egerton, UoN, JKUAT)\n3. Higher Diploma in Agriculture (for extension officer roles)\n4. Optional: MSc Agronomy or Plant Pathology\n5. Membership: Agrochemicals Association of Kenya",
+    "job_opportunities": "• Ministry of Agriculture extension services\n• County agriculture departments\n• Agri-input companies (Yara, Syngenta, MEA Fertilizers)\n• Large-scale farms (flower farms, tea estates, horticulture)\n• NGOs and international development organisations\n• Agribusiness startups and cooperatives",
+    "average_salary": "KSh 50,000 – 200,000/month",
+    "demand_level": "high",
+    "future_outlook": "Climate change is making agronomy knowledge more critical for Kenya's farming sector. Precision agriculture and digital farming are the future. With 70% of Kenyans depending on agriculture, the sector needs urgently modernised expertise.",
+    "icon": "fas fa-leaf",
+    "image": "",
+    "career_tags": "agriculture,science",
+    "created_at": "2026-06-15T12:12:05.630Z",
+    "updated_at": "2026-06-15T12:12:05.630Z",
+    "related_courses": []
+  }
+},
+{
+  "model": "career.careerprofile",
+  "pk": 16,
+  "fields": {
+    "title": "Environmental Scientist",
+    "slug": "environmental-scientist",
+    "description": "Environmental scientists study ecosystems, assess pollution, and advise on sustainability to protect Kenya's natural resources while enabling responsible economic development.",
+    "duties": "• Conduct Environmental Impact Assessments (EIAs) for development projects\n• Monitor water, soil, and air quality\n• Advise on waste management and pollution control\n• Support climate change adaptation and mitigation plans\n• Work with NEMA on environmental compliance\n• Research biodiversity and ecosystem health",
+    "skills_required": "• Environmental chemistry and ecology\n• GIS and remote sensing tools\n• Environmental law and NEMA regulations\n• Research and scientific writing\n• Stakeholder engagement",
+    "educational_pathway": "1. KCSE — Biology, Chemistry, Geography helpful\n2. BSc Environmental Science / Natural Resources / Ecology — 4 years\n   (Moi, UoN, JKUAT, Kenyatta, Egerton)\n3. Lead Expert registration with NEMA for EIA practice\n4. MSc Environmental Management or Climate Change\n5. Professional membership: Environmental Institute of Kenya (EIK)",
+    "job_opportunities": "• National Environment Management Authority (NEMA)\n• Kenya Forest Service and Kenya Wildlife Service\n• Environmental consultancy firms\n• Mining and oil companies (environmental compliance)\n• NGOs (WWF Kenya, Nature Kenya, GreenBelt Movement)\n• International organisations (UNEP headquarters in Nairobi)",
+    "average_salary": "KSh 60,000 – 200,000/month",
+    "demand_level": "high",
+    "future_outlook": "Nairobi hosts UNEP headquarters — giving Kenya a unique position in global environmental governance. EIA requirements for all major projects drive strong demand for environmental consultants. Climate change careers will explode globally in the next decade.",
+    "icon": "fas fa-globe",
+    "image": "",
+    "career_tags": "environment,science",
+    "created_at": "2026-06-15T12:12:05.640Z",
+    "updated_at": "2026-06-15T12:12:05.640Z",
+    "related_courses": []
+  }
+},
+{
+  "model": "career.careerprofile",
+  "pk": 17,
+  "fields": {
+    "title": "Journalist & Media Personality",
+    "slug": "journalist-media-personality",
+    "description": "Journalists investigate and report stories that inform and hold power to account — from TV anchors to investigative reporters, digital content creators, and podcast hosts.",
+    "duties": "• Research, investigate, and verify news stories\n• Conduct interviews and gather information from sources\n• Write, edit, and present news articles or broadcasts\n• Create multimedia content (video, podcast, social media)\n• Build and maintain a network of contacts and sources\n• Adhere to journalistic ethics and editorial standards",
+    "skills_required": "• Strong writing and storytelling skills\n• Research and investigative ability\n• Broadcast presentation (for TV/radio)\n• Video production and editing\n• Social media and digital journalism skills",
+    "educational_pathway": "1. KCSE — Languages (English, Kiswahili) are key; minimum C+\n2. BA Mass Communication / Journalism — 4 years (UoN, USIU, Daystar, Moi)\n3. Or Diploma in Journalism (2–3 years at KIB, KIMC)\n4. Internship at a media house (Nation, Standard, KBC, NTV, Citizen)\n5. Build portfolio: articles, videos, podcast episodes",
+    "job_opportunities": "• Nation Media Group, Standard Group, Royal Media Services\n• KBC and county radio stations\n• Digital media startups\n• International media (BBC Africa, CNN, Al Jazeera Kenya)\n• Corporate communications and PR departments\n• Freelance digital content creation (YouTube, podcast, blogs)",
+    "average_salary": "KSh 40,000 – 300,000/month",
+    "demand_level": "medium",
+    "future_outlook": "Digital journalism and content creation are transforming media. YouTubers, podcasters, and digital journalists can earn far more than traditional media salaries. Investigative journalism and data journalism are growing fields. Media personalities with strong social media presence are highly valued.",
+    "icon": "fas fa-microphone",
+    "image": "",
+    "career_tags": "creative,media",
+    "created_at": "2026-06-15T12:12:05.649Z",
+    "updated_at": "2026-06-15T12:12:05.649Z",
+    "related_courses": []
+  }
+},
+{
+  "model": "career.careerprofile",
+  "pk": 18,
+  "fields": {
+    "title": "Graphic Designer & Creative Director",
+    "slug": "graphic-designer-creative-director",
+    "description": "Graphic designers create visual communications — logos, branding, UI designs, marketing materials, and digital content — that shape how businesses look and feel.",
+    "duties": "• Design logos, brand identities, and visual guidelines\n• Create marketing materials: brochures, banners, social media graphics\n• Design user interfaces for apps and websites (UI/UX)\n• Collaborate with marketing teams on campaigns\n• Prepare files for print and digital production\n• Pitch creative concepts to clients",
+    "skills_required": "• Adobe Creative Suite (Photoshop, Illustrator, InDesign, XD)\n• Figma for UI/UX design\n• Colour theory, typography, layout principles\n• Client communication and presentation\n• Portfolio development and self-promotion",
+    "educational_pathway": "1. KCSE — Art, Design, and Mathematics helpful; minimum C\n2. BSc / BA Graphic Design or Fine Art — 4 years\n   (Kenyatta, Nairobi, USIU, KCA, Limkokwing Nairobi)\n3. Diploma in Graphic Design (2–3 years)\n4. Online certifications: Google UX Design, Adobe Certified Professional\n5. Build a portfolio on Behance and Dribbble",
+    "job_opportunities": "• Advertising agencies (Ogilvy Nairobi, Saatchi & Saatchi)\n• Media and publishing houses\n• Brand and marketing departments of corporations\n• Tech startups needing UI/UX designers\n• Freelance and agency work\n• Digital marketing and social media agencies",
+    "average_salary": "KSh 50,000 – 250,000/month",
+    "demand_level": "high",
+    "future_outlook": "Digital transformation means every business needs visual design. UI/UX design is one of the highest-paying creative specialisations. Motion graphics and 3D design skills are increasingly demanded by media and entertainment companies. Remote freelance work gives Kenyan designers access to global client rates.",
+    "icon": "fas fa-paint-brush",
+    "image": "",
+    "career_tags": "creative,technology",
+    "created_at": "2026-06-15T12:12:05.658Z",
+    "updated_at": "2026-06-15T12:12:05.658Z",
+    "related_courses": []
+  }
+},
+{
+  "model": "career.careerprofile",
+  "pk": 19,
+  "fields": {
+    "title": "Mechanical Engineer",
+    "slug": "mechanical-engineer",
+    "description": "Mechanical engineers design, build, and maintain machines, engines, and mechanical systems — from industrial equipment and vehicles to HVAC systems and manufacturing lines.",
+    "duties": "• Design mechanical components and systems using CAD software\n• Analyse structural and thermal performance of machines\n• Oversee manufacturing processes and quality control\n• Maintain and troubleshoot industrial machinery\n• Manage maintenance schedules and teams\n• Ensure compliance with engineering and safety standards",
+    "skills_required": "• Solid Works, AutoCAD, ANSYS for design and simulation\n• Thermodynamics and fluid mechanics\n• Manufacturing processes and materials science\n• Project management\n• Problem-solving and mechanical aptitude",
+    "educational_pathway": "1. KCSE — Mathematics and Physics are essential\n2. BSc Mechanical Engineering — 5 years (JKUAT, TU-K, UoN, Dedan Kimathi)\n3. Graduate Engineer registration (Engineers Board of Kenya)\n4. Specialisation: Automotive, Manufacturing, HVAC, Renewable Energy\n5. Professional Engineer registration after 3 years practice",
+    "job_opportunities": "• Manufacturing plants (Kenya Breweries, BAT, Bamburi Cement, Coca-Cola)\n• Automotive industry (vehicle assembly, maintenance)\n• Government parastatals (KENGEN, KPA)\n• Construction industry (HVAC, plumbing systems)\n• Oil and gas sector\n• Engineering consulting firms",
+    "average_salary": "KSh 75,000 – 280,000/month",
+    "demand_level": "high",
+    "future_outlook": "Kenya's manufacturing ambitions under Vision 2030, combined with growing automotive assembly and industrial expansion, will require more mechanical engineers. Renewable energy maintenance and energy efficiency consulting are fast-growing niches.",
+    "icon": "fas fa-cogs",
+    "image": "",
+    "career_tags": "engineering",
+    "created_at": "2026-06-15T12:12:05.667Z",
+    "updated_at": "2026-06-15T12:12:05.667Z",
+    "related_courses": []
+  }
+},
+{
+  "model": "career.careerprofile",
+  "pk": 20,
+  "fields": {
+    "title": "Social Worker",
+    "slug": "social-worker",
+    "description": "Social workers support vulnerable individuals, families, and communities — from child protection and mental health support to humanitarian response and community development.",
+    "duties": "• Assess the social, emotional, and economic needs of clients\n• Connect families with government benefits and community resources\n• Support children at risk of abuse, neglect, or exploitation\n• Provide counselling and psychosocial support\n• Manage case files and write detailed reports\n• Work with probation services, schools, and healthcare\n• Advocate for policy changes to protect vulnerable groups",
+    "skills_required": "• Empathy and active listening\n• Case management and documentation\n• Knowledge of Kenyan social protection laws and policies\n• Cultural sensitivity\n• Resilience and emotional regulation",
+    "educational_pathway": "1. KCSE — Minimum C+ (mean grade); Social studies helpful\n2. BSW (Bachelor of Social Work) — 4 years (UoN, Kenyatta, KCA, Moi)\n3. Or Diploma in Social Work (2–3 years)\n4. Internship/placement in a social welfare organisation\n5. MSW (Master of Social Work) for senior or specialised roles\n6. Registration with Kenya Association of Social Workers",
+    "job_opportunities": "• Ministry of Gender, Labour and Social Development\n• Children's homes and child protection services\n• International NGOs (UNICEF, Save the Children, Plan International)\n• Hospitals (medical social workers)\n• Community-based organisations\n• UNHCR refugee support programmes",
+    "average_salary": "KSh 35,000 – 120,000/month",
+    "demand_level": "medium",
+    "future_outlook": "Kenya's social challenges — urbanisation, youth unemployment, gender-based violence, and refugee crises — create consistent demand for trained social workers. NGO and international development organisation roles offer competitive packages for experienced professionals.",
+    "icon": "fas fa-hand-holding-heart",
+    "image": "",
+    "career_tags": "social,health",
+    "created_at": "2026-06-15T12:12:05.677Z",
+    "updated_at": "2026-06-15T12:12:05.677Z",
+    "related_courses": []
+  }
+},
+{
+  "model": "career.careerprofile",
+  "pk": 21,
+  "fields": {
+    "title": "Architect",
+    "slug": "architect",
+    "description": "Architects design functional, safe, and beautiful buildings and spaces — from residential homes and commercial skyscrapers to hospitals, schools, and public spaces.",
+    "duties": "• Consult with clients to understand project briefs and requirements\n• Create architectural designs, drawings, and 3D models\n• Prepare tender documents and construction drawings\n• Oversee construction and ensure designs are built as intended\n• Ensure compliance with building codes and planning regulations\n• Coordinate with engineers, quantity surveyors, and contractors",
+    "skills_required": "• AutoCAD, ArchiCAD, Revit, SketchUp for design\n• 3D rendering software (Lumion, V-Ray)\n• Knowledge of building materials and construction technology\n• Creative design thinking and spatial reasoning\n• Project management and client communication",
+    "educational_pathway": "1. KCSE — Mathematics, Art/Drawing are important\n2. Bachelor of Architecture (BArch) — 5 years (UoN, TU-K, JKUAT)\n3. 2-year pupillage under a registered architect\n4. Registration with the Board of Registration of Architects & Quantity Surveyors (BORAQS)\n5. Optional: MSc Urban Design or Sustainable Architecture",
+    "job_opportunities": "• Architectural firms (Archcraft, Triad Architects Kenya)\n• Real estate developers\n• Government (Ministry of Public Works)\n• County governments planning departments\n• International design firms\n• Own architectural practice",
+    "average_salary": "KSh 80,000 – 400,000/month",
+    "demand_level": "high",
+    "future_outlook": "Kenya's affordable housing programme and continued real estate development in Nairobi, Kisumu, and coastal cities are creating sustained demand. Sustainable green architecture and smart city design are high-growth specialisations.",
+    "icon": "fas fa-drafting-compass",
+    "image": "",
+    "career_tags": "engineering,creative",
+    "created_at": "2026-06-15T12:12:05.685Z",
+    "updated_at": "2026-06-15T12:12:05.685Z",
+    "related_courses": []
+  }
+},
+{
+  "model": "career.careerprofile",
+  "pk": 22,
+  "fields": {
+    "title": "Banker & Financial Analyst",
+    "slug": "banker-financial-analyst",
+    "description": "Bankers and financial analysts manage money, credit, and investments — from retail banking relationship management to investment research and corporate finance advisory.",
+    "duties": "• Evaluate loan applications and assess creditworthiness\n• Manage client relationships and grow business portfolios\n• Analyse financial statements and investment opportunities\n• Prepare financial models and valuation reports\n• Advise corporate clients on mergers, acquisitions, and IPOs\n• Monitor market trends and interest rate movements",
+    "skills_required": "• Financial analysis and modelling (Excel, Bloomberg)\n• Credit analysis and risk assessment\n• Accounting principles (IFRS)\n• Sales and relationship management\n• Analytical thinking and attention to detail",
+    "educational_pathway": "1. KCSE — Strong Mathematics required\n2. BCom Finance / BSc Finance / BA Economics — 4 years\n   (Strathmore, USIU, KU, UoN)\n3. CPA-K or ACCA for accounting pathways\n4. CFA (Chartered Financial Analyst) for investment roles\n5. MBA for senior banking and finance management",
+    "job_opportunities": "• Commercial banks (Equity, KCB, Absa, Cooperative, NCBA)\n• Investment banks and stockbrokers (Nairobi Securities Exchange)\n• Insurance companies and pension funds\n• Central Bank of Kenya\n• Private equity and venture capital firms\n• Mobile money (M-Pesa, Airtel Money)",
+    "average_salary": "KSh 70,000 – 400,000/month",
+    "demand_level": "high",
+    "future_outlook": "Kenya's financial sector is one of the most sophisticated in Africa. Fintech is booming with mobile money and digital banking reshaping finance. Senior bankers and CFA charterholders command the highest salaries in the private sector.",
+    "icon": "fas fa-landmark",
+    "image": "",
+    "career_tags": "finance,business",
+    "created_at": "2026-06-15T12:12:05.693Z",
+    "updated_at": "2026-06-15T12:12:05.693Z",
+    "related_courses": []
+  }
+},
+{
+  "model": "career.careerprofile",
+  "pk": 23,
+  "fields": {
+    "title": "Human Resource Manager",
+    "slug": "human-resource-manager",
+    "description": "HR managers recruit, develop, and retain an organisation's most valuable asset — its people. They shape company culture, manage performance, and ensure fair employment.",
+    "duties": "• Lead recruitment and selection processes\n• Develop and implement HR policies and procedures\n• Manage performance review systems and training programmes\n• Handle employee relations, grievances, and disciplinary matters\n• Oversee payroll and benefits administration\n• Ensure compliance with the Employment Act of Kenya\n• Build organisational culture and drive employee engagement",
+    "skills_required": "• Knowledge of Kenya Employment Act and labour law\n• Recruitment and talent management\n• Conflict resolution and mediation\n• HRIS systems (SAP HR, BambooHR)\n• Communication, empathy, and confidentiality",
+    "educational_pathway": "1. KCSE — Minimum C+ (mean grade)\n2. BA / BSc Human Resource Management — 4 years (multiple universities)\n3. Or BCom with HR specialisation\n4. Higher Diploma in Human Resource Management (IHRM)\n5. IHRM membership (Institute of Human Resource Management Kenya)\n6. MBA for director-level roles",
+    "job_opportunities": "• All medium and large organisations across sectors\n• HR consulting firms\n• NGOs and international development organisations\n• Government ministries and parastatals\n• Manufacturing and service industries\n• Recruitment agencies",
+    "average_salary": "KSh 60,000 – 250,000/month",
+    "demand_level": "medium",
+    "future_outlook": "Every growing organisation needs HR professionals. Tech-enabled HR (AI recruitment, HR analytics) is reshaping the field. Strategic HR business partners with commercial acumen command high salaries at multinationals.",
+    "icon": "fas fa-users",
+    "image": "",
+    "career_tags": "business",
+    "created_at": "2026-06-15T12:12:05.702Z",
+    "updated_at": "2026-06-15T12:12:05.702Z",
+    "related_courses": []
+  }
+},
+{
+  "model": "career.careerprofile",
+  "pk": 24,
+  "fields": {
+    "title": "Agricultural Engineer",
+    "slug": "agricultural-engineer",
+    "description": "Agricultural engineers apply engineering principles to farming — designing irrigation systems, farm machinery, post-harvest facilities, and food processing infrastructure.",
+    "duties": "• Design and install irrigation and drainage systems\n• Select and maintain farm machinery and equipment\n• Design post-harvest storage and food processing facilities\n• Implement precision farming and mechanisation systems\n• Advise on soil conservation and land management\n• Conduct agricultural infrastructure feasibility studies",
+    "skills_required": "• Irrigation design and hydrology\n• Farm mechanisation and equipment maintenance\n• AutoCAD for facility design\n• Soil science and agronomy basics\n• Project management",
+    "educational_pathway": "1. KCSE — Mathematics, Physics, Agriculture subjects\n2. BSc Agricultural Engineering / Agricultural & Biosystems Engineering — 5 years\n   (Egerton, JKUAT, UoN)\n3. Engineers Board of Kenya graduate registration\n4. Specialisation: Irrigation, Precision Agriculture, Food Processing",
+    "job_opportunities": "• Ministry of Agriculture and Irrigation\n• Large-scale farms (flower farms, tea estates, irrigation schemes)\n• FAO and international agricultural development organisations\n• Agricultural machinery dealers and importers\n• KENGO (Kenya Non-Governmental Organisations)\n• Irrigation Board of Kenya",
+    "average_salary": "KSh 55,000 – 200,000/month",
+    "demand_level": "medium",
+    "future_outlook": "Kenya's push to modernise agriculture under the Big Four Agenda and food security goals are creating demand for engineers who can bridge technology and farming. Drip irrigation, greenhouse farming, and cold chain infrastructure are growth areas.",
+    "icon": "fas fa-tractor",
+    "image": "",
+    "career_tags": "engineering,agriculture",
+    "created_at": "2026-06-15T12:12:05.711Z",
+    "updated_at": "2026-06-15T12:12:05.711Z",
+    "related_courses": []
+  }
+},
+{
+  "model": "career.careerprofile",
+  "pk": 25,
+  "fields": {
+    "title": "Biochemist",
+    "slug": "biochemist",
+    "description": "Biochemists study the chemical processes of living organisms — enabling breakthroughs in medicine, food science, pharmaceuticals, and biotechnology in Kenya and globally.",
+    "duties": "• Conduct laboratory experiments on biological samples\n• Analyse proteins, DNA, enzymes, and cellular processes\n• Develop and test pharmaceutical compounds and vaccines\n• Ensure quality control in food and pharmaceutical manufacturing\n• Write scientific papers and present research findings\n• Operate and maintain laboratory equipment",
+    "skills_required": "• Laboratory techniques (PCR, chromatography, spectroscopy, ELISA)\n• Molecular biology and genetics\n• Data analysis and scientific writing\n• Attention to detail and precision\n• Critical thinking and problem-solving",
+    "educational_pathway": "1. KCSE — Biology, Chemistry essential; Mathematics, Physics important\n2. BSc Biochemistry — 4 years (UoN, Moi, Kenyatta, JKUAT)\n3. MSc Biochemistry / Biotechnology for advanced research\n4. PhD for university academic or senior research roles\n5. Lab certifications: GLP (Good Laboratory Practice)",
+    "job_opportunities": "• Kenya Medical Research Institute (KEMRI)\n• Pharmaceutical manufacturing companies\n• Kenya Bureau of Standards (KEBS)\n• University research departments\n• Food and beverage quality labs\n• International research institutions (ILRI, ICRAF)",
+    "average_salary": "KSh 55,000 – 200,000/month",
+    "demand_level": "medium",
+    "future_outlook": "Biotechnology and genomics are reshaping medicine globally. Kenya's growing pharmaceutical manufacturing sector needs more local biochemists. Research institutions like KEMRI and ILRI offer excellent research careers and international collaboration.",
+    "icon": "fas fa-flask",
+    "image": "",
+    "career_tags": "science,health",
+    "created_at": "2026-06-15T12:12:05.721Z",
+    "updated_at": "2026-06-15T12:12:05.721Z",
+    "related_courses": []
+  }
+},
+{
+  "model": "career.careerprofile",
+  "pk": 26,
+  "fields": {
+    "title": "Marketing & Sales Professional",
+    "slug": "marketing-sales-professional",
+    "description": "Marketing and sales professionals drive business growth by understanding customers, building brands, running campaigns, and converting prospects into loyal buyers.",
+    "duties": "• Develop and execute marketing campaigns (digital and traditional)\n• Conduct market research and competitive analysis\n• Manage social media accounts and content calendars\n• Build and manage sales pipelines and client relationships\n• Analyse campaign performance using data and KPIs\n• Collaborate with product teams and creative agencies",
+    "skills_required": "• Digital marketing: SEO, Google Ads, Meta Ads, email marketing\n• Sales techniques and negotiation\n• Analytical tools: Google Analytics, CRM systems\n• Content creation and copywriting\n• Communication and public presentation",
+    "educational_pathway": "1. KCSE — Minimum C+; Languages and Business subjects useful\n2. BA / BSc Marketing or BCom Marketing — 4 years\n3. CIM (Chartered Institute of Marketing) professional qualifications\n4. Google Digital Marketing certifications (free online)\n5. Build a portfolio: managed campaigns, social media accounts, case studies",
+    "job_opportunities": "• Consumer goods companies (Unilever, Procter & Gamble, Bidco)\n• Banks and financial services\n• Media and advertising agencies\n• Tech startups and e-commerce platforms\n• NGOs for fundraising and communications roles\n• Freelance digital marketing consultancy",
+    "average_salary": "KSh 40,000 – 300,000/month",
+    "demand_level": "high",
+    "future_outlook": "Digital marketing is disrupting traditional advertising. Data-driven marketing professionals with skills in performance marketing and CRM analytics earn premium salaries. Entrepreneurial marketers can build successful consultancy businesses.",
+    "icon": "fas fa-bullhorn",
+    "image": "",
+    "career_tags": "business,creative",
+    "created_at": "2026-06-15T12:12:05.732Z",
+    "updated_at": "2026-06-15T12:12:05.732Z",
+    "related_courses": []
+  }
+},
+{
+  "model": "career.careerprofile",
+  "pk": 27,
+  "fields": {
+    "title": "Public Administrator",
+    "slug": "public-administrator",
+    "description": "Public administrators manage government services, implement policy, and coordinate resources to deliver public goods — from county government to national ministries.",
+    "duties": "• Implement government policies and regulations at local or national level\n• Coordinate public service delivery and community programmes\n• Manage government resources, budgets, and staff\n• Liaise between communities and government departments\n• Maintain public records and prepare administrative reports\n• Handle public complaints and service requests",
+    "skills_required": "• Public policy analysis and implementation\n• Leadership and management\n• Understanding of Kenya's devolution framework\n• Communication and stakeholder management\n• Budget and resource management",
+    "educational_pathway": "1. KCSE — Minimum C+ (mean grade)\n2. BA Public Administration / Political Science — 4 years (UoN, KU, JKUAT, Moi)\n3. Competitive entry to Kenya School of Government (KSG) training programmes\n4. County Public Service Board (CPSB) appointment process\n5. MA Public Administration or MPA for senior roles",
+    "job_opportunities": "• Ministry offices and national government departments\n• County governments (47 counties)\n• Kenya School of Government (trainer/facilitator)\n• Public Service Commission (PSC) appointments\n• Kenya Defence Forces administrative roles\n• International governance organisations",
+    "average_salary": "KSh 50,000 – 200,000/month",
+    "demand_level": "medium",
+    "future_outlook": "Devolution continues to create roles at county level across Kenya. Public sector reform is driving demand for professionally trained administrators. Entry to the national government through the PSC remains competitive but highly secure.",
+    "icon": "fas fa-city",
+    "image": "",
+    "career_tags": "governance,law",
+    "created_at": "2026-06-15T12:12:05.742Z",
+    "updated_at": "2026-06-15T12:12:05.742Z",
+    "related_courses": []
+  }
+},
+{
+  "model": "career.quizquestion",
+  "pk": 1,
+  "fields": {
+    "text": "What kind of activities energise you the most?",
+    "category": "interest",
+    "order": 1
+  }
+},
+{
+  "model": "career.quizquestion",
+  "pk": 2,
+  "fields": {
+    "text": "Which school subjects did you genuinely enjoy?",
+    "category": "interest",
+    "order": 2
+  }
+},
+{
+  "model": "career.quizquestion",
+  "pk": 3,
+  "fields": {
+    "text": "What type of work environment do you prefer?",
+    "category": "interest",
+    "order": 3
+  }
+},
+{
+  "model": "career.quizquestion",
+  "pk": 4,
+  "fields": {
+    "text": "What motivates you most in your future career?",
+    "category": "interest",
+    "order": 4
+  }
+},
+{
+  "model": "career.quizquestion",
+  "pk": 5,
+  "fields": {
+    "text": "Which of these best describes your natural talent?",
+    "category": "strength",
+    "order": 5
+  }
+},
+{
+  "model": "career.quizquestion",
+  "pk": 6,
+  "fields": {
+    "text": "What type of problems do you find most satisfying to solve?",
+    "category": "strength",
+    "order": 6
+  }
+},
+{
+  "model": "career.quizquestion",
+  "pk": 7,
+  "fields": {
+    "text": "How would your closest friends describe you?",
+    "category": "personality",
+    "order": 7
+  }
+},
+{
+  "model": "career.quizquestion",
+  "pk": 8,
+  "fields": {
+    "text": "When working in a team, what role do you naturally gravitate to?",
+    "category": "personality",
+    "order": 8
+  }
+},
+{
+  "model": "career.quizquestion",
+  "pk": 9,
+  "fields": {
+    "text": "Which future vision excites you the most?",
+    "category": "values",
+    "order": 9
+  }
+},
+{
+  "model": "career.quizquestion",
+  "pk": 10,
+  "fields": {
+    "text": "What are you willing to invest in your career?",
+    "category": "values",
+    "order": 10
+  }
+},
+{
+  "model": "career.quizoption",
+  "pk": 1,
+  "fields": {
+    "question": 1,
+    "text": "Building things with code or machines",
+    "career_tags": "technology,engineering",
+    "order": 1
+  }
+},
+{
+  "model": "career.quizoption",
+  "pk": 2,
+  "fields": {
+    "question": 1,
+    "text": "Helping sick or vulnerable people get better",
+    "career_tags": "health,social",
+    "order": 2
+  }
+},
+{
+  "model": "career.quizoption",
+  "pk": 3,
+  "fields": {
+    "question": 1,
+    "text": "Analysing numbers, data, and reports",
+    "career_tags": "finance,business,science",
+    "order": 3
+  }
+},
+{
+  "model": "career.quizoption",
+  "pk": 4,
+  "fields": {
+    "question": 1,
+    "text": "Creating art, designs, or stories",
+    "career_tags": "creative,media",
+    "order": 4
+  }
+},
+{
+  "model": "career.quizoption",
+  "pk": 5,
+  "fields": {
+    "question": 2,
+    "text": "Mathematics and Physics",
+    "career_tags": "engineering,technology,finance",
+    "order": 1
+  }
+},
+{
+  "model": "career.quizoption",
+  "pk": 6,
+  "fields": {
+    "question": 2,
+    "text": "Biology and Chemistry",
+    "career_tags": "health,science,agriculture",
+    "order": 2
+  }
+},
+{
+  "model": "career.quizoption",
+  "pk": 7,
+  "fields": {
+    "question": 2,
+    "text": "History, CRE, and Social Studies",
+    "career_tags": "law,governance,education,social",
+    "order": 3
+  }
+},
+{
+  "model": "career.quizoption",
+  "pk": 8,
+  "fields": {
+    "question": 2,
+    "text": "Languages, Literature, and Art",
+    "career_tags": "creative,media,education,law",
+    "order": 4
+  }
+},
+{
+  "model": "career.quizoption",
+  "pk": 9,
+  "fields": {
+    "question": 3,
+    "text": "An office or lab where I can concentrate deeply",
+    "career_tags": "technology,finance,science",
+    "order": 1
+  }
+},
+{
+  "model": "career.quizoption",
+  "pk": 10,
+  "fields": {
+    "question": 3,
+    "text": "Outdoors or in the field working with people",
+    "career_tags": "agriculture,environment,social",
+    "order": 2
+  }
+},
+{
+  "model": "career.quizoption",
+  "pk": 11,
+  "fields": {
+    "question": 3,
+    "text": "A hospital, clinic, or community setting",
+    "career_tags": "health,social",
+    "order": 3
+  }
+},
+{
+  "model": "career.quizoption",
+  "pk": 12,
+  "fields": {
+    "question": 3,
+    "text": "A creative studio or flexible workspace",
+    "career_tags": "creative,media,technology",
+    "order": 4
+  }
+},
+{
+  "model": "career.quizoption",
+  "pk": 13,
+  "fields": {
+    "question": 4,
+    "text": "Solving complex technical problems",
+    "career_tags": "technology,engineering,science",
+    "order": 1
+  }
+},
+{
+  "model": "career.quizoption",
+  "pk": 14,
+  "fields": {
+    "question": 4,
+    "text": "Making a real difference in people's lives",
+    "career_tags": "health,social,education",
+    "order": 2
+  }
+},
+{
+  "model": "career.quizoption",
+  "pk": 15,
+  "fields": {
+    "question": 4,
+    "text": "Earning a high salary and financial security",
+    "career_tags": "finance,business,law",
+    "order": 3
+  }
+},
+{
+  "model": "career.quizoption",
+  "pk": 16,
+  "fields": {
+    "question": 4,
+    "text": "Having creative freedom and self-expression",
+    "career_tags": "creative,media",
+    "order": 4
+  }
+},
+{
+  "model": "career.quizoption",
+  "pk": 17,
+  "fields": {
+    "question": 5,
+    "text": "I can understand and fix complex systems quickly",
+    "career_tags": "technology,engineering",
+    "order": 1
+  }
+},
+{
+  "model": "career.quizoption",
+  "pk": 18,
+  "fields": {
+    "question": 5,
+    "text": "I am very good at understanding and empathising with people",
+    "career_tags": "health,social,education",
+    "order": 2
+  }
+},
+{
+  "model": "career.quizoption",
+  "pk": 19,
+  "fields": {
+    "question": 5,
+    "text": "I love digging into data and spotting patterns",
+    "career_tags": "finance,science,technology",
+    "order": 3
+  }
+},
+{
+  "model": "career.quizoption",
+  "pk": 20,
+  "fields": {
+    "question": 5,
+    "text": "I have a gift for communicating and persuading",
+    "career_tags": "law,creative,media,business",
+    "order": 4
+  }
+},
+{
+  "model": "career.quizoption",
+  "pk": 21,
+  "fields": {
+    "question": 6,
+    "text": "Engineering or coding challenges with logical solutions",
+    "career_tags": "technology,engineering",
+    "order": 1
+  }
+},
+{
+  "model": "career.quizoption",
+  "pk": 22,
+  "fields": {
+    "question": 6,
+    "text": "Social problems — poverty, inequality, or poor health",
+    "career_tags": "social,health,governance",
+    "order": 2
+  }
+},
+{
+  "model": "career.quizoption",
+  "pk": 23,
+  "fields": {
+    "question": 6,
+    "text": "Business problems around growth, profit, and strategy",
+    "career_tags": "business,finance",
+    "order": 3
+  }
+},
+{
+  "model": "career.quizoption",
+  "pk": 24,
+  "fields": {
+    "question": 6,
+    "text": "Creative problems — how to make something beautiful or compelling",
+    "career_tags": "creative,media",
+    "order": 4
+  }
+},
+{
+  "model": "career.quizoption",
+  "pk": 25,
+  "fields": {
+    "question": 7,
+    "text": "The analytical one who always thinks logically",
+    "career_tags": "technology,finance,science",
+    "order": 1
+  }
+},
+{
+  "model": "career.quizoption",
+  "pk": 26,
+  "fields": {
+    "question": 7,
+    "text": "The caring one who always listens and supports",
+    "career_tags": "health,social,education",
+    "order": 2
+  }
+},
+{
+  "model": "career.quizoption",
+  "pk": 27,
+  "fields": {
+    "question": 7,
+    "text": "The leader who takes charge and organises",
+    "career_tags": "business,governance,law",
+    "order": 3
+  }
+},
+{
+  "model": "career.quizoption",
+  "pk": 28,
+  "fields": {
+    "question": 7,
+    "text": "The creative one who comes up with unique ideas",
+    "career_tags": "creative,media",
+    "order": 4
+  }
+},
+{
+  "model": "career.quizoption",
+  "pk": 29,
+  "fields": {
+    "question": 8,
+    "text": "The technical expert solving the hard problems",
+    "career_tags": "technology,engineering,science",
+    "order": 1
+  }
+},
+{
+  "model": "career.quizoption",
+  "pk": 30,
+  "fields": {
+    "question": 8,
+    "text": "The mediator who keeps everyone working together",
+    "career_tags": "social,governance,law",
+    "order": 2
+  }
+},
+{
+  "model": "career.quizoption",
+  "pk": 31,
+  "fields": {
+    "question": 8,
+    "text": "The strategist planning what needs to happen",
+    "career_tags": "business,finance",
+    "order": 3
+  }
+},
+{
+  "model": "career.quizoption",
+  "pk": 32,
+  "fields": {
+    "question": 8,
+    "text": "The communicator presenting ideas clearly",
+    "career_tags": "creative,media,education",
+    "order": 4
+  }
+},
+{
+  "model": "career.quizoption",
+  "pk": 33,
+  "fields": {
+    "question": 9,
+    "text": "Building technology that millions of Kenyans use daily",
+    "career_tags": "technology,engineering",
+    "order": 1
+  }
+},
+{
+  "model": "career.quizoption",
+  "pk": 34,
+  "fields": {
+    "question": 9,
+    "text": "Running a clinic or hospital that serves my community",
+    "career_tags": "health",
+    "order": 2
+  }
+},
+{
+  "model": "career.quizoption",
+  "pk": 35,
+  "fields": {
+    "question": 9,
+    "text": "Leading a business, law firm, or government agency",
+    "career_tags": "business,law,governance",
+    "order": 3
+  }
+},
+{
+  "model": "career.quizoption",
+  "pk": 36,
+  "fields": {
+    "question": 9,
+    "text": "Creating a media brand, art studio, or creative agency",
+    "career_tags": "creative,media",
+    "order": 4
+  }
+},
+{
+  "model": "career.quizoption",
+  "pk": 37,
+  "fields": {
+    "question": 10,
+    "text": "6+ years of study for a very specialised and high-paying career",
+    "career_tags": "health,law,engineering",
+    "order": 1
+  }
+},
+{
+  "model": "career.quizoption",
+  "pk": 38,
+  "fields": {
+    "question": 10,
+    "text": "4 years of focused university study in my passion area",
+    "career_tags": "technology,business,science",
+    "order": 2
+  }
+},
+{
+  "model": "career.quizoption",
+  "pk": 39,
+  "fields": {
+    "question": 10,
+    "text": "3 years of technical training to get into work quickly",
+    "career_tags": "health,engineering,agriculture",
+    "order": 3
+  }
+},
+{
+  "model": "career.quizoption",
+  "pk": 40,
+  "fields": {
+    "question": 10,
+    "text": "Learning by doing — building skills through projects and practice",
+    "career_tags": "creative,technology,media",
+    "order": 4
+  }
+},
+{
+  "model": "resources.article",
+  "pk": 1,
+  "fields": {
+    "title": "How KUCCPS Cluster Points Work: The Complete Guide for 2025",
+    "slug": "how-kuccps-cluster-points-work-the-complete-guide-for-2025",
+    "author": "KUCCPSS Editorial",
+    "excerpt": "Understanding how cluster points are calculated is the first step to choosing the right course. We break down the official KUCCPS formula in plain language.",
+    "content": "Every year, thousands of KCSE candidates miss out on their preferred courses not because of poor grades, but because they do not understand how cluster points work. This guide explains everything.\n\nWHAT ARE CLUSTER POINTS?\n\nCluster points are scores (out of 48) used by KUCCPS to rank students for specific courses. Each course belongs to a cluster group, and each cluster uses a specific combination of subjects to compute your score.\n\nThe official formula is:\n\nCluster Points = 48 x sqrt((core subjects total / 48) x (aggregate total / 84))\n\nThis means two things matter equally: how well you performed in the specific subjects a course cares about, AND your overall KCSE aggregate.\n\nTHE 7-SUBJECT AGGREGATE\n\nYour aggregate (out of 84) is calculated using exactly 7 subjects:\n- Mathematics (compulsory)\n- Best of English or Kiswahili\n- Your next 5 best subjects\n\nThe maximum aggregate is 84 points (12 points per subject x 7 subjects).\n\nWHAT ARE CLUSTERS?\n\nKUCCPS groups all degree, diploma and certificate programmes into 20 calculation clusters. For example:\n- Cluster 1 (Pure Sciences): Maths, Biology, Chemistry, Physics\n- Cluster 5 (Engineering): Maths, Physics, Chemistry\n- Cluster 14 (Social Sciences): English/Kiswahili, History, Geography, CRE/IRE\n\nYour score in the cluster that a course belongs to determines whether you qualify.\n\nMINIMUM CLUSTER POINTS\n\nEach course at every institution has a minimum cluster point cutoff. If your cluster points for that cluster exceed the cutoff, you qualify. If not, you do not -- regardless of your mean grade.\n\nThis is why a student with a B plain (mean grade) might qualify for Medicine while another with a B+ does not, if the B student had stronger scores in Biology, Chemistry and Physics specifically.\n\nHOW TO IMPROVE YOUR CHANCES\n\n1. Know which cluster your target course uses before your exam\n2. Focus revision energy on the specific 4 subjects in that cluster\n3. Use KUCCPSS to simulate different grade combinations and see how your cluster points change\n\nUse the free calculator on this site to compute your exact cluster points for all 20 clusters instantly.",
+    "thumbnail": "",
+    "tags": "placement,university,tips",
+    "is_published": true,
+    "featured": true,
+    "created_at": "2026-06-14T19:21:57.080Z",
+    "updated_at": "2026-06-14T19:21:57.080Z"
+  }
+},
+{
+  "model": "resources.article",
+  "pk": 2,
+  "fields": {
+    "title": "Top University Courses With Accessible Cluster Point Cutoffs in Kenya",
+    "slug": "top-university-courses-with-accessible-cluster-point-cutoffs-in-kenya",
+    "author": "KUCCPSS Research",
+    "excerpt": "Not all university courses require a B+ mean grade. These degree programmes have competitive cutoff points that C+ and B- students can realistically target.",
+    "content": "Many students assume that university is out of reach unless they scored an A or B+. That is not true. KUCCPS lists dozens of degree programmes with cluster point cutoffs well within reach of C+ and B- students.\n\nEDUCATION DEGREES\n\nBachelor of Education programmes -- particularly in Arts, Science and Special Needs -- regularly have cluster cutoffs in the 30-38 range. If you are passionate about teaching, this is a realistic and rewarding path.\n\nAGRICULTURAL SCIENCES\n\nCourses like BSc Agriculture, Horticulture and Food Science at many public universities have cutoffs in the 34-42 range. Kenya's growing agri-sector makes these graduates highly employable.\n\nENVIRONMENTAL STUDIES\n\nEnvironmental Science, Natural Resource Management, and Forestry programmes attract fewer applicants than Medicine or Law, keeping cutoffs lower while career prospects remain strong.\n\nSOCIAL WORK & COMMUNITY DEVELOPMENT\n\nThese programmes are vital for Kenya's development sector and NGO ecosystem. Cutoffs are typically in the 30-36 range.\n\nLIBRARY & INFORMATION SCIENCE\n\nAn underrated but stable profession. Most universities offer this at cutoffs accessible to C+ students.\n\nLINGUISTICS & LANGUAGE STUDIES\n\nIf you performed well in English or Kiswahili, Linguistics and Literature programmes could be your route into university.\n\nRECORDS MANAGEMENT\n\nA growing field as organisations digitise. Cutoffs remain competitive for students with a C+ aggregate.\n\nPHYSICAL EDUCATION & SPORTS SCIENCE\n\nIf you are athletic and academically solid, this programme combines both and has accessible cluster point requirements.\n\nHOW TO FIND YOUR SPECIFIC CUTOFFS\n\nUse the KUCCPSS course finder to search by cluster points. Enter your grades, calculate your cluster points, and filter courses to see exactly which ones you qualify for.",
+    "thumbnail": "",
+    "tags": "university,placement,tips",
+    "is_published": true,
+    "featured": false,
+    "created_at": "2026-06-14T19:21:57.089Z",
+    "updated_at": "2026-06-14T19:21:57.089Z"
+  }
+},
+{
+  "model": "resources.article",
+  "pk": 3,
+  "fields": {
+    "title": "KMTC 2025 Intake: Everything You Need to Know",
+    "slug": "kmtc-2025-intake-everything-you-need-to-know",
+    "author": "KUCCPSS Editorial",
+    "excerpt": "Kenya Medical Training College opens two intakes per year. Here is a full breakdown of the application process, minimum grades, and most competitive programmes.",
+    "content": "Kenya Medical Training College (KMTC) is one of the most sought-after institutions in Kenya. With campuses in every county and over 50 health training programmes, it is the primary route into clinical and community health careers for diploma-level students.\n\nINTAKES\n\nKMTC typically runs two intakes per year:\n- January/February Intake -- applications open around October/November\n- September Intake -- applications open around June/July\n\nMINIMUM ENTRY REQUIREMENTS\n\nFor most KMTC programmes, the minimum entry requirement is a mean grade of C (plain) in KCSE, plus specific subject requirements depending on the programme.\n\nMost competitive programmes (such as Clinical Medicine and Pharmacy) require C+ and above, with strong grades in Biology, Chemistry and English.\n\nTOP PROGRAMMES AND TYPICAL REQUIREMENTS\n\n- Clinical Medicine & Surgery -- C+ overall, C+ in Biology, Chemistry and English\n- Pharmacy -- C+ overall, B in Chemistry, C+ in Biology and Maths\n- Nursing -- C overall, C+ in Biology and English\n- Medical Laboratory Sciences -- C+ overall, C+ in Biology and Chemistry\n- Health Records & Information Management -- C overall, C in English and Maths\n- Community Health -- C overall, C in Biology\n- Nutrition & Dietetics -- C overall, C+ in Biology and Chemistry\n\nAPPLICATION PROCESS\n\n1. Visit the KUCCPS student portal (students.kuccps.net)\n2. Log in with your KCSE index number and year\n3. Select KMTC under institution type\n4. Choose up to three programmes in order of preference\n5. Submit and wait for placement results\n\nTIPS FOR BETTER PLACEMENT\n\n- List your most competitive programme first -- KUCCPS places you in the highest-ranked course you qualify for\n- Check cluster point cutoffs from previous intakes to gauge your chances\n- Consider county campuses -- they often have slightly lower competition than Nairobi campuses\n\nUse KUCCPSS to calculate your cluster points for health-related clusters and see which KMTC programmes you qualify for.",
+    "thumbnail": "",
+    "tags": "kmtc,placement,career",
+    "is_published": true,
+    "featured": false,
+    "created_at": "2026-06-14T19:21:57.097Z",
+    "updated_at": "2026-06-14T19:21:57.097Z"
+  }
+},
+{
+  "model": "resources.article",
+  "pk": 4,
+  "fields": {
+    "title": "TVET vs University: Which Path Is Right for You?",
+    "slug": "tvet-vs-university-which-path-is-right-for-you",
+    "author": "KUCCPSS Career Team",
+    "excerpt": "The choice between a university degree and a TVET diploma is not about which is better -- it is about which fits your goals, timeline and strengths.",
+    "content": "One of the most important decisions after KCSE is choosing between university, TVET, KMTC or a TTC. Each path leads to a different destination. Neither is inferior -- they serve different goals.\n\nUNIVERSITY DEGREES\n\nDuration: 4-6 years\nEntry: Minimum C+ for most programmes; A-B for competitive courses\nOutcome: Bachelor's degree, eligible for professional registration in fields like Medicine, Law, Engineering\n\nBest for students who:\n- Scored C+ and above\n- Want to enter professions that require degree-level qualification\n- Are comfortable with a longer academic journey before employment\n- Have a specific career in mind that is degree-gated (doctor, engineer, architect, lawyer)\n\nTVET DIPLOMAS & CERTIFICATES\n\nDuration: 1-3 years\nEntry: D+ to C, depending on the programme\nOutcome: Certificate or Diploma in a specific trade or technical skill\n\nBest for students who:\n- Scored below C+ in KCSE\n- Want to enter the job market faster\n- Are practically minded -- prefer building, making, fixing, or designing over classroom learning\n- Want to start a business in a trade (welding, electrical, plumbing, fashion, ICT)\n\nTHE SALARY MYTH\n\nMany families assume university graduates always earn more. This is increasingly not true. A qualified electrician or plumber running their own business often out-earns an Arts graduate on a starting salary. A TVET graduate with 3 years of experience can be more employable than a fresh degree holder in many sectors.\n\nPROGRESSION ROUTES\n\nTVET is not a dead end. Most colleges allow graduates to top up to a degree through bridging programmes. Diploma holders can join degree programmes at Part 2 in many universities, cutting the degree to 2-3 additional years.\n\nTHE HONEST QUESTION\n\nAsk yourself: what problem do I want to spend my career solving? That answer -- not your KCSE grade -- should guide your choice.\n\nUse KUCCPSS to explore both university and TVET courses side by side based on your actual cluster points.",
+    "thumbnail": "",
+    "tags": "tvet,career,tips,university",
+    "is_published": true,
+    "featured": true,
+    "created_at": "2026-06-14T19:21:57.102Z",
+    "updated_at": "2026-06-16T18:38:03.698Z"
+  }
+},
+{
+  "model": "resources.article",
+  "pk": 5,
+  "fields": {
+    "title": "Understanding the KUCCPS Placement Process Step by Step",
+    "slug": "understanding-the-kuccps-placement-process-step-by-step",
+    "author": "KUCCPSS Editorial",
+    "excerpt": "From KCSE results to your first day on campus -- here is exactly how the KUCCPS placement system works and how to navigate it successfully.",
+    "content": "The Kenya Universities and Colleges Central Placement Service (KUCCPS) is the body responsible for placing KCSE graduates into universities, KMTCs, TVETs, and TTCs. Understanding how it works gives you a significant advantage.\n\nSTEP 1: KCSE RESULTS\n\nOnce KNEC releases KCSE results (usually in December/January), your index number and results are automatically shared with KUCCPS. You do not need to do anything at this stage.\n\nSTEP 2: OPEN THE STUDENT PORTAL\n\nGo to students.kuccps.net and log in using:\n- Your KCSE Index Number (e.g. 12345678001)\n- Your KCSE Year of Examination\n- Your date of birth\n\nSTEP 3: MAKE YOUR COURSE CHOICES\n\nYou are allowed to select up to:\n- 3 degree programmes (public universities)\n- 3 KMTC programmes\n- 3 TVET/TTC programmes\n\nList your choices in order of preference. KUCCPS will place you in the highest-ranked course you qualify for.\n\nSTEP 4: PAY THE APPLICATION FEE\n\nA small application fee (currently Ksh 1,500) is charged via M-Pesa. You cannot submit without payment.\n\nSTEP 5: PLACEMENT RESULTS\n\nKUCCPS publishes placement results in batches. If you are placed, you will see your institution and course in the portal. If not placed in your first choices, you may be placed in revision rounds.\n\nSTEP 6: REVISION WINDOW\n\nKUCCPS opens a revision window after the first placement round. This is your chance to change choices if you were not placed or if you want to try for a different course. Use this window wisely -- research cutoff points carefully before revising.\n\nSTEP 7: REPORTING TO CAMPUS\n\nOnce placed, you receive a joining letter with your campus reporting date. Bring your original KCSE certificate, ID, and placement letter.\n\nCOMMON MISTAKES TO AVOID\n\n- Choosing a course because of pressure from family without checking if you qualify\n- Listing only highly competitive courses without any fallback choices\n- Missing the revision window deadline\n- Not verifying that your KCSE results in the portal are correct\n\nUse KUCCPSS to simulate your placement -- calculate your cluster points, see which courses you qualify for, and plan your choices before the portal opens.",
+    "thumbnail": "",
+    "tags": "placement,tips,university",
+    "is_published": true,
+    "featured": false,
+    "created_at": "2026-06-14T19:21:57.106Z",
+    "updated_at": "2026-06-14T19:21:57.106Z"
+  }
+},
+{
+  "model": "resources.article",
+  "pk": 6,
+  "fields": {
+    "title": "Scholarships for Kenyan Students in 2025: Where to Apply",
+    "slug": "scholarships-for-kenyan-students-in-2025-where-to-apply",
+    "author": "KUCCPSS Research",
+    "excerpt": "From HELB loans to fully-funded international scholarships, here is a practical guide to funding your education after KCSE.",
+    "content": "Financing higher education is one of the biggest challenges Kenyan students face. Fortunately, there are more options than most families realise.\n\nHELB -- HIGHER EDUCATION LOANS BOARD\n\nThe most widely used funding source for Kenyan university students. HELB provides loans and bursaries to students at public universities.\n- Loan amounts: Ksh 35,000-60,000 per year depending on financial need\n- Repayment: Begins after graduation and employment\n- Application: helb.co.ke after KUCCPS placement\n\nHELB also offers bursaries (non-repayable) for students from very low-income households. Apply as early as possible -- bursary funds are limited.\n\nGOVERNMENT SCHOLARSHIPS\n\nThe Kenya government occasionally offers full scholarships through specific programmes:\n- Presidential Scholarship (high achievers, usually A grades)\n- County Government Bursaries -- check with your county government office each year\n\nEQUITY WINGS TO FLY\n\nOne of Kenya's most impactful scholarship programmes. Targets bright students from disadvantaged backgrounds. Graduates continue to benefit from alumni networks and mentorship.\n\nMASTERCARD FOUNDATION SCHOLARS PROGRAM\n\nAvailable at several Kenyan universities including University of Nairobi and Strathmore. Covers full tuition, accommodation, and a stipend. Targets academically strong students from low-income families. Applications usually open between January and March.\n\nDAAD (GERMAN ACADEMIC EXCHANGE)\n\nGermany offers generous scholarships for African students at German universities, taught in English. Strong in engineering, agriculture, and development studies.\n\nKCDF -- KENYA COMMUNITY DEVELOPMENT FOUNDATION\n\nOffers bursaries to students in TVET and university. Focus on marginalised communities. Apply via kcdf.or.ke.\n\nPRACTICAL ADVICE\n\n- Apply for multiple scholarships simultaneously -- there is no rule against it\n- Start gathering documents early: KCSE certificate, birth certificate, ID, fee structure\n- Write honest, specific personal statements -- generic applications rarely succeed\n- Check your county and constituency bursary fund every year -- many local bursaries go unclaimed\n\nKeep an eye on the KUCCPSS calendar page for updated scholarship deadlines.",
+    "thumbnail": "",
+    "tags": "scholarships,university,tips",
+    "is_published": true,
+    "featured": false,
+    "created_at": "2026-06-14T19:21:57.111Z",
+    "updated_at": "2026-06-14T19:21:57.111Z"
+  }
+},
+{
+  "model": "resources.article",
+  "pk": 7,
+  "fields": {
+    "title": "Career Spotlight: Clinical Medicine -- Kenya's Hidden Healthcare Pathway",
+    "slug": "career-spotlight-clinical-medicine-kenyas-hidden-healthcare-pathway",
+    "author": "KUCCPSS Career Team",
+    "excerpt": "Clinical Officers are the backbone of Kenya's rural health system. Here is what the career looks like, what you study, and how to qualify.",
+    "content": "When most students think about healthcare careers, they think of Medicine (MBChB) -- a 6-year degree requiring an A-minus or better. But Kenya's healthcare system runs largely on Clinical Officers, trained at KMTC in a rigorous 3-year diploma programme.\n\nWHAT IS A CLINICAL OFFICER?\n\nA Clinical Officer (CO) is a mid-level healthcare provider licensed to diagnose illnesses, prescribe medication, perform minor procedures, and manage patients -- particularly in district hospitals, health centres and dispensaries.\n\nIn rural Kenya, the Clinical Officer is often the most senior medical professional available. COs staff over 70% of Kenya's public health facilities.\n\nWHAT DO YOU STUDY?\n\nThe KMTC Clinical Medicine and Surgery programme covers:\nYear 1: Anatomy, Physiology, Biochemistry, Medical Microbiology, Health Systems\nYear 2: Internal Medicine, Surgery, Paediatrics, Gynaecology, Mental Health, Pharmacology\nYear 3: Clinical rotations across all departments, Emergency Medicine, Community Health\n\nHOW TO QUALIFY\n\nMinimum requirements at KMTC:\n- KCSE mean grade of C+\n- C+ in Biology, Chemistry and English\n- C in Mathematics (some campuses require C+)\n\nCAREER PROGRESSION\n\nAfter qualifying as a Clinical Officer, you can:\n- Work in government facilities (salary Ksh 35,000-90,000+)\n- Join a mission hospital or private clinic\n- Specialise in Surgery, Anaesthesia, Ophthalmology, Psychiatry, or Paediatrics\n- Pursue a Bachelor of Science in Clinical Medicine (upgrade degree, 2 years) at UoN or KU\n- Work with international health organisations (MSF, WHO, UNHCR)\n\nIf you scored C+ in KCSE with strong Biology and Chemistry, Clinical Medicine at KMTC is a path worth serious consideration.\n\nUse KUCCPSS to check whether your grades meet the KMTC Clinical Medicine requirements.",
+    "thumbnail": "",
+    "tags": "career,kmtc,health",
+    "is_published": true,
+    "featured": false,
+    "created_at": "2026-06-14T19:21:57.115Z",
+    "updated_at": "2026-06-14T19:21:57.115Z"
+  }
+},
+{
+  "model": "resources.article",
+  "pk": 8,
+  "fields": {
+    "title": "5 Mistakes Students Make When Choosing KUCCPS Courses",
+    "slug": "5-mistakes-students-make-when-choosing-kuccps-courses",
+    "author": "KUCCPSS Editorial",
+    "excerpt": "Every placement cycle, thousands of students make avoidable errors that cost them their preferred courses. Do not be one of them.",
+    "content": "The KUCCPS placement window is open for a limited time. Mistakes made during this period can lock you out of your preferred course for a full year. Here are the five most common errors and how to avoid them.\n\nMISTAKE 1: CHOOSING COURSES WITHOUT CHECKING CLUSTER POINTS\n\nMany students pick courses based on what they want to study, without verifying whether their cluster points actually meet the cutoff. Wanting to do Law is great -- but Law at UoN requires around 42 cluster points in Cluster 16. If your Cluster 16 score is 34, you will not be placed, no matter how much you want it.\n\nFix: Calculate your cluster points on KUCCPSS before opening the portal. Filter courses by your actual scores.\n\nMISTAKE 2: LISTING ONLY HIGHLY COMPETITIVE COURSES\n\nPutting Medicine, Law and Computer Science as your three choices without any fallback is a gamble. If you fall short of the cutoff for all three, you are left unplaced.\n\nFix: Use at least one safe choice -- a course you comfortably qualify for -- as your third option.\n\nMISTAKE 3: IGNORING THE INSTITUTION DIFFERENCE\n\nThe same course at different universities can have dramatically different cutoff points. BSc Computer Science at JKUAT may have a lower cutoff than at UoN or Strathmore. If your score qualifies you for JKUAT but not UoN, listing only UoN means you miss out.\n\nFix: Search by course and compare cutoffs across multiple institutions.\n\nMISTAKE 4: MISSING THE REVISION WINDOW\n\nKUCCPS opens a revision window after initial placement results. Many students miss this window because they did not know it existed or missed the deadline.\n\nFix: Save the KUCCPS calendar dates on your phone. The revision window is typically 1-2 weeks long.\n\nMISTAKE 5: CHOOSING BASED ON FAMILY PRESSURE, NOT FIT\n\nChoosing a course because your parents want you to, without genuine interest or aptitude, is one of the most common causes of university dropout and career dissatisfaction in Kenya.\n\nFix: Take the KUCCPSS career quiz. It maps your interests and strengths to career clusters. Use the results as a starting point for an honest conversation with your family.\n\nThe placement process rewards students who are prepared. Use the tools available -- including this platform -- to make informed choices.",
+    "thumbnail": "",
+    "tags": "placement,tips,university",
+    "is_published": true,
+    "featured": false,
+    "created_at": "2026-06-14T19:21:57.119Z",
+    "updated_at": "2026-06-14T19:21:57.119Z"
+  }
+},
+{
+  "model": "resources.faqitem",
+  "pk": 1,
+  "fields": {
+    "question": "What is KUCCPSS?",
+    "answer": "KUCCPSS is a free online platform that helps Kenyan KCSE graduates calculate their cluster points, discover which university, KMTC, TVET, and TTC courses they qualify for, and explore career options — all using the official KUCCPS formula and placement criteria.",
+    "category": "general",
+    "order": 1,
+    "is_active": true,
+    "created_at": "2026-06-16T16:49:54.432Z"
+  }
+},
+{
+  "model": "resources.faqitem",
+  "pk": 2,
+  "fields": {
+    "question": "Is KUCCPSS the same as KUCCPS?",
+    "answer": "No. KUCCPS (Kenya Universities and Colleges Central Placement Service) is the official government body that places students into institutions. You apply at kuccps.ac.ke.\n\nKUCCPSS (this website) is an independent, free tool to help you prepare for that application — by calculating your points and finding your eligible courses before the portal opens. We are not affiliated with the government.",
+    "category": "general",
+    "order": 2,
+    "is_active": true,
+    "created_at": "2026-06-16T16:49:54.440Z"
+  }
+},
+{
+  "model": "resources.faqitem",
+  "pk": 3,
+  "fields": {
+    "question": "Is KUCCPSS free to use?",
+    "answer": "Yes — completely free. Every feature including the cluster points calculator, eligible courses list, career engine, course shortlist, and PDF exports is free for all students. There are no hidden charges or premium tiers.",
+    "category": "general",
+    "order": 3,
+    "is_active": true,
+    "created_at": "2026-06-16T16:49:54.442Z"
+  }
+},
+{
+  "model": "resources.faqitem",
+  "pk": 4,
+  "fields": {
+    "question": "Do I need to create an account?",
+    "answer": "The cluster points calculator and basic course browsing are available without an account. However, creating a free account unlocks: saving your grades between sessions, bookmarking courses to a watchlist, building a shortlist, tracking your applications, and getting personalised career engine recommendations.",
+    "category": "general",
+    "order": 4,
+    "is_active": true,
+    "created_at": "2026-06-16T16:49:54.445Z"
+  }
+},
+{
+  "model": "resources.faqitem",
+  "pk": 5,
+  "fields": {
+    "question": "Is my data safe on KUCCPSS?",
+    "answer": "Yes. Your grades and personal information are stored securely and are never shared with third parties. We do not sell your data. You can delete your account at any time from your Profile settings.",
+    "category": "general",
+    "order": 5,
+    "is_active": true,
+    "created_at": "2026-06-16T16:49:54.447Z"
+  }
+},
+{
+  "model": "resources.faqitem",
+  "pk": 6,
+  "fields": {
+    "question": "How are cluster points calculated?",
+    "answer": "The official KUCCPS formula is:\n\nCluster Points = 48 × √( (cluster_subjects / 48) × (aggregate / 84) )\n\nWhere cluster_subjects is the sum of your raw marks in the 4 subjects that form each specific cluster (max 48), and aggregate is your KCSE total (max 84). The maximum possible cluster points score is 48.",
+    "category": "cluster",
+    "order": 6,
+    "is_active": true,
+    "created_at": "2026-06-16T16:49:54.451Z"
+  }
+},
+{
+  "model": "resources.faqitem",
+  "pk": 7,
+  "fields": {
+    "question": "What is the KCSE aggregate (total)?",
+    "answer": "The aggregate is your best 7 subjects scored as follows:\n\nMathematics + best of (English or Kiswahili) + your next 5 best subjects. The maximum aggregate is 84 points (7 subjects × A = 12 each).",
+    "category": "cluster",
+    "order": 7,
+    "is_active": true,
+    "created_at": "2026-06-16T16:49:54.454Z"
+  }
+},
+{
+  "model": "resources.faqitem",
+  "pk": 8,
+  "fields": {
+    "question": "What are the 20 KUCCPS clusters?",
+    "answer": "KUCCPS has 20 subject clusters (C1–C20), each grouping 4 subjects relevant to a field of study. For example, Cluster 1 (Medicine) includes Biology, Chemistry, Mathematics, and Physics. Visit the Clusters page to view all 20 clusters and their subject compositions.",
+    "category": "cluster",
+    "order": 8,
+    "is_active": true,
+    "created_at": "2026-06-16T16:49:54.457Z"
+  }
+},
+{
+  "model": "resources.faqitem",
+  "pk": 9,
+  "fields": {
+    "question": "My cluster points seem lower than expected — why?",
+    "answer": "A few common reasons:\n\n• Weak cluster subjects — the formula weights your performance in the specific 4 cluster subjects heavily. A weak subject in the cluster drags the score down even if your overall grades are good.\n• Low aggregate — the aggregate (all 7 best subjects) also factors in.\n• Grade entry error — double-check you entered the correct grade for each subject, especially distinguishing A (12) from A- (11), etc.",
+    "category": "cluster",
+    "order": 9,
+    "is_active": true,
+    "created_at": "2026-06-16T16:49:54.460Z"
+  }
+},
+{
+  "model": "resources.faqitem",
+  "pk": 10,
+  "fields": {
+    "question": "Can I enter grades from a photo of my result slip?",
+    "answer": "Yes. The calculator has an OCR (Optical Character Recognition) feature powered by GPT-4o. Take a clear, well-lit photo of your KNEC result slip and upload it — the system will attempt to read your grades automatically. If the photo is unclear, enter grades manually for best accuracy.",
+    "category": "cluster",
+    "order": 10,
+    "is_active": true,
+    "created_at": "2026-06-16T16:49:54.462Z"
+  }
+},
+{
+  "model": "resources.faqitem",
+  "pk": 11,
+  "fields": {
+    "question": "What pathways does KUCCPSS cover?",
+    "answer": "KUCCPSS covers all four KUCCPS placement pathways:\n\n• Degree — Public and private universities (cluster-points based)\n• KMTC — Kenya Medical Training College programmes (grade-based)\n• TVET — Technical and Vocational Education Training institutions\n• TTC — Teacher Training Colleges",
+    "category": "courses",
+    "order": 11,
+    "is_active": true,
+    "created_at": "2026-06-16T16:49:54.465Z"
+  }
+},
+{
+  "model": "resources.faqitem",
+  "pk": 12,
+  "fields": {
+    "question": "How do I find courses I qualify for?",
+    "answer": "1. Go to the Cluster Points Calculator and enter your grades.\n2. Click 'View Eligible Courses' — you'll see every course whose cutoff point is at or below your calculated cluster score.\n3. Or use the Career Guidance Engine for a more personalised, filtered recommendation.",
+    "category": "courses",
+    "order": 12,
+    "is_active": true,
+    "created_at": "2026-06-16T16:49:54.468Z"
+  }
+},
+{
+  "model": "resources.faqitem",
+  "pk": 13,
+  "fields": {
+    "question": "What does 'cutoff points' mean?",
+    "answer": "The cutoff point is the minimum cluster score a student needed to be placed into a given course in a recent intake. If your cluster points are equal to or above the cutoff, you generally qualify. Cutoffs change each year based on applicant demand — a course in high demand may have a higher cutoff than its stated minimum.",
+    "category": "courses",
+    "order": 13,
+    "is_active": true,
+    "created_at": "2026-06-16T16:49:54.471Z"
+  }
+},
+{
+  "model": "resources.faqitem",
+  "pk": 14,
+  "fields": {
+    "question": "Why do some courses show a minimum grade instead of cluster points?",
+    "answer": "KMTC, TVET, and TTC programmes use minimum mean grade requirements (e.g. C, C+, B-) rather than cluster points. Only university degree courses use the cluster points system. When you use the Career Guidance Engine, select the appropriate pathway and you'll see the right criteria for each.",
+    "category": "courses",
+    "order": 14,
+    "is_active": true,
+    "created_at": "2026-06-16T16:49:54.474Z"
+  }
+},
+{
+  "model": "resources.faqitem",
+  "pk": 15,
+  "fields": {
+    "question": "Can I save and compare courses?",
+    "answer": "Yes. When logged in, you can:\n• Bookmark any course to your Watchlist (the bookmark icon on each course)\n• Shortlist up to your top choices for easy comparison\n• View cutoff trend charts to see how a course's cutoff has changed over the years\n• Access everything from your Dashboard",
+    "category": "courses",
+    "order": 15,
+    "is_active": true,
+    "created_at": "2026-06-16T16:49:54.477Z"
+  }
+},
+{
+  "model": "resources.faqitem",
+  "pk": 16,
+  "fields": {
+    "question": "When does the KUCCPS application portal open?",
+    "answer": "The portal typically opens between June and August each year, after KCSE results are released. For 2026, the portal is estimated to open around 3 July 2026 and close around 21 August 2026. Check the official KUCCPS website and the KUCCPS Calendar on this site for confirmed dates.",
+    "category": "kuccps",
+    "order": 16,
+    "is_active": true,
+    "created_at": "2026-06-16T16:49:54.480Z"
+  }
+},
+{
+  "model": "resources.faqitem",
+  "pk": 17,
+  "fields": {
+    "question": "How many course choices can I submit on KUCCPS?",
+    "answer": "KUCCPS currently allows students to submit up to 4 course choices per pathway (degree, KMTC, TVET, TTC), ranked in order of preference. You are placed into the highest-ranked course you qualify for based on your cluster points and available slots.",
+    "category": "kuccps",
+    "order": 17,
+    "is_active": true,
+    "created_at": "2026-06-16T16:49:54.482Z"
+  }
+},
+{
+  "model": "resources.faqitem",
+  "pk": 18,
+  "fields": {
+    "question": "What happens if I don't get my first choice?",
+    "answer": "KUCCPS works through your ranked choices in order. If you don't qualify for your first choice (because your cluster points are below the cutoff or slots are filled), the system tries your second choice, then third, and so on. If none of your choices are successful, you may participate in the revision or inter-institutional transfer window.",
+    "category": "kuccps",
+    "order": 18,
+    "is_active": true,
+    "created_at": "2026-06-16T16:49:54.485Z"
+  }
+},
+{
+  "model": "resources.faqitem",
+  "pk": 19,
+  "fields": {
+    "question": "Does KUCCPSS submit my application to KUCCPS?",
+    "answer": "No. KUCCPSS is only a preparation and guidance tool. Your actual placement application must be submitted directly on the official KUCCPS portal at kuccps.ac.ke during the application window. KUCCPSS helps you decide what to apply for — you still complete the application yourself on the official site.",
+    "category": "kuccps",
+    "order": 19,
+    "is_active": true,
+    "created_at": "2026-06-16T16:49:54.487Z"
+  }
+},
+{
+  "model": "resources.faqitem",
+  "pk": 20,
+  "fields": {
+    "question": "What is the HELB loan and how do I apply?",
+    "answer": "The Higher Education Loans Board (HELB) provides subsidised loans and bursaries to Kenyan students in accredited institutions. Applications are done online at helb.co.ke. Apply as soon as you get your placement letter — bursary deadlines are typically strict.",
+    "category": "kuccps",
+    "order": 20,
+    "is_active": true,
+    "created_at": "2026-06-16T16:49:54.489Z"
+  }
+},
+{
+  "model": "resources.faqitem",
+  "pk": 21,
+  "fields": {
+    "question": "How do I reset my password?",
+    "answer": "On the Login page, click 'Forgot password?'. Enter your email address and we'll send you a reset link. Check your spam/junk folder if you don't see it within a few minutes.",
+    "category": "account",
+    "order": 21,
+    "is_active": true,
+    "created_at": "2026-06-16T16:49:54.491Z"
+  }
+},
+{
+  "model": "resources.faqitem",
+  "pk": 22,
+  "fields": {
+    "question": "Can I sign in with Google?",
+    "answer": "Yes — the login page has a 'Continue with Google' option powered by Google OAuth. Your KUCCPSS account will be linked to your Google account for quick sign-in on any device.",
+    "category": "account",
+    "order": 22,
+    "is_active": true,
+    "created_at": "2026-06-16T16:49:54.497Z"
+  }
+},
+{
+  "model": "resources.faqitem",
+  "pk": 23,
+  "fields": {
+    "question": "How do I update my county or KCSE year?",
+    "answer": "Go to My Profile (accessible from the top-right account menu). You can update your full name, county, KCSE year, and profile picture there.",
+    "category": "account",
+    "order": 23,
+    "is_active": true,
+    "created_at": "2026-06-16T16:49:54.500Z"
+  }
+},
+{
+  "model": "resources.faqitem",
+  "pk": 24,
+  "fields": {
+    "question": "Why does the Career Engine show sample courses instead of my results?",
+    "answer": "The 'Recommended For You' section on your dashboard shows real results only after you've run the Career Engine at least once. Visit the Career Guidance Engine, enter your grades and preferences, and click Proceed. Your dashboard will then display your personalised matches.",
+    "category": "account",
+    "order": 24,
+    "is_active": true,
+    "created_at": "2026-06-16T16:49:54.504Z"
+  }
+},
+{
+  "model": "resources.faqitem",
+  "pk": 25,
+  "fields": {
+    "question": "How do I report an error in course data or cutoff points?",
+    "answer": "If you spot incorrect course information, outdated cutoff points, or a missing institution, please email us at info@kuccpss.co.ke with details. We update the database regularly and appreciate corrections from students and educators.",
+    "category": "account",
+    "order": 25,
+    "is_active": true,
+    "created_at": "2026-06-16T16:49:54.507Z"
+  }
+},
+{
+  "model": "resources.successstory",
+  "pk": 1,
+  "fields": {
+    "name": "Faith Wanjiru",
+    "initials": "FW",
+    "county": "Kiambu County",
+    "work_location": "Nairobi",
+    "kcse_grade": "A-",
+    "quote": "I wasn't sure my grades covered Computer Science. KUCCPSS confirmed I qualified and showed me the exact cluster I needed. I'm now in second year at UoN and interning at a Nairobi tech company.",
+    "course_name": "BSc Computer Science",
+    "institution": "University of Nairobi",
+    "pathway": "degree",
+    "year": 2023,
+    "avatar_bg": "#eef2ff",
+    "avatar_color": "#4f46e5",
+    "order": 1,
+    "is_active": true
+  }
+},
+{
+  "model": "resources.successstory",
+  "pk": 2,
+  "fields": {
+    "name": "Caleb Ochieng",
+    "initials": "CO",
+    "county": "Kisumu County",
+    "work_location": "Homa Bay",
+    "kcse_grade": "C+",
+    "quote": "People said C+ closes every door. The career engine showed me I met KMTC's minimum and flagged Community Health Nursing as a strong fit. I graduated and I'm now posted at a sub-county health centre in Homabay.",
+    "course_name": "Diploma in Community Health Nursing",
+    "institution": "KMTC Kisumu",
+    "pathway": "kmtc",
+    "year": 2022,
+    "avatar_bg": "#fef2f2",
+    "avatar_color": "#dc2626",
+    "order": 2,
+    "is_active": true
+  }
+},
+{
+  "model": "resources.successstory",
+  "pk": 3,
+  "fields": {
+    "name": "Njeri Wambui",
+    "initials": "NW",
+    "county": "Muranga County",
+    "work_location": "Muranga",
+    "kcse_grade": "B",
+    "quote": "I wanted Medicine but my points fell short. KUCCPSS recommended BSc Nursing as a near-equivalent with strong job prospects. I'm now a Registered Nurse at Muranga County Referral Hospital and I love every shift.",
+    "course_name": "BSc Nursing",
+    "institution": "Mount Kenya University",
+    "pathway": "degree",
+    "year": 2022,
+    "avatar_bg": "#f5f3ff",
+    "avatar_color": "#7c3aed",
+    "order": 3,
+    "is_active": true
+  }
+},
+{
+  "model": "resources.successstory",
+  "pk": 4,
+  "fields": {
+    "name": "Vivian Achieng",
+    "initials": "VA",
+    "county": "Siaya County",
+    "work_location": "Kisumu",
+    "kcse_grade": "C",
+    "quote": "The calculator matched me to Electrical Engineering Technology at my county poly. Within six months of graduating I landed a placement with a construction firm in Kisumu. I now supervise wiring on full housing estates.",
+    "course_name": "Diploma in Electrical Engineering Tech",
+    "institution": "Siaya Institute of Technology",
+    "pathway": "tvet",
+    "year": 2023,
+    "avatar_bg": "#ecfdf5",
+    "avatar_color": "#059669",
+    "order": 4,
+    "is_active": true
+  }
+},
+{
+  "model": "resources.successstory",
+  "pk": 5,
+  "fields": {
+    "name": "Hassan Abdullahi",
+    "initials": "HA",
+    "county": "Mombasa County",
+    "work_location": "Mombasa",
+    "kcse_grade": "B-",
+    "quote": "KUCCPSS shortlisted diploma options that matched my Commerce grade. I picked Business Administration, graduated in 2023, and now run a small logistics business linking Mombasa traders to Nairobi markets — 8 employees and counting.",
+    "course_name": "Diploma in Business Administration",
+    "institution": "Kenya School of Business",
+    "pathway": "diploma",
+    "year": 2022,
+    "avatar_bg": "#ecfeff",
+    "avatar_color": "#0891b2",
+    "order": 5,
+    "is_active": true
+  }
+},
+{
+  "model": "resources.successstory",
+  "pk": 6,
+  "fields": {
+    "name": "Samuel Ruto",
+    "initials": "SR",
+    "county": "Uasin Gishu County",
+    "work_location": "Uasin Gishu EPZ",
+    "kcse_grade": "D+",
+    "quote": "I thought D+ closed every option. The platform showed me the Artisan Certificate path and I went for Welding at Eldoret Polytechnic. Got NITA certified after graduation and I'm now contracted by a steel fabrication firm in the EPZ.",
+    "course_name": "Artisan Certificate — Welding & Fabrication",
+    "institution": "Eldoret National Polytechnic",
+    "pathway": "artisan",
+    "year": 2022,
+    "avatar_bg": "#fffbeb",
+    "avatar_color": "#d97706",
+    "order": 6,
+    "is_active": true
+  }
+}
+]
