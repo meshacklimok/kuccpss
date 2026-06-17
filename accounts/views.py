@@ -840,10 +840,11 @@ def broadcast_notification_view(request: HttpRequest) -> HttpResponse:
     from .models import Notification
 
     sent_count = None
+    push_count = 0
     if request.method == "POST":
-        msg       = request.POST.get("message", "").strip()
-        ntype     = request.POST.get("notif_type", "info")
-        link      = request.POST.get("link", "").strip()
+        msg   = request.POST.get("message", "").strip()
+        ntype = request.POST.get("notif_type", "info")
+        link  = request.POST.get("link", "").strip()
         if msg:
             users = User.objects.filter(is_active=True)
             Notification.objects.bulk_create([
@@ -851,11 +852,81 @@ def broadcast_notification_view(request: HttpRequest) -> HttpResponse:
                 for u in users
             ])
             sent_count = users.count()
-            messages.success(request, f"Notification sent to {sent_count} active users.")
+            push_count = _send_push_to_all(msg, link or "/accounts/notifications/")
+            messages.success(request, f"Notification sent to {sent_count} users ({push_count} push delivered).")
 
     active_count = User.objects.filter(is_active=True).count()
+    from .models import PushSubscription
+    push_sub_count = PushSubscription.objects.count()
     return render(request, "accounts/broadcast_notification.html", {
-        "type_choices": Notification.TYPE_CHOICES,
-        "active_count": active_count,
-        "sent_count":   sent_count,
+        "type_choices":   Notification.TYPE_CHOICES,
+        "active_count":   active_count,
+        "push_sub_count": push_sub_count,
+        "sent_count":     sent_count,
+        "push_count":     push_count,
     })
+
+
+def _send_push_to_all(message: str, url: str = "/") -> int:
+    """Send a Web Push to every stored subscription. Returns count of successful sends."""
+    import json
+    from django.conf import settings as _s
+    from .models import PushSubscription
+
+    if not _s.VAPID_PRIVATE_KEY or not _s.VAPID_PUBLIC_KEY:
+        return 0
+
+    try:
+        from pywebpush import webpush, WebPushException
+    except ImportError:
+        return 0
+
+    payload = json.dumps({
+        "title": "CareerNext",
+        "body":  message,
+        "icon":  "/static/images/icon-192.png",
+        "badge": "/static/images/icon-192.png",
+        "url":   url,
+    })
+
+    ok = 0
+    dead = []
+    for sub in PushSubscription.objects.all():
+        try:
+            webpush(
+                subscription_info={
+                    "endpoint": sub.endpoint,
+                    "keys": {"p256dh": sub.p256dh, "auth": sub.auth},
+                },
+                data=payload,
+                vapid_private_key=_s.VAPID_PRIVATE_KEY,
+                vapid_claims={"sub": f"mailto:{_s.VAPID_MAILTO}"},
+            )
+            ok += 1
+        except Exception:
+            dead.append(sub.pk)
+    if dead:
+        PushSubscription.objects.filter(pk__in=dead).delete()
+    return ok
+
+
+@require_http_methods(["POST"])
+def push_subscribe(request: HttpRequest) -> JsonResponse:
+    """Save a Web Push subscription from the browser."""
+    import json
+    from .models import PushSubscription
+
+    try:
+        data = json.loads(request.body)
+        endpoint = data["endpoint"]
+        p256dh   = data["keys"]["p256dh"]
+        auth     = data["keys"]["auth"]
+    except (KeyError, ValueError):
+        return JsonResponse({"ok": False}, status=400)
+
+    user = request.user if request.user.is_authenticated else None
+    PushSubscription.objects.update_or_create(
+        endpoint=endpoint,
+        defaults={"p256dh": p256dh, "auth": auth, "user": user},
+    )
+    return JsonResponse({"ok": True})

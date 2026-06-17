@@ -11,6 +11,7 @@ from .models import (
     CourseShortlist,
     Notification,
     CareerSessionSnapshot,
+    PushSubscription,
 )
 from .forms import UserAdminCreationForm, UserAdminChangeForm
 
@@ -156,6 +157,21 @@ class NotificationAdmin(admin.ModelAdmin):
     def message_preview(self, obj):
         return obj.message[:60]
     message_preview.short_description = "Message"
+
+
+# =====================================================
+# PUSH SUBSCRIPTIONS
+# =====================================================
+@admin.register(PushSubscription)
+class PushSubscriptionAdmin(admin.ModelAdmin):
+    list_display = ('user', 'endpoint_short', 'created_at')
+    list_filter  = ('created_at',)
+    search_fields = ('user__email', 'endpoint')
+    readonly_fields = ('created_at',)
+
+    def endpoint_short(self, obj):
+        return obj.endpoint[:60]
+    endpoint_short.short_description = "Endpoint"
 
 
 # =====================================================

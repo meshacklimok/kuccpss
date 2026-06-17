@@ -372,3 +372,29 @@ class CareerSessionSnapshot(models.Model):
 
     def __str__(self):
         return f"{self.user.email} — {self.pathway} ({self.computed_at:%Y-%m-%d})"
+
+
+# =====================================================
+# WEB PUSH SUBSCRIPTIONS
+# Stores browser push subscriptions for Web Push API.
+# One user can have multiple subscriptions (phone + laptop).
+# =====================================================
+
+class PushSubscription(models.Model):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        null=True, blank=True,
+        related_name='push_subscriptions',
+    )
+    endpoint = models.URLField(max_length=600, unique=True)
+    p256dh   = models.TextField()
+    auth     = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'Push Subscription'
+        verbose_name_plural = 'Push Subscriptions'
+
+    def __str__(self):
+        return f"{self.user.email if self.user else 'anon'} — {self.endpoint[:60]}"

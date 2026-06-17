@@ -38,6 +38,7 @@ urlpatterns = [
     path("notifications/mark-read/", views.mark_notifications_read, name="mark_notifications_read"),
     path("notifications/<int:notif_id>/read/", views.mark_notification_read, name="mark_notification_read"),
     path("notifications/broadcast/", views.broadcast_notification_view, name="broadcast_notification"),
+    path("push/subscribe/",          views.push_subscribe,              name="push_subscribe"),
 
     # ==============================
     # Allauth URLs (Google OAuth + built-in email/password)

@@ -120,6 +120,59 @@ document.addEventListener('DOMContentLoaded', function () {
 
 });
 
+// ── Web Push Subscription ───────────────────────────────────────────────────
+(function () {
+  if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
+  if (Notification.permission === 'denied') return;
+
+  var PUSH_ASKED = 'cn-push-asked';
+  if (localStorage.getItem(PUSH_ASKED)) return;
+
+  var vapidKey = (document.getElementById('vapid-public-key') || {}).content;
+  if (!vapidKey) return;
+
+  function urlB64ToUint8Array(base64String) {
+    var padding = '='.repeat((4 - base64String.length % 4) % 4);
+    var base64  = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+    var raw     = atob(base64);
+    var arr     = new Uint8Array(raw.length);
+    for (var i = 0; i < raw.length; i++) arr[i] = raw.charCodeAt(i);
+    return arr;
+  }
+
+  function doSubscribe() {
+    navigator.serviceWorker.ready.then(function (reg) {
+      return reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlB64ToUint8Array(vapidKey),
+      });
+    }).then(function (sub) {
+      var json = sub.toJSON();
+      return fetch('/accounts/push/subscribe/', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCsrf() },
+        body:    JSON.stringify(json),
+      });
+    }).then(function () {
+      localStorage.setItem(PUSH_ASKED, '1');
+    }).catch(function () {
+      localStorage.setItem(PUSH_ASKED, '1');
+    });
+  }
+
+  // Ask after 12 seconds — after user has settled on the page
+  setTimeout(function () {
+    if (Notification.permission === 'granted') {
+      doSubscribe();
+      return;
+    }
+    Notification.requestPermission().then(function (p) {
+      localStorage.setItem(PUSH_ASKED, '1');
+      if (p === 'granted') doSubscribe();
+    });
+  }, 12000);
+})();
+
 // ── PWA Install Prompt ──────────────────────────────────────────────────────
 (function () {
   var DISMISS_KEY   = 'cn-install-dismissed';
