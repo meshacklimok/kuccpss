@@ -18,15 +18,26 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
-from accounts.views import dashboard_view
+from django.http import FileResponse
+import os
+from accounts.views import dashboard_view, public_home_view
+from kuccpss.search_views import api_search_suggest
+
+
+def serve_sw(_request):
+    sw_path = os.path.join(settings.STATIC_ROOT or os.path.join(settings.BASE_DIR, 'static'), 'js', 'sw.js')
+    return FileResponse(open(sw_path, 'rb'), content_type='application/javascript',
+                        headers={'Service-Worker-Allowed': '/'})
 
 handler404 = 'django.views.defaults.page_not_found'
 handler500 = 'django.views.defaults.server_error'
 
 urlpatterns = [
+    path('sw.js', serve_sw, name='service_worker'),
     path('admin/', admin.site.urls),
     path('accounts/', include('accounts.urls')),
-    path('', dashboard_view, name='home'),
+    path('', public_home_view, name='home'),
+    path('dashboard/', dashboard_view, name='dashboard_root'),
     path('clusterpoints/', include('clusterpoints.urls', namespace='clusterpoints')),
     path('accounts/', include('django.contrib.auth.urls')),
     path("accounts/", include("allauth.urls")),
@@ -35,7 +46,10 @@ urlpatterns = [
     path('courses/', include('courses.urls', namespace='courses')),
     path('career/', include('career.urls', namespace='career')),
     path('resources/', include('resources.urls', namespace='resources')),
+    path('predictor/', include('predictor.urls', namespace='predictor')),
     path('payments/', include('payments.urls', namespace='payments')),
+    path('api/search/', api_search_suggest, name='api_search_suggest'),
+    path('analytics/', include('analytics.urls', namespace='analytics')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 if settings.DEBUG:

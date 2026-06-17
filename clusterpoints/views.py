@@ -14,7 +14,7 @@ from reportlab.lib.units import cm
 from .forms import KCSEForm
 from clusters.models import Subject
 from .models import UserKCSEResult, SubjectResult, ClusterCalculationResult
-from .services import calculate_all_clusters
+from .services import calculate_all_clusters, calculate_clusters_anonymous
 
 # KCSE mean grade bands (based on 7-subject aggregate max 84)
 _GRADE_BANDS = [
@@ -41,6 +41,49 @@ def _mean_grade(total):
     return 'E'
 
 
+def _pathway_recommendation(total):
+    """Return pathway label, description and styling for a given aggregate total."""
+    if not total:
+        return None
+    if total >= 60:
+        return {'label': 'Degree Programmes', 'badge': 'B+ and above',
+                'desc': 'Your aggregate qualifies you for competitive university degree programmes.',
+                'color_class': 'card-accent-blue', 'text_color': 'var(--primary-light)',
+                'icon': 'fa-graduation-cap', 'btn': 'Explore Degree Courses', 'pathway': 'degree'}
+    elif total >= 46:
+        return {'label': 'Degree or Diploma', 'badge': 'C+ to B',
+                'desc': 'You qualify for diploma programmes and may be competitive for select degree courses.',
+                'color_class': 'card-accent-purple', 'text_color': 'var(--purple)',
+                'icon': 'fa-route', 'btn': 'Find Your Path', 'pathway': 'degree'}
+    elif total >= 32:
+        return {'label': 'KMTC / TVET Diploma', 'badge': 'C to C-',
+                'desc': 'Medical, technical, and vocational diploma programmes are well within your reach.',
+                'color_class': 'card-accent-green', 'text_color': 'var(--accent)',
+                'icon': 'fa-stethoscope', 'btn': 'Explore KMTC & TVET', 'pathway': 'kmtc'}
+    else:
+        return {'label': 'TVET Certificate & Artisan', 'badge': 'D+ and below',
+                'desc': 'Certificate, Craft, and Artisan programmes open strong skill-based career paths.',
+                'color_class': 'card-accent-orange', 'text_color': '#f97316',
+                'icon': 'fa-tools', 'btn': 'Browse Certificate Courses', 'pathway': 'tvet'}
+
+
+def _compute_aggregate(named: dict) -> int:
+    """Compute the 7-subject aggregate (max 84) from {subject_name: points}."""
+    working = named.copy()
+    agg = []
+    if 'Mathematics' in working:
+        agg.append(working.pop('Mathematics'))
+    langs = {l: working.pop(l) for l in ['English', 'Kiswahili'] if l in working}
+    if langs:
+        best = max(langs, key=langs.get)
+        agg.append(langs[best])
+        for l, p in langs.items():
+            if l != best:
+                working[l] = p
+    agg += sorted(working.values(), reverse=True)[:5]
+    return sum(agg)
+
+
 # =====================================================
 # DASHBOARD VIEW
 # =====================================================
@@ -64,66 +107,109 @@ def dashboard(request):
 # =====================================================
 # KCSE CALCULATOR VIEW
 # =====================================================
-@login_required
-@transaction.atomic
 def kcse_calculator_view(request):
-    """
-    KCSE calculator:
-    - Save subject results
-    - Calculate total points: 1 Math + 1 best language + 5 best other subjects
-    - Calculate weighted cluster points
-    """
+    from predictor.services import predict_all_for_student
     form = KCSEForm(request.POST or None)
     results = []
     total_points = None
     kcse_result = None
+    predicted_groups = []
 
     if request.method == "POST":
         if form.is_valid():
-            # Delete previous results for this user
-            UserKCSEResult.objects.filter(user=request.user).delete()
-
-            # Create new KCSE result
-            kcse_result = UserKCSEResult.objects.create(
-                user=request.user,
-                created_at=timezone.now()
-            )
-
-            # -------------------------------
-            # Save SubjectResults
-            # -------------------------------
             points_dict = form.get_points_dict()  # {subject_id: points}
             subject_ids = [int(s) for s in points_dict.keys()]
-            subjects_qs = Subject.objects.filter(id__in=subject_ids)
-            subjects_map = {s.id: s for s in subjects_qs}
+            subjects_map = {s.id: s for s in Subject.objects.filter(id__in=subject_ids)}
 
-            bulk_results = [
-                SubjectResult(
-                    kcse_result=kcse_result,
-                    subject=subjects_map[int(s)],
-                    points=points
-                )
-                for s, points in points_dict.items()
+            # Build {name: points} — needed by both paths
+            named_points = {
+                subjects_map[int(s)].name: pts
+                for s, pts in points_dict.items()
                 if int(s) in subjects_map
-            ]
-            SubjectResult.objects.bulk_create(bulk_results)
+            }
 
-            # -------------------------------
-            # Recalculate total points (max 84)
-            # -------------------------------
-            kcse_result.recalc_total_points()
-            total_points = kcse_result.total_points
+            if request.user.is_authenticated:
+                # ── Authenticated: persist to DB ──────────────────────────
+                with transaction.atomic():
+                    UserKCSEResult.objects.filter(user=request.user).delete()
+                    kcse_result = UserKCSEResult.objects.create(
+                        user=request.user,
+                        created_at=timezone.now(),
+                    )
+                    SubjectResult.objects.bulk_create([
+                        SubjectResult(
+                            kcse_result=kcse_result,
+                            subject=subjects_map[int(s)],
+                            points=pts,
+                        )
+                        for s, pts in points_dict.items()
+                        if int(s) in subjects_map
+                    ])
+                    kcse_result.recalc_total_points()
+                    total_points = kcse_result.total_points
+                    results = calculate_all_clusters(kcse_result)
+                messages.success(request, "KCSE results saved and cluster points calculated!")
 
-            # -------------------------------
-            # Calculate cluster points (20 master clusters, sorted desc)
-            # -------------------------------
-            results = calculate_all_clusters(kcse_result)
+            else:
+                # ── Guest: compute in memory, stash in session ─────────────
+                results = calculate_clusters_anonymous(named_points)
+                total_points = _compute_aggregate(named_points)
+                request.session['guest_calc'] = {
+                    'named_points': named_points,
+                    'total_points': total_points,
+                }
+                request.session['guest_cluster_map'] = {
+                    r.cluster.kuccps_number: float(r.cluster_points)
+                    for r in results
+                    if r.cluster and r.cluster.kuccps_number is not None
+                }
 
-            messages.success(request, "KCSE results saved and cluster points calculated successfully!")
-
+            # ── Build cluster scores dict and run predictor ────────────────
+            cluster_scores = {
+                r.cluster.number: float(r.cluster_points)
+                for r in results
+                if r.cluster and r.cluster.number
+            }
+            if cluster_scores:
+                predicted_groups = predict_all_for_student(cluster_scores, top_per_cluster=5)
 
         else:
             messages.error(request, "Please correct the errors below.")
+
+    # ── Build accordion context (same pattern as degree_calculate) ────────────
+    from clusters.models import GROUP_CHOICES as _GC
+    from clusterpoints.forms import COMPULSORY_SUBJECT_NAMES as _COMP
+    _ICONS = {
+        'English': 'bi-book-half', 'Kiswahili': 'bi-translate',
+        'Mathematics': 'bi-calculator-fill', 'Chemistry': 'bi-droplet-fill',
+        'Biology': 'bi-flower1', 'Physics': 'bi-lightning-charge-fill',
+        'Geography': 'bi-globe2', 'History and Government': 'bi-bank',
+        'Christian Religious Education': 'bi-book', 'Islamic Religious Education': 'bi-moon-stars-fill',
+        'Hindu Religious Education': 'bi-sun', 'Computer Studies': 'bi-laptop',
+        'Agriculture': 'bi-tree-fill', 'Business Studies': 'bi-graph-up-arrow',
+        'Home Science': 'bi-house-heart', 'Art and Design': 'bi-palette-fill',
+        'Music': 'bi-music-note-beamed', 'French': 'bi-chat-left-text',
+        'German': 'bi-chat-left-text', 'Arabic': 'bi-chat-left-text-fill',
+        'Building Construction': 'bi-building', 'Electricity': 'bi-plug-fill',
+        'Metalwork': 'bi-tools', 'Woodwork': 'bi-hammer',
+        'Power Mechanics': 'bi-gear-fill', 'Drawing and Design': 'bi-pencil-fill',
+        'Aviation Technology': 'bi-airplane-fill', 'Kenyan Sign Language': 'bi-hand-index-thumb',
+    }
+    _GM = {
+        'II':  {'label': 'Sciences',                    'color': '#059669', 'icon': 'bi-beaker'},
+        'III': {'label': 'Humanities',                  'color': '#0891b2', 'icon': 'bi-book-fill'},
+        'IV':  {'label': 'Technical & Applied',         'color': '#d97706', 'icon': 'bi-tools'},
+        'V':   {'label': 'Languages, Business & Music', 'color': '#db2777', 'icon': 'bi-music-note'},
+    }
+    compulsory_fields = []
+    _gmap = {g: [] for g, _ in _GC if g != 'I'}
+    for _s in Subject.objects.all().order_by('group', 'name'):
+        _e = (_s, form[f'subject_{_s.id}'], _ICONS.get(_s.name, 'bi-journal'))
+        if _s.name in _COMP:
+            compulsory_fields.append(_e)
+        elif _s.group in _gmap:
+            _gmap[_s.group].append(_e)
+    optional_groups = [(_GM[g], _gmap[g]) for g, _ in _GC if g != 'I' and _gmap.get(g)]
 
     return render(request, "clusterpoints/calculator.html", {
         "form": form,
@@ -132,9 +218,11 @@ def kcse_calculator_view(request):
         "mean_grade": _mean_grade(total_points),
         "grade_bands": _GRADE_BANDS,
         "kcse_result": kcse_result,
-        "form_data": request.POST.dict() if request.method == "POST" else {},
-        "grade_choices": form.fields[list(form.fields.keys())[0]].choices if form.fields else [],
-        "compulsory_subjects": getattr(form, "compulsory_subjects", []),
+        "is_guest": not request.user.is_authenticated,
+        "pathway_rec": _pathway_recommendation(total_points),
+        "predicted_groups": predicted_groups,
+        "compulsory_fields": compulsory_fields,
+        "optional_groups": optional_groups,
     })
 
 
@@ -191,23 +279,36 @@ def export_cluster_pdf(request, result_id):
 # =====================================================
 # ELIGIBLE COURSES VIEW
 # =====================================================
-@login_required
 def eligible_courses_view(request):
-    from .eligibility import get_eligible_courses
+    from .eligibility import get_eligible_courses, get_eligible_courses_from_map
+    from courses.models import CourseType
 
-    kcse_result = UserKCSEResult.objects.filter(
-        user=request.user
-    ).order_by("-created_at").first()
+    is_guest = not request.user.is_authenticated
 
-    if not kcse_result:
-        messages.info(
-            request,
-            "You haven't entered your KCSE results yet. "
-            "Calculate your cluster points first."
+    if is_guest:
+        cluster_map = request.session.get('guest_cluster_map')
+        total_points = request.session.get('guest_calc', {}).get('total_points')
+        if not cluster_map:
+            messages.info(request, "Enter your KCSE results first to see your eligible courses.")
+            return redirect("clusterpoints:calculator")
+        all_results = get_eligible_courses_from_map(cluster_map)
+        kcse_result = None
+        saved_ids = []
+    else:
+        kcse_result = UserKCSEResult.objects.filter(
+            user=request.user
+        ).order_by("-created_at").first()
+        total_points = kcse_result.total_points if kcse_result else None
+
+        if not kcse_result:
+            messages.info(request, "Enter your KCSE results first to see your eligible courses.")
+            return redirect("clusterpoints:calculator")
+
+        all_results = get_eligible_courses(request.user, kcse_result)
+        from accounts.models import SavedCourse
+        saved_ids = list(
+            SavedCourse.objects.filter(user=request.user).values_list('course_id', flat=True)
         )
-        return redirect("clusterpoints:calculator")
-
-    all_results = get_eligible_courses(request.user, kcse_result)
 
     # Filtering
     status_filter = request.GET.get("status", "")
@@ -220,22 +321,19 @@ def eligible_courses_view(request):
     if type_filter:
         filtered = [r for r in filtered if r["course"].course_type.slug == type_filter]
     if query:
-        filtered = [
-            r for r in filtered
-            if query.lower() in r["course"].name.lower()
-        ]
+        filtered = [r for r in filtered if query.lower() in r["course"].name.lower()]
 
-    # Counts by status
-    eligible_count  = sum(1 for r in all_results if r["status"] == "eligible")
-    nearly_count    = sum(1 for r in all_results if r["status"] == "nearly")
-    not_elig_count  = sum(1 for r in all_results if r["status"] == "not_eligible")
+    eligible_count = sum(1 for r in all_results if r["status"] == "eligible")
+    nearly_count   = sum(1 for r in all_results if r["status"] == "nearly")
+    not_elig_count = sum(1 for r in all_results if r["status"] == "not_eligible")
 
-    from courses.models import CourseType
     course_types = CourseType.objects.all()
 
     return render(request, "clusterpoints/eligible_courses.html", {
         "results": filtered,
         "kcse_result": kcse_result,
+        "total_points": total_points,
+        "mean_grade": _mean_grade(total_points),
         "eligible_count": eligible_count,
         "nearly_count": nearly_count,
         "not_eligible_count": not_elig_count,
@@ -243,6 +341,8 @@ def eligible_courses_view(request):
         "type_filter": type_filter,
         "query": query,
         "course_types": course_types,
+        "saved_ids": saved_ids,
+        "is_guest": is_guest,
     })
 
 

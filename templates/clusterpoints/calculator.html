@@ -1,307 +1,697 @@
 {% extends "base.html" %}
 {% load static %}
-{% load widget_tweaks %}
-{% load custom_filters %}
 
-{% block title %}KUCCPS Cluster Points Calculator{% endblock %}
+{% block title %}KCSE Cluster Points Calculator — KUCCPSS{% endblock %}
+{% block meta %}<meta name="description" content="Free KCSE cluster points calculator using the official KUCCPS formula. Enter your grades and instantly see your cluster points for all 20 clusters.">{% endblock %}
 
-{% block content %}
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+{% block extra_head %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
 <style>
-body { background: #f5f7fa; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-
-/* SUBJECT CARDS */
-#compulsory-subjects, #optional-subjects-list {
-    display: flex; flex-wrap: wrap; gap: 1rem; justify-content: center;
+/* ── sticky step bar ── */
+.step-bar {
+    position: sticky; top: 56px; z-index: 200;
+    background: #fff; border-bottom: 1px solid #e2e8f0;
+    padding: 0.6rem 1.25rem;
+    display: flex; align-items: center; gap: 0.75rem;
+    box-shadow: 0 2px 12px rgba(30,58,138,0.08);
 }
-.subject-card {
-    flex: 1 1 120px; min-width: 120px; max-width: 180px;
-    padding: 1rem; border-radius: 0.8rem;
-    background: linear-gradient(145deg, #fff, #e9ecef);
-    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    position: relative; transition: transform 0.25s, box-shadow 0.25s, background 0.25s;
+.sb-badge {
+    font-size: 0.68rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase;
+    background: #eff6ff; border: 1px solid #bfdbfe;
+    color: #1d4ed8; border-radius: 20px; padding: 3px 12px;
 }
-.subject-card:hover { transform: translateY(-4px); box-shadow: 0 8px 20px rgba(0,0,0,0.15); background: linear-gradient(145deg, #e0f7fa, #d0f0ff); }
-.subject-card label { font-weight: 600; margin-bottom: 0.5rem; text-align: center; font-size: 0.95rem; }
-.subject-card select { width: 90px; margin-bottom: 0.5rem; text-align: center; }
-.remove-subject { position: absolute; top: 5px; right: 8px; cursor: pointer; color: #dc3545; font-size: 1.2rem; transition: color 0.2s; }
-.remove-subject:hover { color: #a71d2a; }
-
-/* CLUSTER CARDS */
-.cluster-container { display: flex; flex-wrap: wrap; gap: 1rem; justify-content: center; margin-top: 2rem; }
-.cluster-card {
-    flex: 1 1 180px; min-width: 180px;
-    padding: 1rem; border-radius: 0.8rem;
-    background: #fff; box-shadow: 0 2px 12px rgba(0,0,0,0.08);
-    transition: transform 0.25s, box-shadow 0.25s;
-    text-align: center;
+.sb-steps { display: flex; align-items: center; gap: 6px; }
+.sb-dot {
+    width: 26px; height: 26px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.7rem; font-weight: 800;
+    border: 1.5px solid #d1d5db; color: #9ca3af;
 }
-.cluster-card:hover { transform: translateY(-6px); box-shadow: 0 12px 28px rgba(0,0,0,0.2); }
-.cluster-title { font-size: 1rem; font-weight: 600; color: #555; }
-.cluster-name { font-size: 1.25rem; font-weight: 700; margin-bottom: 0.5rem; }
-
-/* TOTAL POINTS */
-#total-points { font-size: 1.3rem; }
-
-/* CHART CONTAINER */
-#clusterChartContainer { max-width: 600px; margin: 2rem auto; }
-
-/* GRADE SCALE */
-.grade-scale-grid {
-    display: flex; flex-wrap: wrap; gap: 4px;
+.sb-dot.active { background: #1e3a8a; border-color: #1e3a8a; color: #fff; box-shadow: 0 0 0 3px rgba(30,58,138,0.15); }
+.sb-dot.done   { background: #16a34a; border-color: #16a34a; color: #fff; }
+.sb-line { width: 28px; height: 1.5px; background: #e2e8f0; }
+.sb-spacer { flex: 1; }
+.sb-counter {
+    font-size: 0.75rem; font-weight: 700; padding: 4px 12px; border-radius: 20px;
+    border: 1.5px solid #e2e8f0; color: #94a3b8; transition: all 0.25s;
+    white-space: nowrap; background: #f8fafc;
 }
+.sb-counter.ready { border-color: #86efac; color: #16a34a; background: #f0fdf4; }
+.sb-progress { height: 3px; background: #e2e8f0; }
+.sb-progress-fill { height: 100%; width: 0%; background: linear-gradient(90deg,#1e3a8a,#2563eb,#16a34a); transition: width 0.4s ease; }
+
+/* ── page wrapper ── */
+.lce-page { max-width: 760px; margin: 0 auto; padding: 1.5rem 1rem 6rem; }
+
+/* ── header card ── */
+.lce-head {
+    background: #fff; border: 1.5px solid #e2e8f0;
+    border-radius: 16px; padding: 1.5rem 1.5rem 1.25rem; margin-bottom: 1.25rem;
+    box-shadow: 0 1px 8px rgba(30,58,138,0.07);
+}
+.lce-head h2 { font-size: 1.2rem; font-weight: 800; color: #1e293b; margin: 0 0 0.35rem; }
+.lce-head p  { font-size: 0.83rem; color: #64748b; margin: 0; line-height: 1.55; }
+/* ── alert ── */
+.lce-alert {
+    border-radius: 12px; padding: 0.85rem 1rem; margin-bottom: 1rem;
+    font-size: 0.84rem; display: flex; gap: 0.6rem; align-items: flex-start;
+}
+.lce-alert.danger  { background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; }
+.lce-alert.success { background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; }
+
+/* ── accordion section ── */
+.acc-section {
+    background: #fff; border: 1.5px solid #e2e8f0;
+    border-radius: 14px; overflow: hidden; margin-bottom: 0.85rem;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    box-shadow: 0 1px 6px rgba(30,58,138,0.05);
+}
+.acc-section.has-values { border-color: #93c5fd; box-shadow: 0 2px 12px rgba(37,99,235,0.1); }
+.acc-header {
+    width: 100%; background: none; border: none; padding: 1.1rem 1.25rem;
+    display: flex; align-items: center; gap: 0.75rem;
+    cursor: pointer; text-align: left; transition: background 0.15s;
+    -webkit-tap-highlight-color: transparent;
+}
+.acc-header:hover { background: #f8fafc; }
+.acc-icon {
+    width: 36px; height: 36px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.95rem; flex-shrink: 0;
+}
+.acc-title { font-size: 0.95rem; font-weight: 700; color: #1e293b; }
+.acc-badge {
+    font-size: 0.6rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase;
+    padding: 2px 8px; border-radius: 5px; flex-shrink: 0;
+}
+.acc-badge.req { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
+.acc-badge.opt { background: #f1f5f9; color: #64748b; border: 1px solid #e2e8f0; }
+.acc-count {
+    font-size: 0.68rem; font-weight: 700; color: #16a34a;
+    background: #f0fdf4; border: 1px solid #bbf7d0;
+    border-radius: 10px; padding: 1px 8px; display: none;
+}
+.acc-count.visible { display: inline; }
+.acc-spacer { flex: 1; }
+.acc-chevron { font-size: 0.9rem; color: #94a3b8; transition: transform 0.3s, color 0.2s; flex-shrink: 0; }
+.acc-header.expanded .acc-chevron { transform: rotate(180deg); color: #475569; }
+.acc-body { max-height: 0; overflow: hidden; transition: max-height 0.38s cubic-bezier(0.4,0,0.2,1); }
+.acc-body.open { max-height: 3000px; }
+
+/* subject rows */
+.acc-row {
+    display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1.25rem;
+    border-top: 1px solid #f1f5f9; transition: background 0.15s;
+}
+.acc-row:hover { background: #f8fafc; }
+.acc-row.filled { background: #eff6ff; }
+.row-icon {
+    width: 28px; height: 28px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.8rem; flex-shrink: 0;
+    background: #f1f5f9; color: #94a3b8; transition: all 0.2s;
+}
+.acc-row.filled .row-icon { background: #dbeafe; color: #2563eb; }
+.row-name { flex: 1; font-size: 0.86rem; font-weight: 600; color: #374151; line-height: 1.3; }
+.acc-row.filled .row-name { color: #1e293b; font-weight: 700; }
+
+/* grade select */
+.lce-select {
+    border: 1.5px solid #d1d5db; border-radius: 8px;
+    background: #fff; color: #1e293b;
+    font-size: 0.82rem; font-weight: 600; padding: 7px 30px 7px 10px;
+    cursor: pointer; min-width: 82px; box-shadow: none;
+    -webkit-appearance: none; appearance: none;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='%2364748b' viewBox='0 0 16 16'%3e%3cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3e%3c/svg%3e");
+    background-repeat: no-repeat; background-position: right 8px center; background-size: 10px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+.lce-select:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,0.12); outline: none; }
+.lce-select.has-value { border-color: #93c5fd; background-color: #eff6ff; color: #1d4ed8; }
+
+/* ── sticky footer ── */
+.lce-footer {
+    position: fixed; bottom: 0; left: 0; right: 0; z-index: 300;
+    background: #fff; border-top: 1px solid #e2e8f0;
+    padding: 0.9rem 1.5rem; display: flex; align-items: center; gap: 1rem;
+    box-shadow: 0 -4px 20px rgba(30,58,138,0.1);
+}
+.lce-footer-info { flex: 1; min-width: 0; }
+.lce-footer-title { font-size: 0.82rem; font-weight: 600; color: #64748b; }
+.lce-footer-title strong { color: #1e293b; }
+.lce-btn-back {
+    font-size: 0.82rem; font-weight: 600; color: #64748b; text-decoration: none;
+    padding: 0.55rem 1rem; border-radius: 10px; border: 1.5px solid #e2e8f0;
+    transition: all 0.2s; flex-shrink: 0; display: flex; align-items: center; gap: 0.35rem;
+    background: #f8fafc;
+}
+.lce-btn-back:hover { color: #1e293b; border-color: #94a3b8; text-decoration: none; background: #f1f5f9; }
+.lce-btn-calc {
+    background: linear-gradient(135deg, #1e3a8a, #2563eb);
+    color: #fff; border: none; border-radius: 12px; padding: 0.7rem 1.75rem;
+    font-weight: 800; font-size: 0.92rem; cursor: pointer; transition: all 0.2s;
+    flex-shrink: 0; display: flex; align-items: center; gap: 0.5rem;
+    box-shadow: 0 4px 16px rgba(30,58,138,0.35);
+}
+.lce-btn-calc:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(30,58,138,0.45); }
+.lce-btn-calc:disabled { background: #e2e8f0; color: #94a3b8; box-shadow: none; cursor: not-allowed; transform: none; }
+
+/* ── results section ── */
+.results-divider {
+    display: flex; align-items: center; gap: 1rem; margin: 2rem 0 1.25rem;
+}
+.results-divider-line { flex: 1; height: 1px; background: #e2e8f0; }
+.results-divider-label {
+    font-size: 0.72rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase;
+    color: #64748b; white-space: nowrap;
+}
+
+/* score card */
+.score-card {
+    background: #fff; border: 1.5px solid #e2e8f0;
+    border-radius: 16px; padding: 1.25rem 1.5rem; margin-bottom: 1rem;
+    display: flex; flex-wrap: wrap; align-items: center; gap: 1.5rem;
+    box-shadow: 0 2px 12px rgba(30,58,138,0.07);
+}
+.score-block { display: flex; flex-direction: column; gap: 0.2rem; }
+.score-label { font-size: 0.68rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.08em; }
+.score-val { font-size: 2rem; font-weight: 900; color: #16a34a; line-height: 1; }
+.score-val.grade { color: #1e3a8a; }
+.score-sep { width: 1px; height: 48px; background: #e2e8f0; align-self: center; }
+.grade-band-grid { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 0.5rem; }
 .grade-chip {
     display: flex; flex-direction: column; align-items: center;
-    background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 6px;
-    padding: 4px 8px; min-width: 48px;
-    transition: background .15s;
+    background: #f8fafc; border: 1px solid #e2e8f0;
+    border-radius: 6px; padding: 4px 8px; min-width: 46px; transition: all .15s;
 }
-.grade-chip.active {
-    background: #1d4ed8; border-color: #1d4ed8; color: #fff;
-}
-.grade-label { font-size: .8rem; font-weight: 700; line-height: 1; }
-.grade-range { font-size: .65rem; color: inherit; opacity: .7; line-height: 1.2; }
-.grade-chip.active .grade-range { opacity: .85; }
-.fw-600 { font-weight: 600; }
+.grade-chip.active { background: #1e3a8a; border-color: #1e3a8a; color: #fff; }
+.grade-chip .gl { font-size: .8rem; font-weight: 700; line-height: 1; color: #374151; }
+.grade-chip .gr { font-size: .6rem; color: #94a3b8; line-height: 1.3; }
+.grade-chip.active .gl, .grade-chip.active .gr { color: #fff; opacity: .9; }
 
-/* MOBILE */
-@media (max-width: 576px) {
-    .subject-card, .cluster-card { flex: 1 1 100%; min-width: unset; max-width: unset; }
-    .grade-scale-table { width: 100%; }
+/* pathway recommendation */
+.pw-rec-card {
+    background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%);
+    border-radius: 14px; padding: 1.25rem 1.5rem; margin-bottom: 1rem;
+    display: flex; gap: 1rem; align-items: flex-start;
+}
+.pw-rec-icon {
+    width: 48px; height: 48px; border-radius: 12px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center; font-size: 1.1rem;
+    background: rgba(255,255,255,0.2);
+}
+.pw-rec-title { font-size: 0.95rem; font-weight: 800; color: #fff; margin: 0 0 0.2rem; }
+.pw-rec-badge { font-size: 0.68rem; font-weight: 700; background: rgba(255,255,255,0.2); color: #fff; border-radius: 20px; padding: 2px 10px; display: inline-block; margin-bottom: 0.35rem; }
+.pw-rec-desc  { font-size: 0.82rem; color: rgba(255,255,255,0.8); margin: 0 0 0.75rem; }
+.pw-rec-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+.pw-btn-light {
+    font-size: 0.82rem; font-weight: 700; color: #1e3a8a; background: #fff;
+    padding: 6px 16px; border-radius: 8px; text-decoration: none;
+    display: inline-flex; align-items: center; gap: 0.35rem; transition: all 0.2s;
+}
+.pw-btn-light:hover { background: #dbeafe; color: #1e3a8a; text-decoration: none; }
+.pw-btn-outline {
+    font-size: 0.82rem; font-weight: 600; color: #fff; padding: 6px 14px;
+    border-radius: 8px; text-decoration: none;
+    border: 1.5px solid rgba(255,255,255,0.4);
+    display: inline-flex; align-items: center; gap: 0.35rem; transition: all 0.2s;
+}
+.pw-btn-outline:hover { background: rgba(255,255,255,0.15); color: #fff; text-decoration: none; }
+
+/* download bar */
+.dl-bar {
+    background: #fff; border: 1.5px solid #e2e8f0;
+    border-radius: 12px; padding: 0.85rem 1.25rem; margin-bottom: 1rem;
+    display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;
+    box-shadow: 0 1px 6px rgba(30,58,138,0.05);
+}
+.dl-label { font-size: 0.72rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.08em; }
+.dl-btn {
+    font-size: 0.78rem; font-weight: 600; padding: 5px 14px; border-radius: 7px;
+    text-decoration: none; display: inline-flex; align-items: center; gap: 0.3rem;
+    transition: all 0.2s; border: 1.5px solid transparent;
+}
+.dl-btn.red  { background: #fef2f2; color: #dc2626; border-color: #fecaca; }
+.dl-btn.red:hover  { background: #fee2e2; color: #b91c1c; text-decoration: none; }
+.dl-btn.blue { background: #eff6ff; color: #2563eb; border-color: #bfdbfe; }
+.dl-btn.blue:hover { background: #dbeafe; color: #1d4ed8; text-decoration: none; }
+.dl-btn.gray { background: #f8fafc; color: #64748b; border-color: #e2e8f0; }
+.dl-btn.gray:hover { background: #f1f5f9; color: #374151; text-decoration: none; }
+
+/* guest CTA */
+.guest-cta {
+    background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%);
+    border-radius: 14px; padding: 1.1rem 1.5rem; margin-bottom: 1rem;
+    display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;
+}
+.guest-cta-text { flex: 1; font-size: 0.88rem; font-weight: 600; color: #fff; }
+.guest-cta-text span { color: rgba(255,255,255,0.75); font-weight: 400; }
+.cta-btn-light { font-size: 0.8rem; font-weight: 700; color: #1e3a8a; background: #fff; border: none; border-radius: 7px; padding: 6px 14px; text-decoration: none; }
+.cta-btn-light:hover { background: #dbeafe; color: #1e3a8a; text-decoration: none; }
+.cta-btn-outline { font-size: 0.8rem; font-weight: 600; color: #fff; background: rgba(255,255,255,0.15); border: 1.5px solid rgba(255,255,255,0.35); border-radius: 7px; padding: 6px 14px; text-decoration: none; }
+.cta-btn-outline:hover { background: rgba(255,255,255,0.25); color: #fff; text-decoration: none; }
+
+/* cluster results grid */
+.cluster-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.55rem; margin-bottom: 1.5rem; }
+@media (min-width: 640px) { .cluster-grid { grid-template-columns: 1fr 1fr 1fr; } }
+@media (min-width: 900px) { .cluster-grid { grid-template-columns: repeat(4, 1fr); } }
+.cluster-card {
+    background: #fff; border: 1.5px solid #e2e8f0;
+    border-radius: 12px; padding: 0.75rem 0.9rem;
+    display: flex; align-items: center; justify-content: space-between; gap: 0.5rem;
+    transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
+    box-shadow: 0 1px 4px rgba(30,58,138,0.06);
+}
+.cluster-card:hover { border-color: #93c5fd; transform: translateY(-2px); box-shadow: 0 4px 16px rgba(37,99,235,0.12); }
+.cluster-card.zero { opacity: 0.45; }
+.cluster-info { flex: 1; min-width: 0; }
+.cluster-label { font-size: 0.72rem; font-weight: 800; color: #1d4ed8; line-height: 1.2; }
+.cluster-name  { font-size: 0.63rem; color: #94a3b8; font-weight: 500; line-height: 1.3; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.cluster-pts   { font-size: 1.15rem; font-weight: 900; color: #16a34a; line-height: 1; text-align: right; }
+.cluster-card.zero .cluster-pts { color: #cbd5e1; }
+.cluster-max   { font-size: 0.58rem; color: #94a3b8; font-weight: 500; text-align: right; }
+
+/* prediction */
+.pred-section {
+    background: #fff; border: 1.5px solid #e2e8f0;
+    border-radius: 14px; padding: 1.25rem; margin-bottom: 1.25rem;
+    box-shadow: 0 1px 6px rgba(30,58,138,0.06);
+}
+.pred-cluster-badge {
+    display: inline-flex; align-items: center; gap: 0.5rem;
+    background: #eff6ff; border: 1px solid #bfdbfe;
+    color: #1d4ed8; border-radius: 8px; padding: 5px 12px;
+    font-size: 0.78rem; font-weight: 700; margin-bottom: 0.75rem;
+}
+.pred-table { width: 100%; border-collapse: collapse; }
+.pred-table th {
+    font-size: 0.65rem; font-weight: 700; color: #94a3b8; text-transform: uppercase;
+    letter-spacing: 0.07em; padding: 6px 8px; text-align: left;
+    border-bottom: 1.5px solid #f1f5f9;
+}
+.pred-table td { font-size: 0.78rem; padding: 7px 8px; border-bottom: 1px solid #f1f5f9; color: #374151; }
+.pred-table tr:last-child td { border-bottom: none; }
+.pred-table tr:nth-child(even) td { background: #f8fafc; }
+.status-badge { font-size: 0.68rem; font-weight: 700; padding: 2px 9px; border-radius: 20px; white-space: nowrap; }
+.s-high   { background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; }
+.s-likely { background: #f0fdf4; color: #16a34a; border: 1px solid #d1fae5; }
+.s-border { background: #fefce8; color: #a16207; border: 1px solid #fde68a; }
+.s-unlik  { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
+
+/* chart */
+.chart-wrap {
+    background: #fff; border: 1.5px solid #e2e8f0;
+    border-radius: 16px; padding: 1.25rem; margin-bottom: 1.25rem;
+    max-width: 560px; margin-left: auto; margin-right: auto;
+    box-shadow: 0 1px 6px rgba(30,58,138,0.06);
+}
+.chart-title { font-size: 0.85rem; font-weight: 700; color: #64748b; text-align: center; margin-bottom: 0.75rem; }
+
+/* info note */
+.info-banner {
+    background: #fefce8; border: 1px solid #fde68a;
+    border-radius: 10px; padding: 0.75rem 1rem; font-size: 0.78rem; color: #92400e;
+    display: flex; gap: 0.5rem; align-items: flex-start; margin-bottom: 1rem;
+}
+
+@media (max-width: 480px) {
+    .score-card { flex-direction: column; align-items: flex-start; gap: 0.85rem; }
+    .score-sep  { width: 100%; height: 1px; }
+    .pw-rec-card { flex-direction: column; }
+    .dl-bar { flex-direction: column; align-items: flex-start; }
+    .guest-cta { flex-direction: column; }
+    .pred-table { display: block; overflow-x: auto; }
+    .lce-footer { flex-wrap: wrap; }
 }
 </style>
+{% endblock %}
 
-<div class="container py-5">
-    <h1 class="text-center mb-5 fw-bold text-dark">KUCCPS Cluster Points Calculator</h1>
+{% block content %}
+<!-- ══ sticky step bar ══ -->
+<div class="step-bar">
+    <div class="sb-badge"><i class="bi bi-calculator-fill me-1"></i>Calculator</div>
+    <div class="sb-steps">
+        <div class="sb-dot active"><i class="bi bi-pencil-fill" style="font-size:.65rem;"></i></div>
+        <div class="sb-line"></div>
+        <div class="sb-dot {% if results %}done{% endif %}" style="font-size:.65rem;">
+            {% if results %}<i class="bi bi-check-lg"></i>{% else %}2{% endif %}
+        </div>
+    </div>
+    <span style="font-size:0.68rem;color:#94a3b8;font-weight:500;">Grades → Results</span>
+    <div class="sb-spacer"></div>
+    <div class="sb-counter" id="sbCounter">0 / 7 subjects</div>
+</div>
+<div class="sb-progress"><div class="sb-progress-fill" id="sbFill"></div></div>
 
-    {% if messages %}
-        {% for message in messages %}
-            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-                {{ message }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-        {% endfor %}
+<!-- ══ FORM ══ -->
+<form method="post" id="calcForm">
+{% csrf_token %}
+
+<div class="lce-page">
+
+    <div class="lce-head">
+        <h2><i class="fas fa-calculator me-2" style="color:#2563eb;"></i>KCSE Cluster Points Calculator</h2>
+        <p>Enter your KCSE subject grades. We'll compute your cluster points for all 20 KUCCPS clusters.Note this are not
+    the actual KUCCPS points but an estimate .
+        </p>
+    </div>
+
+    {% if messages %}{% for message in messages %}
+    <div class="lce-alert {% if message.tags == 'error' %}danger{% else %}success{% endif %}">
+        <i class="bi bi-{% if message.tags == 'error' %}x-circle-fill{% else %}check-circle-fill{% endif %} flex-shrink-0 mt-1"></i>
+        <span>{{ message }}</span>
+    </div>
+    {% endfor %}{% endif %}
+
+    {% if form.non_field_errors %}
+    <div class="lce-alert danger">
+        <i class="bi bi-x-circle-fill flex-shrink-0 mt-1"></i>
+        <span>{% for e in form.non_field_errors %}{{ e }}{% endfor %}</span>
+    </div>
     {% endif %}
 
-    <form method="post" id="kcse-form">
-        {% csrf_token %}
-
-        <!-- COMPULSORY SUBJECTS (Group I core) -->
-        <h5 class="mb-3">Compulsory Subjects</h5>
-        <div id="compulsory-subjects">
-            {% for field in form %}
-                {% if field.label in form.compulsory_subjects %}
-                    <div class="subject-card text-center">
-                        <label>{{ field.label }}</label>
-                        <select name="{{ field.name }}" class="form-select grade-select" required>
-                            <option value="">Grade</option>
-                            {% for points, grade in grade_choices %}
-                                <option value="{{ points }}" {% if form_data|get_item:field.name == points|stringformat:"s" %}selected{% endif %}>{{ grade }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                {% endif %}
+    <!-- Core Subjects -->
+    <div class="acc-section" id="sec-compulsory">
+        <button type="button" class="acc-header expanded" onclick="toggleAcc(this)">
+            <div class="acc-icon" style="background:#eff6ff;color:#2563eb;"><i class="bi bi-star-fill"></i></div>
+            <div><div class="acc-title">Core Subjects</div></div>
+            <span class="acc-badge req">Required</span>
+            <span class="acc-count" id="cnt-compulsory"></span>
+            <div class="acc-spacer"></div>
+            <i class="bi bi-chevron-up acc-chevron"></i>
+        </button>
+        <div class="acc-body open" id="body-compulsory">
+            {% for subj, bound, icon in compulsory_fields %}
+            <div class="acc-row" id="row-{{ bound.html_name }}">
+                <div class="row-icon"><i class="bi {{ icon }}"></i></div>
+                <div class="row-name">{{ subj.name }}</div>
+                <select name="{{ bound.html_name }}" class="lce-select"
+                        onchange="onSelChange('{{ bound.html_name }}', 'compulsory', this)">
+                    <option value="">Grade</option>
+                    <option value="12" {% if bound.value == '12' %}selected{% endif %}>A</option>
+                    <option value="11" {% if bound.value == '11' %}selected{% endif %}>A-</option>
+                    <option value="10" {% if bound.value == '10' %}selected{% endif %}>B+</option>
+                    <option value="9"  {% if bound.value == '9'  %}selected{% endif %}>B</option>
+                    <option value="8"  {% if bound.value == '8'  %}selected{% endif %}>B-</option>
+                    <option value="7"  {% if bound.value == '7'  %}selected{% endif %}>C+</option>
+                    <option value="6"  {% if bound.value == '6'  %}selected{% endif %}>C</option>
+                    <option value="5"  {% if bound.value == '5'  %}selected{% endif %}>C-</option>
+                    <option value="4"  {% if bound.value == '4'  %}selected{% endif %}>D+</option>
+                    <option value="3"  {% if bound.value == '3'  %}selected{% endif %}>D</option>
+                    <option value="2"  {% if bound.value == '2'  %}selected{% endif %}>D-</option>
+                    <option value="1"  {% if bound.value == '1'  %}selected{% endif %}>E</option>
+                </select>
+            </div>
             {% endfor %}
         </div>
+    </div>
 
-        <!-- OPTIONAL SUBJECTS (already entered on POST) -->
-        <h5 class="mt-4 mb-2">Optional Subjects <small class="text-muted fw-normal">(add any you sat)</small></h5>
-        <div id="optional-subjects-list">
-            {% for field in form %}
-                {% if field.label not in form.compulsory_subjects and form_data|get_item:field.name %}
-                    <div class="subject-card text-center" id="wrapper-{{ field.name }}">
-                        <label>{{ field.label }}</label>
-                        <input type="hidden" name="{{ field.name }}" value="{{ form_data|get_item:field.name }}">
-                        <select class="form-select grade-select" onchange="this.previousElementSibling.value=this.value;">
-                            <option value="">Grade</option>
-                            {% for points, grade in grade_choices %}
-                                <option value="{{ points }}" {% if form_data|get_item:field.name == points|stringformat:"s" %}selected{% endif %}>{{ grade }}</option>
-                            {% endfor %}
-                        </select>
-                        <i class="bi bi-trash-fill remove-subject" onclick="removeSubject('{{ field.name }}')"></i>
-                    </div>
-                {% endif %}
+    <!-- Optional Groups -->
+    {% for meta, subjects in optional_groups %}
+    <div class="acc-section" id="sec-{{ forloop.counter }}">
+        <button type="button" class="acc-header" onclick="toggleAcc(this)">
+            <div class="acc-icon" style="background:{{ meta.color }}18;color:{{ meta.color }};"><i class="bi {{ meta.icon }}"></i></div>
+            <div><div class="acc-title" style="color:{{ meta.color }};">{{ meta.label }}</div></div>
+            <span class="acc-badge opt">Optional</span>
+            <span class="acc-count" id="cnt-{{ forloop.counter }}"></span>
+            <div class="acc-spacer"></div>
+            <i class="bi bi-chevron-down acc-chevron"></i>
+        </button>
+        <div class="acc-body" id="body-{{ forloop.counter }}">
+            {% for subj, bound, icon in subjects %}
+            <div class="acc-row" id="row-{{ bound.html_name }}">
+                <div class="row-icon"><i class="bi {{ icon }}"></i></div>
+                <div class="row-name">{{ subj.name }}</div>
+                <select name="{{ bound.html_name }}" class="lce-select"
+                        onchange="onSelChange('{{ bound.html_name }}', '{{ forloop.parentloop.counter }}', this)">
+                    <option value="">Grade</option>
+                    <option value="12" {% if bound.value == '12' %}selected{% endif %}>A</option>
+                    <option value="11" {% if bound.value == '11' %}selected{% endif %}>A-</option>
+                    <option value="10" {% if bound.value == '10' %}selected{% endif %}>B+</option>
+                    <option value="9"  {% if bound.value == '9'  %}selected{% endif %}>B</option>
+                    <option value="8"  {% if bound.value == '8'  %}selected{% endif %}>B-</option>
+                    <option value="7"  {% if bound.value == '7'  %}selected{% endif %}>C+</option>
+                    <option value="6"  {% if bound.value == '6'  %}selected{% endif %}>C</option>
+                    <option value="5"  {% if bound.value == '5'  %}selected{% endif %}>C-</option>
+                    <option value="4"  {% if bound.value == '4'  %}selected{% endif %}>D+</option>
+                    <option value="3"  {% if bound.value == '3'  %}selected{% endif %}>D</option>
+                    <option value="2"  {% if bound.value == '2'  %}selected{% endif %}>D-</option>
+                    <option value="1"  {% if bound.value == '1'  %}selected{% endif %}>E</option>
+                </select>
+            </div>
             {% endfor %}
         </div>
+    </div>
+    {% endfor %}
 
-        <!-- Grouped dropdown for adding optional subjects -->
-        <select id="optional-subject-dropdown" class="form-select mb-3">
-            <option value="">Add a subject...</option>
-            {% for group_label, fields in form.grouped_optional_fields %}
-                <optgroup label="{{ group_label }}">
-                    {% for field_name, label in fields %}
-                        <option value="{{ field_name }}">{{ label }}</option>
-                    {% endfor %}
-                </optgroup>
-            {% endfor %}
-        </select>
+    <!-- ══ RESULTS ══ -->
+    {% if results %}
+    <div class="results-divider">
+        <div class="results-divider-line"></div>
+        <div class="results-divider-label"><i class="bi bi-bar-chart-fill me-1"></i>Your Results</div>
+        <div class="results-divider-line"></div>
+    </div>
 
-        <div class="text-center mb-4">
-            <button type="submit" class="btn btn-primary btn-lg px-5">Calculate Cluster Points</button>
-            {% if kcse_result %}
-                <a href="{% url 'clusterpoints:export_cluster_pdf' kcse_result.id %}" class="btn btn-danger btn-lg px-4 ms-3">Export PDF</a>
-            {% endif %}
-        </div>
-    </form>
-
-    <!-- TOTAL POINTS + MEAN GRADE -->
     {% if total_points %}
-    <div class="card border-0 shadow-sm mb-4" id="total-points">
-        <div class="card-body py-3 px-4">
-            <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
-                <div class="d-flex align-items-center gap-3">
-                    <div>
-                        <div class="text-muted small mb-1">Total KCSE Points (out of 84)</div>
-                        <div class="fw-bold fs-3 text-success">{{ total_points }}</div>
-                    </div>
-                    {% if mean_grade %}
-                    <div class="ms-3 ps-3 border-start">
-                        <div class="text-muted small mb-1">Mean Grade</div>
-                        <div class="fw-bold fs-2 text-primary">{{ mean_grade }}</div>
-                    </div>
-                    {% endif %}
+    <div class="score-card">
+        <div class="score-block">
+            <div class="score-label">Total Aggregate</div>
+            <div class="score-val">{{ total_points }} <span style="font-size:1rem;color:#94a3b8;font-weight:600;">/ 84</span></div>
+        </div>
+        {% if mean_grade %}
+        <div class="score-sep"></div>
+        <div class="score-block">
+            <div class="score-label">Mean Grade</div>
+            <div class="score-val grade">{{ mean_grade }}</div>
+        </div>
+        {% endif %}
+        {% if grade_bands %}
+        <div class="score-block" style="flex:1;min-width:180px;">
+            <div class="score-label" style="margin-bottom:0.4rem;">Grade Scale</div>
+            <div class="grade-band-grid">
+                {% for lo, hi, grade in grade_bands %}
+                <div class="grade-chip {% if mean_grade == grade %}active{% endif %}">
+                    <span class="gl">{{ grade }}</span>
+                    <span class="gr">{{ lo }}–{{ hi }}</span>
                 </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
 
-                <!-- Grade scale reference -->
-                <div class="grade-scale-table">
-                    <div class="text-muted small fw-600 mb-1">KCSE Mean Grade Scale</div>
-                    <div class="grade-scale-grid">
-                        {% for lo, hi, grade in grade_bands %}
-                        <div class="grade-chip {% if mean_grade == grade %}active{% endif %}">
-                            <span class="grade-label">{{ grade }}</span>
-                            <span class="grade-range">{{ lo }}–{{ hi }}</span>
-                        </div>
-                        {% endfor %}
-                    </div>
-                </div>
+    <div class="results-divider" style="margin-top:1.25rem;">
+        <div class="results-divider-line"></div>
+        <div class="results-divider-label"><i class="bi bi-grid-3x3-gap-fill me-1"></i>All 20 Cluster Points</div>
+        <div class="results-divider-line"></div>
+    </div>
+    <div class="cluster-grid">
+        {% for r in results %}
+        <div class="cluster-card {% if r.cluster_points == 0 %}zero{% endif %}">
+            <div class="cluster-info">
+                <div class="cluster-label">Cluster {{ r.cluster.kuccps_number }}</div>
+                <div class="cluster-name">{{ r.cluster.name }}</div>
+            </div>
+            <div style="flex-shrink:0;">
+                <div class="cluster-pts">{{ r.cluster_points }}</div>
+                <div class="cluster-max">/ 48</div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    {% if pathway_rec %}
+    <div class="pw-rec-card">
+        <div class="pw-rec-icon"><i class="fas {{ pathway_rec.icon }}"></i></div>
+        <div style="flex:1;min-width:0;">
+            <div class="pw-rec-badge">{{ pathway_rec.badge }}</div>
+            <div class="pw-rec-title">Best Pathway: {{ pathway_rec.label }}</div>
+            <p class="pw-rec-desc">{{ pathway_rec.desc }}</p>
+            <div class="pw-rec-actions">
+                <a href="{% url 'career:home' %}" class="pw-btn-light"><i class="fas {{ pathway_rec.icon }}"></i>{{ pathway_rec.btn }}</a>
+                <a href="{% url 'career:quiz' %}" class="pw-btn-outline"><i class="fas fa-clipboard-list"></i>Career Quiz</a>
             </div>
         </div>
     </div>
     {% endif %}
 
-    <!-- CLUSTER POINTS -->
-    {% if results %}
-        <h2 class="fw-bold text-dark text-center mt-5">Cluster Points Summary</h2>
-        <div class="cluster-container" id="cluster-container">
-            {% for r in results %}
-                <div class="cluster-card">
-                    <div class="cluster-title">Cluster {{ forloop.counter }}</div>
-                    <div class="cluster-name">{{ r.cluster.name }}</div>
-                    <div class="fw-bold fs-5">{{ r.cluster_points }}</div>
-                </div>
-            {% endfor %}
+    {% if is_guest %}
+    <div class="guest-cta">
+        <div class="guest-cta-text"><i class="bi bi-lock-fill me-1"></i>Create a free account to save these results. <span class="d-none d-md-inline">Access eligible courses, PDF export, and calculation history.</span></div>
+        <div style="display:flex;gap:0.5rem;flex-shrink:0;flex-wrap:wrap;">
+            <a href="{% url 'accounts:register' %}" class="cta-btn-light">Register Free</a>
+            <a href="{% url 'accounts:login' %}" class="cta-btn-outline">Login</a>
         </div>
-
-        <!-- CHART.JS RADAR -->
-        <div id="clusterChartContainer">
-            <canvas id="clusterChart"></canvas>
-        </div>
+    </div>
     {% endif %}
+
+    <div class="dl-bar">
+        <span class="dl-label"><i class="bi bi-download me-1"></i>Download</span>
+        <a href="{% url 'predictor:quick_pdf' %}" class="dl-btn red"><i class="bi bi-file-earmark-pdf-fill"></i>Quick PDF</a>
+        <a href="{% url 'predictor:full_report' %}" class="dl-btn blue"><i class="bi bi-file-earmark-text-fill"></i>Full Report</a>
+        <a href="{% url 'predictor:index' %}" class="dl-btn gray"><i class="bi bi-graph-up-arrow"></i>Predictor</a>
+    </div>
+
+    {% if predicted_groups %}
+    <div class="results-divider">
+        <div class="results-divider-line"></div>
+        <div class="results-divider-label"><i class="bi bi-lightning-charge-fill me-1"></i>Predicted 2026 Eligibility</div>
+        <div class="results-divider-line"></div>
+    </div>
+    
+    <p style="font-size:0.75rem;color:#94a3b8;text-align:center;margin-bottom:1rem;">Based on 2021–2025 data ·avg error ±0.96 pts</p>
+    <div class="info-banner">
+        <i class="bi bi-exclamation-triangle-fill flex-shrink-0 mt-1" style="color:#d97706;"></i>
+        <span>Predictions are estimates only. Verify all cutoffs on the official <strong>KUCCPS portal</strong> before applying.</span>
+    </div>
+
+    {% for group in predicted_groups %}
+    <div class="pred-section">
+        <div class="pred-cluster-badge">
+            <i class="bi bi-diagram-3-fill"></i>
+            Cluster {{ group.kuccps_num }} — {{ group.cluster_name }} &nbsp;·&nbsp; Your score: <strong>{{ group.student_score|floatformat:1 }} / 48</strong>
+        </div>
+        <div style="overflow-x:auto;">
+        <table class="pred-table">
+            <thead><tr><th>Course</th><th>Institution</th><th>Latest</th><th>2026 Pred</th><th>Range</th><th>Status</th></tr></thead>
+            <tbody>
+            {% for row in group.rows %}
+            <tr>
+                <td style="font-weight:600;">
+                  <a href="{% url 'courses:course_detail_no_category' row.course.course_type.slug row.course.slug %}"
+                     class="text-dark text-decoration-none">{{ row.course.name|truncatechars:38 }}</a>
+                </td>
+                <td style="color:#64748b;">
+                  <a href="{% url 'institutions:institution_detail' type_slug=row.institution.institution_type.slug institution_slug=row.institution.slug %}"
+                     class="text-secondary text-decoration-none">{{ row.institution.name|truncatechars:26 }}</a>
+                </td>
+                <td><span style="font-weight:700;color:#1e293b;">{{ row.pred.latest_cutoff }}</span><span style="font-size:.62rem;color:#94a3b8;display:block;">{{ row.pred.latest_year }}</span></td>
+                <td><span style="font-weight:800;color:#2563eb;">{{ row.pred.predicted }}</span></td>
+                <td style="color:#64748b;font-size:.72rem;">{{ row.pred.low }}–{{ row.pred.high }}</td>
+                <td>{% with key=row.elig.key %}<span class="status-badge {% if key == 'HighLikelihood' %}s-high{% elif key == 'Likely' %}s-likely{% elif key == 'Borderline' %}s-border{% else %}s-unlik{% endif %}">{{ row.elig.label }}</span>{% endwith %}</td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        </div>
+        {% if group.rows|length >= 5 %}
+        <div style="margin-top:.6rem;text-align:right;">
+            <a href="{% url 'predictor:index' %}?cluster={{ group.kuccps_num }}" style="font-size:.78rem;color:#2563eb;font-weight:600;">View all Cluster {{ group.kuccps_num }} <i class="bi bi-arrow-right ms-1"></i></a>
+        </div>
+        {% endif %}
+    </div>
+    {% endfor %}
+    {% endif %}
+
+    <div class="info-banner">
+        <i class="bi bi-exclamation-triangle-fill flex-shrink-0 mt-1" style="color:#d97706;"></i>
+        <span>Predictions are estimates only. Verify all cutoffs on the official <strong>KUCCPS portal</strong> before applying.</span>
+    </div>
+
+    <div class="chart-wrap">
+        <div class="chart-title"><i class="bi bi-diagram-3 me-1"></i>Cluster Points Radar</div>
+        <canvas id="clusterChart"></canvas>
+    </div>
+    {% endif %}
+
+    <div style="height:6rem;"></div>
+</div>
+</form>
+
+<!-- sticky footer -->
+<div class="lce-footer">
+    <div class="lce-footer-info"><div class="lce-footer-title" id="footerNote">Enter <strong>7 subjects</strong> to calculate</div></div>
+    <a href="{% url 'home' %}" class="lce-btn-back"><i class="bi bi-arrow-left"></i> Back</a>
+    <button type="submit" form="calcForm" class="lce-btn-calc" id="calcBtn" disabled>
+        <i class="bi bi-calculator-fill"></i> Calculate
+    </button>
 </div>
 
+{% block extra_js %}
 <script>
-// =================== OPTIONAL SUBJECTS DYNAMIC ADD/REMOVE ===================
-const optionalSubjectsList = document.getElementById('optional-subjects-list');
-const optionalDropdown = document.getElementById('optional-subject-dropdown');
-const addedSubjects = new Set();
-
-function removeSubject(name){
-    const wrapper = document.getElementById('wrapper-' + name);
-    if(wrapper){ 
-        wrapper.remove(); 
-        addedSubjects.delete(name); 
-        const opt = optionalDropdown.querySelector(`option[value="${name}"]`);
-        if(opt){ opt.style.display='block'; }
+function toggleAcc(header) {
+    const body = header.nextElementSibling;
+    const isOpen = body.classList.contains('open');
+    body.classList.toggle('open', !isOpen);
+    header.classList.toggle('expanded', !isOpen);
+    const chev = header.querySelector('.acc-chevron');
+    if (chev) chev.className = 'bi acc-chevron ' + (!isOpen ? 'bi-chevron-up' : 'bi-chevron-down');
+}
+function onSelChange(field, secId, sel) {
+    const row = document.getElementById('row-' + field);
+    const hasVal = sel.value !== '';
+    sel.classList.toggle('has-value', hasVal);
+    if (row) row.classList.toggle('filled', hasVal);
+    updateSecCount(secId);
+    updateGlobal();
+}
+function updateSecCount(secId) {
+    const body = document.getElementById('body-' + secId);
+    const cnt  = document.getElementById('cnt-' + secId);
+    const sec  = document.getElementById('sec-' + secId);
+    if (!body) return;
+    const filled = body.querySelectorAll('.lce-select.has-value').length;
+    if (cnt) { cnt.textContent = filled + ' entered'; cnt.classList.toggle('visible', filled > 0); }
+    if (sec) sec.classList.toggle('has-values', filled > 0);
+}
+function updateGlobal() {
+    const all   = document.querySelectorAll('select.lce-select.has-value').length;
+    const ready = all >= 7;
+    const pct   = Math.min(100, Math.round((all / 7) * 100));
+    const sb    = document.getElementById('sbCounter');
+    const fill  = document.getElementById('sbFill');
+    const btn   = document.getElementById('calcBtn');
+    const note  = document.getElementById('footerNote');
+    if (sb)   { sb.textContent = all + ' / 7 subjects'; sb.className = 'sb-counter' + (ready ? ' ready' : ''); }
+    if (fill) fill.style.width = pct + '%';
+    btn.disabled = !ready;
+    if (ready) {
+        note.innerHTML = '<strong>' + all + ' subjects entered</strong> — ready to calculate!';
+    } else {
+        const need = 7 - all;
+        note.innerHTML = 'Enter <strong>' + need + ' more subject' + (need !== 1 ? 's' : '') + '</strong> to continue';
     }
 }
-
-optionalDropdown.addEventListener('change', function() {
-    const selected = this.value;
-    if (!selected || addedSubjects.has(selected)) return;
-
-    const label = this.options[this.selectedIndex].text;
-    const wrapper = document.createElement('div');
-    wrapper.className = 'subject-card text-center';
-    wrapper.id = 'wrapper-' + selected;
-
-    const hiddenInput = document.createElement('input');
-    hiddenInput.type = 'hidden';
-    hiddenInput.name = selected;
-    hiddenInput.value = '';
-
-    const gradeSelect = document.createElement('select');
-    gradeSelect.className = 'form-select grade-select';
-    gradeSelect.required = true;
-    gradeSelect.innerHTML = `
-        <option value="">Grade</option>
-        <option value="12">A</option>
-        <option value="11">A-</option>
-        <option value="10">B+</option>
-        <option value="9">B</option>
-        <option value="8">B-</option>
-        <option value="7">C+</option>
-        <option value="6">C</option>
-        <option value="5">C-</option>
-        <option value="4">D+</option>
-        <option value="3">D</option>
-        <option value="2">D-</option>
-        <option value="1">E</option>
-    `;
-    gradeSelect.addEventListener('change', ()=>hiddenInput.value=gradeSelect.value);
-
-    const deleteBtn = document.createElement('i');
-    deleteBtn.className='bi bi-trash-fill remove-subject';
-    deleteBtn.addEventListener('click', ()=>removeSubject(selected));
-
-    wrapper.appendChild(hiddenInput);
-    wrapper.appendChild(document.createTextNode(label));
-    wrapper.appendChild(gradeSelect);
-    wrapper.appendChild(deleteBtn);
-
-    optionalSubjectsList.appendChild(wrapper);
-    addedSubjects.add(selected);
-    this.querySelector(`option[value="${selected}"]`).style.display='none';
-    this.value='';
+document.querySelectorAll('select.lce-select').forEach(sel => {
+    if (sel.value) { sel.classList.add('has-value'); const r = sel.closest('.acc-row'); if (r) r.classList.add('filled'); }
 });
+['compulsory',1,2,3,4].forEach(id => updateSecCount(id));
+updateGlobal();
 
-// =================== CHART.JS RADAR ===================
-document.addEventListener('DOMContentLoaded', ()=>{
-    const results = [
-        {% for r in results %}
-            { name: "{{ r.cluster.name }}", points: {{ r.cluster_points }} },
-        {% endfor %}
-    ];
-    const ctx = document.getElementById('clusterChart').getContext('2d');
+{% if results %}
+(function() {
+    const ctx = document.getElementById('clusterChart');
+    if (!ctx) return;
     new Chart(ctx, {
         type: 'radar',
         data: {
-            labels: results.map(r=>r.name),
+            labels: [{% for r in results %}"{{ r.cluster.name|truncatechars:18 }}",{% endfor %}],
             datasets: [{
                 label: 'Cluster Points',
-                data: results.map(r=>r.points),
-                backgroundColor: 'rgba(54, 162, 235, 0.2)',
-                borderColor: 'rgba(54, 162, 235, 1)',
-                pointBackgroundColor: 'rgba(54, 162, 235, 1)'
+                data: [{% for r in results %}{{ r.cluster_points }},{% endfor %}],
+                backgroundColor: 'rgba(37,99,235,0.1)',
+                borderColor: '#2563eb',
+                pointBackgroundColor: '#1e3a8a',
+                pointHoverBackgroundColor: '#2563eb',
             }]
         },
         options: {
             responsive: true,
+            plugins: { legend: { labels: { color: '#64748b', font: { size: 11 } } } },
             scales: {
                 r: {
-                    beginAtZero: true,
-                    min: 0,
-                    max: 50,
-                    ticks: { stepSize: 5 }
+                    beginAtZero: true, min: 0, max: 50,
+                    ticks: { stepSize: 10, color: '#94a3b8' },
+                    grid:  { color: '#e2e8f0' },
+                    pointLabels: { color: '#64748b', font: { size: 9 } }
                 }
             }
         }
     });
-});
+})();
+{% endif %}
 </script>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+{% endblock %}
 {% endblock %}

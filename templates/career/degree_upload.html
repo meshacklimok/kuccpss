@@ -42,15 +42,15 @@
         </ol>
     </nav>
 
-    <!-- Coming Soon banner -->
+    <!-- Active OCR banner -->
     <div class="alert d-flex align-items-center gap-3 mb-4"
-         style="background:#fefce8;border:1.5px solid #fde047;border-radius:12px;">
-        <i class="bi bi-stars" style="color:#d97706;font-size:1.4rem;flex-shrink:0;"></i>
+         style="background:#f0fdf4;border:1.5px solid #86efac;border-radius:12px;">
+        <i class="bi bi-stars" style="color:#16a34a;font-size:1.4rem;flex-shrink:0;"></i>
         <div>
-            <strong>OCR Feature Coming Soon</strong><br>
+            <strong>AI-Powered Grade Extraction</strong><br>
             <span class="small text-muted">
-                Automatic grade extraction from your KCSE slip image is under development.
-                Upload your image now and we'll redirect you to confirm your cluster points manually.
+                Upload a photo or scan of your KCSE results slip — our AI reads your grades automatically.
+                You can review and correct before continuing.
             </span>
         </div>
     </div>
@@ -70,7 +70,7 @@
                     <p class="fw-semibold mt-3 mb-1" style="color:#0f172a;">Drag & drop your slip here</p>
                     <p class="text-muted small mb-3">or click to browse files</p>
                     <span class="badge" style="background:#ecfeff;color:#0891b2;font-size:0.78rem;padding:6px 14px;">
-                        Select Image
+                        Select File
                     </span>
                     <input type="file" id="slipInput" name="slip_image"
                            accept="image/*,.pdf" onchange="previewFile(this)">
@@ -80,11 +80,17 @@
                 <img id="preview-img" alt="Slip preview">
                 <p id="file-name" class="text-center text-muted small mt-2"></p>
 
+                <!-- Loading overlay (shown on submit) -->
+                <div id="loadingMsg" class="text-center py-3 d-none">
+                    <div class="spinner-border text-info mb-2" role="status"></div>
+                    <p class="text-muted small mb-0">Reading your grades with AI — this takes a few seconds…</p>
+                </div>
+
                 <!-- Submit -->
-                <div class="d-flex gap-3 flex-wrap mt-4">
-                    <button type="submit" class="btn btn-lg px-5 fw-bold text-white"
+                <div class="d-flex gap-3 flex-wrap mt-4" id="submitRow">
+                    <button type="submit" id="submitBtn" class="btn btn-lg px-5 fw-bold text-white"
                             style="background:#0891b2;border-radius:10px;border:none;">
-                        <i class="bi bi-arrow-right-circle me-2"></i>Continue
+                        <i class="bi bi-stars me-2"></i>Extract Grades
                     </button>
                     <a href="{% url 'career:degree_entry' %}" class="btn btn-outline-secondary btn-lg" style="border-radius:10px;">
                         Back
@@ -123,6 +129,13 @@ function previewFile(input) {
         reader.readAsDataURL(file);
     }
 }
+
+document.getElementById('uploadForm').addEventListener('submit', function () {
+    const file = document.getElementById('slipInput').files[0];
+    if (!file) return;
+    document.getElementById('submitRow').classList.add('d-none');
+    document.getElementById('loadingMsg').classList.remove('d-none');
+});
 
 const zone = document.getElementById('dropZone');
 zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('dragover'); });

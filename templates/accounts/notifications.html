@@ -4,13 +4,13 @@
 {% block content %}
 <div class="page-hero">
   <div class="container">
-    <div class="d-flex justify-content-between align-items-center">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
       <div>
         <h1><i class="fas fa-bell me-2"></i>Notifications</h1>
         <p class="mb-0">Stay up to date with your placement activity.</p>
       </div>
       {% if notifications %}
-      <form action="{% url 'accounts:mark_notifications_read' %}" method="POST">
+      <form action="{% url 'accounts:mark_notifications_read' %}" method="POST" id="markAllForm">
         {% csrf_token %}
         <button type="submit" class="btn btn-outline-light btn-sm">
           <i class="fas fa-check-double me-1"></i>Mark All Read
@@ -27,30 +27,68 @@
 
       {% if notifications %}
       {% for notif in notifications %}
-      <div class="card p-3 mb-2 d-flex flex-row align-items-start gap-3
-                  {% if not notif.is_read %}border-start border-4 border-warning{% endif %}">
-        <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
-             style="width:40px;height:40px;background:
-               {% if notif.notif_type == 'success' %}#dcfce7
-               {% elif notif.notif_type == 'warning' %}#fef9c3
-               {% elif notif.notif_type == 'deadline' %}#fee2e2
-               {% else %}#e8f0fe{% endif %};">
-          <i class="fas fa-
-            {% if notif.notif_type == 'success' %}check-circle text-success
-            {% elif notif.notif_type == 'warning' %}exclamation-triangle text-warning
-            {% elif notif.notif_type == 'deadline' %}clock text-danger
-            {% elif notif.notif_type == 'system' %}cog text-secondary
-            {% else %}info-circle{% endif %}" style="color:{% if notif.notif_type == 'info' %}var(--primary){% endif %};">
-          </i>
+      {% with tid=notif.notif_type %}
+      <div class="notif-card card mb-2 border-0 shadow-sm {% if not notif.is_read %}notif-unread{% endif %}"
+           id="notif-{{ notif.id }}"
+           data-notif-id="{{ notif.id }}"
+           data-read="{{ notif.is_read|yesno:'true,false' }}"
+           data-link="{{ notif.link }}"
+           style="border-radius:0.85rem;cursor:pointer;transition:background 0.18s,box-shadow 0.18s;
+                  {% if not notif.is_read %}border-left:4px solid
+                    {% if tid == 'warning' %}#f59e0b
+                    {% elif tid == 'deadline' %}#ef4444
+                    {% elif tid == 'success' %}#22c55e
+                    {% else %}#6366f1{% endif %} !important;{% endif %}">
+        <div class="card-body d-flex align-items-start gap-3 py-3">
+
+          <!-- Icon circle -->
+          <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
+               style="width:44px;height:44px;
+                      background:{% if tid == 'warning' %}#fef9c3{% elif tid == 'deadline' %}#fee2e2{% elif tid == 'success' %}#dcfce7{% elif tid == 'system' %}#f1f5f9{% else %}#e8f0fe{% endif %};">
+            <i class="fas fa-{% if tid == 'warning' %}exclamation-triangle{% elif tid == 'deadline' %}clock{% elif tid == 'success' %}check-circle{% elif tid == 'system' %}cog{% else %}info-circle{% endif %}"
+               style="color:{% if tid == 'warning' %}#d97706{% elif tid == 'deadline' %}#dc2626{% elif tid == 'success' %}#16a34a{% elif tid == 'system' %}#64748b{% else %}#4f46e5{% endif %};font-size:1.1rem;"></i>
+          </div>
+
+          <!-- Body -->
+          <div class="flex-grow-1 min-width-0">
+            <!-- Type badge + unread dot -->
+            <div class="d-flex align-items-center gap-2 mb-1 flex-wrap">
+              <span class="badge fw-600"
+                    style="font-size:0.68rem;letter-spacing:0.04em;padding:3px 9px;border-radius:20px;
+                           background:{% if tid == 'warning' %}#fef9c3;color:#92400e{% elif tid == 'deadline' %}#fee2e2;color:#991b1b{% elif tid == 'success' %}#dcfce7;color:#166534{% elif tid == 'system' %}#f1f5f9;color:#475569{% else %}#e8f0fe;color:#3730a3{% endif %};">
+                <i class="fas fa-{% if tid == 'warning' %}exclamation-triangle{% elif tid == 'deadline' %}clock{% elif tid == 'success' %}check-circle{% elif tid == 'system' %}cog{% else %}info-circle{% endif %} me-1"></i>
+                {{ notif.get_notif_type_display }}
+              </span>
+              {% if not notif.is_read %}
+              <span class="badge bg-warning text-dark" style="font-size:0.65rem;">New</span>
+              {% endif %}
+            </div>
+
+            <p class="mb-1 text-dark" style="font-size:0.9rem;line-height:1.45;">{{ notif.message }}</p>
+
+            <div class="d-flex align-items-center gap-3 flex-wrap" style="font-size:0.73rem;color:#94a3b8;">
+              <span><i class="fas fa-clock me-1"></i>{{ notif.created_at|date:"d M Y, H:i" }}</span>
+              {% if notif.published_by %}
+              <span><i class="fas fa-user-shield me-1"></i>By {{ notif.published_by.full_name|default:notif.published_by.email }}</span>
+              {% endif %}
+              {% if notif.link %}
+              <span class="text-primary"><i class="fas fa-external-link-alt me-1"></i>Has link</span>
+              {% endif %}
+            </div>
+          </div>
+
+          <!-- Read indicator -->
+          <div class="flex-shrink-0 d-flex align-items-center" style="padding-top:2px;">
+            {% if notif.is_read %}
+            <i class="fas fa-check-circle text-success" style="font-size:1rem;" title="Read"></i>
+            {% else %}
+            <i class="fas fa-circle text-warning" style="font-size:0.6rem;" title="Unread"></i>
+            {% endif %}
+          </div>
+
         </div>
-        <div class="flex-grow-1">
-          <p class="mb-1">{{ notif.message }}</p>
-          <small class="text-muted">{{ notif.created_at|date:"d M Y, H:i" }}</small>
-        </div>
-        {% if not notif.is_read %}
-        <span class="badge bg-warning text-dark align-self-center">New</span>
-        {% endif %}
       </div>
+      {% endwith %}
       {% endfor %}
 
       {% else %}
@@ -67,4 +105,42 @@
     </div>
   </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const CSRF = (document.cookie.match(/csrftoken=([^;]+)/) || [])[1] || '';
+
+document.querySelectorAll('.notif-card').forEach(card => {
+  card.addEventListener('click', function () {
+    const id   = this.dataset.notifId;
+    const link = this.dataset.link;
+    const isRead = this.dataset.read === 'true';
+
+    const markAndNavigate = () => {
+      if (link) window.location.href = link;
+    };
+
+    if (!isRead) {
+      fetch(`/accounts/notifications/${id}/read/`, {
+        method: 'POST',
+        headers: { 'X-CSRFToken': CSRF },
+      })
+      .then(() => {
+        // Visual update
+        this.dataset.read = 'true';
+        this.classList.remove('notif-unread');
+        this.style.borderLeft = '';
+        const dot = this.querySelector('.fa-circle.text-warning');
+        if (dot) { dot.className = 'fas fa-check-circle text-success'; dot.style.fontSize = '1rem'; dot.removeAttribute('title'); dot.title = 'Read'; }
+        const newBadge = this.querySelector('.badge.bg-warning');
+        if (newBadge) newBadge.remove();
+      })
+      .finally(markAndNavigate);
+    } else {
+      markAndNavigate();
+    }
+  });
+});
+</script>
 {% endblock %}

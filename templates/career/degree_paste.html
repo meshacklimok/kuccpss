@@ -128,16 +128,14 @@ body { background: #f0f4ff; }
                     class="paste-area"
                     name="cluster_data"
                     id="pasteArea"
-                    placeholder="Paste your cluster points here...&#10;Example: 32.5 28.0 41.2 ..."
+                    placeholder="Paste your KUCCPS cluster results here directly from the results page..."
                     oninput="livePreview(this.value)"
                     required></textarea>
 
                 <div class="example-box mt-2">
-                    <strong>Format examples:</strong><br>
-                    <span class="text-muted">Space-separated:</span> <code>32.5 28.0 41.2 35.0 ...</code><br>
-                    <span class="text-muted">Comma-separated:</span> <code>32.5, 28.0, 41.2, 35.0</code><br>
-                    <span class="text-muted">One per line:</span>
-                    <code>32.5<br>28.0<br>41.2</code>
+                    <strong>Supports KUCCPS copy-paste format:</strong><br>
+                    <code>Cluster 1<br>35.916&nbsp;&nbsp;&nbsp;Cluster 2<br>35.916&nbsp;&nbsp;&nbsp;Cluster 3<br>36.559<br>...</code><br>
+                    <span class="text-muted mt-1 d-block">Also works with plain numbers: <code>35.9 36.5 0.0 ...</code></span>
                 </div>
             </div>
 
@@ -169,22 +167,38 @@ body { background: #f0f4ff; }
 {% block extra_js %}
 <script>
 function livePreview(raw) {
-    const vals = raw.trim().split(/[\s,;]+/).filter(v => v.trim() !== '');
-    const nums = vals.map(v => parseFloat(v)).filter(n => !isNaN(n) && n >= 0 && n <= 48);
-
     const section = document.getElementById('preview-section');
     const preview = document.getElementById('cluster-preview');
     const count   = document.getElementById('val-count');
 
-    if (nums.length === 0) { section.style.display = 'none'; return; }
+    // Try KUCCPS named format: "Cluster N\nVALUE" or "VALUE\tCluster N"
+    const namedRe = /Cluster\s+(\d+)\s+([\d.]+)/gi;
+    const pairs = {};
+    let m;
+    while ((m = namedRe.exec(raw)) !== null) {
+        const n = parseFloat(m[2]);
+        if (n >= 0 && n <= 48) pairs[parseInt(m[1])] = n;
+    }
+
+    let entries = Object.keys(pairs).sort((a,b) => a - b).map(k => ({ label: `C${k}`, val: pairs[k] }));
+
+    // Fallback: plain numbers
+    if (entries.length === 0) {
+        const nums = raw.trim().split(/[\s,;]+/)
+            .map(v => parseFloat(v))
+            .filter(n => !isNaN(n) && n >= 0 && n <= 48);
+        entries = nums.map((n, i) => ({ label: `C${i + 1}`, val: n }));
+    }
+
+    if (entries.length === 0) { section.style.display = 'none'; return; }
 
     section.style.display = 'block';
-    count.textContent = nums.length;
+    count.textContent = entries.length;
     preview.innerHTML = '';
-    nums.forEach((n, i) => {
+    entries.forEach(e => {
         const chip = document.createElement('div');
-        chip.className = 'cluster-chip filled';
-        chip.innerHTML = `<span>C${i + 1}</span><span class="val">${n.toFixed(1)}</span>`;
+        chip.className = 'cluster-chip' + (e.val > 0 ? ' filled' : '');
+        chip.innerHTML = `<span>${e.label}</span><span class="val">${e.val.toFixed(1)}</span>`;
         preview.appendChild(chip);
     });
 }

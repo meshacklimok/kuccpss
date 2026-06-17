@@ -35,10 +35,38 @@
     border-radius: 20px;
     white-space: nowrap;
 }
-.chance-VERY-HIGH { background: #dcfce7; color: #15803d; }
-.chance-HIGH      { background: #dbeafe; color: #1d4ed8; }
-.chance-MEDIUM    { background: #fef9c3; color: #854d0e; }
-.chance-LOW       { background: #fee2e2; color: #991b1b; }
+.chance-HighLikelihood { background: #bbf7d0; color: #14532d; }
+.chance-Likely         { background: #dcfce7; color: #166534; }
+.chance-Borderline     { background: #fef9c3; color: #854d0e; }
+.chance-Unlikely       { background: #fee2e2; color: #991b1b; }
+
+/* Tier badges */
+.tier-badge {
+    font-size: 0.72rem; font-weight: 700; padding: 3px 10px;
+    border-radius: 20px; white-space: nowrap; cursor: help;
+}
+.tier-best     { background: #d1fae5; color: #065f46; }
+.tier-stretch  { background: #fef3c7; color: #92400e; }
+.tier-safe     { background: #dbeafe; color: #1e40af; }
+.tier-easy     { background: #f1f5f9; color: #475569; }
+.tier-longshot { background: #fee2e2; color: #991b1b; }
+.tier-competitive { background: #fce7f3; color: #9d174d; }
+
+.course-link {
+    color: #1e293b; text-decoration: none; font-weight: 700;
+    font-size: 0.95rem; line-height: 1.35;
+    transition: color 0.15s;
+}
+.course-link:hover { color: #4f46e5; text-decoration: underline; }
+
+.pred-chip {
+    font-size: 0.7rem; font-weight: 600; padding: 2px 8px;
+    border-radius: 6px; background: #f0fdf4; color: #15803d;
+    display: inline-flex; align-items: center; gap: 4px;
+}
+.pred-chip.falling { background: #f0fdf4; color: #15803d; }
+.pred-chip.rising  { background: #fff1f2; color: #be123c; }
+.pred-chip.stable  { background: #f8fafc; color: #475569; }
 
 .result-card {
     background: #fff;
@@ -80,6 +108,69 @@
     background: #f1f5f9;
     color: #475569;
 }
+.meta-chip.min-req {
+    background: #fee2e2;
+    color: #b91c1c;
+    border: 1px solid #fca5a5;
+}
+.meta-chip.subj-req {
+    background: #fef3c7;
+    color: #92400e;
+    border: 1px solid #fcd34d;
+}
+
+/* ── Non-degree grade comparison bar ── */
+.nd-grade-bar {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.45rem 0.75rem;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    flex-wrap: wrap;
+}
+.nd-label {
+    font-size: 0.68rem;
+    font-weight: 600;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+.nd-your {
+    font-size: 0.85rem;
+    font-weight: 800;
+    color: #1d4ed8;
+    background: #eff6ff;
+    padding: 1px 9px;
+    border-radius: 5px;
+    border: 1px solid #bfdbfe;
+}
+.nd-arrow {
+    font-size: 0.8rem;
+    color: #cbd5e1;
+    font-weight: 700;
+}
+.nd-min {
+    font-size: 0.85rem;
+    font-weight: 800;
+    color: #b91c1c;
+    background: #fee2e2;
+    padding: 1px 9px;
+    border-radius: 5px;
+    border: 1px solid #fca5a5;
+}
+.nd-spacer { flex: 1; min-width: 0.5rem; }
+.nd-verdict {
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 2px 10px;
+    border-radius: 20px;
+    white-space: nowrap;
+}
+.nd-just   { background: #dbeafe; color: #1d4ed8; }
+.nd-good   { background: #dcfce7; color: #15803d; }
+.nd-strong { background: #d1fae5; color: #065f46; font-weight: 800; }
 .pts-diff {
     font-size: 0.72rem;
     font-weight: 700;
@@ -120,21 +211,79 @@
     background: #eef2ff;
     color: #3730a3;
 }
-.filter-chip.chance-active-VERY-HIGH { border-color: #22c55e; background: #dcfce7; color: #15803d; }
-.filter-chip.chance-active-HIGH      { border-color: #3b82f6; background: #dbeafe; color: #1d4ed8; }
-.filter-chip.chance-active-MEDIUM    { border-color: #f59e0b; background: #fef9c3; color: #854d0e; }
-.filter-chip.chance-active-LOW       { border-color: #ef4444; background: #fee2e2; color: #991b1b; }
+.filter-chip.chance-active-HighLikelihood { border-color: #22c55e; background: #bbf7d0; color: #14532d; }
+.filter-chip.chance-active-Likely         { border-color: #4ade80; background: #dcfce7; color: #166534; }
+.filter-chip.chance-active-Borderline     { border-color: #f59e0b; background: #fef9c3; color: #854d0e; }
+.filter-chip.chance-active-Unlikely       { border-color: #ef4444; background: #fee2e2; color: #991b1b; }
+/* Tier filter active states */
+.filter-chip.tier-active-best     { border-color: #059669; background: #d1fae5; color: #065f46; }
+.filter-chip.tier-active-stretch  { border-color: #d97706; background: #fef3c7; color: #92400e; }
+.filter-chip.tier-active-safe     { border-color: #2563eb; background: #dbeafe; color: #1e40af; }
+.filter-chip.tier-active-easy     { border-color: #64748b; background: #f1f5f9; color: #475569; }
+.filter-chip.tier-active-longshot { border-color: #dc2626; background: #fee2e2; color: #991b1b; }
+
+/* ── Backup Plan ── */
+.bp-header { display:flex; align-items:flex-start; gap:1rem; margin-bottom:1.5rem; padding-top:.25rem; }
+.bp-icon { width:44px; height:44px; background:linear-gradient(135deg,#7c3aed,#4f46e5); border-radius:12px; display:flex; align-items:center; justify-content:center; color:#fff; font-size:1.1rem; flex-shrink:0; }
+.bp-title { font-size:1.25rem; font-weight:800; color:#1e293b; margin:0 0 .2rem; }
+.bp-sub { font-size:.875rem; color:#64748b; margin:0; }
+.bp-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:1.1rem; margin-bottom:1rem; }
+.bp-card { background:#fff; border:1.5px solid #e2e8f0; border-radius:14px; overflow:hidden; box-shadow:0 2px 12px rgba(30,58,138,0.06); transition:border-color .18s,box-shadow .18s; }
+.bp-card:hover { border-color:#c4b5fd; box-shadow:0 4px 20px rgba(124,58,237,0.12); }
+.bp-cluster-head { background:linear-gradient(135deg,#7c3aed,#4f46e5); padding:.75rem 1.1rem; display:flex; align-items:center; gap:.6rem; }
+.bp-cluster-pill { background:rgba(255,255,255,0.2); color:#fff; font-size:.72rem; font-weight:700; padding:.25rem .65rem; border-radius:20px; letter-spacing:.04em; white-space:nowrap; }
+.bp-cluster-name { color:#fff; font-size:.82rem; font-weight:600; opacity:.92; }
+.bp-aspiration { padding:.85rem 1.1rem .65rem; border-bottom:1px dashed #e2e8f0; }
+.bp-asp-label { font-size:.7rem; font-weight:700; color:#94a3b8; text-transform:uppercase; letter-spacing:.06em; margin-bottom:.3rem; }
+.bp-asp-course { margin-bottom:.4rem; }
+.bp-asp-link { font-weight:700; color:#1e293b; text-decoration:none; font-size:.88rem; }
+.bp-asp-link:hover { color:#7c3aed; text-decoration:underline; }
+.bp-asp-inst { font-size:.75rem; color:#64748b; display:block; margin-top:.1rem; }
+.bp-gap-pill { display:inline-flex; align-items:center; background:#fee2e2; color:#991b1b; border:1px solid #fca5a5; border-radius:6px; font-size:.72rem; font-weight:700; padding:.25rem .6rem; }
+.bp-divider { display:flex; align-items:center; gap:.5rem; padding:.5rem 1.1rem; font-size:.7rem; font-weight:700; color:#94a3b8; text-transform:uppercase; letter-spacing:.06em; }
+.bp-divider::before,.bp-divider::after { content:''; flex:1; height:1px; background:#e2e8f0; }
+.bp-alts { padding:.1rem 1.1rem .85rem; display:flex; flex-direction:column; gap:.6rem; }
+.bp-alt-row { display:flex; align-items:flex-start; justify-content:space-between; gap:.5rem; padding:.55rem .7rem; background:#f8fafc; border-radius:8px; border:1px solid #f1f5f9; transition:background .15s; }
+.bp-alt-row:hover { background:#eff6ff; border-color:#bfdbfe; }
+.bp-alt-info { flex:1; min-width:0; }
+.bp-alt-name { font-size:.83rem; font-weight:700; color:#1e293b; text-decoration:none; display:block; line-height:1.3; }
+.bp-alt-name:hover { color:#4f46e5; text-decoration:underline; }
+.bp-alt-inst { font-size:.72rem; color:#64748b; display:block; margin-top:.1rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:200px; }
+.bp-alt-right { display:flex; flex-direction:column; align-items:flex-end; gap:.2rem; flex-shrink:0; }
+.bp-alt-cutoff { font-size:.7rem; color:#94a3b8; font-weight:500; }
+.bp-alt-margin { font-size:.72rem; font-weight:700; padding:.2rem .55rem; border-radius:5px; }
+.margin-high { background:#d1fae5; color:#065f46; }
+.margin-mid  { background:#dcfce7; color:#15803d; }
+.margin-low  { background:#eff6ff; color:#1d4ed8; }
+.bp-footnote { font-size:.78rem; color:#94a3b8; text-align:center; margin-top:.5rem; }
+.bp-footnote a { color:#7c3aed; }
+@media(max-width:640px) { .bp-grid { grid-template-columns:1fr; } .bp-header { flex-direction:column; gap:.6rem; } }
 </style>
 
 <!-- Hero stats bar -->
 <div class="results-hero">
     <div class="container">
-        <div class="d-flex align-items-center gap-3 mb-3 flex-wrap">
-            <a href="{% url 'career:home' %}" class="text-white text-decoration-none small opacity-75">
-                <i class="bi bi-arrow-left me-1"></i>Career Guidance
-            </a>
-            <span class="opacity-50">/</span>
-            <span class="small fw-semibold">{{ pathway }} Results</span>
+        <div class="d-flex align-items-center justify-content-between gap-3 mb-3 flex-wrap">
+            <div class="d-flex align-items-center gap-3">
+                <a href="{% url 'career:home' %}" class="text-white text-decoration-none small opacity-75">
+                    <i class="bi bi-arrow-left me-1"></i>Career Guidance
+                </a>
+                <span class="opacity-50">/</span>
+                <span class="small fw-semibold">{{ pathway }} Results</span>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                <a href="{{ edit_url }}"
+                   class="btn btn-sm"
+                   style="background:rgba(255,255,255,0.15);color:#fff;border:1px solid rgba(255,255,255,0.3);border-radius:8px;font-size:0.78rem;font-weight:600;padding:5px 12px;">
+                    <i class="bi bi-pencil-square me-1"></i>Edit Grades
+                </a>
+                <a href="{{ clear_url }}"
+                   class="btn btn-sm"
+                   style="background:rgba(239,68,68,0.25);color:#fecaca;border:1px solid rgba(239,68,68,0.4);border-radius:8px;font-size:0.78rem;font-weight:600;padding:5px 12px;"
+                   onclick="return confirm('Clear all results and start over?')">
+                    <i class="bi bi-x-circle me-1"></i>Clear All
+                </a>
+            </div>
         </div>
         <div class="row g-3">
             <div class="col-6 col-md-3 hero-stat">
@@ -147,8 +296,8 @@
             </div>
             {% if pathway == 'Degree' %}
             <div class="col-6 col-md-3 hero-stat">
-                <div class="number">{{ cluster_pts_single|floatformat:1 }}</div>
-                <div class="label">Cluster Points / 48</div>
+                <div class="number">{{ best_cluster_pts|floatformat:1 }}</div>
+                <div class="label">Best Cluster / 48</div>
             </div>
             {% else %}
             <div class="col-6 col-md-3 hero-stat">
@@ -180,138 +329,805 @@
                 </div>
             </form>
 
-            <!-- Admission chance filters -->
+            <!-- Tier filters (primary) -->
             <div class="d-flex gap-1 flex-wrap">
                 <a href="?sort={{ sort_by }}{% if search_q %}&q={{ search_q }}{% endif %}"
-                   class="filter-chip {% if not filter_chance %}active{% endif %}">All</a>
-                <a href="?chance=VERY+HIGH&sort={{ sort_by }}{% if search_q %}&q={{ search_q }}{% endif %}"
-                   class="filter-chip {% if filter_chance == 'VERY HIGH' %}chance-active-VERY-HIGH{% endif %}">
-                    <span style="width:8px;height:8px;border-radius:50%;background:#22c55e;display:inline-block;"></span>
-                    Very High
+                   class="filter-chip {% if not filter_tier and not filter_chance %}active{% endif %}">All</a>
+                <a href="?tier=Best+Match&sort={{ sort_by }}{% if search_q %}&q={{ search_q }}{% endif %}"
+                   class="filter-chip {% if filter_tier == 'Best Match' %}tier-active-best{% endif %}">
+                    <span style="width:8px;height:8px;border-radius:50%;background:#059669;display:inline-block;"></span>
+                    Best Match{% if tier_counts.BestMatch %} ({{ tier_counts.BestMatch }}){% endif %}
                 </a>
-                <a href="?chance=HIGH&sort={{ sort_by }}{% if search_q %}&q={{ search_q }}{% endif %}"
-                   class="filter-chip {% if filter_chance == 'HIGH' %}chance-active-HIGH{% endif %}">
-                    <span style="width:8px;height:8px;border-radius:50%;background:#3b82f6;display:inline-block;"></span>
-                    High
+                <a href="?tier=Stretch&sort={{ sort_by }}{% if search_q %}&q={{ search_q }}{% endif %}"
+                   class="filter-chip {% if filter_tier == 'Stretch' %}tier-active-stretch{% endif %}">
+                    <span style="width:8px;height:8px;border-radius:50%;background:#d97706;display:inline-block;"></span>
+                    Stretch{% if tier_counts.Stretch %} ({{ tier_counts.Stretch }}){% endif %}
                 </a>
-                <a href="?chance=MEDIUM&sort={{ sort_by }}{% if search_q %}&q={{ search_q }}{% endif %}"
-                   class="filter-chip {% if filter_chance == 'MEDIUM' %}chance-active-MEDIUM{% endif %}">
-                    <span style="width:8px;height:8px;border-radius:50%;background:#f59e0b;display:inline-block;"></span>
-                    Medium
+                <a href="?tier=Safe+Option&sort={{ sort_by }}{% if search_q %}&q={{ search_q }}{% endif %}"
+                   class="filter-chip {% if filter_tier == 'Safe Option' %}tier-active-safe{% endif %}">
+                    <span style="width:8px;height:8px;border-radius:50%;background:#2563eb;display:inline-block;"></span>
+                    Safe Option{% if tier_counts.SafeOption %} ({{ tier_counts.SafeOption }}){% endif %}
                 </a>
-                <a href="?chance=LOW&sort={{ sort_by }}{% if search_q %}&q={{ search_q }}{% endif %}"
-                   class="filter-chip {% if filter_chance == 'LOW' %}chance-active-LOW{% endif %}">
-                    <span style="width:8px;height:8px;border-radius:50%;background:#ef4444;display:inline-block;"></span>
-                    Low
+                <a href="?tier=Easy+Admission&sort={{ sort_by }}{% if search_q %}&q={{ search_q }}{% endif %}"
+                   class="filter-chip {% if filter_tier == 'Easy Admission' %}tier-active-easy{% endif %}">
+                    <span style="width:8px;height:8px;border-radius:50%;background:#64748b;display:inline-block;"></span>
+                    Easy Admission{% if tier_counts.EasyAdmission %} ({{ tier_counts.EasyAdmission }}){% endif %}
+                </a>
+                <a href="?tier=Long+Shot&sort={{ sort_by }}{% if search_q %}&q={{ search_q }}{% endif %}"
+                   class="filter-chip {% if filter_tier == 'Long Shot' %}tier-active-longshot{% endif %}">
+                    <span style="width:8px;height:8px;border-radius:50%;background:#dc2626;display:inline-block;"></span>
+                    Long Shot{% if tier_counts.LongShot %} ({{ tier_counts.LongShot }}){% endif %}
                 </a>
             </div>
 
             <!-- Sort -->
-            <div class="ms-auto">
+            <div class="ms-auto d-flex align-items-center gap-2">
                 <select class="form-select form-select-sm"
                         style="width:auto;border-radius:8px;font-size:0.8rem;"
-                        onchange="location.href='?sort='+this.value+'{% if filter_chance %}&chance={{ filter_chance }}{% endif %}{% if search_q %}&q={{ search_q }}{% endif %}'">
-                    <option value="chance"      {% if sort_by == 'chance'      %}selected{% endif %}>Sort: Best Match</option>
+                        onchange="location.href='?sort='+this.value+'{% if filter_tier %}&tier={{ filter_tier|urlencode }}{% endif %}{% if search_q %}&q={{ search_q }}{% endif %}'">
+                    <option value="tier"        {% if sort_by == 'tier'        %}selected{% endif %}>Sort: {% if pathway == 'Degree' %}Academic Fit{% else %}Required Grade (High→Low){% endif %}</option>
+                    <option value="chance"      {% if sort_by == 'chance'      %}selected{% endif %}>Sort: Admission Likelihood</option>
                     <option value="institution" {% if sort_by == 'institution' %}selected{% endif %}>Sort: Institution</option>
                     <option value="course"      {% if sort_by == 'course'      %}selected{% endif %}>Sort: Course Name</option>
                 </select>
+                <!-- PDF download buttons -->
+                <a href="{% url 'career:pdf_quick' %}"
+                   class="btn btn-sm d-flex align-items-center gap-1"
+                   style="background:#1e3a8a;color:#fff;border-radius:8px;font-size:0.78rem;font-weight:600;white-space:nowrap;padding:5px 10px;"
+                   data-bs-toggle="tooltip" title="Download a compact 1–2 page summary PDF">
+                    <i class="bi bi-file-earmark-pdf"></i>
+                    <span class="d-none d-md-inline">Quick PDF</span>
+                </a>
+                <a href="{% url 'career:pdf_report' %}"
+                   class="btn btn-sm d-flex align-items-center gap-1"
+                   style="background:#4f46e5;color:#fff;border-radius:8px;font-size:0.78rem;font-weight:600;white-space:nowrap;padding:5px 10px;"
+                   data-bs-toggle="tooltip" title="Download a detailed PDF with your profile and per-tier breakdown">
+                    <i class="bi bi-file-earmark-text"></i>
+                    <span class="d-none d-md-inline">Full Report</span>
+                </a>
+                <a href="https://wa.me/?text={{ 'I found '|urlencode }}{{ total_count }}{{ ' courses I qualify for after KCSE! Check yours free at kuccpss.ke — Kenya%27s #1 placement guide.'|urlencode }}"
+                   target="_blank" rel="noopener"
+                   class="btn btn-sm d-flex align-items-center gap-1"
+                   style="background:#25d366;color:#fff;border-radius:8px;font-size:0.78rem;font-weight:600;white-space:nowrap;padding:5px 10px;">
+                    <i class="fab fa-whatsapp"></i>
+                    <span class="d-none d-md-inline">Share</span>
+                </a>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Payment gate -->
-<div class="container py-5">
-    <div class="row justify-content-center">
-        <div class="col-lg-7 col-md-9">
+<!-- Results -->
+<div class="container py-4">
+    {% if page_obj %}
+        <div class="row g-3">
+            {% for match in page_obj %}
+            <div class="col-12">
+                <div class="result-card">
+                    <div class="chance-stripe" style="background:{{ match.tier_color }};"></div>
+                    <div class="ps-2">
 
-            {% if total_count > 0 %}
-            <!-- Blurred preview cards (decorative) -->
-            <div class="position-relative mb-4" style="pointer-events:none;user-select:none;">
-                <div class="row g-2">
-                    {% for i in "123" %}
-                    <div class="col-12">
-                        <div class="result-card" style="filter:blur(5px);opacity:0.55;">
-                            <div class="chance-stripe stripe-success"></div>
-                            <div class="ps-2">
-                                <div class="course-name">██████████████████████████</div>
-                                <div class="inst-name"><i class="bi bi-building me-1"></i>████████████████</div>
-                                <div class="meta-row mt-2">
-                                    <span class="chance-badge chance-VERY-HIGH">VERY HIGH</span>
-                                    <span class="meta-chip">████████</span>
-                                    <span class="meta-chip">████████</span>
+                        <!-- Row 1: Course name + badges -->
+                        <div class="d-flex align-items-start justify-content-between gap-2 flex-wrap mb-1">
+                            <div style="min-width:0;">
+                                {% if match.course_url %}
+                                <a href="{{ match.course_url }}" class="course-link d-block">{{ match.course.name }}</a>
+                                {% elif match.course and match.course.slug %}
+                                <a href="{% url 'courses:course_detail_no_category' match.course.course_type.slug match.course.slug %}" class="course-link d-block">{{ match.course.name }}</a>
+                                {% else %}
+                                <div class="course-name">{{ match.course.name }}</div>
+                                {% endif %}
+                                <div class="inst-name mt-1">
+                                    <i class="bi bi-building me-1"></i>
+                                    {% if match.institution and match.institution.slug %}
+                                    <a href="{% url 'institutions:institution_detail' type_slug=match.institution.institution_type.slug institution_slug=match.institution.slug %}" class="text-inherit text-decoration-none">{{ match.institution.name }}</a>
+                                    {% else %}{{ match.institution.name }}{% endif %}
+                                    {% if pathway != 'Degree' and match.institution.location %}
+                                    <span class="text-muted mx-1">·</span>
+                                    <i class="bi bi-geo-alt-fill" style="color:#3b82f6;font-size:0.75rem;"></i>
+                                    <span style="font-size:0.78rem;color:#3b82f6;font-weight:600;">{{ match.institution.location }}</span>
+                                    {% endif %}
                                 </div>
                             </div>
+                            <!-- Right badges + bookmark -->
+                            <div class="d-flex gap-1 flex-wrap align-items-center flex-shrink-0">
+                                {% if pathway == 'Degree' %}
+                                {% if match.is_competitive %}
+                                <span class="tier-badge tier-competitive"
+                                      data-bs-toggle="tooltip" data-bs-placement="top"
+                                      title="High-demand course — cutoff is near the top of the scale">
+                                    Competitive
+                                </span>
+                                {% endif %}
+                                <span class="tier-badge {{ match.tier_css }}"
+                                      data-bs-toggle="tooltip" data-bs-placement="top"
+                                      title="{{ match.tier_desc }}">
+                                    {{ match.tier }}
+                                </span>
+                                {% else %}
+                                {% if match.has_specific_min %}
+                                <span class="tier-badge {{ match.tier_css }}"
+                                      data-bs-toggle="tooltip" data-bs-placement="top"
+                                      title="{{ match.tier_desc }}">
+                                    {{ match.tier }}
+                                </span>
+                                {% else %}
+                                <span class="tier-badge"
+                                      style="background:#dcfce7;color:#15803d;border:1px solid #86efac;">
+                                    <i class="bi bi-check-circle-fill me-1"></i>Qualifies
+                                </span>
+                                {% endif %}
+                                {% endif %}
+                                {% if user.is_authenticated %}
+                                <button class="save-btn btn btn-link p-0 ms-1"
+                                        data-course-id="{{ match.course.id }}"
+                                        data-saved="{% if match.course.id in saved_ids %}true{% else %}false{% endif %}"
+                                        data-bs-toggle="tooltip" data-bs-placement="top"
+                                        title="{% if match.course.id in saved_ids %}Remove from watchlist{% else %}Save to watchlist{% endif %}"
+                                        style="font-size:1.05rem;line-height:1;border:none;background:none;color:{% if match.course.id in saved_ids %}#f59e0b{% else %}#cbd5e1{% endif %};">
+                                    <i class="{% if match.course.id in saved_ids %}fas{% else %}far{% endif %} fa-bookmark"></i>
+                                </button>
+                                {% endif %}
+                            </div>
                         </div>
+
+                        {% if pathway == 'Degree' %}
+                        <!-- ── DEGREE: chips row ── -->
+                        <div class="meta-row">
+                            <span class="chance-badge chance-{{ match.chance|cut:' ' }}"
+                                  data-bs-toggle="tooltip" data-bs-placement="top"
+                                  title="{{ match.chance_desc }}">{{ match.chance }}</span>
+                            {% if match.cutoff %}
+                            <span class="meta-chip">
+                                <i class="bi bi-bullseye me-1"></i>Cutoff: <strong>{{ match.cutoff }}</strong>
+                            </span>
+                            {% endif %}
+                            {% if match.pred %}
+                            <span class="pred-chip {{ match.pred.trend }}"
+                                  data-bs-toggle="tooltip" data-bs-placement="top"
+                                  title="2026 predicted cutoff (estimate based on 2021–2024 data). {{ match.pred.trend_tip }}">
+                                <i class="fas {{ match.pred.trend_icon }}"></i>
+                                2026 est: <strong>{{ match.pred.predicted }}</strong>
+                            </span>
+                            {% endif %}
+                            {% if match.diff >= 0 %}
+                            <span class="pts-diff pos"
+                                  data-bs-toggle="tooltip" data-bs-placement="top"
+                                  title="Your cluster points are {{ match.diff|floatformat:1 }} above the cutoff">
+                                +{{ match.diff|floatformat:1 }} pts
+                            </span>
+                            {% else %}
+                            <span class="pts-diff neg"
+                                  data-bs-toggle="tooltip" data-bs-placement="top"
+                                  title="Your cluster points are {{ match.diff|floatformat:1|cut:'-' }} below the cutoff">
+                                {{ match.diff|floatformat:1 }} pts
+                            </span>
+                            {% endif %}
+                            {% if match.cluster %}
+                            <span class="meta-chip"
+                                  data-bs-toggle="tooltip" data-bs-placement="top"
+                                  title="KUCCPS Cluster {{ match.cluster.kuccps_number }}: {{ match.cluster.name }}">
+                                <i class="bi bi-diagram-3 me-1"></i>Cluster {{ match.cluster.kuccps_number }}
+                            </span>
+                            {% endif %}
+                            {% if has_per_cluster and match.cluster %}
+                            <span class="meta-chip"
+                                  data-bs-toggle="tooltip" data-bs-placement="top"
+                                  title="Your score in Cluster {{ match.cluster.kuccps_number }}">
+                                <i class="bi bi-person-badge me-1"></i>You: {{ match.student_points }} pts
+                            </span>
+                            {% endif %}
+                            {% if match.offering.programme_code %}
+                            <span class="meta-chip"><i class="bi bi-hash"></i>{{ match.offering.programme_code }}</span>
+                            {% endif %}
+                        </div>
+
+                        {% else %}
+                        <!-- ── NON-DEGREE: enriched guidance layout ── -->
+
+                        <!-- Row A: programme info chips -->
+                        <div class="meta-row">
+                            <span class="chance-badge chance-{{ match.chance|cut:' ' }}"
+                                  data-bs-toggle="tooltip" data-bs-placement="top"
+                                  title="{{ match.chance_desc }}">{{ match.chance }}</span>
+                            {% if match.institution.institution_type %}
+                            <span class="meta-chip" style="background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;">
+                                <i class="bi bi-bank me-1"></i>{{ match.institution.institution_type.name }}
+                            </span>
+                            {% endif %}
+                            {% if match.course.category %}
+                            <span class="meta-chip" style="background:#f5f3ff;color:#6d28d9;border:1px solid #ddd6fe;">
+                                <i class="bi bi-folder me-1"></i>{{ match.course.category.name }}
+                            </span>
+                            {% endif %}
+                            {% if match.offering.programme_code %}
+                            <span class="meta-chip"><i class="bi bi-hash"></i>{{ match.offering.programme_code }}</span>
+                            {% endif %}
+                        </div>
+
+                        <!-- Row B: eligibility requirements -->
+                        {% if match.cutoff or match.course.subject_requirements %}
+                        <div class="meta-row mt-1">
+                            {% if match.cutoff %}
+                            <span class="meta-chip min-req">
+                                <i class="bi bi-shield-exclamation me-1"></i>Min. Grade: <strong>{{ match.cutoff }}</strong>
+                            </span>
+                            {% endif %}
+                            {% if match.course.subject_requirements %}
+                            {% for req in match.course.subject_requirements %}
+                            <span class="meta-chip subj-req"
+                                  data-bs-toggle="tooltip" data-bs-placement="top"
+                                  title="Required subject(s): {{ req.subjects_str }} — minimum {{ req.min_grade }}">
+                                <i class="bi bi-journal-check me-1"></i>{{ req.subjects_str }}: <strong>{{ req.min_grade }}</strong>
+                            </span>
+                            {% endfor %}
+                            {% endif %}
+                        </div>
+                        {% endif %}
+
+                        <!-- Row C: grade comparison bar -->
+                        <div class="nd-grade-bar mt-2">
+                            <span class="nd-label">Your Grade</span>
+                            <span class="nd-your">{{ match.student_points }}</span>
+                            <span class="nd-arrow">→</span>
+                            <span class="nd-label">Required</span>
+                            <span class="nd-min">{{ match.cutoff|default:"—" }}</span>
+                            <span class="nd-spacer"></span>
+                            {% if match.diff == 0 %}
+                            <span class="nd-verdict nd-just">Meets minimum</span>
+                            {% elif match.diff <= 2 %}
+                            <span class="nd-verdict nd-good">Comfortably qualifies</span>
+                            {% else %}
+                            <span class="nd-verdict nd-strong">Strongly qualifies</span>
+                            {% endif %}
+                        </div>
+                        {% endif %}
                     </div>
-                    {% endfor %}
-                </div>
-                <!-- Lock overlay -->
-                <div class="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center"
-                     style="background:linear-gradient(to bottom, rgba(245,247,250,0) 0%, rgba(245,247,250,0.6) 30%, rgba(245,247,250,1) 70%);pointer-events:none;">
                 </div>
             </div>
-            {% endif %}
-
-            <!-- Lock card -->
-            <div class="card border-0 text-center shadow" style="border-radius:1.25rem;overflow:hidden;">
-                <div style="background:linear-gradient(135deg,#1e3a8a,#4f46e5);padding:2rem 1.5rem 1.5rem;">
-                    <div style="width:64px;height:64px;background:rgba(255,255,255,0.15);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 1rem;font-size:1.75rem;color:#fff;">
-                        <i class="bi bi-lock-fill"></i>
-                    </div>
-                    {% if total_count > 0 %}
-                    <h4 class="fw-bold text-white mb-1">{{ total_count }} Courses Found For You</h4>
-                    <p class="mb-0" style="color:rgba(255,255,255,0.8);font-size:0.9rem;">
-                        Your results are ready — unlock them to see which courses you qualify for.
-                    </p>
-                    {% else %}
-                    <h4 class="fw-bold text-white mb-1">Your Results Are Ready</h4>
-                    <p class="mb-0" style="color:rgba(255,255,255,0.8);font-size:0.9rem;">
-                        Unlock your personalised course matches.
-                    </p>
-                    {% endif %}
-                </div>
-
-                <div class="card-body px-4 py-4">
-                    <!-- Feature list -->
-                    <ul class="list-unstyled text-start mb-4" style="max-width:320px;margin:0 auto;">
-                        <li class="d-flex align-items-center gap-2 mb-2 small">
-                            <i class="bi bi-check-circle-fill text-success flex-shrink-0"></i>
-                            Full list of courses you qualify for
-                        </li>
-                        <li class="d-flex align-items-center gap-2 mb-2 small">
-                            <i class="bi bi-check-circle-fill text-success flex-shrink-0"></i>
-                            Admission chance for each course
-                        </li>
-                        <li class="d-flex align-items-center gap-2 mb-2 small">
-                            <i class="bi bi-check-circle-fill text-success flex-shrink-0"></i>
-                            Institution details and cut-off points
-                        </li>
-                        <li class="d-flex align-items-center gap-2 small">
-                            <i class="bi bi-check-circle-fill text-success flex-shrink-0"></i>
-                            Subject requirement breakdown
-                        </li>
-                    </ul>
-
-                    <div class="d-grid gap-2" style="max-width:280px;margin:0 auto;">
-                        <a href="{% url 'accounts:register' %}" class="btn btn-lg fw-bold text-white"
-                           style="background:#4f46e5;border:none;border-radius:10px;">
-                            <i class="bi bi-unlock-fill me-2"></i>Unlock My Results
-                        </a>
-                        <a href="{% url 'career:home' %}" class="btn btn-outline-secondary"
-                           style="border-radius:10px;font-size:0.9rem;">
-                            <i class="bi bi-arrow-left me-1"></i>Try Another Pathway
-                        </a>
-                    </div>
-
-                    <p class="text-muted mt-3 mb-0" style="font-size:0.75rem;">
-                        <i class="bi bi-shield-check me-1"></i>
-                        Coming soon — payments will be introduced shortly
-                    </p>
-                </div>
-            </div>
-
+            {% endfor %}
         </div>
-    </div>
+
+        <!-- Pagination -->
+        {% if page_obj.has_other_pages %}
+        <nav class="mt-4">
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if filter_tier %}&tier={{ filter_tier|urlencode }}{% endif %}{% if filter_chance %}&chance={{ filter_chance }}{% endif %}{% if search_q %}&q={{ search_q }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}">
+                        <i class="bi bi-chevron-left"></i>
+                    </a>
+                </li>
+                {% endif %}
+                {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                    <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ num }}{% if filter_tier %}&tier={{ filter_tier|urlencode }}{% endif %}{% if filter_chance %}&chance={{ filter_chance }}{% endif %}{% if search_q %}&q={{ search_q }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}">{{ num }}</a>
+                    </li>
+                    {% endif %}
+                {% endfor %}
+                {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if filter_tier %}&tier={{ filter_tier|urlencode }}{% endif %}{% if filter_chance %}&chance={{ filter_chance }}{% endif %}{% if search_q %}&q={{ search_q }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}">
+                        <i class="bi bi-chevron-right"></i>
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+
+    {% else %}
+        <div class="empty-state py-5">
+            <i class="fas fa-search-minus"></i>
+            <h5>No Matches Found</h5>
+            <p class="text-muted">Try adjusting your filters or <a href="{% url 'career:home' %}">try a different pathway</a>.</p>
+        </div>
+    {% endif %}
 </div>
+
+<!-- ── Backup Plan ──────────────────────────────────────────────────────── -->
+{% if backup_plan %}
+<div class="container pb-5">
+  <div class="bp-header">
+    <div class="bp-icon"><i class="fas fa-route"></i></div>
+    <div>
+      <h2 class="bp-title">Your Backup Plan</h2>
+      <p class="bp-sub">You're below cutoff in {{ backup_plan|length }} cluster{{ backup_plan|length|pluralize }}. Here are courses in the same clusters where you <em>do</em> qualify — apply to these alongside your stretch goals.</p>
+    </div>
+  </div>
+
+  <div class="bp-grid">
+    {% for plan in backup_plan %}
+    <div class="bp-card">
+
+      <!-- Cluster header -->
+      <div class="bp-cluster-head">
+        <span class="bp-cluster-pill">Cluster {{ plan.cluster.kuccps_number }}</span>
+        <span class="bp-cluster-name">{{ plan.cluster.name }}</span>
+      </div>
+
+      <!-- Aspiration row -->
+      <div class="bp-aspiration">
+        <div class="bp-asp-label">
+          <i class="fas fa-bullseye me-1"></i>You're aiming for
+        </div>
+        <div class="bp-asp-course">
+          {% if plan.aspiration.course_url %}
+          <a href="{{ plan.aspiration.course_url }}" class="bp-asp-link">{{ plan.aspiration.course.name }}</a>
+          {% else %}
+          {{ plan.aspiration.course.name }}
+          {% endif %}
+          <span class="bp-asp-inst">@ {{ plan.aspiration.institution.name }}</span>
+        </div>
+        <div class="bp-gap-pill">
+          <i class="fas fa-arrow-up me-1"></i>Need <strong>{{ plan.gap }} more pts</strong> to qualify
+        </div>
+      </div>
+
+      <!-- Divider -->
+      <div class="bp-divider">
+        <span>You qualify for these in the same cluster</span>
+      </div>
+
+      <!-- Alternative courses -->
+      <div class="bp-alts">
+        {% for alt in plan.alts %}
+        <div class="bp-alt-row">
+          <div class="bp-alt-info">
+            {% if alt.course_url %}
+            <a href="{{ alt.course_url }}" class="bp-alt-name">{{ alt.course.name }}</a>
+            {% else %}
+            <span class="bp-alt-name">{{ alt.course.name }}</span>
+            {% endif %}
+            <span class="bp-alt-inst">{{ alt.institution.name }}</span>
+          </div>
+          <div class="bp-alt-right">
+            <span class="bp-alt-cutoff">cutoff {{ alt.cutoff }}</span>
+            <span class="bp-alt-margin {% if alt.diff >= 5 %}margin-high{% elif alt.diff >= 2 %}margin-mid{% else %}margin-low{% endif %}">
+              +{{ alt.diff|floatformat:1 }} pts
+            </span>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+
+    </div>
+    {% endfor %}
+  </div>
+
+  <p class="bp-footnote">
+    <i class="fas fa-info-circle me-1"></i>
+    Backup courses are in the same KUCCPS cluster as your aspirations — your subject requirements still apply.
+    <a href="{% url 'career:home' %}">Try a different pathway</a> if you want to explore more options.
+  </p>
+</div>
+{% endif %}
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Init Bootstrap tooltips (Bootstrap is now loaded above in base.html)
+document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function (el) {
+    new bootstrap.Tooltip(el, { trigger: 'hover focus' });
+});
+
+// CSRF token from cookie (more reliable than template var when script is cached)
+const SAVE_CSRF = (document.cookie.match(/(?:^|;\s*)csrftoken=([^;]+)/) || [])[1] || '{{ csrf_token }}';
+
+// Bookmark / save-course toggle
+document.addEventListener('click', function (e) {
+    const btn = e.target.closest('.save-btn');
+    if (!btn) return;
+    e.preventDefault();
+    const courseId = btn.dataset.courseId;
+    const isSaved  = btn.dataset.saved === 'true';
+    const icon     = btn.querySelector('i');
+
+    // Optimistic UI
+    btn.dataset.saved  = isSaved ? 'false' : 'true';
+    icon.className     = isSaved ? 'far fa-bookmark' : 'fas fa-bookmark';
+    btn.style.color    = isSaved ? '#cbd5e1' : '#f59e0b';
+    btn.disabled       = true;
+
+    fetch('/accounts/save-course/' + courseId + '/', {
+        method: 'POST',
+        headers: { 'X-CSRFToken': SAVE_CSRF },
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+        const nowSaved     = data.saved;
+        btn.dataset.saved  = nowSaved ? 'true' : 'false';
+        icon.className     = nowSaved ? 'fas fa-bookmark' : 'far fa-bookmark';
+        btn.style.color    = nowSaved ? '#f59e0b' : '#cbd5e1';
+        btn.title          = nowSaved ? 'Remove from watchlist' : 'Save to watchlist';
+        // Refresh tooltip text
+        const tip = bootstrap.Tooltip.getInstance(btn);
+        if (tip) tip.setContent({ '.tooltip-inner': btn.title });
+    })
+    .catch(function() {
+        // Revert on error
+        btn.dataset.saved  = isSaved ? 'true' : 'false';
+        icon.className     = isSaved ? 'fas fa-bookmark' : 'far fa-bookmark';
+        btn.style.color    = isSaved ? '#f59e0b' : '#cbd5e1';
+    })
+    .finally(function() { btn.disabled = false; });
+});
+
+// ── KUCCPSS AI Career Assistant — Professional Widget ───────────────
+const AI_CHAT_URL    = '{% url "career:ajax_ai_chat" %}';
+const AI_INSIGHT_URL = '{% url "career:ajax_ai_insight" %}';
+const CSRF           = (document.cookie.match(/(?:^|;\s*)csrftoken=([^;]+)/) || [])[1] || '{{ csrf_token }}';
+const TIER_COUNTS    = '{% for k,v in tier_counts.items %}{{ k }}:{{ v }} {% endfor %}'.trim();
+const TOTAL_MATCHES  = '{{ total_count }}';
+const PATHWAY        = '{{ pathway }}';
+const SCORE          = '{% if pathway == "Degree" %}{{ best_cluster_pts|floatformat:1 }}/48{% else %}{{ mean_grade }}{% endif %}';
+
+let chatHistory = [];
+let widgetOpen  = false;
+let greeted     = false;
+let msgCount    = 0;
+
+document.body.insertAdjacentHTML('beforeend', `
+<style>
+/* ── Float Button ── */
+#aiFloatBtn {
+  position:fixed; bottom:28px; right:28px; z-index:1055;
+  width:60px; height:60px; border-radius:50%;
+  background:linear-gradient(135deg,#4338ca,#7c3aed);
+  color:#fff; border:none; font-size:1.4rem;
+  box-shadow:0 8px 32px rgba(79,70,229,0.5);
+  cursor:pointer; transition:all 0.25s;
+  display:flex; align-items:center; justify-content:center;
+}
+#aiFloatBtn:hover { transform:translateY(-3px) scale(1.05); box-shadow:0 16px 40px rgba(79,70,229,0.6); }
+#aiFloatBtn.open  { background:linear-gradient(135deg,#1e293b,#374151); }
+#aiPulse {
+  position:absolute; width:60px; height:60px; border-radius:50%;
+  background:rgba(99,102,241,0.35); animation:pulse-ring 2s ease-out infinite;
+  pointer-events:none;
+}
+@keyframes pulse-ring { 0%{transform:scale(1);opacity:1} 100%{transform:scale(1.7);opacity:0} }
+#aiUnreadBadge {
+  position:absolute; top:2px; right:2px;
+  width:18px; height:18px; border-radius:50%;
+  background:#ef4444; color:#fff; font-size:0.65rem; font-weight:800;
+  display:none; align-items:center; justify-content:center;
+  border:2px solid #fff;
+}
+#aiUnreadBadge.show { display:flex; }
+
+/* ── Panel ── */
+#aiChatPanel {
+  position:fixed; bottom:100px; right:28px; z-index:1054;
+  width:360px; height:560px;
+  background:#fff; border-radius:20px;
+  box-shadow:0 32px 80px rgba(0,0,0,0.22), 0 0 0 1px rgba(0,0,0,0.06);
+  display:flex; flex-direction:column; overflow:hidden;
+  opacity:0; transform:translateY(20px) scale(0.96);
+  pointer-events:none; transition:all 0.25s cubic-bezier(0.34,1.56,0.64,1);
+}
+#aiChatPanel.open {
+  opacity:1; transform:translateY(0) scale(1); pointer-events:all;
+}
+
+/* ── Header ── */
+.aip-header {
+  background:linear-gradient(135deg,#1e3a8a 0%,#3730a3 60%,#4f46e5 100%);
+  padding:14px 16px 12px; flex-shrink:0;
+}
+.aip-header-top { display:flex; align-items:center; gap:10px; margin-bottom:10px; }
+.aip-avatar-wrap { position:relative; flex-shrink:0; }
+.aip-avatar {
+  width:40px; height:40px; border-radius:50%;
+  background:rgba(255,255,255,0.15); border:2px solid rgba(255,255,255,0.3);
+  display:flex; align-items:center; justify-content:center; font-size:1.1rem; color:#fff;
+}
+.aip-status-dot {
+  position:absolute; bottom:1px; right:1px;
+  width:11px; height:11px; border-radius:50%;
+  background:#22c55e; border:2px solid #1e3a8a;
+}
+.aip-title { color:#fff; font-weight:800; font-size:0.92rem; line-height:1.2; }
+.aip-subtitle { color:rgba(255,255,255,0.7); font-size:0.7rem; }
+.aip-close {
+  margin-left:auto; background:rgba(255,255,255,0.12); border:none;
+  color:#fff; width:30px; height:30px; border-radius:50%; cursor:pointer;
+  display:flex; align-items:center; justify-content:center; font-size:0.85rem;
+  transition:background 0.15s; flex-shrink:0;
+}
+.aip-close:hover { background:rgba(255,255,255,0.25); }
+
+/* ── Stats strip ── */
+.aip-stats {
+  display:flex; gap:8px;
+}
+.aip-stat {
+  flex:1; background:rgba(255,255,255,0.12); border-radius:10px;
+  padding:6px 8px; text-align:center;
+}
+.aip-stat-num { color:#fff; font-weight:800; font-size:0.88rem; }
+.aip-stat-lbl { color:rgba(255,255,255,0.65); font-size:0.62rem; text-transform:uppercase; letter-spacing:0.04em; }
+
+/* ── Messages ── */
+.aip-body {
+  flex:1; overflow-y:auto; padding:14px 14px 8px;
+  display:flex; flex-direction:column; gap:12px;
+  background:#f8fafc; scroll-behavior:smooth;
+}
+.aip-body::-webkit-scrollbar { width:4px; }
+.aip-body::-webkit-scrollbar-track { background:transparent; }
+.aip-body::-webkit-scrollbar-thumb { background:#cbd5e1; border-radius:4px; }
+
+.aip-row { display:flex; gap:8px; align-items:flex-end; }
+.aip-row.user { flex-direction:row-reverse; }
+.aip-msg-avatar {
+  width:28px; height:28px; border-radius:50%; flex-shrink:0;
+  background:linear-gradient(135deg,#4338ca,#7c3aed);
+  display:flex; align-items:center; justify-content:center;
+  font-size:0.7rem; color:#fff;
+}
+.aip-bubble {
+  max-width:78%; padding:10px 13px; border-radius:16px;
+  font-size:0.83rem; line-height:1.6; word-break:break-word;
+}
+.aip-bubble.bot {
+  background:#fff; color:#1e293b;
+  border:1.5px solid #e2e8f0; border-bottom-left-radius:4px;
+  box-shadow:0 2px 8px rgba(0,0,0,0.05);
+}
+.aip-bubble.user {
+  background:linear-gradient(135deg,#4338ca,#7c3aed); color:#fff;
+  border-bottom-right-radius:4px;
+}
+.aip-time { font-size:0.62rem; color:#94a3b8; margin-top:3px; text-align:right; }
+.aip-time.bot-time { text-align:left; padding-left:36px; }
+
+/* ── Typing ── */
+.aip-typing {
+  display:flex; align-items:center; gap:5px; padding:10px 13px;
+  background:#fff; border:1.5px solid #e2e8f0; border-radius:16px;
+  border-bottom-left-radius:4px; align-self:flex-start;
+  box-shadow:0 2px 8px rgba(0,0,0,0.05);
+}
+.aip-typing span {
+  width:7px; height:7px; border-radius:50%; background:#a5b4fc; display:inline-block;
+  animation:aip-bounce 1.2s infinite;
+}
+.aip-typing span:nth-child(2) { animation-delay:0.18s; }
+.aip-typing span:nth-child(3) { animation-delay:0.36s; }
+@keyframes aip-bounce { 0%,60%,100%{transform:translateY(0)} 30%{transform:translateY(-5px)} }
+
+/* ── Quick chips ── */
+.aip-chips {
+  padding:10px 12px; background:#fff;
+  border-top:1px solid #f1f5f9; display:flex; flex-wrap:wrap; gap:6px;
+}
+.aip-chip {
+  font-size:0.71rem; font-weight:600; padding:5px 11px;
+  border-radius:20px; border:1.5px solid #e0e7ff;
+  background:#eef2ff; color:#3730a3; cursor:pointer;
+  transition:all 0.15s; white-space:nowrap;
+  display:flex; align-items:center; gap:4px;
+}
+.aip-chip:hover { background:#ddd6fe; border-color:#a5b4fc; color:#1e1b4b; }
+
+/* ── Input bar ── */
+.aip-inputbar {
+  padding:10px 12px; background:#fff;
+  border-top:1px solid #e2e8f0;
+  display:flex; align-items:center; gap:8px;
+}
+#aipInput {
+  flex:1; border:1.5px solid #e2e8f0; border-radius:22px;
+  padding:8px 14px; font-size:0.83rem; outline:none;
+  background:#f8fafc; transition:border-color 0.15s, background 0.15s;
+  color:#1e293b;
+}
+#aipInput:focus { border-color:#a5b4fc; background:#fff; }
+#aipSend {
+  width:38px; height:38px; border-radius:50%; flex-shrink:0;
+  background:linear-gradient(135deg,#4338ca,#7c3aed);
+  color:#fff; border:none; cursor:pointer;
+  display:flex; align-items:center; justify-content:center; font-size:0.9rem;
+  transition:all 0.15s; box-shadow:0 4px 12px rgba(79,70,229,0.35);
+}
+#aipSend:hover { transform:scale(1.08); box-shadow:0 6px 16px rgba(79,70,229,0.45); }
+#aipSend:disabled { opacity:0.5; transform:none; cursor:not-allowed; }
+.aip-footer {
+  text-align:center; padding:5px 0 8px;
+  font-size:0.62rem; color:#94a3b8; background:#fff;
+}
+</style>
+
+<!-- Pulse ring behind button -->
+<div id="aiPulse" style="position:fixed;bottom:28px;right:28px;z-index:1053;pointer-events:none;"></div>
+
+<!-- Float button -->
+<button id="aiFloatBtn" onclick="aipToggle()" title="Ask AI about your results">
+  <span id="aiUnreadBadge">1</span>
+  <i class="fas fa-robot" id="aiFabIcon"></i>
+</button>
+
+<!-- Chat panel -->
+<div id="aiChatPanel">
+
+  <!-- Header -->
+  <div class="aip-header">
+    <div class="aip-header-top">
+      <div class="aip-avatar-wrap">
+        <div class="aip-avatar"><i class="fas fa-robot"></i></div>
+        <div class="aip-status-dot"></div>
+      </div>
+      <div>
+        <div class="aip-title">KUCCPSS AI Advisor</div>
+        <div class="aip-subtitle"><i class="fas fa-circle" style="font-size:0.45rem;color:#22c55e;"></i> Online &bull; Powered by GPT-4o-mini</div>
+      </div>
+      <button class="aip-close" onclick="aipToggle()"><i class="fas fa-times"></i></button>
+    </div>
+    <!-- Stats strip -->
+    <div class="aip-stats">
+      <div class="aip-stat">
+        <div class="aip-stat-num">${TOTAL_MATCHES}</div>
+        <div class="aip-stat-lbl">Matches</div>
+      </div>
+      <div class="aip-stat">
+        <div class="aip-stat-num">${SCORE}</div>
+        <div class="aip-stat-lbl">${PATHWAY === 'Degree' ? 'Cluster Pts' : 'Mean Grade'}</div>
+      </div>
+      <div class="aip-stat">
+        <div class="aip-stat-num">${PATHWAY}</div>
+        <div class="aip-stat-lbl">Pathway</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Messages -->
+  <div class="aip-body" id="aipBody"></div>
+
+  <!-- Quick replies -->
+  <div class="aip-chips" id="aipChips">
+    <span class="aip-chip" onclick="aipChip(this)"><i class="fas fa-star"></i> My best course?</span>
+    <span class="aip-chip" onclick="aipChip(this)"><i class="fas fa-university"></i> Best university?</span>
+    <span class="aip-chip" onclick="aipChip(this)"><i class="fas fa-chart-bar"></i> Am I competitive?</span>
+    <span class="aip-chip" onclick="aipChip(this)"><i class="fas fa-bullseye"></i> What to apply first?</span>
+    <span class="aip-chip" onclick="aipChip(this)"><i class="fas fa-arrow-up"></i> Improve my chances?</span>
+    <span class="aip-chip" onclick="aipChip(this)"><i class="fas fa-lightbulb"></i> Application tips</span>
+  </div>
+
+  <!-- Input -->
+  <div class="aip-inputbar">
+    <input id="aipInput" type="text" placeholder="Ask about your results, courses, universities…"
+           maxlength="300" onkeydown="if(event.key==='Enter')aipSend()">
+    <button id="aipSend" onclick="aipSend()"><i class="fas fa-paper-plane"></i></button>
+  </div>
+  <div class="aip-footer">Your data stays private &bull; Results based on your KCSE input</div>
+</div>
+`);
+
+function aipToggle() {
+  widgetOpen = !widgetOpen;
+  document.getElementById('aiChatPanel').classList.toggle('open', widgetOpen);
+  document.getElementById('aiFloatBtn').classList.toggle('open', widgetOpen);
+  document.getElementById('aiFabIcon').className = widgetOpen ? 'fas fa-times' : 'fas fa-robot';
+  document.getElementById('aiPulse').style.display = widgetOpen ? 'none' : 'block';
+  if (widgetOpen) {
+    document.getElementById('aiUnreadBadge').classList.remove('show');
+    if (!greeted) { greeted = true; aipGreet(); }
+    else { setTimeout(() => document.getElementById('aipInput').focus(), 300); }
+  }
+}
+
+function aipTime() {
+  return new Date().toLocaleTimeString('en-KE', {hour:'2-digit', minute:'2-digit'});
+}
+
+function aipAddMsg(text, role) {
+  const body = document.getElementById('aipBody');
+  msgCount++;
+  const row = document.createElement('div');
+  row.className = 'aip-row ' + role;
+  if (role === 'bot') {
+    row.innerHTML =
+      '<div class="aip-msg-avatar"><i class="fas fa-robot"></i></div>' +
+      '<div><div class="aip-bubble bot">' + text.replace(/\n/g,'<br>') + '</div>' +
+      '<div class="aip-time bot-time">' + aipTime() + '</div></div>';
+  } else {
+    row.innerHTML =
+      '<div><div class="aip-bubble user">' + text.replace(/\n/g,'<br>') + '</div>' +
+      '<div class="aip-time">' + aipTime() + '</div></div>';
+  }
+  body.appendChild(row);
+  body.scrollTop = body.scrollHeight;
+}
+
+function aipShowTyping() {
+  const body = document.getElementById('aipBody');
+  const row  = document.createElement('div');
+  row.className = 'aip-row bot'; row.id = 'aipTyping';
+  row.innerHTML = '<div class="aip-msg-avatar"><i class="fas fa-robot"></i></div>' +
+    '<div class="aip-typing"><span></span><span></span><span></span></div>';
+  body.appendChild(row);
+  body.scrollTop = body.scrollHeight;
+}
+
+function aipRemoveTyping() {
+  const t = document.getElementById('aipTyping');
+  if (t) t.remove();
+}
+
+function aipGreet() {
+  aipShowTyping();
+  fetch(AI_INSIGHT_URL + '?total=' + TOTAL_MATCHES + '&tiers=' + encodeURIComponent(TIER_COUNTS))
+    .then(r => r.json())
+    .then(data => {
+      aipRemoveTyping();
+      const msg = data.insight || 'Hi! I\'m your KUCCPSS AI Advisor. Ask me anything about your career results.';
+      chatHistory.push({role:'assistant', content: msg});
+      aipAddMsg(msg, 'bot');
+      if (!widgetOpen) {
+        document.getElementById('aiUnreadBadge').textContent = '1';
+        document.getElementById('aiUnreadBadge').classList.add('show');
+      }
+    })
+    .catch(() => {
+      aipRemoveTyping();
+      aipAddMsg('Hi! I\'m your KUCCPSS AI Advisor. Ask me anything about your career results.', 'bot');
+    });
+  // Pre-fetch greeting even if panel is closed
+  setTimeout(() => {
+    if (!greeted) return;
+    document.getElementById('aiUnreadBadge').textContent = '1';
+    document.getElementById('aiUnreadBadge').classList.add('show');
+  }, 3000);
+}
+
+function aipChip(el) {
+  document.getElementById('aipChips').style.display = 'none';
+  aipSendText(el.innerText.replace(/^\S+\s/, '').trim());
+}
+
+function aipSend() {
+  const inp  = document.getElementById('aipInput');
+  const text = inp.value.trim();
+  if (!text) return;
+  inp.value = '';
+  document.getElementById('aipChips').style.display = 'none';
+  aipSendText(text);
+}
+
+function aipSendText(text) {
+  aipAddMsg(text, 'user');
+  chatHistory.push({role:'user', content: text});
+  aipShowTyping();
+  document.getElementById('aipSend').disabled = true;
+
+  fetch(AI_CHAT_URL, {
+    method:'POST',
+    headers:{'Content-Type':'application/json','X-CSRFToken':CSRF},
+    body:JSON.stringify({message: text, history: chatHistory}),
+  })
+  .then(r => r.json())
+  .then(data => {
+    aipRemoveTyping();
+    const reply = data.reply || data.error || 'Sorry, I could not respond right now.';
+    chatHistory.push({role:'assistant', content: reply});
+    aipAddMsg(reply, 'bot');
+  })
+  .catch(() => {
+    aipRemoveTyping();
+    aipAddMsg('Connection error. Please check your internet and try again.', 'bot');
+  })
+  .finally(() => {
+    document.getElementById('aipSend').disabled = false;
+    document.getElementById('aipInput').focus();
+  });
+}
+
+// Auto-greet after 2s even if panel not opened yet
+setTimeout(() => { if (!greeted) { greeted = true; aipGreet(); } }, 2000);
+</script>
 {% endblock %}

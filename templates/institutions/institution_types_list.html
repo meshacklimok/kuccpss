@@ -1,65 +1,221 @@
 {% extends 'base.html' %}
-{% block title %}Institutions — KUCCPSS{% endblock %}
+{% block title %}Universities, KMTCs, TVETs &amp; TTCs in Kenya | KUCCPSS{% endblock %}
+
+{% block meta %}<meta name="description" content="Explore all Kenyan universities, KMTC campuses, TVET institutes, and TTCs. Find admissions details, courses offered, and cutoff points for each institution.">{% endblock %}
+{% block og_meta %}
+<meta property="og:title" content="Kenyan Institutions Directory — KUCCPSS">
+<meta property="og:description" content="Universities, KMTC campuses, TVET institutes, and TTCs in Kenya. All in one searchable directory.">
+{% endblock %}
 
 {% block content %}
-<div class="page-hero">
-  <div class="container">
-    <h1><i class="fas fa-university me-2"></i>Institutions</h1>
-    <p class="mb-0">Browse Public Universities, Private Universities, KMTCs, TVETs, TTCs and more.</p>
-  </div>
-</div>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
 
-<div class="container pb-5">
+<style>
+/* ── entrance ── */
+@keyframes cardIn {
+    from { opacity: 0; transform: translateY(28px) scale(0.97); }
+    to   { opacity: 1; transform: translateY(0)   scale(1); }
+}
+@keyframes iconBounce {
+    0%   { transform: scale(1); }
+    45%  { transform: scale(1.22); }
+    72%  { transform: scale(0.94); }
+    100% { transform: scale(1.1); }
+}
+@keyframes ringPulse {
+    0%   { box-shadow: 0 0 0 0 var(--ring); }
+    60%  { box-shadow: 0 0 0 8px transparent; }
+    100% { box-shadow: 0 0 0 0 transparent; }
+}
+
+body { background: #f0f4ff; }
+
+.type-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.4rem;
+    max-width: 900px;
+    margin: 0 auto;
+}
+@media (max-width: 768px) { .type-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 420px)  { .type-grid { grid-template-columns: 1fr 1fr; gap: 0.85rem; } }
+
+/* ── base card ── */
+.type-card {
+    position: relative; overflow: hidden;
+    background: #fff;
+    border-radius: 1.1rem;
+    border: 2px solid var(--accent-border, #e2e8f0);
+    box-shadow: 0 2px 12px rgba(30,58,138,0.07);
+    padding: 2rem 1.25rem 1.75rem;
+    text-align: center;
+    text-decoration: none; color: inherit;
+    display: flex; flex-direction: column; align-items: center; gap: 0.7rem;
+    transition:
+        transform      0.38s cubic-bezier(0.34, 1.56, 0.64, 1),
+        box-shadow     0.28s ease,
+        border-color   0.22s ease;
+    animation: cardIn 0.52s cubic-bezier(0.22, 1, 0.36, 1) both;
+    will-change: transform;
+}
+.type-card:nth-child(1) { animation-delay: 0.05s; }
+.type-card:nth-child(2) { animation-delay: 0.13s; }
+.type-card:nth-child(3) { animation-delay: 0.21s; }
+.type-card:nth-child(4) { animation-delay: 0.29s; }
+.type-card:nth-child(5) { animation-delay: 0.37s; }
+.type-card:nth-child(6) { animation-delay: 0.45s; }
+
+/* shimmer */
+.type-card::before {
+    content: '';
+    position: absolute; top: 0; left: -75%;
+    width: 50%; height: 100%;
+    background: linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.55) 50%, transparent 60%);
+    transition: left 0.5s ease;
+    pointer-events: none;
+}
+.type-card:hover::before { left: 130%; }
+
+/* arrow */
+.type-card::after {
+    content: '\F285';
+    font-family: 'bootstrap-icons';
+    position: absolute; bottom: 1rem; right: 1.2rem;
+    font-size: 0.82rem; font-weight: 700;
+    color: var(--accent, #94a3b8);
+    opacity: 0; transform: translateX(-5px);
+    transition: opacity 0.22s ease, transform 0.22s ease;
+}
+.type-card:hover::after { opacity: 0.65; transform: translateX(0); }
+
+/* hover */
+.type-card:hover {
+    transform: translateY(-9px) scale(1.015);
+    border-color: var(--accent);
+    box-shadow: 0 16px 40px rgba(0,0,0,0.1), 0 4px 12px var(--shadow, rgba(0,0,0,0.06));
+    text-decoration: none; color: inherit;
+}
+.type-card:active { transform: translateY(-4px) scale(0.985); transition-duration: 0.12s; }
+
+/* icon circle */
+.type-icon {
+    width: 68px; height: 68px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.75rem;
+    background: var(--accent-bg, #f1f5f9);
+    color: var(--accent, #64748b);
+    flex-shrink: 0;
+    transition: transform 0.38s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease;
+}
+.type-card:hover .type-icon {
+    animation: iconBounce 0.42s cubic-bezier(0.34, 1.56, 0.64, 1) forwards,
+               ringPulse  0.55s ease forwards;
+    transform: scale(1.1);
+}
+
+.type-title {
+    font-size: 1rem; font-weight: 800; color: #1e293b; line-height: 1.3;
+    transition: color 0.2s ease;
+}
+.type-card:hover .type-title { color: var(--accent); }
+
+.type-count {
+    font-size: 0.76rem; font-weight: 600; color: #94a3b8;
+}
+
+/* ── per-type colour tokens ── */
+.ct-public-university    { --accent:#1e3a8a; --accent-bg:#eff6ff; --accent-border:#bfdbfe; --ring:rgba(30,58,138,0.3); --shadow:rgba(30,58,138,0.12); }
+.ct-private-university   { --accent:#7c3aed; --accent-bg:#f5f3ff; --accent-border:#ddd6fe; --ring:rgba(124,58,237,0.3); --shadow:rgba(124,58,237,0.12); }
+.ct-kmtc                 { --accent:#dc2626; --accent-bg:#fef2f2; --accent-border:#fca5a5; --ring:rgba(220,38,38,0.3);  --shadow:rgba(220,38,38,0.12); }
+.ct-public-tvet          { --accent:#059669; --accent-bg:#ecfdf5; --accent-border:#6ee7b7; --ring:rgba(5,150,105,0.3);  --shadow:rgba(5,150,105,0.12); }
+.ct-private-tvet         { --accent:#0891b2; --accent-bg:#ecfeff; --accent-border:#a5f3fc; --ring:rgba(8,145,178,0.3);  --shadow:rgba(8,145,178,0.12); }
+.ct-ttc                  { --accent:#d97706; --accent-bg:#fffbeb; --accent-border:#fde68a; --ring:rgba(217,119,6,0.3);  --shadow:rgba(217,119,6,0.12); }
+.ct-tvet                 { --accent:#059669; --accent-bg:#ecfdf5; --accent-border:#6ee7b7; --ring:rgba(5,150,105,0.3);  --shadow:rgba(5,150,105,0.12); }
+.ct-specialized          { --accent:#0f766e; --accent-bg:#f0fdfa; --accent-border:#99f6e4; --ring:rgba(15,118,110,0.3); --shadow:rgba(15,118,110,0.12); }
+
+/* ── hero ── */
+.hero-badge {
+    display: inline-flex; align-items: center; gap: 0.4rem; margin-bottom: 0.9rem;
+    background: #eff6ff; border: 1px solid #bfdbfe; color: #1d4ed8;
+    border-radius: 20px; padding: 4px 14px; font-size: 0.75rem; font-weight: 700;
+}
+</style>
+
+<!-- hero -->
+<div class="container py-5">
+  <div class="text-center mb-5">
+    <div class="hero-badge"><i class="bi bi-building-fill me-1"></i>Kenya Institutions Directory</div>
+    <h1 class="fw-bold mb-2" style="color:#1e293b;font-size:clamp(1.6rem,4vw,2.2rem);">Browse Institutions</h1>
+    <p class="text-muted mb-0" style="max-width:460px;margin:0 auto;">Universities, KMTCs, TVETs, and TTCs — find the right institution for your pathway.</p>
+  </div>
 
   {% if types %}
-  <div class="row g-4 justify-content-center">
+  <div class="type-grid">
     {% for type in types %}
-    <div class="col-6 col-md-4 col-lg-2">
-      <a href="{% url 'institutions:institution_type_detail' type_slug=type.slug %}" class="text-decoration-none">
-        <div class="inst-type-card card h-100 text-center p-4"
-             style="border-top: 4px solid {{ type.color_code }};">
-          <div class="mx-auto mb-3 d-flex align-items-center justify-content-center"
-               style="width:64px;height:64px;border-radius:50%;background:{{ type.bg_color }};">
-            <i class="{{ type.icon }} fa-2x" style="color:{{ type.color_code }};"></i>
-          </div>
-          <h6 class="fw-bold mb-1" style="font-size:0.95rem;">{{ type.name }}</h6>
-          <div class="text-muted" style="font-size:0.8rem;">
-            {{ type.inst_count }} institution{{ type.inst_count|pluralize }}
-          </div>
-        </div>
-      </a>
-      {% if request.user.is_staff %}
-      <div class="text-center mt-1">
-        <a href="{% url 'admin:institutions_institutiontype_change' type.id %}"
-           class="btn btn-sm btn-outline-secondary" style="font-size:0.72rem;">Edit</a>
+    {% with sl=type.slug|lower %}
+    <a href="{% url 'institutions:institution_type_detail' type_slug=type.slug %}"
+       class="type-card
+         {% if 'public-university' in sl or 'public university' in sl %}ct-public-university
+         {% elif 'private-university' in sl or 'private university' in sl %}ct-private-university
+         {% elif 'kmtc' in sl %}ct-kmtc
+         {% elif 'private-tvet' in sl or 'private tvet' in sl %}ct-private-tvet
+         {% elif 'public-tvet' in sl or 'public tvet' in sl %}ct-public-tvet
+         {% elif 'tvet' in sl %}ct-tvet
+         {% elif 'ttc' in sl %}ct-ttc
+         {% elif 'special' in sl %}ct-specialized
+         {% endif %}">
+
+      <div class="type-icon">
+        {% if 'public-university' in sl or 'public university' in sl %}
+          <i class="bi bi-bank2"></i>
+        {% elif 'private-university' in sl or 'private university' in sl %}
+          <i class="bi bi-building-fill"></i>
+        {% elif 'kmtc' in sl %}
+          <i class="bi bi-hospital-fill"></i>
+        {% elif 'private-tvet' in sl or 'private tvet' in sl %}
+          <i class="bi bi-gear-fill"></i>
+        {% elif 'public-tvet' in sl or 'public tvet' in sl %}
+          <i class="bi bi-tools"></i>
+        {% elif 'tvet' in sl %}
+          <i class="bi bi-wrench-adjustable-circle-fill"></i>
+        {% elif 'ttc' in sl %}
+          <i class="bi bi-pencil-fill"></i>
+        {% elif 'special' in sl %}
+          <i class="bi bi-star-fill"></i>
+        {% else %}
+          <i class="bi bi-buildings-fill"></i>
+        {% endif %}
       </div>
+
+      <div class="type-title">{{ type.name }}</div>
+      {% if type.inst_count is not None %}
+      <div class="type-count">{{ type.inst_count }} institution{{ type.inst_count|pluralize }}</div>
       {% endif %}
-    </div>
+    </a>
+    {% endwith %}
     {% endfor %}
   </div>
 
+  {% if request.user.is_staff %}
+  <div class="text-center mt-4">
+    {% for type in types %}
+    <a href="{% url 'admin:institutions_institutiontype_change' type.id %}"
+       class="btn btn-sm btn-outline-secondary me-1 mb-1" style="font-size:0.72rem;">Edit {{ type.name }}</a>
+    {% endfor %}
+  </div>
+  {% endif %}
+
   {% else %}
   <div class="text-center py-5">
-    <i class="fas fa-university fa-4x text-muted mb-3"></i>
-    <h5 class="text-muted">No institution types available yet</h5>
+    <i class="bi bi-buildings-fill" style="font-size:3rem;color:#94a3b8;"></i>
+    <h5 class="text-muted mt-3">No institution types available yet</h5>
     {% if request.user.is_staff %}
     <a href="/admin/institutions/institutiontype/add/" class="btn btn-primary mt-2">
-      <i class="fas fa-plus me-1"></i>Add Institution Type
+      <i class="bi bi-plus-lg me-1"></i>Add Institution Type
     </a>
     {% endif %}
   </div>
   {% endif %}
 
 </div>
-
-<style>
-.inst-type-card {
-  transition: transform 0.2s, box-shadow 0.2s;
-  border-radius: 1rem;
-}
-.inst-type-card:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 12px 28px rgba(0,0,0,0.12) !important;
-}
-</style>
 {% endblock %}

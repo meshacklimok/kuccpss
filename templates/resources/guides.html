@@ -1,0 +1,394 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}How-To Guides — KUCCPS & KCSE Placement Help{% endblock %}
+
+{% block content %}
+<style>
+.guides-hero {
+    background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 60%, #1d4ed8 100%);
+    color: #fff;
+    padding: 3rem 0 2.5rem;
+}
+.guides-hero h1 { font-size: 2rem; font-weight: 800; }
+
+.guide-card {
+    background: #fff;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 2rem;
+    margin-bottom: 1.5rem;
+    scroll-margin-top: 80px;
+}
+.guide-card:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.07); }
+.guide-card h3 { font-size: 1.15rem; font-weight: 800; color: #1e293b; }
+
+.step-list { list-style: none; padding: 0; margin: 0; }
+.step-list li {
+    display: flex;
+    gap: 1rem;
+    align-items: flex-start;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid #f1f5f9;
+}
+.step-list li:last-child { border-bottom: none; }
+.step-num {
+    flex-shrink: 0;
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    background: #eff6ff;
+    color: #1d4ed8;
+    font-weight: 800;
+    font-size: 0.85rem;
+    display: flex; align-items: center; justify-content: center;
+}
+.step-text { font-size: 0.88rem; color: #374151; line-height: 1.6; }
+.step-text strong { color: #1e293b; }
+
+.tip-box {
+    background: #fefce8;
+    border: 1.5px solid #fde047;
+    border-radius: 10px;
+    padding: 0.85rem 1rem;
+    font-size: 0.82rem;
+    color: #713f12;
+    margin-top: 1rem;
+}
+.warn-box {
+    background: #fff1f2;
+    border: 1.5px solid #fecdd3;
+    border-radius: 10px;
+    padding: 0.85rem 1rem;
+    font-size: 0.82rem;
+    color: #9f1239;
+    margin-top: 0.75rem;
+}
+.info-box {
+    background: #eff6ff;
+    border: 1.5px solid #bfdbfe;
+    border-radius: 10px;
+    padding: 0.85rem 1rem;
+    font-size: 0.82rem;
+    color: #1e40af;
+    margin-top: 0.75rem;
+}
+
+.guide-icon {
+    width: 48px; height: 48px;
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.2rem;
+    flex-shrink: 0;
+}
+.icon-blue   { background: #dbeafe; color: #1d4ed8; }
+.icon-green  { background: #dcfce7; color: #15803d; }
+.icon-purple { background: #f3e8ff; color: #7e22ce; }
+.icon-amber  { background: #fef3c7; color: #b45309; }
+
+.toc-link {
+    display: block;
+    padding: 0.5rem 0.75rem;
+    border-radius: 8px;
+    font-size: 0.83rem;
+    font-weight: 600;
+    color: #374151;
+    text-decoration: none;
+    transition: background 0.15s, color 0.15s;
+}
+.toc-link:hover { background: #eff6ff; color: #1d4ed8; }
+
+.formula-block {
+    background: #0f172a;
+    color: #7dd3fc;
+    border-radius: 10px;
+    padding: 1rem 1.25rem;
+    font-family: monospace;
+    font-size: 0.88rem;
+    margin: 0.75rem 0;
+    overflow-x: auto;
+}
+</style>
+
+<!-- Hero -->
+<div class="guides-hero">
+    <div class="container">
+        <div class="mb-2" style="color:#93c5fd;font-size:0.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;">
+            Help & Guides
+        </div>
+        <h1 class="mb-2">
+            <i class="fas fa-book-open me-2" style="color:#93c5fd;"></i>
+            How-To Guides
+        </h1>
+        <p style="opacity:.82;max-width:600px;" class="mb-0">
+            Step-by-step answers to the questions every Kenyan KCSE student asks — how cluster points work, how to apply on KUCCPS, and how to pick the right course.
+        </p>
+    </div>
+</div>
+
+<div class="container py-5">
+    <div class="row g-4">
+
+        <!-- Sidebar TOC -->
+        <div class="col-lg-3 d-none d-lg-block">
+            <div style="position:sticky;top:80px;background:#fff;border:1.5px solid #e2e8f0;border-radius:14px;padding:1.25rem;">
+                <p class="fw-bold small text-muted text-uppercase mb-2" style="letter-spacing:.07em;">On this page</p>
+                <a class="toc-link" href="#cluster-points">How cluster points work</a>
+                <a class="toc-link" href="#apply-kuccps">How to apply on KUCCPS</a>
+                <a class="toc-link" href="#choose-course">How to choose the right course</a>
+                <a class="toc-link" href="#kmtc-tvet">Degree vs KMTC vs TVET</a>
+                <a class="toc-link" href="#revision">What is a revision window?</a>
+                <a class="toc-link" href="#helb">HELB funding basics</a>
+                <hr>
+                <a href="{% url 'resources:kuccps_calendar' %}" class="toc-link" style="color:#1d4ed8;">
+                    <i class="fas fa-calendar-alt me-1"></i> KUCCPS Calendar
+                </a>
+                <a href="{% url 'clusterpoints:calculator' %}" class="toc-link" style="color:#15803d;">
+                    <i class="fas fa-calculator me-1"></i> Cluster Calculator
+                </a>
+            </div>
+        </div>
+
+        <!-- Guides -->
+        <div class="col-lg-9">
+
+            <!-- Guide 1: Cluster Points -->
+            <div class="guide-card" id="cluster-points">
+                <div class="d-flex gap-3 align-items-start mb-3">
+                    <div class="guide-icon icon-blue"><i class="fas fa-calculator"></i></div>
+                    <div>
+                        <h3 class="mb-1">How KCSE Cluster Points Are Calculated</h3>
+                        <p class="text-muted small mb-0">The official KUCCPS formula — explained simply</p>
+                    </div>
+                </div>
+
+                <p class="small text-muted">Cluster points determine which degree programmes you qualify for at Kenyan universities. There are <strong>61 clusters</strong>, each grouping related programmes (Medicine, Engineering, Law, etc.).</p>
+
+                <ol class="step-list">
+                    <li>
+                        <div class="step-num">1</div>
+                        <div class="step-text"><strong>Your KCSE aggregate (max 84)</strong> is calculated as: Mathematics + best of (English or Kiswahili) + your next 5 best subjects. Maximum possible = 12 × 7 = 84.</div>
+                    </li>
+                    <li>
+                        <div class="step-num">2</div>
+                        <div class="step-text"><strong>Each cluster uses 4 specific subjects</strong> (called core subjects for that cluster). For example, Cluster 9A (Medicine) uses Biology, Chemistry, Physics, and Mathematics. Your best score from each slot is taken.</div>
+                    </li>
+                    <li>
+                        <div class="step-num">3</div>
+                        <div class="step-text"><strong>The weighted formula is applied:</strong></div>
+                    </li>
+                </ol>
+
+                <div class="formula-block">
+Cluster Points = 48 × √( (core_subjects / 48) × (aggregate / 84) )
+                </div>
+
+                <p class="small text-muted">Where <strong>core_subjects</strong> = sum of your 4 cluster subject scores (max 48), and <strong>aggregate</strong> = your total 7-subject aggregate (max 84).</p>
+
+                <div class="tip-box">
+                    <i class="fas fa-lightbulb me-2"></i>
+                    <strong>Simple version:</strong> Higher aggregate + strong performance in the cluster's 4 key subjects = higher cluster points. Maximum cluster points = 48.
+                </div>
+                <div class="info-box mt-2">
+                    <i class="fas fa-calculator me-2"></i>
+                    Use our <a href="{% url 'clusterpoints:calculator' %}">free Cluster Points Calculator</a> — enter your grades and get all 61 cluster scores instantly.
+                </div>
+            </div>
+
+            <!-- Guide 2: Apply on KUCCPS -->
+            <div class="guide-card" id="apply-kuccps">
+                <div class="d-flex gap-3 align-items-start mb-3">
+                    <div class="guide-icon icon-green"><i class="fas fa-globe"></i></div>
+                    <div>
+                        <h3 class="mb-1">How to Apply on the KUCCPS Portal</h3>
+                        <p class="text-muted small mb-0">Step-by-step portal application guide</p>
+                    </div>
+                </div>
+
+                <ol class="step-list">
+                    <li>
+                        <div class="step-num">1</div>
+                        <div class="step-text"><strong>Wait for KCSE results.</strong> KUCCPS only opens after KNEC releases results (usually February–March). You cannot apply before this.</div>
+                    </li>
+                    <li>
+                        <div class="step-num">2</div>
+                        <div class="step-text"><strong>Go to kuccps.net</strong> and click "Student Portal". Log in using your <strong>KCSE index number</strong> and <strong>year of examination</strong> as your credentials.</div>
+                    </li>
+                    <li>
+                        <div class="step-num">3</div>
+                        <div class="step-text"><strong>Review your cluster points.</strong> The portal shows your computed cluster points for each cluster. Confirm they match your grades.</div>
+                    </li>
+                    <li>
+                        <div class="step-num">4</div>
+                        <div class="step-text"><strong>Select degree programme choices.</strong> You can pick up to <strong>6 degree programmes</strong>, ranked 1–6. Rank them in order of preference — KUCCPS places you in the highest-ranked course you qualify for.</div>
+                    </li>
+                    <li>
+                        <div class="step-num">5</div>
+                        <div class="step-text"><strong>Add TVET/KMTC backup choices.</strong> You can also apply for up to 3 TVET or KMTC programmes simultaneously. Always add these as a safety net.</div>
+                    </li>
+                    <li>
+                        <div class="step-num">6</div>
+                        <div class="step-text"><strong>Submit and save your confirmation.</strong> After submitting, save your application confirmation number. You'll need it to track placement and during revision windows.</div>
+                    </li>
+                </ol>
+
+                <div class="warn-box">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <strong>Important:</strong> Submit within the deadline. Late applications are NOT accepted. The portal closes on the exact date announced by KUCCPS — no extensions.
+                </div>
+                <div class="tip-box mt-2">
+                    <i class="fas fa-lightbulb me-2"></i>
+                    Research your choices <em>before</em> the portal opens using our <a href="{% url 'career:home' %}">Career Guidance Engine</a> and <a href="{% url 'courses:course_types_list' %}">course browser</a> so you're ready to submit on day one.
+                </div>
+            </div>
+
+            <!-- Guide 3: Choose course -->
+            <div class="guide-card" id="choose-course">
+                <div class="d-flex gap-3 align-items-start mb-3">
+                    <div class="guide-icon icon-purple"><i class="fas fa-compass"></i></div>
+                    <div>
+                        <h3 class="mb-1">How to Choose the Right Course</h3>
+                        <p class="text-muted small mb-0">Strategy for picking wisely — not just what you qualify for</p>
+                    </div>
+                </div>
+
+                <ol class="step-list">
+                    <li>
+                        <div class="step-num">1</div>
+                        <div class="step-text"><strong>Know your cluster points first.</strong> Use our calculator. This tells you which programmes are within reach and which are out of range.</div>
+                    </li>
+                    <li>
+                        <div class="step-num">2</div>
+                        <div class="step-text"><strong>Match interests, not just scores.</strong> Many students pick Medicine because it's competitive, not because they want to be doctors. Choose a course aligned with what you enjoy — it affects 5+ years of study.</div>
+                    </li>
+                    <li>
+                        <div class="step-num">3</div>
+                        <div class="step-text"><strong>Check the minimum subject requirements.</strong> Some courses require a minimum grade in specific subjects (e.g. Biology C+ for Nursing). Check these on each course page before applying.</div>
+                    </li>
+                    <li>
+                        <div class="step-num">4</div>
+                        <div class="step-text"><strong>Use the 1-2-3-safety strategy.</strong> Choice 1 = your dream (stretch). Choice 2–3 = realistic matches. Choices 4–5 = comfortable qualifiers. Choice 6 = guaranteed safety.</div>
+                    </li>
+                    <li>
+                        <div class="step-num">5</div>
+                        <div class="step-text"><strong>Consider job market outlook.</strong> Ask: what is the employment rate for this course in Kenya? Are there jobs? Clinical Medicine, Nursing, and ICT consistently have high demand.</div>
+                    </li>
+                    <li>
+                        <div class="step-num">6</div>
+                        <div class="step-text"><strong>Think about location and cost.</strong> Public universities charge lower fees. KMTC programmes are 2 years. Your county of residence may qualify you for special county-sponsored slots.</div>
+                    </li>
+                </ol>
+
+                <div class="info-box">
+                    <i class="fas fa-compass me-2"></i>
+                    Our <a href="{% url 'career:home' %}">Career Guidance Engine</a> matches courses to your exact grades and shows your admission chances as VERY HIGH / HIGH / MEDIUM / LOW.
+                </div>
+            </div>
+
+            <!-- Guide 4: Degree vs KMTC vs TVET -->
+            <div class="guide-card" id="kmtc-tvet">
+                <div class="d-flex gap-3 align-items-start mb-3">
+                    <div class="guide-icon icon-amber"><i class="fas fa-balance-scale"></i></div>
+                    <div>
+                        <h3 class="mb-1">Degree vs KMTC vs TVET — Which Should You Choose?</h3>
+                        <p class="text-muted small mb-0">Understanding the different pathways</p>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-bordered table-sm small" style="border-color:#e2e8f0;">
+                        <thead style="background:#f8fafc;">
+                            <tr>
+                                <th>Factor</th>
+                                <th>Degree (University)</th>
+                                <th>KMTC (Clinical/Health)</th>
+                                <th>TVET (Technical)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>Duration</td><td>4–6 years</td><td>2–3 years</td><td>1–3 years</td></tr>
+                            <tr><td>Entry requirement</td><td>C+ mean grade + cluster points</td><td>C mean grade + subject reqs</td><td>D+ or C- depending on level</td></tr>
+                            <tr><td>Fees (approx)</td><td>Ksh 16,000–100,000/yr (public)</td><td>Ksh 50,000–60,000/yr</td><td>Ksh 15,000–40,000/yr</td></tr>
+                            <tr><td>HELB funding</td><td>Yes (most programmes)</td><td>Yes</td><td>Limited</td></tr>
+                            <tr><td>Best for</td><td>Academic careers, management, medicine, law</td><td>Clinical Medicine, Nursing, Lab, Pharmacy</td><td>Engineering, ICT, hospitality, trades</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="tip-box">
+                    <i class="fas fa-lightbulb me-2"></i>
+                    KMTC Clinical Medicine graduates are among the most employable in Kenya. If you qualify, it's often a better practical choice than a 4-year degree in a non-STEM field.
+                </div>
+            </div>
+
+            <!-- Guide 5: Revision windows -->
+            <div class="guide-card" id="revision">
+                <div class="d-flex gap-3 align-items-start mb-3">
+                    <div class="guide-icon icon-blue"><i class="fas fa-redo"></i></div>
+                    <div>
+                        <h3 class="mb-1">What Is a KUCCPS Revision Window?</h3>
+                        <p class="text-muted small mb-0">Second chances to update your choices</p>
+                    </div>
+                </div>
+
+                <p class="small text-muted">After the initial application window closes, KUCCPS opens two <strong>revision windows</strong> where you can change your programme choices.</p>
+
+                <ol class="step-list">
+                    <li>
+                        <div class="step-num">1</div>
+                        <div class="step-text"><strong>1st Revision Window (May–June):</strong> You can change any or all of your choices. This is useful if you made mistakes, found better options, or if cutoff points shifted after the first round.</div>
+                    </li>
+                    <li>
+                        <div class="step-num">2</div>
+                        <div class="step-text"><strong>2nd Revision Window (June–July):</strong> The final chance to update. Changes here are binding — KUCCPS uses these choices for final placement computation.</div>
+                    </li>
+                    <li>
+                        <div class="step-num">3</div>
+                        <div class="step-text"><strong>Only one change per window:</strong> You get one submission per revision window. Plan carefully before making changes.</div>
+                    </li>
+                </ol>
+
+                <div class="warn-box">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Don't rely on revision windows to fix a rushed first application. Do your research before the main window opens.
+                </div>
+            </div>
+
+            <!-- Guide 6: HELB -->
+            <div class="guide-card" id="helb">
+                <div class="d-flex gap-3 align-items-start mb-3">
+                    <div class="guide-icon icon-green"><i class="fas fa-hand-holding-usd"></i></div>
+                    <div>
+                        <h3 class="mb-1">HELB Funding — The Basics</h3>
+                        <p class="text-muted small mb-0">Higher Education Loans Board — what you need to know</p>
+                    </div>
+                </div>
+
+                <ol class="step-list">
+                    <li>
+                        <div class="step-num">1</div>
+                        <div class="step-text"><strong>What HELB covers:</strong> HELB provides loans for tuition fees and a small upkeep allowance. Public universities receive tuition directly; you get an upkeep amount each semester.</div>
+                    </li>
+                    <li>
+                        <div class="step-num">2</div>
+                        <div class="step-text"><strong>Who qualifies:</strong> Kenyan citizen + KUCCPS-placed student at an approved institution. You must be in your first degree. Income-based assessment determines the loan amount (Ksh 35,000–60,000/yr tuition + upkeep).</div>
+                    </li>
+                    <li>
+                        <div class="step-num">3</div>
+                        <div class="step-text"><strong>When to apply:</strong> HELB applications open around July–August each year for the new academic year. Apply at helb.co.ke immediately after placement — don't wait.</div>
+                    </li>
+                    <li>
+                        <div class="step-num">4</div>
+                        <div class="step-text"><strong>Repayment:</strong> Loan repayment begins 1 year after completing your course or 2 years after the loan start date, whichever comes first. Interest is 4% per annum.</div>
+                    </li>
+                </ol>
+
+                <div class="info-box">
+                    <i class="fas fa-info-circle me-2"></i>
+                    KMTC programmes also qualify for HELB funding. TVET programmes are partially covered under the TVET CDACC scheme — check directly with your institution.
+                </div>
+            </div>
+
+        </div><!-- /guides col -->
+    </div>
+</div>
+{% endblock %}

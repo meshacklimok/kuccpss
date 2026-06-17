@@ -1,0 +1,400 @@
+{% extends "base.html" %}
+
+{% block title %}2026 Cutoff Predictor — KUCCPSS{% endblock %}
+{% block meta %}<meta name="description" content="Predict your 2026 KUCCPS course eligibility based on 2021–2024 historical cutoff point trends.">{% endblock %}
+
+{% block extra_head %}
+<style>
+.pred-card {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  transition: transform .22s cubic-bezier(.34,1.56,.64,1), box-shadow .22s;
+}
+.pred-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(30,58,138,.11); }
+
+.cutoff-badge {
+  display: inline-flex; flex-direction: column; align-items: center;
+  background: var(--bg); border-radius: 8px; padding: 5px 12px; min-width: 64px;
+  border: 1px solid var(--border);
+}
+.cutoff-value { font-size: 1.25rem; font-weight: 800; line-height: 1.1; }
+.cutoff-label { font-size: .62rem; color: var(--muted); letter-spacing: .04em; text-transform: uppercase; }
+
+.range-bar-wrap { height: 6px; border-radius: 3px; background: var(--bg); border: 1px solid var(--border); position: relative; overflow: visible; }
+.range-bar { height: 100%; border-radius: 3px; background: linear-gradient(90deg, var(--accent), var(--primary-light)); }
+.your-score-tick {
+  position: absolute; top: -5px;
+  width: 3px; height: 16px; background: #f97316; border-radius: 2px;
+  transform: translateX(-50%);
+}
+
+.elig-pill {
+  font-size: .7rem; font-weight: 700; padding: 3px 10px; border-radius: 20px; white-space: nowrap;
+}
+.elig-highlikelihood { background: #bbf7d0; color: #14532d; }
+.elig-likely         { background: #dcfce7; color: #166534; }
+.elig-borderline     { background: #fff7ed; color: #9a3412; }
+.elig-unlikely       { background: #fee2e2; color: #991b1b; }
+
+.trend-up   { color: #dc2626; }
+.trend-down { color: #16a34a; }
+.trend-flat { color: var(--muted); }
+
+.filter-bar { background: var(--white); border: 1px solid var(--border); border-radius: var(--radius-sm); }
+
+.elig-filter-btn {
+  font-size: .78rem; font-weight: 600; padding: 5px 14px; border-radius: 20px;
+  border: 2px solid transparent; cursor: pointer; transition: all .18s;
+}
+.elig-filter-btn.active-highlikelihood { background:#bbf7d0; color:#14532d; border-color:#16a34a; }
+.elig-filter-btn.active-likely         { background:#dcfce7; color:#166534; border-color:#4ade80; }
+.elig-filter-btn.active-borderline     { background:#fff7ed; color:#9a3412; border-color:#f97316; }
+.elig-filter-btn.active-unlikely       { background:#fee2e2; color:#991b1b; border-color:#dc2626; }
+.elig-filter-btn.inactive         { background:var(--bg); color:var(--muted); border-color:var(--border); }
+.elig-filter-btn.btn-all          { background:var(--bg); color:var(--dark); border-color:var(--border); }
+.elig-filter-btn.btn-all.active   { background:var(--primary); color:#fff; border-color:var(--primary); }
+
+.no-scores-notice {
+  border: 2px dashed var(--border); border-radius: var(--radius-sm);
+  padding: 1.25rem; text-align: center; background: var(--bg);
+}
+
+.method-badge {
+  display: inline-block; font-size: .62rem; font-weight: 700; padding: 2px 6px;
+  border-radius: 4px; text-transform: uppercase; letter-spacing: .03em;
+}
+.method-wma   { background: #e0f2fe; color: #0369a1; }
+.method-trend { background: #f0fdf4; color: #15803d; }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="page-hero">
+  <div class="container">
+    <div class="row align-items-center gy-3">
+      <div class="col-md-7">
+        <div class="d-flex align-items-center gap-2 mb-1 opacity-75" style="font-size:.85rem;">
+          <i class="fas fa-chart-line"></i>
+          <span>Based on 2021–2026 historical data · Two prediction methods</span>
+        </div>
+        <h1 class="mb-1">2026 Cutoff Predictor</h1>
+        <p class="mb-0 opacity-75">
+          See each course's predicted 2026 cutoff using <strong>Weighted Average</strong> and
+          <strong>Linear Trend</strong> methods.
+          {% if has_scores %}Your scores are loaded — eligibility shown automatically.{% endif %}
+        </p>
+      </div>
+      <div class="col-md-5">
+        <div class="d-flex gap-2">
+          <a href="{% url 'predictor:quick_pdf' %}"
+             class="btn btn-light fw-semibold flex-fill {% if not has_scores %}disabled{% endif %}">
+            <i class="fas fa-file-pdf me-1 text-danger"></i>Quick PDF
+          </a>
+          <a href="{% url 'predictor:full_report' %}"
+             class="btn btn-warning fw-semibold flex-fill {% if not has_scores %}disabled{% endif %}">
+            <i class="fas fa-file-alt me-1"></i>Full Report
+          </a>
+        </div>
+        {% if not has_scores %}
+        <p class="text-white-50 small mt-1 mb-0">
+          <i class="fas fa-info-circle me-1"></i>
+          <a href="{% url 'clusterpoints:calculator' %}" class="text-white">Calculate your cluster points</a>
+          first to see eligibility and download PDFs.
+        </p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="container py-4 pb-5">
+
+  {% if not has_scores %}
+  <div class="no-scores-notice mb-4">
+    <i class="fas fa-calculator fa-2x text-muted mb-2 d-block"></i>
+    <p class="mb-2 fw-semibold">No cluster scores found</p>
+    <p class="text-muted small mb-3">
+      Calculate your KCSE cluster points first. Your scores are then used to show predicted
+      eligibility for every course below.
+    </p>
+    <a href="{% url 'clusterpoints:calculator' %}" class="btn btn-primary-custom">
+      <i class="fas fa-calculator me-1"></i>Go to Calculator
+    </a>
+  </div>
+  {% endif %}
+
+  <!-- ── Filter bar ───────────────────────────────────────────────────────── -->
+  <form method="get" id="filter-form" class="filter-bar p-3 mb-3">
+    <div class="row g-2 align-items-end">
+      <div class="col-md-4">
+        <label class="form-label small fw-semibold mb-1">Search course</label>
+        <div class="input-group">
+          <span class="input-group-text bg-transparent border-end-0">
+            <i class="fas fa-search text-muted"></i>
+          </span>
+          <input type="search" name="q" value="{{ query }}"
+                 class="form-control border-start-0"
+                 placeholder="e.g. Nursing, Engineering…">
+        </div>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label small fw-semibold mb-1">KUCCPS Cluster (1–20)</label>
+        <select name="cluster" class="form-select">
+          <option value="">All 20 clusters</option>
+          {% for cl in kuccps_clusters %}
+          <option value="{{ cl.number }}"
+            {% if cluster_num == cl.number|stringformat:"s" %}selected{% endif %}>
+            Cluster {{ cl.number }} — {{ cl.name }}
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label small fw-semibold mb-1">Course type</label>
+        <select name="type" class="form-select">
+          <option value="">All types</option>
+          {% for ct in course_types %}
+          <option value="{{ ct.slug }}"
+            {% if course_type_slug == ct.slug %}selected{% endif %}>{{ ct.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-2">
+        <button type="submit" class="btn btn-primary-custom w-100">
+          <i class="fas fa-filter me-1"></i>Filter
+        </button>
+      </div>
+    </div>
+  </form>
+
+  <!-- ── Eligibility filter buttons (only when scores available) ──────────── -->
+  {% if has_scores %}
+  <div class="d-flex flex-wrap gap-2 align-items-center mb-3">
+    <span class="text-muted small fw-semibold me-1">Filter by eligibility:</span>
+
+    <a href="?q={{ query }}&cluster={{ cluster_num }}&type={{ course_type_slug }}"
+       class="elig-filter-btn btn-all {% if not status_filter %}active{% endif %} text-decoration-none">
+      All
+    </a>
+    <a href="?q={{ query }}&cluster={{ cluster_num }}&type={{ course_type_slug }}&status=HighLikelihood"
+       class="elig-filter-btn {% if status_filter == 'HighLikelihood' %}active-highlikelihood{% else %}inactive{% endif %} text-decoration-none">
+      <i class="fas fa-circle-check me-1"></i>High Likelihood
+      {% if elig_counts.HighLikelihood %}<span class="ms-1 fw-normal">({{ elig_counts.HighLikelihood }})</span>{% endif %}
+    </a>
+    <a href="?q={{ query }}&cluster={{ cluster_num }}&type={{ course_type_slug }}&status=Likely"
+       class="elig-filter-btn {% if status_filter == 'Likely' %}active-likely{% else %}inactive{% endif %} text-decoration-none">
+      <i class="fas fa-circle-check me-1"></i>Likely
+      {% if elig_counts.Likely %}<span class="ms-1 fw-normal">({{ elig_counts.Likely }})</span>{% endif %}
+    </a>
+    <a href="?q={{ query }}&cluster={{ cluster_num }}&type={{ course_type_slug }}&status=Borderline"
+       class="elig-filter-btn {% if status_filter == 'Borderline' %}active-borderline{% else %}inactive{% endif %} text-decoration-none">
+      <i class="fas fa-circle-exclamation me-1"></i>Borderline
+      {% if elig_counts.Borderline %}<span class="ms-1 fw-normal">({{ elig_counts.Borderline }})</span>{% endif %}
+    </a>
+    <a href="?q={{ query }}&cluster={{ cluster_num }}&type={{ course_type_slug }}&status=Unlikely"
+       class="elig-filter-btn {% if status_filter == 'Unlikely' %}active-unlikely{% else %}inactive{% endif %} text-decoration-none">
+      <i class="fas fa-circle-xmark me-1"></i>Unlikely
+      {% if elig_counts.Unlikely %}<span class="ms-1 fw-normal">({{ elig_counts.Unlikely }})</span>{% endif %}
+    </a>
+  </div>
+  {% endif %}
+
+  <!-- ── Results count ───────────────────────────────────────────────────── -->
+  <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+    <p class="mb-0 text-muted small">
+      <strong class="text-dark">{{ total_count }}</strong>
+      course–institution combinations
+      {% if status_filter %}with status <span class="elig-pill elig-{{ status_filter|lower }}">{{ status_label }}</span>{% endif %}
+      {% if query or cluster_num or course_type_slug %} matching your search{% endif %}.
+    </p>
+    {% if query or cluster_num or course_type_slug or status_filter %}
+    <a href="{% url 'predictor:index' %}" class="btn btn-outline-secondary btn-sm">
+      <i class="fas fa-times me-1"></i>Clear all filters
+    </a>
+    {% endif %}
+  </div>
+
+  <!-- ── Legend ─────────────────────────────────────────────────────────── -->
+  <div class="d-flex flex-wrap gap-2 mb-3 align-items-center" style="font-size:.8rem;">
+    <span class="text-muted">2026 prediction:  backtested on 720 courses (avg error ±0.96 pts)</span>
+    <span class="ms-3 trend-up small"><i class="fas fa-arrow-trend-up me-1"></i>Rising (harder)</span>
+    <span class="trend-down small"><i class="fas fa-arrow-trend-down me-1"></i>Falling (easier)</span>
+  </div>
+
+  <!-- ── Results ─────────────────────────────────────────────────────────── -->
+  {% if page_obj %}
+  <div class="row g-3">
+    {% for row in page_obj %}
+    <div class="col-12">
+      <div class="pred-card p-3">
+        <div class="row align-items-center gy-2">
+
+          <!-- Course + institution + cluster -->
+          <div class="col-lg-4">
+            <div class="fw-bold">
+              <a href="{% url 'courses:course_detail_no_category' row.course.course_type.slug row.course.slug %}"
+                 class="text-dark text-decoration-none">{{ row.course.name }}</a>
+            </div>
+            <div class="text-muted small">
+              <i class="fas fa-university me-1"></i>
+              <a href="{% url 'institutions:institution_detail' type_slug=row.institution.institution_type.slug institution_slug=row.institution.slug %}"
+                 class="text-secondary text-decoration-none">{{ row.institution.name }}</a>
+            </div>
+            <div class="mt-1 d-flex flex-wrap gap-1">
+              {% if row.kuccps_num %}
+              <span class="badge bg-primary bg-opacity-10 text-primary">
+                Cluster {{ row.kuccps_num }}
+              </span>
+              {% endif %}
+              {% if row.course.course_type %}
+              <span class="badge bg-secondary bg-opacity-10 text-secondary">
+                {{ row.course.course_type.name }}
+              </span>
+              {% endif %}
+            </div>
+          </div>
+
+          <!-- Latest actual cutoff -->
+          <div class="col-6 col-lg-1 text-center">
+            <div class="small text-muted" style="font-size:.65rem; text-transform:uppercase; letter-spacing:.04em;">
+              {{ row.pred.latest_year }}
+            </div>
+            <div class="fw-bold" style="font-size:1.05rem; color:var(--dark);">
+              {{ row.pred.latest_cutoff }}
+            </div>
+          </div>
+
+          <!-- 2026 prediction (single) -->
+          <div class="col-6 col-lg-2 text-center">
+            <div class="small text-muted mb-1" style="font-size:.65rem; text-transform:uppercase; letter-spacing:.04em;">
+              2026 Predicted
+            </div>
+            <div class="cutoff-badge mx-auto">
+              <span class="cutoff-value" style="color:var(--primary);">{{ row.pred.predicted }}</span>
+              <span class="cutoff-label">/ 48</span>
+            </div>
+            <div class="text-muted mt-1" style="font-size:.65rem;">
+              {{ row.pred.low }} – {{ row.pred.high }}
+            </div>
+          </div>
+
+          <!-- Trend direction -->
+          <div class="col-6 col-lg-1 text-center">
+            {% if row.pred.trend == "rising" %}
+            <span class="trend-up small fw-semibold">
+              <i class="fas fa-arrow-trend-up d-block fa-lg mb-1"></i>Rising
+            </span>
+            {% elif row.pred.trend == "falling" %}
+            <span class="trend-down small fw-semibold">
+              <i class="fas fa-arrow-trend-down d-block fa-lg mb-1"></i>Falling
+            </span>
+            {% else %}
+            <span class="trend-flat small fw-semibold">
+              <i class="fas fa-minus d-block fa-lg mb-1"></i>Stable
+            </span>
+            {% endif %}
+            <div class="text-muted" style="font-size:.65rem;">{{ row.pred.years_used }}yr data</div>
+          </div>
+
+          <!-- Score vs range bar -->
+          <div class="col-lg-1">
+            {% if row.score is not None %}
+            <div class="small fw-semibold mb-1">Your: {{ row.score|floatformat:1 }}</div>
+            <div class="range-bar-wrap">
+              <div class="range-bar"
+                   style="width:{{ row.pred.predicted|floatformat:0 }}%"></div>
+              <div class="your-score-tick"
+                   style="left:{{ row.score|floatformat:0 }}%"></div>
+            </div>
+            <div style="font-size:.62rem;color:var(--muted);">vs cutoff {{ row.pred.predicted }}</div>
+            {% else %}
+            <span class="text-muted" style="font-size:.72rem;">
+              <a href="{% url 'clusterpoints:calculator' %}">Score?</a>
+            </span>
+            {% endif %}
+          </div>
+
+          <!-- Eligibility badge -->
+          <div class="col-lg-1 text-center">
+            {% if row.elig %}
+            <span class="elig-pill elig-{{ row.elig.key|lower }}">
+              {{ row.elig.label }}
+            </span>
+            {% else %}
+            <span class="text-muted small">—</span>
+            {% endif %}
+          </div>
+
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- Pagination -->
+  {% if page_obj.has_other_pages %}
+  <nav class="mt-4">
+    <ul class="pagination justify-content-center flex-wrap">
+      {% if page_obj.has_previous %}
+      <li class="page-item">
+        <a class="page-link"
+           href="?page={{ page_obj.previous_page_number }}&q={{ query }}&cluster={{ cluster_num }}&type={{ course_type_slug }}&status={{ status_filter }}">
+          <i class="fas fa-chevron-left"></i>
+        </a>
+      </li>
+      {% endif %}
+      {% for num in page_obj.paginator.page_range %}
+        {% if num == page_obj.number %}
+        <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+        {% elif num == 1 or num == page_obj.paginator.num_pages or num >= page_obj.number|add:"-2" and num <= page_obj.number|add:"2" %}
+        <li class="page-item">
+          <a class="page-link"
+             href="?page={{ num }}&q={{ query }}&cluster={{ cluster_num }}&type={{ course_type_slug }}&status={{ status_filter }}">{{ num }}</a>
+        </li>
+        {% elif num == page_obj.number|add:"-3" or num == page_obj.number|add:"3" %}
+        <li class="page-item disabled"><span class="page-link">…</span></li>
+        {% endif %}
+      {% endfor %}
+      {% if page_obj.has_next %}
+      <li class="page-item">
+        <a class="page-link"
+           href="?page={{ page_obj.next_page_number }}&q={{ query }}&cluster={{ cluster_num }}&type={{ course_type_slug }}&status={{ status_filter }}">
+          <i class="fas fa-chevron-right"></i>
+        </a>
+      </li>
+      {% endif %}
+    </ul>
+  </nav>
+  {% endif %}
+
+  {% else %}
+  <div class="text-center py-5">
+    <i class="fas fa-search fa-3x text-muted mb-3 d-block"></i>
+    <h5 class="fw-bold">No results found</h5>
+    <p class="text-muted">Try a different search term, cluster, or eligibility filter.</p>
+    <a href="{% url 'predictor:index' %}" class="btn btn-outline-primary btn-sm">Clear all filters</a>
+  </div>
+  {% endif %}
+
+  <!-- Disclaimer -->
+  <div class="alert alert-warning mt-5 d-flex gap-3 align-items-start">
+    <i class="fas fa-triangle-exclamation fa-lg flex-shrink-0 mt-1"></i>
+   <div>
+  <strong>Important Disclaimer:</strong>
+The information, admission predictions, cutoff points predictions
+, course recommendations, and career guidance provided 
+on this platform are for educational and informational purposes only. While we strive to provide accurate and
+ up-to-date information based on historical data and analytical models, we do not guarantee admission, placement, 
+ or the accuracy of future cutoff points. Users are solely responsible for verifying all requirements, deadlines,
+  and application decisions with KUCCPS and the relevant institutions. We shall not be held responsible or liable 
+  for any loss, damages, missed opportunities, admission outcomes, or decisions made based on the information provided 
+  on this platform.
+
+</div>
+  </div>
+
+</div>
+
+{% endblock %}

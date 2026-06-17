@@ -1,26 +1,105 @@
 {% extends "base.html" %}
-{% block title %}Dashboard — KUCCPSS{% endblock %}
+{% block title %}My Dashboard — KUCCPSS{% endblock %}
 
 {% block content %}
-<div class="page-hero">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+<style>
+.dash-section-title {
+    font-size: 1rem; font-weight: 800; color: #1e293b;
+    letter-spacing: -0.02em; margin-bottom: 0;
+}
+.stat-card {
+    border-radius: 14px; padding: 1.1rem 1rem; text-align: center;
+    border: 1.5px solid #e2e8f0; background: #fff;
+    transition: box-shadow 0.15s, transform 0.15s; text-decoration: none; display: block;
+}
+.stat-card:hover { box-shadow: 0 4px 14px rgba(0,0,0,0.09); transform: translateY(-2px); }
+.stat-card .stat-num { font-size: 1.9rem; font-weight: 900; line-height: 1.1; }
+.stat-card .stat-lbl { font-size: 0.72rem; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 2px; }
+
+.reco-carousel-wrap { position: relative; padding: 0 18px; }
+.reco-carousel-outer { overflow: hidden; }
+.reco-carousel-track { display: flex; transition: transform 0.38s cubic-bezier(0.4,0,0.2,1); will-change: transform; }
+.reco-carousel-item { flex-shrink: 0; padding: 0 5px; box-sizing: border-box; }
+.reco-car-btn {
+    position: absolute; top: 44%; transform: translateY(-50%);
+    width: 32px; height: 32px; border-radius: 50%; border: none;
+    background: #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; color: #1e3a8a; z-index: 5; padding: 0;
+    transition: box-shadow 0.15s;
+}
+.reco-car-btn:hover { box-shadow: 0 4px 14px rgba(0,0,0,0.2); }
+.rc-prev { left: -4px; }
+.rc-next { right: -4px; }
+.reco-dots-bar { display: flex; justify-content: center; gap: 5px; margin-top: 10px; }
+.reco-dot { width: 8px; height: 8px; border-radius: 4px; border: none; padding: 0;
+    background: #cbd5e1; cursor: pointer; transition: all 0.22s; }
+.reco-dot.active { width: 20px; background: #4f46e5; }
+.reco-card {
+    width: 100%; background: #fff; border-radius: 14px;
+    border: 2px solid #e2e8f0; padding: 1rem;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    transition: box-shadow 0.15s, transform 0.15s;
+    display: flex; flex-direction: column; height: 100%;
+}
+.reco-card:hover { box-shadow: 0 6px 20px rgba(0,0,0,0.1); transform: translateY(-2px); }
+.reco-card .r-course {
+    font-size: 0.88rem; font-weight: 700; color: #1e293b; line-height: 1.3; margin-bottom: 0.2rem;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.reco-card .r-inst { font-size: 0.73rem; color: #64748b; }
+
+.watchlist-item {
+    display: flex; align-items: center; gap: 0.75rem;
+    padding: 0.65rem 0.75rem; border-radius: 10px;
+    border: 1.5px solid #f1f5f9; background: #f8fafc;
+    transition: border-color 0.15s;
+}
+.watchlist-item:hover { border-color: #a5b4fc; }
+.watchlist-num {
+    width: 34px; height: 34px; border-radius: 8px;
+    background: #eef2ff; color: #4f46e5; font-weight: 800;
+    font-size: 0.8rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.timeline-days { font-size: 3.2rem; font-weight: 900; line-height: 1; }
+.avatar-circle {
+    width: 76px; height: 76px; border-radius: 50%;
+    background: #e8f0fe; color: #4f46e5;
+    font-size: 2rem; font-weight: 900;
+    display: flex; align-items: center; justify-content: center;
+}
+
+</style>
+
+<!-- ════ HERO ════ -->
+<div class="page-hero" style="padding:1.6rem 0;">
   <div class="container">
-    <div class="d-flex align-items-center gap-3">
+    <div class="d-flex align-items-center gap-3 flex-wrap">
       {% if user.profile_picture %}
-      <img src="{{ user.profile_picture.url }}" width="64" height="64"
-           class="rounded-circle border border-white shadow" style="object-fit:cover;" alt="">
+      <img src="{{ user.profile_picture.url }}" width="58" height="58"
+           class="rounded-circle border border-white shadow-sm" style="object-fit:cover;" alt="">
       {% else %}
-      <div class="rounded-circle bg-white d-flex align-items-center justify-content-center shadow"
-           style="width:64px;height:64px;font-size:1.6rem;color:var(--primary);font-weight:800;">
+      <div class="rounded-circle bg-white d-flex align-items-center justify-content-center shadow-sm"
+           style="width:58px;height:58px;font-size:1.4rem;color:var(--primary);font-weight:900;">
         {{ user.full_name|first|upper|default:user.email|first|upper }}
       </div>
       {% endif %}
       <div>
-        <h1 class="mb-0">Welcome back, {{ user.full_name|default:user.email }}!</h1>
-        <p class="mb-0 opacity-75">
-          {% if user.county %}{{ user.county }} · {% endif %}
+        <h1 class="mb-0 fs-4">Welcome back, {{ user.full_name|default:user.email }}!</h1>
+        <p class="mb-0 opacity-75 small">
+          {% if user.county %}<i class="bi bi-geo-alt me-1"></i>{{ user.county }} · {% endif %}
           {% if user.kcse_year %}KCSE {{ user.kcse_year }} · {% endif %}
           {{ user.email }}
         </p>
+      </div>
+      <div class="ms-auto d-flex gap-2 flex-wrap">
+        <a href="{% url 'career:home' %}" class="btn btn-light btn-sm fw-600">
+          <i class="fas fa-rocket me-1"></i>Career Engine
+        </a>
+        <a href="{% url 'clusterpoints:calculator' %}" class="btn btn-light btn-sm fw-600">
+          <i class="fas fa-calculator me-1"></i>Calculator
+        </a>
       </div>
     </div>
   </div>
@@ -28,199 +107,679 @@
 
 <div class="container pb-5">
 
-  <!-- Summary Cards -->
-  <div class="row g-3 mb-4">
-    <div class="col-6 col-xl-2">
-      <a href="{% url 'clusterpoints:eligible_courses' %}" class="text-decoration-none">
-        <div class="card card-accent-green p-3 text-center h-100">
-          <div class="fs-2 fw-bold text-success">{{ eligible_count|default:"0" }}</div>
-          <div class="small text-muted">Eligible Courses</div>
-        </div>
+  <!-- ══ STAT CARDS ══ -->
+  <div class="row g-2 mb-4 mt-3">
+    <div class="col-4 col-xl-2">
+      <a href="{% url 'clusterpoints:eligible_courses' %}" class="stat-card" style="border-color:#bbf7d0;">
+        <div class="stat-num text-success">{{ eligible_count|default:"0" }}</div>
+        <div class="stat-lbl">Eligible Courses</div>
       </a>
     </div>
-    <div class="col-6 col-xl-2">
-      <a href="{% url 'accounts:saved_courses' %}" class="text-decoration-none">
-        <div class="card card-accent-blue p-3 text-center h-100">
-          <div class="fs-2 fw-bold" style="color:var(--primary);">{{ saved_count|default:"0" }}</div>
-          <div class="small text-muted">Saved Courses</div>
-        </div>
+    <div class="col-4 col-xl-2">
+      <a href="{% url 'accounts:saved_courses' %}" class="stat-card" style="border-color:#fde68a;">
+        <div class="stat-num" style="color:#d97706;">{{ saved_count|default:"0" }}</div>
+        <div class="stat-lbl">Watchlist</div>
       </a>
     </div>
-    <div class="col-6 col-xl-2">
-      <a href="{% url 'accounts:applications' %}" class="text-decoration-none">
-        <div class="card p-3 text-center h-100">
-          <div class="fs-2 fw-bold text-warning">{{ applications|length|default:"0" }}</div>
-          <div class="small text-muted">Applications</div>
-        </div>
+    <div class="col-4 col-xl-2">
+      <a href="{% url 'accounts:shortlist' %}" class="stat-card" style="border-color:#bfdbfe;">
+        <div class="stat-num text-primary">{{ shortlist_count|default:"0" }}</div>
+        <div class="stat-lbl">Shortlist</div>
       </a>
     </div>
-    <div class="col-6 col-xl-2">
-      <a href="{% url 'career:career_profiles' %}" class="text-decoration-none">
-        <div class="card p-3 text-center h-100">
-          <div class="fs-2 fw-bold" style="color:#7c3aed;">{{ recommended_careers|length|default:"0" }}</div>
-          <div class="small text-muted">Career Picks</div>
-        </div>
+    <div class="col-4 col-xl-2">
+      <a href="{% url 'career:career_results' %}" class="stat-card" style="border-color:#ddd6fe;">
+        <div class="stat-num" style="color:#7c3aed;">{{ snapshot.total_matches|default:"—" }}</div>
+        <div class="stat-lbl">Career Matches</div>
       </a>
     </div>
-    <div class="col-6 col-xl-2">
-      <a href="{% url 'resources:resource_list' %}" class="text-decoration-none">
-        <div class="card p-3 text-center h-100">
-          <div class="fs-2 fw-bold text-info"><i class="fas fa-book-open"></i></div>
-          <div class="small text-muted">Resources</div>
-        </div>
+    <div class="col-4 col-xl-2">
+      <a href="{% url 'career:career_profiles' %}" class="stat-card" style="border-color:#fecaca;">
+        <div class="stat-num" style="color:#dc2626;">{{ recommended_careers|length }}</div>
+        <div class="stat-lbl">Career Ideas</div>
       </a>
     </div>
-    <div class="col-6 col-xl-2">
-      <a href="{% url 'accounts:notifications' %}" class="text-decoration-none">
-        <div class="card p-3 text-center h-100 position-relative">
-          <div class="fs-2 fw-bold text-secondary"><i class="fas fa-bell"></i></div>
-          {% if unread_count %}
-          <span class="position-absolute top-0 end-0 badge bg-danger rounded-pill m-2">
-            {{ unread_count }}
-          </span>
-          {% endif %}
-          <div class="small text-muted">Notifications</div>
-        </div>
+    <div class="col-4 col-xl-2">
+      <a href="{% url 'accounts:notifications' %}" class="stat-card position-relative" style="border-color:#e9d5ff;">
+        <div class="stat-num text-secondary"><i class="fas fa-bell" style="font-size:1.5rem;"></i></div>
+        {% if unread_count %}
+        <span class="position-absolute top-0 end-0 badge bg-danger rounded-pill m-2" style="font-size:0.65rem;">
+          {{ unread_count }}
+        </span>
+        {% endif %}
+        <div class="stat-lbl">Notifications</div>
       </a>
     </div>
   </div>
 
+  <!-- ══ RECOMMENDED FOR YOU ══ -->
+  {% if snapshot and snapshot.top_matches_json %}
+  <div class="card mb-4 border-0 overflow-hidden" style="border-radius:1.1rem;box-shadow:0 2px 12px rgba(0,0,0,0.07);">
+    <div class="px-4 pt-4 pb-3 d-flex justify-content-between align-items-center"
+         style="background:linear-gradient(120deg,#1e3a8a 0%,#4f46e5 100%);color:#fff;">
+      <div>
+        <div class="d-flex align-items-center gap-2 mb-1">
+          <i class="fas fa-star" style="color:#fbbf24;font-size:1.1rem;"></i>
+          <span style="font-size:1rem;font-weight:800;">Recommended For You</span>
+        </div>
+        <p class="mb-0 opacity-75 small">
+          {{ snapshot.pathway }} pathway ·
+          {{ snapshot.total_matches }} total matches
+          {% if snapshot.tier_counts_json.BestMatch %} · {{ snapshot.tier_counts_json.BestMatch }} Best Match{% endif %}
+        </p>
+      </div>
+      <a href="{% url 'career:career_results' %}" class="btn btn-sm btn-light fw-600">
+        View all <i class="bi bi-arrow-right ms-1"></i>
+      </a>
+    </div>
+
+    <div class="px-4 pt-2 pb-3 bg-white">
+      <div class="reco-carousel-wrap" id="recoWrapReal">
+        <div class="reco-carousel-outer">
+          <div class="reco-carousel-track">
+            {% for m in snapshot.top_matches_json %}
+            <div class="reco-carousel-item">
+              <div class="reco-card" style="border-color:{{ m.tier_color }};">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                  <span style="font-size:0.68rem;font-weight:700;padding:3px 10px;border-radius:20px;
+                               background:{{ m.tier_color }}33;color:{{ m.tier_color }};">
+                    {{ m.tier }}
+                  </span>
+                  {% if snapshot.pathway == 'Degree' %}
+                  {% if m.diff >= 0 %}
+                  <span style="font-size:0.72rem;font-weight:800;color:#15803d;">+{{ m.diff|floatformat:1 }}pts</span>
+                  {% else %}
+                  <span style="font-size:0.72rem;font-weight:800;color:#dc2626;">{{ m.diff|floatformat:1 }}pts</span>
+                  {% endif %}
+                  {% endif %}
+                </div>
+                <div class="r-course">{{ m.course_name }}</div>
+                <div class="r-inst mb-2"><i class="fas fa-university me-1"></i>{{ m.institution_name }}</div>
+                <div class="d-flex align-items-center justify-content-between mt-auto pt-2" style="border-top:1px solid #f1f5f9;">
+                  <span style="font-size:0.7rem;color:#94a3b8;">
+                    {% if snapshot.pathway == 'Degree' %}
+                    {% if m.kuccps_num %}Cluster {{ m.kuccps_num }} · {% endif %}Cutoff: {{ m.cutoff|default:"—" }}
+                    {% else %}
+                    Min. Grade: <strong style="color:#b91c1c;">{{ m.cutoff|default:"—" }}</strong>
+                    {% endif %}
+                  </span>
+                  <button class="save-btn-dash btn btn-link btn-sm p-0"
+                          data-course-id="{{ m.course_id }}"
+                          data-saved="{% if m.course_id in saved_course_ids %}true{% else %}false{% endif %}"
+                          title="{% if m.course_id in saved_course_ids %}Saved{% else %}Save to watchlist{% endif %}"
+                          style="font-size:0.95rem;border:none;background:none;
+                                 color:{% if m.course_id in saved_course_ids %}#f59e0b{% else %}#cbd5e1{% endif %};">
+                    <i class="{% if m.course_id in saved_course_ids %}fas{% else %}far{% endif %} fa-bookmark"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+            {% endfor %}
+            <!-- End CTA card -->
+            <div class="reco-carousel-item">
+              <div class="reco-card align-items-center justify-content-center text-center"
+                   style="background:#f8fafc;border-style:dashed;border-color:#cbd5e1;color:#475569;min-height:160px;">
+                <i class="fas fa-th-list fa-2x text-muted mb-2"></i>
+                <div class="fw-600 small mb-1">{{ snapshot.total_matches }} total matches</div>
+                <a href="{% url 'career:career_results' %}" class="btn btn-sm btn-primary mt-1">View All</a>
+              </div>
+            </div>
+          </div>
+        </div>
+        <button class="reco-car-btn rc-prev" aria-label="Previous" onclick="rcMove('recoWrapReal',-1)">
+          <i class="bi bi-chevron-left" style="font-size:0.85rem;"></i>
+        </button>
+        <button class="reco-car-btn rc-next" aria-label="Next" onclick="rcMove('recoWrapReal',1)">
+          <i class="bi bi-chevron-right" style="font-size:0.85rem;"></i>
+        </button>
+        <div class="reco-dots-bar" id="recoDotsReal"></div>
+      </div>
+    </div>
+  </div>
+
+  {% else %}
+  <!-- Sample "Recommended For You" — new user empty state -->
+  <div class="card mb-4 border-0 overflow-hidden" style="border-radius:1.1rem;box-shadow:0 2px 12px rgba(0,0,0,0.07);">
+
+    <!-- Header (identical style to real section) -->
+    <div class="px-4 pt-4 pb-3 d-flex justify-content-between align-items-center"
+         style="background:linear-gradient(120deg,#1e3a8a 0%,#4f46e5 100%);color:#fff;">
+      <div>
+        <div class="d-flex align-items-center gap-2 mb-1">
+          <i class="fas fa-star" style="color:#fbbf24;font-size:1.1rem;"></i>
+          <span style="font-size:1rem;font-weight:800;">Recommended For You</span>
+        </div>
+        <p class="mb-0 opacity-75 small">
+          Use the Career Engine to view your eligible courses matched to your grades
+        </p>
+      </div>
+      <a href="{% url 'career:home' %}" class="btn btn-sm btn-light fw-600">
+        Launch Engine <i class="bi bi-arrow-right ms-1"></i>
+      </a>
+    </div>
+
+    <!-- Sample cards carousel -->
+    <div class="px-4 pt-2 pb-3 bg-white">
+      <div class="reco-carousel-wrap" id="recoWrapSample">
+        <div class="reco-carousel-outer">
+          <div class="reco-carousel-track">
+
+            <!-- Card 1: Best Match -->
+            <div class="reco-carousel-item">
+              <div class="reco-card" style="border-color:#16a34a;">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                  <span style="font-size:0.68rem;font-weight:700;padding:3px 10px;border-radius:20px;background:#dcfce7;color:#16a34a;">Best Match</span>
+                  <span style="font-size:0.72rem;font-weight:800;color:#15803d;">+2.2pts</span>
+                </div>
+                <div class="r-course">Medicine and Surgery</div>
+                <div class="r-inst mb-2"><i class="fas fa-university me-1"></i>University of Nairobi</div>
+                <div class="d-flex align-items-center justify-content-between mt-auto pt-2" style="border-top:1px solid #f1f5f9;">
+                  <span style="font-size:0.7rem;color:#94a3b8;">Cluster 15 · Cutoff: 38.0</span>
+                  <i class="far fa-bookmark" style="color:#cbd5e1;font-size:0.95rem;"></i>
+                </div>
+              </div>
+            </div>
+
+            <!-- Card 2: Best Match -->
+            <div class="reco-carousel-item">
+              <div class="reco-card" style="border-color:#16a34a;">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                  <span style="font-size:0.68rem;font-weight:700;padding:3px 10px;border-radius:20px;background:#dcfce7;color:#16a34a;">Best Match</span>
+                  <span style="font-size:0.72rem;font-weight:800;color:#15803d;">+1.8pts</span>
+                </div>
+                <div class="r-course">Civil Engineering (BSc)</div>
+                <div class="r-inst mb-2"><i class="fas fa-university me-1"></i>JKUAT</div>
+                <div class="d-flex align-items-center justify-content-between mt-auto pt-2" style="border-top:1px solid #f1f5f9;">
+                  <span style="font-size:0.7rem;color:#94a3b8;">Cluster 4 · Cutoff: 36.5</span>
+                  <i class="far fa-bookmark" style="color:#cbd5e1;font-size:0.95rem;"></i>
+                </div>
+              </div>
+            </div>
+
+            <!-- Card 3: Stretch -->
+            <div class="reco-carousel-item">
+              <div class="reco-card" style="border-color:#2563eb;">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                  <span style="font-size:0.68rem;font-weight:700;padding:3px 10px;border-radius:20px;background:#dbeafe;color:#1d4ed8;">Stretch</span>
+                  <span style="font-size:0.72rem;font-weight:800;color:#dc2626;">-0.5pts</span>
+                </div>
+                <div class="r-course">Computer Science</div>
+                <div class="r-inst mb-2"><i class="fas fa-university me-1"></i>Strathmore University</div>
+                <div class="d-flex align-items-center justify-content-between mt-auto pt-2" style="border-top:1px solid #f1f5f9;">
+                  <span style="font-size:0.7rem;color:#94a3b8;">Cluster 9 · Cutoff: 34.0</span>
+                  <i class="far fa-bookmark" style="color:#cbd5e1;font-size:0.95rem;"></i>
+                </div>
+              </div>
+            </div>
+
+            <!-- Card 4: Stretch -->
+            <div class="reco-carousel-item">
+              <div class="reco-card" style="border-color:#2563eb;">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                  <span style="font-size:0.68rem;font-weight:700;padding:3px 10px;border-radius:20px;background:#dbeafe;color:#1d4ed8;">Stretch</span>
+                  <span style="font-size:0.72rem;font-weight:800;color:#dc2626;">-1.2pts</span>
+                </div>
+                <div class="r-course">Bachelor of Laws (LLB)</div>
+                <div class="r-inst mb-2"><i class="fas fa-university me-1"></i>University of Nairobi</div>
+                <div class="d-flex align-items-center justify-content-between mt-auto pt-2" style="border-top:1px solid #f1f5f9;">
+                  <span style="font-size:0.7rem;color:#94a3b8;">Cluster 12 · Cutoff: 37.5</span>
+                  <i class="far fa-bookmark" style="color:#cbd5e1;font-size:0.95rem;"></i>
+                </div>
+              </div>
+            </div>
+
+            <!-- Card 5: Safe Option -->
+            <div class="reco-carousel-item">
+              <div class="reco-card" style="border-color:#d97706;">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                  <span style="font-size:0.68rem;font-weight:700;padding:3px 10px;border-radius:20px;background:#fef3c7;color:#d97706;">Safe Option</span>
+                  <span style="font-size:0.72rem;font-weight:800;color:#15803d;">+4.5pts</span>
+                </div>
+                <div class="r-course">Nursing (B.Sc.)</div>
+                <div class="r-inst mb-2"><i class="fas fa-university me-1"></i>Kenyatta University</div>
+                <div class="d-flex align-items-center justify-content-between mt-auto pt-2" style="border-top:1px solid #f1f5f9;">
+                  <span style="font-size:0.7rem;color:#94a3b8;">Cluster 13 · Cutoff: 32.0</span>
+                  <i class="far fa-bookmark" style="color:#cbd5e1;font-size:0.95rem;"></i>
+                </div>
+              </div>
+            </div>
+
+            <!-- Card 6: Safe Option -->
+            <div class="reco-carousel-item">
+              <div class="reco-card" style="border-color:#d97706;">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                  <span style="font-size:0.68rem;font-weight:700;padding:3px 10px;border-radius:20px;background:#fef3c7;color:#d97706;">Safe Option</span>
+                  <span style="font-size:0.72rem;font-weight:800;color:#15803d;">+6.8pts</span>
+                </div>
+                <div class="r-course">Architecture (BArch)</div>
+                <div class="r-inst mb-2"><i class="fas fa-university me-1"></i>University of Nairobi</div>
+                <div class="d-flex align-items-center justify-content-between mt-auto pt-2" style="border-top:1px solid #f1f5f9;">
+                  <span style="font-size:0.7rem;color:#94a3b8;">Cluster 5 · Cutoff: 30.0</span>
+                  <i class="far fa-bookmark" style="color:#cbd5e1;font-size:0.95rem;"></i>
+                </div>
+              </div>
+            </div>
+
+            <!-- CTA end card -->
+            <div class="reco-carousel-item">
+              <div class="reco-card align-items-center justify-content-center text-center"
+                   style="background:#f8fafc;border-style:dashed;border-color:#cbd5e1;color:#475569;min-height:160px;">
+                <i class="fas fa-rocket fa-2x mb-2" style="color:#4f46e5;opacity:0.7;"></i>
+                <div class="fw-600 small mb-1">See your real matches</div>
+                <p style="font-size:0.72rem;color:#94a3b8;margin-bottom:8px;">Enter your KCSE grades to get personalised results</p>
+                <a href="{% url 'career:home' %}" class="btn btn-sm btn-primary mt-1">Start Engine</a>
+              </div>
+            </div>
+
+          </div>
+        </div>
+        <button class="reco-car-btn rc-prev" aria-label="Previous" onclick="rcMove('recoWrapSample',-1)">
+          <i class="bi bi-chevron-left" style="font-size:0.85rem;"></i>
+        </button>
+        <button class="reco-car-btn rc-next" aria-label="Next" onclick="rcMove('recoWrapSample',1)">
+          <i class="bi bi-chevron-right" style="font-size:0.85rem;"></i>
+        </button>
+        <div class="reco-dots-bar" id="recoDotsSample"></div>
+      </div>
+    </div>
+
+  </div>
+  {% endif %}
+
+  <!-- ══ MAIN 2-COLUMN LAYOUT ══ -->
   <div class="row g-4">
 
-    <!-- Left Column -->
+    <!-- LEFT (col-lg-8) -->
     <div class="col-lg-8">
 
-      <!-- Cluster Points Chart -->
+      <!-- Cluster Scores chart -->
       {% if latest_result and cluster_results %}
-      <div class="card mb-4 p-4">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-          <h5 class="fw-bold mb-0">
-            <i class="fas fa-chart-bar me-2 text-primary"></i>Your Cluster Points
-          </h5>
+      <div class="card mb-4 p-4 border-0" style="border-radius:1.1rem;box-shadow:0 2px 12px rgba(0,0,0,0.07);">
+        <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
           <div>
-            <span class="badge bg-primary bg-opacity-10 text-primary me-2">
-              Aggregate: {{ latest_result.total_points }} / 84 pts
+            <h5 class="dash-section-title"><i class="fas fa-chart-bar me-2 text-primary"></i>Your Cluster Points</h5>
+            <p class="text-muted small mb-0">Top 8 clusters from your KCSE calculation</p>
+          </div>
+          <div class="d-flex gap-2 align-items-center flex-wrap">
+            <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-2" style="font-size:0.8rem;">
+              Aggregate: {{ latest_result.total_points }}&thinsp;/&thinsp;84
             </span>
             <a href="{% url 'clusterpoints:calculator' %}" class="btn btn-sm btn-outline-primary">
               <i class="fas fa-sync me-1"></i>Recalculate
             </a>
           </div>
         </div>
-        <canvas id="clusterChart" height="120"></canvas>
+        <canvas id="clusterChart" height="110"></canvas>
+        <div class="d-flex gap-3 mt-3 flex-wrap">
+          <span class="d-flex align-items-center gap-1" style="font-size:0.74rem;color:#64748b;">
+            <span style="width:10px;height:10px;border-radius:3px;background:#16a34a;display:inline-block;"></span>Strong (≥36)
+          </span>
+          <span class="d-flex align-items-center gap-1" style="font-size:0.74rem;color:#64748b;">
+            <span style="width:10px;height:10px;border-radius:3px;background:#2563eb;display:inline-block;"></span>Good (24–35)
+          </span>
+          <span class="d-flex align-items-center gap-1" style="font-size:0.74rem;color:#64748b;">
+            <span style="width:10px;height:10px;border-radius:3px;background:#f97316;display:inline-block;"></span>Fair (&lt;24)
+          </span>
+        </div>
       </div>
       {% else %}
-      <div class="card mb-4 p-5 text-center">
+      <div class="card mb-4 p-5 text-center border-0" style="border-radius:1.1rem;background:#f8fafc;">
         <i class="fas fa-calculator fa-3x text-muted mb-3"></i>
-        <h5>No KCSE Results Yet</h5>
-        <p class="text-muted mb-3">Enter your grades to calculate cluster points and see eligible courses.</p>
-        <a href="{% url 'clusterpoints:calculator' %}" class="btn btn-gradient-success px-5">
+        <h5 class="fw-bold">No KCSE Results Yet</h5>
+        <p class="text-muted small mb-3">Enter your grades to calculate cluster points and see eligible courses.</p>
+        <a href="{% url 'clusterpoints:calculator' %}" class="btn btn-primary px-5">
           <i class="fas fa-calculator me-2"></i>Start Calculator
         </a>
       </div>
       {% endif %}
 
       <!-- Quick Actions -->
-      <div class="card mb-4 p-4">
-        <h5 class="fw-bold mb-3"><i class="fas fa-bolt me-2 text-warning"></i>Quick Actions</h5>
+      <div class="card mb-4 p-3 border-0" style="border-radius:1.1rem;box-shadow:0 2px 12px rgba(0,0,0,0.07);">
+        <h6 class="fw-bold mb-3 px-1"><i class="fas fa-bolt me-2 text-warning"></i>Quick Actions</h6>
         <div class="row g-2">
-          <div class="col-6 col-md-3">
+          <div class="col-6 col-sm-3">
             <a href="{% url 'clusterpoints:calculator' %}"
-               class="btn btn-outline-primary w-100 d-flex flex-column align-items-center py-3 gap-1">
-              <i class="fas fa-calculator fa-lg"></i>
-              <small>Calculator</small>
+               class="btn btn-outline-primary w-100 d-flex flex-column align-items-center py-2 gap-1"
+               style="font-size:0.78rem;border-radius:10px;">
+              <i class="fas fa-calculator"></i>Calculator
             </a>
           </div>
-          <div class="col-6 col-md-3">
+          <div class="col-6 col-sm-3">
             <a href="{% url 'clusterpoints:eligible_courses' %}"
-               class="btn btn-outline-success w-100 d-flex flex-column align-items-center py-3 gap-1">
-              <i class="fas fa-check-circle fa-lg"></i>
-              <small>Eligible Courses</small>
+               class="btn btn-outline-success w-100 d-flex flex-column align-items-center py-2 gap-1"
+               style="font-size:0.78rem;border-radius:10px;">
+              <i class="fas fa-check-circle"></i>Eligible
             </a>
           </div>
-          <div class="col-6 col-md-3">
+          <div class="col-6 col-sm-3">
             <a href="{% url 'career:quiz' %}"
-               class="btn btn-outline-warning w-100 d-flex flex-column align-items-center py-3 gap-1">
-              <i class="fas fa-clipboard-list fa-lg"></i>
-              <small>Career Quiz</small>
+               class="btn btn-outline-warning w-100 d-flex flex-column align-items-center py-2 gap-1"
+               style="font-size:0.78rem;border-radius:10px;">
+              <i class="fas fa-clipboard-list"></i>Quiz
             </a>
           </div>
-          <div class="col-6 col-md-3">
+          <div class="col-6 col-sm-3">
             <a href="{% url 'resources:resource_list' %}"
-               class="btn btn-outline-info w-100 d-flex flex-column align-items-center py-3 gap-1">
-              <i class="fas fa-download fa-lg"></i>
-              <small>Guides</small>
+               class="btn btn-outline-info w-100 d-flex flex-column align-items-center py-2 gap-1"
+               style="font-size:0.78rem;border-radius:10px;">
+              <i class="fas fa-book-open"></i>Guides
             </a>
           </div>
         </div>
       </div>
 
-      <!-- Applications -->
-      <div class="card mb-4 p-4">
+      <!-- Career Path & Quiz -->
+      <div class="card mb-4 p-4 border-0" style="border-radius:1.1rem;box-shadow:0 2px 12px rgba(0,0,0,0.07);">
         <div class="d-flex justify-content-between align-items-center mb-3">
-          <h5 class="fw-bold mb-0">
-            <i class="fas fa-file-alt me-2 text-info"></i>My Applications
-          </h5>
-          <a href="{% url 'accounts:application_add' %}" class="btn btn-sm btn-gradient-success">
-            <i class="fas fa-plus me-1"></i>Add
+          <h6 class="fw-bold mb-0"><i class="fas fa-compass me-2 text-primary"></i>Career Path</h6>
+          <a href="{% url 'career:career_profiles' %}" class="small" style="color:#4f46e5;">See all</a>
+        </div>
+        {% if quiz_submission %}
+        <div class="p-3 rounded-3 mb-3 d-flex gap-2 align-items-start"
+             style="background:#f0fdf4;border:1.5px solid #bbf7d0;">
+          <i class="fas fa-check-circle text-success mt-1 flex-shrink-0"></i>
+          <div>
+            <div class="fw-600 small text-success">Quiz Complete</div>
+            <div class="text-muted" style="font-size:0.73rem;">{{ quiz_submission.created_at|date:"d M Y" }}</div>
+          </div>
+          <a href="{% url 'career:quiz_results' %}" class="btn btn-sm btn-outline-success ms-auto">Results</a>
+        </div>
+        {% else %}
+        <div class="p-3 rounded-3 mb-3 d-flex gap-2 align-items-start"
+             style="background:#fef9c3;border:1.5px solid #fde68a;">
+          <i class="fas fa-lightbulb text-warning mt-1 flex-shrink-0"></i>
+          <div>
+            <div class="fw-600 small" style="color:#92400e;">Discover your ideal career</div>
+            <div class="text-muted" style="font-size:0.73rem;">Takes 3 minutes · personalised results</div>
+          </div>
+        </div>
+        <a href="{% url 'career:quiz' %}" class="btn btn-sm btn-outline-warning w-100 mb-3">
+          <i class="fas fa-clipboard-list me-1"></i>Take Career Quiz
+        </a>
+        {% endif %}
+        {% for career in recommended_careers %}
+        <a href="{% url 'career:career_profile_detail' career.slug %}"
+           class="d-flex align-items-center gap-3 p-2 rounded-3 text-decoration-none mb-1"
+           style="transition:background 0.15s;"
+           onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background=''">
+          <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
+               style="width:38px;height:38px;background:#e8f0fe;color:#4f46e5;">
+            <i class="{{ career.icon|default:'fas fa-briefcase' }}" style="font-size:0.85rem;"></i>
+          </div>
+          <div style="min-width:0;">
+            <div class="fw-600 small text-dark" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+              {{ career.title }}
+            </div>
+            <div class="text-muted" style="font-size:0.72rem;">{{ career.average_salary|default:"View details" }}</div>
+          </div>
+        </a>
+        {% empty %}
+        <p class="text-muted small mt-2">
+          <a href="{% url 'career:quiz' %}">Take the career quiz</a> to get personalised suggestions.
+        </p>
+        {% endfor %}
+      </div>
+
+      <!-- Institutions -->
+      <div class="card mb-4 border-0" style="border-radius:1.1rem;box-shadow:0 2px 12px rgba(0,0,0,0.07);overflow:hidden;">
+        <div class="px-4 py-3 d-flex justify-content-between align-items-center"
+             style="background:linear-gradient(120deg,#065f46 0%,#059669 100%);color:#fff;">
+          <div class="d-flex align-items-center gap-2">
+            <i class="fas fa-university" style="color:#a7f3d0;"></i>
+            <span class="fw-800" style="font-size:0.95rem;">Institutions</span>
+          </div>
+          <a href="{% url 'institutions:institution_types_list' %}" class="btn btn-sm"
+             style="background:rgba(255,255,255,0.15);color:#fff;border:1px solid rgba(255,255,255,0.25);font-size:0.75rem;border-radius:20px;">
+            Browse All <i class="fas fa-arrow-right ms-1"></i>
           </a>
         </div>
-        {% if applications %}
-        <div class="table-responsive">
-          <table class="table table-hover table-sm align-middle mb-0">
-            <thead class="table-light">
-              <tr>
-                <th>Course</th><th>Institution</th><th>Status</th><th>Deadline</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for app in applications|slice:":5" %}
-              <tr>
-                <td class="fw-500">{{ app.course_name|default:"—" }}</td>
-                <td class="text-muted small">{{ app.institution_name|default:"—" }}</td>
-                <td>
-                  <span class="badge rounded-pill
-                    {% if app.status == 'accepted' %}bg-success
-                    {% elif app.status == 'rejected' %}bg-danger
-                    {% elif app.status == 'submitted' %}bg-primary
-                    {% elif app.status == 'waitlisted' %}bg-warning text-dark
-                    {% else %}bg-secondary{% endif %}">
-                    {{ app.get_status_display }}
-                  </span>
-                </td>
-                <td class="text-muted small">{{ app.deadline|date:"d M Y"|default:"—" }}</td>
-              </tr>
-              {% endfor %}
-            </tbody>
-          </table>
+        <div class="px-2 py-2 bg-white">
+          <div class="row g-2">
+            {% for inst_type in inst_type_links %}
+            <div class="col-6">
+              <a href="{{ inst_type.url }}"
+                 class="d-flex align-items-center gap-2 p-2 rounded-3 text-decoration-none"
+                 style="background:#f8fafc;border:1.5px solid #e2e8f0;transition:border-color 0.15s;"
+                 onmouseover="this.style.borderColor='#6ee7b7'" onmouseout="this.style.borderColor='#e2e8f0'">
+                <div class="rounded-2 d-flex align-items-center justify-content-center flex-shrink-0"
+                     style="width:32px;height:32px;background:#ecfdf5;color:#059669;">
+                  <i class="{{ inst_type.icon }}" style="font-size:0.85rem;"></i>
+                </div>
+                <div style="min-width:0;">
+                  <div class="fw-700 text-dark" style="font-size:0.8rem;line-height:1.2;">{{ inst_type.label }}</div>
+                  <div class="text-muted" style="font-size:0.68rem;">{{ inst_type.count }} listed</div>
+                </div>
+              </a>
+            </div>
+            {% empty %}
+            <div class="col-12 text-center py-3">
+              <a href="{% url 'institutions:institution_types_list' %}" class="btn btn-sm btn-outline-success">
+                <i class="fas fa-university me-1"></i>Browse Institutions
+              </a>
+            </div>
+            {% endfor %}
+          </div>
         </div>
-        {% if applications|length > 5 %}
-        <a href="{% url 'accounts:applications' %}" class="btn btn-sm btn-outline-secondary mt-2">
-          View all {{ applications|length }} applications
+      </div>
+
+      <!-- Watchlist -->
+      <div class="card mb-4 p-4 border-0" style="border-radius:1.1rem;box-shadow:0 2px 12px rgba(0,0,0,0.07);">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h5 class="dash-section-title">
+            <i class="fas fa-bookmark me-2" style="color:#f59e0b;"></i>My Watchlist
+          </h5>
+          <a href="{% url 'accounts:saved_courses' %}" class="small fw-600" style="color:#4f46e5;">
+            View all ({{ saved_count }}) <i class="bi bi-arrow-right ms-1"></i>
+          </a>
+        </div>
+        {% if saved_courses %}
+        <div class="d-flex flex-column gap-2">
+          {% for sc in saved_courses %}
+          <div class="watchlist-item">
+            <div class="watchlist-num">
+              {% if sc.course.cluster %}{{ sc.course.cluster.kuccps_number|default:"?" }}
+              {% else %}<i class="fas fa-book" style="font-size:0.7rem;"></i>{% endif %}
+            </div>
+            <div style="min-width:0;flex:1;">
+              <div class="fw-600" style="font-size:0.85rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                <a href="{% url 'courses:course_detail_no_category' sc.course.course_type.slug sc.course.slug %}"
+                   class="text-dark text-decoration-none">{{ sc.course.name }}</a>
+              </div>
+              <div class="text-muted" style="font-size:0.72rem;">{{ sc.course.course_type.name }}</div>
+            </div>
+            <div class="text-muted" style="font-size:0.72rem;white-space:nowrap;">{{ sc.saved_at|date:"d M" }}</div>
+            <button class="unsave-btn btn btn-link btn-sm p-0" data-course-id="{{ sc.course.id }}"
+                    title="Remove from watchlist" style="color:#f59e0b;font-size:0.95rem;border:none;background:none;">
+              <i class="fas fa-bookmark"></i>
+            </button>
+          </div>
+          {% endfor %}
+        </div>
+        {% if saved_count > 6 %}
+        <a href="{% url 'accounts:saved_courses' %}" class="btn btn-sm btn-outline-secondary w-100 mt-3">
+          View all {{ saved_count }} saved courses
         </a>
         {% endif %}
         {% else %}
-        <p class="text-muted small mb-0">No applications tracked yet.
-          <a href="{% url 'accounts:application_add' %}">Add your first one.</a>
-        </p>
+        <div class="text-center py-4">
+          <i class="fas fa-bookmark fa-2x text-muted mb-2"></i>
+          <p class="text-muted small mb-1">No courses saved yet.</p>
+          <p class="text-muted" style="font-size:0.75rem;">
+            Click <i class="fas fa-bookmark" style="color:#f59e0b;"></i> on any course in the Career Engine results.
+          </p>
+          <a href="{% url 'career:home' %}" class="btn btn-sm btn-outline-primary mt-1">Find Courses</a>
+        </div>
         {% endif %}
       </div>
-    </div>
 
-    <!-- Right Column -->
+      <!-- Course Shortlist -->
+      <div class="card mb-4 p-4 border-0" style="border-radius:1.1rem;box-shadow:0 2px 12px rgba(0,0,0,0.07);">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h5 class="dash-section-title"><i class="fas fa-list-check me-2 text-info"></i>My Shortlist</h5>
+          <a href="{% url 'accounts:shortlist' %}" class="btn btn-sm btn-outline-primary rounded-pill">
+            <i class="fas fa-arrows-left-right me-1"></i>Compare
+          </a>
+        </div>
+        {% if shortlist_items %}
+        <div class="row g-2">
+          {% for item in shortlist_items %}
+          <div class="col-12 col-sm-6">
+            <a href="{% url 'courses:course_detail_no_category' item.course.course_type.slug item.course.slug %}"
+               class="d-flex align-items-center gap-2 p-2 rounded-3 text-decoration-none"
+               style="background:#f8fafc;border:1.5px solid #e2e8f0;transition:border-color 0.15s;"
+               onmouseover="this.style.borderColor='#c7d2fe'" onmouseout="this.style.borderColor='#e2e8f0'">
+              <div class="rounded-2 d-flex align-items-center justify-content-center flex-shrink-0"
+                   style="width:32px;height:32px;background:#eff6ff;color:#2563eb;">
+                <i class="fas fa-graduation-cap" style="font-size:0.8rem;"></i>
+              </div>
+              <div class="min-w-0">
+                <div class="fw-700 text-dark" style="font-size:0.8rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                  {{ item.course.name|truncatewords:5 }}
+                </div>
+                <div class="text-muted" style="font-size:0.68rem;">{{ item.course.course_type.name }}</div>
+              </div>
+            </a>
+          </div>
+          {% endfor %}
+        </div>
+        {% if shortlist_count > 4 %}
+        <p class="text-muted small mt-2 mb-0">+{{ shortlist_count|add:"-4" }} more in shortlist</p>
+        {% endif %}
+        <a href="{% url 'accounts:shortlist' %}" class="btn btn-sm btn-primary rounded-pill mt-3 px-4">
+          <i class="fas fa-arrows-left-right me-1"></i>Open Full Comparison
+        </a>
+        {% else %}
+        <div class="text-center py-3">
+          <i class="fas fa-list-check fa-2x text-muted mb-2 d-block" style="opacity:0.35;"></i>
+          <p class="text-muted small mb-2">No courses shortlisted yet.</p>
+          <a href="{% url 'courses:course_types_list' %}" class="btn btn-sm btn-outline-primary rounded-pill px-3">
+            <i class="fas fa-search me-1"></i>Browse Courses
+          </a>
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- Latest News & Updates -->
+      {% if recent_news %}
+      <div class="card mb-4 border-0" style="border-radius:1.1rem;box-shadow:0 2px 12px rgba(0,0,0,0.07);overflow:hidden;">
+        <div class="px-4 py-3 d-flex justify-content-between align-items-center"
+             style="background:linear-gradient(120deg,#0f172a 0%,#1e3a8a 100%);color:#fff;">
+          <div class="d-flex align-items-center gap-2">
+            <i class="fas fa-newspaper" style="color:#93c5fd;"></i>
+            <span class="fw-800" style="font-size:0.95rem;">Latest News &amp; Updates</span>
+          </div>
+          <a href="{% url 'resources:article_list' %}" class="btn btn-sm"
+             style="background:rgba(255,255,255,0.15);color:#fff;border:1px solid rgba(255,255,255,0.25);font-size:0.75rem;border-radius:20px;">
+            View All <i class="fas fa-arrow-right ms-1"></i>
+          </a>
+        </div>
+        <div class="px-1 py-1 bg-white">
+          {% for article in recent_news %}
+          <a href="{% url 'resources:article_detail' article.slug %}"
+             class="d-flex align-items-start gap-3 p-3 text-decoration-none rounded-3 news-row"
+             style="transition:background 0.15s;"
+             onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background=''">
+            <div class="flex-shrink-0 d-flex align-items-center justify-content-center rounded-2"
+                 style="width:42px;height:42px;background:#e8f0fe;color:#3730a3;">
+              <i class="fas fa-file-alt" style="font-size:1rem;"></i>
+            </div>
+            <div class="flex-grow-1 min-width-0">
+              <div class="fw-600 text-dark" style="font-size:0.85rem;line-height:1.35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                {{ article.title }}
+              </div>
+              {% if article.excerpt %}
+              <div class="text-muted" style="font-size:0.75rem;line-height:1.4;margin-top:2px;
+                          display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">
+                {{ article.excerpt }}
+              </div>
+              {% endif %}
+              <div class="text-muted mt-1" style="font-size:0.68rem;">
+                <i class="fas fa-clock me-1"></i>{{ article.created_at|date:"d M Y" }}
+              </div>
+            </div>
+            <i class="fas fa-chevron-right text-muted flex-shrink-0 mt-1" style="font-size:0.7rem;"></i>
+          </a>
+          {% if not forloop.last %}
+          <hr class="my-0 mx-3" style="border-color:#f1f5f9;">
+          {% endif %}
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+
+    </div><!-- /col-lg-8 -->
+
+    <!-- RIGHT (col-lg-4) -->
     <div class="col-lg-4">
 
+      <!-- KUCCPS 2026 Timeline -->
+      <div class="card mb-4 border-0" style="border-radius:1.1rem;overflow:hidden;box-shadow:0 2px 14px rgba(0,0,0,0.1);">
+        <div class="p-4 {% if timeline_phase != 'closed' %}text-white{% endif %}"
+             style="{% if timeline_phase == 'before_open' %}background:linear-gradient(135deg,#1e3a8a,#4f46e5);
+                    {% elif timeline_phase == 'open' %}background:linear-gradient(135deg,#065f46,#16a34a);
+                    {% else %}background:#f8fafc;{% endif %}">
+          <div class="d-flex align-items-center gap-2 mb-3">
+            <i class="fas fa-calendar-check fa-lg {% if timeline_phase == 'closed' %}text-muted{% endif %}"></i>
+            <div class="fw-800 fs-6 {% if timeline_phase == 'closed' %}text-dark{% endif %}">KUCCPS 2026 Portal</div>
+          </div>
+          {% if timeline_phase != 'closed' %}
+          <div class="text-center py-1 mb-2">
+            <div class="timeline-days">{{ timeline_days }}</div>
+            <div style="font-size:0.78rem;opacity:0.85;text-transform:uppercase;letter-spacing:0.06em;margin-top:2px;">
+              {{ timeline_label }}
+            </div>
+            <div style="font-size:0.72rem;opacity:0.65;margin-top:4px;">{{ timeline_date }}</div>
+          </div>
+          {% else %}
+          <p class="text-muted small mb-2">{{ timeline_date }}</p>
+          {% endif %}
+          <hr class="{% if timeline_phase != 'closed' %}border-white opacity-25{% endif %} my-3">
+          <div class="d-flex flex-column gap-2" style="font-size:0.78rem;">
+            <div class="d-flex justify-content-between {% if timeline_phase != 'closed' %}opacity-90{% endif %}">
+              <span>
+                <i class="fas fa-circle me-2"
+                   style="font-size:0.42rem;vertical-align:middle;color:{% if timeline_phase == 'before_open' %}#93c5fd{% elif timeline_phase == 'open' %}#86efac{% else %}#94a3b8{% endif %};"></i>
+                Portal Opens
+              </span><strong>Est. 3 Jul 2026</strong>
+            </div>
+            <div class="d-flex justify-content-between {% if timeline_phase != 'closed' %}opacity-90{% endif %}">
+              <span>
+                <i class="fas fa-circle me-2"
+                   style="font-size:0.42rem;vertical-align:middle;color:{% if timeline_phase == 'closed' %}#94a3b8{% else %}#fcd34d{% endif %};"></i>
+                Portal Closes
+              </span><strong>Est. 21 Aug 2026</strong>
+            </div>
+            <div class="d-flex justify-content-between {% if timeline_phase != 'closed' %}opacity-90{% endif %}">
+              <span>
+                <i class="fas fa-circle me-2" style="font-size:0.42rem;vertical-align:middle;color:#f87171;"></i>
+                Results Released
+              </span><strong>Est. Sep 2026</strong>
+            </div>
+          </div>
+          {% if timeline_phase == 'before_open' %}
+          <a href="{% url 'career:home' %}" class="btn btn-light btn-sm w-100 mt-3 fw-600">
+            <i class="fas fa-rocket me-1"></i>Prepare Now
+          </a>
+          {% elif timeline_phase == 'open' %}
+          <a href="https://kuccps.ac.ke" target="_blank" rel="noopener"
+             class="btn btn-light btn-sm w-100 mt-3 fw-600">
+            <i class="fas fa-external-link-alt me-1"></i>Apply on KUCCPS
+          </a>
+          {% endif %}
+        </div>
+      </div>
+
       <!-- Profile Card -->
-      <div class="card mb-4 p-4 text-center">
+      <div class="card mb-4 p-4 text-center border-0" style="border-radius:1.1rem;box-shadow:0 2px 12px rgba(0,0,0,0.07);">
         {% if user.profile_picture %}
-        <img src="{{ user.profile_picture.url }}" width="80" height="80"
-             class="rounded-circle mx-auto mb-2 shadow" style="object-fit:cover;" alt="">
+        <img src="{{ user.profile_picture.url }}" width="76" height="76"
+             class="rounded-circle mx-auto mb-2 shadow-sm" style="object-fit:cover;" alt="">
         {% else %}
-        <div class="rounded-circle d-flex align-items-center justify-content-center mx-auto mb-2 shadow"
-             style="width:80px;height:80px;font-size:2rem;font-weight:800;background:#e8f0fe;color:var(--primary);">
+        <div class="avatar-circle mx-auto mb-2">
           {{ user.full_name|first|upper|default:user.email|first|upper }}
         </div>
         {% endif %}
-        <h6 class="fw-bold mb-0">{{ user.full_name|default:"Complete your profile" }}</h6>
+        <h6 class="fw-bold mb-0">{{ user.full_name|default:user.email }}</h6>
         <p class="text-muted small">{{ user.email }}</p>
         {% if user.county or user.kcse_year %}
         <p class="small text-muted mb-2">
@@ -228,50 +787,100 @@
           {% if user.kcse_year %} · KCSE {{ user.kcse_year }}{% endif %}
         </p>
         {% endif %}
-        <a href="{% url 'accounts:profile' %}" class="btn btn-sm btn-outline-primary">
-          <i class="fas fa-edit me-1"></i>Edit Profile
-        </a>
       </div>
 
-      <!-- Recommended Careers -->
-      <div class="card mb-4 p-4">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-          <h6 class="fw-bold mb-0">
-            <i class="fas fa-compass me-2 text-primary"></i>Career Ideas
-          </h6>
-          <a href="{% url 'career:career_profiles' %}" class="small" style="color:var(--primary);">See all</a>
+      <!-- Quick Links -->
+      <div class="card mb-4 border-0" style="border-radius:1.1rem;box-shadow:0 2px 12px rgba(0,0,0,0.07);overflow:hidden;">
+        <div class="px-4 py-3" style="background:linear-gradient(120deg,#0f4c75 0%,#1b6ca8 100%);color:#fff;">
+          <div class="d-flex align-items-center gap-2">
+            <i class="fas fa-link" style="color:#93c5fd;"></i>
+            <span class="fw-800" style="font-size:0.95rem;">Official Links</span>
+          </div>
         </div>
-        {% for career in recommended_careers %}
-        <a href="{% url 'career:career_profile_detail' career.slug %}"
-           class="d-flex align-items-center gap-3 p-2 rounded-3 text-decoration-none mb-1"
-           style="transition:background 0.15s;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background=''">
-          <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
-               style="width:40px;height:40px;background:#e8f0fe;color:var(--primary);">
-            <i class="{{ career.icon|default:'fas fa-briefcase' }}"></i>
-          </div>
-          <div>
-            <div class="fw-bold small text-dark">{{ career.title }}</div>
-            <div class="text-muted" style="font-size:0.75rem;">{{ career.average_salary|default:"View details" }}</div>
-          </div>
-        </a>
-        {% empty %}
-        <p class="text-muted small">
-          <a href="{% url 'career:quiz' %}">Take the career quiz</a> to get personalised suggestions.
-        </p>
-        {% endfor %}
-        <a href="{% url 'career:quiz' %}" class="btn btn-sm btn-gradient-success w-100 mt-2">
-          <i class="fas fa-clipboard-list me-1"></i>Take Career Quiz
-        </a>
+        <div class="px-3 py-2 bg-white">
+          <a href="https://kuccps.ac.ke" target="_blank" rel="noopener"
+             class="quick-link-row d-flex align-items-center gap-3 py-2 px-2 text-decoration-none rounded-2"
+             style="transition:background 0.15s;"
+             onmouseover="this.style.background='#f0f9ff'" onmouseout="this.style.background=''">
+            <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
+                 style="width:34px;height:34px;background:#dbeafe;">
+              <i class="fas fa-university" style="color:#1d4ed8;font-size:0.85rem;"></i>
+            </div>
+            <div class="flex-grow-1">
+              <div class="fw-600" style="font-size:0.82rem;color:#1e3a8a;">KUCCPS Portal</div>
+              <div class="text-muted" style="font-size:0.7rem;">kuccps.ac.ke</div>
+            </div>
+            <i class="fas fa-external-link-alt text-muted" style="font-size:0.65rem;"></i>
+          </a>
+          <hr class="my-0 mx-2" style="border-color:#f1f5f9;">
+          <a href="https://www.helb.co.ke" target="_blank" rel="noopener"
+             class="d-flex align-items-center gap-3 py-2 px-2 text-decoration-none rounded-2"
+             style="transition:background 0.15s;"
+             onmouseover="this.style.background='#f0fdf4'" onmouseout="this.style.background=''">
+            <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
+                 style="width:34px;height:34px;background:#dcfce7;">
+              <i class="fas fa-hand-holding-usd" style="color:#15803d;font-size:0.85rem;"></i>
+            </div>
+            <div class="flex-grow-1">
+              <div class="fw-600" style="font-size:0.82rem;color:#14532d;">HELB</div>
+              <div class="text-muted" style="font-size:0.7rem;">Higher Education Loans Board</div>
+            </div>
+            <i class="fas fa-external-link-alt text-muted" style="font-size:0.65rem;"></i>
+          </a>
+          <hr class="my-0 mx-2" style="border-color:#f1f5f9;">
+          <a href="https://www.knec.ac.ke" target="_blank" rel="noopener"
+             class="d-flex align-items-center gap-3 py-2 px-2 text-decoration-none rounded-2"
+             style="transition:background 0.15s;"
+             onmouseover="this.style.background='#fef9f0'" onmouseout="this.style.background=''">
+            <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
+                 style="width:34px;height:34px;background:#fef3c7;">
+              <i class="fas fa-graduation-cap" style="color:#b45309;font-size:0.85rem;"></i>
+            </div>
+            <div class="flex-grow-1">
+              <div class="fw-600" style="font-size:0.82rem;color:#92400e;">KNEC</div>
+              <div class="text-muted" style="font-size:0.7rem;">Kenya National Examinations Council</div>
+            </div>
+            <i class="fas fa-external-link-alt text-muted" style="font-size:0.65rem;"></i>
+          </a>
+          <hr class="my-0 mx-2" style="border-color:#f1f5f9;">
+          <a href="https://www.universitiesfund.ac.ke" target="_blank" rel="noopener"
+             class="d-flex align-items-center gap-3 py-2 px-2 text-decoration-none rounded-2"
+             style="transition:background 0.15s;"
+             onmouseover="this.style.background='#fdf4ff'" onmouseout="this.style.background=''">
+            <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
+                 style="width:34px;height:34px;background:#f3e8ff;">
+              <i class="fas fa-landmark" style="color:#7c3aed;font-size:0.85rem;"></i>
+            </div>
+            <div class="flex-grow-1">
+              <div class="fw-600" style="font-size:0.82rem;color:#581c87;">Universities Fund</div>
+              <div class="text-muted" style="font-size:0.7rem;">universitiesfund.ac.ke</div>
+            </div>
+            <i class="fas fa-external-link-alt text-muted" style="font-size:0.65rem;"></i>
+          </a>
+          <hr class="my-0 mx-2" style="border-color:#f1f5f9;">
+          <a href="https://www.education.go.ke" target="_blank" rel="noopener"
+             class="d-flex align-items-center gap-3 py-2 px-2 text-decoration-none rounded-2"
+             style="transition:background 0.15s;"
+             onmouseover="this.style.background='#fff5f5'" onmouseout="this.style.background=''">
+            <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
+                 style="width:34px;height:34px;background:#fee2e2;">
+              <i class="fas fa-flag" style="color:#b91c1c;font-size:0.85rem;"></i>
+            </div>
+            <div class="flex-grow-1">
+              <div class="fw-600" style="font-size:0.82rem;color:#7f1d1d;">Ministry of Education</div>
+              <div class="text-muted" style="font-size:0.7rem;">education.go.ke</div>
+            </div>
+            <i class="fas fa-external-link-alt text-muted" style="font-size:0.65rem;"></i>
+          </a>
+        </div>
       </div>
 
       <!-- Notifications -->
       {% if notifications %}
-      <div class="card p-4">
+      <div class="card p-4 border-0" style="border-radius:1.1rem;box-shadow:0 2px 12px rgba(0,0,0,0.07);">
         <div class="d-flex justify-content-between align-items-center mb-3">
-          <h6 class="fw-bold mb-0">
-            <i class="fas fa-bell me-2 text-warning"></i>Notifications
-          </h6>
-          <a href="{% url 'accounts:notifications' %}" class="small" style="color:var(--primary);">View all</a>
+          <h6 class="fw-bold mb-0"><i class="fas fa-bell me-2 text-warning"></i>Notifications</h6>
+          <a href="{% url 'accounts:notifications' %}" class="small" style="color:#4f46e5;">View all</a>
         </div>
         {% for notif in notifications %}
         <div class="d-flex gap-2 mb-2 p-2 rounded-3" style="background:#fffbeb;">
@@ -282,40 +891,246 @@
       </div>
       {% endif %}
 
-    </div>
+    </div><!-- /col-lg-4 -->
   </div>
+
 </div>
 {% endblock %}
 
 {% block extra_js %}
-{% if cluster_results %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-const labels = [{% for r in cluster_results %}"{{ r.cluster.name|truncatechars:20 }}"{% if not forloop.last %},{% endif %}{% endfor %}];
-const data   = [{% for r in cluster_results %}{{ r.cluster_points }}{% if not forloop.last %},{% endif %}{% endfor %}];
-const colors = data.map(v => v >= 40 ? '#16a34a' : v >= 30 ? '#2563eb' : v >= 20 ? '#f97316' : '#94a3b8');
+// ── Cluster bar chart ────────────────────────────────────────────────────
+{% if cluster_results %}
+const clusterLabels = [{% for r in cluster_results %}"{{ r.cluster.name|truncatechars:18 }}"{% if not forloop.last %},{% endif %}{% endfor %}];
+const clusterData   = [{% for r in cluster_results %}{{ r.cluster_points }}{% if not forloop.last %},{% endif %}{% endfor %}];
+const barColors     = clusterData.map(v => v >= 36 ? '#16a34a' : v >= 24 ? '#2563eb' : '#f97316');
 
 new Chart(document.getElementById('clusterChart'), {
   type: 'bar',
   data: {
-    labels,
-    datasets: [{
-      label: 'Cluster Points',
-      data,
-      backgroundColor: colors,
-      borderRadius: 6,
-      borderSkipped: false,
-    }]
+    labels: clusterLabels,
+    datasets: [{ label: 'Cluster Points', data: clusterData, backgroundColor: barColors, borderRadius: 7, borderSkipped: false }]
   },
   options: {
     responsive: true,
-    plugins: { legend: { display: false } },
+    plugins: {
+      legend: { display: false },
+      tooltip: { callbacks: { label: ctx => ` ${ctx.parsed.y.toFixed(1)} pts` } }
+    },
     scales: {
-      y: { beginAtZero: true, max: 48, grid: { color: '#f1f5f9' } },
+      y: { beginAtZero: true, max: 48, grid: { color: '#f1f5f9' }, ticks: { font: { size: 11 } } },
       x: { ticks: { font: { size: 10 } } }
     }
   }
 });
-</script>
 {% endif %}
+
+// ── CSRF helper ──────────────────────────────────────────────────────────
+const CSRF = (document.cookie.match(/csrftoken=([^;]+)/) || [])[1] || '';
+
+function toggleSave(courseId, btn) {
+  const isSaved = btn.dataset.saved === 'true';
+  const icon    = btn.querySelector('i');
+  btn.dataset.saved = isSaved ? 'false' : 'true';
+  icon.className    = isSaved ? 'far fa-bookmark' : 'fas fa-bookmark';
+  btn.style.color   = isSaved ? '#cbd5e1' : '#f59e0b';
+
+  fetch('/accounts/save-course/' + courseId + '/', {
+    method: 'POST',
+    headers: { 'X-CSRFToken': CSRF }
+  })
+  .then(r => r.json())
+  .then(data => {
+    const s = data.saved;
+    btn.dataset.saved = s ? 'true' : 'false';
+    icon.className    = s ? 'fas fa-bookmark' : 'far fa-bookmark';
+    btn.style.color   = s ? '#f59e0b' : '#cbd5e1';
+  })
+  .catch(() => {
+    btn.dataset.saved = isSaved ? 'true' : 'false';
+    icon.className    = isSaved ? 'fas fa-bookmark' : 'far fa-bookmark';
+    btn.style.color   = isSaved ? '#f59e0b' : '#cbd5e1';
+  });
+}
+
+// ── Recommended For You carousel ─────────────────────────────────────────
+var _rcState = {};
+
+function rcInit(wrapId) {
+  var wrap = document.getElementById(wrapId);
+  if (!wrap) return;
+  var track = wrap.querySelector('.reco-carousel-track');
+  var items = track ? track.querySelectorAll('.reco-carousel-item') : [];
+  if (!track || !items.length) return;
+  var dotsId = wrapId.replace('recoWrap', 'recoDots');
+  var dotsBar = document.getElementById(dotsId);
+  _rcState[wrapId] = { current: 0, timer: null };
+
+  function getVis() {
+    return window.innerWidth >= 992 ? 3 : window.innerWidth >= 576 ? 2 : 1;
+  }
+  function totalSlides() { return Math.ceil(items.length / getVis()); }
+
+  function setWidths() {
+    var pct = (100 / getVis()) + '%';
+    [].forEach.call(items, function(item) { item.style.width = pct; });
+  }
+
+  function buildDots(cur) {
+    if (!dotsBar) return;
+    dotsBar.innerHTML = '';
+    var n = totalSlides();
+    for (var i = 0; i < n; i++) {
+      var dot = document.createElement('button');
+      dot.className = 'reco-dot' + (i === cur ? ' active' : '');
+      dot.setAttribute('aria-label', 'Slide ' + (i + 1));
+      (function(idx) { dot.addEventListener('click', function() { rcGoTo(wrapId, idx); }); })(i);
+      dotsBar.appendChild(dot);
+    }
+  }
+
+  function applyPos(cur) {
+    var vis = getVis();
+    var outer = wrap.querySelector('.reco-carousel-outer');
+    var itemW = outer.clientWidth / vis;
+    track.style.transform = 'translateX(' + (-(cur * vis * itemW)) + 'px)';
+    if (dotsBar) {
+      [].forEach.call(dotsBar.querySelectorAll('.reco-dot'), function(d, i) {
+        d.className = 'reco-dot' + (i === cur ? ' active' : '');
+      });
+    }
+  }
+
+  function refresh() {
+    setWidths();
+    var n = totalSlides();
+    var cur = Math.min(_rcState[wrapId].current, n - 1);
+    _rcState[wrapId].current = cur;
+    buildDots(cur);
+    applyPos(cur);
+  }
+  _rcState[wrapId].refresh = refresh;
+
+  function startAuto() {
+    _rcState[wrapId].timer = setInterval(function() {
+      var n = totalSlides();
+      rcGoTo(wrapId, (_rcState[wrapId].current + 1) % n);
+    }, 4000);
+  }
+  function stopAuto() { clearInterval(_rcState[wrapId].timer); }
+
+  wrap.addEventListener('mouseenter', stopAuto);
+  wrap.addEventListener('mouseleave', startAuto);
+
+  var touchX = null;
+  wrap.addEventListener('touchstart', function(e) { touchX = e.changedTouches[0].clientX; }, { passive: true });
+  wrap.addEventListener('touchend', function(e) {
+    if (touchX === null) return;
+    var dx = e.changedTouches[0].clientX - touchX;
+    touchX = null;
+    if (Math.abs(dx) < 40) return;
+    stopAuto(); rcMove(wrapId, dx < 0 ? 1 : -1); startAuto();
+  }, { passive: true });
+
+  refresh();
+  startAuto();
+}
+
+function rcGoTo(wrapId, idx) {
+  var wrap = document.getElementById(wrapId);
+  if (!wrap || !_rcState[wrapId]) return;
+  var track = wrap.querySelector('.reco-carousel-track');
+  var items = track.querySelectorAll('.reco-carousel-item');
+  var vis = window.innerWidth >= 992 ? 3 : window.innerWidth >= 576 ? 2 : 1;
+  var n = Math.ceil(items.length / vis);
+  idx = Math.max(0, Math.min(idx, n - 1));
+  _rcState[wrapId].current = idx;
+  var outer = wrap.querySelector('.reco-carousel-outer');
+  var itemW = outer.clientWidth / vis;
+  track.style.transform = 'translateX(' + (-(idx * vis * itemW)) + 'px)';
+  var dotsBar = document.getElementById(wrapId.replace('recoWrap', 'recoDots'));
+  if (dotsBar) {
+    [].forEach.call(dotsBar.querySelectorAll('.reco-dot'), function(d, i) {
+      d.className = 'reco-dot' + (i === idx ? ' active' : '');
+    });
+  }
+}
+
+function rcMove(wrapId, dir) {
+  if (!_rcState[wrapId]) return;
+  var wrap = document.getElementById(wrapId);
+  if (!wrap) return;
+  var track = wrap.querySelector('.reco-carousel-track');
+  var items = track.querySelectorAll('.reco-carousel-item');
+  var vis = window.innerWidth >= 992 ? 3 : window.innerWidth >= 576 ? 2 : 1;
+  var n = Math.ceil(items.length / vis);
+  var cur = _rcState[wrapId].current + dir;
+  cur = cur < 0 ? n - 1 : cur >= n ? 0 : cur;
+  rcGoTo(wrapId, cur);
+}
+
+var _rcResizeTimer;
+window.addEventListener('resize', function() {
+  clearTimeout(_rcResizeTimer);
+  _rcResizeTimer = setTimeout(function() {
+    Object.keys(_rcState).forEach(function(id) {
+      if (_rcState[id] && _rcState[id].refresh) _rcState[id].refresh();
+    });
+  }, 200);
+});
+
+rcInit('recoWrapReal');
+rcInit('recoWrapSample');
+
+document.addEventListener('click', function(e) {
+  // Recommended For You save buttons
+  const recoBtn = e.target.closest('.save-btn-dash');
+  if (recoBtn) { e.preventDefault(); toggleSave(recoBtn.dataset.courseId, recoBtn); return; }
+
+  // Watchlist remove buttons
+  const unsaveBtn = e.target.closest('.unsave-btn');
+  if (unsaveBtn) {
+    e.preventDefault();
+    const item = unsaveBtn.closest('.watchlist-item');
+    fetch('/accounts/save-course/' + unsaveBtn.dataset.courseId + '/', {
+      method: 'POST', headers: { 'X-CSRFToken': CSRF }
+    })
+    .then(r => r.json())
+    .then(data => {
+      if (!data.saved && item) {
+        item.style.transition = 'opacity 0.3s';
+        item.style.opacity = '0';
+        setTimeout(() => item.remove(), 320);
+      }
+    });
+  }
+});
+</script>
+
+<!--Start of Tawk.to Script-->
+<script type="text/javascript">
+var Tawk_API=Tawk_API||{}, Tawk_LoadStart=new Date();
+Tawk_API.customStyle = {
+  visibility: {
+    desktop: { position: 'br', xOffset: -15, yOffset: 45 },
+    mobile:  { position: 'br', xOffset: -15, yOffset: 45 }
+  }
+};
+Tawk_API.onLoad = function(){
+  Tawk_API.setAttributes({
+    name:  '{{ user.full_name|default:user.email|escapejs }}',
+    email: '{{ user.email|escapejs }}'
+  }, function(error){});
+};
+(function(){
+var s1=document.createElement("script"),s0=document.getElementsByTagName("script")[0];
+s1.async=true;
+s1.src='https://embed.tawk.to/6a31197012c0871d504f8a8e/default';
+s1.charset='UTF-8';
+s1.setAttribute('crossorigin','*');
+s0.parentNode.insertBefore(s1,s0);
+})();
+</script>
+<!--End of Tawk.to Script-->
 {% endblock %}

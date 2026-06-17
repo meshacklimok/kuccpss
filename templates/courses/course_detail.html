@@ -2,6 +2,19 @@
 {% load custom_filters %}
 {% block title %}{{ course.name }} — KUCCPSS{% endblock %}
 
+{% block extra_head %}
+<style>
+.trend-tab {
+  background: #f1f5f9; border: 1.5px solid #e2e8f0; border-radius: 8px;
+  padding: .3rem .9rem; font-size: .78rem; font-weight: 600; color: #64748b;
+  cursor: pointer; transition: all .18s;
+}
+.trend-tab.active {
+  background: #1e3a8a; border-color: #1e3a8a; color: #fff;
+}
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="page-hero">
   <div class="container">
@@ -120,7 +133,10 @@
             <tbody>
               {% for offering in offerings %}
               <tr>
-                <td class="fw-semibold">{{ offering.institution.name }}</td>
+                <td class="fw-semibold">
+                  <a href="{% url 'institutions:institution_detail' type_slug=offering.institution.institution_type.slug institution_slug=offering.institution.slug %}"
+                     class="text-dark text-decoration-none link-hover-primary">{{ offering.institution.name }}</a>
+                </td>
                 <td class="text-muted" style="font-size:0.85rem;">
                   {% if offering.institution.location %}
                   <i class="fas fa-map-marker-alt me-1 opacity-50"></i>{{ offering.institution.location }}
@@ -249,65 +265,121 @@
 
       {% else %}
 
-      <!-- University/Degree: Cut-off points per institution -->
+      <!-- University/Degree: Cutoff Trend Chart -->
+      {% if chart_json %}
+      <div class="card p-4 mb-4" id="cutoffTrendCard">
+        <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+          <h5 class="fw-bold mb-0"><i class="fas fa-chart-line me-2" style="color:#1e3a8a;"></i>Cutoff Points Trend</h5>
+          <div class="d-flex gap-2">
+            <button class="trend-tab active" data-view="chart">Chart</button>
+            <button class="trend-tab" data-view="table">Table</button>
+          </div>
+        </div>
+
+        <!-- Chart view -->
+        <div id="trendChartView">
+          <div style="position:relative; height:260px;">
+            <canvas id="cutoffTrendChart"></canvas>
+          </div>
+          <p class="text-muted mt-2 mb-0" style="font-size:0.78rem;">
+            <i class="fas fa-info-circle me-1"></i>
+            Cluster cut-off points per institution. Source: KUCCPS placement data.
+          </p>
+        </div>
+
+        <!-- Table view (hidden by default) -->
+        <div id="trendTableView" style="display:none;">
+          <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th>Institution</th>
+                  <th class="text-center">2024</th>
+                  <th class="text-center">2023</th>
+                  <th class="text-center">2022</th>
+                  <th class="text-center">2021</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for offering in offerings %}
+                {% if offering.cutoff_points %}
+                <tr>
+                  <td>
+                    <a href="{% url 'institutions:institution_detail' type_slug=offering.institution.institution_type.slug institution_slug=offering.institution.slug %}"
+                       class="fw-semibold text-dark text-decoration-none">{{ offering.institution.name }}</a>
+                    <small class="text-muted d-block">{{ offering.institution.institution_type }}</small>
+                  </td>
+                  {% for year in '2024,2023,2022,2021'|split:',' %}
+                  <td class="text-center">
+                    {% with val=offering.cutoff_points|get_item:year %}
+                      {% if val %}
+                      <span class="badge rounded-pill fw-semibold"
+                            style="background:{% if val >= 35 %}#dcfce7;color:#16a34a{% elif val >= 25 %}#fef9c3;color:#ca8a04{% else %}#fee2e2;color:#dc2626{% endif %};font-size:0.8rem;padding:4px 10px;border:1px solid currentColor;">
+                        {{ val }}
+                      </span>
+                      {% else %}
+                      <span class="text-muted">—</span>
+                      {% endif %}
+                    {% endwith %}
+                  </td>
+                  {% endfor %}
+                </tr>
+                {% endif %}
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          <p class="text-muted mt-2 mb-0" style="font-size:0.78rem;">
+            <i class="fas fa-info-circle me-1"></i>
+            Cluster cut-off points (max 48). Source: KUCCPS placement data.
+          </p>
+        </div>
+      </div>
+      {% elif offerings %}
+      <!-- No multi-year data yet — show simple table -->
       <div class="card p-4 mb-4">
         <h5 class="fw-bold mb-3"><i class="fas fa-chart-bar me-2 text-success"></i>Cut-off Points by Institution</h5>
-
-        {% if offerings %}
         <div class="table-responsive">
           <table class="table table-hover align-middle mb-0">
             <thead class="table-light">
               <tr>
                 <th>Institution</th>
-                <th class="text-center">2024</th>
-                <th class="text-center">2023</th>
-                <th class="text-center">2022</th>
-                <th class="text-center">2021</th>
+                <th class="text-center">Latest Cutoff</th>
               </tr>
             </thead>
             <tbody>
               {% for offering in offerings %}
+              {% with lc=offering.latest_cutoff %}
+              {% if lc %}
               <tr>
                 <td>
-                  <div class="fw-semibold">{{ offering.institution.name }}</div>
-                  <small class="text-muted">{{ offering.institution.institution_type }}</small>
+                  <a href="{% url 'institutions:institution_detail' type_slug=offering.institution.institution_type.slug institution_slug=offering.institution.slug %}"
+                     class="fw-semibold text-dark text-decoration-none">{{ offering.institution.name }}</a>
+                  <small class="text-muted d-block">{{ offering.institution.institution_type }}</small>
                 </td>
-                {% for year in '2024,2023,2022,2021'|split:',' %}
                 <td class="text-center">
-                  {% with pts=offering.cutoff_points|default_if_none:'' %}
-                    {% if pts %}
-                      {% with val=pts|get_item:year %}
-                        {% if val %}
-                        <span class="badge rounded-pill fw-semibold"
-                              style="background: {% if val >= 70 %}#16a34a{% elif val >= 55 %}#d97706{% else %}#dc2626{% endif %}; font-size:0.8rem; padding:4px 10px;">
-                          {{ val }}
-                        </span>
-                        {% else %}
-                        <span class="text-muted">—</span>
-                        {% endif %}
-                      {% endwith %}
-                    {% else %}
-                    <span class="text-muted">—</span>
-                    {% endif %}
-                  {% endwith %}
+                  <span class="badge rounded-pill fw-semibold"
+                        style="background:#eff6ff;color:#1e3a8a;border:1px solid #bfdbfe;font-size:0.82rem;padding:5px 12px;">
+                    {{ lc }}
+                  </span>
                 </td>
-                {% endfor %}
               </tr>
+              {% endif %}
+              {% endwith %}
               {% endfor %}
             </tbody>
           </table>
         </div>
-        <p class="text-muted mt-2 mb-0" style="font-size:0.8rem;">
-          <i class="fas fa-info-circle me-1"></i>
-          Cut-off points are out of 84 (KCSE aggregate). Source: KUCCPS placement data.
-        </p>
-        {% else %}
+      </div>
+      {% else %}
+      <div class="card p-4 mb-4">
+        <h5 class="fw-bold mb-3"><i class="fas fa-chart-bar me-2 text-success"></i>Cut-off Points by Institution</h5>
         <div class="text-center py-4 text-muted">
           <i class="fas fa-database fa-2x mb-2 d-block opacity-50"></i>
           No cut-off data available yet.
         </div>
-        {% endif %}
       </div>
+      {% endif %}
 
       {% endif %}
 
@@ -329,6 +401,31 @@
 
     <!-- ── Sidebar ── -->
     <div class="col-lg-4">
+
+      <!-- Action buttons -->
+      {% if request.user.is_authenticated %}
+      <div class="card p-3 mb-4 border-0" style="background:linear-gradient(135deg,#1e3a8a,#1d4ed8);">
+        <div class="d-flex flex-column gap-2">
+          <button id="shortlistBtn" data-course-id="{{ course.pk }}"
+                  class="btn fw-700 rounded-pill {% if is_shortlisted %}btn-warning{% else %}btn-light{% endif %}"
+                  style="font-size:0.85rem;">
+            <i class="fas fa-list-check me-1"></i>
+            <span id="shortlistLabel">{% if is_shortlisted %}In Shortlist{% else %}+ Add to Shortlist{% endif %}</span>
+          </button>
+          <form method="post" action="{% url 'accounts:toggle_save_course' course.pk %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-sm rounded-pill fw-700 w-100"
+                    style="background:rgba(255,255,255,0.15);color:#fff;border:1.5px solid rgba(255,255,255,0.3);font-size:0.8rem;">
+              <i class="far fa-bookmark me-1"></i>Save Course
+            </button>
+          </form>
+          <a href="{% url 'accounts:shortlist' %}" class="text-center"
+             style="color:rgba(255,255,255,0.6);font-size:0.72rem;">
+            View My Shortlist ({{ shortlist_count }}/5)
+          </a>
+        </div>
+      </div>
+      {% endif %}
 
       <!-- Quick info card -->
       <div class="card p-4 mb-4">
@@ -370,7 +467,8 @@
         <ul class="list-unstyled mb-0">
           {% for offering in offerings %}
           <li class="py-2 {% if not forloop.last %}border-bottom{% endif %}">
-            <div class="fw-semibold" style="font-size:0.9rem;">{{ offering.institution.name }}</div>
+            <a href="{% url 'institutions:institution_detail' type_slug=offering.institution.institution_type.slug institution_slug=offering.institution.slug %}"
+               class="fw-semibold text-dark text-decoration-none" style="font-size:0.9rem;">{{ offering.institution.name }}</a>
             {% with lc=offering.latest_cutoff %}
             {% if lc %}
             <small class="text-muted">Latest cutoff: <strong>{{ lc }}</strong> pts</small>
@@ -395,4 +493,94 @@
     </div><!-- /col-lg-4 -->
   </div><!-- /row -->
 </div>
+
+{% if chart_json %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+(function(){
+  var raw = {{ chart_json|safe }};
+
+  var ctx = document.getElementById('cutoffTrendChart');
+  if (ctx && raw.datasets.length) {
+    new Chart(ctx, {
+      type: 'line',
+      data: raw,
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: { boxWidth: 12, font: { size: 11 }, padding: 14 },
+          },
+          tooltip: {
+            callbacks: {
+              label: function(c){
+                var v = c.parsed.y;
+                return v == null ? c.dataset.label + ': —' : c.dataset.label + ': ' + v + ' pts';
+              }
+            }
+          }
+        },
+        scales: {
+          x: { grid: { display: false }, ticks: { font: { size: 11 } } },
+          y: {
+            beginAtZero: false,
+            suggestedMin: 0,
+            suggestedMax: 48,
+            ticks: { font: { size: 11 }, callback: function(v){ return v + ' pts'; } },
+            grid: { color: '#f1f5f9' },
+          }
+        }
+      }
+    });
+  }
+
+  document.querySelectorAll('.trend-tab').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      document.querySelectorAll('.trend-tab').forEach(function(b){ b.classList.remove('active'); });
+      btn.classList.add('active');
+      var view = btn.dataset.view;
+      document.getElementById('trendChartView').style.display = view === 'chart' ? '' : 'none';
+      document.getElementById('trendTableView').style.display  = view === 'table' ? '' : 'none';
+    });
+  });
+})();
+</script>
+{% endif %}
+
+{% if request.user.is_authenticated %}
+<script>
+(function(){
+  var btn = document.getElementById('shortlistBtn');
+  if (!btn) return;
+  var csrf = (document.cookie.match(/(?:^|;\s*)csrftoken=([^;]+)/) || [])[1] || '';
+  btn.addEventListener('click', function(){
+    btn.disabled = true;
+    fetch('/accounts/shortlist/toggle/' + btn.dataset.courseId + '/', {
+      method: 'POST',
+      headers: { 'X-CSRFToken': csrf },
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(data){
+      var label = document.getElementById('shortlistLabel');
+      if (data.full) {
+        alert(data.message);
+        return;
+      }
+      if (data.shortlisted) {
+        label.textContent = 'In Shortlist';
+        btn.classList.replace('btn-light', 'btn-warning');
+      } else {
+        label.textContent = '+ Add to Shortlist';
+        btn.classList.replace('btn-warning', 'btn-light');
+      }
+    })
+    .catch(function(){})
+    .finally(function(){ btn.disabled = false; });
+  });
+})();
+</script>
+{% endif %}
 {% endblock %}

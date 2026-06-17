@@ -1,0 +1,499 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}KUCCPS Application Calendar 2025/2026 — Key Dates{% endblock %}
+
+{% block content %}
+<style>
+/* ── Page layout ── */
+.cal-hero {
+    background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 60%, #1d4ed8 100%);
+    color: #fff;
+    padding: 3rem 0 2.5rem;
+}
+.cal-hero h1 { font-size: 2rem; font-weight: 800; }
+.cal-hero p  { opacity: 0.82; max-width: 600px; }
+
+.cycle-badge {
+    display: inline-block;
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.25);
+    border-radius: 20px;
+    padding: 4px 14px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #93c5fd;
+    margin-bottom: 0.75rem;
+}
+
+/* ── Cycle selector tabs ── */
+.cycle-tabs { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+.cycle-tab {
+    padding: 0.45rem 1.2rem;
+    border-radius: 20px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    border: 1.5px solid rgba(255,255,255,0.25);
+    color: rgba(255,255,255,0.7);
+    cursor: pointer;
+    transition: all 0.15s;
+    background: transparent;
+    text-decoration: none;
+}
+.cycle-tab:hover, .cycle-tab.active {
+    background: rgba(255,255,255,0.18);
+    border-color: rgba(255,255,255,0.6);
+    color: #fff;
+}
+
+/* ── Timeline ── */
+.timeline-section { padding: 2.5rem 0 3rem; }
+.timeline-phase-header {
+    font-size: 0.7rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: #6366f1;
+    margin: 2rem 0 0.5rem;
+    padding-left: 2px;
+}
+
+.timeline { position: relative; }
+.timeline::before {
+    content: '';
+    position: absolute;
+    left: 18px;
+    top: 0; bottom: 0;
+    width: 2px;
+    background: #e2e8f0;
+}
+
+.tl-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 1.1rem;
+    position: relative;
+}
+.tl-dot {
+    flex-shrink: 0;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    font-weight: 800;
+    position: relative;
+    z-index: 1;
+    border: 3px solid #fff;
+    box-shadow: 0 0 0 2px currentColor;
+}
+.dot-blue    { background: #dbeafe; color: #1d4ed8; }
+.dot-green   { background: #dcfce7; color: #15803d; }
+.dot-amber   { background: #fef3c7; color: #b45309; }
+.dot-red     { background: #fee2e2; color: #991b1b; }
+.dot-purple  { background: #f3e8ff; color: #7e22ce; }
+.dot-teal    { background: #ccfbf1; color: #0f766e; }
+.dot-gray    { background: #f1f5f9; color: #475569; }
+
+.tl-card {
+    flex: 1;
+    background: #fff;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 0.85rem 1rem;
+    transition: box-shadow 0.15s, border-color 0.15s;
+}
+.tl-card:hover {
+    border-color: #a5b4fc;
+    box-shadow: 0 3px 12px rgba(79,70,229,0.1);
+}
+.tl-card.status-done    { border-left: 4px solid #22c55e; }
+.tl-card.status-active  { border-left: 4px solid #3b82f6; background: #f0f7ff; }
+.tl-card.status-upcoming{ border-left: 4px solid #f59e0b; }
+.tl-card.status-future  { border-left: 4px solid #e2e8f0; }
+
+.tl-date {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 2px;
+}
+.tl-title {
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 2px;
+}
+.tl-desc {
+    font-size: 0.8rem;
+    color: #64748b;
+    margin: 0;
+}
+
+.status-pill {
+    display: inline-block;
+    font-size: 0.65rem;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    float: right;
+    margin-top: 2px;
+}
+.pill-done     { background: #dcfce7; color: #15803d; }
+.pill-active   { background: #dbeafe; color: #1d4ed8; }
+.pill-upcoming { background: #fef3c7; color: #b45309; }
+.pill-future   { background: #f1f5f9; color: #64748b; }
+
+/* ── Info box ── */
+.info-box {
+    background: #eff6ff;
+    border: 1.5px solid #bfdbfe;
+    border-radius: 12px;
+    padding: 1rem 1.25rem;
+    font-size: 0.83rem;
+    color: #1e40af;
+}
+.info-box strong { color: #1e3a8a; }
+
+/* ── Cycle cards ── */
+.cycle-card {
+    border-radius: 14px;
+    border: 1.5px solid #e2e8f0;
+    padding: 1.25rem;
+    background: #fff;
+    transition: box-shadow 0.15s;
+}
+.cycle-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.08); }
+</style>
+
+<!-- Hero -->
+<div class="cal-hero">
+    <div class="container">
+        <div class="cycle-badge">KUCCPS Official Cycle</div>
+        <h1 class="mb-2">
+            <i class="fas fa-calendar-alt me-2" style="color:#93c5fd;"></i>
+            KUCCPS Application Calendar
+        </h1>
+        <p class="mb-4">
+            All key dates for KCSE 2025 placement — from results day to university reporting.
+            Bookmark this page so you never miss a deadline.
+        </p>
+        <div class="cycle-tabs">
+            <a href="#cycle-2025" class="cycle-tab active">KCSE 2025 Cycle (2026)</a>
+            <a href="#cycle-2024" class="cycle-tab">KCSE 2024 Cycle (2025) — Completed</a>
+        </div>
+    </div>
+</div>
+
+<!-- Main content -->
+<div class="timeline-section">
+    <div class="container">
+        <div class="row g-4">
+
+            <!-- Timeline column -->
+            <div class="col-lg-8">
+
+                <!-- Info notice -->
+                <div class="info-box mb-4">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>Dates are estimates</strong> based on historical KUCCPS patterns. KNEC and KUCCPS set official dates each year.
+                    Always verify on the <strong>KUCCPS portal (kuccps.net)</strong> and KNEC website before acting.
+                </div>
+
+                <!-- ─── 2025 Cycle ─── -->
+                <div id="cycle-2025">
+                    <h4 class="fw-bold mb-1" style="color:#1e3a8a;">
+                        KCSE 2025 Cycle
+                        <span class="badge bg-primary ms-2" style="font-size:0.72rem;">Current Cycle</span>
+                    </h4>
+                    <p class="text-muted small mb-3">For students who sat KCSE in October–November 2025</p>
+
+                    <div class="timeline">
+
+                        <p class="timeline-phase-header">Phase 1 — Examinations</p>
+
+                        <div class="tl-item">
+                            <div class="tl-dot dot-gray"><i class="fas fa-pen"></i></div>
+                            <div class="tl-card status-done">
+                                <span class="status-pill pill-done">Done</span>
+                                <div class="tl-date">Oct – Nov 2025</div>
+                                <div class="tl-title">KCSE 2025 Written Examinations</div>
+                                <p class="tl-desc">National examinations administered by KNEC at secondary schools countrywide.</p>
+                            </div>
+                        </div>
+
+                        <p class="timeline-phase-header">Phase 2 — Results</p>
+
+                        <div class="tl-item">
+                            <div class="tl-dot dot-blue"><i class="fas fa-star"></i></div>
+                            <div class="tl-card status-active">
+                                <span class="status-pill pill-active">Expected</span>
+                                <div class="tl-date">February – March 2026</div>
+                                <div class="tl-title">KCSE 2025 Results Released</div>
+                                <p class="tl-desc">KNEC releases national results. Individual results available via SMS (22252) and school portals. Mean grade and subject scores published.</p>
+                            </div>
+                        </div>
+
+                        <div class="tl-item">
+                            <div class="tl-dot dot-blue"><i class="fas fa-file-alt"></i></div>
+                            <div class="tl-card status-active">
+                                <span class="status-pill pill-active">Expected</span>
+                                <div class="tl-date">March 2026</div>
+                                <div class="tl-title">KUCCPS Cluster Points Released</div>
+                                <p class="tl-desc">KUCCPS publishes computed cluster points for each student. Verify yours using the KUCCPS portal or KUCCPSS calculator.</p>
+                            </div>
+                        </div>
+
+                        <p class="timeline-phase-header">Phase 3 — Applications</p>
+
+                        <div class="tl-item">
+                            <div class="tl-dot dot-green"><i class="fas fa-globe"></i></div>
+                            <div class="tl-card status-upcoming">
+                                <span class="status-pill pill-upcoming">Upcoming</span>
+                                <div class="tl-date">April 2026</div>
+                                <div class="tl-title">KUCCPS Portal Opens for Applications</div>
+                                <p class="tl-desc">Students log in at <strong>kuccps.net</strong> using their index number and KCSE year. Select up to 6 degree programme choices and 3 TVET/KMTC choices.</p>
+                            </div>
+                        </div>
+
+                        <div class="tl-item">
+                            <div class="tl-dot dot-green"><i class="fas fa-list-ol"></i></div>
+                            <div class="tl-card status-upcoming">
+                                <span class="status-pill pill-upcoming">Upcoming</span>
+                                <div class="tl-date">April – May 2026</div>
+                                <div class="tl-title">Course Selection Window (Applications Open)</div>
+                                <p class="tl-desc">Main window to select and rank degree, diploma, KMTC, TVET, and TTC programme choices. Submit before the deadline — late submissions are not accepted.</p>
+                            </div>
+                        </div>
+
+                        <p class="timeline-phase-header">Phase 4 — Revision Windows</p>
+
+                        <div class="tl-item">
+                            <div class="tl-dot dot-amber"><i class="fas fa-edit"></i></div>
+                            <div class="tl-card status-future">
+                                <span class="status-pill pill-future">TBA</span>
+                                <div class="tl-date">May – June 2026</div>
+                                <div class="tl-title">1st Revision Window</div>
+                                <p class="tl-desc">Portal re-opens for students to change programme choices. Highly competitive — only one revision per window allowed. New cutoffs may apply based on first-round demand.</p>
+                            </div>
+                        </div>
+
+                        <div class="tl-item">
+                            <div class="tl-dot dot-amber"><i class="fas fa-redo"></i></div>
+                            <div class="tl-card status-future">
+                                <span class="status-pill pill-future">TBA</span>
+                                <div class="tl-date">June – July 2026</div>
+                                <div class="tl-title">2nd Revision Window</div>
+                                <p class="tl-desc">Final opportunity to update programme choices before placement. Changes in this window are binding — choose carefully.</p>
+                            </div>
+                        </div>
+
+                        <p class="timeline-phase-header">Phase 5 — Placement</p>
+
+                        <div class="tl-item">
+                            <div class="tl-dot dot-purple"><i class="fas fa-award"></i></div>
+                            <div class="tl-card status-future">
+                                <span class="status-pill pill-future">TBA</span>
+                                <div class="tl-date">August 2026</div>
+                                <div class="tl-title">Placement Results Announced</div>
+                                <p class="tl-desc">KUCCPS publishes placement results. Students receive SMS notifications. View your placement on kuccps.net using index number.</p>
+                            </div>
+                        </div>
+
+                        <div class="tl-item">
+                            <div class="tl-dot dot-teal"><i class="fas fa-university"></i></div>
+                            <div class="tl-card status-future">
+                                <span class="status-pill pill-future">TBA</span>
+                                <div class="tl-date">August – September 2026</div>
+                                <div class="tl-title">Reporting to Institutions</div>
+                                <p class="tl-desc">Students report to their placed universities, KMTCs, TVETs, or TTCs for registration. Bring: placement letter, KCSE certificate, national ID, passport photos, and any required fees.</p>
+                            </div>
+                        </div>
+
+                    </div><!-- /timeline -->
+                </div>
+
+                <hr class="my-5">
+
+                <!-- ─── 2024 Cycle (completed) ─── -->
+                <div id="cycle-2024">
+                    <h4 class="fw-bold mb-1" style="color:#475569;">
+                        KCSE 2024 Cycle
+                        <span class="badge bg-secondary ms-2" style="font-size:0.72rem;">Completed</span>
+                    </h4>
+                    <p class="text-muted small mb-3">For students who sat KCSE in October–November 2024</p>
+
+                    <div class="timeline">
+
+                        <div class="tl-item">
+                            <div class="tl-dot dot-gray"><i class="fas fa-check"></i></div>
+                            <div class="tl-card status-done">
+                                <span class="status-pill pill-done">Done</span>
+                                <div class="tl-date">Oct – Nov 2024</div>
+                                <div class="tl-title">KCSE 2024 Examinations</div>
+                                <p class="tl-desc">National written examinations conducted by KNEC.</p>
+                            </div>
+                        </div>
+
+                        <div class="tl-item">
+                            <div class="tl-dot dot-gray"><i class="fas fa-check"></i></div>
+                            <div class="tl-card status-done">
+                                <span class="status-pill pill-done">Done</span>
+                                <div class="tl-date">Feb – Mar 2025</div>
+                                <div class="tl-title">KCSE 2024 Results Released</div>
+                                <p class="tl-desc">Results published by KNEC. Mean grade, subject grades, and cluster points made available.</p>
+                            </div>
+                        </div>
+
+                        <div class="tl-item">
+                            <div class="tl-dot dot-gray"><i class="fas fa-check"></i></div>
+                            <div class="tl-card status-done">
+                                <span class="status-pill pill-done">Done</span>
+                                <div class="tl-date">April – May 2025</div>
+                                <div class="tl-title">Applications &amp; Course Selection</div>
+                                <p class="tl-desc">KUCCPS portal opened; students submitted degree, TVET, and KMTC programme choices.</p>
+                            </div>
+                        </div>
+
+                        <div class="tl-item">
+                            <div class="tl-dot dot-gray"><i class="fas fa-check"></i></div>
+                            <div class="tl-card status-done">
+                                <span class="status-pill pill-done">Done</span>
+                                <div class="tl-date">May – June 2025</div>
+                                <div class="tl-title">1st Revision Window</div>
+                                <p class="tl-desc">Students updated programme choices in the first revision round.</p>
+                            </div>
+                        </div>
+
+                        <div class="tl-item">
+                            <div class="tl-dot dot-gray"><i class="fas fa-check"></i></div>
+                            <div class="tl-card status-done">
+                                <span class="status-pill pill-done">Done</span>
+                                <div class="tl-date">June – July 2025</div>
+                                <div class="tl-title">2nd Revision Window</div>
+                                <p class="tl-desc">Final programme choice revisions before placement computation.</p>
+                            </div>
+                        </div>
+
+                        <div class="tl-item">
+                            <div class="tl-dot dot-gray"><i class="fas fa-check"></i></div>
+                            <div class="tl-card status-done">
+                                <span class="status-pill pill-done">Done</span>
+                                <div class="tl-date">August 2025</div>
+                                <div class="tl-title">Placement Results</div>
+                                <p class="tl-desc">KUCCPS announced placements. Students notified via SMS and kuccps.net portal.</p>
+                            </div>
+                        </div>
+
+                        <div class="tl-item">
+                            <div class="tl-dot dot-gray"><i class="fas fa-check"></i></div>
+                            <div class="tl-card status-done">
+                                <span class="status-pill pill-done">Done</span>
+                                <div class="tl-date">Aug – Sep 2025</div>
+                                <div class="tl-title">Reporting to Institutions</div>
+                                <p class="tl-desc">Placed students reported to their institutions for registration and orientation.</p>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div><!-- /col -->
+
+            <!-- Sidebar -->
+            <div class="col-lg-4">
+
+                <!-- Quick checklist -->
+                <div class="cycle-card mb-3">
+                    <h6 class="fw-bold mb-3" style="color:#1e3a8a;">
+                        <i class="fas fa-clipboard-check me-2 text-success"></i>Application Checklist
+                    </h6>
+                    <ul class="list-unstyled small mb-0" style="line-height:2;">
+                        <li><i class="fas fa-square-check me-2 text-success"></i>KCSE index number</li>
+                        <li><i class="fas fa-square-check me-2 text-success"></i>Know your cluster points</li>
+                        <li><i class="fas fa-square-check me-2 text-success"></i>Research courses in advance</li>
+                        <li><i class="fas fa-square-check me-2 text-success"></i>Rank 6 degree choices (1–6)</li>
+                        <li><i class="fas fa-square-check me-2 text-success"></i>Add KMTC/TVET backup choices</li>
+                        <li><i class="fas fa-square-check me-2 text-success"></i>Check subject requirements</li>
+                        <li><i class="fas fa-square-check me-2 text-success"></i>Submit before portal closes</li>
+                        <li><i class="fas fa-square-check me-2 text-success"></i>Save your confirmation number</li>
+                    </ul>
+                </div>
+
+                <!-- Status legend -->
+                <div class="cycle-card mb-3">
+                    <h6 class="fw-bold mb-3"><i class="fas fa-circle-info me-2 text-primary"></i>Status Key</h6>
+                    <div class="d-flex flex-column gap-2 small">
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="status-pill pill-done" style="float:none;position:static;">Done</span>
+                            <span class="text-muted">Already completed</span>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="status-pill pill-active" style="float:none;position:static;">Expected</span>
+                            <span class="text-muted">Coming soon (date estimated)</span>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="status-pill pill-upcoming" style="float:none;position:static;">Upcoming</span>
+                            <span class="text-muted">After results are out</span>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="status-pill pill-future" style="float:none;position:static;">TBA</span>
+                            <span class="text-muted">Date not yet announced</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tips -->
+                <div class="cycle-card mb-3" style="background:#fffbeb;border-color:#fde68a;">
+                    <h6 class="fw-bold mb-3" style="color:#92400e;"><i class="fas fa-lightbulb me-2 text-amber-500"></i>Application Tips</h6>
+                    <ul class="small mb-0" style="color:#78350f;line-height:1.85;padding-left:1.2rem;">
+                        <li>Put your <strong>most desired course first</strong> — KUCCPS fills choices in order.</li>
+                        <li>Include at least one KMTC or TVET programme as a safety backup.</li>
+                        <li>Revision windows are limited — don't rely on them to fix a bad first selection.</li>
+                        <li>Check minimum subject requirements before selecting a course.</li>
+                        <li>HELB loans are tied to approved KUCCPS placements.</li>
+                    </ul>
+                </div>
+
+                <!-- Quick links -->
+                <div class="cycle-card">
+                    <h6 class="fw-bold mb-3"><i class="fas fa-external-link-alt me-2 text-primary"></i>Useful Links</h6>
+                    <ul class="list-unstyled small mb-0" style="line-height:2.2;">
+                        <li>
+                            <i class="fas fa-calculator me-2 text-primary"></i>
+                            <a href="{% url 'clusterpoints:calculator' %}">Calculate your cluster points</a>
+                        </li>
+                        <li>
+                            <i class="fas fa-graduation-cap me-2 text-success"></i>
+                            <a href="{% url 'courses:course_types_list' %}">Browse all courses</a>
+                        </li>
+                        <li>
+                            <i class="fas fa-compass me-2 text-warning"></i>
+                            <a href="{% url 'career:home' %}">Career guidance engine</a>
+                        </li>
+                        <li>
+                            <i class="fas fa-university me-2 text-info"></i>
+                            <a href="{% url 'institutions:institution_types_list' %}">Browse institutions</a>
+                        </li>
+                        <li>
+                            <i class="fas fa-file-pdf me-2 text-danger"></i>
+                            <a href="{% url 'resources:resource_list' %}">Guides &amp; Resources</a>
+                        </li>
+                    </ul>
+                </div>
+
+            </div><!-- /sidebar -->
+        </div><!-- /row -->
+    </div><!-- /container -->
+</div>
+
+{% endblock %}

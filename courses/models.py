@@ -76,6 +76,8 @@ class Course(models.Model):
         blank=True, null=True,
         help_text='[{"slot":1,"subjects_str":"ENG/KIS","min_grade":"C"}, ...]'
     )
+    duration = models.CharField(max_length=60, blank=True, help_text="e.g. 3 years, 18 months")
+    career_outcomes = models.TextField(blank=True, help_text="Comma-separated example job titles e.g. Doctor, Surgeon, Physician")
     pdf_file = models.FileField(upload_to="course_pdfs/", blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

@@ -188,21 +188,6 @@ class UserAdminCreationForm(forms.ModelForm):
 # =====================================================
 # ADMIN USER CHANGE FORM
 # =====================================================
-# =====================================================
-# APPLICATION TRACKING FORM
-# =====================================================
-class ApplicationForm(forms.ModelForm):
-    class Meta:
-        from .models import ApplicationTracking
-        model = ApplicationTracking
-        fields = ['course_name', 'institution_name', 'status', 'deadline', 'notes']
-        widgets = {
-            'course_name': forms.TextInput(attrs={'placeholder': 'e.g. Bachelor of Medicine'}),
-            'institution_name': forms.TextInput(attrs={'placeholder': 'e.g. University of Nairobi'}),
-            'deadline': forms.DateInput(attrs={'type': 'date'}),
-            'notes': forms.Textarea(attrs={'rows': 3, 'placeholder': 'Any additional notes...'}),
-        }
-
 
 class UserAdminChangeForm(forms.ModelForm):
     password = ReadOnlyPasswordHashField(

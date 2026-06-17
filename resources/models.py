@@ -2,6 +2,121 @@ from django.db import models
 from django.utils.text import slugify
 
 
+# ──────────────────────────────────────────────────────
+# Site-wide key-value settings (contact info, hero text, social links …)
+# ──────────────────────────────────────────────────────
+class SiteSetting(models.Model):
+    TYPE_CHOICES = [
+        ('text',     'Short Text'),
+        ('textarea', 'Long Text'),
+        ('url',      'URL'),
+        ('email',    'Email'),
+        ('phone',    'Phone / WhatsApp'),
+        ('number',   'Number'),
+    ]
+
+    key          = models.CharField(max_length=100, unique=True,
+                                    help_text="Unique key used in views/templates")
+    label        = models.CharField(max_length=200, help_text="Human-readable label")
+    value        = models.TextField(blank=True)
+    setting_type = models.CharField(max_length=20, choices=TYPE_CHOICES, default='text')
+    group        = models.CharField(max_length=50, default='general',
+                                    help_text="Group name for admin display (e.g. contact, social, hero)")
+    help_note    = models.CharField(max_length=300, blank=True,
+                                    help_text="Extra hint for the admin editing this value")
+
+    class Meta:
+        ordering = ['group', 'key']
+        verbose_name        = 'Site Setting'
+        verbose_name_plural = 'Site Settings'
+
+    def __str__(self):
+        return f"{self.label} ({self.key})"
+
+    @classmethod
+    def get(cls, key, default=''):
+        try:
+            return cls.objects.get(key=key).value
+        except cls.DoesNotExist:
+            return default
+
+
+# ──────────────────────────────────────────────────────
+# FAQ items
+# ──────────────────────────────────────────────────────
+class FAQItem(models.Model):
+    CATEGORY_CHOICES = [
+        ('general', 'General'),
+        ('cluster', 'Cluster Points'),
+        ('courses', 'Courses & Pathways'),
+        ('kuccps',  'KUCCPS Process'),
+        ('account', 'My Account'),
+    ]
+
+    question   = models.CharField(max_length=400)
+    answer     = models.TextField()
+    category   = models.CharField(max_length=20, choices=CATEGORY_CHOICES, default='general')
+    order      = models.PositiveIntegerField(default=0,
+                                             help_text="Lower numbers appear first within each category")
+    is_active  = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['category', 'order', 'id']
+        verbose_name        = 'FAQ Item'
+        verbose_name_plural = 'FAQ Items'
+
+    def __str__(self):
+        return f"[{self.get_category_display()}] {self.question[:70]}"
+
+
+# ──────────────────────────────────────────────────────
+# Student success stories (public home page)
+# ──────────────────────────────────────────────────────
+class SuccessStory(models.Model):
+    PATHWAY_CHOICES = [
+        ('degree',  'Degree'),
+        ('kmtc',    'KMTC'),
+        ('tvet',    'TVET / Polytechnic'),
+        ('ttc',     'TTC'),
+        ('diploma', 'Diploma'),
+        ('artisan', 'Artisan Certificate'),
+    ]
+
+    name          = models.CharField(max_length=100)
+    initials      = models.CharField(max_length=4, blank=True,
+                                     help_text="2-letter avatar initials — auto-filled from name if blank")
+    county        = models.CharField(max_length=80, blank=True, help_text="Home county, e.g. Kiambu County")
+    work_location = models.CharField(max_length=100, blank=True,
+                                     help_text="City/region where they work now, e.g. Nairobi")
+    kcse_grade    = models.CharField(max_length=4, blank=True, help_text="Mean grade, e.g. A-, C+, B")
+    quote         = models.TextField(help_text="Their testimonial in their own words")
+    course_name   = models.CharField(max_length=200)
+    institution   = models.CharField(max_length=200)
+    pathway       = models.CharField(max_length=20, choices=PATHWAY_CHOICES, default='degree')
+    year          = models.PositiveIntegerField(blank=True, null=True, help_text="Graduation year")
+    avatar_bg     = models.CharField(max_length=20, default='#eef2ff',
+                                     help_text="Avatar background colour (hex)")
+    avatar_color  = models.CharField(max_length=20, default='#4f46e5',
+                                     help_text="Avatar text colour (hex)")
+    order         = models.PositiveIntegerField(default=0)
+    is_active     = models.BooleanField(default=True)
+
+    class Meta:
+        ordering = ['order', 'id']
+        verbose_name        = 'Success Story'
+        verbose_name_plural = 'Success Stories'
+
+    def save(self, *args, **kwargs):
+        if not self.initials:
+            parts = self.name.split()
+            self.initials = ''.join(p[0].upper() for p in parts[:2])
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.name} — {self.course_name}"
+
+
 class ResourceCategory(models.Model):
     name = models.CharField(max_length=100, unique=True)
     slug = models.SlugField(max_length=120, unique=True, blank=True)
@@ -77,6 +192,7 @@ class Article(models.Model):
         help_text="Comma-separated tags, e.g. career,university,tips"
     )
     is_published = models.BooleanField(default=True)
+    featured = models.BooleanField(default=False, help_text="Pin as the featured headline article")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -99,3 +215,9 @@ class Article(models.Model):
 
     def get_tags_list(self):
         return [t.strip() for t in self.tags.split(",") if t.strip()]
+
+    @property
+    def reading_time(self):
+        words = len(self.content.split())
+        minutes = max(1, round(words / 200))
+        return minutes

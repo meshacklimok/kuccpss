@@ -51,4 +51,15 @@ urlpatterns = [
     # ── Loading & Results ────────────────────────────
     path("loading/<str:pathway>/", views.loading_page, name="loading_page"),
     path("results/", views.career_results, name="career_results"),
+
+    # ── PDF Downloads ────────────────────────────────
+    path("results/pdf/quick/",  views.career_results_pdf_quick,   name="pdf_quick"),
+    path("results/pdf/report/", views.career_results_pdf_detailed, name="pdf_report"),
+
+    # ── AI Insight (AJAX) ────────────────────────────
+    path("ajax/ai-insight/", views.ajax_ai_insight, name="ajax_ai_insight"),
+    path("ajax/ai-chat/",    views.ajax_ai_chat,    name="ajax_ai_chat"),
+
+    # ── Session management ───────────────────────────
+    path("clear/", views.clear_session, name="clear_session"),
 ]

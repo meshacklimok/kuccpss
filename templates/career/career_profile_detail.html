@@ -1,174 +1,620 @@
 {% extends "base.html" %}
-{% block title %}{{ profile.title }} — KUCCPSS{% endblock %}
+{% load custom_filters %}
+{% block title %}{{ profile.title }} — Career Guide{% endblock %}
 
 {% block content %}
+<style>
+.detail-hero {
+  background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 60%, #1d4ed8 100%);
+  padding: 2.5rem 0;
+  position: relative;
+  overflow: hidden;
+}
+.detail-hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 75% 50%, rgba(99,102,241,0.3) 0%, transparent 60%);
+  pointer-events: none;
+}
+.hero-icon-wrap {
+  width: 80px; height: 80px;
+  border-radius: 20px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 2rem;
+  background: rgba(255,255,255,0.12);
+  border: 2px solid rgba(255,255,255,0.2);
+  backdrop-filter: blur(8px);
+  flex-shrink: 0;
+}
+.section-card {
+  background: #fff;
+  border-radius: 14px;
+  border: 1.5px solid #f1f5f9;
+  padding: 1.5rem;
+  margin-bottom: 1.25rem;
+}
+.section-card h5 {
+  font-size: 0.95rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+/* Pathway timeline */
+.pathway-step {
+  display: flex;
+  gap: 1rem;
+  padding-bottom: 1.2rem;
+  position: relative;
+}
+.pathway-step:not(:last-child)::before {
+  content: '';
+  position: absolute;
+  left: 17px;
+  top: 36px;
+  bottom: 0;
+  width: 2px;
+  background: #e2e8f0;
+}
+.step-num {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: var(--primary);
+  color: #fff;
+  font-weight: 800;
+  font-size: 0.8rem;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  z-index: 1;
+  position: relative;
+}
+.step-content {
+  padding-top: 0.35rem;
+  flex: 1;
+}
+/* Bullet list */
+.bullet-list { list-style: none; padding: 0; margin: 0; }
+.bullet-list li {
+  padding: 0.4rem 0;
+  font-size: 0.88rem;
+  color: #374151;
+  border-bottom: 1px solid #f8fafc;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+}
+.bullet-list li:last-child { border-bottom: none; }
+.bullet-list li::before {
+  content: '';
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--primary);
+  margin-top: 0.45rem;
+  flex-shrink: 0;
+}
+/* Skill chips */
+.skill-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 4px 10px;
+  border-radius: 50px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: #eef2ff;
+  color: #4338ca;
+  margin: 3px;
+}
+/* Job tile */
+.job-tile {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.6rem 0.75rem;
+  border-radius: 10px;
+  background: #f8fafc;
+  font-size: 0.83rem;
+  color: #334155;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+}
+.job-tile i { color: var(--primary); font-size: 0.85rem; width: 18px; text-align: center; }
+/* Sidebar stat */
+.stat-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.6rem 0;
+  border-bottom: 1px solid #f1f5f9;
+  font-size: 0.83rem;
+}
+.stat-row:last-child { border-bottom: none; }
+
+/* ── Qualification routes ── */
+.route-card {
+  border-radius: 12px;
+  padding: 0.9rem 0.75rem;
+  text-align: center;
+  border: 1.5px solid;
+  transition: transform 0.15s, box-shadow 0.15s;
+  cursor: default;
+}
+.route-card:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0,0,0,0.08); }
+.route-card .r-count { font-size: 1.4rem; font-weight: 900; line-height: 1; }
+.route-card .r-label { font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; margin-top: 2px; }
+.rc-degree  { background:#eff6ff; border-color:#bfdbfe; color:#1d4ed8; }
+.rc-diploma { background:#f5f3ff; border-color:#ddd6fe; color:#6d28d9; }
+.rc-kmtc    { background:#f0fdf4; border-color:#bbf7d0; color:#15803d; }
+.rc-ttc     { background:#fff7ed; border-color:#fed7aa; color:#c2410c; }
+.rc-tvet    { background:#f0fdfa; border-color:#99f6e4; color:#0f766e; }
+.rc-default { background:#f8fafc; border-color:#e2e8f0; color:#475569; }
+
+/* ── Linked course items ── */
+.linked-course-item {
+  display: flex; align-items: center; gap: 0.75rem;
+  padding: 0.65rem 0.85rem;
+  border-radius: 10px;
+  border: 1.5px solid #f1f5f9;
+  background: #f8fafc;
+  text-decoration: none;
+  transition: border-color 0.15s, background 0.15s;
+}
+.linked-course-item:hover { border-color: #c7d2fe; background: #eef2ff; }
+.lci-icon {
+  width: 32px; height: 32px; border-radius: 8px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center; font-size: 0.8rem;
+}
+.lci-degree  { background:#dbeafe; color:#1d4ed8; }
+.lci-diploma { background:#ede9fe; color:#6d28d9; }
+.lci-kmtc   { background:#dcfce7; color:#15803d; }
+.lci-ttc    { background:#ffedd5; color:#c2410c; }
+.lci-tvet   { background:#ccfbf1; color:#0f766e; }
+.lci-default { background:#f1f5f9; color:#475569; }
+.lci-name { font-size: 0.83rem; font-weight: 700; color: #1e293b; line-height: 1.3; }
+.lci-meta { font-size: 0.7rem; color: #64748b; }
+.type-group-header {
+  display: flex; align-items: center; gap: 0.5rem;
+  padding: 0.4rem 0; margin-bottom: 0.5rem;
+  border-bottom: 2px solid #f1f5f9;
+  font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em;
+}
+</style>
+
 <!-- Hero -->
-<div class="page-hero">
-  <div class="container">
-    <nav aria-label="breadcrumb" class="mb-2">
-      <ol class="breadcrumb breadcrumb-dark mb-0">
-        <li class="breadcrumb-item"><a href="{% url 'career:career_profiles' %}" class="text-white-50">Careers</a></li>
+<div class="detail-hero">
+  <div class="container position-relative">
+    <!-- Breadcrumb -->
+    <nav class="mb-3">
+      <ol class="breadcrumb mb-0" style="font-size:0.78rem;">
+        <li class="breadcrumb-item"><a href="{% url 'career:career_profiles' %}" class="text-white-50">Career Ideas</a></li>
         <li class="breadcrumb-item active text-white">{{ profile.title }}</li>
       </ol>
     </nav>
-    <div class="row align-items-center">
-      <div class="col-md-8">
-        <h1 class="mb-1">{{ profile.title }}</h1>
-        <div class="d-flex gap-2 flex-wrap">
-          <span class="badge rounded-pill
-            {% if profile.demand_level == 'high' %}bg-success
+
+    <div class="d-flex gap-4 align-items-start flex-wrap">
+      <!-- Icon -->
+      <div class="hero-icon-wrap">
+        <i class="{{ profile.icon|default:'fas fa-briefcase' }} text-white"></i>
+      </div>
+
+      <!-- Title + badges -->
+      <div class="flex-grow-1">
+        <h1 class="text-white fw-900 mb-2" style="font-size:clamp(1.5rem,3.5vw,2.2rem);line-height:1.2;">
+          {{ profile.title }}
+        </h1>
+        <div class="d-flex flex-wrap gap-2 mb-3">
+          <span class="badge rounded-pill fw-700
+            {% if profile.demand_level == 'very_high' %}bg-success
+            {% elif profile.demand_level == 'high' %}bg-primary
             {% elif profile.demand_level == 'medium' %}bg-warning text-dark
-            {% else %}bg-secondary{% endif %}">
-            {{ profile.get_demand_level_display }} Demand
+            {% else %}bg-secondary{% endif %}"
+            style="font-size:0.75rem;padding:5px 12px;">
+            <i class="fas fa-fire me-1"></i>{{ profile.get_demand_level_display }} Demand
           </span>
           {% if profile.average_salary %}
-          <span class="badge bg-white text-primary">
-            <i class="fas fa-coins me-1"></i>{{ profile.average_salary }}
+          <span class="badge rounded-pill bg-white text-success fw-700" style="font-size:0.75rem;padding:5px 12px;">
+            <i class="fas fa-money-bill-wave me-1"></i>{{ profile.average_salary }}
           </span>
           {% endif %}
+          {% for tag in profile.career_tags|split:"," %}
+          {% if tag|length > 0 %}
+          <span class="badge rounded-pill fw-600" style="background:rgba(255,255,255,0.15);color:#e0e7ff;font-size:0.72rem;padding:4px 10px;">
+            {{ tag|title }}
+          </span>
+          {% endif %}
+          {% endfor %}
         </div>
-      </div>
-      <div class="col-md-4 text-md-end mt-3 mt-md-0">
-        {% if request.user.is_authenticated %}
-        <button id="saveCareerBtn" class="btn {% if is_saved %}btn-warning{% else %}btn-outline-light{% endif %} me-2"
-                data-career-id="{{ profile.pk }}">
-          <i class="{% if is_saved %}fas{% else %}far{% endif %} fa-heart me-1"></i>
-          <span id="saveLabel">{% if is_saved %}Saved{% else %}Save Career{% endif %}</span>
-        </button>
-        {% endif %}
-        <a href="{% url 'career:quiz' %}" class="btn btn-gradient-success">
-          <i class="fas fa-clipboard-list me-1"></i>Find Your Match
-        </a>
+
+        <!-- Action buttons -->
+        <div class="d-flex gap-2 flex-wrap">
+          {% if request.user.is_authenticated %}
+          <button id="saveCareerBtn" class="btn btn-sm fw-700 rounded-pill
+            {% if is_saved %}btn-warning{% else %}btn-outline-light{% endif %}"
+            data-career-id="{{ profile.pk }}" style="padding:6px 18px;">
+            <i class="{% if is_saved %}fas{% else %}far{% endif %} fa-heart me-1"></i>
+            <span id="saveLabel">{% if is_saved %}Saved{% else %}Save Career{% endif %}</span>
+          </button>
+          {% endif %}
+          <a href="{% url 'career:quiz' %}" class="btn btn-light btn-sm fw-700 rounded-pill" style="padding:6px 18px;">
+            <i class="fas fa-magic me-1"></i>Find My Match
+          </a>
+          <a href="{% url 'clusterpoints:calculator' %}" class="btn btn-sm fw-700 rounded-pill"
+             style="background:rgba(255,255,255,0.15);color:#fff;border:1.5px solid rgba(255,255,255,0.3);padding:6px 18px;">
+            <i class="fas fa-calculator me-1"></i>Check My Cluster Points
+          </a>
+        </div>
       </div>
     </div>
   </div>
 </div>
 
-<div class="container pb-5">
+<div class="container py-4">
   <div class="row g-4">
 
-    <!-- Main Content -->
+    <!-- ── LEFT MAIN CONTENT ── -->
     <div class="col-lg-8">
 
-      {% if profile.image %}
-      <img src="{{ profile.image.url }}" class="w-100 rounded-3 mb-4" style="max-height:320px;object-fit:cover;" alt="{{ profile.title }}">
-      {% endif %}
-
       <!-- About -->
-      <div class="card p-4 mb-4">
-        <h5 class="fw-bold mb-3"><i class="fas fa-info-circle me-2 text-primary"></i>About This Career</h5>
-        <p>{{ profile.description }}</p>
+      <div class="section-card">
+        <h5><i class="fas fa-info-circle text-primary"></i>About This Career</h5>
+        <p style="color:#374151;line-height:1.8;font-size:0.92rem;">{{ profile.description }}</p>
+
+        <!-- Key facts strip -->
+        <div class="d-flex flex-wrap gap-3 mt-3 pt-3 border-top">
+          <div class="d-flex align-items-center gap-2">
+            <div style="width:34px;height:34px;border-radius:8px;background:#dbeafe;display:flex;align-items:center;justify-content:center;">
+              <i class="fas fa-fire" style="color:#2563eb;font-size:0.85rem;"></i>
+            </div>
+            <div>
+              <div style="font-size:0.67rem;color:#64748b;text-transform:uppercase;letter-spacing:0.06em;font-weight:700;">Demand</div>
+              <div style="font-size:0.82rem;font-weight:700;color:#1e293b;">{{ profile.get_demand_level_display }}</div>
+            </div>
+          </div>
+          {% if profile.average_salary %}
+          <div class="d-flex align-items-center gap-2">
+            <div style="width:34px;height:34px;border-radius:8px;background:#dcfce7;display:flex;align-items:center;justify-content:center;">
+              <i class="fas fa-money-bill-wave" style="color:#16a34a;font-size:0.85rem;"></i>
+            </div>
+            <div>
+              <div style="font-size:0.67rem;color:#64748b;text-transform:uppercase;letter-spacing:0.06em;font-weight:700;">Avg Salary</div>
+              <div style="font-size:0.82rem;font-weight:700;color:#16a34a;">{{ profile.average_salary }}</div>
+            </div>
+          </div>
+          {% endif %}
+          {% if total_linked %}
+          <div class="d-flex align-items-center gap-2">
+            <div style="width:34px;height:34px;border-radius:8px;background:#ede9fe;display:flex;align-items:center;justify-content:center;">
+              <i class="fas fa-graduation-cap" style="color:#7c3aed;font-size:0.85rem;"></i>
+            </div>
+            <div>
+              <div style="font-size:0.67rem;color:#64748b;text-transform:uppercase;letter-spacing:0.06em;font-weight:700;">Linked Courses</div>
+              <div style="font-size:0.82rem;font-weight:700;color:#1e293b;">{{ total_linked }} course{{ total_linked|pluralize }}</div>
+            </div>
+          </div>
+          {% endif %}
+          {% if profile.career_tags %}
+          <div class="d-flex align-items-center gap-2">
+            <div style="width:34px;height:34px;border-radius:8px;background:#f0fdfa;display:flex;align-items:center;justify-content:center;">
+              <i class="fas fa-tags" style="color:#0f766e;font-size:0.85rem;"></i>
+            </div>
+            <div>
+              <div style="font-size:0.67rem;color:#64748b;text-transform:uppercase;letter-spacing:0.06em;font-weight:700;">Sector</div>
+              <div style="font-size:0.82rem;font-weight:700;color:#1e293b;">{{ profile.career_tags|truncatechars:30 }}</div>
+            </div>
+          </div>
+          {% endif %}
+        </div>
       </div>
 
       <!-- Duties -->
       {% if profile.duties %}
-      <div class="card p-4 mb-4">
-        <h5 class="fw-bold mb-3"><i class="fas fa-tasks me-2 text-success"></i>Key Duties & Responsibilities</h5>
-        <div style="white-space:pre-line;">{{ profile.duties }}</div>
+      <div class="section-card">
+        <h5><i class="fas fa-tasks text-success"></i>What You'll Do Day-to-Day</h5>
+        <ul class="bullet-list">
+          {% for line in profile.duties|split:"\n" %}
+          {% if line|length > 2 %}
+          <li>{{ line|cut:"• " }}</li>
+          {% endif %}
+          {% endfor %}
+        </ul>
       </div>
       {% endif %}
 
-      <!-- Skills Required -->
+      <!-- Skills -->
       {% if profile.skills_required %}
-      <div class="card p-4 mb-4">
-        <h5 class="fw-bold mb-3"><i class="fas fa-tools me-2 text-warning"></i>Skills Required</h5>
-        <div style="white-space:pre-line;">{{ profile.skills_required }}</div>
+      <div class="section-card">
+        <h5><i class="fas fa-star text-warning"></i>Skills You'll Need</h5>
+        <div class="mt-1">
+          {% for line in profile.skills_required|split:"\n" %}
+          {% if line|length > 2 %}
+          <span class="skill-chip">
+            <i class="fas fa-check" style="font-size:0.6rem;"></i>{{ line|cut:"• " }}
+          </span>
+          {% endif %}
+          {% endfor %}
+        </div>
       </div>
       {% endif %}
 
-      <!-- Educational Pathway -->
+      <!-- Educational Pathway as timeline -->
       {% if profile.educational_pathway %}
-      <div class="card p-4 mb-4">
-        <h5 class="fw-bold mb-3"><i class="fas fa-graduation-cap me-2 text-info"></i>Educational Pathway</h5>
-        <div style="white-space:pre-line;">{{ profile.educational_pathway }}</div>
+      <div class="section-card">
+        <h5><i class="fas fa-graduation-cap" style="color:#6366f1;"></i>How to Become a {{ profile.title }}</h5>
+        <p class="text-muted mb-3" style="font-size:0.83rem;">
+          Follow these steps from KCSE to your first job as a {{ profile.title }} in Kenya.
+        </p>
+        <div class="mt-2">
+          {% for line in profile.educational_pathway|split:"\n" %}
+          {% if line|length > 2 %}
+          <div class="pathway-step">
+            <div class="step-num">{{ forloop.counter }}</div>
+            <div class="step-content">
+              <p class="mb-0" style="font-size:0.87rem;color:#1e293b;line-height:1.6;">{{ line|slice:"3:" }}</p>
+            </div>
+          </div>
+          {% endif %}
+          {% endfor %}
+        </div>
+        {% if courses_by_type %}
+        <div class="mt-3 p-3 rounded-3" style="background:#f0f9ff;border:1.5px solid #bae6fd;">
+          <p class="mb-0 small" style="color:#0369a1;">
+            <i class="fas fa-lightbulb me-1" style="color:#f59e0b;"></i>
+            <strong>{{ total_linked }} course{{ total_linked|pluralize }}</strong> across
+            {% for type_name, courses in courses_by_type %}{{ type_name }}{% if not forloop.last %}, {% endif %}{% endfor %}
+            lead directly to this career. See the <strong>Courses That Lead Here</strong> section below.
+          </p>
+        </div>
+        {% endif %}
       </div>
       {% endif %}
 
       <!-- Job Opportunities -->
       {% if profile.job_opportunities %}
-      <div class="card p-4 mb-4">
-        <h5 class="fw-bold mb-3"><i class="fas fa-building me-2 text-primary"></i>Where You Can Work</h5>
-        <div style="white-space:pre-line;">{{ profile.job_opportunities }}</div>
+      <div class="section-card">
+        <h5><i class="fas fa-building text-primary"></i>Where You Can Work</h5>
+        {% for line in profile.job_opportunities|split:"\n" %}
+        {% if line|length > 2 %}
+        <div class="job-tile">
+          <i class="fas fa-map-marker-alt"></i>
+          <span>{{ line|cut:"• " }}</span>
+        </div>
+        {% endif %}
+        {% endfor %}
       </div>
       {% endif %}
 
-      <!-- Related Courses -->
-      {% if profile.related_courses.exists %}
-      <div class="card p-4 mb-4">
-        <h5 class="fw-bold mb-3"><i class="fas fa-book me-2 text-success"></i>Related Courses</h5>
-        <div class="row g-2">
-          {% for course in profile.related_courses.all %}
-          <div class="col-md-6">
-            <div class="border rounded-3 p-3 d-flex align-items-center gap-2">
-              <i class="fas fa-graduation-cap text-primary"></i>
-              <div>
-                <div class="fw-bold small">{{ course.name }}</div>
-                <div class="text-muted" style="font-size:0.75rem;">{{ course.course_type.name }}</div>
-              </div>
+      <!-- Future Outlook -->
+      {% if profile.future_outlook %}
+      <div class="section-card" style="border-left:4px solid #4f46e5;background:linear-gradient(135deg,#fafafa,#eef2ff);">
+        <h5><i class="fas fa-rocket" style="color:#4f46e5;"></i>Future Outlook in Kenya</h5>
+        <p style="color:#1e293b;line-height:1.8;font-size:0.91rem;margin:0;">{{ profile.future_outlook }}</p>
+      </div>
+      {% endif %}
+
+      <!-- ── Qualification Routes Overview ── -->
+      {% if courses_by_type %}
+      <div class="section-card">
+        <h5><i class="fas fa-route" style="color:#6366f1;"></i>Qualification Routes</h5>
+        <p class="text-muted mb-3" style="font-size:0.85rem;line-height:1.6;">
+          There are <strong>{{ total_linked }} course{{ total_linked|pluralize }}</strong> across
+          <strong>{{ courses_by_type|length }} pathway{{ courses_by_type|length|pluralize }}</strong>
+          that lead to a career as a {{ profile.title }}. Click any route below to explore.
+        </p>
+        <div class="row g-2 mb-1">
+          {% for type_name, courses in courses_by_type %}
+          <div class="col-6 col-sm-4 col-md-3">
+            <div class="route-card
+              {% if 'TVET' in type_name %}rc-tvet
+              {% elif type_name == 'Degree' %}rc-degree
+              {% elif type_name == 'Diploma' %}rc-diploma
+              {% elif type_name == 'KMTC' %}rc-kmtc
+              {% elif type_name == 'TTC' %}rc-ttc
+              {% else %}rc-default{% endif %}">
+              <div class="r-count">{{ courses|length }}</div>
+              <div class="r-label">{{ type_name }}</div>
             </div>
           </div>
           {% endfor %}
+        </div>
+      </div>
+
+      <!-- ── Linked Courses (grouped by type) ── -->
+      <div class="section-card">
+        <h5><i class="fas fa-graduation-cap text-success"></i>
+          Courses That Lead Here
+          <span class="badge bg-success bg-opacity-15 text-success fw-700 rounded-pill ms-1" style="font-size:0.68rem;">{{ total_linked }}</span>
+        </h5>
+        <p class="text-muted mb-3" style="font-size:0.83rem;">
+          These are real courses offered by Kenyan universities and colleges that prepare you for a career as a <strong>{{ profile.title }}</strong>.
+          Each links directly to the course page with full institution details and cutoff points.
+        </p>
+
+        {% for type_name, courses in courses_by_type %}
+        <div class="mb-4">
+          <!-- Type header -->
+          <div class="type-group-header
+            {% if 'TVET' in type_name %}text-info
+            {% elif type_name == 'Degree' %}text-primary
+            {% elif type_name == 'Diploma' %}text-secondary
+            {% elif type_name == 'KMTC' %}text-success
+            {% elif type_name == 'TTC' %}text-warning
+            {% else %}text-secondary{% endif %}"
+            style="{% if type_name == 'Diploma' %}color:#6d28d9!important;{% elif 'TVET' in type_name %}color:#0f766e!important;{% endif %}">
+            <i class="
+              {% if 'TVET' in type_name %}fas fa-tools
+              {% elif type_name == 'Degree' %}fas fa-university
+              {% elif type_name == 'Diploma' %}fas fa-award
+              {% elif type_name == 'KMTC' %}fas fa-clinic-medical
+              {% elif type_name == 'TTC' %}fas fa-chalkboard-teacher
+              {% else %}fas fa-graduation-cap{% endif %} me-1"></i>
+            {{ type_name }}
+            <span class="ms-1 fw-500 text-muted" style="text-transform:none;letter-spacing:0;">— {{ courses|length }} course{{ courses|length|pluralize }}</span>
+          </div>
+
+          <div class="row g-2">
+            {% for course in courses %}
+            {% with inst_count=course.offerings.all|length %}
+            <div class="col-12 col-md-6">
+              <a href="{% url 'courses:course_detail_no_category' course.course_type.slug course.slug %}"
+                 class="linked-course-item">
+                <div class="lci-icon
+                  {% if 'TVET' in type_name %}lci-tvet
+                  {% elif type_name == 'Degree' %}lci-degree
+                  {% elif type_name == 'Diploma' %}lci-diploma
+                  {% elif type_name == 'KMTC' %}lci-kmtc
+                  {% elif type_name == 'TTC' %}lci-ttc
+                  {% else %}lci-default{% endif %}">
+                  <i class="
+                    {% if 'TVET' in type_name %}fas fa-tools
+                    {% elif type_name == 'Degree' %}fas fa-university
+                    {% elif type_name == 'Diploma' %}fas fa-award
+                    {% elif type_name == 'KMTC' %}fas fa-clinic-medical
+                    {% elif type_name == 'TTC' %}fas fa-chalkboard-teacher
+                    {% else %}fas fa-book{% endif %}"></i>
+                </div>
+                <div class="flex-grow-1 min-w-0">
+                  <div class="lci-name">{{ course.name }}</div>
+                  <div class="lci-meta d-flex align-items-center gap-2 flex-wrap mt-1">
+                    {% if inst_count > 0 %}
+                    <span><i class="fas fa-building me-1" style="font-size:0.6rem;"></i>{{ inst_count }} institution{{ inst_count|pluralize }}</span>
+                    {% endif %}
+                    {% if course.minimum_mean_grade %}
+                    <span><i class="fas fa-star me-1" style="font-size:0.6rem;color:#f59e0b;"></i>Min: {{ course.minimum_mean_grade }}</span>
+                    {% endif %}
+                    {% if course.cluster %}
+                    <span><i class="fas fa-layer-group me-1" style="font-size:0.6rem;color:#6366f1;"></i>{{ course.cluster.name }}</span>
+                    {% endif %}
+                  </div>
+                </div>
+                <i class="fas fa-arrow-right text-muted flex-shrink-0" style="font-size:0.7rem;"></i>
+              </a>
+            </div>
+            {% endwith %}
+            {% endfor %}
+          </div>
+        </div>
+        {% endfor %}
+
+        <!-- Browse all CTA -->
+        <div class="d-flex gap-2 pt-2 border-top flex-wrap">
+          <a href="{% url 'courses:course_types_list' %}" class="btn btn-outline-primary btn-sm rounded-pill px-3">
+            <i class="fas fa-th me-1"></i>Browse All Courses
+          </a>
+          <a href="{% url 'clusterpoints:eligible_courses' %}" class="btn btn-outline-success btn-sm rounded-pill px-3">
+            <i class="fas fa-check-circle me-1"></i>See Courses I Qualify For
+          </a>
         </div>
       </div>
       {% endif %}
 
     </div>
 
-    <!-- Right Sidebar -->
+    <!-- ── RIGHT SIDEBAR ── -->
     <div class="col-lg-4">
 
-      <!-- Quick Stats -->
-      <div class="card p-4 mb-4">
-        <h6 class="fw-bold mb-3">Career Snapshot</h6>
+      <!-- Career Snapshot card -->
+      <div class="section-card mb-3">
+        <h6 class="fw-800 mb-3" style="font-size:0.88rem;color:#0f172a;">Career Snapshot</h6>
         {% if profile.average_salary %}
-        <div class="d-flex justify-content-between py-2 border-bottom">
+        <div class="stat-row">
           <span class="text-muted small">Average Salary</span>
-          <span class="fw-bold small text-success">{{ profile.average_salary }}</span>
+          <span class="fw-700 text-success small">{{ profile.average_salary }}</span>
         </div>
         {% endif %}
-        <div class="d-flex justify-content-between py-2 border-bottom">
+        <div class="stat-row">
           <span class="text-muted small">Job Demand</span>
-          <span class="badge rounded-pill
-            {% if profile.demand_level == 'high' %}bg-success
+          <span class="badge rounded-pill fw-700
+            {% if profile.demand_level == 'very_high' %}bg-success
+            {% elif profile.demand_level == 'high' %}bg-primary
             {% elif profile.demand_level == 'medium' %}bg-warning text-dark
-            {% else %}bg-secondary{% endif %}">
+            {% else %}bg-secondary{% endif %}" style="font-size:0.68rem;">
             {{ profile.get_demand_level_display }}
           </span>
         </div>
-        {% if profile.future_outlook %}
-        <div class="py-2">
-          <div class="text-muted small mb-1">Future Outlook</div>
-          <p class="small mb-0">{{ profile.future_outlook }}</p>
+        {% if total_linked %}
+        <div class="stat-row">
+          <span class="text-muted small">Linked Courses</span>
+          <span class="fw-700 small text-primary">{{ total_linked }} course{{ total_linked|pluralize }}</span>
+        </div>
+        {% endif %}
+        {% if courses_by_type %}
+        <div class="stat-row">
+          <span class="text-muted small">Pathways</span>
+          <div class="d-flex flex-wrap gap-1 justify-content-end">
+            {% for type_name, courses in courses_by_type %}
+            <span class="badge rounded-pill fw-600" style="font-size:0.62rem;
+              {% if 'TVET' in type_name %}background:#ccfbf1;color:#0f766e;
+              {% elif type_name == 'Degree' %}background:#dbeafe;color:#1d4ed8;
+              {% elif type_name == 'Diploma' %}background:#ede9fe;color:#6d28d9;
+              {% elif type_name == 'KMTC' %}background:#dcfce7;color:#15803d;
+              {% elif type_name == 'TTC' %}background:#ffedd5;color:#c2410c;
+              {% else %}background:#f1f5f9;color:#475569;{% endif %}">
+              {{ type_name }}
+            </span>
+            {% endfor %}
+          </div>
+        </div>
+        {% endif %}
+        {% if profile.career_tags %}
+        <div class="stat-row">
+          <span class="text-muted small">Sectors</span>
+          <div class="d-flex flex-wrap gap-1 justify-content-end">
+            {% for tag in profile.career_tags|split:"," %}
+            {% if tag|length > 0 %}
+            <span class="badge bg-primary bg-opacity-10 text-primary rounded-pill" style="font-size:0.65rem;">{{ tag|title }}</span>
+            {% endif %}
+            {% endfor %}
+          </div>
         </div>
         {% endif %}
       </div>
 
-      <!-- Related Careers -->
+      <!-- Quick Actions -->
+      <div class="section-card mb-3" style="background:linear-gradient(135deg,#0f172a,#1e3a8a);">
+        <h6 class="text-white fw-800 mb-3" style="font-size:0.88rem;">Ready to pursue this career?</h6>
+        <div class="d-flex flex-column gap-2">
+          <a href="{% url 'career:home' %}" class="btn btn-light btn-sm fw-700 rounded-pill">
+            <i class="fas fa-compass me-1"></i>Find Matching Courses
+          </a>
+          <a href="{% url 'clusterpoints:calculator' %}" class="btn btn-sm fw-700 rounded-pill"
+             style="background:rgba(255,255,255,0.12);color:#fff;border:1px solid rgba(255,255,255,0.25);">
+            <i class="fas fa-calculator me-1"></i>Calculate My Cluster Points
+          </a>
+          {% if request.user.is_authenticated %}
+          <a href="{% url 'clusterpoints:eligible_courses' %}" class="btn btn-sm fw-700 rounded-pill"
+             style="background:rgba(99,244,134,0.15);color:#86efac;border:1px solid rgba(99,244,134,0.25);">
+            <i class="fas fa-check-circle me-1"></i>Check Eligible Courses
+          </a>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Similar Careers -->
       {% if related %}
-      <div class="card p-4 mb-4">
-        <h6 class="fw-bold mb-3">Similar Careers</h6>
+      <div class="section-card">
+        <h6 class="fw-800 mb-3" style="font-size:0.88rem;color:#0f172a;">Similar Careers</h6>
         {% for rel in related %}
         <a href="{% url 'career:career_profile_detail' rel.slug %}"
            class="d-flex align-items-center gap-3 p-2 rounded-3 text-decoration-none mb-1"
+           style="transition:background 0.15s;"
            onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background=''">
-          <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
-               style="width:36px;height:36px;background:#e8f0fe;color:var(--primary);">
-            <i class="{{ rel.icon|default:'fas fa-briefcase' }} fa-sm"></i>
+          <div class="rounded-2 d-flex align-items-center justify-content-center flex-shrink-0"
+               style="width:34px;height:34px;background:#eef2ff;color:var(--primary);">
+            <i class="{{ rel.icon|default:'fas fa-briefcase' }}" style="font-size:0.85rem;"></i>
           </div>
-          <span class="small fw-bold text-dark">{{ rel.title }}</span>
+          <div>
+            <div class="fw-700 text-dark" style="font-size:0.82rem;">{{ rel.title }}</div>
+            <div class="text-muted" style="font-size:0.7rem;">{{ rel.get_demand_level_display }} Demand</div>
+          </div>
         </a>
         {% endfor %}
-      </div>
-      {% endif %}
-
-      <!-- CTA -->
-      <div class="card p-4" style="background:linear-gradient(135deg,#1e3a8a,#2563eb);">
-        <h6 class="text-white fw-bold mb-2">Is this your path?</h6>
-        <p class="text-white-75 small mb-3">Calculate your cluster points to see which courses lead here.</p>
-        <a href="{% url 'clusterpoints:calculator' %}" class="btn btn-gradient-success btn-sm w-100">
-          <i class="fas fa-calculator me-1"></i>Check My Points
+        <a href="{% url 'career:career_profiles' %}" class="d-block text-center text-primary small mt-2 fw-600">
+          Browse all careers <i class="fas fa-arrow-right ms-1"></i>
         </a>
       </div>
+      {% endif %}
 
     </div>
   </div>
@@ -178,26 +624,30 @@
 {% block extra_js %}
 {% if request.user.is_authenticated %}
 <script>
+var CAREER_CSRF = (document.cookie.match(/(?:^|;\s*)csrftoken=([^;]+)/) || [])[1] || '';
 document.getElementById('saveCareerBtn')?.addEventListener('click', function() {
-  const careerId = this.dataset.careerId;
-  fetch(`/accounts/save-career/${careerId}/`, {
+  var btn = this;
+  btn.disabled = true;
+  fetch('/accounts/save-career/' + btn.dataset.careerId + '/', {
     method: 'POST',
-    headers: {'X-CSRFToken': '{{ csrf_token }}', 'Content-Type': 'application/json'},
+    headers: { 'X-CSRFToken': CAREER_CSRF },
   })
-  .then(r => r.json())
-  .then(data => {
-    const icon  = this.querySelector('i');
-    const label = document.getElementById('saveLabel');
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    var icon  = btn.querySelector('i');
+    var label = document.getElementById('saveLabel');
     if (data.saved) {
       icon.className  = 'fas fa-heart me-1';
       label.textContent = 'Saved';
-      this.classList.replace('btn-outline-light', 'btn-warning');
+      btn.classList.replace('btn-outline-light', 'btn-warning');
     } else {
       icon.className  = 'far fa-heart me-1';
       label.textContent = 'Save Career';
-      this.classList.replace('btn-warning', 'btn-outline-light');
+      btn.classList.replace('btn-warning', 'btn-outline-light');
     }
-  });
+  })
+  .catch(function(){})
+  .finally(function(){ btn.disabled = false; });
 });
 </script>
 {% endif %}

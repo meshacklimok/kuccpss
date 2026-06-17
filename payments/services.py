@@ -1,0 +1,54 @@
+import requests
+from django.conf import settings
+
+SANDBOX_BASE = "https://sandbox.intasend.com/api/v1"
+PROD_BASE = "https://payment.intasend.com/api/v1"
+
+FEATURE_PRICES = {
+    "view_cluster_points": 0,
+    "view_eligible_courses": 0,
+    "premium_career_report": 99,
+    "advanced_analysis": 149,
+}
+
+
+def get_base_url():
+    return SANDBOX_BASE if getattr(settings, "INTASEND_SANDBOX", True) else PROD_BASE
+
+
+def normalise_phone(phone: str) -> str:
+    """Convert 07XXXXXXXX or +2547XXXXXXXX → 2547XXXXXXXX"""
+    phone = phone.strip().replace(" ", "").replace("-", "")
+    if phone.startswith("+"):
+        phone = phone[1:]
+    elif phone.startswith("0"):
+        phone = "254" + phone[1:]
+    return phone
+
+
+def initiate_stk_push(phone_number: str, amount: int, payment_ref: str, narrative: str = "KUCCPSS") -> str:
+    """
+    Fire an M-Pesa STK push via IntaSend.
+    Returns the IntaSend checkout_id on success, raises requests.HTTPError on failure.
+    """
+    url = f"{get_base_url()}/payment/mpesa-stk-push/"
+    headers = {
+        "Authorization": f"Bearer {settings.INTASEND_SECRET_KEY}",
+        "Content-Type": "application/json",
+    }
+    payload = {
+        "public_key": settings.INTASEND_PUBLISHABLE_KEY,
+        "currency": "KES",
+        "amount": amount,
+        "phone_number": normalise_phone(phone_number),
+        "narrative": narrative,
+        "api_ref": payment_ref,
+    }
+    response = requests.post(url, json=payload, headers=headers, timeout=15)
+    response.raise_for_status()
+    data = response.json()
+    return data.get("id") or data.get("invoice", {}).get("id") or ""
+
+
+def price_for_feature(feature: str) -> int:
+    return FEATURE_PRICES.get(feature, 0)

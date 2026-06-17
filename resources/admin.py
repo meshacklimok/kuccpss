@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import ResourceCategory, Resource, Article
+from .models import ResourceCategory, Resource, Article, FAQItem, SuccessStory, SiteSetting
 
 
 @admin.register(ResourceCategory)
@@ -20,8 +20,69 @@ class ResourceAdmin(admin.ModelAdmin):
 
 @admin.register(Article)
 class ArticleAdmin(admin.ModelAdmin):
-    list_display = ("title", "author", "is_published", "created_at")
-    list_filter = ("is_published",)
+    list_display = ("title", "author", "is_published", "featured", "created_at")
+    list_filter = ("is_published", "featured")
     search_fields = ("title", "content", "tags")
     prepopulated_fields = {"slug": ("title",)}
     readonly_fields = ("created_at", "updated_at")
+    list_editable = ("featured",)
+
+
+@admin.register(FAQItem)
+class FAQItemAdmin(admin.ModelAdmin):
+    list_display  = ("question_short", "category", "order", "is_active")
+    list_filter   = ("category", "is_active")
+    search_fields = ("question", "answer")
+    list_editable = ("order", "is_active")
+    ordering      = ("category", "order")
+
+    fieldsets = (
+        (None, {"fields": ("question", "answer")}),
+        ("Settings", {"fields": ("category", "order", "is_active")}),
+    )
+
+    def question_short(self, obj):
+        return obj.question[:80] + ("…" if len(obj.question) > 80 else "")
+    question_short.short_description = "Question"
+
+
+@admin.register(SuccessStory)
+class SuccessStoryAdmin(admin.ModelAdmin):
+    list_display  = ("name", "county", "course_name", "institution", "pathway", "year", "order", "is_active")
+    list_filter   = ("pathway", "is_active")
+    search_fields = ("name", "course_name", "institution", "quote")
+    list_editable = ("order", "is_active")
+
+    fieldsets = (
+        ("Student", {
+            "fields": ("name", "initials", "county", "kcse_grade", "work_location"),
+        }),
+        ("Story", {
+            "fields": ("quote",),
+        }),
+        ("Programme", {
+            "fields": ("course_name", "institution", "pathway", "year"),
+        }),
+        ("Display", {
+            "fields": ("avatar_bg", "avatar_color", "order", "is_active"),
+            "classes": ("collapse",),
+        }),
+    )
+
+
+@admin.register(SiteSetting)
+class SiteSettingAdmin(admin.ModelAdmin):
+    list_display  = ("label", "key", "setting_type", "group", "value_preview")
+    list_filter   = ("setting_type", "group")
+    search_fields = ("key", "label", "value")
+    ordering      = ("group", "key")
+
+    fieldsets = (
+        (None, {"fields": ("key", "label", "value")}),
+        ("Meta", {"fields": ("setting_type", "group", "help_note"), "classes": ("collapse",)}),
+    )
+
+    def value_preview(self, obj):
+        v = obj.value
+        return (v[:55] + "…") if len(v) > 55 else v
+    value_preview.short_description = "Value"

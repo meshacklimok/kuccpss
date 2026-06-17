@@ -1,110 +1,249 @@
 {% extends "base.html" %}
 {% load custom_filters %}
-{% block title %}Articles & Tips — KUCCPSS{% endblock %}
+
+{% block title %}News & Articles — KUCCPSS{% endblock %}
+
+{% block meta %}<meta name="description" content="KUCCPSS news, placement guides, career tips and KCSE updates for Kenyan students.">{% endblock %}
+
+{% block extra_head %}
+<style>
+/* ── Featured hero card ───────────────────────────────── */
+.news-hero-card {
+  position: relative; overflow: hidden;
+  border-radius: var(--radius); min-height: 380px;
+  display: flex; align-items: flex-end;
+  background: linear-gradient(135deg, #1e3a8a 0%, #16a34a 100%);
+  text-decoration: none; color: inherit;
+  transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.3s;
+  box-shadow: 0 4px 24px rgba(30,58,138,.15);
+}
+.news-hero-card:hover { transform: translateY(-4px); box-shadow: 0 12px 40px rgba(30,58,138,.22); }
+.news-hero-card img.hero-bg {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  object-fit: cover; z-index: 0;
+}
+.news-hero-card .hero-overlay {
+  position: absolute; inset: 0; z-index: 1;
+  background: linear-gradient(to top, rgba(10,20,50,0.88) 0%, rgba(10,20,50,0.3) 60%, transparent 100%);
+}
+.news-hero-card .hero-body { position: relative; z-index: 2; padding: 2rem; width: 100%; }
+.hero-featured-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: #f59e0b; color: #000; font-weight: 700;
+  font-size: .72rem; letter-spacing: .06em;
+  padding: 3px 10px; border-radius: 20px; text-transform: uppercase; margin-bottom: .75rem;
+}
+.hero-title { font-size: clamp(1.3rem, 3vw, 2rem); font-weight: 800; color: #fff; line-height: 1.25; margin-bottom: .5rem; }
+.hero-meta { color: rgba(255,255,255,.7); font-size: .82rem; display: flex; gap: 1rem; flex-wrap: wrap; }
+.hero-excerpt { color: rgba(255,255,255,.85); font-size: .95rem; line-height: 1.6; margin: .6rem 0 1rem; }
+
+/* ── Article cards ───────────────────────────────────── */
+.article-card {
+  display: flex; flex-direction: column; height: 100%;
+  border-radius: var(--radius-sm); overflow: hidden;
+  border: 1px solid var(--border); background: var(--white);
+  box-shadow: 0 2px 8px var(--shadow);
+  transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.3s;
+  text-decoration: none; color: inherit;
+}
+.article-card:hover { transform: translateY(-5px); box-shadow: 0 12px 32px rgba(30,58,138,.15); color: inherit; }
+.article-card .thumb {
+  height: 180px; width: 100%; object-fit: cover; flex-shrink: 0;
+}
+.article-card .thumb-placeholder {
+  height: 180px; flex-shrink: 0;
+  background: linear-gradient(135deg, #1e3a8a 0%, #16a34a 100%);
+  display: flex; align-items: center; justify-content: center;
+}
+.article-card .card-body-inner { padding: 1.1rem; display: flex; flex-direction: column; flex: 1; }
+.article-card .card-title { font-weight: 700; font-size: 1rem; line-height: 1.35; margin-bottom: .4rem; }
+.article-card .card-excerpt { font-size: .85rem; color: var(--muted); line-height: 1.55; flex: 1; }
+.article-card .card-footer-inner {
+  margin-top: .9rem; padding-top: .75rem; border-top: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between; gap: .5rem;
+}
+.read-time { display: inline-flex; align-items: center; gap: 4px; font-size: .75rem; color: var(--muted); }
+.tag-pill {
+  display: inline-block; padding: 2px 10px; border-radius: 20px;
+  font-size: .72rem; font-weight: 600; text-decoration: none;
+  background: #e8f0fe; color: var(--primary);
+  transition: background .15s;
+}
+.tag-pill:hover { background: var(--primary); color: #fff; }
+.tag-pill.active { background: var(--primary); color: #fff; }
+
+/* ── Search bar ──────────────────────────────────────── */
+.news-search { position: relative; }
+.news-search input { padding-left: 2.6rem; border-radius: 8px; border: 1px solid var(--border); }
+.news-search .search-icon {
+  position: absolute; left: .85rem; top: 50%; transform: translateY(-50%);
+  color: var(--muted); pointer-events: none;
+}
+
+/* ── Tag cloud ───────────────────────────────────────── */
+.tag-cloud { display: flex; flex-wrap: wrap; gap: 6px; }
+</style>
+{% endblock %}
 
 {% block content %}
+
 <div class="page-hero">
   <div class="container">
-    <h1><i class="fas fa-newspaper me-2"></i>Articles & Tips</h1>
-    <p class="mb-0">Advice, guides, and insights for your placement journey.</p>
+    <div class="row align-items-center gy-3">
+      <div class="col-md-7">
+        <div class="d-flex align-items-center gap-2 mb-1 opacity-75" style="font-size:.85rem;">
+          <i class="fas fa-newspaper"></i>
+          <span>KUCCPSS News &amp; Insights</span>
+        </div>
+        <h1 class="mb-1">News &amp; Articles</h1>
+        <p class="mb-0 opacity-75">Placement tips, career guides, and KCSE updates for Kenyan students.</p>
+      </div>
+      <div class="col-md-5">
+        <form method="get" class="news-search">
+          <i class="fas fa-search search-icon"></i>
+          <input type="search" name="q" value="{{ query }}"
+                 class="form-control form-control-lg"
+                 placeholder="Search articles…"
+                 autocomplete="off">
+        </form>
+      </div>
+    </div>
   </div>
 </div>
 
-<div class="container pb-5">
+<div class="container py-4 pb-5">
 
-  <!-- Section switcher -->
-  <div class="d-flex gap-2 mb-4">
+  <!-- Section nav -->
+  <div class="d-flex gap-2 mb-4 flex-wrap">
     <a href="{% url 'resources:resource_list' %}" class="btn btn-outline-secondary btn-sm">
       <i class="fas fa-file-pdf me-1 text-danger"></i>Guides &amp; PDFs
     </a>
-    <span class="btn btn-success btn-sm disabled">
-      <i class="fas fa-newspaper me-1"></i>Articles &amp; Tips
+    <span class="btn btn-primary-custom btn-sm" style="pointer-events:none;">
+      <i class="fas fa-newspaper me-1"></i>News &amp; Articles
     </span>
+    <a href="{% url 'resources:kuccps_calendar' %}" class="btn btn-outline-secondary btn-sm">
+      <i class="fas fa-calendar me-1 text-success"></i>KUCCPS Calendar
+    </a>
   </div>
 
-  <!-- Tag filter bar -->
-  <div class="d-flex gap-2 flex-wrap mb-4">
-    <a href="{% url 'resources:article_list' %}"
-       class="btn btn-sm {% if not active_tag %}btn-success{% else %}btn-outline-secondary{% endif %}">
-      All
-    </a>
-    {% for tag in "university,career,tips,tvet,kmtc,scholarships,placement"|split:"," %}
-    <a href="?tag={{ tag }}"
-       class="btn btn-sm {% if active_tag == tag %}btn-success{% else %}btn-outline-secondary{% endif %}">
-      {{ tag|title }}
-    </a>
+  <!-- Tag cloud -->
+  {% if all_tags %}
+  <div class="tag-cloud mb-4">
+    <a href="{% url 'resources:article_list' %}{% if query %}?q={{ query }}{% endif %}"
+       class="tag-pill {% if not active_tag %}active{% endif %}">All</a>
+    {% for tag in all_tags %}
+    <a href="?tag={{ tag }}{% if query %}&q={{ query }}{% endif %}"
+       class="tag-pill {% if active_tag == tag %}active{% endif %}">{{ tag|title }}</a>
     {% endfor %}
     {% if active_tag %}
-    <a href="{% url 'resources:article_list' %}" class="btn btn-sm btn-outline-danger">
-      <i class="fas fa-times me-1"></i>Clear
+    <a href="{% url 'resources:article_list' %}{% if query %}?q={{ query }}{% endif %}"
+       class="tag-pill" style="background:#fee2e2;color:#b91c1c;">
+      <i class="fas fa-times me-1"></i>Clear filter
     </a>
     {% endif %}
   </div>
+  {% endif %}
 
+  <!-- Active search notice -->
+  {% if query %}
+  <div class="alert alert-info d-flex align-items-center gap-2 py-2 mb-4">
+    <i class="fas fa-search"></i>
+    <span>Results for <strong>"{{ query }}"</strong>
+      — {{ page_obj.paginator.count }} article{{ page_obj.paginator.count|pluralize }} found.
+      <a href="{% url 'resources:article_list' %}{% if active_tag %}?tag={{ active_tag }}{% endif %}" class="ms-2">Clear</a>
+    </span>
+  </div>
+  {% endif %}
+
+  <!-- Featured article -->
+  {% if featured and not query %}
+  <div class="mb-4">
+    <a href="{% url 'resources:article_detail' featured.slug %}" class="news-hero-card d-block">
+      {% if featured.thumbnail %}
+      <img src="{{ featured.thumbnail.url }}" class="hero-bg" alt="{{ featured.title }}">
+      {% endif %}
+      <div class="hero-overlay"></div>
+      <div class="hero-body">
+        <div class="hero-featured-badge"><i class="fas fa-star me-1"></i>Featured</div>
+        <h2 class="hero-title">{{ featured.title }}</h2>
+        {% if featured.excerpt %}
+        <p class="hero-excerpt d-none d-md-block">{{ featured.excerpt|truncatechars:160 }}</p>
+        {% endif %}
+        <div class="hero-meta">
+          {% if featured.author %}<span><i class="fas fa-user me-1"></i>{{ featured.author }}</span>{% endif %}
+          <span><i class="fas fa-calendar me-1"></i>{{ featured.created_at|date:"d M Y" }}</span>
+          <span><i class="fas fa-clock me-1"></i>{{ featured.reading_time }} min read</span>
+          {% for tag in featured.get_tags_list|slice:":3" %}
+          <span class="badge bg-white bg-opacity-20 text-white">{{ tag }}</span>
+          {% endfor %}
+        </div>
+      </div>
+    </a>
+  </div>
+  {% endif %}
+
+  <!-- Article grid -->
   {% if page_obj %}
   <div class="row g-4">
     {% for article in page_obj %}
-    <div class="col-md-6 col-lg-4">
-      <div class="card h-100 p-0 overflow-hidden">
+    <div class="col-sm-6 col-lg-4 reveal">
+      <a href="{% url 'resources:article_detail' article.slug %}" class="article-card">
         {% if article.thumbnail %}
-        <img src="{{ article.thumbnail.url }}" class="card-img-top"
-             style="height:160px;object-fit:cover;" alt="{{ article.title }}">
+        <img src="{{ article.thumbnail.url }}" class="thumb" alt="{{ article.title }}">
         {% else %}
-        <div class="d-flex align-items-center justify-content-center"
-             style="height:160px;background:linear-gradient(135deg,#1e3a8a 0%,#16a34a 100%);">
-          <i class="fas fa-pen-nib fa-3x text-white opacity-50"></i>
+        <div class="thumb-placeholder">
+          <i class="fas fa-pen-nib fa-2x text-white opacity-50"></i>
         </div>
         {% endif %}
-        <div class="p-3 d-flex flex-column h-100">
+        <div class="card-body-inner">
           {% if article.tags %}
           <div class="mb-2">
-            {% for tag in article.get_tags_list|slice:":3" %}
-            <a href="?tag={{ tag }}" class="badge bg-success bg-opacity-10 text-success text-decoration-none small me-1">
-              {{ tag }}
-            </a>
+            {% for tag in article.get_tags_list|slice:":2" %}
+            <span class="tag-pill me-1" style="pointer-events:none;">{{ tag }}</span>
             {% endfor %}
           </div>
           {% endif %}
-          <h6 class="fw-bold mb-1">{{ article.title }}</h6>
+          <div class="card-title">{{ article.title }}</div>
           {% if article.excerpt %}
-          <p class="text-muted small mb-3">{{ article.excerpt|truncatechars:100 }}</p>
+          <p class="card-excerpt">{{ article.excerpt|truncatechars:110 }}</p>
           {% endif %}
-          <div class="mt-auto d-flex align-items-center justify-content-between">
-            <small class="text-muted">
-              {% if article.author %}<i class="fas fa-user me-1"></i>{{ article.author }}{% endif %}
-              <span class="mx-1">·</span>
-              {{ article.created_at|date:"d M Y" }}
-            </small>
-            <a href="{% url 'resources:article_detail' article.slug %}"
-               class="btn btn-sm btn-outline-success">
-              Read <i class="fas fa-arrow-right ms-1"></i>
-            </a>
+          <div class="card-footer-inner">
+            <div class="read-time">
+              <i class="fas fa-clock"></i>
+              {{ article.reading_time }} min
+            </div>
+            <div class="d-flex align-items-center gap-2">
+              {% if article.author %}
+              <span class="text-muted" style="font-size:.75rem;">{{ article.author }}</span>
+              {% endif %}
+              <span class="text-muted" style="font-size:.75rem;">{{ article.created_at|date:"d M Y" }}</span>
+            </div>
           </div>
         </div>
-      </div>
+      </a>
     </div>
     {% endfor %}
   </div>
 
   <!-- Pagination -->
   {% if page_obj.has_other_pages %}
-  <nav class="mt-4">
+  <nav class="mt-5" aria-label="Article pages">
     <ul class="pagination justify-content-center">
       {% if page_obj.has_previous %}
       <li class="page-item">
-        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if active_tag %}&tag={{ active_tag }}{% endif %}">
+        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if active_tag %}&tag={{ active_tag }}{% endif %}{% if query %}&q={{ query }}{% endif %}">
           <i class="fas fa-chevron-left"></i>
         </a>
       </li>
       {% endif %}
       {% for num in page_obj.paginator.page_range %}
       <li class="page-item {% if num == page_obj.number %}active{% endif %}">
-        <a class="page-link" href="?page={{ num }}{% if active_tag %}&tag={{ active_tag }}{% endif %}">{{ num }}</a>
+        <a class="page-link" href="?page={{ num }}{% if active_tag %}&tag={{ active_tag }}{% endif %}{% if query %}&q={{ query }}{% endif %}">{{ num }}</a>
       </li>
       {% endfor %}
       {% if page_obj.has_next %}
       <li class="page-item">
-        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if active_tag %}&tag={{ active_tag }}{% endif %}">
+        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if active_tag %}&tag={{ active_tag }}{% endif %}{% if query %}&q={{ query }}{% endif %}">
           <i class="fas fa-chevron-right"></i>
         </a>
       </li>
@@ -114,15 +253,15 @@
   {% endif %}
 
   {% else %}
-  <div class="text-center py-5">
-    <i class="fas fa-newspaper fa-4x text-muted mb-3"></i>
-    <h5 class="text-muted">No articles found</h5>
-    <p class="text-muted small">
-      {% if active_tag %}No articles tagged "{{ active_tag }}".{% else %}Check back soon.{% endif %}
+  <div class="text-center py-5 my-3">
+    <i class="fas fa-newspaper fa-4x text-muted mb-3 d-block"></i>
+    <h5 class="fw-bold">No articles found</h5>
+    <p class="text-muted">
+      {% if query %}No results for "{{ query }}".{% elif active_tag %}Nothing tagged "{{ active_tag }}" yet.{% else %}Check back soon — articles are on the way.{% endif %}
     </p>
-    {% if active_tag %}
-    <a href="{% url 'resources:article_list' %}" class="btn btn-outline-primary">View All Articles</a>
-    {% endif %}
+    <a href="{% url 'resources:article_list' %}" class="btn btn-outline-primary btn-sm">
+      <i class="fas fa-arrow-left me-1"></i>All Articles
+    </a>
   </div>
   {% endif %}
 

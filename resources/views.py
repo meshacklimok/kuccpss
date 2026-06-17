@@ -1,5 +1,4 @@
-from django.shortcuts import render, get_object_or_404, redirect
-from django.contrib import messages
+from django.shortcuts import render, get_object_or_404
 from django.core.paginator import Paginator
 from .models import ResourceCategory, Resource, Article
 
@@ -30,28 +29,75 @@ def resource_list(request):
 def resource_detail(request, slug):
     resource = get_object_or_404(Resource, slug=slug)
     resource.increment_download()
+    from analytics.utils import log_download
+    log_download(request, content_type='resource', object_id=resource.pk, object_name=resource.title)
     return render(request, "resources/resource_detail.html", {"resource": resource})
 
 
 def article_list(request):
     articles = Article.objects.filter(is_published=True)
-    tag = request.GET.get("tag", "")
+
+    query = request.GET.get("q", "").strip()
+    tag = request.GET.get("tag", "").strip()
+
+    if query:
+        articles = articles.filter(title__icontains=query) | Article.objects.filter(
+            is_published=True, excerpt__icontains=query
+        ) | Article.objects.filter(is_published=True, content__icontains=query)
+        articles = articles.distinct()
     if tag:
         articles = articles.filter(tags__icontains=tag)
+
+    # Featured article (pinned) — show above grid, not in paginated list
+    featured = articles.filter(featured=True).first()
+    if featured:
+        articles = articles.exclude(pk=featured.pk)
+
+    # Collect all unique tags from published articles for the filter cloud
+    all_tags = set()
+    for row in Article.objects.filter(is_published=True).values_list("tags", flat=True):
+        for t in (row or "").split(","):
+            t = t.strip()
+            if t:
+                all_tags.add(t)
+    all_tags = sorted(all_tags)
 
     paginator = Paginator(articles, 9)
     page_obj = paginator.get_page(request.GET.get("page", 1))
 
     return render(request, "resources/article_list.html", {
         "page_obj": page_obj,
+        "featured": featured,
         "active_tag": tag,
+        "query": query,
+        "all_tags": all_tags,
     })
 
 
 def article_detail(request, slug):
     article = get_object_or_404(Article, slug=slug, is_published=True)
-    related = Article.objects.filter(is_published=True).exclude(pk=article.pk)[:3]
+    # Prefer related articles that share at least one tag
+    article_tags = article.get_tags_list()
+    related = []
+    if article_tags:
+        from django.db.models import Q
+        q = Q()
+        for t in article_tags:
+            q |= Q(tags__icontains=t)
+        related = list(Article.objects.filter(is_published=True).exclude(pk=article.pk).filter(q)[:3])
+    if len(related) < 3:
+        extra = Article.objects.filter(is_published=True).exclude(pk=article.pk).exclude(
+            pk__in=[r.pk for r in related])[:3 - len(related)]
+        related += list(extra)
     return render(request, "resources/article_detail.html", {
         "article": article,
         "related": related,
     })
+
+
+def kuccps_calendar(request):
+    return render(request, "resources/calendar.html")
+
+
+def how_to_guides(request):
+    return render(request, "resources/guides.html")

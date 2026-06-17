@@ -64,7 +64,10 @@
       <div class="col-12 col-md-6 col-lg-4">
         <div class="card h-100 shadow-sm p-3">
           <div class="d-flex justify-content-between align-items-start mb-1">
-            <h6 class="fw-bold mb-0" style="line-height:1.35;">{{ course.name }}</h6>
+            <h6 class="fw-bold mb-0" style="line-height:1.35;">
+              <a href="{% url 'courses:course_detail_no_category' course.course_type.slug course.slug %}"
+                 class="text-dark text-decoration-none">{{ course.name }}</a>
+            </h6>
             {% if course.minimum_mean_grade %}
             <span class="badge ms-2 flex-shrink-0" style="background:#dc2626;color:#fff;">{{ course.minimum_mean_grade }}</span>
             {% endif %}
@@ -128,7 +131,10 @@
     <div class="col-12 col-md-6 col-lg-4">
       <div class="card h-100 shadow-sm p-3">
         <div class="d-flex justify-content-between align-items-start mb-1">
-          <h6 class="fw-bold mb-0" style="line-height:1.35;">{{ course.name }}</h6>
+          <h6 class="fw-bold mb-0" style="line-height:1.35;">
+            <a href="{% url 'courses:course_detail_no_category' type_slug=course_type.slug course_slug=course.slug %}"
+               class="text-dark text-decoration-none">{{ course.name }}</a>
+          </h6>
           {% if course.minimum_mean_grade %}
           <span class="badge ms-2 flex-shrink-0" style="background:#dc2626;color:#fff;">{{ course.minimum_mean_grade }}</span>
           {% endif %}

@@ -7,239 +7,242 @@
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
 
 <style>
-*, *::before, *::after { box-sizing: border-box; }
-body { background: #0a0f1e; color: #e2e8f0; }
-
-/* ── pathway colour tokens ── */
+/* ── pathway colour tokens (light variants) ── */
 {% if pathway == 'diploma' %}
-:root { --pw:#0891b2; --pw-glow:rgba(8,145,178,0.4); --pw-light:rgba(8,145,178,0.15); }
+:root { --pw:#0891b2; --pw-bg:#ecfeff; --pw-border:#a5f3fc; }
 {% elif pathway == 'certificate' %}
-:root { --pw:#059669; --pw-glow:rgba(5,150,105,0.4); --pw-light:rgba(5,150,105,0.15); }
+:root { --pw:#059669; --pw-bg:#ecfdf5; --pw-border:#6ee7b7; }
 {% elif pathway == 'kmtc' %}
-:root { --pw:#dc2626; --pw-glow:rgba(220,38,38,0.4); --pw-light:rgba(220,38,38,0.15); }
+:root { --pw:#dc2626; --pw-bg:#fef2f2; --pw-border:#fca5a5; }
 {% elif pathway == 'ttc' %}
-:root { --pw:#7c3aed; --pw-glow:rgba(124,58,237,0.4); --pw-light:rgba(124,58,237,0.15); }
+:root { --pw:#7c3aed; --pw-bg:#f5f3ff; --pw-border:#c4b5fd; }
 {% elif pathway == 'artisan' %}
-:root { --pw:#d97706; --pw-glow:rgba(217,119,6,0.4); --pw-light:rgba(217,119,6,0.15); }
+:root { --pw:#d97706; --pw-bg:#fffbeb; --pw-border:#fde68a; }
 {% else %}
-:root { --pw:#4f46e5; --pw-glow:rgba(79,70,229,0.4); --pw-light:rgba(79,70,229,0.15); }
+:root { --pw:#1e3a8a; --pw-bg:#eff6ff; --pw-border:#bfdbfe; }
 {% endif %}
 
 /* ── sticky step bar ── */
 .step-bar {
     position: sticky; top: 56px; z-index: 200;
-    background: #0d1226; border-bottom: 1px solid rgba(255,255,255,0.06);
+    background: #fff; border-bottom: 1px solid #e2e8f0;
     padding: 0.6rem 1.25rem;
     display: flex; align-items: center; gap: 0.75rem;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+    box-shadow: 0 2px 12px rgba(30,58,138,0.08);
 }
 .sb-pathway {
     font-size: 0.68rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase;
-    background: var(--pw-light); border: 1px solid var(--pw-glow);
-    color: #fff; border-radius: 20px; padding: 3px 12px;
+    background: var(--pw-bg); border: 1px solid var(--pw-border);
+    color: var(--pw); border-radius: 20px; padding: 3px 12px;
 }
 .sb-steps { display: flex; align-items: center; gap: 6px; }
 .sb-dot {
     width: 26px; height: 26px; border-radius: 50%;
     display: flex; align-items: center; justify-content: center;
     font-size: 0.7rem; font-weight: 800;
-    border: 1.5px solid rgba(255,255,255,0.12); color: rgba(255,255,255,0.3);
+    border: 1.5px solid #d1d5db; color: #9ca3af;
 }
-.sb-dot.active { background: var(--pw); border-color: rgba(255,255,255,0.5); color: #fff; box-shadow: 0 0 12px var(--pw-glow); }
-.sb-dot.done   { background: #22c55e; border-color: #4ade80; color: #fff; }
-.sb-line { width: 28px; height: 1.5px; background: rgba(255,255,255,0.1); }
+.sb-dot.active { background: var(--pw); border-color: var(--pw); color: #fff; box-shadow: 0 0 0 3px var(--pw-bg); }
+.sb-dot.done   { background: #16a34a; border-color: #16a34a; color: #fff; }
+.sb-line { width: 28px; height: 1.5px; background: #e2e8f0; }
 .sb-spacer { flex: 1; }
 .sb-counter {
     font-size: 0.75rem; font-weight: 700; padding: 4px 12px; border-radius: 20px;
-    border: 1.5px solid rgba(255,255,255,0.1); color: #64748b; transition: all 0.25s;
+    border: 1.5px solid #e2e8f0; color: #94a3b8; background: #f8fafc; transition: all 0.25s;
 }
-.sb-counter.ready { border-color: #22c55e; color: #4ade80; background: rgba(34,197,94,0.1); }
-.sb-progress { height: 2px; background: rgba(255,255,255,0.06); }
-.sb-progress-fill { height: 100%; width: 0%; background: linear-gradient(90deg, var(--pw), #22d3ee, #22c55e); transition: width 0.4s ease; }
+.sb-counter.ready { border-color: #86efac; color: #16a34a; background: #f0fdf4; }
+.sb-progress { height: 3px; background: #e2e8f0; }
+.sb-progress-fill { height: 100%; width: 0%; background: linear-gradient(90deg, var(--pw), #0891b2, #16a34a); transition: width 0.4s ease; }
 
-/* ── page wrapper ── */
+/* ── page ── */
 .lce-page { max-width: 760px; margin: 0 auto; padding: 1.5rem 1rem 6rem; }
 
 /* ── header card ── */
 .lce-head {
-    background: #111827; border: 1px solid rgba(255,255,255,0.06);
+    background: #fff; border: 1.5px solid #e2e8f0;
     border-radius: 16px; padding: 1.5rem 1.5rem 1.25rem; margin-bottom: 1.25rem;
+    box-shadow: 0 1px 8px rgba(30,58,138,0.07);
 }
-.lce-head h2 { font-size: 1.2rem; font-weight: 800; color: #fff; margin: 0 0 0.35rem; }
+.lce-head h2 { font-size: 1.2rem; font-weight: 800; color: #1e293b; margin: 0 0 0.35rem; }
 .lce-head p  { font-size: 0.83rem; color: #64748b; margin: 0; line-height: 1.55; }
 
 /* ── alert ── */
-.lce-alert {
-    border-radius: 12px; padding: 0.85rem 1rem; margin-bottom: 1rem;
-    font-size: 0.84rem; display: flex; gap: 0.6rem; align-items: flex-start;
-}
-.lce-alert.danger { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); color: #fca5a5; }
+.lce-alert { border-radius: 12px; padding: 0.85rem 1rem; margin-bottom: 1rem; font-size: 0.84rem; display: flex; gap: 0.6rem; align-items: flex-start; }
+.lce-alert.danger { background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; }
 
 /* ── mean grade picker ── */
 .mean-section {
-    background: #111827; border: 1px solid rgba(255,255,255,0.06);
+    background: #fff; border: 1.5px solid #e2e8f0;
     border-radius: 14px; padding: 1.25rem 1.5rem; margin-bottom: 1rem;
+    box-shadow: 0 1px 6px rgba(30,58,138,0.05);
 }
 .mean-label { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #64748b; margin-bottom: 0.75rem; }
 .mean-grade-grid { display: grid; grid-template-columns: repeat(6,1fr); gap: 0.5rem; }
 @media (max-width:380px) { .mean-grade-grid { grid-template-columns: repeat(4,1fr); } }
 .mgp {
-    border: 1.5px solid rgba(255,255,255,0.08); border-radius: 10px;
-    background: #1e2a3e; cursor: pointer;
+    border: 1.5px solid #e2e8f0; border-radius: 10px; background: #f8fafc; cursor: pointer;
     display: flex; flex-direction: column; align-items: center;
-    justify-content: center; padding: 0.6rem 0.2rem;
-    transition: all 0.15s; color: #94a3b8; -webkit-tap-highlight-color: transparent;
+    justify-content: center; padding: 0.65rem 0.2rem;
+    transition: all 0.15s; color: #64748b; -webkit-tap-highlight-color: transparent;
 }
 .mgp-g { font-size: 1rem; font-weight: 800; line-height: 1; }
-.mgp-p { font-size: 0.58rem; font-weight: 700; color: #475569; margin-top: 2px; }
-.mgp:hover { border-color: rgba(255,255,255,0.2); background: #243450; color: #e2e8f0; transform: translateY(-1px); }
+.mgp-p { font-size: 0.58rem; font-weight: 700; color: #94a3b8; margin-top: 2px; }
+.mgp:hover { border-color: var(--pw-border); background: var(--pw-bg); color: var(--pw); transform: translateY(-1px); box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
 .mgp:active { transform: scale(0.93); }
-.mgp.sel-a { background: #166534; border-color: #22c55e; color: #4ade80; }
-.mgp.sel-a .mgp-p { color: rgba(74,222,128,0.7); }
-.mgp.sel-b { background: #1e3a8a; border-color: #3b82f6; color: #60a5fa; }
-.mgp.sel-b .mgp-p { color: rgba(96,165,250,0.7); }
-.mgp.sel-c { background: #78350f; border-color: #f59e0b; color: #fbbf24; }
-.mgp.sel-c .mgp-p { color: rgba(251,191,36,0.7); }
-.mgp.sel-d { background: #7f1d1d; border-color: #ef4444; color: #f87171; }
-.mgp.sel-d .mgp-p { color: rgba(248,113,113,0.7); }
-.mgp.sel-e { background: #1e293b; border-color: #64748b; color: #94a3b8; }
+.mgp.sel-a { background: #f0fdf4; border-color: #86efac; color: #15803d; }
+.mgp.sel-a .mgp-p { color: #16a34a; }
+.mgp.sel-b { background: #eff6ff; border-color: #93c5fd; color: #1d4ed8; }
+.mgp.sel-b .mgp-p { color: #2563eb; }
+.mgp.sel-c { background: #fffbeb; border-color: #fde68a; color: #92400e; }
+.mgp.sel-c .mgp-p { color: #d97706; }
+.mgp.sel-d { background: #fef2f2; border-color: #fca5a5; color: #991b1b; }
+.mgp.sel-d .mgp-p { color: #dc2626; }
+.mgp.sel-e { background: #f1f5f9; border-color: #cbd5e1; color: #475569; }
 
 .mean-display {
     margin-top: 1rem; padding: 0.85rem 1.1rem; border-radius: 10px;
-    background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06);
+    background: #f8fafc; border: 1.5px solid #e2e8f0;
     display: flex; align-items: center; gap: 0.75rem; transition: all 0.3s;
 }
-.mean-display.selected { background: var(--pw-light); border-color: var(--pw-glow); }
+.mean-display.selected { background: var(--pw-bg); border-color: var(--pw-border); }
 .mean-display-grade { font-size: 1.25rem; font-weight: 900; color: var(--pw); }
 .mean-display-note  { font-size: 0.8rem; color: #64748b; }
 
 /* ── accordion section ── */
 .acc-section {
-    background: #111827; border: 1px solid rgba(255,255,255,0.06);
+    background: #fff; border: 1.5px solid #e2e8f0;
     border-radius: 14px; overflow: hidden; margin-bottom: 0.85rem;
-    transition: border-color 0.2s;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    box-shadow: 0 1px 6px rgba(30,58,138,0.05);
 }
-.acc-section.has-values { border-color: rgba(99,102,241,0.3); }
-
+.acc-section.has-values { border-color: var(--pw-border); box-shadow: 0 2px 10px rgba(0,0,0,0.08); }
 .acc-header {
     width: 100%; background: none; border: none; padding: 1.1rem 1.25rem;
     display: flex; align-items: center; gap: 0.75rem;
     cursor: pointer; text-align: left; transition: background 0.15s;
     -webkit-tap-highlight-color: transparent;
 }
-.acc-header:hover { background: rgba(255,255,255,0.02); }
-.acc-icon {
-    width: 36px; height: 36px; border-radius: 10px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 0.95rem; flex-shrink: 0;
-}
-.acc-title { font-size: 0.95rem; font-weight: 700; color: #e2e8f0; }
-.acc-badge {
-    font-size: 0.6rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase;
-    padding: 2px 8px; border-radius: 5px; flex-shrink: 0; margin-left: 2px;
-}
-.acc-badge.req { background: rgba(239,68,68,0.18); color: #f87171; border: 1px solid rgba(239,68,68,0.3); }
-.acc-badge.opt { background: rgba(100,116,139,0.15); color: #64748b; border: 1px solid rgba(100,116,139,0.2); }
-.acc-count {
-    font-size: 0.68rem; font-weight: 700; color: #4ade80;
-    background: rgba(34,197,94,0.12); border: 1px solid rgba(34,197,94,0.25);
-    border-radius: 10px; padding: 1px 8px; display: none;
-}
+.acc-header:hover { background: #f8fafc; }
+.acc-icon { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 0.95rem; flex-shrink: 0; }
+.acc-title { font-size: 0.95rem; font-weight: 700; color: #1e293b; }
+.acc-badge { font-size: 0.6rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; padding: 2px 8px; border-radius: 5px; flex-shrink: 0; margin-left: 2px; }
+.acc-badge.opt { background: #f1f5f9; color: #64748b; border: 1px solid #e2e8f0; }
+.acc-count { font-size: 0.68rem; font-weight: 700; color: #16a34a; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; padding: 1px 8px; display: none; }
 .acc-count.visible { display: inline; }
 .acc-spacer { flex: 1; }
-.acc-chevron { font-size: 0.9rem; color: rgba(255,255,255,0.25); transition: transform 0.3s, color 0.2s; flex-shrink: 0; }
-.acc-header.expanded .acc-chevron { transform: rotate(180deg); color: rgba(255,255,255,0.55); }
+.acc-chevron { font-size: 0.9rem; color: #94a3b8; transition: transform 0.3s, color 0.2s; flex-shrink: 0; }
+.acc-header.expanded .acc-chevron { transform: rotate(180deg); color: #475569; }
 .acc-body { max-height: 0; overflow: hidden; transition: max-height 0.38s cubic-bezier(0.4,0,0.2,1); }
 .acc-body.open { max-height: 2000px; }
 
 /* subject rows */
-.acc-row {
-    display: flex; align-items: center; gap: 0.75rem; padding: 0.8rem 1.25rem;
-    border-top: 1px solid rgba(255,255,255,0.04); transition: background 0.15s;
-}
-.acc-row:hover { background: rgba(255,255,255,0.02); }
-.acc-row.filled { background: rgba(99,102,241,0.04); }
-.row-icon {
-    width: 28px; height: 28px; border-radius: 8px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 0.8rem; flex-shrink: 0;
-    background: rgba(255,255,255,0.04); color: #475569; transition: all 0.2s;
-}
-.acc-row.filled .row-icon { background: rgba(99,102,241,0.15); color: #818cf8; }
-.row-name { flex: 1; font-size: 0.86rem; font-weight: 600; color: #cbd5e1; line-height: 1.3; }
-.acc-row.filled .row-name { color: #e2e8f0; }
-.row-req { font-size: 0.58rem; font-weight: 700; color: #ef4444; text-transform: uppercase; letter-spacing: 0.06em; display: block; }
+.acc-row { display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1.25rem; border-top: 1px solid #f1f5f9; transition: background 0.15s; }
+.acc-row:hover { background: #f8fafc; }
+.acc-row.filled { background: var(--pw-bg); }
+.row-icon { width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; flex-shrink: 0; background: #f1f5f9; color: #94a3b8; transition: all 0.2s; }
+.acc-row.filled .row-icon { background: var(--pw-bg); color: var(--pw); border: 1px solid var(--pw-border); }
+.row-name { flex: 1; font-size: 0.86rem; font-weight: 600; color: #374151; line-height: 1.3; }
+.acc-row.filled .row-name { color: #1e293b; font-weight: 700; }
 
-/* dark select */
+/* select */
 .lce-select {
-    border: 1.5px solid rgba(255,255,255,0.08) !important;
-    border-radius: 8px !important; background: #1e2a3e !important;
-    color: #e2e8f0 !important; font-size: 0.82rem !important; font-weight: 600 !important;
-    padding: 6px 30px 6px 10px !important; cursor: pointer; min-width: 80px;
-    box-shadow: none !important; -webkit-appearance: none; appearance: none;
-    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='%2394a3b8' viewBox='0 0 16 16'%3e%3cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3e%3c/svg%3e") !important;
-    background-repeat: no-repeat !important; background-position: right 8px center !important;
-    background-size: 10px !important; transition: border-color 0.2s, box-shadow 0.2s !important;
+    border: 1.5px solid #d1d5db; border-radius: 8px; background: #fff; color: #1e293b;
+    font-size: 0.82rem; font-weight: 600; padding: 7px 30px 7px 10px;
+    cursor: pointer; min-width: 82px; box-shadow: none;
+    -webkit-appearance: none; appearance: none;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='%2364748b' viewBox='0 0 16 16'%3e%3cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3e%3c/svg%3e");
+    background-repeat: no-repeat; background-position: right 8px center; background-size: 10px;
+    transition: border-color 0.2s, box-shadow 0.2s;
 }
-.lce-select:focus { border-color: var(--pw, #6366f1) !important; box-shadow: 0 0 0 3px var(--pw-light, rgba(99,102,241,0.15)) !important; outline: none !important; }
-.lce-select option { background: #1e2a3e; color: #e2e8f0; }
-.lce-select.has-value { border-color: rgba(99,102,241,0.4) !important; color: #c7d2fe !important; }
+.lce-select:focus { border-color: var(--pw); box-shadow: 0 0 0 3px var(--pw-bg); outline: none; }
+.lce-select.has-value { border-color: var(--pw-border); background-color: var(--pw-bg); color: var(--pw); }
 
 /* ── category / county tags ── */
-.tags-section { background: #111827; border: 1px solid rgba(255,255,255,0.06); border-radius: 14px; padding: 1.1rem 1.25rem; margin-bottom: 0.85rem; }
+.tags-section { background: #fff; border: 1.5px solid #e2e8f0; border-radius: 14px; padding: 1.1rem 1.25rem; margin-bottom: 0.85rem; box-shadow: 0 1px 6px rgba(30,58,138,0.05); }
 .tags-section-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.85rem; }
-.tags-section-title { font-size: 0.88rem; font-weight: 700; color: #e2e8f0; }
-.tags-sub { font-size: 0.72rem; color: #475569; }
-.tags-select-all { font-size: 0.72rem; font-weight: 700; color: #64748b; cursor: pointer; border: none; background: none; padding: 0; text-decoration: underline; }
-.tags-select-all:hover { color: #e2e8f0; }
+.tags-section-title { font-size: 0.88rem; font-weight: 700; color: #1e293b; }
+.tags-sub { font-size: 0.72rem; color: #64748b; }
+.tags-select-all { font-size: 0.72rem; font-weight: 700; color: #2563eb; cursor: pointer; border: none; background: none; padding: 0; text-decoration: underline; }
+.tags-select-all:hover { color: #1e3a8a; }
 .county-search {
-    width: 100%; border: 1.5px solid rgba(255,255,255,0.08); border-radius: 8px;
-    background: #1e2a3e; color: #e2e8f0; font-size: 0.82rem; padding: 8px 12px;
+    width: 100%; border: 1.5px solid #e2e8f0; border-radius: 8px;
+    background: #f8fafc; color: #1e293b; font-size: 0.82rem; padding: 8px 12px;
     margin-bottom: 0.75rem; transition: border-color 0.2s;
 }
-.county-search::placeholder { color: #475569; }
-.county-search:focus { outline: none; border-color: var(--pw, #6366f1); }
+.county-search::placeholder { color: #94a3b8; }
+.county-search:focus { outline: none; border-color: var(--pw); box-shadow: 0 0 0 3px var(--pw-bg); }
 .tags-grid { display: flex; flex-wrap: wrap; gap: 0.45rem; }
 .tag-chip {
     display: inline-flex; align-items: center; gap: 0.3rem;
     font-size: 0.76rem; font-weight: 600; padding: 5px 12px;
-    border-radius: 20px; border: 1.5px solid rgba(255,255,255,0.07);
-    background: #1e2a3e; cursor: pointer; transition: all 0.15s;
+    border-radius: 20px; border: 1.5px solid #e2e8f0;
+    background: #f8fafc; cursor: pointer; transition: all 0.15s;
     color: #64748b; user-select: none;
 }
-.tag-chip:hover   { border-color: rgba(255,255,255,0.2); color: #e2e8f0; }
-.tag-chip.selected { border-color: var(--pw, #6366f1); background: var(--pw-light, rgba(99,102,241,0.15)); color: #e2e8f0; font-weight: 700; }
+.tag-chip:hover { border-color: var(--pw-border); color: var(--pw); background: var(--pw-bg); }
+.tag-chip.selected { border-color: var(--pw); background: var(--pw-bg); color: var(--pw); font-weight: 700; }
 .tag-chip input { display: none; }
-.tag-chip .tc-chk { font-size: 0.65rem; opacity: 0; color: var(--pw, #6366f1); transition: opacity 0.15s; }
+.tag-chip .tc-chk { font-size: 0.65rem; opacity: 0; color: var(--pw); transition: opacity 0.15s; }
 .tag-chip.selected .tc-chk { opacity: 1; }
 .tag-chip.hidden-chip { display: none; }
+
+/* ── county checkbox grid ── */
+.county-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.35rem;
+}
+@media (min-width: 600px) { .county-grid { grid-template-columns: repeat(3, 1fr); } }
+@media (min-width: 860px) { .county-grid { grid-template-columns: repeat(4, 1fr); } }
+.county-cb-label {
+    display: flex; align-items: center; gap: 0.5rem;
+    padding: 0.5rem 0.7rem; border-radius: 9px;
+    border: 1.5px solid #e2e8f0; background: #f8fafc;
+    cursor: pointer; transition: all 0.15s; user-select: none;
+    font-size: 0.78rem; font-weight: 600; color: #475569;
+    -webkit-tap-highlight-color: transparent;
+}
+.county-cb-label:hover { border-color: var(--pw-border); background: var(--pw-bg); color: var(--pw); }
+.county-cb-label input[type=checkbox] { display: none; }
+.county-cb-box {
+    width: 16px; height: 16px; border-radius: 4px; flex-shrink: 0;
+    border: 2px solid #d1d5db; background: #fff; transition: all 0.15s;
+    display: flex; align-items: center; justify-content: center;
+}
+.county-cb-box i { font-size: 0.6rem; color: #fff; opacity: 0; transition: opacity 0.1s; }
+.county-cb-label.checked { border-color: var(--pw); background: var(--pw-bg); color: var(--pw); }
+.county-cb-label.checked .county-cb-box { background: var(--pw); border-color: var(--pw); }
+.county-cb-label.checked .county-cb-box i { opacity: 1; }
+.county-cb-label.hidden-county { display: none; }
 
 /* ── sticky footer ── */
 .lce-footer {
     position: fixed; bottom: 0; left: 0; right: 0; z-index: 300;
-    background: #0d1226; border-top: 1px solid rgba(255,255,255,0.06);
+    background: #fff; border-top: 1px solid #e2e8f0;
     padding: 0.9rem 1.5rem; display: flex; align-items: center; gap: 1rem;
-    box-shadow: 0 -8px 32px rgba(0,0,0,0.4);
+    box-shadow: 0 -4px 20px rgba(30,58,138,0.1);
 }
 .lce-footer-info { flex: 1; min-width: 0; }
-.lce-footer-title { font-size: 0.82rem; font-weight: 600; color: rgba(255,255,255,0.5); }
-.lce-footer-title strong { color: #fff; }
+.lce-footer-title { font-size: 0.82rem; font-weight: 600; color: #64748b; }
+.lce-footer-title strong { color: #1e293b; }
 .lce-btn-back {
-    font-size: 0.82rem; font-weight: 600; color: rgba(255,255,255,0.4);
-    text-decoration: none; padding: 0.55rem 1rem; border-radius: 10px;
-    border: 1px solid rgba(255,255,255,0.1); transition: all 0.2s; flex-shrink: 0;
+    font-size: 0.82rem; font-weight: 600; color: #64748b; text-decoration: none;
+    padding: 0.55rem 1rem; border-radius: 10px; border: 1.5px solid #e2e8f0;
+    background: #f8fafc; transition: all 0.2s; flex-shrink: 0;
     display: flex; align-items: center; gap: 0.35rem;
 }
-.lce-btn-back:hover { color: #fff; border-color: rgba(255,255,255,0.25); text-decoration: none; }
+.lce-btn-back:hover { color: #1e293b; border-color: #94a3b8; background: #f1f5f9; text-decoration: none; }
 .lce-btn-continue {
-    background: linear-gradient(135deg, #00b4d8, #0096c7); color: #fff;
-    border: none; border-radius: 12px; padding: 0.7rem 1.75rem;
+    background: linear-gradient(135deg, var(--pw), #2563eb);
+    color: #fff; border: none; border-radius: 12px; padding: 0.7rem 1.75rem;
     font-weight: 800; font-size: 0.92rem; cursor: pointer; transition: all 0.2s;
     flex-shrink: 0; display: flex; align-items: center; gap: 0.5rem;
-    box-shadow: 0 4px 20px rgba(0,180,216,0.35);
+    box-shadow: 0 4px 16px rgba(30,58,138,0.35);
 }
-.lce-btn-continue:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 6px 24px rgba(0,180,216,0.5); }
-.lce-btn-continue:disabled { background: rgba(255,255,255,0.07); color: rgba(255,255,255,0.25); box-shadow: none; cursor: not-allowed; transform: none; }
+.lce-btn-continue:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(30,58,138,0.45); }
+.lce-btn-continue:disabled { background: #e2e8f0; color: #94a3b8; box-shadow: none; cursor: not-allowed; transform: none; }
+
+@media (max-width: 480px) { .lce-footer { flex-wrap: wrap; } }
 </style>
 
 <!-- ══ sticky step bar ══ -->
@@ -286,35 +289,6 @@ body { background: #0a0f1e; color: #e2e8f0; }
     </div>
     {% endif %}
 
-    {% if not use_kcse_form %}
-    <!-- ══ Mean Grade Picker ══ -->
-    <input type="hidden" name="mean_grade" id="meanGradeHidden">
-    <div class="mean-section">
-        <div class="mean-label">Select Your Mean Grade <span style="color:#ef4444;">*</span></div>
-        <div class="mean-grade-grid">
-            <button type="button" class="mgp" data-val="A"  data-cls="sel-a"><div class="mgp-g">A</div><div class="mgp-p">12 pts</div></button>
-            <button type="button" class="mgp" data-val="A-" data-cls="sel-a"><div class="mgp-g">A-</div><div class="mgp-p">11 pts</div></button>
-            <button type="button" class="mgp" data-val="B+" data-cls="sel-b"><div class="mgp-g">B+</div><div class="mgp-p">10 pts</div></button>
-            <button type="button" class="mgp" data-val="B"  data-cls="sel-b"><div class="mgp-g">B</div><div class="mgp-p">9 pts</div></button>
-            <button type="button" class="mgp" data-val="B-" data-cls="sel-b"><div class="mgp-g">B-</div><div class="mgp-p">8 pts</div></button>
-            <button type="button" class="mgp" data-val="C+" data-cls="sel-c"><div class="mgp-g">C+</div><div class="mgp-p">7 pts</div></button>
-            <button type="button" class="mgp" data-val="C"  data-cls="sel-c"><div class="mgp-g">C</div><div class="mgp-p">6 pts</div></button>
-            <button type="button" class="mgp" data-val="C-" data-cls="sel-c"><div class="mgp-g">C-</div><div class="mgp-p">5 pts</div></button>
-            <button type="button" class="mgp" data-val="D+" data-cls="sel-d"><div class="mgp-g">D+</div><div class="mgp-p">4 pts</div></button>
-            <button type="button" class="mgp" data-val="D"  data-cls="sel-d"><div class="mgp-g">D</div><div class="mgp-p">3 pts</div></button>
-            <button type="button" class="mgp" data-val="D-" data-cls="sel-d"><div class="mgp-g">D-</div><div class="mgp-p">2 pts</div></button>
-            <button type="button" class="mgp" data-val="E"  data-cls="sel-e"><div class="mgp-g">E</div><div class="mgp-p">1 pt</div></button>
-        </div>
-        <div class="mean-display" id="meanDisplay">
-            <i class="bi bi-bar-chart-fill" style="color:#475569;font-size:1.25rem;"></i>
-            <div>
-                <div class="mean-display-grade" id="meanDisplayGrade" style="color:#475569;font-size:1rem;">No grade selected</div>
-                <div class="mean-display-note">Tap a grade above</div>
-            </div>
-        </div>
-    </div>
-    {% endif %}
-
     {% if use_kcse_form %}
     <!-- ══ Core / Compulsory Subjects ══ -->
     <div class="acc-section" id="sec-compulsory">
@@ -325,7 +299,6 @@ body { background: #0a0f1e; color: #e2e8f0; }
             <div>
                 <div class="acc-title">Core Subjects</div>
             </div>
-            <span class="acc-badge req">Required</span>
             <span class="acc-count" id="cnt-compulsory"></span>
             <div class="acc-spacer"></div>
             <i class="bi bi-chevron-up acc-chevron"></i>
@@ -334,10 +307,7 @@ body { background: #0a0f1e; color: #e2e8f0; }
             {% for subj, bound, icon in compulsory_fields %}
             <div class="acc-row" id="row-{{ bound.html_name }}">
                 <div class="row-icon"><i class="bi {{ icon }}"></i></div>
-                <div class="row-name">
-                    {{ subj.name }}
-                    <span class="row-req">Required</span>
-                </div>
+                <div class="row-name">{{ subj.name }}</div>
                 <select name="{{ bound.html_name }}" class="lce-select form-select"
                         onchange="onSelChange('{{ bound.html_name }}', 'compulsory', this)">
                     <option value="">None</option>
@@ -402,21 +372,51 @@ body { background: #0a0f1e; color: #e2e8f0; }
     {% endfor %}
     {% endif %}
 
-    <!-- ══ Categories ══ -->
+    <!-- ══ Mean Grade Picker (always shown) ══ -->
+    <input type="hidden" name="mean_grade" id="meanGradeHidden" value="{{ current_mean_grade }}">
+    <div class="mean-section">
+        <div class="mean-label">
+            {% if use_kcse_form %}Overall Mean Grade <span style="color:#94a3b8;font-weight:500;text-transform:none;letter-spacing:0;">(optional)</span>{% else %}Select Your Mean Grade <span style="color:#ef4444;">*</span>{% endif %}
+        </div>
+        <div class="mean-grade-grid">
+            <button type="button" class="mgp" data-val="A"  data-cls="sel-a"><div class="mgp-g">A</div><div class="mgp-p">12 pts</div></button>
+            <button type="button" class="mgp" data-val="A-" data-cls="sel-a"><div class="mgp-g">A-</div><div class="mgp-p">11 pts</div></button>
+            <button type="button" class="mgp" data-val="B+" data-cls="sel-b"><div class="mgp-g">B+</div><div class="mgp-p">10 pts</div></button>
+            <button type="button" class="mgp" data-val="B"  data-cls="sel-b"><div class="mgp-g">B</div><div class="mgp-p">9 pts</div></button>
+            <button type="button" class="mgp" data-val="B-" data-cls="sel-b"><div class="mgp-g">B-</div><div class="mgp-p">8 pts</div></button>
+            <button type="button" class="mgp" data-val="C+" data-cls="sel-c"><div class="mgp-g">C+</div><div class="mgp-p">7 pts</div></button>
+            <button type="button" class="mgp" data-val="C"  data-cls="sel-c"><div class="mgp-g">C</div><div class="mgp-p">6 pts</div></button>
+            <button type="button" class="mgp" data-val="C-" data-cls="sel-c"><div class="mgp-g">C-</div><div class="mgp-p">5 pts</div></button>
+            <button type="button" class="mgp" data-val="D+" data-cls="sel-d"><div class="mgp-g">D+</div><div class="mgp-p">4 pts</div></button>
+            <button type="button" class="mgp" data-val="D"  data-cls="sel-d"><div class="mgp-g">D</div><div class="mgp-p">3 pts</div></button>
+            <button type="button" class="mgp" data-val="D-" data-cls="sel-d"><div class="mgp-g">D-</div><div class="mgp-p">2 pts</div></button>
+            <button type="button" class="mgp" data-val="E"  data-cls="sel-e"><div class="mgp-g">E</div><div class="mgp-p">1 pt</div></button>
+        </div>
+        <div class="mean-display" id="meanDisplay">
+            <i class="bi bi-bar-chart-fill" style="color:#475569;font-size:1.25rem;"></i>
+            <div>
+                <div class="mean-display-grade" id="meanDisplayGrade" style="color:#475569;font-size:1rem;">No grade selected</div>
+                <div class="mean-display-note">Tap a grade above</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══ Categories (required) ══ -->
     {% if tvet_categories and pathway != 'kmtc' and pathway != 'ttc' %}
-    <div class="tags-section">
+    <div class="tags-section" id="cat-section">
         <div class="tags-section-head">
             <div>
-                <div class="tags-section-title">Course Categories <span style="color:#475569;font-weight:500;font-size:0.82rem;">(optional)</span></div>
-                <div class="tags-sub">Filter results by programme area</div>
+                <div class="tags-section-title">Preferred Course Categories <span style="color:#ef4444;">*</span></div>
+                <div class="tags-sub" id="cat-hint">Select at least one category to proceed</div>
             </div>
-            <button type="button" class="tags-select-all" onclick="selectAllTags('catChip')">Select all</button>
+            <button type="button" class="tags-select-all" onclick="selectAllCategories()">Select all</button>
         </div>
-        <div class="tags-grid">
+        <div class="county-grid" id="cat-grid">
             {% for cat in tvet_categories %}
-            <label class="tag-chip catChip">
+            <label class="county-cb-label" onclick="toggleCat(this)">
                 <input type="checkbox" name="categories" value="{{ cat }}">
-                <i class="bi bi-check-circle-fill tc-chk"></i>{{ cat }}
+                <div class="county-cb-box"><i class="bi bi-check"></i></div>
+                <span>{{ cat }}</span>
             </label>
             {% endfor %}
         </div>
@@ -424,21 +424,22 @@ body { background: #0a0f1e; color: #e2e8f0; }
     {% endif %}
 
     <!-- ══ Counties ══ -->
-    {% if counties %}
-    <div class="tags-section">
+    {% if counties and pathway != 'kmtc' %}
+    <div class="tags-section" id="counties-section">
         <div class="tags-section-head">
             <div>
                 <div class="tags-section-title">Preferred Counties <span style="color:#475569;font-weight:500;font-size:0.82rem;">(optional)</span></div>
                 <div class="tags-sub">Filter by campus location</div>
             </div>
-            <button type="button" class="tags-select-all" onclick="selectAllTags('countyChip')">Select all</button>
+            <button type="button" class="tags-select-all" onclick="selectAllCounties()">Select all</button>
         </div>
         <input type="text" class="county-search" placeholder="Search counties..." oninput="filterCounties(this.value)">
-        <div class="tags-grid">
+        <div class="county-grid">
             {% for county in counties %}
-            <label class="tag-chip countyChip">
+            <label class="county-cb-label" onclick="toggleCounty(this)">
                 <input type="checkbox" name="counties" value="{{ county }}">
-                <i class="bi bi-check-circle-fill tc-chk"></i>{{ county|capfirst|lower|title }}
+                <div class="county-cb-box"><i class="bi bi-check"></i></div>
+                <span>{{ county|capfirst|lower|title }}</span>
             </label>
             {% endfor %}
         </div>
@@ -464,7 +465,7 @@ body { background: #0a0f1e; color: #e2e8f0; }
         <i class="bi bi-arrow-left"></i> Back
     </a>
     <button type="submit" form="pathwayForm" class="lce-btn-continue" id="proceedBtn" disabled>
-        Continue <i class="bi bi-arrow-right"></i>
+        Proceed <i class="bi bi-arrow-right"></i>
     </button>
 </div>
 
@@ -479,6 +480,43 @@ function toggleAcc(header) {
     const chev = header.querySelector('.acc-chevron');
     if (chev) chev.className = 'bi acc-chevron ' + (!isOpen ? 'bi-chevron-up' : 'bi-chevron-down');
 }
+
+/* ══ Mean grade picker (always active) ══ */
+function selectMgp(val) {
+    document.querySelectorAll('.mgp').forEach(p => p.className = 'mgp');
+    const pill = document.querySelector('.mgp[data-val="' + val + '"]');
+    if (!pill) return;
+    pill.classList.add(pill.dataset.cls);
+    document.getElementById('meanGradeHidden').value = pill.dataset.val;
+    document.getElementById('meanDisplayGrade').textContent = pill.dataset.val;
+    document.getElementById('meanDisplayGrade').style.color = '';
+    document.getElementById('meanDisplay').classList.add('selected');
+    {% if not use_kcse_form %}
+    updateMeanReady();
+    {% endif %}
+}
+{% if not use_kcse_form %}
+function updateMeanReady() {
+    const gradeSet = document.getElementById('meanGradeHidden').value !== '';
+    const ready    = gradeSet && catsOk();
+    const btn  = document.getElementById('proceedBtn');
+    const note = document.getElementById('footerNote');
+    btn.disabled = !ready;
+    const grade = document.getElementById('meanGradeHidden').value;
+    if (!gradeSet) {
+        note.innerHTML = 'Select your <strong>mean grade</strong> to proceed';
+    } else if (!catsOk()) {
+        note.innerHTML = 'Select a <strong>course category</strong> to proceed';
+    } else {
+        note.innerHTML = 'Mean grade: <strong>' + grade + '</strong> — ready to proceed!';
+    }
+}
+{% endif %}
+document.querySelectorAll('.mgp').forEach(pill => {
+    pill.addEventListener('click', () => selectMgp(pill.dataset.val));
+});
+const _preGrade = document.getElementById('meanGradeHidden').value;
+if (_preGrade) { selectMgp(_preGrade); }
 
 {% if use_kcse_form %}
 /* ══ Subject select changes ══ */
@@ -501,22 +539,29 @@ function updateSecCount(secId) {
     if (sec) sec.classList.toggle('has-values', filled > 0);
 }
 
+function catsOk() {
+    if (!_hasCats) return true;
+    return document.querySelectorAll('#cat-grid .county-cb-label.checked').length > 0;
+}
 function updateGlobal() {
-    const all   = document.querySelectorAll('select.lce-select.has-value').length;
-    const ready = all >= 7;
-    const pct   = Math.min(100, Math.round((all / 7) * 100));
-    const sb    = document.getElementById('sbCounter');
-    const fill  = document.getElementById('sbFill');
-    const btn   = document.getElementById('proceedBtn');
-    const note  = document.getElementById('footerNote');
-    if (sb)   { sb.textContent = all + ' / 7 subjects'; sb.className = 'sb-counter' + (ready ? ' ready' : ''); }
+    const all      = document.querySelectorAll('select.lce-select.has-value').length;
+    const gradesOk = all >= 7;
+    const ready    = gradesOk && catsOk();
+    const pct      = Math.min(100, Math.round((all / 7) * 100));
+    const sb   = document.getElementById('sbCounter');
+    const fill = document.getElementById('sbFill');
+    const btn  = document.getElementById('proceedBtn');
+    const note = document.getElementById('footerNote');
+    if (sb)   { sb.textContent = all + ' / 7 subjects'; sb.className = 'sb-counter' + (gradesOk ? ' ready' : ''); }
     if (fill) fill.style.width = pct + '%';
     btn.disabled = !ready;
-    if (ready) {
-        note.innerHTML = '<strong>' + all + ' subjects entered</strong> — ready!';
-    } else {
+    if (!gradesOk) {
         const need = 7 - all;
-        note.innerHTML = 'Enter <strong>' + need + ' more</strong> subject' + (need !== 1 ? 's' : '') + ' to continue';
+        note.innerHTML = 'Enter <strong>' + need + ' more</strong> subject' + (need !== 1 ? 's' : '') + ' to proceed';
+    } else if (!catsOk()) {
+        note.innerHTML = 'Select a <strong>course category</strong> to proceed';
+    } else {
+        note.innerHTML = '<strong>' + all + ' subjects entered</strong> — ready to proceed!';
     }
 }
 
@@ -526,24 +571,9 @@ document.querySelectorAll('select.lce-select').forEach(sel => {
 });
 ['compulsory',1,2,3,4].forEach(id => updateSecCount(id));
 updateGlobal();
-
-{% else %}
-/* ══ Mean grade picker ══ */
-document.querySelectorAll('.mgp').forEach(pill => {
-    pill.addEventListener('click', () => {
-        document.querySelectorAll('.mgp').forEach(p => p.className = 'mgp');
-        pill.classList.add(pill.dataset.cls);
-        document.getElementById('meanGradeHidden').value = pill.dataset.val;
-        document.getElementById('meanDisplayGrade').textContent = pill.dataset.val;
-        document.getElementById('meanDisplayGrade').style.color = '';
-        document.getElementById('meanDisplay').classList.add('selected');
-        document.getElementById('proceedBtn').disabled = false;
-        document.getElementById('footerNote').innerHTML = 'Mean grade: <strong>' + pill.dataset.val + '</strong> — ready to continue!';
-    });
-});
 {% endif %}
 
-/* ══ Tag chips ══ */
+/* ══ Category tag chips ══ */
 document.querySelectorAll('.tag-chip').forEach(chip => {
     chip.addEventListener('click', function(e) {
         if (e.target.tagName === 'INPUT') return;
@@ -563,9 +593,53 @@ function selectAllTags(cls) {
         }
     });
 }
+
+/* ══ Category checkboxes ══ */
+const _hasCats = !!document.getElementById('cat-section');
+function toggleCat(label) {
+    const cb = label.querySelector('input[type=checkbox]');
+    cb.checked = !cb.checked;
+    label.classList.toggle('checked', cb.checked);
+    updateCatValidation();
+}
+function selectAllCategories() {
+    const labels = document.querySelectorAll('#cat-grid .county-cb-label');
+    const allSel = [...labels].every(l => l.classList.contains('checked'));
+    labels.forEach(label => {
+        const cb = label.querySelector('input[type=checkbox]');
+        cb.checked = !allSel;
+        label.classList.toggle('checked', !allSel);
+    });
+    updateCatValidation();
+}
+function updateCatValidation() {
+    if (!_hasCats) return;
+    const catSec   = document.getElementById('cat-section');
+    const catHint  = document.getElementById('cat-hint');
+    const anyChk   = document.querySelectorAll('#cat-grid .county-cb-label.checked').length > 0;
+    catSec.style.borderColor = anyChk ? 'var(--pw-border)' : '#fca5a5';
+    if (catHint) catHint.textContent = anyChk ? '✓ Categories selected' : 'Select at least one category to proceed';
+    {% if use_kcse_form %}updateGlobal();{% else %}updateMeanReady();{% endif %}
+}
+
+/* ══ County checkboxes ══ */
+function toggleCounty(label) {
+    const cb = label.querySelector('input[type=checkbox]');
+    cb.checked = !cb.checked;
+    label.classList.toggle('checked', cb.checked);
+}
+function selectAllCounties() {
+    const labels = document.querySelectorAll('.county-cb-label:not(.hidden-county):not([id*=cat])');
+    const allSel = [...labels].every(l => l.classList.contains('checked'));
+    labels.forEach(label => {
+        const cb = label.querySelector('input[type=checkbox]');
+        cb.checked = !allSel;
+        label.classList.toggle('checked', !allSel);
+    });
+}
 function filterCounties(q) {
-    document.querySelectorAll('.countyChip').forEach(chip => {
-        chip.classList.toggle('hidden-chip', !chip.textContent.trim().toLowerCase().includes(q.toLowerCase()));
+    document.querySelectorAll('#counties-section .county-cb-label').forEach(label => {
+        label.classList.toggle('hidden-county', !label.textContent.trim().toLowerCase().includes(q.toLowerCase()));
     });
 }
 </script>

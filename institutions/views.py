@@ -25,7 +25,12 @@ def institution_type_detail(request, type_slug):
     ).order_by('name')
 
     if q:
-        institutions = institutions.filter(name__icontains=q)
+        from django.db.models import Q as _Q
+        f = _Q(name__icontains=q) | _Q(abbreviation__icontains=q)
+        for tok in q.split():
+            if len(tok) >= 3:
+                f |= _Q(name__icontains=tok)
+        institutions = institutions.filter(f)
 
     return render(request, 'institutions/institution_type_detail.html', {
         'inst_type': inst_type,
@@ -54,6 +59,9 @@ def institution_detail(request, type_slug, institution_slug):
         ct = offering.course.course_type.name
         cat = offering.course.category.name if offering.course.category else 'General'
         grouped.setdefault(ct, {}).setdefault(cat, []).append(offering)
+
+    from analytics.utils import log_view
+    log_view(request, content_type='institution', object_id=institution.pk, object_name=institution.name)
 
     return render(request, 'institutions/institution_detail.html', {
         'institution': institution,

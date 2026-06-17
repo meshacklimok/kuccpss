@@ -1,0 +1,467 @@
+{% extends "base.html" %}
+{% block title %}Analytics Dashboard{% endblock %}
+
+{% block content %}
+<style>
+:root {
+  --primary: #1e3a8a;
+  --primary-light: #eff6ff;
+  --primary-border: #bfdbfe;
+  --green: #16a34a;
+  --green-bg: #f0fdf4;
+  --amber: #d97706;
+  --amber-bg: #fffbeb;
+  --red: #dc2626;
+  --red-bg: #fef2f2;
+  --purple: #7c3aed;
+  --purple-bg: #f5f3ff;
+  --text: #1e293b;
+  --muted: #64748b;
+  --border: #e2e8f0;
+  --card-shadow: 0 2px 12px rgba(30,58,138,0.07);
+}
+.dash-wrap { max-width: 1280px; margin: 0 auto; padding: 2rem 1rem 4rem; }
+.dash-header { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:1rem; margin-bottom:2rem; }
+.dash-title { font-size:1.6rem; font-weight:700; color:var(--primary); margin:0; }
+.dash-subtitle { color:var(--muted); font-size:.9rem; margin:.25rem 0 0; }
+.refresh-btn { background:var(--primary); color:#fff; border:none; padding:.5rem 1.2rem; border-radius:8px; font-size:.875rem; font-weight:600; cursor:pointer; text-decoration:none; }
+.refresh-btn:hover { background:#1d4ed8; color:#fff; }
+
+/* KPI grid */
+.kpi-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:1rem; margin-bottom:2rem; }
+.kpi-card { background:#fff; border:1px solid var(--border); border-radius:14px; padding:1.1rem 1.2rem; box-shadow:var(--card-shadow); }
+.kpi-label { font-size:.72rem; font-weight:600; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); margin:0 0 .35rem; }
+.kpi-value { font-size:1.8rem; font-weight:800; color:var(--text); margin:0; line-height:1; }
+.kpi-sub { font-size:.75rem; color:var(--muted); margin:.3rem 0 0; }
+.kpi-card.green  { border-left:4px solid var(--green);  } .kpi-card.green  .kpi-value { color:var(--green);  }
+.kpi-card.amber  { border-left:4px solid var(--amber);  } .kpi-card.amber  .kpi-value { color:var(--amber);  }
+.kpi-card.red    { border-left:4px solid var(--red);    } .kpi-card.red    .kpi-value { color:var(--red);    }
+.kpi-card.purple { border-left:4px solid var(--purple); } .kpi-card.purple .kpi-value { color:var(--purple); }
+.kpi-card.blue   { border-left:4px solid var(--primary);} .kpi-card.blue   .kpi-value { color:var(--primary);}
+
+/* Section layout */
+.section-title { font-size:1rem; font-weight:700; color:var(--text); margin:0 0 .75rem; display:flex; align-items:center; gap:.5rem; }
+.section-title::after { content:''; flex:1; height:1px; background:var(--border); }
+.card { background:#fff; border:1px solid var(--border); border-radius:14px; padding:1.25rem 1.5rem; box-shadow:var(--card-shadow); margin-bottom:1.25rem; }
+.two-col { display:grid; grid-template-columns:1fr 1fr; gap:1.25rem; margin-bottom:1.25rem; }
+.three-col { display:grid; grid-template-columns:repeat(3,1fr); gap:1.25rem; margin-bottom:1.25rem; }
+@media(max-width:900px) { .two-col,.three-col { grid-template-columns:1fr; } }
+
+/* Chart containers */
+.chart-wrap { position:relative; height:220px; }
+.chart-wrap.tall  { height:280px; }
+.chart-wrap.donut { height:240px; max-width:280px; margin:0 auto; }
+
+/* Tables */
+.rank-table { width:100%; border-collapse:collapse; font-size:.85rem; }
+.rank-table th { text-align:left; font-size:.7rem; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); padding:.4rem .5rem; border-bottom:2px solid var(--border); }
+.rank-table td { padding:.45rem .5rem; border-bottom:1px solid #f1f5f9; color:var(--text); }
+.rank-table tr:last-child td { border-bottom:none; }
+.rank-table tr:hover td { background:#f8fafc; }
+.rank-num { font-weight:700; color:var(--muted); min-width:1.8rem; display:inline-block; }
+.rank-bar { height:6px; border-radius:3px; background:var(--primary-border); margin-top:3px; }
+.rank-bar-fill { height:100%; border-radius:3px; background:var(--primary); }
+.badge-pill { display:inline-block; padding:.15rem .55rem; border-radius:20px; font-size:.7rem; font-weight:600; }
+.pill-green  { background:var(--green-bg);  color:var(--green);  }
+.pill-amber  { background:var(--amber-bg);  color:var(--amber);  }
+.pill-red    { background:var(--red-bg);    color:var(--red);    }
+.pill-blue   { background:var(--primary-light); color:var(--primary); }
+.pill-purple { background:var(--purple-bg); color:var(--purple); }
+
+/* Auth split bar */
+.split-bar-wrap { display:flex; gap:.5rem; align-items:center; margin:.75rem 0; font-size:.8rem; }
+.split-bar-track { flex:1; height:10px; border-radius:5px; background:#f1f5f9; overflow:hidden; }
+.split-bar-auth  { height:100%; border-radius:5px; background:var(--primary); transition:width .5s ease; }
+.split-label { white-space:nowrap; color:var(--muted); }
+
+.no-data { color:var(--muted); font-size:.85rem; text-align:center; padding:2rem; }
+</style>
+
+<div class="dash-wrap">
+
+  <!-- Header -->
+  <div class="dash-header">
+    <div>
+      <h1 class="dash-title">Analytics Dashboard</h1>
+      <p class="dash-subtitle">Last updated: {{ request.META.SERVER_NAME }} &bull; Staff view only</p>
+    </div>
+    <a href="{% url 'analytics:dashboard' %}" class="refresh-btn">&#8635; Refresh</a>
+  </div>
+
+  <!-- ── KPI Row ──────────────────────────────────────────────────── -->
+  <div class="kpi-grid">
+    <div class="kpi-card blue">
+      <p class="kpi-label">Total Users</p>
+      <p class="kpi-value">{{ total_users }}</p>
+      <p class="kpi-sub">+{{ new_users_7d }} this week</p>
+    </div>
+    <div class="kpi-card green">
+      <p class="kpi-label">New (30 days)</p>
+      <p class="kpi-value">{{ new_users_30d }}</p>
+      <p class="kpi-sub">{{ verified_pct }}% verified</p>
+    </div>
+    <div class="kpi-card blue">
+      <p class="kpi-label">Searches</p>
+      <p class="kpi-value">{{ total_searches }}</p>
+      <p class="kpi-sub">{{ searches_today }} today</p>
+    </div>
+    <div class="kpi-card amber">
+      <p class="kpi-label">Zero-Result %</p>
+      <p class="kpi-value">{{ zero_result_pct }}%</p>
+      <p class="kpi-sub">of all searches</p>
+    </div>
+    <div class="kpi-card purple">
+      <p class="kpi-label">Page Views</p>
+      <p class="kpi-value">{{ total_views }}</p>
+      <p class="kpi-sub">{{ views_7d }} this week</p>
+    </div>
+    <div class="kpi-card green">
+      <p class="kpi-label">Downloads</p>
+      <p class="kpi-value">{{ total_downloads }}</p>
+      <p class="kpi-sub">{{ downloads_7d }} this week</p>
+    </div>
+    <div class="kpi-card blue">
+      <p class="kpi-label">Saved Courses</p>
+      <p class="kpi-value">{{ total_saves }}</p>
+      <p class="kpi-sub">across all users</p>
+    </div>
+    <div class="kpi-card purple">
+      <p class="kpi-label">Career Engine</p>
+      <p class="kpi-value">{{ total_engine }}</p>
+      <p class="kpi-sub">{{ engine_7d }} this week</p>
+    </div>
+  </div>
+
+  <!-- ── Activity Chart (30 days) ─────────────────────────────────── -->
+  <h2 class="section-title">30-Day Activity</h2>
+  <div class="card">
+    <div class="chart-wrap tall">
+      <canvas id="activityChart"></canvas>
+    </div>
+  </div>
+
+  <!-- ── Search Section ───────────────────────────────────────────── -->
+  <h2 class="section-title">Search Insights</h2>
+  <div class="two-col">
+    <!-- Top Queries -->
+    <div class="card">
+      <p class="section-title" style="font-size:.85rem;">Top Queries</p>
+      {% if top_queries %}
+      <table class="rank-table">
+        <thead><tr><th>#</th><th>Query</th><th>Searches</th><th>Zero?</th></tr></thead>
+        <tbody>
+        {% for row in top_queries %}
+        <tr>
+          <td><span class="rank-num">{{ forloop.counter }}</span></td>
+          <td>{{ row.query }}</td>
+          <td>{{ row.n }}</td>
+          <td>
+            {% if row.zeros %}
+              <span class="badge-pill pill-red">{{ row.zeros }}</span>
+            {% else %}
+              <span class="badge-pill pill-green">0</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+      {% else %}<p class="no-data">No searches yet.</p>{% endif %}
+    </div>
+
+    <!-- Zero-Result Queries -->
+    <div class="card">
+      <p class="section-title" style="font-size:.85rem;">Queries With Zero Results</p>
+      {% if zero_result_queries %}
+      <table class="rank-table">
+        <thead><tr><th>#</th><th>Query</th><th>Times</th></tr></thead>
+        <tbody>
+        {% for row in zero_result_queries %}
+        <tr>
+          <td><span class="rank-num">{{ forloop.counter }}</span></td>
+          <td>{{ row.query }}</td>
+          <td><span class="badge-pill pill-red">{{ row.n }}</span></td>
+        </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+      {% else %}<p class="no-data">No zero-result queries — great!</p>{% endif %}
+    </div>
+  </div>
+
+  <!-- Auth vs Anonymous split -->
+  <div class="card" style="margin-bottom:1.25rem;">
+    <p class="section-title" style="font-size:.85rem; margin-bottom:.5rem;">Authenticated vs Anonymous</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;">
+      <div>
+        <p style="font-size:.8rem;color:var(--muted);margin:0 0 .4rem;">Searches</p>
+        <div class="split-bar-wrap">
+          <span class="split-label">Auth {{ auth_searches }}</span>
+          <div class="split-bar-track">
+            <div class="split-bar-auth" style="width:{% if total_searches %}{{ auth_searches|floatformat:0 }}{% else %}0{% endif %}%"></div>
+          </div>
+          <span class="split-label">Anon {{ anon_searches }}</span>
+        </div>
+      </div>
+      <div>
+        <p style="font-size:.8rem;color:var(--muted);margin:0 0 .4rem;">Career Engine Uses</p>
+        <div class="split-bar-wrap">
+          <span class="split-label">Auth {{ auth_engine }}</span>
+          <div class="split-bar-track">
+            <div class="split-bar-auth" style="width:{% if total_engine %}{{ auth_engine|floatformat:0 }}{% else %}0{% endif %}%"></div>
+          </div>
+          <span class="split-label">Anon {{ anon_engine }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Content Views ─────────────────────────────────────────────── -->
+  <h2 class="section-title">Most Viewed Content</h2>
+  <div class="two-col">
+    <div class="card">
+      <p class="section-title" style="font-size:.85rem;">Top Courses Viewed</p>
+      {% if top_courses_viewed %}
+      <table class="rank-table">
+        <thead><tr><th>#</th><th>Course</th><th>Views</th></tr></thead>
+        <tbody>
+        {% for row in top_courses_viewed %}
+        <tr>
+          <td><span class="rank-num">{{ forloop.counter }}</span></td>
+          <td>{{ row.object_name }}</td>
+          <td>
+            <span class="badge-pill pill-blue">{{ row.n }}</span>
+            <div class="rank-bar"><div class="rank-bar-fill" style="width:{% widthratio row.n top_courses_viewed.0.n 100 %}%"></div></div>
+          </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+      {% else %}<p class="no-data">No course views logged yet.</p>{% endif %}
+    </div>
+
+    <div class="card">
+      <p class="section-title" style="font-size:.85rem;">Top Institutions Viewed</p>
+      {% if top_insts_viewed %}
+      <table class="rank-table">
+        <thead><tr><th>#</th><th>Institution</th><th>Views</th></tr></thead>
+        <tbody>
+        {% for row in top_insts_viewed %}
+        <tr>
+          <td><span class="rank-num">{{ forloop.counter }}</span></td>
+          <td>{{ row.object_name }}</td>
+          <td>
+            <span class="badge-pill pill-purple">{{ row.n }}</span>
+            <div class="rank-bar" style="--fill:var(--purple)"><div class="rank-bar-fill" style="width:{% widthratio row.n top_insts_viewed.0.n 100 %}%;background:var(--purple)"></div></div>
+          </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+      {% else %}<p class="no-data">No institution views logged yet.</p>{% endif %}
+    </div>
+  </div>
+
+  <!-- ── Downloads + Saved ─────────────────────────────────────────── -->
+  <h2 class="section-title">Downloads &amp; Saved Courses</h2>
+  <div class="two-col">
+    <div class="card">
+      <p class="section-title" style="font-size:.85rem;">Top Downloads</p>
+      {% if top_downloads %}
+      <table class="rank-table">
+        <thead><tr><th>#</th><th>Resource</th><th>Type</th><th>Downloads</th></tr></thead>
+        <tbody>
+        {% for row in top_downloads %}
+        <tr>
+          <td><span class="rank-num">{{ forloop.counter }}</span></td>
+          <td>{{ row.object_name }}</td>
+          <td><span class="badge-pill pill-amber">{{ row.content_type }}</span></td>
+          <td>{{ row.n }}</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+      {% else %}<p class="no-data">No downloads logged yet.</p>{% endif %}
+    </div>
+
+    <div class="card">
+      <p class="section-title" style="font-size:.85rem;">Most Saved Programmes</p>
+      {% if top_saved %}
+      <table class="rank-table">
+        <thead><tr><th>#</th><th>Course</th><th>Type</th><th>Saves</th></tr></thead>
+        <tbody>
+        {% for row in top_saved %}
+        <tr>
+          <td><span class="rank-num">{{ forloop.counter }}</span></td>
+          <td>{{ row.course__name }}</td>
+          <td><span class="badge-pill pill-green">{{ row.course__course_type__name }}</span></td>
+          <td>{{ row.n }}</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+      {% else %}<p class="no-data">No saved courses yet.</p>{% endif %}
+    </div>
+  </div>
+
+  <!-- ── Career Engine ─────────────────────────────────────────────── -->
+  <h2 class="section-title">Career Engine</h2>
+  <div class="three-col">
+    <!-- Pathway donut -->
+    <div class="card">
+      <p class="section-title" style="font-size:.85rem;">Pathway Distribution</p>
+      {% if pathway_dist %}
+      <div class="chart-wrap donut">
+        <canvas id="pathwayChart"></canvas>
+      </div>
+      {% else %}<p class="no-data">No engine data yet.</p>{% endif %}
+    </div>
+
+    <!-- Top mean grades -->
+    <div class="card">
+      <p class="section-title" style="font-size:.85rem;">Mean Grades Entered</p>
+      {% if top_grades %}
+      <table class="rank-table">
+        <thead><tr><th>Grade</th><th>Count</th></tr></thead>
+        <tbody>
+        {% for row in top_grades %}
+        <tr>
+          <td><strong>{{ row.mean_grade|upper }}</strong></td>
+          <td>
+            <span class="badge-pill pill-blue">{{ row.n }}</span>
+            <div class="rank-bar"><div class="rank-bar-fill" style="width:{% widthratio row.n top_grades.0.n 100 %}%"></div></div>
+          </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+      {% else %}<p class="no-data">No grade data yet.</p>{% endif %}
+    </div>
+
+    <!-- Pathway breakdown table -->
+    <div class="card">
+      <p class="section-title" style="font-size:.85rem;">Pathway Breakdown</p>
+      {% if pathway_dist %}
+      <table class="rank-table">
+        <thead><tr><th>Pathway</th><th>Uses</th></tr></thead>
+        <tbody>
+        {% for row in pathway_dist %}
+        <tr>
+          <td>{{ row.pathway|title }}</td>
+          <td>
+            <span class="badge-pill {% if forloop.first %}pill-blue{% else %}pill-purple{% endif %}">{{ row.n }}</span>
+            <div class="rank-bar"><div class="rank-bar-fill" style="width:{% widthratio row.n pathway_dist.0.n 100 %}%"></div></div>
+          </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+      {% else %}<p class="no-data">No engine usage yet.</p>{% endif %}
+    </div>
+  </div>
+
+</div><!-- end dash-wrap -->
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+(function(){
+  'use strict';
+  const dates   = {{ chart_dates|safe }};
+  const regs    = {{ chart_regs|safe }};
+  const searches = {{ chart_searches|safe }};
+  const engine  = {{ chart_engine|safe }};
+  const views   = {{ chart_views|safe }};
+
+  // ── Activity line chart ──────────────────────────────────────────
+  const actCtx = document.getElementById('activityChart');
+  if (actCtx) {
+    new Chart(actCtx, {
+      type: 'line',
+      data: {
+        labels: dates,
+        datasets: [
+          {
+            label: 'Registrations',
+            data: regs,
+            borderColor: '#1e3a8a',
+            backgroundColor: 'rgba(30,58,138,0.08)',
+            tension: 0.35,
+            fill: true,
+            pointRadius: 2,
+          },
+          {
+            label: 'Searches',
+            data: searches,
+            borderColor: '#d97706',
+            backgroundColor: 'rgba(217,119,6,0.07)',
+            tension: 0.35,
+            fill: true,
+            pointRadius: 2,
+          },
+          {
+            label: 'Career Engine',
+            data: engine,
+            borderColor: '#7c3aed',
+            backgroundColor: 'rgba(124,58,237,0.06)',
+            tension: 0.35,
+            fill: true,
+            pointRadius: 2,
+          },
+          {
+            label: 'Page Views',
+            data: views,
+            borderColor: '#16a34a',
+            backgroundColor: 'rgba(22,163,74,0.06)',
+            tension: 0.35,
+            fill: true,
+            pointRadius: 2,
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'top', labels: { font: { size: 12 }, boxWidth: 12 } },
+          tooltip: { mode: 'index', intersect: false },
+        },
+        scales: {
+          x: { grid: { display: false }, ticks: { maxTicksLimit: 10, font: { size: 11 } } },
+          y: { beginAtZero: true, ticks: { font: { size: 11 } }, grid: { color: '#f1f5f9' } },
+        },
+      },
+    });
+  }
+
+  // ── Pathway donut ────────────────────────────────────────────────
+  const pwLabels = {{ chart_pw_labels|safe }};
+  const pwData   = {{ chart_pw_data|safe }};
+  const pwCtx    = document.getElementById('pathwayChart');
+  if (pwCtx && pwData.length) {
+    const PALETTE = ['#1e3a8a','#7c3aed','#0891b2','#16a34a','#d97706','#dc2626'];
+    new Chart(pwCtx, {
+      type: 'doughnut',
+      data: {
+        labels: pwLabels,
+        datasets: [{
+          data: pwData,
+          backgroundColor: PALETTE.slice(0, pwData.length),
+          borderWidth: 2,
+          borderColor: '#fff',
+          hoverOffset: 8,
+        }],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: '62%',
+        plugins: {
+          legend: { position: 'bottom', labels: { font: { size: 11 }, boxWidth: 12 } },
+        },
+      },
+    });
+  }
+})();
+</script>
+{% endblock %}

@@ -1,22 +1,410 @@
 {% extends "base.html" %}
+{% load static %}
+
+{% block title %}KUCCPSS — Kenya's #1 KCSE Career Guidance Platform{% endblock %}
+
+{% block meta %}<meta name="description" content="Kenya's free KCSE cluster points calculator and career guidance platform. Calculate your cluster points and discover university, KMTC, TVET and TTC courses you qualify for via KUCCPS.">{% endblock %}
+{% block og_meta %}
+<meta property="og:title" content="KUCCPSS — Kenya's #1 KCSE Career Guidance Platform">
+<meta property="og:description" content="Free cluster points calculator. Find university, KMTC, TVET and TTC courses you qualify for via KUCCPS. Used by thousands of Kenyan students.">
+{% endblock %}
+{% block twitter_meta %}
+<meta name="twitter:title" content="KUCCPSS — Free KCSE Cluster Points Calculator">
+<meta name="twitter:description" content="Calculate your KCSE cluster points and find courses you qualify for. Free, instant, and accurate.">
+{% endblock %}
 
 {% block content %}
-<div class="container text-center my-5">
-    <div class="p-5 bg-light rounded shadow" 
-         style="background-image: url('/static/images/home-bg.jpg'); background-size: cover; background-position: center;">
-        
-        <h1 class="display-4 fw-bold text-dark">Welcome to Kuccpss!</h1>
-        <p class="lead text-dark">Your countrywide platform for accounts, login, and profile management.</p>
 
-        <!-- Conditional buttons depending on login status -->
-        {% if user.is_authenticated %}
-            <a href="{% url 'accounts:dashboard' %}" class="btn btn-success btn-lg mt-3">Go to Dashboard</a>
-            <a href="{% url 'accounts:logout' %}" class="btn btn-danger btn-lg mt-3">Logout</a>
-        {% else %}
-            <a href="{% url 'accounts:login' %}" class="btn btn-primary btn-lg mt-3">Login</a>
-            <a href="{% url 'accounts:register' %}" class="btn btn-secondary btn-lg mt-3">Register</a>
-        {% endif %}
-        
+<!-- ── HERO ── -->
+<section class="hero-section">
+    <div class="container">
+        <div class="row align-items-center g-5">
+            <div class="col-lg-7 fade-in-up">
+                <div class="hero-badge">
+                    <i class="fas fa-star me-1"></i> Kenya's #1 Placement Guide
+                </div>
+                <h1 class="mb-3">Find Your Perfect Course After <span style="color:#93c5fd;">KCSE</span></h1>
+                <p class="lead mb-4">
+                    Calculate your cluster points, discover courses you qualify for, and explore career paths — all in one place, free for Kenyan students.
+                </p>
+                <div class="d-flex flex-wrap gap-3 mb-4">
+                    {% if user.is_authenticated %}
+                    <a href="{% url 'clusterpoints:calculator' %}" class="btn btn-light fw-bold px-4 py-2">
+                        <i class="fas fa-calculator me-2 text-primary"></i>Open Calculator
+                    </a>
+                    <a href="{% url 'accounts:dashboard' %}" class="btn btn-outline-light fw-semibold px-4 py-2">
+                        <i class="fas fa-tachometer-alt me-2"></i>My Dashboard
+                    </a>
+                    {% else %}
+                    <a href="{% url 'accounts:register' %}" class="btn btn-light fw-bold px-4 py-2">
+                        <i class="fas fa-rocket me-2 text-primary"></i>Get Started Free
+                    </a>
+                    <a href="{% url 'clusterpoints:calculator' %}" class="btn btn-outline-light fw-semibold px-4 py-2">
+                        <i class="fas fa-calculator me-2"></i>Try Calculator
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="col-lg-5 d-none d-lg-block text-center fade-in-up">
+                <div style="background:rgba(255,255,255,0.08);border-radius:24px;padding:2rem;backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.15);">
+                    <i class="fas fa-graduation-cap" style="font-size:5rem;color:rgba(255,255,255,0.85);"></i>
+                    <p class="mt-3 mb-0 fw-semibold" style="color:rgba(255,255,255,0.9);">Start your journey today</p>
+                    <small style="color:rgba(255,255,255,0.65);">Cluster points · Courses · Careers</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats row -->
+        <div class="row g-3 mt-4 pt-3 border-top border-white border-opacity-10">
+            <div class="col-6 col-md-3">
+                <div class="hero-stat">
+                    <div class="stat-num"><span data-count="1000">1,000</span>+</div>
+                    <div class="stat-label">Courses Listed</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="hero-stat">
+                    <div class="stat-num"><span data-count="200">200</span>+</div>
+                    <div class="stat-label">Institutions</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="hero-stat">
+                    <div class="stat-num"><span data-count="50">50</span>+</div>
+                    <div class="stat-label">Career Profiles</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="hero-stat">
+                    <div class="stat-num">Free</div>
+                    <div class="stat-label">Always</div>
+                </div>
+            </div>
+        </div>
     </div>
-</div>
+</section>
+
+<!-- ── HOW IT WORKS ── -->
+<section class="py-5">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="section-header">How It Works</h2>
+            <p class="section-sub">Three simple steps to find your ideal course</p>
+        </div>
+        <div class="row g-4 justify-content-center">
+            <div class="col-md-4">
+                <div class="card card-accent-blue h-100 text-center p-4">
+                    <div class="feature-icon feature-icon-blue mx-auto" style="width:60px;height:60px;font-size:1.5rem;">
+                        <i class="fas fa-calculator"></i>
+                    </div>
+                    <h5 class="fw-bold mt-2">1. Calculate Points</h5>
+                    <p class="text-muted small mb-0">Enter your KCSE grades and get your cluster points calculated instantly using the official KUCCPS formula.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card card-accent-green h-100 text-center p-4">
+                    <div class="feature-icon feature-icon-green mx-auto" style="width:60px;height:60px;font-size:1.5rem;">
+                        <i class="fas fa-search"></i>
+                    </div>
+                    <h5 class="fw-bold mt-2">2. Discover Courses</h5>
+                    <p class="text-muted small mb-0">Browse Degree, Diploma, KMTC, TVET, and TTC courses you qualify for based on your cluster points.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card card-accent-purple h-100 text-center p-4">
+                    <div class="feature-icon feature-icon-purple mx-auto" style="width:60px;height:60px;font-size:1.5rem;">
+                        <i class="fas fa-compass"></i>
+                    </div>
+                    <h5 class="fw-bold mt-2">3. Plan Your Career</h5>
+                    <p class="text-muted small mb-0">Explore career profiles, take the career quiz, and get AI-powered guidance to pick the right path.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ── FEATURES ── -->
+<section class="py-5" style="background:white;">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="section-header">Everything You Need</h2>
+            <p class="section-sub">Powerful tools built for Kenyan KCSE students</p>
+        </div>
+        <div class="row g-4">
+            <div class="col-6 col-md-4">
+                <div class="d-flex gap-3 align-items-start">
+                    <div class="feature-icon feature-icon-blue flex-shrink-0">
+                        <i class="fas fa-calculator"></i>
+                    </div>
+                    <div>
+                        <h6 class="fw-bold mb-1">Cluster Calculator</h6>
+                        <p class="text-muted small mb-0">Official KUCCPS formula. Get results instantly.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-4">
+                <div class="d-flex gap-3 align-items-start">
+                    <div class="feature-icon feature-icon-green flex-shrink-0">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div>
+                        <h6 class="fw-bold mb-1">Eligible Courses</h6>
+                        <p class="text-muted small mb-0">See only courses you qualify for.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-4">
+                <div class="d-flex gap-3 align-items-start">
+                    <div class="feature-icon feature-icon-orange flex-shrink-0">
+                        <i class="fas fa-university"></i>
+                    </div>
+                    <div>
+                        <h6 class="fw-bold mb-1">All Institutions</h6>
+                        <p class="text-muted small mb-0">Universities, KMTCs, TVETs & TTCs.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-4">
+                <div class="d-flex gap-3 align-items-start">
+                    <div class="feature-icon feature-icon-purple flex-shrink-0">
+                        <i class="fas fa-user-tie"></i>
+                    </div>
+                    <div>
+                        <h6 class="fw-bold mb-1">Career Profiles</h6>
+                        <p class="text-muted small mb-0">50+ detailed career profiles with salary info.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-4">
+                <div class="d-flex gap-3 align-items-start">
+                    <div class="feature-icon feature-icon-teal flex-shrink-0">
+                        <i class="fas fa-clipboard-question"></i>
+                    </div>
+                    <div>
+                        <h6 class="fw-bold mb-1">Career Quiz</h6>
+                        <p class="text-muted small mb-0">Discover careers that match your interests.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-4">
+                <div class="d-flex gap-3 align-items-start">
+                    <div class="feature-icon feature-icon-red flex-shrink-0">
+                        <i class="fas fa-file-pdf"></i>
+                    </div>
+                    <div>
+                        <h6 class="fw-bold mb-1">Guides & Resources</h6>
+                        <p class="text-muted small mb-0">PDFs, articles and placement tips.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ── SUCCESS STORIES ── -->
+<section class="py-5 stories-section" style="background:#f0f4ff;">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+<style>
+.stories-section { overflow: hidden; }
+
+/* scroll-triggered entrance */
+@keyframes storyIn {
+    from { opacity: 0; transform: translateY(30px) scale(0.97); }
+    to   { opacity: 1; transform: translateY(0)   scale(1); }
+}
+.story-card {
+    opacity: 0;
+    transform: translateY(30px);
+}
+.story-card.visible {
+    animation: storyIn 0.55s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+.story-card:nth-child(2).visible { animation-delay: 0.1s; }
+.story-card:nth-child(3).visible { animation-delay: 0.2s; }
+.story-card:nth-child(4).visible { animation-delay: 0.1s; }
+.story-card:nth-child(5).visible { animation-delay: 0.2s; }
+.story-card:nth-child(6).visible { animation-delay: 0.3s; }
+
+/* card */
+.story-card {
+    background: #fff;
+    border-radius: 1.1rem;
+    border: 1.5px solid #e2e8f0;
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    box-shadow: 0 2px 12px rgba(30,58,138,0.06);
+    transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.25s ease, border-color 0.2s ease;
+    height: 100%;
+    position: relative; overflow: hidden;
+}
+.story-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 14px 36px rgba(30,58,138,0.12);
+    border-color: #bfdbfe;
+}
+
+/* avatar + meta row */
+.story-meta { display: flex; align-items: center; gap: 0.85rem; }
+.story-avatar {
+    width: 46px; height: 46px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.05rem; font-weight: 900; flex-shrink: 0;
+    letter-spacing: -0.5px;
+}
+.story-name  { font-size: 0.92rem; font-weight: 800; color: #1e293b; line-height: 1.2; }
+.story-county { font-size: 0.72rem; color: #64748b; margin-top: 1px; }
+.story-work-loc {
+    font-size: 0.72rem; color: #059669; font-weight: 600; margin-top: 0.4rem;
+    display: flex; align-items: center; gap: 0.3rem;
+}
+
+/* grade badge */
+.grade-badge {
+    display: inline-flex; align-items: center; gap: 0.3rem;
+    font-size: 0.7rem; font-weight: 800; letter-spacing: 0.04em;
+    padding: 3px 10px; border-radius: 20px;
+    border: 1px solid; align-self: flex-start;
+}
+
+/* quote */
+.story-quote {
+    font-size: 0.84rem; color: #374151; line-height: 1.6;
+    font-style: italic; flex: 1;
+    position: relative; padding-left: 1rem;
+}
+.story-quote::before {
+    content: '"';
+    position: absolute; left: 0; top: -4px;
+    font-size: 1.8rem; color: #bfdbfe; font-style: normal; line-height: 1;
+    font-family: Georgia, serif;
+}
+
+/* programme */
+.story-prog {
+    border-top: 1px solid #f1f5f9;
+    padding-top: 0.85rem;
+    display: flex; flex-direction: column; gap: 0.25rem;
+}
+.story-prog-name { font-size: 0.8rem; font-weight: 700; color: #1e293b; }
+.story-prog-inst { font-size: 0.73rem; color: #64748b; }
+.story-pathway {
+    display: inline-flex; align-items: center; gap: 0.3rem;
+    margin-top: 0.4rem;
+    font-size: 0.68rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;
+    padding: 2px 9px; border-radius: 5px;
+}
+
+/* mobile horizontal scroll */
+@media (max-width: 576px) {
+    .stories-track {
+        display: flex;
+        overflow-x: auto;
+        scroll-snap-type: x mandatory;
+        -webkit-overflow-scrolling: touch;
+        gap: 1rem;
+        padding: 0 1rem 0.5rem;
+        margin: 0 -1rem;
+    }
+    .stories-track .col { min-width: 280px; scroll-snap-align: start; flex-shrink: 0; }
+    .stories-track { scrollbar-width: none; }
+    .stories-track::-webkit-scrollbar { display: none; }
+}
+</style>
+
+<div class="container">
+    <div class="text-center mb-5">
+        <span style="display:inline-flex;align-items:center;gap:.4rem;background:#eff6ff;border:1px solid #bfdbfe;color:#1d4ed8;border-radius:20px;padding:4px 14px;font-size:.75rem;font-weight:700;margin-bottom:.85rem;">
+            <i class="bi bi-people-fill"></i>Student Stories
+        </span>
+        <h2 class="section-header">From KCSE Results to Real Careers</h2>
+        <p class="section-sub">Students across Kenya who used KUCCPSS to find their right path</p>
+    </div>
+
+    <div class="row g-4 stories-track">
+
+        {% for story in stories %}
+        <div class="col-md-4">
+        <div class="story-card">
+            <div class="story-meta">
+                <div class="story-avatar" style="background:{{ story.avatar_bg }};color:{{ story.avatar_color }};">{{ story.initials }}</div>
+                <div>
+                    <div class="story-name">{{ story.name }}</div>
+                    {% if story.county %}<div class="story-county"><i class="bi bi-geo-alt-fill me-1" style="font-size:.6rem;"></i>{{ story.county }}</div>{% endif %}
+                </div>
+                {% if story.kcse_grade %}
+                <span class="grade-badge ms-auto" style="background:#f0fdf4;color:#15803d;border-color:#86efac;">
+                    <i class="bi bi-star-fill" style="font-size:.55rem;"></i>{{ story.kcse_grade }}
+                </span>
+                {% endif %}
+            </div>
+            {% if story.work_location %}<div class="story-work-loc"><i class="bi bi-briefcase-fill"></i>Now working in {{ story.work_location }}</div>{% endif %}
+            <div class="story-quote">{{ story.quote }}</div>
+            <div class="story-prog">
+                <div class="story-prog-name">{{ story.course_name }}</div>
+                <div class="story-prog-inst"><i class="bi bi-building me-1"></i>{{ story.institution }}</div>
+                <span class="story-pathway" style="background:{{ story.avatar_bg }};color:{{ story.avatar_color }};">
+                    <i class="bi bi-mortarboard-fill"></i>{{ story.get_pathway_display }}{% if story.year %} · {{ story.year }}{% endif %}
+                </span>
+            </div>
+        </div>
+        </div>
+        {% empty %}
+        <!-- Fallback: no stories in DB yet — hidden from view (admin should add via /admin/) -->
+        <div class="col-12 text-center text-muted py-4 small">No success stories yet. Add them in the admin.</div>
+        {% endfor %}
+
+        <!-- placeholder ghost cards below if you want padding: removed -->
+
+    </div><!-- /row -->
+</div><!-- /container -->
+
+<script>
+(function(){
+    var cards = document.querySelectorAll('.story-card');
+    if (!cards.length) return;
+    if ('IntersectionObserver' in window) {
+        var io = new IntersectionObserver(function(entries){
+            entries.forEach(function(e){
+                if (e.isIntersecting) {
+                    e.target.classList.add('visible');
+                    io.unobserve(e.target);
+                }
+            });
+        }, { threshold: 0.05 });
+        cards.forEach(function(c){ io.observe(c); });
+        /* Fallback: if cards are still hidden after 1.5s (e.g. section off-screen on load), show them */
+        setTimeout(function(){
+            cards.forEach(function(c){ if (!c.classList.contains('visible')) c.classList.add('visible'); });
+        }, 1500);
+    } else {
+        /* No IntersectionObserver support — show all immediately */
+        cards.forEach(function(c){ c.classList.add('visible'); });
+    }
+})();
+</script>
+</section>
+
+<!-- ── CTA ── -->
+{% if not user.is_authenticated %}
+<section class="py-5">
+    <div class="container">
+        <div class="card text-center p-5" style="background:linear-gradient(135deg,var(--primary) 0%,#1d4ed8 100%);border:none;color:white;">
+            <h2 class="fw-bold mb-2">Ready to find your course?</h2>
+            <p class="mb-4" style="opacity:0.85;">Join thousands of Kenyan students already using KUCCPSS.</p>
+            <div class="d-flex justify-content-center gap-3 flex-wrap">
+                <a href="{% url 'accounts:register' %}" class="btn btn-light fw-bold px-5 py-2">
+                    <i class="fas fa-user-plus me-2 text-primary"></i>Create Free Account
+                </a>
+                <a href="{% url 'clusterpoints:calculator' %}" class="btn btn-outline-light fw-semibold px-4 py-2">
+                    Try Without Account
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+{% endif %}
+
 {% endblock %}
+
