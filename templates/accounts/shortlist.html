@@ -1,0 +1,472 @@
+{% extends "base.html" %}
+{% block title %}My Shortlist — KUCCPSS{% endblock %}
+
+{% block content %}
+<style>
+/* ── Hero ── */
+.sl-hero {
+  background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 60%, #1d4ed8 100%);
+  padding: 2rem 0 1.5rem;
+}
+
+/* ── Comparison grid ── */
+.sl-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+}
+
+/* ── Course card ── */
+.sl-card {
+  background: #fff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 18px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: box-shadow 0.2s, border-color 0.2s;
+}
+.sl-card:hover { box-shadow: 0 8px 32px rgba(30,58,138,0.10); border-color: #bfdbfe; }
+
+.sl-card-header {
+  padding: 1.1rem 1.1rem 0.6rem;
+  border-bottom: 1px solid #f1f5f9;
+}
+.sl-card-body { padding: 0.9rem 1.1rem; flex: 1; }
+.sl-card-footer { padding: 0.8rem 1.1rem; border-top: 1px solid #f1f5f9; background: #f8fafc; }
+
+.sl-course-name {
+  font-size: 0.97rem; font-weight: 800; color: #0f172a; line-height: 1.3;
+  text-decoration: none;
+}
+.sl-course-name:hover { color: #1d4ed8; }
+
+/* ── Type pill ── */
+.type-pill { display:inline-block;padding:2px 9px;border-radius:50px;font-size:0.68rem;font-weight:700; }
+.tp-degree  { background:#dbeafe;color:#1d4ed8; }
+.tp-diploma { background:#ede9fe;color:#6d28d9; }
+.tp-kmtc    { background:#dcfce7;color:#15803d; }
+.tp-ttc     { background:#ffedd5;color:#c2410c; }
+.tp-tvet    { background:#ccfbf1;color:#0f766e; }
+.tp-default { background:#f1f5f9;color:#475569; }
+
+/* ── Eligibility badge ── */
+.elig-badge {
+  display:inline-flex;align-items:center;gap:4px;padding:3px 10px;
+  border-radius:50px;font-size:0.7rem;font-weight:700;
+}
+.elig-eligible    { background:#dcfce7;color:#15803d; }
+.elig-nearly      { background:#fef9c3;color:#854d0e; }
+.elig-not_eligible{ background:#fee2e2;color:#b91c1c; }
+
+/* ── Competition badge ── */
+.comp-high   { background:#fee2e2;color:#b91c1c; }
+.comp-medium { background:#fef3c7;color:#92400e; }
+.comp-low    { background:#dcfce7;color:#166534; }
+
+/* ── Rank selector ── */
+.rank-select {
+  border: 1.5px solid #e2e8f0; border-radius: 8px; padding: 3px 6px;
+  font-size: 0.78rem; font-weight: 700; color: #1e3a8a;
+  background: #eff6ff; cursor: pointer; outline: none;
+}
+.rank-select:focus { border-color: #2563eb; }
+.rank-badge {
+  display:inline-flex;align-items:center;justify-content:center;
+  width:26px;height:26px;border-radius:50%;
+  background:#1d4ed8;color:#fff;font-size:0.72rem;font-weight:800;
+  flex-shrink:0;
+}
+
+/* ── Row label ── */
+.sl-row { display:flex; align-items:flex-start; gap:0.5rem; margin-bottom:0.55rem; font-size:0.83rem; }
+.sl-label { color:#64748b; font-weight:600; font-size:0.72rem; min-width:90px; padding-top:2px; text-transform:uppercase; letter-spacing:0.04em; flex-shrink:0; }
+.sl-value { color:#1e293b; flex:1; }
+
+/* ── Notes textarea ── */
+.notes-box {
+  width:100%; border:1.5px solid #e2e8f0; border-radius:8px;
+  padding:6px 9px; font-size:0.8rem; color:#374151; resize:vertical;
+  min-height:56px; transition: border-color 0.15s;
+  font-family: inherit;
+}
+.notes-box:focus { border-color:#2563eb; outline:none; }
+.notes-save-btn {
+  font-size:0.73rem; padding:2px 10px; border-radius:6px;
+  border:none; background:#1d4ed8; color:#fff; font-weight:700; cursor:pointer;
+}
+.notes-save-btn:hover { background:#1e40af; }
+.notes-saved { font-size:0.72rem; color:#16a34a; display:none; }
+
+/* ── WhatsApp btn ── */
+.btn-wa { background:#25d366; color:#fff; border:none; }
+.btn-wa:hover { background:#1ebe5d; color:#fff; }
+
+/* ── Empty state ── */
+.empty-sl { text-align:center; padding:4rem 1rem; }
+.empty-icon { width:80px;height:80px;border-radius:50%;background:#eff6ff;color:#2563eb;
+  display:flex;align-items:center;justify-content:center;font-size:2rem;margin:0 auto 1.25rem; }
+
+/* ── No cluster data notice ── */
+.no-cluster-notice { background:#fef9c3; border:1.5px solid #fde68a; border-radius:10px;
+  padding:0.7rem 1rem; font-size:0.82rem; color:#78350f; margin-bottom:1rem; }
+</style>
+
+<!-- ── HERO ── -->
+<div class="sl-hero">
+  <div class="container">
+    <nav class="mb-2">
+      <ol class="breadcrumb mb-0" style="font-size:0.78rem;">
+        <li class="breadcrumb-item"><a href="{% url 'accounts:dashboard' %}" class="text-white-50">Dashboard</a></li>
+        <li class="breadcrumb-item active text-white">My Shortlist</li>
+      </ol>
+    </nav>
+    <div class="d-flex align-items-center gap-3 flex-wrap">
+      <div>
+        <h1 class="text-white fw-900 mb-1" style="font-size:clamp(1.4rem,3vw,2rem);">
+          <i class="fas fa-list-check me-2" style="color:#93c5fd;"></i>My Shortlist
+        </h1>
+        <p class="mb-0 small" style="color:rgba(255,255,255,0.75);">
+          Compare up to 5 courses side-by-side. Set your KUCCPS choice order (1st – 4th choice).
+          {% if items %}<strong class="text-white">{{ items|length }}/5</strong> added.{% endif %}
+        </p>
+      </div>
+      <div class="ms-auto d-flex gap-2 flex-wrap">
+        {% if items %}
+        <a href="{% url 'accounts:shortlist_pdf' %}" class="btn btn-sm fw-700 rounded-pill px-3"
+           style="background:rgba(255,255,255,0.15);color:#fff;border:1.5px solid rgba(255,255,255,0.3);">
+          <i class="fas fa-file-pdf me-1"></i>Export PDF
+        </a>
+        <button id="waShareBtn" class="btn btn-sm fw-700 rounded-pill px-3 btn-wa">
+          <i class="fab fa-whatsapp me-1"></i>Share via WhatsApp
+        </button>
+        {% endif %}
+        <a href="{% url 'courses:course_types_list' %}" class="btn btn-sm fw-700 rounded-pill px-3 btn-light">
+          <i class="fas fa-plus me-1"></i>Add Courses
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="container py-4" style="max-width:1200px;">
+
+{% if items %}
+
+  <!-- No cluster data notice -->
+  {% if not has_cluster_data %}
+  <div class="no-cluster-notice mb-3">
+    <i class="fas fa-exclamation-triangle me-2"></i>
+    <strong>Tip:</strong> Run the <a href="{% url 'clusterpoints:calculator' %}">Cluster Points Calculator</a>
+    first to see Eligible / Nearly / Not Eligible status on each course.
+  </div>
+  {% endif %}
+
+  <!-- Tip bar -->
+  <div class="alert border-0 rounded-3 mb-4 d-flex gap-3 align-items-start"
+       style="background:#eff6ff;border-left:4px solid #2563eb!important;padding:.75rem 1rem;">
+    <i class="fas fa-lightbulb text-primary mt-1"></i>
+    <div class="small">
+      <strong>How to use this shortlist:</strong> Set your <strong>Choice #</strong> rank for each course to match the KUCCPS
+      application order (1st = most preferred). Add personal notes. Export a PDF to share with your parents or school counsellor.
+      Add courses from the <a href="{% url 'courses:course_types_list' %}">course browser</a> or
+      <a href="{% url 'clusterpoints:eligible_courses' %}">eligible courses</a> using the <strong>+ Shortlist</strong> button.
+    </div>
+  </div>
+
+  <!-- Course cards grid -->
+  <div class="sl-grid mb-4">
+  {% for item in items %}
+  {% with course=item.course %}
+  <div class="sl-card" id="sl-card-{{ course.pk }}">
+
+    <!-- Card header -->
+    <div class="sl-card-header">
+      <div class="d-flex align-items-start gap-2 mb-2">
+        <!-- Rank badge / selector -->
+        <div class="flex-shrink-0 pt-1">
+          {% if item.rank %}
+          <div class="rank-badge">{{ item.rank }}</div>
+          {% else %}
+          <div class="rank-badge" style="background:#cbd5e1;">—</div>
+          {% endif %}
+        </div>
+        <div class="flex-grow-1">
+          <a href="{% url 'courses:course_detail_no_category' course.course_type.slug course.slug %}"
+             class="sl-course-name d-block mb-1">{{ course.name }}</a>
+          <div class="d-flex flex-wrap gap-1 align-items-center">
+            <span class="type-pill
+              {% if 'TVET' in course.course_type.name %}tp-tvet
+              {% elif course.course_type.name == 'Degree' %}tp-degree
+              {% elif course.course_type.name == 'Diploma' %}tp-diploma
+              {% elif course.course_type.name == 'KMTC' %}tp-kmtc
+              {% elif course.course_type.name == 'TTC' %}tp-ttc
+              {% else %}tp-default{% endif %}">
+              {{ course.course_type.name }}
+            </span>
+
+            <!-- Eligibility badge -->
+            {% if item.eligibility == 'eligible' %}
+            <span class="elig-badge elig-eligible">
+              <i class="fas fa-check-circle"></i>Eligible
+            </span>
+            {% if item.eligibility_gap is not None %}
+            <span style="font-size:1.35rem;font-weight:900;color:#15803d;letter-spacing:-0.02em;line-height:1;">
+              +{{ item.eligibility_gap }}<span style="font-size:0.75rem;font-weight:700;">pts</span>
+            </span>
+            {% endif %}
+            {% elif item.eligibility == 'nearly' %}
+            <span class="elig-badge elig-nearly">
+              <i class="fas fa-exclamation-circle"></i>Nearly
+            </span>
+            {% if item.eligibility_gap is not None %}
+            <span style="font-size:1.35rem;font-weight:900;color:#92400e;letter-spacing:-0.02em;line-height:1;">
+              {{ item.eligibility_gap }}<span style="font-size:0.75rem;font-weight:700;">pts</span>
+            </span>
+            {% endif %}
+            {% elif item.eligibility == 'not_eligible' %}
+            <span class="elig-badge elig-not_eligible">
+              <i class="fas fa-times-circle"></i>Below cutoff
+            </span>
+            {% if item.eligibility_gap is not None %}
+            <span style="font-size:1.35rem;font-weight:900;color:#b91c1c;letter-spacing:-0.02em;line-height:1;">
+              {{ item.eligibility_gap }}<span style="font-size:0.75rem;font-weight:700;">pts</span>
+            </span>
+            {% endif %}
+            {% endif %}
+
+            <!-- Competition badge -->
+            {% if item.competition == 'high' %}
+            <span class="elig-badge comp-high"><i class="fas fa-fire me-1"></i>High competition</span>
+            {% elif item.competition == 'medium' %}
+            <span class="elig-badge comp-medium"><i class="fas fa-chart-line me-1"></i>Medium</span>
+            {% elif item.competition == 'low' %}
+            <span class="elig-badge comp-low"><i class="fas fa-door-open me-1"></i>Low competition</span>
+            {% endif %}
+          </div>
+        </div>
+        <!-- Remove btn -->
+        <form method="post" action="{% url 'accounts:shortlist_toggle' course.pk %}" class="flex-shrink-0">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill" title="Remove"
+                  style="font-size:0.7rem;padding:2px 8px;" onclick="return confirm('Remove {{ course.name }} from shortlist?')">
+            <i class="fas fa-times"></i>
+          </button>
+        </form>
+      </div>
+
+      <!-- KUCCPS Choice ranking -->
+      <div class="d-flex align-items-center gap-2 mt-1">
+        <span class="sl-label" style="min-width:auto;">KUCCPS Choice:</span>
+        <select class="rank-select" data-course="{{ course.pk }}"
+                onchange="setRank({{ course.pk }}, this.value, this)">
+          <option value="">— not ranked —</option>
+          {% for r in rank_choices %}
+          <option value="{{ r }}" {% if item.rank == r %}selected{% endif %}>{{ r }}{% if r == 1 %} (1st choice){% elif r == 2 %} (2nd choice){% elif r == 3 %} (3rd choice){% elif r == 4 %} (4th choice){% endif %}</option>
+          {% endfor %}
+        </select>
+        <span class="rank-saved-{{ course.pk }}" style="font-size:0.72rem;color:#16a34a;display:none;">
+          <i class="fas fa-check"></i> Saved
+        </span>
+      </div>
+    </div>
+
+    <!-- Card body -->
+    <div class="sl-card-body">
+
+      <div class="sl-row">
+        <span class="sl-label"><i class="fas fa-layer-group me-1" style="color:#6366f1;"></i>Cluster</span>
+        <span class="sl-value">
+          {% if course.cluster %}{{ course.cluster.name }}{% else %}<span class="text-muted">—</span>{% endif %}
+        </span>
+      </div>
+
+      <div class="sl-row">
+        <span class="sl-label"><i class="fas fa-star me-1" style="color:#f59e0b;"></i>Min Grade</span>
+        <span class="sl-value">
+          {% if course.minimum_mean_grade %}
+          <span class="badge" style="background:#fef9c3;color:#854d0e;font-weight:700;font-size:0.75rem;">{{ course.minimum_mean_grade }}</span>
+          {% else %}<span class="text-muted small">—</span>{% endif %}
+        </span>
+      </div>
+
+      <div class="sl-row">
+        <span class="sl-label"><i class="fas fa-bullseye me-1 text-danger"></i>Cutoff</span>
+        <span class="sl-value">
+          {% if item.min_cutoff %}
+          <strong style="color:#1d4ed8;">{{ item.min_cutoff }} pts</strong>
+          <span class="text-muted small">(lowest)</span>
+          {% else %}<span class="text-muted small">No data yet</span>{% endif %}
+        </span>
+      </div>
+
+      {% if course.duration %}
+      <div class="sl-row">
+        <span class="sl-label"><i class="fas fa-clock me-1 text-primary"></i>Duration</span>
+        <span class="sl-value">{{ course.duration }}</span>
+      </div>
+      {% endif %}
+
+      <div class="sl-row">
+        <span class="sl-label"><i class="fas fa-building me-1 text-success"></i>Institutions</span>
+        <span class="sl-value">
+          {% with offs=course.offerings.all %}
+          {% if offs %}
+          <div class="fw-700 text-success" style="font-size:0.82rem;">{{ offs|length }} institution{{ offs|length|pluralize }}</div>
+          <div style="font-size:0.72rem;color:#64748b;line-height:1.6;">
+            {% for off in offs|slice:":3" %}<a href="{% url 'institutions:institution_detail' type_slug=off.institution.institution_type.slug institution_slug=off.institution.slug %}" class="text-dark text-decoration-none">{{ off.institution.name }}</a>{% if not forloop.last %}, {% endif %}{% endfor %}
+            {% if offs|length > 3 %} +{{ offs|length|add:"-3" }} more{% endif %}
+          </div>
+          {% else %}<span class="text-muted small">—</span>{% endif %}
+          {% endwith %}
+        </span>
+      </div>
+
+      {% if course.core_subjects.all %}
+      <div class="sl-row">
+        <span class="sl-label"><i class="fas fa-book me-1 text-primary"></i>Key Subjects</span>
+        <span class="sl-value">
+          <div class="d-flex flex-wrap gap-1">
+            {% for subj in course.core_subjects.all|slice:":5" %}
+            <span class="badge rounded-pill" style="background:#f1f5f9;color:#475569;font-size:0.67rem;font-weight:600;">{{ subj.name }}</span>
+            {% endfor %}
+          </div>
+        </span>
+      </div>
+      {% endif %}
+
+      {% if course.career_outcomes %}
+      <div class="sl-row">
+        <span class="sl-label"><i class="fas fa-briefcase me-1" style="color:#0891b2;"></i>Careers</span>
+        <span class="sl-value" style="font-size:0.8rem;color:#0f172a;">{{ course.career_outcomes }}</span>
+      </div>
+      {% endif %}
+
+      {% if course.description %}
+      <div class="sl-row">
+        <span class="sl-label"><i class="fas fa-info-circle me-1 text-muted"></i>About</span>
+        <span class="sl-value" style="font-size:0.79rem;color:#374151;line-height:1.6;">
+          {{ course.description|truncatewords:30 }}
+        </span>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Card footer: notes + actions -->
+    <div class="sl-card-footer">
+      <div class="mb-2">
+        <label class="sl-label d-block mb-1"><i class="fas fa-sticky-note me-1" style="color:#f59e0b;"></i>My Notes</label>
+        <textarea class="notes-box" id="notes-{{ course.pk }}"
+                  placeholder="Add your thoughts — campus preference, why this course, family decision…">{{ item.notes }}</textarea>
+        <div class="d-flex align-items-center gap-2 mt-1">
+          <button class="notes-save-btn" onclick="saveNotes({{ course.pk }})">
+            <i class="fas fa-save me-1"></i>Save
+          </button>
+          <span class="notes-saved" id="notes-saved-{{ course.pk }}"><i class="fas fa-check"></i> Saved</span>
+        </div>
+      </div>
+
+      <div class="d-flex gap-2 mt-2">
+        <a href="{% url 'courses:course_detail_no_category' course.course_type.slug course.slug %}"
+           class="btn btn-sm btn-primary rounded-pill fw-700 flex-grow-1" style="font-size:0.75rem;">
+          <i class="fas fa-eye me-1"></i>Full Details
+        </a>
+        <form method="post" action="{% url 'accounts:toggle_save_course' course.pk %}" class="flex-shrink-0">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-sm btn-outline-warning rounded-pill fw-700" style="font-size:0.75rem;" title="Save to watchlist">
+            <i class="far fa-bookmark"></i>
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+  {% endwith %}
+  {% endfor %}
+  </div>
+
+  <!-- Add more CTA -->
+  {% if items|length < 5 %}
+  <div class="text-center py-3">
+    <p class="text-muted small mb-2">You can add up to 5 courses. Currently {{ items|length }}/5.</p>
+    <a href="{% url 'courses:course_types_list' %}" class="btn btn-outline-primary rounded-pill px-4">
+      <i class="fas fa-plus me-1"></i>Add More Courses
+    </a>
+  </div>
+  {% endif %}
+
+{% else %}
+
+<!-- Empty state -->
+<div class="empty-sl">
+  <div class="empty-icon"><i class="fas fa-list-check"></i></div>
+  <h4 class="fw-800 mb-2">Your shortlist is empty</h4>
+  <p class="text-muted mb-4" style="max-width:420px;margin:0 auto 1.5rem;">
+    Add up to 5 courses to compare side-by-side, set your KUCCPS choice order, add personal notes,
+    and export a PDF. Look for the <strong>+ Shortlist</strong> button on any course page.
+  </p>
+  <div class="d-flex gap-3 justify-content-center flex-wrap">
+    <a href="{% url 'courses:course_types_list' %}" class="btn btn-primary rounded-pill px-4 fw-700">
+      <i class="fas fa-graduation-cap me-2"></i>Browse Courses
+    </a>
+    <a href="{% url 'clusterpoints:eligible_courses' %}" class="btn btn-outline-success rounded-pill px-4 fw-700">
+      <i class="fas fa-check-circle me-2"></i>My Eligible Courses
+    </a>
+    <a href="{% url 'career:home' %}" class="btn btn-outline-primary rounded-pill px-4 fw-700">
+      <i class="fas fa-compass me-2"></i>Career Engine
+    </a>
+  </div>
+</div>
+
+{% endif %}
+
+</div>
+
+<script>
+function getCookie(name) {
+  const v = document.cookie.match('(^|;) ?' + name + '=([^;]*)(;|$)');
+  return v ? v[2] : null;
+}
+
+function saveNotes(courseId) {
+  const text = document.getElementById('notes-' + courseId).value;
+  const fd = new FormData();
+  fd.append('notes', text);
+  fd.append('csrfmiddlewaretoken', getCookie('csrftoken'));
+  fetch('{% url "accounts:shortlist_notes" 0 %}'.replace('/0/', '/' + courseId + '/'), {
+    method: 'POST', body: fd
+  }).then(r => r.json()).then(data => {
+    if (data.ok) {
+      const el = document.getElementById('notes-saved-' + courseId);
+      el.style.display = 'inline';
+      setTimeout(() => { el.style.display = 'none'; }, 2000);
+    }
+  });
+}
+
+function setRank(courseId, rankVal, selectEl) {
+  const fd = new FormData();
+  fd.append('rank', rankVal);
+  fd.append('csrfmiddlewaretoken', getCookie('csrftoken'));
+  fetch('{% url "accounts:shortlist_rank" 0 %}'.replace('/0/', '/' + courseId + '/'), {
+    method: 'POST', body: fd
+  }).then(r => r.json()).then(data => {
+    if (data.ok) {
+      const badge = selectEl.closest('.sl-card-header').querySelector('.rank-badge');
+      if (badge) badge.textContent = data.rank || '—';
+      const saved = document.querySelector('.rank-saved-' + courseId);
+      if (saved) { saved.style.display = 'inline'; setTimeout(() => { saved.style.display = 'none'; }, 1500); }
+    }
+  });
+}
+
+// WhatsApp share
+document.getElementById('waShareBtn') && document.getElementById('waShareBtn').addEventListener('click', function() {
+  const courses = [{% for item in items %}"{{ item.course.name }}"{% if not forloop.last %},{% endif %}{% endfor %}];
+  let msg = "🎓 My KUCCPSS Course Shortlist:\n";
+  courses.forEach((c, i) => { msg += (i+1) + ". " + c + "\n"; });
+  msg += "\nFind your courses free at kuccpss.co.ke";
+  window.open("https://wa.me/?text=" + encodeURIComponent(msg), "_blank");
+});
+</script>
+
+{% endblock %}

@@ -3,214 +3,318 @@
 {% block title %}My Eligible Courses — KUCCPSS{% endblock %}
 
 {% block content %}
+
 <!-- Page Hero -->
-<div class="page-hero">
+<div class="page-hero" style="padding:1.5rem 0;">
   <div class="container">
-    <div class="row align-items-center">
-      <div class="col-md-8">
-        <h1><i class="fas fa-check-circle me-2"></i>My Eligible Courses</h1>
-        <p class="mb-0">Based on your KCSE cluster points of
-          <strong>{{ kcse_result.total_points }} pts</strong> aggregate.
+    <div class="d-flex align-items-center gap-3 flex-wrap">
+      <div>
+        <h1 class="mb-0 fs-4"><i class="fas fa-check-circle me-2"></i>Eligible Courses</h1>
+        <p class="mb-0 opacity-75 small">
+          {% if kcse_result %}
+            Based on your KCSE aggregate of <strong>{{ kcse_result.total_points }} pts</strong>
+            {% if mean_grade %}({{ mean_grade }}){% endif %}.
+          {% elif total_points %}
+            Based on your KCSE aggregate of <strong>{{ total_points }} pts</strong>
+            {% if mean_grade %}({{ mean_grade }}){% endif %}.
+          {% else %}
+            Based on your entered KCSE grades.
+          {% endif %}
         </p>
       </div>
-      <div class="col-md-4 text-md-end mt-3 mt-md-0">
-        <a href="{% url 'clusterpoints:calculator' %}" class="btn btn-outline-light btn-sm me-2">
+      <div class="ms-auto d-flex gap-2 flex-wrap">
+        <a href="{% url 'clusterpoints:calculator' %}" class="btn btn-outline-light btn-sm fw-600">
           <i class="fas fa-sync me-1"></i>Recalculate
         </a>
-        <a href="{% url 'courses:course_types_list' %}" class="btn btn-gradient-success btn-sm">
-          <i class="fas fa-list me-1"></i>All Courses
+        <a href="{% url 'career:home' %}" class="btn btn-light btn-sm fw-600">
+          <i class="fas fa-compass me-1"></i>Career Engine
         </a>
       </div>
     </div>
   </div>
 </div>
 
-<div class="container pb-5">
+<div class="container py-4" style="max-width:1000px;">
 
-  <!-- Summary Cards -->
+  {% if is_guest %}
+  <!-- Guest save-results banner -->
+  <div class="d-flex align-items-center gap-3 flex-wrap p-3 mb-4 rounded-3"
+       style="background:linear-gradient(135deg,#eef2ff,#e0f2fe);border:1.5px solid #bfdbfe;">
+    <div class="flex-grow-1">
+      <div class="fw-700" style="color:#1e3a8a;font-size:0.93rem;">
+        <i class="fas fa-bookmark me-2" style="color:#2563eb;"></i>Save your results — free, 30 seconds
+      </div>
+      <div class="small text-muted mt-1">
+        Create a free account to save these courses, build a shortlist, track applications,
+        and get personalised career guidance. Your grades are already entered.
+      </div>
+    </div>
+    <div class="d-flex gap-2 flex-shrink-0">
+      <a href="{% url 'accounts:register' %}" class="btn btn-primary btn-sm fw-700">
+        <i class="fab fa-google me-1"></i>Register Free
+      </a>
+      <a href="{% url 'accounts:login' %}" class="btn btn-outline-secondary btn-sm">
+        Log in
+      </a>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Summary stat cards -->
   <div class="row g-3 mb-4">
-    <div class="col-6 col-md-4">
-      <div class="card card-accent-green text-center p-3">
-        <div class="display-6 fw-800 text-success">{{ eligible_count }}</div>
-        <div class="small text-muted">Eligible</div>
-      </div>
+    <div class="col-4">
+      <a href="?status=eligible{% if type_filter %}&type={{ type_filter }}{% endif %}{% if query %}&q={{ query }}{% endif %}"
+         class="text-decoration-none">
+        <div class="card text-center p-3 {% if status_filter == 'eligible' %}border-success border-2{% endif %}"
+             style="background:{% if status_filter == 'eligible' %}#ecfdf5{% else %}#fff{% endif %}">
+          <div class="fw-900 fs-2 text-success">{{ eligible_count }}</div>
+          <div class="small text-muted fw-600">Eligible</div>
+        </div>
+      </a>
     </div>
-    <div class="col-6 col-md-4">
-      <div class="card card-accent-orange text-center p-3">
-        <div class="display-6 fw-800 text-warning">{{ nearly_count }}</div>
-        <div class="small text-muted">Nearly Eligible</div>
-      </div>
+    <div class="col-4">
+      <a href="?status=nearly{% if type_filter %}&type={{ type_filter }}{% endif %}{% if query %}&q={{ query }}{% endif %}"
+         class="text-decoration-none">
+        <div class="card text-center p-3 {% if status_filter == 'nearly' %}border-warning border-2{% endif %}"
+             style="background:{% if status_filter == 'nearly' %}#fffbeb{% else %}#fff{% endif %}">
+          <div class="fw-900 fs-2 text-warning">{{ nearly_count }}</div>
+          <div class="small text-muted fw-600">Nearly There</div>
+        </div>
+      </a>
     </div>
-    <div class="col-6 col-md-4">
-      <div class="card text-center p-3">
-        <div class="display-6 fw-800 text-danger">{{ not_eligible_count }}</div>
-        <div class="small text-muted">Not Eligible</div>
-      </div>
+    <div class="col-4">
+      <a href="{% url 'clusterpoints:eligible_courses' %}{% if type_filter %}?type={{ type_filter }}{% endif %}"
+         class="text-decoration-none">
+        <div class="card text-center p-3 {% if not status_filter and not query %}border-primary border-2{% endif %}"
+             style="background:{% if not status_filter and not query %}#eef2ff{% else %}#fff{% endif %}">
+          <div class="fw-900 fs-2" style="color:var(--primary);">{{ eligible_count|add:nearly_count|add:not_eligible_count }}</div>
+          <div class="small text-muted fw-600">All Courses</div>
+        </div>
+      </a>
     </div>
   </div>
 
-  <div class="row g-4">
-
-    <!-- Filters Sidebar -->
-    <div class="col-lg-3">
-      <div class="card p-4 sticky-top" style="top:80px">
-        <h6 class="fw-700 mb-3"><i class="fas fa-filter me-2 text-primary"></i>Filter Results</h6>
-        <form method="GET">
-          <div class="mb-3">
-            <label class="form-label">Search Course</label>
-            <input type="text" name="q" class="form-control form-control-sm"
-                   placeholder="e.g. Medicine" value="{{ query }}">
-          </div>
-          <div class="mb-3">
-            <label class="form-label">Eligibility Status</label>
-            <select name="status" class="form-select form-select-sm">
-              <option value="">All</option>
-              <option value="eligible" {% if status_filter == "eligible" %}selected{% endif %}>
-                ✅ Eligible
-              </option>
-              <option value="nearly" {% if status_filter == "nearly" %}selected{% endif %}>
-                🟡 Nearly Eligible
-              </option>
-              <option value="not_eligible" {% if status_filter == "not_eligible" %}selected{% endif %}>
-                ❌ Not Eligible
-              </option>
-            </select>
-          </div>
-          <div class="mb-3">
-            <label class="form-label">Course Type</label>
-            <select name="type" class="form-select form-select-sm">
-              <option value="">All Types</option>
-              {% for ct in course_types %}
-              <option value="{{ ct.slug }}" {% if type_filter == ct.slug %}selected{% endif %}>
-                {{ ct.name }}
-              </option>
-              {% endfor %}
-            </select>
-          </div>
-          <button type="submit" class="btn btn-primary-custom w-100 btn-sm">Apply Filters</button>
-          {% if status_filter or type_filter or query %}
-          <a href="{% url 'clusterpoints:eligible_courses' %}" class="btn btn-outline-secondary w-100 btn-sm mt-2">
-            Clear Filters
-          </a>
-          {% endif %}
-        </form>
+  <!-- Filter bar -->
+  <form method="GET" class="card p-3 mb-4" style="border-radius:12px;">
+    <div class="d-flex gap-2 flex-wrap align-items-end">
+      <div style="flex:1;min-width:160px;">
+        <label class="form-label small fw-600 mb-1">Search</label>
+        <input type="text" name="q" class="form-control form-control-sm"
+               placeholder="e.g. Medicine" value="{{ query }}">
+      </div>
+      <div style="min-width:150px;">
+        <label class="form-label small fw-600 mb-1">Status</label>
+        <select name="status" class="form-select form-select-sm">
+          <option value="">All Statuses</option>
+          <option value="eligible" {% if status_filter == "eligible" %}selected{% endif %}>Eligible</option>
+          <option value="nearly" {% if status_filter == "nearly" %}selected{% endif %}>Nearly Eligible</option>
+          <option value="not_eligible" {% if status_filter == "not_eligible" %}selected{% endif %}>Not Eligible</option>
+        </select>
+      </div>
+      <div style="min-width:150px;">
+        <label class="form-label small fw-600 mb-1">Course Type</label>
+        <select name="type" class="form-select form-select-sm">
+          <option value="">All Types</option>
+          {% for ct in course_types %}
+          <option value="{{ ct.slug }}" {% if type_filter == ct.slug %}selected{% endif %}>{{ ct.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-primary btn-sm px-3">
+          <i class="fas fa-filter me-1"></i>Filter
+        </button>
+        {% if status_filter or type_filter or query %}
+        <a href="{% url 'clusterpoints:eligible_courses' %}" class="btn btn-outline-secondary btn-sm px-3">
+          <i class="fas fa-times me-1"></i>Clear
+        </a>
+        {% endif %}
       </div>
     </div>
+  </form>
 
-    <!-- Results -->
-    <div class="col-lg-9">
-      {% if results %}
-        <p class="text-muted small mb-3">Showing {{ results|length }} course{% if results|length != 1 %}s{% endif %}</p>
-        <div class="row g-3">
-          {% for item in results %}
-          <div class="col-md-6">
-            <div class="card h-100 p-0 overflow-hidden">
-              <!-- Status bar -->
-              <div class="px-3 py-2
-                {% if item.status == 'eligible' %}bg-success
-                {% elif item.status == 'nearly' %}bg-warning
-                {% else %}bg-danger{% endif %} bg-opacity-10
-                d-flex justify-content-between align-items-center">
-                <span class="badge
-                  {% if item.status == 'eligible' %}badge-eligible
-                  {% elif item.status == 'nearly' %}badge-nearly
-                  {% else %}badge-not-eligible{% endif %} px-3 py-1 rounded-pill">
-                  {% if item.status == 'eligible' %}✅ Eligible
-                  {% elif item.status == 'nearly' %}🟡 Nearly Eligible
-                  {% else %}❌ Not Eligible{% endif %}
-                </span>
-                <small class="text-muted fw-500">
-                  {{ item.user_points }} / {{ item.cutoff }} pts
-                </small>
-              </div>
+  <!-- Results -->
+  {% if results %}
+  <p class="text-muted small mb-3">
+    Showing <strong>{{ results|length }}</strong> course{{ results|length|pluralize }}
+  </p>
 
-              <div class="card-body">
-                <h6 class="fw-700 mb-1">{{ item.course.name }}</h6>
-                <div class="d-flex gap-2 flex-wrap mb-2">
-                  <span class="badge bg-primary bg-opacity-10 text-primary small">
-                    {{ item.course.course_type.name }}
-                  </span>
-                  {% if item.course.category %}
-                  <span class="badge bg-secondary bg-opacity-10 text-secondary small">
-                    {{ item.course.category.name }}
-                  </span>
-                  {% endif %}
-                </div>
+  <div class="d-flex flex-column gap-3">
+    {% for item in results %}
+    <div class="card eligible-card d-flex flex-row align-items-stretch overflow-hidden p-0"
+         style="border-radius:12px;border:1.5px solid
+         {% if item.status == 'eligible' %}#bbf7d0{% elif item.status == 'nearly' %}#fde68a{% else %}#e2e8f0{% endif %};
+         box-shadow:0 1px 4px rgba(0,0,0,0.05);">
 
-                <!-- Gap indicator -->
-                {% if item.gap >= 0 %}
-                <p class="text-success small mb-2">
-                  <i class="fas fa-arrow-up me-1"></i>
-                  {{ item.gap }} pts above cutoff
-                </p>
-                {% else %}
-                <p class="text-danger small mb-2">
-                  <i class="fas fa-arrow-down me-1"></i>
-                  {{ item.gap|abs }} pts below cutoff
-                </p>
-                {% endif %}
+      <!-- Status stripe -->
+      <div class="flex-shrink-0"
+           style="width:6px;background:{% if item.status == 'eligible' %}#22c55e{% elif item.status == 'nearly' %}#f59e0b{% else %}#94a3b8{% endif %};">
+      </div>
 
-                <!-- Institutions -->
-                {% if item.institutions %}
-                <p class="text-muted small mb-3">
-                  <i class="fas fa-university me-1"></i>
-                  {% for inst in item.institutions|slice:":2" %}{{ inst.name }}{% if not forloop.last %}, {% endif %}{% endfor %}
-                  {% if item.institutions|length > 2 %}+{{ item.institutions|length|add:"-2" }} more{% endif %}
-                </p>
-                {% endif %}
+      <!-- Body -->
+      <div class="p-3 flex-grow-1" style="min-width:0;">
+        <div class="d-flex align-items-start gap-2">
 
-                <div class="d-flex gap-2 mt-auto">
-                  <a href="{% url 'courses:course_detail' item.course.course_type.slug item.course.slug %}"
-                     class="btn btn-sm btn-outline-primary flex-grow-1">
-                    View Course
-                  </a>
-                  <button class="btn btn-sm btn-outline-warning save-course-btn"
-                          data-course-id="{{ item.course.pk }}"
-                          title="Save course">
-                    <i class="far fa-bookmark"></i>
-                  </button>
-                </div>
-              </div>
+          <!-- Cluster badge -->
+          {% if item.course.cluster %}
+          <div class="flex-shrink-0 d-flex align-items-center justify-content-center rounded-2 fw-800 text-white"
+               style="width:36px;height:36px;min-width:36px;font-size:0.78rem;background:
+               {% if item.status == 'eligible' %}#16a34a{% elif item.status == 'nearly' %}#d97706{% else %}#64748b{% endif %};">
+            {{ item.course.cluster.kuccps_number|default:"?" }}
+          </div>
+          {% endif %}
+
+          <!-- Course name + pills -->
+          <div style="flex:1;min-width:0;">
+            <div class="fw-700" style="font-size:0.93rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+              <a href="{% url 'courses:course_detail_no_category' item.course.course_type.slug item.course.slug %}"
+                 class="text-dark text-decoration-none" style="hover:color:#1d4ed8;">{{ item.course.name }}</a>
+            </div>
+            <div class="d-flex gap-2 flex-wrap mt-1">
+              <span class="badge rounded-pill bg-primary bg-opacity-10 text-primary" style="font-size:0.68rem;">
+                {{ item.course.course_type.name }}
+              </span>
+              {% if item.course.category %}
+              <span class="badge rounded-pill bg-secondary bg-opacity-10 text-secondary" style="font-size:0.68rem;">
+                {{ item.course.category.name }}
+              </span>
+              {% endif %}
+              {% if item.course.cluster %}
+              <span class="text-muted" style="font-size:0.7rem;">
+                Cluster {{ item.course.cluster.kuccps_number }}
+              </span>
+              {% endif %}
             </div>
           </div>
-          {% endfor %}
-        </div>
-      {% else %}
-        <div class="text-center py-5">
-          <i class="fas fa-search fa-3x text-muted mb-3"></i>
-          <h5 class="text-muted">No courses found</h5>
-          <p class="text-muted small">Try adjusting your filters or
-            <a href="{% url 'clusterpoints:eligible_courses' %}">clear all filters</a>.
-          </p>
-        </div>
-      {% endif %}
-    </div>
 
+          <!-- Points (desktop) -->
+          <div class="text-end flex-shrink-0 d-none d-sm-block" style="min-width:90px;">
+            <div class="fw-800 {% if item.status == 'eligible' %}text-success{% elif item.status == 'nearly' %}text-warning{% else %}text-muted{% endif %}"
+                 style="font-size:1rem;">
+              {{ item.user_points }} pts
+            </div>
+            <div class="text-muted" style="font-size:0.72rem;">cutoff {{ item.cutoff }}</div>
+            {% if item.gap >= 0 %}
+            <div class="fw-900 text-success" style="font-size:1.15rem;letter-spacing:-0.01em;">
+              <i class="fas fa-arrow-up" style="font-size:0.85rem;"></i> +{{ item.gap }}
+            </div>
+            {% else %}
+            <div class="fw-900 text-danger" style="font-size:1.15rem;letter-spacing:-0.01em;">
+              <i class="fas fa-arrow-down" style="font-size:0.85rem;"></i> {{ item.gap|abs }}
+            </div>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Points (mobile) -->
+        <div class="d-flex d-sm-none gap-3 mt-2 align-items-center">
+          <span class="fw-700 {% if item.status == 'eligible' %}text-success{% elif item.status == 'nearly' %}text-warning{% else %}text-muted{% endif %}" style="font-size:0.85rem;">
+            {{ item.user_points }} / {{ item.cutoff }} pts
+          </span>
+          {% if item.gap >= 0 %}
+          <span class="fw-900 text-success" style="font-size:1rem;"><i class="fas fa-arrow-up" style="font-size:0.8rem;"></i> +{{ item.gap }}</span>
+          {% else %}
+          <span class="fw-900 text-danger" style="font-size:1rem;"><i class="fas fa-arrow-down" style="font-size:0.8rem;"></i> {{ item.gap|abs }}</span>
+          {% endif %}
+        </div>
+
+        <!-- Institutions -->
+        {% if item.institutions %}
+        <div class="text-muted mt-2" style="font-size:0.75rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+          <i class="fas fa-university me-1"></i>
+          {% for inst in item.institutions|slice:":3" %}{{ inst.name }}{% if not forloop.last %}, {% endif %}{% endfor %}
+          {% if item.institutions|length > 3 %}+{{ item.institutions|length|add:"-3" }} more{% endif %}
+        </div>
+        {% endif %}
+
+        <!-- Action row -->
+        <div class="d-flex gap-2 mt-2 align-items-center">
+          <span class="badge
+            {% if item.status == 'eligible' %}bg-success
+            {% elif item.status == 'nearly' %}bg-warning text-dark
+            {% else %}bg-secondary{% endif %}"
+            style="font-size:0.68rem;opacity:0.85;">
+            {% if item.status == 'eligible' %}Eligible
+            {% elif item.status == 'nearly' %}Nearly Eligible
+            {% else %}Not Eligible{% endif %}
+          </span>
+          <div class="ms-auto d-flex gap-2">
+            <a href="{% url 'courses:course_detail_no_category' item.course.course_type.slug item.course.slug %}"
+               class="btn btn-outline-primary btn-sm" style="font-size:0.78rem;padding:3px 10px;">
+              View
+            </a>
+            <button class="save-btn btn btn-sm {% if item.course.pk in saved_ids %}btn-warning{% else %}btn-outline-warning{% endif %}"
+                    data-course-id="{{ item.course.pk }}"
+                    data-saved="{% if item.course.pk in saved_ids %}true{% else %}false{% endif %}"
+                    title="{% if item.course.pk in saved_ids %}Saved to watchlist{% else %}Save to watchlist{% endif %}"
+                    style="font-size:0.78rem;padding:3px 10px;">
+              <i class="{% if item.course.pk in saved_ids %}fas{% else %}far{% endif %} fa-bookmark"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
   </div>
+
+  {% else %}
+  <div class="text-center py-5">
+    <i class="fas fa-search fa-3x text-muted mb-3 d-block"></i>
+    {% if status_filter or type_filter or query %}
+    <h5 class="text-muted">No courses match your filters</h5>
+    <p class="text-muted small mb-3">Try adjusting or
+      <a href="{% url 'clusterpoints:eligible_courses' %}">clear all filters</a>.
+    </p>
+    {% else %}
+    <h5 class="text-muted">No eligible courses found</h5>
+    <p class="text-muted small mb-3">
+      Make sure you've entered your KCSE grades in the cluster calculator.
+    </p>
+    <a href="{% url 'clusterpoints:calculator' %}" class="btn btn-primary px-4">
+      <i class="fas fa-calculator me-2"></i>Calculate Cluster Points
+    </a>
+    {% endif %}
+  </div>
+  {% endif %}
+
 </div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-document.querySelectorAll('.save-course-btn').forEach(btn => {
-  btn.addEventListener('click', function() {
-    const courseId = this.dataset.courseId;
-    fetch(`/accounts/save-course/${courseId}/`, {
-      method: 'POST',
-      headers: {'X-CSRFToken': '{{ csrf_token }}', 'Content-Type': 'application/json'},
-    })
-    .then(r => r.json())
-    .then(data => {
-      const icon = this.querySelector('i');
-      if (data.saved) {
-        icon.className = 'fas fa-bookmark';
-        this.classList.replace('btn-outline-warning', 'btn-warning');
-      } else {
-        icon.className = 'far fa-bookmark';
-        this.classList.replace('btn-warning', 'btn-outline-warning');
-      }
-    });
-  });
+const EL_CSRF = (document.cookie.match(/(?:^|;\s*)csrftoken=([^;]+)/) || [])[1] || '';
+
+document.addEventListener('click', function (e) {
+  var btn = e.target.closest('.save-btn');
+  if (!btn) return;
+  e.preventDefault();
+  if (btn.disabled) return;
+  btn.disabled = true;
+
+  var courseId = btn.dataset.courseId;
+  fetch('/accounts/save-course/' + courseId + '/', {
+    method: 'POST',
+    headers: { 'X-CSRFToken': EL_CSRF },
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    var icon = btn.querySelector('i');
+    if (data.saved) {
+      icon.className = 'fas fa-bookmark';
+      btn.classList.remove('btn-outline-warning');
+      btn.classList.add('btn-warning');
+      btn.dataset.saved = 'true';
+      btn.title = 'Saved to watchlist';
+    } else {
+      icon.className = 'far fa-bookmark';
+      btn.classList.remove('btn-warning');
+      btn.classList.add('btn-outline-warning');
+      btn.dataset.saved = 'false';
+      btn.title = 'Save to watchlist';
+    }
+  })
+  .catch(function() {})
+  .finally(function() { btn.disabled = false; });
 });
 </script>
 {% endblock %}

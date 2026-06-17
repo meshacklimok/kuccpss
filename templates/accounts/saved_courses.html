@@ -1,83 +1,172 @@
 {% extends "base.html" %}
-{% block title %}Saved Courses — KUCCPSS{% endblock %}
+{% block title %}My Watchlist — KUCCPSS{% endblock %}
 
 {% block content %}
-<div class="page-hero">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+
+<div class="page-hero" style="padding:1.5rem 0;">
   <div class="container">
-    <h1><i class="fas fa-bookmark me-2"></i>Saved Courses</h1>
-    <p class="mb-0">Courses you've bookmarked for later.</p>
+    <div class="d-flex align-items-center gap-3 flex-wrap">
+      <div>
+        <h1 class="mb-0 fs-4"><i class="fas fa-bookmark me-2"></i>My Watchlist</h1>
+        <p class="mb-0 opacity-75 small">Courses you've saved — ready to review anytime.</p>
+      </div>
+      <div class="ms-auto d-flex gap-2 flex-wrap">
+        {% if snapshot %}
+        <a href="{% url 'career:career_results' %}?tier=Best+Match"
+           class="btn btn-light btn-sm fw-600">
+          <i class="fas fa-star me-1" style="color:#fbbf24;"></i>
+          Best Match {{ snapshot.pathway }} Courses
+        </a>
+        <a href="{% url 'career:career_results' %}"
+           class="btn btn-outline-light btn-sm fw-600">
+          <i class="fas fa-th-list me-1"></i>
+          All {{ snapshot.total_matches }} Matches
+        </a>
+        {% else %}
+        <a href="{% url 'career:home' %}" class="btn btn-light btn-sm fw-600">
+          <i class="fas fa-plus me-1"></i>Find Courses
+        </a>
+        {% endif %}
+      </div>
+    </div>
   </div>
 </div>
 
-<div class="container pb-5">
+<div class="container py-4" style="max-width:900px;">
+
   {% if saved %}
-  <div class="row g-3">
-    {% for saved in saved %}
-    <div class="col-md-6 col-lg-4">
-      <div class="card h-100 p-4">
-        <div class="d-flex justify-content-between align-items-start mb-2">
-          <h6 class="fw-bold mb-0">{{ saved.course.name }}</h6>
-          <button class="btn btn-sm btn-warning remove-saved" data-course-id="{{ saved.course.pk }}">
-            <i class="fas fa-bookmark"></i>
-          </button>
+
+  <!-- Count badge -->
+  <p class="text-muted small mb-3">
+    <strong>{{ saved|length }}</strong> saved course{{ saved|length|pluralize }}
+  </p>
+
+  <div class="d-flex flex-column gap-3" id="watchlist-container">
+    {% for sc in saved %}
+    <div class="watchlist-card d-flex align-items-center gap-3 p-3 rounded-3"
+         id="card-{{ sc.course.pk }}"
+         style="background:#fff;border:1.5px solid #e2e8f0;border-radius:12px;
+                box-shadow:0 1px 4px rgba(0,0,0,0.05);transition:all 0.2s;">
+
+      <!-- Cluster number badge -->
+      <div class="flex-shrink-0 d-flex align-items-center justify-content-center rounded-2 fw-900"
+           style="width:42px;height:42px;background:#eef2ff;color:#4f46e5;font-size:0.85rem;">
+        {% if sc.course.cluster %}
+          {{ sc.course.cluster.kuccps_number|default:"?" }}
+        {% else %}
+          <i class="fas fa-book" style="font-size:0.8rem;"></i>
+        {% endif %}
+      </div>
+
+      <!-- Course info -->
+      <div style="min-width:0;flex:1;">
+        <div class="fw-700" style="font-size:0.92rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+          <a href="{% url 'courses:course_detail_no_category' sc.course.course_type.slug sc.course.slug %}"
+             class="text-dark text-decoration-none">{{ sc.course.name }}</a>
         </div>
-        <div class="d-flex gap-2 flex-wrap mb-2">
-          <span class="badge bg-primary bg-opacity-10 text-primary small">
-            {{ saved.course.course_type.name }}
+        <div class="d-flex align-items-center gap-2 mt-1 flex-wrap">
+          <span class="badge rounded-pill bg-primary bg-opacity-10 text-primary" style="font-size:0.7rem;">
+            {{ sc.course.course_type.name }}
           </span>
-          {% if saved.course.category %}
-          <span class="badge bg-secondary bg-opacity-10 text-secondary small">
-            {{ saved.course.category.name }}
+          {% if sc.course.category %}
+          <span class="badge rounded-pill bg-secondary bg-opacity-10 text-secondary" style="font-size:0.7rem;">
+            {{ sc.course.category.name }}
+          </span>
+          {% endif %}
+          {% if sc.course.cluster %}
+          <span class="text-muted" style="font-size:0.72rem;">
+            <i class="bi bi-diagram-3 me-1"></i>Cluster {{ sc.course.cluster.kuccps_number }}
           </span>
           {% endif %}
         </div>
-        {% if saved.course.institutions.exists %}
-        <p class="text-muted small mb-3">
-          <i class="fas fa-university me-1"></i>
-          {% for inst in saved.course.institutions.all|slice:":2" %}
-            {{ inst.name }}{% if not forloop.last %}, {% endif %}
-          {% endfor %}
-        </p>
-        {% endif %}
-        <p class="text-muted small mb-0">
-          <i class="fas fa-clock me-1"></i>Saved {{ saved.saved_at|date:"d M Y" }}
-        </p>
       </div>
+
+      <!-- Institutions preview -->
+      {% if sc.course.institutions.exists %}
+      <div class="d-none d-md-block text-muted" style="font-size:0.75rem;white-space:nowrap;max-width:180px;overflow:hidden;text-overflow:ellipsis;">
+        <i class="fas fa-university me-1"></i>
+        {% for inst in sc.course.institutions.all|slice:":2" %}{{ inst.name }}{% if not forloop.last %}, {% endif %}{% endfor %}
+        {% if sc.course.institutions.count > 2 %} +{{ sc.course.institutions.count|add:"-2" }} more{% endif %}
+      </div>
+      {% endif %}
+
+      <!-- Saved date -->
+      <div class="d-none d-sm-block text-muted text-end" style="font-size:0.72rem;white-space:nowrap;flex-shrink:0;">
+        <i class="fas fa-clock me-1"></i>{{ sc.saved_at|date:"d M Y" }}
+      </div>
+
+      <!-- Remove button -->
+      <button class="remove-saved flex-shrink-0 btn btn-link p-1"
+              data-course-id="{{ sc.course.pk }}"
+              title="Remove from watchlist"
+              style="color:#f59e0b;font-size:1.05rem;border:none;background:none;">
+        <i class="fas fa-bookmark"></i>
+      </button>
     </div>
     {% endfor %}
   </div>
+
   {% else %}
   <div class="text-center py-5">
     <i class="fas fa-bookmark fa-4x text-muted mb-3"></i>
-    <h5 class="text-muted">No saved courses yet</h5>
-    <p class="text-muted small">Browse courses and click the bookmark icon to save them here.</p>
-    <a href="{% url 'clusterpoints:eligible_courses' %}" class="btn btn-gradient-success">
-      <i class="fas fa-check-circle me-1"></i>View Eligible Courses
-    </a>
+    <h5 class="fw-bold text-dark">No saved courses yet</h5>
+    <p class="text-muted small mb-3">
+      Browse the career engine results and click
+      <i class="fas fa-bookmark" style="color:#f59e0b;"></i> to save courses here.
+    </p>
+    <div class="d-flex gap-2 justify-content-center flex-wrap">
+      {% if snapshot %}
+      <a href="{% url 'career:career_results' %}?tier=Best+Match" class="btn btn-primary px-4">
+        <i class="fas fa-star me-2"></i>View Best Match {{ snapshot.pathway }} Courses
+      </a>
+      <a href="{% url 'career:career_results' %}" class="btn btn-outline-primary px-4">
+        <i class="fas fa-th-list me-2"></i>All {{ snapshot.total_matches }} Matches
+      </a>
+      {% else %}
+      <a href="{% url 'career:home' %}" class="btn btn-primary px-4">
+        <i class="fas fa-rocket me-2"></i>Use Career Engine
+      </a>
+      <a href="{% url 'clusterpoints:eligible_courses' %}" class="btn btn-outline-success px-4">
+        <i class="fas fa-check-circle me-2"></i>Eligible Courses
+      </a>
+      {% endif %}
+    </div>
   </div>
   {% endif %}
+
 </div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-document.querySelectorAll('.remove-saved').forEach(btn => {
-  btn.addEventListener('click', function() {
-    const courseId = this.dataset.courseId;
-    const card = this.closest('.col-md-6, .col-lg-4, [class*="col-"]');
-    fetch(`/accounts/save-course/${courseId}/`, {
-      method: 'POST',
-      headers: {'X-CSRFToken': '{{ csrf_token }}', 'Content-Type': 'application/json'},
-    })
-    .then(r => r.json())
-    .then(data => {
-      if (!data.saved) {
-        card.style.opacity = '0';
-        card.style.transition = 'opacity .3s';
-        setTimeout(() => card.remove(), 300);
-      }
-    });
-  });
+// CSRF from cookie
+const WL_CSRF = (document.cookie.match(/(?:^|;\s*)csrftoken=([^;]+)/) || [])[1] || '';
+
+document.addEventListener('click', function (e) {
+  const btn = e.target.closest('.remove-saved');
+  if (!btn) return;
+  e.preventDefault();
+  const courseId = btn.dataset.courseId;
+  const card     = document.getElementById('card-' + courseId);
+  btn.disabled   = true;
+
+  fetch('/accounts/save-course/' + courseId + '/', {
+    method: 'POST',
+    headers: { 'X-CSRFToken': WL_CSRF },
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    if (!data.saved && card) {
+      card.style.transition = 'opacity 0.3s, transform 0.3s';
+      card.style.opacity    = '0';
+      card.style.transform  = 'translateX(20px)';
+      setTimeout(function() { card.remove(); }, 320);
+    } else {
+      btn.disabled = false;
+    }
+  })
+  .catch(function() { btn.disabled = false; });
 });
 </script>
 {% endblock %}

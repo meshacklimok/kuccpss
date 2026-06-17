@@ -1,121 +1,298 @@
 {% extends "base.html" %}
-{% block title %}Career Profiles — KUCCPSS{% endblock %}
+{% load custom_filters %}
+{% block title %}Career Ideas — Discover Your Future Path{% endblock %}
 
 {% block content %}
-<div class="page-hero">
-  <div class="container">
-    <div class="row align-items-center">
-      <div class="col-md-8">
-        <h1><i class="fas fa-compass me-2"></i>Career Profiles</h1>
-        <p class="mb-0">Explore careers that match your interests, strengths, and qualifications.</p>
+<style>
+/* ── Hero ── */
+.careers-hero {
+  background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 60%, #1d4ed8 100%);
+  padding: 3.5rem 0 2.5rem;
+  position: relative;
+  overflow: hidden;
+}
+.careers-hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 70% 50%, rgba(99,102,241,0.3) 0%, transparent 60%);
+  pointer-events: none;
+}
+.hero-search {
+  background: rgba(255,255,255,0.12);
+  border: 1.5px solid rgba(255,255,255,0.25);
+  border-radius: 50px;
+  padding: 0.6rem 1.25rem;
+  color: #fff;
+  font-size: 0.95rem;
+  width: 100%;
+  max-width: 480px;
+  backdrop-filter: blur(8px);
+  transition: border-color 0.2s;
+}
+.hero-search::placeholder { color: rgba(255,255,255,0.6); }
+.hero-search:focus { outline: none; border-color: rgba(255,255,255,0.6); background: rgba(255,255,255,0.18); }
+
+/* ── Sector tabs ── */
+.sector-tabs {
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+  padding: 1rem 0 0.5rem;
+  scrollbar-width: none;
+}
+.sector-tabs::-webkit-scrollbar { display: none; }
+.sector-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.9rem;
+  border-radius: 50px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  white-space: nowrap;
+  text-decoration: none;
+  border: 1.5px solid #e2e8f0;
+  color: #64748b;
+  background: #fff;
+  transition: all 0.15s;
+  flex-shrink: 0;
+}
+.sector-tab:hover { border-color: var(--primary); color: var(--primary); background: #eef2ff; }
+.sector-tab.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+
+/* ── Career cards ── */
+.career-card {
+  background: #fff;
+  border-radius: 16px;
+  border: 1.5px solid #f1f5f9;
+  overflow: hidden;
+  transition: transform 0.2s, box-shadow 0.2s;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+.career-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 16px 40px rgba(30,58,138,0.12);
+  border-color: #c7d2fe;
+}
+.career-card-banner {
+  height: 90px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.2rem;
+  position: relative;
+}
+.career-card-body { padding: 1.1rem; flex: 1; display: flex; flex-direction: column; }
+.demand-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 50px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Banner gradients per sector tag */
+.banner-technology  { background: linear-gradient(135deg, #1e1b4b, #4f46e5); }
+.banner-health      { background: linear-gradient(135deg, #052e16, #16a34a); }
+.banner-engineering { background: linear-gradient(135deg, #1c1917, #ea580c); }
+.banner-finance     { background: linear-gradient(135deg, #042f2e, #0d9488); }
+.banner-business    { background: linear-gradient(135deg, #0c1a4b, #2563eb); }
+.banner-law         { background: linear-gradient(135deg, #2d1654, #7c3aed); }
+.banner-education   { background: linear-gradient(135deg, #172554, #0369a1); }
+.banner-agriculture { background: linear-gradient(135deg, #14532d, #65a30d); }
+.banner-creative    { background: linear-gradient(135deg, #4a044e, #c026d3); }
+.banner-science     { background: linear-gradient(135deg, #1e3a5f, #0891b2); }
+.banner-environment { background: linear-gradient(135deg, #14532d, #15803d); }
+.banner-social      { background: linear-gradient(135deg, #4c0519, #e11d48); }
+.banner-default     { background: linear-gradient(135deg, #1e293b, #475569); }
+
+/* Demand badge colours */
+.demand-very_high { background: #dcfce7; color: #166534; }
+.demand-high      { background: #dbeafe; color: #1e40af; }
+.demand-medium    { background: #fef9c3; color: #854d0e; }
+.demand-low       { background: #f1f5f9; color: #475569; }
+</style>
+
+<!-- Hero -->
+<div class="careers-hero">
+  <div class="container position-relative">
+    <div class="row align-items-center g-4">
+      <div class="col-lg-7">
+        <div class="d-flex align-items-center gap-2 mb-2">
+          <span class="badge rounded-pill" style="background:rgba(99,102,241,0.3);color:#c7d2fe;font-size:0.72rem;font-weight:600;">
+            CAREER IDEAS
+          </span>
+          <span class="text-white-50 small">{{ page_obj.paginator.count }} career{% if page_obj.paginator.count != 1 %}s{% endif %} to explore</span>
+        </div>
+        <h1 class="fw-900 text-white mb-2" style="font-size:clamp(1.8rem,4vw,2.5rem);line-height:1.15;">
+          Discover Your<br>
+          <span style="background:linear-gradient(90deg,#818cf8,#38bdf8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">
+            Perfect Career Path
+          </span>
+        </h1>
+        <p class="text-white-75 mb-4" style="font-size:1rem;max-width:480px;">
+          Explore 27+ real Kenyan careers with salary data, educational pathways,
+          and job market outlook — all tailored to KCSE graduates.
+        </p>
+        <form method="GET" id="searchForm" class="d-flex gap-2 flex-wrap">
+          {% if active_sector %}<input type="hidden" name="sector" value="{{ active_sector }}">{% endif %}
+          {% if active_demand %}<input type="hidden" name="demand" value="{{ active_demand }}">{% endif %}
+          <input type="text" name="q" class="hero-search" placeholder="Search careers e.g. Doctor, Engineer…" value="{{ query }}">
+          {% if query %}
+          <a href="{% url 'career:career_profiles' %}{% if active_sector %}?sector={{ active_sector }}{% endif %}"
+             class="btn btn-sm" style="background:rgba(255,255,255,0.15);color:#fff;border-radius:50px;border:1.5px solid rgba(255,255,255,0.3);">
+            <i class="fas fa-times me-1"></i>Clear
+          </a>
+          {% endif %}
+        </form>
       </div>
-      <div class="col-md-4 text-md-end mt-3 mt-md-0">
-        <a href="{% url 'career:quiz' %}" class="btn btn-gradient-success">
-          <i class="fas fa-clipboard-list me-2"></i>Take Career Quiz
-        </a>
+      <div class="col-lg-5 d-none d-lg-flex justify-content-end">
+        <div class="d-flex flex-wrap gap-2 justify-content-end" style="max-width:320px;">
+          {% for sv, label, icon in sector_tabs|slice:"1:7" %}
+          <a href="?sector={{ sv }}" class="d-flex align-items-center gap-2 px-3 py-2 rounded-3 text-decoration-none"
+             style="background:rgba(255,255,255,0.1);color:#e0e7ff;font-size:0.8rem;font-weight:600;border:1px solid rgba(255,255,255,0.15);">
+            <i class="{{ icon }}"></i> {{ label }}
+          </a>
+          {% endfor %}
+        </div>
       </div>
+    </div>
+
+    <!-- Sector filter tabs -->
+    <div class="sector-tabs mt-3">
+      {% for val, label, icon in sector_tabs %}
+      <a href="?sector={{ val }}{% if query %}&q={{ query }}{% endif %}"
+         class="sector-tab {% if active_sector == val %}active{% endif %}">
+        <i class="{{ icon }}"></i>{{ label }}
+      </a>
+      {% endfor %}
     </div>
   </div>
 </div>
 
-<div class="container pb-5">
+<div class="container py-4">
 
-  <!-- Filter Bar -->
-  <form method="GET" class="card p-3 mb-4">
-    <div class="row g-2 align-items-end">
-      <div class="col-md-6">
-        <input type="text" name="q" class="form-control" placeholder="Search careers…" value="{{ query }}">
-      </div>
-      <div class="col-md-4">
-        <select name="demand" class="form-select">
-          <option value="">All Demand Levels</option>
-          {% for val, label in demand_choices %}
-          <option value="{{ val }}" {% if active_demand == val %}selected{% endif %}>{{ label }}</option>
-          {% endfor %}
-        </select>
-      </div>
-      <div class="col-md-2">
-        <button type="submit" class="btn btn-primary-custom w-100">Filter</button>
-      </div>
+  <!-- Demand filter + results count row -->
+  <div class="d-flex align-items-center gap-3 mb-4 flex-wrap">
+    <p class="text-muted small mb-0">
+      Showing <strong>{{ page_obj.start_index }}–{{ page_obj.end_index }}</strong> of
+      <strong>{{ page_obj.paginator.count }}</strong>
+      career{% if page_obj.paginator.count != 1 %}s{% endif %}
+      {% if active_sector %} in <strong>{{ active_sector|title }}</strong>{% endif %}
+      {% if query %} matching "<strong>{{ query }}</strong>"{% endif %}
+    </p>
+    <div class="ms-auto d-flex gap-2 flex-wrap">
+      {% for val, label in demand_choices %}
+      <a href="?demand={{ val }}{% if active_sector %}&sector={{ active_sector }}{% endif %}{% if query %}&q={{ query }}{% endif %}"
+         class="btn btn-sm {% if active_demand == val %}btn-primary{% else %}btn-outline-secondary{% endif %}"
+         style="border-radius:50px;font-size:0.75rem;">
+        {{ label }} Demand
+      </a>
+      {% endfor %}
+      {% if active_demand %}
+      <a href="?{% if active_sector %}sector={{ active_sector }}&{% endif %}{% if query %}q={{ query }}{% endif %}"
+         class="btn btn-sm btn-outline-danger" style="border-radius:50px;font-size:0.75rem;">
+        <i class="fas fa-times me-1"></i>Clear Demand
+      </a>
+      {% endif %}
     </div>
-  </form>
+  </div>
 
-  <!-- Results Count -->
-  <p class="text-muted small mb-3">
-    Showing {{ page_obj.start_index }}–{{ page_obj.end_index }} of {{ page_obj.paginator.count }} profiles
-  </p>
-
-  <!-- Career Cards Grid -->
+  <!-- Career cards grid -->
   {% if page_obj.object_list %}
   <div class="row g-4">
     {% for profile in page_obj %}
-    <div class="col-md-6 col-lg-4">
-      <div class="card h-100 p-0 overflow-hidden" style="transition:transform .2s,box-shadow .2s;"
-           onmouseover="this.style.transform='translateY(-4px)';this.style.boxShadow='0 12px 32px rgba(30,58,138,.12)'"
-           onmouseout="this.style.transform='';this.style.boxShadow=''">
+    {% with first_tag=profile.career_tags|split:","|first %}
+    <div class="col-sm-6 col-lg-4 col-xl-3">
+      <a href="{% url 'career:career_profile_detail' profile.slug %}" class="text-decoration-none">
+        <div class="career-card">
 
-        {% if profile.image %}
-        <img src="{{ profile.image.url }}" alt="{{ profile.title }}"
-             class="w-100" style="height:160px;object-fit:cover;">
-        {% else %}
-        <div class="d-flex align-items-center justify-content-center"
-             style="height:120px;background:linear-gradient(135deg,#1e3a8a 0%,#2563eb 100%);">
-          <i class="{{ profile.icon|default:'fas fa-briefcase' }} fa-3x text-white opacity-75"></i>
-        </div>
-        {% endif %}
-
-        <div class="card-body d-flex flex-column">
-          <div class="d-flex justify-content-between align-items-start mb-2">
-            <h6 class="fw-bold mb-0">{{ profile.title }}</h6>
-            <span class="badge rounded-pill
-              {% if profile.demand_level == 'high' %}bg-success
-              {% elif profile.demand_level == 'medium' %}bg-warning text-dark
-              {% else %}bg-secondary{% endif %} ms-2 flex-shrink-0">
-              {{ profile.get_demand_level_display }}
-            </span>
+          <!-- Banner with icon -->
+          <div class="career-card-banner banner-{{ first_tag|default:'default' }}">
+            <i class="{{ profile.icon|default:'fas fa-briefcase' }} text-white" style="opacity:0.9;"></i>
+            <!-- Demand badge pinned top-right -->
+            <div class="position-absolute top-0 end-0 m-2">
+              <span class="demand-badge demand-{{ profile.demand_level }}">
+                {{ profile.get_demand_level_display }}
+              </span>
+            </div>
           </div>
 
-          <p class="text-muted small flex-grow-1" style="line-height:1.5;">
-            {{ profile.description|truncatewords:20 }}
-          </p>
+          <div class="career-card-body">
+            <h6 class="fw-800 text-dark mb-1" style="font-size:0.92rem;line-height:1.3;">
+              {{ profile.title }}
+            </h6>
 
-          {% if profile.average_salary %}
-          <p class="small mb-2">
-            <i class="fas fa-coins text-success me-1"></i>
-            <strong>Avg. Salary:</strong> {{ profile.average_salary }}
-          </p>
-          {% endif %}
+            <p class="text-muted mb-2" style="font-size:0.78rem;line-height:1.5;
+               display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">
+              {{ profile.description|truncatewords:18 }}
+            </p>
 
-          <a href="{% url 'career:career_profile_detail' profile.slug %}"
-             class="btn btn-primary-custom btn-sm mt-auto">
-            Explore Career <i class="fas fa-arrow-right ms-1"></i>
-          </a>
+            <!-- Salary -->
+            {% if profile.averagesvalary %}
+            <div class="d-flex align-items-center gap-1 mb-2">
+              <i class="fas fa-money-bill-wave text-success" style="font-size:0.72rem;"></i>
+              <span class="fw-700 text-success" style="font-size:0.75rem;">{{ profile.averagesvalary }}</span>
+            </div>
+            {% endif %}
+
+            <!-- Tags chips -->
+            <div class="d-flex flex-wrap gap-1 mt-auto">
+              {% for tag in profile.career_tags|split:"," %}
+              {% if tag|length > 0 %}
+              <span class="badge rounded-pill bg-primary bg-opacity-10 text-primary" style="font-size:0.62rem;">
+                {{ tag|title }}
+              </span>
+              {% endif %}
+              {% endfor %}
+            </div>
+          </div>
+
+          <!-- Footer CTA -->
+          <div class="px-3 pb-3">
+            <div class="d-flex align-items-center justify-content-between pt-2 border-top">
+              <span class="small text-muted" style="font-size:0.72rem;">
+                <i class="fas fa-graduation-cap me-1"></i>
+                {{ profile.course_count }} linked course{{ profile.course_count|pluralize }}
+              </span>
+              <span class="text-primary fw-700" style="font-size:0.78rem;">
+                Explore <i class="fas fa-arrow-right ms-1"></i>
+              </span>
+            </div>
+          </div>
+
         </div>
-      </div>
+      </a>
     </div>
+    {% endwith %}
     {% endfor %}
   </div>
 
   <!-- Pagination -->
   {% if page_obj.has_other_pages %}
-  <nav class="mt-4">
-    <ul class="pagination justify-content-center">
+  <nav class="mt-5">
+    <ul class="pagination justify-content-center gap-1">
       {% if page_obj.has_previous %}
       <li class="page-item">
-        <a class="page-link" href="?page={{ page_obj.previous_page_number }}&q={{ query }}&demand={{ active_demand }}">
-          &laquo; Prev
+        <a class="page-link rounded-3" href="?page={{ page_obj.previous_page_number }}&q={{ query }}&sector={{ active_sector }}&demand={{ active_demand }}">
+          <i class="fas fa-chevron-left"></i>
         </a>
       </li>
       {% endif %}
       {% for num in page_obj.paginator.page_range %}
       <li class="page-item {% if num == page_obj.number %}active{% endif %}">
-        <a class="page-link" href="?page={{ num }}&q={{ query }}&demand={{ active_demand }}">{{ num }}</a>
+        <a class="page-link rounded-3" href="?page={{ num }}&q={{ query }}&sector={{ active_sector }}&demand={{ active_demand }}">{{ num }}</a>
       </li>
       {% endfor %}
       {% if page_obj.has_next %}
       <li class="page-item">
-        <a class="page-link" href="?page={{ page_obj.next_page_number }}&q={{ query }}&demand={{ active_demand }}">
-          Next &raquo;
+        <a class="page-link rounded-3" href="?page={{ page_obj.next_page_number }}&q={{ query }}&sector={{ active_sector }}&demand={{ active_demand }}">
+          <i class="fas fa-chevron-right"></i>
         </a>
       </li>
       {% endif %}
@@ -125,16 +302,48 @@
 
   {% else %}
   <div class="text-center py-5">
-    <i class="fas fa-search fa-3x text-muted mb-3"></i>
-    <h5 class="text-muted">No career profiles found</h5>
-    <p class="text-muted small">
-      {% if query or active_demand %}Try adjusting your filters.{% else %}No careers have been added yet.{% endif %}
+    <i class="fas fa-search fa-3x text-muted mb-3 d-block"></i>
+    <h5 class="text-muted fw-bold">No careers found</h5>
+    <p class="text-muted small mb-3">
+      {% if query or active_demand or active_sector %}
+        Try adjusting your filters or search terms.
+      {% else %}
+        No career profiles have been added yet.
+      {% endif %}
     </p>
-    {% if query or active_demand %}
-    <a href="{% url 'career:career_profiles' %}" class="btn btn-outline-secondary">Clear filters</a>
-    {% endif %}
+    <a href="{% url 'career:career_profiles' %}" class="btn btn-primary px-4 rounded-pill">
+      <i class="fas fa-th me-2"></i>Show All Careers
+    </a>
   </div>
   {% endif %}
 
+  <!-- Quiz CTA banner -->
+  <div class="mt-5 p-4 rounded-3 text-center text-white position-relative overflow-hidden"
+       style="background:linear-gradient(135deg,#1e3a8a 0%,#4f46e5 100%);">
+    <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 30% 50%,rgba(129,140,248,0.25) 0%,transparent 60%);pointer-events:none;"></div>
+    <div class="position-relative">
+      <i class="fas fa-clipboard-list fa-2x mb-2 d-block" style="color:#a5b4fc;"></i>
+      <h4 class="fw-800 mb-1">Not sure which career fits you?</h4>
+      <p class="text-white-75 mb-3" style="font-size:0.9rem;">
+        Take our 10-question Career Quiz and get matched to the careers that suit your personality and strengths.
+      </p>
+      <a href="{% url 'career:quiz' %}" class="btn btn-light fw-700 px-5 rounded-pill">
+        <i class="fas fa-magic me-2"></i>Take the Quiz — Free
+      </a>
+    </div>
+  </div>
+
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Auto-submit search on Enter
+document.querySelector('.hero-search')?.addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    document.getElementById('searchForm').submit();
+  }
+});
+</script>
 {% endblock %}

@@ -20,7 +20,7 @@ Status legend: ✅ Done | 🚧 In Progress | 📋 Planned | ❌ Blocked
 | Account soft delete | ✅ | soft_delete() sets deleted_at + is_active=False |
 | Terms & conditions page | ✅ | agreed_terms + terms_version fields |
 | Send verification email | 🚧 | Token created but email not actually sent yet |
-| Suspend/unsuspend (admin) | 📋 | Model field exists, no admin UI yet |
+| Suspend/unsuspend (admin) | ✅ | Bulk admin actions: "Suspend selected users" and "Unsuspend selected users" added to UserAdmin |
 
 ---
 
@@ -116,6 +116,63 @@ Status legend: ✅ Done | 🚧 In Progress | 📋 Planned | ❌ Blocked
 | Career insights (salary, demand) | 📋 | Model exists, no data or UI yet |
 | Real OpenAI integration | 📋 | See API_NOTES.md |
 | Save matches per user (not session) | 📋 | Currently saves globally, not user-scoped |
+| PDF export of career results | 📋 | Download matched courses as PDF from career engine |
+| Course Comparison Tool | 📋 | Compare 2–3 courses side-by-side (cutoffs, requirements, institutions) |
+| Career Mistake Detector | 📋 | Warn "This course does NOT match your KCSE subjects" before results |
+| Grade simulator | 📋 | "What if I scored B+ instead of C in Chemistry?" re-run without re-entering |
+
+---
+
+## AI & Intelligence Features
+| Feature | Status | Notes |
+|---|---|---|
+| AI Career Advisor (OpenAI) | 📋 | Conversational guidance via career/engine.py once OpenAI live |
+| Placement Probability Score | 📋 | Predict likelihood of admission based on past KCSE distributions and competition per course |
+| Cutoff Prediction Engine | 📋 | Predict next year's cutoff based on year-by-year intake trends |
+| Admission Shock Predictor | 📋 | Warn "This cutoff is rising fast — you may not qualify next year" |
+| AI Admission Strategy Builder | 📋 | Given grade + preferred course: auto-generate 1st / 2nd / 3rd choice + backup plan |
+| Backup Plan Generator | 📋 | If student doesn't qualify for top course, auto-suggest alternatives (e.g. Medicine ❌ → Nursing, Clinical Medicine, Lab Tech) |
+| Fail-Safe Career Path Engine | 📋 | Multi-step fallback paths: preferred course → diploma bridge → degree upgrade route |
+| AI "Explain Like I'm 5" Mode | 📋 | Toggle: Simple / Normal / Advanced explanations (e.g. cluster formula explained as "your best 7 subjects decide your score") |
+| AI Parent Mode | 📋 | Plain-language explanations for parents: "What does this course mean?", "Is it worth it?", "Job prospects in Kenya" |
+| Hidden Talent Career Match | 📋 | Personality quiz → "You are best suited for Data Science, not Medicine" — viral shareable result |
+| Alternative Subject Suggestions | 📋 | For weak subjects: suggest alternatives that open better cluster paths |
+| Smart Course Recommendation Feed | 📋 | TikTok-style feed: "Top 5 courses for B+ students", "Low competition, high salary", "Hidden gem courses in Kenya" |
+
+---
+
+## Analytics & Insights
+| Feature | Status | Notes |
+|---|---|---|
+| Admin Analytics Dashboard | 📋 | Track: most searched course, most viewed institution, most saved programme, most downloaded PDF |
+| Placement Trends Dashboard | 📋 | Most applied courses, fastest growing careers, most competitive programmes year-on-year |
+| Competition Pressure Indicator | 📋 | Per-course badge: Low / Medium / High / Extreme 🔥 competition level |
+| Top Trending Courses Live Feed | 📋 | "Computer Science +32% this month" — creates urgency and social virality |
+| Cutoff Trend Chart | 📋 | Year-on-year cutoff history chart per course/university pair |
+| Peer Comparison | 📋 | "Among students with similar grades, 60% chose Medicine, 30% chose Engineering" |
+
+---
+
+## Career Planning Tools
+| Feature | Status | Notes |
+|---|---|---|
+| Career Path Roadmaps | 📋 | Full journey maps: e.g. Doctor → KCSE → MBChB → Internship → Specialisation → Consultant → Salary growth |
+| Multi-Path Planner | 📋 | Show 3 parallel paths: Safe (Nursing) / Balanced (Pharmacy) / Risky high-reward (Medicine) |
+| Job Market Intelligence | 📋 | Demand levels, salary ranges, growth outlook per career in Kenya |
+| Placement Reports (PDF) | 📋 | Downloadable PDF career report: matched courses, cluster scores, strategy, backup paths |
+| Student Success Stories | 📋 | Alumni stories: "I scored C+ and got into KMTC Nursing — here's how" |
+| Alumni Outcome Tracking | 📋 | Track where past users enrolled; surface anonymised aggregate outcomes |
+| Reviews | 📋 | Students rate and review courses / institutions they applied to |
+
+---
+
+## Personalisation & Engagement
+| Feature | Status | Notes |
+|---|---|---|
+| Personalised Dashboard | 📋 | Student-specific view: their chances, saved courses, alerts, recommended changes — "Netflix for careers" |
+| Smart Alerts System | 📋 | Notify: cutoff changes, application deadline approaching, new matching courses added |
+| Onboarding Walkthrough | 📋 | 3-step intro overlay / tooltip tour for first-time users |
+| How-to Guides | 📋 | Step-by-step guides: how to apply on KUCCPS, how cluster points work, how to choose a course |
 
 ---
 
@@ -150,7 +207,7 @@ Status legend: ✅ Done | 🚧 In Progress | 📋 Planned | ❌ Blocked
 | Notification model | ✅ | TYPE_CHOICES: info/success/warning/deadline/system; is_read flag |
 | Unread notification count in navbar | ✅ | Context processor: unread_notification_count |
 | Notifications list view | ✅ | accounts/notifications view |
-| Mark notification as read | 📋 | Model supports it; no endpoint yet |
+| Mark notification as read | ✅ | `mark_notifications_read` view + URL exist; notifications_view auto-marks all read on visit |
 
 ---
 
@@ -161,6 +218,8 @@ Status legend: ✅ Done | 🚧 In Progress | 📋 Planned | ❌ Blocked
 | Resource items (PDF / video / link) | ✅ | Resource model with download_count |
 | Articles (content + tags) | ✅ | Article model with is_published flag |
 | Resources views / templates | ✅ | resource_list, resource_detail, article_list, article_detail views and templates; category sidebar; search; tag filter; pagination |
+| KUCCPS Application Calendar | ✅ | Static page at /resources/kuccps-calendar/ — 2025 & 2024 cycles, timeline layout, application checklist, tips sidebar |
+| How-To Guides | ✅ | Static page at /resources/how-to-guides/ — 6 guides: cluster points formula, KUCCPS portal steps, course selection strategy, Degree vs KMTC vs TVET, revision windows, HELB basics |
 
 ---
 
@@ -174,14 +233,35 @@ Status legend: ✅ Done | 🚧 In Progress | 📋 Planned | ❌ Blocked
 
 ---
 
+## Community & Communication
+| Feature | Status | Notes |
+|---|---|---|
+| News Panel | 📋 | Platform updates, KUCCPS announcements, deadline alerts displayed on dashboard/homepage |
+| Student-to-Admin Chat | 📋 | In-app messaging: students ask questions, admins respond |
+| WhatsApp share button | ✅ | On career results filter bar — shows match count in pre-filled message |
+| Shareable results link | 📋 | Token-based URL so results can be shared without login |
+| Instagram-style result card | 📋 | Generated PNG showing top 3 matches (Pillow/canvas) |
+
+---
+
 ## General / Infrastructure
 | Feature | Status | Notes |
 |---|---|---|
 | Custom 404 / 500 pages | ✅ | Branded 404 (extends base) + standalone 500; preview at /errors/404/ and /errors/500/ in DEBUG mode |
-| Static files setup | 📋 | STATIC_URL set, STATICFILES_DIRS not configured |
+| Dark mode toggle | ✅ | Moon/sun button in navbar; `body.dark` CSS class; preference saved to localStorage |
+| Back to top button | ✅ | Fixed floating button on all pages; appears after 400px scroll |
+| Static files setup | ✅ | STATICFILES_DIRS configured; static/css/style.css and static/js/main.js in place |
 | Media files setup | ✅ | MEDIA_ROOT and MEDIA_URL configured in settings.py |
+| PostgreSQL database | ✅ | Migrated from SQLite; 21,601 objects loaded to PostgreSQL 17 |
+| Credentials in .env | ✅ | SECRET_KEY, DB credentials, OPENAI_API_KEY loaded from .env; .gitignore excludes it |
+| GitHub repository | ✅ | Private repo under meshacklimok |
+| Terms & Conditions update flow | 📋 | Currently static page; needs version tracking + re-acceptance prompt on update |
 | Production settings | 📋 | DEBUG=True, ALLOWED_HOSTS=[] — dev only |
-| PostgreSQL migration | 📋 | Currently SQLite |
 | Deployment config | 📋 | No Dockerfile / Procfile yet |
 | Email backend config | 🚧 | Console backend set; needs SMTP/SendGrid for production |
-| Fix TIME_ZONE double-definition | ✅ | Removed duplicate UTC line; consistently `Africa/Nairobi` |
+| SEO & OpenGraph meta tags | 📋 | Course/institution detail pages need structured data (JSON-LD) |
+| PWA / offline support | 📋 | Service worker + manifest for mobile install |
+| Google Analytics / event tracking | 📋 | Page views, pathway selections, payment funnel |
+| Rate limiting (login/register) | 📋 | Prevent brute force |
+| Unit tests (cluster formula) | 📋 | Formula must never regress |
+| Sentry error monitoring | 📋 | Production exception tracking |

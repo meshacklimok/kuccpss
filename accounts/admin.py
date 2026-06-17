@@ -8,14 +8,26 @@ from .models import (
     LoginHistory,
     SavedCourse,
     SavedCareer,
-    ApplicationTracking,
+    CourseShortlist,
     Notification,
+    CareerSessionSnapshot,
 )
 from .forms import UserAdminCreationForm, UserAdminChangeForm
 
 # =====================================================
 # CUSTOM USER ADMIN
 # =====================================================
+def suspend_users(modeladmin, request, queryset):
+    queryset.update(is_suspended=True)
+    modeladmin.message_user(request, f"{queryset.count()} user(s) suspended.")
+suspend_users.short_description = "Suspend selected users"
+
+def unsuspend_users(modeladmin, request, queryset):
+    queryset.update(is_suspended=False)
+    modeladmin.message_user(request, f"{queryset.count()} user(s) unsuspended.")
+unsuspend_users.short_description = "Unsuspend selected users"
+
+
 class UserAdmin(BaseUserAdmin):
     # Forms for adding and changing users
     form = UserAdminChangeForm
@@ -27,6 +39,7 @@ class UserAdmin(BaseUserAdmin):
     search_fields = ('email', 'full_name')
     ordering = ('email',)
     readonly_fields = ('last_login', 'created_at', 'updated_at', 'deleted_at')
+    actions = [suspend_users, unsuspend_users]
 
     # Fieldsets for changing a user
     fieldsets = (
@@ -118,14 +131,14 @@ class SavedCareerAdmin(admin.ModelAdmin):
 
 
 # =====================================================
-# APPLICATION TRACKING
+# COURSE SHORTLIST
 # =====================================================
-@admin.register(ApplicationTracking)
-class ApplicationTrackingAdmin(admin.ModelAdmin):
-    list_display = ('user', 'course_name', 'institution_name', 'status', 'deadline', 'created_at')
-    list_filter = ('status', 'deadline', 'created_at')
-    search_fields = ('user__email', 'course_name', 'institution_name')
-    readonly_fields = ('created_at', 'updated_at')
+@admin.register(CourseShortlist)
+class CourseShortlistAdmin(admin.ModelAdmin):
+    list_display = ('user', 'course', 'added_at')
+    list_filter = ('added_at',)
+    search_fields = ('user__email', 'course__name')
+    readonly_fields = ('added_at',)
 
 
 # =====================================================
@@ -133,11 +146,24 @@ class ApplicationTrackingAdmin(admin.ModelAdmin):
 # =====================================================
 @admin.register(Notification)
 class NotificationAdmin(admin.ModelAdmin):
-    list_display = ('user', 'notif_type', 'is_read', 'message_preview', 'created_at')
+    list_display = ('user', 'notif_type', 'published_by', 'is_read', 'message_preview', 'created_at')
     list_filter = ('notif_type', 'is_read', 'created_at')
-    search_fields = ('user__email', 'message')
+    search_fields = ('user__email', 'message', 'published_by__email')
     readonly_fields = ('created_at',)
+    raw_id_fields = ('published_by',)
+    change_list_template = 'admin/accounts/notification/change_list.html'
 
     def message_preview(self, obj):
         return obj.message[:60]
     message_preview.short_description = "Message"
+
+
+# =====================================================
+# CAREER SESSION SNAPSHOT
+# =====================================================
+@admin.register(CareerSessionSnapshot)
+class CareerSessionSnapshotAdmin(admin.ModelAdmin):
+    list_display  = ('user', 'pathway', 'total_matches', 'mean_grade', 'computed_at')
+    list_filter   = ('pathway', 'computed_at')
+    search_fields = ('user__email',)
+    readonly_fields = ('computed_at',)

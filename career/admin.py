@@ -1,68 +1,12 @@
 from django.contrib import admin
+from django.http import HttpResponseRedirect
+from django.urls import reverse
 from .models import (
-    KCSEGrade, CourseCategory, University, Course, CourseCutoff, CourseCutoffHistory,
     TVETCategory, TVETCourse, KMTCampus, KMTCourse, TTCCollege, TTCCourse,
-    StudentCourseMatch, AIRecommendation, CareerInsight,
+    CareerInsight,
     CareerProfile, QuizQuestion, QuizOption, QuizSubmission, QuizAnswer,
+    CareerConfig,
 )
-
-# =====================================================
-# KCSE Grades
-# =====================================================
-@admin.register(KCSEGrade)
-class KCSEGradeAdmin(admin.ModelAdmin):
-    list_display = ("subject_name", "grade")
-    search_fields = ("subject_name", "grade")
-    list_filter = ("grade",)
-
-
-# =====================================================
-# Course Categories
-# =====================================================
-@admin.register(CourseCategory)
-class CourseCategoryAdmin(admin.ModelAdmin):
-    list_display = ("name", "description")
-    search_fields = ("name",)
-
-
-# =====================================================
-# Universities
-# =====================================================
-@admin.register(University)
-class UniversityAdmin(admin.ModelAdmin):
-    list_display = ("name", "county", "description")
-    search_fields = ("name", "county")
-
-
-# =====================================================
-# Courses
-# =====================================================
-@admin.register(Course)
-class CourseAdmin(admin.ModelAdmin):
-    list_display = ("name", "category")
-    search_fields = ("name",)
-    list_filter = ("category",)
-    filter_horizontal = ("cluster_subjects",)
-
-
-# =====================================================
-# Course Cutoff Points
-# =====================================================
-@admin.register(CourseCutoff)
-class CourseCutoffAdmin(admin.ModelAdmin):
-    list_display = ("course", "university", "cutoff_points", "year")
-    search_fields = ("course__name", "university__name")
-    list_filter = ("year",)
-
-
-# =====================================================
-# Historical Cutoff Trends
-# =====================================================
-@admin.register(CourseCutoffHistory)
-class CourseCutoffHistoryAdmin(admin.ModelAdmin):
-    list_display = ("course", "university", "cutoff_points", "year")
-    search_fields = ("course__name", "university__name")
-    list_filter = ("year",)
 
 
 # =====================================================
@@ -112,32 +56,6 @@ class TTCCourseAdmin(admin.ModelAdmin):
     list_display = ("name", "min_mean_grade")
     search_fields = ("name",)
     filter_horizontal = ("required_subjects", "colleges")
-
-
-# =====================================================
-# Student Course Matches
-# =====================================================
-@admin.register(StudentCourseMatch)
-class StudentCourseMatchAdmin(admin.ModelAdmin):
-    list_display = ("get_course_name", "university", "admission_chance", "match_score", "recommended_by_ai", "created_at")
-    search_fields = ("course__name", "tvet_course__name", "kmc_course__name", "ttc_course__name")
-    list_filter = ("admission_chance", "recommended_by_ai", "created_at")
-    readonly_fields = ("match_score", "admission_chance", "recommended_by_ai", "created_at")
-
-    def get_course_name(self, obj):
-        course_obj = obj.course or obj.tvet_course or obj.kmc_course or obj.ttc_course
-        return course_obj.name if course_obj else "N/A"
-    get_course_name.short_description = "Course"
-
-
-# =====================================================
-# AI Recommendations
-# =====================================================
-@admin.register(AIRecommendation)
-class AIRecommendationAdmin(admin.ModelAdmin):
-    list_display = ("advice_text", "created_at")
-    readonly_fields = ("advice_text", "created_at")
-    search_fields = ("advice_text",)
 
 
 # =====================================================
@@ -199,3 +117,44 @@ class QuizSubmissionAdmin(admin.ModelAdmin):
 class QuizAnswerAdmin(admin.ModelAdmin):
     list_display = ("submission", "question", "option")
     list_filter  = ("question__category",)
+
+
+# =====================================================
+# Career Recommendation Config (singleton)
+# =====================================================
+@admin.register(CareerConfig)
+class CareerConfigAdmin(admin.ModelAdmin):
+    fieldsets = (
+        ("Recommendation Tier Thresholds", {
+            "description": (
+                "Controls which tier each course falls into based on the difference between "
+                "the student's score and the course cutoff. "
+                "All values are in cluster points (Degree pathway) or mean-grade points (others)."
+            ),
+            "fields": ("best_match_max_diff", "stretch_min_diff", "safe_max_diff"),
+        }),
+        ("Competitive Flag", {
+            "description": "Courses with a cutoff at or above this threshold are marked 'Competitive'.",
+            "fields": ("competitive_threshold",),
+        }),
+        ("AI Career Insight (Quiz Results)", {
+            "description": (
+                "Controls the AI summary shown on the quiz results page. "
+                "Uses GPT-4o-mini. Requires OPENAI_API_KEY in .env. "
+                "Available placeholders: {tag_str} = student interest tags, {careers_str} = top matched careers."
+            ),
+            "fields": ("ai_enabled", "ai_prompt_template"),
+        }),
+    )
+
+    def has_add_permission(self, request):
+        return not CareerConfig.objects.exists()
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+    def changelist_view(self, request, extra_context=None):
+        config = CareerConfig.get()
+        return HttpResponseRedirect(
+            reverse("admin:career_careerconfig_change", args=[config.pk])
+        )

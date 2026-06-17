@@ -60,6 +60,8 @@ INSTALLED_APPS = [
     'resources',
     'payments',
     'import_export',
+    'predictor',
+    'analytics',
 ]
 
 MEDIA_URL = '/media/'
@@ -118,21 +120,19 @@ DATABASES = {
 }
 
 
+# IntaSend M-Pesa
+INTASEND_PUBLISHABLE_KEY = os.environ.get("INTASEND_PUBLISHABLE_KEY", "")
+INTASEND_SECRET_KEY = os.environ.get("INTASEND_SECRET_KEY", "")
+INTASEND_WEBHOOK_SECRET = os.environ.get("INTASEND_WEBHOOK_SECRET", "")
+INTASEND_SANDBOX = os.environ.get("INTASEND_SANDBOX", "true").lower() == "true"
+
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
 
 AUTH_PASSWORD_VALIDATORS = [
     {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
-    },
-    {
         'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+        'OPTIONS': {'min_length': 8},
     },
 ]
 
@@ -153,6 +153,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = 'static/'
+STATICFILES_DIRS = [BASE_DIR / 'static']
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field

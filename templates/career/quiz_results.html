@@ -2,104 +2,224 @@
 {% block title %}Your Career Matches — KUCCPSS{% endblock %}
 
 {% block content %}
-<div class="page-hero">
-  <div class="container">
-    <h1><i class="fas fa-star me-2"></i>Your Career Matches</h1>
-    <p class="mb-0">Based on your quiz answers, here are the careers that suit you best.</p>
+<style>
+.results-hero {
+  background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 60%, #4f46e5 100%);
+  padding: 3rem 0 2.5rem;
+  position: relative;
+  overflow: hidden;
+}
+.results-hero::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 80% 50%, rgba(129,140,248,0.25) 0%, transparent 60%);
+  pointer-events: none;
+}
+.match-card {
+  background: #fff;
+  border-radius: 16px;
+  border: 1.5px solid #f1f5f9;
+  overflow: hidden;
+  transition: transform 0.2s, box-shadow 0.2s;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+.match-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 32px rgba(30,58,138,0.1);
+  border-color: #c7d2fe;
+}
+.match-rank {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.72rem;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+.rank-1 { background: #fbbf24; color: #78350f; }
+.rank-2 { background: #94a3b8; color: #0f172a; }
+.rank-3 { background: #cd7c2f; color: #fff; }
+.rank-other { background: #f1f5f9; color: #64748b; }
+</style>
+
+<!-- Hero -->
+<div class="results-hero">
+  <div class="container position-relative text-center">
+    <div class="mb-3">
+      <span class="badge rounded-pill fw-700" style="background:rgba(251,191,36,0.2);color:#fbbf24;font-size:0.8rem;padding:6px 16px;">
+        <i class="fas fa-magic me-1"></i>Quiz Complete
+      </span>
+    </div>
+    <h1 class="text-white fw-900 mb-2" style="font-size:clamp(1.8rem,4vw,2.5rem);">
+      Your Career Matches Are Ready
+    </h1>
+    <p class="text-white-75 mb-0" style="font-size:1rem;max-width:520px;margin:0 auto;">
+      Based on your answers, here are the careers that best match your personality, strengths, and interests.
+    </p>
   </div>
 </div>
 
-<div class="container pb-5">
+<div class="container py-4" style="max-width:1100px;">
+
+  {% if ai_summary %}
+  <div class="mb-4 p-4 rounded-3 d-flex align-items-start gap-3"
+       style="background:linear-gradient(135deg,#eef2ff,#f0fdf4);border:1.5px solid #c7d2fe;">
+    <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
+         style="width:40px;height:40px;background:#4f46e5;color:#fff;font-size:1.1rem;">
+      <i class="fas fa-robot"></i>
+    </div>
+    <div>
+      <div class="fw-800 text-dark mb-1" style="font-size:0.85rem;">AI Career Insight</div>
+      <p class="text-dark mb-0" style="font-size:0.92rem;line-height:1.65;">{{ ai_summary }}</p>
+    </div>
+  </div>
+  {% endif %}
 
   {% if top_matches %}
 
-  <!-- Top Match Highlight -->
+  <!-- Best Match Hero Card -->
   {% with top=top_matches.0 %}
-  {% if top %}
-  <div class="card p-4 mb-5" style="background:linear-gradient(135deg,#1e3a8a 0%,#2563eb 100%);color:#fff;">
-    <div class="row align-items-center">
-      <div class="col-md-8">
-        <span class="badge bg-warning text-dark mb-2"><i class="fas fa-trophy me-1"></i>Best Match</span>
-        <h3 class="fw-bold mb-1">{{ top.profile.title }}</h3>
-        <p class="opacity-75 mb-3">{{ top.profile.description|truncatewords:30 }}</p>
-        {% if top.profile.average_salary %}
-        <p class="mb-0"><i class="fas fa-coins me-1"></i><strong>Salary:</strong> {{ top.profile.average_salary }}</p>
-        {% endif %}
+  <div class="card p-0 mb-5 overflow-hidden" style="border-radius:20px;border:none;
+    box-shadow:0 8px 40px rgba(79,70,229,0.18);">
+    <div class="row g-0">
+      <!-- Left coloured panel -->
+      <div class="col-md-4 d-flex align-items-center justify-content-center flex-column text-white text-center p-4"
+           style="background:linear-gradient(135deg,#1e3a8a,#4f46e5);min-height:200px;">
+        <span class="badge rounded-pill fw-700 mb-3" style="background:rgba(251,191,36,0.25);color:#fbbf24;font-size:0.8rem;">
+          <i class="fas fa-trophy me-1"></i>Your Best Match
+        </span>
+        <div class="rounded-3 d-flex align-items-center justify-content-center mb-3"
+             style="width:72px;height:72px;background:rgba(255,255,255,0.15);font-size:2rem;">
+          <i class="{{ top.profile.icon|default:'fas fa-briefcase' }}"></i>
+        </div>
+        <div class="fw-900 mb-1" style="font-size:2rem;">{{ top.score }}<span style="font-size:1rem;opacity:0.7;"> pts</span></div>
+        <div class="small opacity-75">Match Score</div>
       </div>
-      <div class="col-md-4 text-md-end mt-3 mt-md-0">
-        <div class="display-4 fw-bold opacity-75 mb-2">{{ top.score }}<small class="fs-5"> pts</small></div>
+      <!-- Right content -->
+      <div class="col-md-8 p-4 d-flex flex-column justify-content-center">
+        <h2 class="fw-900 text-dark mb-2" style="font-size:clamp(1.3rem,3vw,1.8rem);">{{ top.profile.title }}</h2>
+        <p class="text-muted mb-3" style="font-size:0.9rem;line-height:1.7;">{{ top.profile.description|truncatewords:35 }}</p>
+        <div class="d-flex flex-wrap gap-2 mb-3">
+          <span class="badge rounded-pill fw-700
+            {% if top.profile.demand_level == 'very_high' %}bg-success
+            {% elif top.profile.demand_level == 'high' %}bg-primary
+            {% else %}bg-warning text-dark{% endif %}" style="font-size:0.72rem;padding:5px 12px;">
+            {{ top.profile.get_demand_level_display }} Demand
+          </span>
+          {% if top.profile.average_salary %}
+          <span class="badge rounded-pill bg-success bg-opacity-10 text-success fw-700" style="font-size:0.72rem;padding:5px 12px;">
+            <i class="fas fa-money-bill-wave me-1"></i>{{ top.profile.average_salary }}
+          </span>
+          {% endif %}
+        </div>
         <a href="{% url 'career:career_profile_detail' top.profile.slug %}"
-           class="btn btn-gradient-success">
-          <i class="fas fa-arrow-right me-1"></i>Explore Career
+           class="btn btn-primary fw-700 rounded-pill d-inline-flex align-items-center gap-2"
+           style="align-self:flex-start;padding:10px 24px;">
+          <i class="fas fa-compass"></i>Explore This Career
         </a>
       </div>
     </div>
   </div>
-  {% endif %}
   {% endwith %}
 
-  <!-- All Matches Grid -->
-  <h5 class="fw-bold mb-3">All Your Matches</h5>
+  <!-- All matches -->
+  <h5 class="fw-800 mb-3 text-dark">All Your Matches
+    <span class="text-muted fw-400 fs-6 ms-2">{{ top_matches|length }} career{{ top_matches|length|pluralize }}</span>
+  </h5>
+
   <div class="row g-4">
     {% for match in top_matches %}
-    <div class="col-md-6 col-lg-4">
-      <div class="card h-100 p-4">
-        <div class="d-flex align-items-center gap-3 mb-3">
-          <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
-               style="width:48px;height:48px;background:#e8f0fe;color:var(--primary);">
+    <div class="col-sm-6 col-lg-4">
+      <div class="match-card">
+
+        <div class="p-3 d-flex align-items-center gap-3 border-bottom">
+          <!-- Rank badge -->
+          <div class="match-rank rank-{% if forloop.counter <= 3 %}{{ forloop.counter }}{% else %}other{% endif %}">
+            {% if forloop.counter == 1 %}🥇{% elif forloop.counter == 2 %}🥈{% elif forloop.counter == 3 %}🥉{% else %}{{ forloop.counter }}{% endif %}
+          </div>
+
+          <!-- Icon -->
+          <div class="rounded-2 d-flex align-items-center justify-content-center flex-shrink-0"
+               style="width:40px;height:40px;background:#eef2ff;color:var(--primary);">
             <i class="{{ match.profile.icon|default:'fas fa-briefcase' }}"></i>
           </div>
-          <div>
-            <h6 class="fw-bold mb-0">{{ match.profile.title }}</h6>
-            <span class="badge rounded-pill
-              {% if match.profile.demand_level == 'high' %}bg-success
-              {% elif match.profile.demand_level == 'medium' %}bg-warning text-dark
-              {% else %}bg-secondary{% endif %}">
-              {{ match.profile.get_demand_level_display }} demand
+
+          <!-- Title -->
+          <div style="flex:1;min-width:0;">
+            <div class="fw-800 text-dark" style="font-size:0.88rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+              {{ match.profile.title }}
+            </div>
+            <span class="badge rounded-pill fw-600
+              {% if match.profile.demand_level == 'very_high' %}bg-success
+              {% elif match.profile.demand_level == 'high' %}bg-primary
+              {% else %}bg-warning text-dark{% endif %}" style="font-size:0.62rem;">
+              {{ match.profile.get_demand_level_display }}
             </span>
           </div>
         </div>
 
-        <!-- Match Score Bar -->
-        <div class="mb-3">
-          <div class="d-flex justify-content-between small mb-1">
-            <span class="text-muted">Match strength</span>
-            <span class="fw-bold" style="color:var(--primary);">{{ match.score }} pts</span>
-          </div>
-          <div class="progress" style="height:6px;">
-            <div class="progress-bar" role="progressbar"
-                 style="width:{% widthratio match.score top_matches.0.score 100 %}%;background:var(--primary);">
+        <div class="p-3 flex-grow-1 d-flex flex-column">
+          <!-- Match bar -->
+          <div class="mb-3">
+            <div class="d-flex justify-content-between mb-1">
+              <span class="text-muted" style="font-size:0.72rem;">Match strength</span>
+              <span class="fw-800" style="color:var(--primary);font-size:0.75rem;">{{ match.score }} pts</span>
+            </div>
+            <div class="progress rounded-pill" style="height:5px;">
+              <div class="progress-bar rounded-pill"
+                   style="width:{% widthratio match.score top_matches.0.score 100 %}%;background:linear-gradient(90deg,var(--primary),#818cf8);">
+              </div>
             </div>
           </div>
+
+          <p class="text-muted flex-grow-1" style="font-size:0.8rem;line-height:1.55;
+             display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;">
+            {{ match.profile.description }}
+          </p>
+
+          {% if match.profile.average_salary %}
+          <div class="small text-success fw-700 mb-2">
+            <i class="fas fa-money-bill-wave me-1"></i>{{ match.profile.average_salary }}
+          </div>
+          {% endif %}
+
+          <a href="{% url 'career:career_profile_detail' match.profile.slug %}"
+             class="btn btn-outline-primary btn-sm fw-700 rounded-pill mt-auto">
+            Explore Career <i class="fas fa-arrow-right ms-1"></i>
+          </a>
         </div>
 
-        <p class="text-muted small flex-grow-1">{{ match.profile.description|truncatewords:18 }}</p>
-
-        <a href="{% url 'career:career_profile_detail' match.profile.slug %}"
-           class="btn btn-sm btn-outline-primary mt-2">
-          Learn More <i class="fas fa-arrow-right ms-1"></i>
-        </a>
       </div>
     </div>
     {% endfor %}
   </div>
 
-  <!-- Actions -->
-  <div class="text-center mt-5">
-    <a href="{% url 'career:quiz' %}" class="btn btn-outline-secondary me-2">
-      <i class="fas fa-redo me-1"></i>Retake Quiz
-    </a>
-    <a href="{% url 'career:career_profiles' %}" class="btn btn-primary-custom">
-      <i class="fas fa-compass me-1"></i>Browse All Careers
-    </a>
+  <!-- Action banner -->
+  <div class="mt-5 p-4 rounded-3 d-flex align-items-center gap-4 flex-wrap"
+       style="background:#f8fafc;border:1.5px solid #e2e8f0;">
+    <div class="flex-grow-1">
+      <div class="fw-800 text-dark mb-1">Ready to take the next step?</div>
+      <div class="text-muted small">Calculate your cluster points to see which courses you qualify for.</div>
+    </div>
+    <div class="d-flex gap-2 flex-wrap">
+      <a href="{% url 'career:quiz' %}" class="btn btn-outline-secondary fw-700 rounded-pill btn-sm">
+        <i class="fas fa-redo me-1"></i>Retake Quiz
+      </a>
+      <a href="{% url 'clusterpoints:calculator' %}" class="btn btn-primary fw-700 rounded-pill btn-sm">
+        <i class="fas fa-calculator me-1"></i>Calculate Cluster Points
+      </a>
+    </div>
   </div>
 
   {% else %}
   <div class="text-center py-5">
-    <i class="fas fa-question-circle fa-4x text-muted mb-3"></i>
-    <h4>No matches found</h4>
-    <p class="text-muted">We couldn't score careers from your answers. Try the quiz again.</p>
-    <a href="{% url 'career:quiz' %}" class="btn btn-gradient-success px-5">
+    <i class="fas fa-question-circle fa-4x text-muted mb-3 d-block"></i>
+    <h4 class="fw-800 text-dark">No matches found</h4>
+    <p class="text-muted mb-3">We couldn't match careers from your answers. Try the quiz again.</p>
+    <a href="{% url 'career:quiz' %}" class="btn btn-primary fw-700 rounded-pill px-5">
       <i class="fas fa-redo me-1"></i>Retake Quiz
     </a>
   </div>

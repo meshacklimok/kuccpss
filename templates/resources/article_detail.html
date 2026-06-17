@@ -1,26 +1,129 @@
 {% extends "base.html" %}
+
 {% block title %}{{ article.title }} — KUCCPSS{% endblock %}
 
+{% block meta %}<meta name="description" content="{{ article.excerpt|default:article.title }}">{% endblock %}
+{% block og_meta %}
+<meta property="og:title" content="{{ article.title }} — KUCCPSS">
+<meta property="og:description" content="{{ article.excerpt|default:article.title }}">
+{% if article.thumbnail %}<meta property="og:image" content="{{ request.scheme }}://{{ request.get_host }}{{ article.thumbnail.url }}">{% endif %}
+{% endblock %}
+
+{% block extra_head %}
+<style>
+/* ── Article typography ───────────────────────────────── */
+.article-body {
+  font-size: 1.05rem;
+  line-height: 1.85;
+  color: var(--text);
+  white-space: pre-wrap;
+}
+.article-body p { margin-bottom: 1.25rem; }
+.lead-quote {
+  border-left: 4px solid var(--accent);
+  padding: 1rem 1.5rem;
+  background: rgba(22,163,74,.06);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  color: var(--text);
+  font-size: 1.08rem;
+  line-height: 1.7;
+  margin-bottom: 1.5rem;
+}
+
+/* ── Progress bar (reading position) ─────────────────── */
+#reading-progress {
+  position: fixed; top: 0; left: 0; z-index: 9999;
+  height: 3px; background: var(--accent);
+  width: 0%; transition: width .1s linear;
+}
+
+/* ── Share buttons ───────────────────────────────────── */
+.share-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 14px; border-radius: 20px; font-size: .82rem;
+  font-weight: 600; border: none; cursor: pointer;
+  text-decoration: none; transition: opacity .15s, transform .15s;
+}
+.share-btn:hover { opacity: .85; transform: translateY(-1px); }
+.share-twitter { background: #1da1f2; color: #fff; }
+.share-whatsapp { background: #25d366; color: #fff; }
+.share-copy { background: var(--bg); border: 1px solid var(--border); color: var(--text); }
+
+/* ── Related article mini card ───────────────────────── */
+.related-card {
+  display: flex; gap: 12px; align-items: flex-start;
+  text-decoration: none; color: inherit; padding: .75rem 0;
+  border-bottom: 1px solid var(--border);
+  transition: color .15s;
+}
+.related-card:last-child { border-bottom: none; }
+.related-card:hover .related-title { color: var(--primary); }
+.related-thumb {
+  width: 64px; height: 64px; border-radius: 6px;
+  object-fit: cover; flex-shrink: 0;
+}
+.related-placeholder {
+  width: 64px; height: 64px; border-radius: 6px; flex-shrink: 0;
+  background: linear-gradient(135deg, #1e3a8a, #16a34a);
+  display: flex; align-items: center; justify-content: center;
+}
+.related-title { font-size: .88rem; font-weight: 600; line-height: 1.35; }
+.related-meta { font-size: .75rem; color: var(--muted); margin-top: 2px; }
+
+/* ── Author chip ──────────────────────────────────────── */
+.author-chip {
+  display: inline-flex; align-items: center; gap: 10px;
+  background: var(--bg); border: 1px solid var(--border);
+  border-radius: 40px; padding: 8px 16px 8px 8px;
+}
+.author-avatar {
+  width: 38px; height: 38px; border-radius: 50%;
+  background: linear-gradient(135deg, #1e3a8a, #16a34a);
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; font-weight: 700; font-size: .9rem; flex-shrink: 0;
+}
+</style>
+{% endblock %}
+
 {% block content %}
+
+<!-- Reading progress bar -->
+<div id="reading-progress"></div>
+
+<!-- Hero -->
 <div class="page-hero">
   <div class="container">
     <nav aria-label="breadcrumb" class="mb-2">
-      <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a href="{% url 'resources:article_list' %}" class="text-white-50">Articles</a></li>
+      <ol class="breadcrumb mb-0">
+        <li class="breadcrumb-item">
+          <a href="{% url 'resources:article_list' %}" class="text-white-50 text-decoration-none">
+            <i class="fas fa-newspaper me-1"></i>News
+          </a>
+        </li>
         <li class="breadcrumb-item active text-white">{{ article.title|truncatechars:50 }}</li>
       </ol>
     </nav>
-    <h1 class="mb-2">{{ article.title }}</h1>
-    <div class="d-flex gap-3 align-items-center flex-wrap">
+
+    <h1 class="mb-3" style="max-width:780px;line-height:1.25;">{{ article.title }}</h1>
+
+    <div class="d-flex flex-wrap gap-3 align-items-center">
       {% if article.author %}
-      <span class="text-white-50 small"><i class="fas fa-user me-1"></i>{{ article.author }}</span>
+      <div class="author-chip">
+        <div class="author-avatar">{{ article.author|first|upper }}</div>
+        <div>
+          <div class="fw-semibold text-dark" style="font-size:.85rem;">{{ article.author }}</div>
+          <div class="text-muted" style="font-size:.72rem;">Author</div>
+        </div>
+      </div>
       {% endif %}
-      <span class="text-white-50 small"><i class="fas fa-calendar me-1"></i>{{ article.created_at|date:"d M Y" }}</span>
+      <span class="text-white-50 small"><i class="fas fa-calendar me-1"></i>{{ article.created_at|date:"d F Y" }}</span>
+      <span class="text-white-50 small"><i class="fas fa-clock me-1"></i>{{ article.reading_time }} min read</span>
       {% if article.tags %}
-      <div>
+      <div class="d-flex flex-wrap gap-1">
         {% for tag in article.get_tags_list %}
         <a href="{% url 'resources:article_list' %}?tag={{ tag }}"
-           class="badge bg-white bg-opacity-20 text-white text-decoration-none me-1 small">
+           class="badge text-decoration-none"
+           style="background:rgba(255,255,255,.18);color:#fff;border:1px solid rgba(255,255,255,.3);">
           {{ tag }}
         </a>
         {% endfor %}
@@ -30,71 +133,138 @@
   </div>
 </div>
 
-<div class="container pb-5">
+<div class="container py-4 pb-5">
   <div class="row g-4">
 
     <!-- Article body -->
-    <div class="col-lg-8">
+    <div class="col-lg-8" id="article-content">
+
       {% if article.thumbnail %}
-      <img src="{{ article.thumbnail.url }}" class="img-fluid rounded-3 mb-4"
-           style="max-height:380px;width:100%;object-fit:cover;" alt="{{ article.title }}">
+      <img src="{{ article.thumbnail.url }}" class="img-fluid rounded-3 mb-4 w-100"
+           style="max-height:420px;object-fit:cover;" alt="{{ article.title }}">
       {% endif %}
 
-      <div class="card p-4 p-lg-5">
-        {% if article.excerpt %}
-        <p class="lead text-muted border-start border-4 border-success ps-3 mb-4">
-          {{ article.excerpt }}
-        </p>
-        {% endif %}
-        <div class="article-content" style="line-height:1.8;white-space:pre-line;">{{ article.content }}</div>
+      {% if article.excerpt %}
+      <blockquote class="lead-quote mb-4">{{ article.excerpt }}</blockquote>
+      {% endif %}
+
+      <div class="article-body">{{ article.content }}</div>
+
+      <!-- Share bar -->
+      <div class="mt-5 pt-4 border-top">
+        <p class="fw-semibold text-muted small mb-2"><i class="fas fa-share-alt me-1"></i>Share this article</p>
+        <div class="d-flex gap-2 flex-wrap">
+          <a href="https://twitter.com/intent/tweet?text={{ article.title|urlencode }}&url={{ request.build_absolute_uri }}"
+             target="_blank" rel="noopener" class="share-btn share-twitter">
+            <i class="fab fa-x-twitter"></i> Share on X
+          </a>
+          <a href="https://wa.me/?text={{ article.title|urlencode }}%20{{ request.build_absolute_uri|urlencode }}"
+             target="_blank" rel="noopener" class="share-btn share-whatsapp">
+            <i class="fab fa-whatsapp"></i> WhatsApp
+          </a>
+          <button onclick="copyLink(this)" class="share-btn share-copy">
+            <i class="fas fa-link"></i> Copy link
+          </button>
+        </div>
       </div>
 
       <!-- Back link -->
-      <div class="mt-3">
+      <div class="mt-4">
         <a href="{% url 'resources:article_list' %}" class="btn btn-outline-secondary btn-sm">
-          <i class="fas fa-arrow-left me-1"></i>Back to Articles
+          <i class="fas fa-arrow-left me-1"></i>Back to News
         </a>
       </div>
     </div>
 
     <!-- Sidebar -->
     <div class="col-lg-4">
+
+      <!-- Related articles -->
       {% if related %}
-      <div class="card p-3 mb-3">
-        <h6 class="fw-bold mb-3"><i class="fas fa-bookmark me-1 text-success"></i>Related Articles</h6>
+      <div class="card p-4 mb-3">
+        <h6 class="fw-bold mb-3">
+          <i class="fas fa-bookmark me-1" style="color:var(--accent);"></i>Related Articles
+        </h6>
         {% for r in related %}
-        <a href="{% url 'resources:article_detail' r.slug %}"
-           class="d-flex align-items-start gap-2 text-decoration-none text-dark mb-3 pb-2
-                  {% if not forloop.last %}border-bottom{% endif %}">
+        <a href="{% url 'resources:article_detail' r.slug %}" class="related-card">
           {% if r.thumbnail %}
-          <img src="{{ r.thumbnail.url }}" class="rounded flex-shrink-0"
-               style="width:52px;height:52px;object-fit:cover;" alt="">
+          <img src="{{ r.thumbnail.url }}" class="related-thumb" alt="">
           {% else %}
-          <div class="rounded flex-shrink-0 d-flex align-items-center justify-content-center"
-               style="width:52px;height:52px;background:linear-gradient(135deg,#1e3a8a,#16a34a);">
+          <div class="related-placeholder">
             <i class="fas fa-pen-nib text-white small"></i>
           </div>
           {% endif %}
           <div>
-            <div class="small fw-semibold lh-sm">{{ r.title|truncatechars:60 }}</div>
-            <div class="small text-muted">{{ r.created_at|date:"d M Y" }}</div>
+            <div class="related-title">{{ r.title|truncatechars:65 }}</div>
+            <div class="related-meta">
+              {{ r.created_at|date:"d M Y" }} · {{ r.reading_time }} min read
+            </div>
           </div>
         </a>
         {% endfor %}
+        <a href="{% url 'resources:article_list' %}" class="btn btn-outline-secondary btn-sm w-100 mt-3">
+          All Articles <i class="fas fa-arrow-right ms-1"></i>
+        </a>
       </div>
       {% endif %}
 
-      <div class="card p-3" style="background:linear-gradient(135deg,#1e3a8a,#2563eb);">
+      <!-- Calculator CTA -->
+      <div class="card p-4" style="background:linear-gradient(135deg,#1e3a8a,#2563eb);">
         <h6 class="text-white fw-bold mb-2">
-          <i class="fas fa-calculator me-1"></i>Calculate Your Points
+          <i class="fas fa-calculator me-1"></i>Know Your Points
         </h6>
-        <p class="text-white-50 small mb-3">Find out which courses you qualify for based on your KCSE results.</p>
+        <p class="text-white-50 small mb-3">
+          Find out which universities and colleges you qualify for using the official KUCCPS formula.
+        </p>
         <a href="{% url 'clusterpoints:calculator' %}" class="btn btn-light btn-sm fw-bold">
           Start Calculator <i class="fas fa-arrow-right ms-1"></i>
         </a>
       </div>
-    </div>
 
+      <!-- Tag cloud -->
+      {% if article.tags %}
+      <div class="card p-4 mt-3">
+        <h6 class="fw-bold mb-3"><i class="fas fa-tags me-1 text-muted"></i>Tags</h6>
+        <div class="d-flex flex-wrap gap-2">
+          {% for tag in article.get_tags_list %}
+          <a href="{% url 'resources:article_list' %}?tag={{ tag }}"
+             class="badge text-decoration-none px-3 py-2"
+             style="background:#e8f0fe;color:var(--primary);font-size:.8rem;">
+            {{ tag }}
+          </a>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+
+    </div>
   </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Reading progress bar
+(function () {
+  const bar = document.getElementById('reading-progress');
+  const body = document.getElementById('article-content');
+  if (!bar || !body) return;
+  window.addEventListener('scroll', () => {
+    const rect = body.getBoundingClientRect();
+    const total = body.offsetHeight - window.innerHeight;
+    const scrolled = Math.max(0, -rect.top);
+    bar.style.width = total > 0 ? Math.min(100, (scrolled / total) * 100) + '%' : '100%';
+  }, { passive: true });
+})();
+
+// Copy link
+function copyLink(btn) {
+  navigator.clipboard.writeText(window.location.href).then(() => {
+    const orig = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+    btn.style.background = '#d1fae5';
+    setTimeout(() => { btn.innerHTML = orig; btn.style.background = ''; }, 2000);
+  });
+}
+</script>
 {% endblock %}

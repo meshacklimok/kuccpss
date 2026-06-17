@@ -121,6 +121,19 @@ class Cluster(TimeStampedModel):
         ]
 
     # Auto-generate slug & number
+    @property
+    def kuccps_number(self):
+        """
+        Return the KUCCPS group number (1-20) for this cluster.
+        Master clusters (number 101-120): kuccps_group = number - 100.
+        Sub-clusters: parse from name pattern like 'Medicine (13A)' → 13.
+        """
+        if self.number and 101 <= self.number <= 120:
+            return self.number - 100
+        import re
+        m = re.search(r'\((\d+)[A-Za-z]*\)', self.name)
+        return int(m.group(1)) if m else self.number
+
     def save(self, *args, **kwargs):
         # Auto-generate slug
         if not self.slug:

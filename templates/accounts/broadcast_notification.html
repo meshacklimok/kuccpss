@@ -1,0 +1,154 @@
+{% extends "base.html" %}
+{% block title %}Broadcast Notification{% endblock %}
+
+{% block content %}
+<style>
+.bc-wrap { max-width: 680px; margin: 2.5rem auto; padding: 0 1rem 4rem; }
+.bc-card  { background: #fff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 2rem 2.25rem; box-shadow: 0 4px 24px rgba(30,58,138,0.08); }
+.bc-title { font-size: 1.35rem; font-weight: 800; color: #1e3a8a; margin: 0 0 .25rem; }
+.bc-sub   { font-size: .875rem; color: #64748b; margin: 0 0 1.75rem; }
+.bc-badge { display: inline-flex; align-items: center; gap: .4rem; background: #eff6ff; color: #1e3a8a; border: 1px solid #bfdbfe; border-radius: 20px; font-size: .8rem; font-weight: 600; padding: .3rem .85rem; margin-bottom: 1.5rem; }
+label { display: block; font-size: .8rem; font-weight: 700; color: #374151; margin-bottom: .35rem; text-transform: uppercase; letter-spacing: .04em; }
+textarea, select, input[type="url"], input[type="text"] {
+  width: 100%; border: 1.5px solid #d1d5db; border-radius: 10px;
+  padding: .65rem .85rem; font-size: .9rem; color: #1e293b;
+  background: #f8fafc; transition: border-color .2s;
+  font-family: inherit; box-sizing: border-box;
+}
+textarea:focus, select:focus, input:focus { outline: none; border-color: #1e3a8a; background: #fff; }
+textarea { resize: vertical; min-height: 110px; }
+.field    { margin-bottom: 1.25rem; }
+.hint     { font-size: .75rem; color: #94a3b8; margin: .3rem 0 0; }
+.type-grid { display: grid; grid-template-columns: repeat(5,1fr); gap: .5rem; }
+.type-opt  { position: relative; }
+.type-opt input[type=radio] { position:absolute; opacity:0; width:0; height:0; }
+.type-opt label {
+  display: flex; flex-direction: column; align-items: center; gap: .2rem;
+  padding: .55rem .3rem; border: 2px solid #e2e8f0; border-radius: 10px;
+  cursor: pointer; font-size: .7rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .04em; color: #64748b; text-align: center;
+  transition: border-color .18s, background .18s;
+}
+.type-opt label .ico { font-size: 1.15rem; }
+.type-opt input[type=radio]:checked + label { border-color: var(--tc); background: var(--tc-bg); color: var(--tc); }
+.type-opt.t-info    { --tc:#1e3a8a; --tc-bg:#eff6ff; }
+.type-opt.t-success { --tc:#16a34a; --tc-bg:#f0fdf4; }
+.type-opt.t-warning { --tc:#d97706; --tc-bg:#fffbeb; }
+.type-opt.t-deadline{ --tc:#dc2626; --tc-bg:#fef2f2; }
+.type-opt.t-system  { --tc:#7c3aed; --tc-bg:#f5f3ff; }
+.bc-btn {
+  width: 100%; padding: .85rem; border: none; border-radius: 12px;
+  background: linear-gradient(135deg,#1e3a8a,#2563eb); color: #fff;
+  font-size: 1rem; font-weight: 700; cursor: pointer; letter-spacing: .02em;
+  transition: opacity .2s, transform .15s;
+}
+.bc-btn:hover { opacity: .92; transform: translateY(-1px); }
+.bc-btn:disabled { opacity: .55; cursor: not-allowed; transform: none; }
+.bc-confirm { background: #fef2f2; border: 1px solid #fecaca; border-radius: 10px; padding: .85rem 1rem; margin-bottom: 1.25rem; font-size: .875rem; color: #991b1b; display:none; }
+.bc-confirm.show { display:block; }
+.success-banner { background: #f0fdf4; border: 1px solid #86efac; border-radius: 12px; padding: 1rem 1.25rem; margin-bottom: 1.5rem; color: #15803d; font-weight: 600; font-size: .9rem; }
+</style>
+
+<div class="bc-wrap">
+  <div class="bc-card">
+    <h1 class="bc-title">Broadcast Notification</h1>
+    <p class="bc-sub">Send a message to every active user on the platform.</p>
+
+    <div class="bc-badge">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      {{ active_count }} active user{{ active_count|pluralize }} will receive this
+    </div>
+
+    {% if sent_count is not None %}
+    <div class="success-banner">
+      ✓ Notification delivered to {{ sent_count }} user{{ sent_count|pluralize }}.
+    </div>
+    {% endif %}
+
+    <form method="post" id="broadcastForm">
+      {% csrf_token %}
+
+      <!-- Type -->
+      <div class="field">
+        <label>Notification Type</label>
+        <div class="type-grid">
+          <div class="type-opt t-info">
+            <input type="radio" name="notif_type" id="t-info" value="info" checked>
+            <label for="t-info"><span class="ico">ℹ️</span>Info</label>
+          </div>
+          <div class="type-opt t-success">
+            <input type="radio" name="notif_type" id="t-success" value="success">
+            <label for="t-success"><span class="ico">✅</span>Success</label>
+          </div>
+          <div class="type-opt t-warning">
+            <input type="radio" name="notif_type" id="t-warning" value="warning">
+            <label for="t-warning"><span class="ico">⚠️</span>Warning</label>
+          </div>
+          <div class="type-opt t-deadline">
+            <input type="radio" name="notif_type" id="t-deadline" value="deadline">
+            <label for="t-deadline"><span class="ico">🔴</span>Deadline</label>
+          </div>
+          <div class="type-opt t-system">
+            <input type="radio" name="notif_type" id="t-system" value="system">
+            <label for="t-system"><span class="ico">⚙️</span>System</label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Message -->
+      <div class="field">
+        <label for="bc-message">Message</label>
+        <textarea id="bc-message" name="message" rows="4" maxlength="500" required
+                  placeholder="e.g. KUCCPS 2025/26 application portal is now open. Log in to check your results."></textarea>
+        <p class="hint"><span id="charCount">0</span>/500 characters</p>
+      </div>
+
+      <!-- Optional link -->
+      <div class="field">
+        <label for="bc-link">Link (optional)</label>
+        <input type="text" id="bc-link" name="link" maxlength="255"
+               placeholder="/career/ or https://kuccps.ac.ke">
+        <p class="hint">If set, the notification will be clickable and take users to this URL.</p>
+      </div>
+
+      <!-- Confirm warning -->
+      <div class="bc-confirm" id="bcConfirm">
+        ⚠️ This will create <strong>{{ active_count }}</strong> notification record{{ active_count|pluralize }}.
+        Are you sure? Click Send again to confirm.
+      </div>
+
+      <button type="submit" class="bc-btn" id="bcBtn">
+        📢 Send to All {{ active_count }} User{{ active_count|pluralize }}
+      </button>
+    </form>
+
+    <p style="margin-top:1.5rem;font-size:.8rem;color:#94a3b8;text-align:center;">
+      <a href="/admin/accounts/notification/" style="color:#1e3a8a;">← View all notifications in admin</a>
+    </p>
+  </div>
+</div>
+
+<script>
+(function(){
+  var form = document.getElementById('broadcastForm');
+  var btn  = document.getElementById('bcBtn');
+  var conf = document.getElementById('bcConfirm');
+  var ta   = document.getElementById('bc-message');
+  var cc   = document.getElementById('charCount');
+  var confirmed = false;
+
+  ta.addEventListener('input', function(){ cc.textContent = ta.value.length; });
+
+  form.addEventListener('submit', function(e){
+    if (!ta.value.trim()) { e.preventDefault(); ta.focus(); return; }
+    if (!confirmed) {
+      e.preventDefault();
+      conf.classList.add('show');
+      btn.textContent = '📢 Yes, Send to Everyone';
+      confirmed = true;
+    }
+    // second click → submit naturally
+  });
+})();
+</script>
+{% endblock %}

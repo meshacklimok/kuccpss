@@ -1,11 +1,12 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
-from django.views.decorators.http import require_http_methods
+from django.views.decorators.http import require_http_methods, require_POST
 from django.http import JsonResponse
 from django.core.paginator import Paginator
-from django.urls import reverse
+from django.urls import reverse, NoReverseMatch
 from math import sqrt as _sqrt
 import re as _re
+import time as _time
 from .models import (
     TVETCourse, StudentCourseMatch, AIRecommendation, CareerInsight, TVETCategory,
     CareerProfile, QuizQuestion, QuizSubmission, QuizAnswer,
@@ -327,24 +328,48 @@ def export_matches_csv(_request):
 # =====================================================
 # 10. Career Profiles List
 # =====================================================
+SECTOR_TABS = [
+    ("", "All Careers", "fas fa-th"),
+    ("technology", "Technology", "fas fa-laptop-code"),
+    ("health", "Health", "fas fa-heartbeat"),
+    ("engineering", "Engineering", "fas fa-hard-hat"),
+    ("finance", "Finance", "fas fa-chart-line"),
+    ("business", "Business", "fas fa-briefcase"),
+    ("law", "Law", "fas fa-balance-scale"),
+    ("education", "Education", "fas fa-chalkboard-teacher"),
+    ("agriculture", "Agriculture", "fas fa-leaf"),
+    ("creative", "Creative", "fas fa-paint-brush"),
+    ("science", "Science", "fas fa-flask"),
+    ("environment", "Environment", "fas fa-globe"),
+    ("social", "Social Work", "fas fa-hand-holding-heart"),
+]
+
+
 def career_profiles_list(request):
-    profiles = CareerProfile.objects.all()
+    from django.db.models import Count
+    profiles = CareerProfile.objects.annotate(course_count=Count('related_courses', distinct=True))
     query = request.GET.get("q", "")
     if query:
         profiles = profiles.filter(title__icontains=query)
+
+    sector = request.GET.get("sector", "")
+    if sector:
+        profiles = profiles.filter(career_tags__icontains=sector)
 
     demand = request.GET.get("demand", "")
     if demand:
         profiles = profiles.filter(demand_level=demand)
 
-    paginator = Paginator(profiles, 12)
+    paginator = Paginator(profiles, 24)
     page_obj = paginator.get_page(request.GET.get("page", 1))
 
     return render(request, "career/career_profiles.html", {
         "page_obj": page_obj,
         "query": query,
         "active_demand": demand,
+        "active_sector": sector,
         "demand_choices": CareerProfile.DEMAND_CHOICES,
+        "sector_tabs": SECTOR_TABS,
     })
 
 
@@ -360,11 +385,42 @@ def career_profile_detail(request, slug):
             user=request.user, career_profile=profile
         ).exists()
 
-    related = CareerProfile.objects.exclude(pk=profile.pk)[:4]
+    # Related careers: prefer same-sector tags over arbitrary first-4
+    tags = profile.get_tags_list()
+    related_qs = CareerProfile.objects.exclude(pk=profile.pk)
+    if tags:
+        from django.db.models import Q as _Q
+        tq = _Q()
+        for t in tags[:2]:
+            tq |= _Q(career_tags__icontains=t)
+        related_qs = related_qs.filter(tq)
+    related = list(related_qs[:4])
+
+    # Linked courses: prefetch offerings+institutions, then group by type
+    from collections import defaultdict
+    raw_courses = list(
+        profile.related_courses
+        .select_related('course_type', 'category', 'cluster')
+        .prefetch_related('offerings__institution')
+        .all()
+    )
+    _TYPE_ORDER = ['Degree', 'Diploma', 'KMTC', 'TTC']
+    bucket = defaultdict(list)
+    for c in raw_courses:
+        bucket[c.course_type.name].append(c)
+    courses_by_type = []
+    for t in _TYPE_ORDER:
+        if t in bucket:
+            courses_by_type.append((t, bucket.pop(t)))
+    for t in sorted(bucket):
+        courses_by_type.append((t, bucket[t]))
+
     return render(request, "career/career_profile_detail.html", {
         "profile": profile,
         "is_saved": is_saved,
         "related": related,
+        "courses_by_type": courses_by_type,
+        "total_linked": len(raw_courses),
     })
 
 
@@ -403,6 +459,49 @@ def quiz_view(request):
 # =====================================================
 # 13. Quiz Results
 # =====================================================
+
+def _generate_quiz_ai_summary(tag_scores: dict, top_career_names: list) -> str:
+    """Call GPT-4o-mini for a short personalised career summary. Returns '' on any error."""
+    from django.conf import settings as _s
+    api_key = getattr(_s, 'OPENAI_API_KEY', '')
+    if not api_key or api_key.startswith('sk-xxx') or not top_career_names:
+        return ''
+    try:
+        cfg = _get_career_config()
+        if not getattr(cfg, 'ai_enabled', True):
+            return ''
+
+        top_tags = sorted(tag_scores.items(), key=lambda x: x[1], reverse=True)[:5]
+        tag_str = ', '.join(f"{t} ({s})" for t, s in top_tags)
+        careers_str = ', '.join(top_career_names[:3])
+
+        custom_template = getattr(cfg, 'ai_prompt_template', '').strip()
+        if custom_template:
+            prompt = custom_template.format(tag_str=tag_str, careers_str=careers_str)
+        else:
+            prompt = (
+                f"A Kenyan secondary school student completed a career quiz. "
+                f"Their top interest tags and scores: {tag_str}. "
+                f"Top matched careers: {careers_str}. "
+                "Write a warm, encouraging 2-sentence personalised summary (max 60 words) "
+                "explaining why these careers suit them. Address the student as 'you'. No bullet points."
+            )
+
+        from openai import OpenAI
+        client = OpenAI(api_key=api_key)
+        resp = client.chat.completions.create(
+            model='gpt-4o-mini',
+            messages=[{'role': 'user', 'content': prompt}],
+            max_tokens=120,
+            temperature=0.7,
+        )
+        return resp.choices[0].message.content.strip()
+    except Exception as _e:
+        import logging as _lg
+        _lg.getLogger(__name__).error("AI summary error: %s", _e)
+        return ''
+
+
 def quiz_results_view(request):
     tag_scores = request.session.get("quiz_tag_scores", {})
     if not tag_scores:
@@ -420,10 +519,241 @@ def quiz_results_view(request):
     scored.sort(key=lambda x: x["score"], reverse=True)
     top_matches = scored[:6]
 
+    top_career_names = [m['profile'].title for m in top_matches[:3]]
+    ai_summary = _generate_quiz_ai_summary(tag_scores, top_career_names)
+
     return render(request, "career/quiz_results.html", {
         "top_matches": top_matches,
         "tag_scores": tag_scores,
+        "ai_summary": ai_summary,
     })
+
+
+# =====================================================
+# Shared helper — build real DB context for AI
+# =====================================================
+def _build_ai_db_context(request) -> str:
+    """
+    Returns a string of the student's actual course matches from the DB.
+    Uses CareerSessionSnapshot for logged-in users, or a quick query for anonymous.
+    """
+    pathway            = request.session.get('career_pathway', '')
+    cluster_pts_single = float(request.session.get('career_cluster_pts_single', 0) or 0)
+    mean_grade         = request.session.get('career_mean_grade', '')
+    score_str          = f"{cluster_pts_single:.1f}/48 cluster points" if pathway == 'Degree' else f"mean grade {mean_grade}"
+
+    lines      = [f"STUDENT: {pathway} pathway | Score: {score_str}"]
+    top_matches = []
+
+    # Logged-in users — use stored snapshot
+    if request.user.is_authenticated:
+        try:
+            from accounts.models import CareerSessionSnapshot
+            snap = CareerSessionSnapshot.objects.filter(
+                user=request.user, pathway=pathway
+            ).order_by('-computed_at').first()
+            if snap and snap.top_matches_json:
+                top_matches = snap.top_matches_json
+                lines.append(f"Total matches in database: {snap.total_matches}")
+                tc = snap.tier_counts_json or {}
+                tier_summary = ', '.join(f"{k}: {v}" for k, v in tc.items())
+                if tier_summary:
+                    lines.append(f"Tier breakdown: {tier_summary}")
+        except Exception:
+            pass
+
+    # Anonymous users (or snapshot missing) — quick live query
+    if not top_matches:
+        try:
+            from courses.models import CourseOffering, CourseType
+            cluster_points_dict = request.session.get('career_cluster_points', {})
+            cfg = _get_career_config()
+
+            if pathway == 'Degree':
+                degree_type = CourseType.objects.filter(name__icontains='Degree').first()
+                if degree_type:
+                    qs = (CourseOffering.objects
+                          .filter(course__course_type=degree_type)
+                          .select_related('course', 'course__cluster', 'institution')
+                          .exclude(cutoff_points__isnull=True)[:100])
+                    raw = []
+                    for offering in qs:
+                        cutoff = offering.latest_cutoff()
+                        if cutoff is None:
+                            continue
+                        cluster = offering.course.cluster
+                        knum    = cluster.kuccps_number if cluster else None
+                        s_pts   = float(cluster_points_dict.get(str(knum), cluster_pts_single)) if knum else cluster_pts_single
+                        diff    = round(s_pts - float(cutoff), 2)
+                        tier, _ = _tier_from_diff(diff, cfg)
+                        raw.append({
+                            'course_name':      offering.course.name,
+                            'institution_name': offering.institution.name,
+                            'cutoff':           cutoff,
+                            'student_pts':      round(s_pts, 1),
+                            'diff':             diff,
+                            'tier':             tier,
+                            'chance':           _chance_from_diff(diff)[0],
+                        })
+                    _ORDER = {'Best Match':1,'Stretch':2,'Safe Option':3,'Easy Admission':4,'Long Shot':5}
+                    raw.sort(key=lambda m: (_ORDER.get(m['tier'], 9), abs(m['diff'])))
+                    top_matches = raw[:10]
+            else:
+                subject_grades = request.session.get('career_subject_grades', {})
+                student_pts_val = GRADE_POINTS.get(mean_grade, 0)
+                type_names = COURSE_TYPE_MAP.get(pathway, [])
+                if type_names:
+                    qs = (CourseOffering.objects
+                          .filter(course__course_type__name__in=type_names)
+                          .select_related('course', 'institution')[:100])
+                    default_min = PATHWAY_DEFAULT_MIN_GRADE.get(pathway, 'E')
+                    raw = []
+                    for offering in qs:
+                        min_g  = (offering.course.minimum_mean_grade or '').strip() or default_min
+                        min_p  = GRADE_POINTS.get(min_g, 0)
+                        diff   = student_pts_val - min_p
+                        tier, _= _tier_from_diff(diff, cfg)
+                        raw.append({
+                            'course_name':      offering.course.name,
+                            'institution_name': offering.institution.name,
+                            'cutoff':           min_g,
+                            'student_pts':      mean_grade,
+                            'diff':             diff,
+                            'tier':             tier,
+                            'chance':           _chance_from_grade_diff(diff)[0],
+                        })
+                    _ORDER = {'Best Match':1,'Stretch':2,'Safe Option':3,'Easy Admission':4,'Long Shot':5}
+                    raw.sort(key=lambda m: (_ORDER.get(m['tier'], 9), abs(m['diff'])))
+                    top_matches = raw[:10]
+        except Exception:
+            pass
+
+    if top_matches:
+        lines.append("\nTOP MATCHED COURSES FROM YOUR DATABASE:")
+        for i, m in enumerate(top_matches, 1):
+            diff     = m.get('diff', 0)
+            diff_str = f"+{diff:.1f}" if diff >= 0 else f"{diff:.1f}"
+            lines.append(
+                f"{i}. {m.get('course_name','?')} — {m.get('institution_name','?')} | "
+                f"Cutoff: {m.get('cutoff','?')} | Your score: {m.get('student_pts','?')} | "
+                f"Diff: {diff_str} | Tier: {m.get('tier','?')} | Chance: {m.get('chance','?')}"
+            )
+    else:
+        lines.append("\nNo specific course data found — advise based on pathway and score only.")
+
+    lines.append(
+        "\nRULE: Use ONLY the real course data above. Never invent cutoff points or institution names. "
+        "If asked about a specific course not listed, say you can only see their top 10 matches."
+    )
+    return '\n'.join(lines)
+
+
+# =====================================================
+# 14. AJAX — AI Insight for Career Results page
+# =====================================================
+def ajax_ai_insight(request):
+    """
+    Called by the 'AI Insight' button on career_results_v2.html.
+    Reads session career data and returns a GPT-4o-mini insight as JSON.
+    """
+    from django.conf import settings as _s
+    api_key = getattr(_s, 'OPENAI_API_KEY', '')
+    if not api_key:
+        return JsonResponse({"error": "AI not configured."}, status=400)
+
+    try:
+        from openai import OpenAI
+        cfg = _get_career_config()
+        if not getattr(cfg, 'ai_enabled', True):
+            return JsonResponse({"error": "AI insight is disabled."}, status=400)
+
+        db_context = _build_ai_db_context(request)
+
+        prompt = (
+            f"{db_context}\n\n"
+            "Based on the real course data above, write a personalised 3-sentence opening message to this student:\n"
+            "(1) Name their top 2 specific matched courses and institutions from the data.\n"
+            "(2) Tell them what their score means — are they competitive?\n"
+            "(3) Give one specific actionable tip for their next step.\n"
+            "Be warm, specific, and address them as 'you'. No bullet points."
+        )
+
+        client = OpenAI(api_key=api_key)
+        resp = client.chat.completions.create(
+            model='gpt-4o-mini',
+            messages=[{'role': 'user', 'content': prompt}],
+            max_tokens=200,
+            temperature=0.7,
+        )
+        text = resp.choices[0].message.content.strip()
+        return JsonResponse({"insight": text})
+
+    except Exception as e:
+        import logging as _lg
+        _lg.getLogger(__name__).error("AI insight error: %s", e)
+        return JsonResponse({"error": str(e)}, status=500)
+
+
+# =====================================================
+# 15. AJAX — AI Chat for floating widget
+# =====================================================
+@require_POST
+def ajax_ai_chat(request):
+    """
+    Multi-turn AI chat. Uses real DB course data in the system prompt.
+    Body: { message, history: [{role, content}, ...] }
+    """
+    import json as _json
+    from django.conf import settings as _s
+
+    api_key = getattr(_s, 'OPENAI_API_KEY', '')
+    if not api_key:
+        return JsonResponse({"error": "AI not configured."}, status=400)
+
+    try:
+        body = _json.loads(request.body)
+    except ValueError:
+        return JsonResponse({"error": "Invalid request."}, status=400)
+
+    user_message = body.get("message", "").strip()
+    history      = body.get("history", [])
+
+    if not user_message:
+        return JsonResponse({"error": "Empty message."}, status=400)
+
+    db_context = _build_ai_db_context(request)
+
+    system_prompt = (
+        "You are KUCCPSS AI, a Kenyan KUCCPS career guidance assistant. "
+        "You have access to this student's REAL matched course data from the database:\n\n"
+        f"{db_context}\n\n"
+        "Answer questions using ONLY this real data. Be specific — name actual courses and institutions. "
+        "Keep responses under 100 words. Be warm and address the student as 'you'. "
+        "No bullet points unless listing 3+ items."
+    )
+
+    messages = [{"role": "system", "content": system_prompt}]
+    for turn in history[-6:]:
+        if turn.get("role") in ("user", "assistant") and turn.get("content"):
+            messages.append({"role": turn["role"], "content": turn["content"]})
+    messages.append({"role": "user", "content": user_message})
+
+    try:
+        from openai import OpenAI
+        client = OpenAI(api_key=api_key)
+        resp = client.chat.completions.create(
+            model='gpt-4o-mini',
+            messages=messages,
+            max_tokens=180,
+            temperature=0.7,
+        )
+        reply = resp.choices[0].message.content.strip()
+        return JsonResponse({"reply": reply})
+
+    except Exception as e:
+        import logging as _lg
+        _lg.getLogger(__name__).error("AI chat error: %s", e)
+        return JsonResponse({"error": "AI error, please try again."}, status=500)
 
 
 # ═══════════════════════════════════════════════════════
@@ -487,23 +817,180 @@ COURSE_TYPE_MAP = {
 def _chance_from_diff(diff):
     """Admission chance for cluster points (degree)."""
     if diff >= 5:
-        return 'VERY HIGH', 'success'
+        return 'High Likelihood', 'success'
     if diff >= 0:
-        return 'HIGH', 'primary'
+        return 'Likely', 'success'
     if diff >= -3:
-        return 'MEDIUM', 'warning'
-    return 'LOW', 'danger'
+        return 'Borderline', 'warning'
+    return 'Unlikely', 'danger'
+
+
+def _compute_cluster_points_for_session(pts_by_name):
+    """
+    Compute per-cluster points from a {subject_name: points_int} dict.
+    Returns (cluster_points_dict {str(cluster_id): float}, avg_pts float).
+    Falls back to top-4 single value if SubjectGroups are not seeded.
+    """
+    from math import sqrt as _sqrt2
+    from clusters.models import Cluster
+
+    # Aggregate total: Maths + best language + 5 best remaining
+    working = pts_by_name.copy()
+    agg = []
+    if 'Mathematics' in working:
+        agg.append(working.pop('Mathematics'))
+    lang_scores = {lang: working.pop(lang) for lang in ['English', 'Kiswahili'] if lang in working}
+    if lang_scores:
+        best_lang = max(lang_scores, key=lambda k: lang_scores[k])
+        agg.append(lang_scores[best_lang])
+        for lang, pts in lang_scores.items():
+            if lang != best_lang:
+                working[lang] = pts
+    agg += sorted(working.values(), reverse=True)[:5]
+    aggregate_total = sum(agg)
+
+    clusters = (
+        Cluster.objects
+        .filter(subject_groups__isnull=False)
+        .distinct()
+        .prefetch_related('subject_groups__subjects')
+    )
+    cluster_list = list(clusters)
+
+    if not cluster_list:
+        # SubjectGroups not seeded — fall back to top-4 for all clusters
+        all_pts = sorted(pts_by_name.values(), reverse=True)
+        core_total = min(sum(all_pts[:4]), 48)
+        single = round(48 * _sqrt2((core_total / 48) * (aggregate_total / 84)), 2) if aggregate_total and core_total else 0.0
+        all_ids = list(Cluster.objects.values_list('id', flat=True))
+        return {str(cid): single for cid in all_ids}, single
+
+    cluster_points = {}
+    for cluster in cluster_list:
+        slots = cluster.subject_groups.prefetch_related('subjects').order_by('priority')
+        used_names = set()
+        core_pts = []
+        any_unfilled = False
+
+        for slot in slots:
+            if len(core_pts) >= 4:
+                break
+            best_name, best_val = None, -1
+            for subj in slot.subjects.all():
+                if subj.name not in used_names and subj.name in pts_by_name:
+                    v = pts_by_name[subj.name]
+                    if v > best_val:
+                        best_val, best_name = v, subj.name
+            if best_name:
+                core_pts.append(best_val)
+                used_names.add(best_name)
+            else:
+                core_pts.append(0)
+                any_unfilled = True
+
+        while len(core_pts) < 4:
+            core_pts.append(0)
+
+        raw_core = sum(core_pts[:4])
+        if any_unfilled or raw_core == 0 or aggregate_total == 0:
+            weighted = 0.0
+        else:
+            weighted = round(min(48 * _sqrt2((raw_core / 48) * (aggregate_total / 84)), 48.0), 2)
+
+        # Key by KUCCPS group number (1-20) so career_results can look up
+        # by cluster.kuccps_number regardless of whether the course uses a
+        # sub-cluster (5-65) or a master cluster (66-85).
+        knum = cluster.kuccps_number
+        if knum is not None:
+            cluster_points[str(knum)] = weighted
+
+    avg = round(sum(cluster_points.values()) / len(cluster_points), 2) if cluster_points else 0.0
+    return cluster_points, avg
 
 
 def _chance_from_grade_diff(diff):
     """Admission chance for mean grade comparison (non-degree)."""
     if diff >= 3:
-        return 'VERY HIGH', 'success'
+        return 'High Likelihood', 'success'
     if diff >= 0:
-        return 'HIGH', 'primary'
+        return 'Likely', 'success'
     if diff >= -2:
-        return 'MEDIUM', 'warning'
-    return 'LOW', 'danger'
+        return 'Borderline', 'warning'
+    return 'Unlikely', 'danger'
+
+
+# ── Career config cache (refreshed every 60 s) ───────────────────────────────
+
+class _DefaultCareerCfg:
+    best_match_max_diff  = 3.0
+    stretch_min_diff     = -3.0
+    safe_max_diff        = 8.0
+    competitive_threshold = 40.0
+
+_career_cfg_cache: object = None
+_career_cfg_ts:    float  = 0.0
+
+def _get_career_config() -> _DefaultCareerCfg:
+    global _career_cfg_cache, _career_cfg_ts
+    now = _time.monotonic()
+    if _career_cfg_cache is None or now - _career_cfg_ts > 60:
+        try:
+            from career.models import CareerConfig
+            _career_cfg_cache = CareerConfig.get()
+        except Exception:
+            _career_cfg_cache = _DefaultCareerCfg()
+        _career_cfg_ts = now
+    return _career_cfg_cache  # type: ignore[return-value]
+
+
+# Tier metadata: label → (sort_order, stripe_colour, badge_css, description)
+TIER_META = {
+    'Best Match':     (1, '#059669', 'tier-best',     'Your score is right at or just above the cutoff — ideal fit.'),
+    'Stretch':        (2, '#d97706', 'tier-stretch',  'Slightly below the cutoff — competitive but worth applying.'),
+    'Safe Option':    (3, '#2563eb', 'tier-safe',     'Comfortably above the cutoff — strong chance of admission.'),
+    'Easy Admission': (4, '#64748b', 'tier-easy',     'Well above the cutoff — very high certainty of admission.'),
+    'Long Shot':      (5, '#dc2626', 'tier-longshot', 'Significantly below the cutoff — low probability.'),
+}
+
+
+def _tier_from_diff(diff: float, cfg: _DefaultCareerCfg) -> tuple:
+    """Return (tier_label, tier_order) based on student_score - cutoff."""
+    if diff < cfg.stretch_min_diff:
+        return 'Long Shot', 5
+    if diff < 0:
+        return 'Stretch', 2
+    if diff <= cfg.best_match_max_diff:
+        return 'Best Match', 1
+    if diff <= cfg.safe_max_diff:
+        return 'Safe Option', 3
+    return 'Easy Admission', 4
+
+
+CHANCE_DESC = {
+    'High Likelihood': 'Your score is above the high-end predicted cutoff. Very strong candidate — apply with confidence.',
+    'Likely':          'Your score is above the predicted cutoff. Good chance — include as a top choice.',
+    'Borderline':      'Your score falls within the predicted range. Possible — a strong application matters here.',
+    'Unlikely':        'Your score is below the predicted range. Very competitive — treat as a long-shot only.',
+}
+
+
+def _build_course_url(course) -> str | None:
+    """Build a link to the course detail page. Returns None if URL can't be resolved."""
+    try:
+        if course.category and course.course_type:
+            return reverse('courses:course_detail', kwargs={
+                'type_slug':     course.course_type.slug,
+                'category_slug': course.category.slug,
+                'course_slug':   course.slug,
+            })
+        if course.course_type:
+            return reverse('courses:course_detail_no_category', kwargs={
+                'type_slug':   course.course_type.slug,
+                'course_slug': course.slug,
+            })
+    except (NoReverseMatch, AttributeError):
+        pass
+    return None
 
 
 # ── Grade-band lookup ─────────────────────────
@@ -626,9 +1113,10 @@ def degree_calculate(request):
     if request.method == 'POST' and form.is_valid():
         points_by_id = form.get_points_dict()  # {subject_id: points_int}
 
-        # Build name → points dict
-        subjects = Subject.objects.filter(id__in=points_by_id.keys())
-        pts_by_name = {s.name: points_by_id[s.id] for s in subjects}
+        # Build name → points dict (keep subjects_map for DB persistence below)
+        subjects_qs = Subject.objects.filter(id__in=points_by_id.keys())
+        subjects_map = {s.id: s for s in subjects_qs}
+        pts_by_name = {s.name: points_by_id[s.id] for s in subjects_qs}
 
         # Persist for subject-requirement filtering in results
         request.session['career_subject_grades'] = {k.lower(): v for k, v in pts_by_name.items()}
@@ -648,23 +1136,33 @@ def degree_calculate(request):
         agg += sorted(working.values(), reverse=True)[:5]
         aggregate_total = sum(agg)
 
-        # Cluster points — top-4 fallback (SubjectGroups not yet seeded)
-        all_pts = sorted(pts_by_name.values(), reverse=True)
-        core_total = min(sum(all_pts[:4]), 48)
-        if aggregate_total > 0 and core_total > 0:
-            cluster_pts_single = round(48 * _sqrt((core_total / 48) * (aggregate_total / 84)), 2)
-        else:
-            cluster_pts_single = 0.0
-
-        # Pre-fill every DB cluster with this value
-        cluster_ids = list(Cluster.objects.values_list('id', flat=True))
-        precomputed = {str(cid): cluster_pts_single for cid in cluster_ids}
+        # Per-cluster points using SubjectGroups (same logic as clusterpoints/services.py)
+        precomputed, cluster_pts_single = _compute_cluster_points_for_session(pts_by_name)
 
         request.session['career_pathway'] = 'Degree'
         request.session['career_degree_method'] = 'calculate'
         request.session['career_precomputed'] = precomputed
         request.session['career_aggregate_total'] = aggregate_total
         request.session['career_cluster_pts_single'] = cluster_pts_single
+
+        # Also persist to DB so that Eligible Courses (clusterpoints app) stays in sync
+        if request.user.is_authenticated:
+            from django.db import transaction
+            from django.utils import timezone
+            from clusterpoints.models import UserKCSEResult, SubjectResult
+            from clusterpoints.services import calculate_all_clusters
+            with transaction.atomic():
+                UserKCSEResult.objects.filter(user=request.user).delete()
+                kcse_result = UserKCSEResult.objects.create(
+                    user=request.user, created_at=timezone.now()
+                )
+                SubjectResult.objects.bulk_create([
+                    SubjectResult(kcse_result=kcse_result, subject=subjects_map[sid], points=pts)
+                    for sid, pts in points_by_id.items()
+                    if sid in subjects_map
+                ])
+                kcse_result.recalc_total_points()
+                calculate_all_clusters(kcse_result)
 
         return redirect('career:degree_options')
 
@@ -762,11 +1260,24 @@ def degree_upload(request):
             import base64
             from openai import OpenAI
 
-            # Encode image to base64
             img_bytes = img.read()
-            b64 = base64.b64encode(img_bytes).decode('utf-8')
             mime = img.content_type or 'image/jpeg'
 
+            # PDF → render first page to PNG in memory
+            is_pdf = (
+                mime == 'application/pdf' or
+                img.name.lower().endswith('.pdf')
+            )
+            if is_pdf:
+                import fitz  # PyMuPDF
+                doc = fitz.open(stream=img_bytes, filetype='pdf')
+                page = doc[0]
+                pix = page.get_pixmap(dpi=200)
+                img_bytes = pix.tobytes('png')
+                mime = 'image/png'
+                doc.close()
+
+            b64 = base64.b64encode(img_bytes).decode('utf-8')
             client = OpenAI(api_key=api_key)
 
             prompt = """You are reading a Kenyan KCSE (secondary school) results slip.
@@ -782,7 +1293,7 @@ If you cannot read a grade clearly, omit that subject.
 Return ONLY the JSON object, nothing else."""
 
             response = client.chat.completions.create(
-                model='gpt-4o-mini',
+                model='gpt-4o',
                 messages=[{
                     'role': 'user',
                     'content': [
@@ -867,30 +1378,33 @@ def degree_paste(request):
 
     if request.method == 'POST':
         raw = request.POST.get('cluster_data', '')
-        values = [v.strip() for v in re.split(r'[\s,;]+', raw) if v.strip()]
 
-        try:
-            degree_type = CourseType.objects.filter(name__icontains='Degree').first()
-            if degree_type:
-                relevant_ids = list(
-                    CourseOffering.objects
-                    .filter(course__course_type=degree_type, course__cluster__isnull=False)
-                    .values_list('course__cluster_id', flat=True)
-                    .distinct()
-                )
-                clusters = list(Cluster.objects.filter(id__in=relevant_ids).order_by('number'))
-            else:
-                clusters = list(Cluster.objects.all().order_by('number'))
-        except Exception:
-            clusters = list(Cluster.objects.all().order_by('number'))
+        # Try KUCCPS format: "Cluster N\nVALUE" or "VALUE\tCluster N"
+        named_pairs = re.findall(r'Cluster\s+(\d+)\s+([\d.]+)', raw, re.IGNORECASE)
 
         cluster_points = {}
-        for i, cluster in enumerate(clusters):
+        if named_pairs:
+            # Named format — map directly by cluster number
+            for cnum_str, val_str in named_pairs:
+                try:
+                    val = max(0.0, min(48.0, float(val_str)))
+                    cluster_points[cnum_str] = val
+                except ValueError:
+                    pass
+        else:
+            # Fallback: plain numbers in order, map to clusters sequentially
+            plain_vals = [v.strip() for v in re.split(r'[\s,;]+', raw) if v.strip()]
             try:
-                val = max(0.0, min(48.0, float(values[i]))) if i < len(values) else 0.0
-            except (ValueError, TypeError):
-                val = 0.0
-            cluster_points[str(cluster.id)] = val
+                clusters = list(Cluster.objects.all().order_by('number'))
+            except Exception:
+                clusters = []
+            for i, cluster in enumerate(clusters):
+                try:
+                    val = max(0.0, min(48.0, float(plain_vals[i]))) if i < len(plain_vals) else 0.0
+                except (ValueError, TypeError):
+                    val = 0.0
+                if cluster.kuccps_number is not None:
+                    cluster_points[str(cluster.kuccps_number)] = val
 
         valid_vals = [v for v in cluster_points.values() if v > 0]
         if valid_vals:
@@ -901,7 +1415,7 @@ def degree_paste(request):
             request.session['career_cluster_pts_single'] = single
             return redirect('career:loading_page', pathway='degree')
 
-        messages.error(request, 'No valid cluster points found. Please enter numeric values (e.g. 32.5 28.0 ...).')
+        messages.error(request, 'No valid cluster points found. Paste your KUCCPS cluster results and try again.')
 
     return render(request, 'career/degree_paste.html')
 
@@ -913,22 +1427,15 @@ def degree_paste(request):
 def degree_manual(request):
     import re as _re
     from clusters.models import Cluster
-    from courses.models import CourseOffering, CourseType
 
-    try:
-        degree_type = CourseType.objects.filter(name__icontains='Degree').first()
-        if degree_type:
-            relevant_ids = list(
-                CourseOffering.objects
-                .filter(course__course_type=degree_type, course__cluster__isnull=False)
-                .values_list('course__cluster_id', flat=True)
-                .distinct()
-            )
-            all_clusters = list(Cluster.objects.filter(id__in=relevant_ids).order_by('number'))
-        else:
-            all_clusters = list(Cluster.objects.all().order_by('number'))
-    except Exception:
-        all_clusters = list(Cluster.objects.all().order_by('number'))
+    # Only the ~20 master clusters that have SubjectGroups defined —
+    # these are exactly what the KUCCPS formula uses for degree matching.
+    all_clusters = list(
+        Cluster.objects
+        .filter(subject_groups__isnull=False)
+        .distinct()
+        .order_by('number')
+    )
 
     # Group sub-clusters (e.g. 1A, 1B, 2A...) into 20 main KUCCPS groups
     _grouped = {}
@@ -961,10 +1468,12 @@ def degree_manual(request):
             try:
                 val = max(0.0, min(48.0, float(raw)))
             except (ValueError, TypeError):
-                first_id = str(grp['subs'][0].id) if grp['subs'] else None
-                val = float(precomputed.get(first_id, 0)) if first_id else 0.0
-            for c in grp['subs']:
-                cluster_points[str(c.id)] = val
+                # Fall back to precomputed value keyed by KUCCPS group number
+                knum = grp['main_num']
+                val = float(precomputed.get(str(knum), 0)) if knum is not None else 0.0
+            # Store by KUCCPS group number (1-20) — matches career_results lookup
+            if grp['main_num'] is not None:
+                cluster_points[str(grp['main_num'])] = val
 
         request.session['career_pathway'] = 'Degree'
         request.session['career_degree_method'] = request.session.get('career_degree_method', 'manual')
@@ -991,7 +1500,7 @@ def pathway_input(request, pathway):
     if not pathway_label:
         return redirect('career:home')
 
-    use_kcse_form = pathway.lower() in ('diploma', 'certificate')
+    use_kcse_form = pathway.lower() in ('diploma', 'certificate', 'kmtc')
 
     if request.method == 'POST':
         request.session['career_pathway'] = pathway_label
@@ -1029,7 +1538,24 @@ def pathway_input(request, pathway):
             request.session['career_mean_grade'] = request.POST.get('mean_grade', '').strip()
             return redirect('career:loading_page', pathway=pathway.lower())
     else:
-        form = KCSEForm() if use_kcse_form else None
+        if use_kcse_form and request.GET.get('edit'):
+            # Pre-populate form from stored session grades
+            from clusters.models import Subject as _EditSubj
+            stored = request.session.get('career_subject_grades', {})
+            if stored:
+                name_to_id = {s.name.lower(): s.id for s in _EditSubj.objects.all()}
+                initial = {
+                    f'subject_{name_to_id[name]}': pts
+                    for name, pts in stored.items()
+                    if name in name_to_id
+                }
+                form = KCSEForm(initial=initial)
+            else:
+                form = KCSEForm()
+        else:
+            form = KCSEForm() if use_kcse_form else None
+
+    current_mean_grade = request.session.get('career_mean_grade', '') if request.GET.get('edit') else ''
 
     # Build pill-button context for diploma/certificate grade entry
     compulsory_fields, optional_groups = [], []
@@ -1077,6 +1603,8 @@ def pathway_input(request, pathway):
         'form': form,
         'compulsory_fields': compulsory_fields,
         'optional_groups': optional_groups,
+        'current_mean_grade': current_mean_grade,
+        'is_edit': bool(request.GET.get('edit')),
     })
 
 
@@ -1096,16 +1624,37 @@ def loading_page(request, pathway):
 # ─────────────────────────────────────────────
 def career_results(request):
     from courses.models import CourseOffering, CourseType
+    from predictor.services import predict_cutoff as _predict_cutoff, TREND_ICON, TREND_COLOR, TREND_TIP
 
-    pathway = request.session.get('career_pathway', '')
-    filter_chance = request.GET.get('chance', '')
-    search_q = request.GET.get('q', '').strip()
-    sort_by = request.GET.get('sort', 'chance')
+    pathway             = request.session.get('career_pathway', '')
+    filter_chance       = request.GET.get('chance', '')
+    filter_tier         = request.GET.get('tier', '')
+    search_q            = request.GET.get('q', '').strip()
+    sort_by             = request.GET.get('sort', 'tier')
 
-    matches = []
-    cluster_pts_single = float(request.session.get('career_cluster_pts_single', 0) or 0)
-    mean_grade = request.session.get('career_mean_grade', '')
-    subject_grades = request.session.get('career_subject_grades', {})  # {lower_name: points_int}
+    if not pathway:
+        messages.info(request, "Your session has expired. Please start the Career Engine again.")
+        return redirect('career:home')
+
+    cfg = _get_career_config()
+
+    matches             = []
+    cluster_pts_single  = float(request.session.get('career_cluster_pts_single', 0) or 0)
+    mean_grade          = request.session.get('career_mean_grade', '')
+    subject_grades      = request.session.get('career_subject_grades', {})
+    cluster_points_dict = {}
+
+    def _enrich_pred(offering):
+        """Return prediction dict with trend decorators, or None."""
+        try:
+            p = _predict_cutoff(getattr(offering, 'cutoff_points', None))
+            if p:
+                p['trend_icon']  = TREND_ICON[p['trend']]
+                p['trend_color'] = TREND_COLOR[p['trend']]
+                p['trend_tip']   = TREND_TIP[p['trend']]
+            return p
+        except Exception:
+            return None
 
     if pathway == 'Degree':
         cluster_points_dict = request.session.get('career_cluster_points', {})
@@ -1129,38 +1678,50 @@ def career_results(request):
                 if cutoff is None:
                     continue
 
-                # Skip courses whose subject requirements the student doesn't meet
                 if subject_grades and offering.course.subject_requirements:
                     if not _meets_subject_requirements(offering.course.subject_requirements, subject_grades):
                         continue
 
-                cluster = offering.course.cluster
+                cluster     = offering.course.cluster
                 if cluster and cluster_points_dict:
-                    student_pts = float(cluster_points_dict.get(str(cluster.id), cluster_pts_single))
+                    knum        = cluster.kuccps_number
+                    student_pts = float(cluster_points_dict.get(str(knum), cluster_pts_single)) if knum else cluster_pts_single
                 else:
                     student_pts = cluster_pts_single
+                diff        = round(student_pts - float(cutoff), 2)
 
-                diff = round(student_pts - float(cutoff), 2)
-                chance, badge = _chance_from_diff(diff)
+                chance, badge    = _chance_from_diff(diff)
+                tier, tier_order = _tier_from_diff(diff, cfg)
 
                 if filter_chance and chance != filter_chance:
                     continue
+                if filter_tier and tier != filter_tier:
+                    continue
 
                 matches.append({
-                    'offering': offering,
-                    'course': offering.course,
-                    'institution': offering.institution,
-                    'cluster': cluster,
-                    'cutoff': cutoff,
+                    'offering':       offering,
+                    'course':         offering.course,
+                    'institution':    offering.institution,
+                    'cluster':        cluster,
+                    'cutoff':         cutoff,
                     'student_points': round(student_pts, 1),
-                    'diff': diff,
-                    'chance': chance,
-                    'badge': badge,
+                    'diff':           diff,
+                    'chance':         chance,
+                    'chance_desc':    CHANCE_DESC.get(chance, ''),
+                    'badge':          badge,
+                    'tier':           tier,
+                    'tier_order':     tier_order,
+                    'tier_color':     TIER_META[tier][1],
+                    'tier_css':       TIER_META[tier][2],
+                    'tier_desc':      TIER_META[tier][3],
+                    'pred':           _enrich_pred(offering),
+                    'is_competitive': float(cutoff) >= cfg.competitive_threshold,
+                    'course_url':     _build_course_url(offering.course),
                 })
 
     else:
         student_pts = GRADE_POINTS.get(mean_grade, 0)
-        type_names = COURSE_TYPE_MAP.get(pathway, [])
+        type_names  = COURSE_TYPE_MAP.get(pathway, [])
 
         if type_names:
             qs = (
@@ -1174,53 +1735,1034 @@ def career_results(request):
             if search_q:
                 qs = qs.filter(course__name__icontains=search_q)
 
+            # County filter — narrow to preferred campus locations
+            _counties = request.session.get('career_counties', [])
+            if _counties:
+                from django.db.models import Q as _Q
+                _cq = _Q()
+                for _cn in _counties:
+                    _cq |= _Q(institution__location__icontains=_cn)
+                qs = qs.filter(_cq)
+
+            # Category filter — narrow to preferred programme areas
+            _categories = request.session.get('career_categories', [])
+            if _categories:
+                qs = qs.filter(course__category__name__in=_categories)
+
             default_min = PATHWAY_DEFAULT_MIN_GRADE.get(pathway, 'E')
             for offering in qs:
-                course = offering.course
+                course    = offering.course
 
-                # Skip courses whose subject requirements the student doesn't meet
+                # Layer 1a: subject requirements (Diploma/Certificate only — KMTC/TTC enter mean grade only)
                 if subject_grades and course.subject_requirements:
                     if not _meets_subject_requirements(course.subject_requirements, subject_grades):
                         continue
 
                 min_grade = (course.minimum_mean_grade or '').strip() or default_min
-                min_pts = GRADE_POINTS.get(min_grade, 0)
-                diff = student_pts - min_pts
-                chance, badge = _chance_from_grade_diff(diff)
+                min_pts   = GRADE_POINTS.get(min_grade, 0)
+                diff      = student_pts - min_pts
+
+                # Layer 1b: hard grade filter — student must meet the minimum mean grade
+                if diff < 0:
+                    continue
+
+                chance, badge    = _chance_from_grade_diff(diff)
+                tier, tier_order = _tier_from_diff(diff, cfg)
+
+                # Layer 3: qualification label for display/PDF
+                if diff == 0:
+                    qual_label = 'Meets Minimum'
+                elif diff <= 2:
+                    qual_label = 'Comfortably Qualifies'
+                else:
+                    qual_label = 'Strongly Qualifies'
 
                 if filter_chance and chance != filter_chance:
                     continue
+                if filter_tier and tier != filter_tier:
+                    continue
 
                 matches.append({
-                    'offering': offering,
-                    'course': course,
-                    'institution': offering.institution,
-                    'cluster': None,
-                    'cutoff': min_grade or '—',
-                    'student_points': mean_grade,
-                    'diff': diff,
-                    'chance': chance,
-                    'badge': badge,
+                    'offering':        offering,
+                    'course':          course,
+                    'institution':     offering.institution,
+                    'cluster':         None,
+                    'cutoff':          min_grade or '—',
+                    'min_pts':         min_pts,
+                    'student_points':  mean_grade,
+                    'diff':            diff,
+                    'chance':          chance,
+                    'chance_desc':     CHANCE_DESC.get(chance, ''),
+                    'badge':           badge,
+                    'tier':            tier,
+                    'tier_order':      tier_order,
+                    'tier_color':      TIER_META[tier][1],
+                    'tier_css':        TIER_META[tier][2],
+                    'tier_desc':       TIER_META[tier][3],
+                    'qual_label':      qual_label,
+                    'pred':            None,
+                    'is_competitive':  False,
+                    'course_url':      _build_course_url(course),
+                    'has_specific_min': bool((course.minimum_mean_grade or '').strip()),
                 })
 
-    _CHANCE_ORDER = {'VERY HIGH': 0, 'HIGH': 1, 'MEDIUM': 2, 'LOW': 3}
-    if sort_by == 'chance':
-        matches.sort(key=lambda m: (_CHANCE_ORDER.get(m['chance'], 4), -m.get('diff', 0)))
-    elif sort_by == 'institution':
-        matches.sort(key=lambda m: m['institution'].name)
-    elif sort_by == 'course':
-        matches.sort(key=lambda m: m['course'].name)
+    if pathway == 'Degree':
+        if sort_by == 'tier':
+            def _tier_key(m):
+                cutoff_val = (
+                    float(m['cutoff'])
+                    if isinstance(m['cutoff'], (int, float))
+                    else GRADE_POINTS.get(str(m['cutoff']).strip(), 0)
+                )
+                if m['tier_order'] == 1:
+                    return (m['tier_order'], -cutoff_val)
+                return (m['tier_order'], abs(m['diff']))
+            matches.sort(key=_tier_key)
+        elif sort_by == 'chance':
+            _CHANCE_ORDER = {'High Likelihood': 0, 'Likely': 1, 'Borderline': 2, 'Unlikely': 3}
+            matches.sort(key=lambda m: (_CHANCE_ORDER.get(m['chance'], 4), abs(m['diff'])))
+        elif sort_by == 'institution':
+            matches.sort(key=lambda m: m['institution'].name)
+        elif sort_by == 'course':
+            matches.sort(key=lambda m: m['course'].name)
+    else:
+        # Non-degree: default sort by required grade descending (most selective first),
+        # then by student margin, then alphabetically — gives meaningful ordering even
+        # when all courses share the same pathway-default minimum.
+        if sort_by in ('tier', 'chance'):
+            matches.sort(key=lambda m: (-m.get('min_pts', 0), -m['diff'], m['course'].name))
+        elif sort_by == 'institution':
+            matches.sort(key=lambda m: (m['institution'].name, -m.get('min_pts', 0)))
+        elif sort_by == 'course':
+            matches.sort(key=lambda m: m['course'].name)
+
+    tier_counts = {}
+    for m in matches:
+        key = m['tier'].replace(' ', '')
+        tier_counts[key] = tier_counts.get(key, 0) + 1
+
+    # ── Persist snapshot for logged-in users (powers Personalised Dashboard) ──
+    if request.user.is_authenticated and matches and not filter_tier and not filter_chance and not search_q:
+        try:
+            from accounts.models import CareerSessionSnapshot
+            sorted_top = sorted(matches, key=lambda m: (m['tier_order'], abs(m['diff'])))[:10]
+            top_json = [{
+                'course_id':        _m['offering'].course.id,
+                'offering_id':      _m['offering'].id,
+                'course_name':      _m['course'].name,
+                'institution_name': _m['institution'].name,
+                'tier':             _m['tier'],
+                'tier_css':         _m['tier_css'],
+                'tier_color':       _m['tier_color'],
+                'diff':             _m['diff'],
+                'chance':           _m['chance'],
+                'cutoff':           _m['cutoff'],
+                'student_pts':      float(_m['student_points']) if isinstance(_m['student_points'], (int, float)) else 0,
+                'kuccps_num':       _m['cluster'].kuccps_number if _m['cluster'] else None,
+                'cluster_name':     _m['cluster'].name if _m['cluster'] else '',
+            } for _m in sorted_top]
+            CareerSessionSnapshot.objects.filter(
+                user=request.user, pathway=pathway
+            ).delete()
+            CareerSessionSnapshot.objects.create(
+                user=request.user,
+                pathway=pathway,
+                cluster_points_json=cluster_points_dict,
+                mean_grade=mean_grade,
+                aggregate_score=cluster_pts_single,
+                total_matches=len(matches),
+                tier_counts_json=tier_counts,
+                top_matches_json=top_json,
+            )
+        except Exception:
+            pass  # never let snapshot saving break the results page
+
+    from analytics.utils import log_career_engine
+    log_career_engine(request, pathway=pathway, result_count=len(matches), mean_grade=mean_grade)
+
+    # ── Backup Plan (Degree only, no active filters) ──────────────────────────
+    backup_plan = []
+    if pathway == 'Degree' and not filter_chance and not filter_tier and not search_q:
+        from collections import defaultdict
+
+        qual_matches   = [m for m in matches if m['diff'] >= 0]
+        missed_matches = [m for m in matches if m['diff'] < -1]  # meaningfully below cutoff
+
+        if missed_matches and qual_matches:
+            qual_by_cluster = defaultdict(list)
+            for m in qual_matches:
+                if m['cluster']:
+                    qual_by_cluster[m['cluster'].id].append(m)
+
+            seen = set()
+            for m in missed_matches:
+                if not m['cluster']:
+                    continue
+                cid = m['cluster'].id
+                if cid in seen:
+                    continue
+                seen.add(cid)
+
+                alts = qual_by_cluster.get(cid, [])
+                if not alts:
+                    continue
+
+                # aspiration = the missed course closest to qualifying in this cluster
+                cluster_missed = [x for x in missed_matches if x['cluster'] and x['cluster'].id == cid]
+                aspiration     = max(cluster_missed, key=lambda x: x['diff'])
+
+                # show up to 3 qualifying alternatives, closest cutoff first
+                alts_sorted = sorted(alts, key=lambda a: a['diff'])[:3]
+
+                backup_plan.append({
+                    'cluster':    m['cluster'],
+                    'aspiration': aspiration,
+                    'alts':       alts_sorted,
+                    'gap':        abs(round(aspiration['diff'], 1)),
+                })
+
+            # show clusters with smallest gap first (most "reachable" aspirations)
+            backup_plan.sort(key=lambda p: p['gap'])
+            backup_plan = backup_plan[:4]  # cap at 4 cluster cards
+
+    saved_ids: set = set()
+    if request.user.is_authenticated:
+        try:
+            from accounts.models import SavedCourse
+            saved_ids = set(SavedCourse.objects.filter(user=request.user).values_list('course_id', flat=True))
+        except Exception:
+            pass
 
     paginator = Paginator(matches, 20)
-    page_obj = paginator.get_page(request.GET.get('page', 1))
+    page_obj  = paginator.get_page(request.GET.get('page', 1))
+
+    _LABEL_TO_SLUG = {v: k for k, v in PATHWAY_SLUG_TO_LABEL.items()}
+    _pathway_slug  = _LABEL_TO_SLUG.get(pathway, pathway.lower())
+    if pathway == 'Degree':
+        _edit_url = reverse('career:degree_calculate')
+    elif _pathway_slug:
+        _edit_url = reverse('career:pathway_input', kwargs={'pathway': _pathway_slug}) + '?edit=1'
+    else:
+        _edit_url = reverse('career:home')
 
     return render(request, 'career/career_results_v2.html', {
-        'page_obj': page_obj,
-        'pathway': pathway,
-        'total_count': len(matches),
-        'filter_chance': filter_chance,
-        'search_q': search_q,
-        'sort_by': sort_by,
-        'mean_grade': mean_grade,
-        'cluster_pts_single': cluster_pts_single,
+        'page_obj':            page_obj,
+        'pathway':             pathway,
+        'total_count':         len(matches),
+        'filter_chance':       filter_chance,
+        'filter_tier':         filter_tier,
+        'search_q':            search_q,
+        'sort_by':             sort_by,
+        'mean_grade':          mean_grade,
+        'cluster_pts_single':  cluster_pts_single,
+        'best_cluster_pts':    max(cluster_points_dict.values(), default=cluster_pts_single) if cluster_points_dict else cluster_pts_single,
+        'tier_counts':         tier_counts,
+        'tier_meta':           TIER_META,
+        'has_per_cluster':     bool(cluster_points_dict),
+        'saved_ids':           list(saved_ids),
+        'backup_plan':         backup_plan,
+        'edit_url':            _edit_url,
+        'clear_url':           reverse('career:clear_session'),
     })
+
+
+# ─────────────────────────────────────────────
+# H1. CLEAR CAREER SESSION
+# ─────────────────────────────────────────────
+def clear_session(request):
+    """Wipe all career engine session keys and restart from home."""
+    for key in list(request.session.keys()):
+        if key.startswith('career_'):
+            del request.session[key]
+    return redirect('career:home')
+
+
+# ─────────────────────────────────────────────
+# H. CAREER PDF DOWNLOADS
+# ─────────────────────────────────────────────
+
+def _build_career_matches(request):
+    """
+    Build all career course matches from session data (shared by both PDF views).
+    Returns (matches, pathway, cluster_pts_single, mean_grade, cluster_points_dict).
+    """
+    from courses.models import CourseOffering, CourseType
+    from predictor.services import predict_cutoff as _predict_cutoff, TREND_ICON, TREND_COLOR, TREND_TIP
+
+    pathway             = request.session.get('career_pathway', '')
+    cluster_pts_single  = float(request.session.get('career_cluster_pts_single', 0) or 0)
+    mean_grade          = request.session.get('career_mean_grade', '')
+    subject_grades      = request.session.get('career_subject_grades', {})
+    cluster_points_dict = {}
+    matches             = []
+    cfg                 = _get_career_config()
+
+    def _enrich_pred(offering):
+        try:
+            p = _predict_cutoff(getattr(offering, 'cutoff_points', None))
+            if p:
+                p['trend_icon']  = TREND_ICON[p['trend']]
+                p['trend_color'] = TREND_COLOR[p['trend']]
+                p['trend_tip']   = TREND_TIP[p['trend']]
+            return p
+        except Exception:
+            return None
+
+    if pathway == 'Degree':
+        cluster_points_dict = request.session.get('career_cluster_points', {})
+        degree_type = CourseType.objects.filter(name__icontains='Degree').first()
+        if degree_type:
+            qs = (
+                CourseOffering.objects
+                .filter(course__course_type=degree_type)
+                .select_related(
+                    'course', 'course__cluster', 'course__category', 'course__course_type',
+                    'institution', 'institution__institution_type',
+                )
+                .exclude(cutoff_points__isnull=True)
+            )
+            for offering in qs:
+                cutoff = offering.latest_cutoff()
+                if cutoff is None:
+                    continue
+                if subject_grades and offering.course.subject_requirements:
+                    if not _meets_subject_requirements(offering.course.subject_requirements, subject_grades):
+                        continue
+                cluster     = offering.course.cluster
+                if cluster and cluster_points_dict:
+                    knum        = cluster.kuccps_number
+                    student_pts = float(cluster_points_dict.get(str(knum), cluster_pts_single)) if knum else cluster_pts_single
+                else:
+                    student_pts = cluster_pts_single
+                diff        = round(student_pts - float(cutoff), 2)
+                chance, badge    = _chance_from_diff(diff)
+                tier, tier_order = _tier_from_diff(diff, cfg)
+                matches.append({
+                    'course':         offering.course,
+                    'institution':    offering.institution,
+                    'cluster':        cluster,
+                    'cutoff':         cutoff,
+                    'student_points': round(student_pts, 1),
+                    'diff':           diff,
+                    'chance':         chance,
+                    'tier':           tier,
+                    'tier_order':     tier_order,
+                    'pred':           _enrich_pred(offering),
+                    'is_competitive': float(cutoff) >= cfg.competitive_threshold,
+                })
+    else:
+        student_pts_val = GRADE_POINTS.get(mean_grade, 0)
+        type_names      = COURSE_TYPE_MAP.get(pathway, [])
+        if type_names:
+            qs = (
+                CourseOffering.objects
+                .filter(course__course_type__name__in=type_names)
+                .select_related(
+                    'course', 'course__course_type', 'course__category',
+                    'institution', 'institution__institution_type',
+                )
+            )
+            # County filter
+            _counties = request.session.get('career_counties', [])
+            if _counties:
+                from django.db.models import Q as _Q2
+                _cq2 = _Q2()
+                for _cn2 in _counties:
+                    _cq2 |= _Q2(institution__location__icontains=_cn2)
+                qs = qs.filter(_cq2)
+            # Category filter
+            _categories = request.session.get('career_categories', [])
+            if _categories:
+                qs = qs.filter(course__category__name__in=_categories)
+
+            default_min = PATHWAY_DEFAULT_MIN_GRADE.get(pathway, 'E')
+            for offering in qs:
+                course = offering.course
+                if subject_grades and course.subject_requirements:
+                    if not _meets_subject_requirements(course.subject_requirements, subject_grades):
+                        continue
+                min_grade = (course.minimum_mean_grade or '').strip() or default_min
+                min_pts   = GRADE_POINTS.get(min_grade, 0)
+                diff      = student_pts_val - min_pts
+                if diff < 0:
+                    continue
+                chance, badge    = _chance_from_grade_diff(diff)
+                tier, tier_order = _tier_from_diff(diff, cfg)
+                if diff == 0:
+                    qual_label = 'Meets Minimum'
+                elif diff <= 2:
+                    qual_label = 'Comfortably Qualifies'
+                else:
+                    qual_label = 'Strongly Qualifies'
+                matches.append({
+                    'course':         course,
+                    'institution':    offering.institution,
+                    'cluster':        None,
+                    'cutoff':         min_grade or '—',
+                    'student_points': mean_grade,
+                    'diff':           diff,
+                    'chance':         chance,
+                    'tier':           tier,
+                    'tier_order':     tier_order,
+                    'qual_label':     qual_label,
+                    'pred':           None,
+                    'is_competitive': False,
+                })
+
+    if pathway == 'Degree':
+        matches.sort(key=lambda m: (m['tier_order'], abs(m['diff'])))
+    else:
+        matches.sort(key=lambda m: (-m['diff'], m['course'].name))
+
+    # Build 20-group KUCCPS cluster score table for PDF display.
+    # career_cluster_points is now keyed by KUCCPS group number (1-20 as strings).
+    cluster_score_table = []   # list of (kuccps_num, group_name, score)
+    if pathway == 'Degree' and cluster_points_dict:
+        from clusters.models import Cluster as _Cluster
+        import re as _re2
+        # Build a name lookup: kuccps_num → clean group name
+        # Use sub-clusters (numbered 1-99 in DB) to get official KUCCPS group names
+        knum_to_name = {}
+        for cl in _Cluster.objects.filter(number__lt=100).exclude(number__isnull=True):
+            kn = cl.kuccps_number
+            if kn and kn not in knum_to_name:
+                clean = _re2.sub(r'\s*\(\d+[A-Za-z]*\)\s*$', '', cl.name).strip()
+                knum_to_name[kn] = clean
+        # Fallback names from master clusters if sub-cluster name not found
+        for cl in _Cluster.objects.filter(number__gte=100):
+            kn = cl.kuccps_number
+            if kn and kn not in knum_to_name:
+                knum_to_name[kn] = cl.name
+
+        for kn_str, score in sorted(cluster_points_dict.items(), key=lambda x: int(x[0]) if x[0].isdigit() else 999):
+            try:
+                knum = int(kn_str)
+            except ValueError:
+                continue
+            name  = knum_to_name.get(knum, f'Cluster {knum}')
+            cluster_score_table.append((knum, name, round(float(score), 1)))
+
+    return matches, pathway, cluster_pts_single, mean_grade, cluster_points_dict, cluster_score_table
+
+
+def career_results_pdf_quick(request):
+    """Quick summary PDF — compact landscape table of all course matches."""
+    from reportlab.pdfgen import canvas
+    from reportlab.lib.pagesizes import A4, landscape
+    from reportlab.lib.units import cm
+    from reportlab.lib import colors
+    from django.http import HttpResponse
+    from django.utils import timezone
+
+    matches, pathway, cluster_pts_single, mean_grade, _, cluster_score_table = _build_career_matches(request)
+    if not matches:
+        return HttpResponse(
+            "No career matches found. Please run the career guidance tool first.",
+            status=400,
+        )
+
+    numeric_pts = [m['student_points'] for m in matches if isinstance(m['student_points'], (int, float))]
+    best_pts    = max(numeric_pts, default=cluster_pts_single) if pathway == 'Degree' else None
+
+    response = HttpResponse(content_type="application/pdf")
+    response["Content-Disposition"] = 'attachment; filename="kuccpss_career_matches.pdf"'
+
+    c = canvas.Canvas(response, pagesize=landscape(A4))
+    W, H = landscape(A4)
+
+    NAVY  = colors.HexColor("#1e3a8a")
+    SLATE = colors.HexColor("#64748b")
+    LIGHT = colors.HexColor("#f1f5f9")
+
+    TIER_COLORS = {
+        'Best Match':     colors.HexColor("#059669"),
+        'Stretch':        colors.HexColor("#d97706"),
+        'Safe Option':    colors.HexColor("#2563eb"),
+        'Easy Admission': colors.HexColor("#64748b"),
+        'Long Shot':      colors.HexColor("#dc2626"),
+    }
+    CHANCE_COLORS = {
+        'High Likelihood': colors.HexColor("#16a34a"),
+        'Likely':          colors.HexColor("#059669"),
+        'Borderline':      colors.HexColor("#f97316"),
+        'Unlikely':        colors.HexColor("#dc2626"),
+    }
+
+    page_num = [0]
+
+    def new_page():
+        page_num[0] += 1
+        if page_num[0] > 1:
+            c.showPage()
+        c.setFillColor(NAVY)
+        c.rect(0, H - 1.5*cm, W, 1.5*cm, fill=1, stroke=0)
+        c.setFillColor(colors.white)
+        c.setFont("Helvetica-Bold", 12)
+        c.drawString(1.5*cm, H - 0.95*cm, "KUCCPSS — Career Course Matches Summary")
+        c.setFont("Helvetica", 9)
+        c.drawRightString(W - 1.5*cm, H - 0.95*cm, f"Page {page_num[0]}")
+        c.setFont("Helvetica-Oblique", 7)
+        c.setFillColor(SLATE)
+        c.drawCentredString(W / 2, 0.45*cm,
+            "For guidance only. Verify all cutoffs on the official KUCCPS portal (kuccps.net) before applying.")
+        c.setFillColor(colors.black)
+        return H - 1.9*cm
+
+    y = new_page()
+
+    # Profile line
+    score_txt = f"Your Score: {best_pts:.1f} / 48 pts" if best_pts is not None else f"Mean Grade: {mean_grade}"
+    c.setFont("Helvetica-Bold", 9)
+    c.setFillColor(NAVY)
+    c.drawString(1.5*cm, y, f"Pathway: {pathway}   |   {score_txt}   |   Total Matches: {len(matches)}")
+    y -= 0.45*cm
+    c.setFont("Helvetica", 8)
+    c.setFillColor(SLATE)
+    c.drawString(1.5*cm, y, f"Generated: {timezone.now().strftime('%d %B %Y %H:%M')}")
+    y -= 0.65*cm
+
+    if pathway == 'Degree':
+        # ── Degree: cluster scores mini-table ────────────────────────────────
+        if cluster_score_table:
+            c.setFont("Helvetica-Bold", 8)
+            c.setFillColor(NAVY)
+            c.drawString(1.5*cm, y, "YOUR CLUSTER SCORES (KUCCPS Groups 1–20, out of 48 pts)")
+            y -= 0.4*cm
+            col_w = (W - 3*cm) / 4
+            GREEN = colors.HexColor("#16a34a")
+            for i, (knum, gname, score) in enumerate(cluster_score_table):
+                col = i % 4
+                if col == 0 and i > 0:
+                    y -= 0.5*cm
+                x = 1.5*cm + col * col_w
+                bar_max = col_w - 1.4*cm
+                bar_w   = (score / 48.0) * bar_max if score else 0
+                bar_col = GREEN if score >= 36 else (NAVY if score >= 24 else colors.HexColor("#f97316"))
+                c.setFillColor(LIGHT)
+                c.rect(x + 1.05*cm, y - 0.28*cm, bar_max, 0.16*cm, fill=1, stroke=0)
+                c.setFillColor(bar_col)
+                c.rect(x + 1.05*cm, y - 0.28*cm, bar_w, 0.16*cm, fill=1, stroke=0)
+                c.setFont("Helvetica", 7.5)
+                c.setFillColor(colors.black)
+                c.drawString(x, y, f"C{knum}: {score:.1f}")
+            y -= 0.65*cm
+        elif best_pts:
+            c.setFont("Helvetica", 8)
+            c.setFillColor(SLATE)
+            c.drawString(1.5*cm, y, f"Single score {best_pts:.1f} pts applied to all clusters")
+            y -= 0.45*cm
+
+        y -= 0.25*cm
+
+        COL = {
+            'course':  1.6*cm, 'inst': 9.8*cm, 'cluster': 16.0*cm,
+            'tier': 17.8*cm, 'chance': 21.0*cm, 'cutoff': 24.5*cm,
+            'pred': 26.3*cm, 'diff': 28.1*cm,
+        }
+
+        def draw_headers():
+            nonlocal y
+            c.setFont("Helvetica-Bold", 7.5)
+            c.setFillColor(SLATE)
+            c.drawString(COL['course'],  y, "COURSE")
+            c.drawString(COL['inst'],    y, "INSTITUTION")
+            c.drawString(COL['cluster'], y, "CLUST")
+            c.drawString(COL['tier'],    y, "TIER")
+            c.drawString(COL['chance'],  y, "LIKELIHOOD")
+            c.drawString(COL['cutoff'],  y, "CUTOFF")
+            c.drawString(COL['pred'],    y, "EST 2026")
+            c.drawString(COL['diff'],    y, "DIFF")
+            y -= 0.1*cm
+            c.setStrokeColor(colors.HexColor("#cbd5e1"))
+            c.line(1.5*cm, y, W - 1.5*cm, y)
+            y -= 0.4*cm
+            c.setFillColor(colors.black)
+
+        draw_headers()
+
+        for i, m in enumerate(matches):
+            if y < 2.0*cm:
+                y = new_page()
+                draw_headers()
+            if i % 2 == 0:
+                c.setFillColor(LIGHT)
+                c.rect(1.5*cm, y - 0.22*cm, W - 3*cm, 0.36*cm, fill=1, stroke=0)
+            c.setFont("Helvetica", 7.5)
+            c.setFillColor(colors.black)
+            course_name = m['course'].name
+            if len(course_name) > 44:
+                course_name = course_name[:42] + '…'
+            c.drawString(COL['course'], y, course_name)
+            inst_name = m['institution'].name
+            if len(inst_name) > 30:
+                inst_name = inst_name[:28] + '…'
+            c.drawString(COL['inst'], y, inst_name)
+            knum = m['cluster'].kuccps_number if m['cluster'] else None
+            c.drawString(COL['cluster'], y, f"C{knum}" if knum else '—')
+            c.setFillColor(TIER_COLORS.get(m['tier'], colors.grey))
+            c.setFont("Helvetica-Bold", 7.5)
+            c.drawString(COL['tier'], y, m['tier'][:14])
+            c.setFillColor(CHANCE_COLORS.get(m['chance'], colors.grey))
+            chance_abbr = {'High Likelihood': 'High Like.', 'Likely': 'Likely',
+                           'Borderline': 'Borderline', 'Unlikely': 'Unlikely'}.get(m['chance'], m['chance'])
+            c.drawString(COL['chance'], y, chance_abbr)
+            c.setFont("Helvetica", 7.5)
+            c.setFillColor(colors.black)
+            c.drawString(COL['cutoff'], y, str(m['cutoff'])[:6])
+            pred = m.get('pred')
+            c.drawString(COL['pred'], y, f"{pred['predicted']:.1f}" if pred else '—')
+            diff_val = m['diff']
+            diff_str = f"+{diff_val:.1f}" if diff_val >= 0 else f"{diff_val:.1f}"
+            c.setFillColor(colors.HexColor("#15803d") if diff_val >= 0 else colors.HexColor("#dc2626"))
+            c.setFont("Helvetica-Bold", 7.5)
+            c.drawString(COL['diff'], y, diff_str)
+            y -= 0.41*cm
+
+    else:
+        # ── Non-degree: columns suited to KMTC / TTC / Diploma / Certificate ──
+        y -= 0.25*cm
+
+        COL_ND = {
+            'course':    1.6*cm,
+            'inst':      9.0*cm,
+            'location':  17.0*cm,
+            'category':  20.5*cm,
+            'chance':    24.0*cm,
+            'min_grade': 26.5*cm,
+            'qual':      27.8*cm,
+        }
+
+        def draw_headers_nd():
+            nonlocal y
+            c.setFont("Helvetica-Bold", 7.5)
+            c.setFillColor(SLATE)
+            c.drawString(COL_ND['course'],    y, "COURSE / PROGRAMME")
+            c.drawString(COL_ND['inst'],      y, "INSTITUTION")
+            c.drawString(COL_ND['location'],  y, "LOCATION")
+            c.drawString(COL_ND['category'],  y, "CATEGORY")
+            c.drawString(COL_ND['chance'],    y, "LIKELIHOOD")
+            c.drawString(COL_ND['min_grade'], y, "MIN")
+            c.drawString(COL_ND['qual'],      y, "STATUS")
+            y -= 0.1*cm
+            c.setStrokeColor(colors.HexColor("#cbd5e1"))
+            c.line(1.5*cm, y, W - 1.5*cm, y)
+            y -= 0.4*cm
+            c.setFillColor(colors.black)
+
+        draw_headers_nd()
+
+        QUAL_COLORS = {
+            'Strongly Qualifies':    colors.HexColor("#065f46"),
+            'Comfortably Qualifies': colors.HexColor("#15803d"),
+            'Meets Minimum':         colors.HexColor("#1d4ed8"),
+        }
+
+        for i, m in enumerate(matches):
+            if y < 2.0*cm:
+                y = new_page()
+                draw_headers_nd()
+            if i % 2 == 0:
+                c.setFillColor(LIGHT)
+                c.rect(1.5*cm, y - 0.22*cm, W - 3*cm, 0.36*cm, fill=1, stroke=0)
+            c.setFont("Helvetica", 7.5)
+            c.setFillColor(colors.black)
+            course_name = m['course'].name
+            if len(course_name) > 40:
+                course_name = course_name[:38] + '…'
+            c.drawString(COL_ND['course'], y, course_name)
+            inst_name = m['institution'].name
+            if len(inst_name) > 26:
+                inst_name = inst_name[:24] + '…'
+            c.drawString(COL_ND['inst'], y, inst_name)
+            location = (getattr(m['institution'], 'location', '') or '—')[:14]
+            c.drawString(COL_ND['location'], y, location)
+            cat = m['course'].category.name[:14] if m['course'].category else '—'
+            c.drawString(COL_ND['category'], y, cat)
+            c.setFillColor(CHANCE_COLORS.get(m['chance'], colors.grey))
+            c.setFont("Helvetica-Bold", 7.5)
+            chance_abbr = {'High Likelihood': 'High Like.', 'Likely': 'Likely'}.get(m['chance'], m['chance'])
+            c.drawString(COL_ND['chance'], y, chance_abbr)
+            c.setFont("Helvetica", 7.5)
+            c.setFillColor(colors.black)
+            c.drawString(COL_ND['min_grade'], y, str(m['cutoff'])[:4])
+            ql = m.get('qual_label', '—')
+            c.setFillColor(QUAL_COLORS.get(ql, SLATE))
+            c.setFont("Helvetica-Bold", 7.5)
+            c.drawString(COL_ND['qual'], y, ql[:22])
+            y -= 0.41*cm
+
+    c.save()
+    return response
+
+
+def career_results_pdf_detailed(request):
+    """Detailed placement report PDF — cover page + per-tier grouped results."""
+    from reportlab.pdfgen import canvas
+    from reportlab.lib.pagesizes import A4, landscape
+    from reportlab.lib.units import cm
+    from reportlab.lib import colors
+    from django.http import HttpResponse
+    from django.utils import timezone
+    from collections import Counter
+
+    matches, pathway, cluster_pts_single, mean_grade, _, cluster_score_table = _build_career_matches(request)
+    if not matches:
+        return HttpResponse(
+            "No career matches found. Please run the career guidance tool first.",
+            status=400,
+        )
+
+    numeric_pts = [m['student_points'] for m in matches if isinstance(m['student_points'], (int, float))]
+    best_pts    = max(numeric_pts, default=cluster_pts_single) if pathway == 'Degree' else None
+
+    response = HttpResponse(content_type="application/pdf")
+    response["Content-Disposition"] = 'attachment; filename="kuccpss_career_report.pdf"'
+
+    c = canvas.Canvas(response, pagesize=landscape(A4))
+    W, H = landscape(A4)   # ~29.7 × 21 cm
+
+    NAVY  = colors.HexColor("#1e3a8a")
+    GREEN = colors.HexColor("#16a34a")
+    SLATE = colors.HexColor("#64748b")
+    LIGHT = colors.HexColor("#f1f5f9")
+
+    TIER_COLORS = {
+        'Best Match':     colors.HexColor("#059669"),
+        'Stretch':        colors.HexColor("#d97706"),
+        'Safe Option':    colors.HexColor("#2563eb"),
+        'Easy Admission': colors.HexColor("#64748b"),
+        'Long Shot':      colors.HexColor("#dc2626"),
+    }
+    CHANCE_COLORS = {
+        'High Likelihood': colors.HexColor("#16a34a"),
+        'Likely':          colors.HexColor("#059669"),
+        'Borderline':      colors.HexColor("#f97316"),
+        'Unlikely':        colors.HexColor("#dc2626"),
+    }
+    TIER_DESC_SHORT = {
+        'Best Match':     'Score right at or just above cutoff — ideal fit.',
+        'Stretch':        'Slightly below cutoff — competitive, worth applying.',
+        'Safe Option':    'Comfortably above cutoff — strong admission chance.',
+        'Easy Admission': 'Well above cutoff — very high certainty.',
+        'Long Shot':      'Significantly below cutoff — low probability.',
+    }
+
+    page_num = [0]
+
+    def new_page(subtitle=""):
+        page_num[0] += 1
+        if page_num[0] > 1:
+            c.showPage()
+        c.setFillColor(NAVY)
+        c.rect(0, H - 1.8*cm, W, 1.8*cm, fill=1, stroke=0)
+        c.setFillColor(GREEN)
+        c.rect(0, H - 1.85*cm, W, 0.07*cm, fill=1, stroke=0)
+        c.setFillColor(colors.white)
+        c.setFont("Helvetica-Bold", 12)
+        c.drawString(1.5*cm, H - 1.15*cm, "KUCCPSS Career Placement Report 2026")
+        if subtitle:
+            c.setFont("Helvetica", 8)
+            c.drawString(1.5*cm, H - 1.55*cm, subtitle)
+        c.setFont("Helvetica", 9)
+        c.drawRightString(W - 1.5*cm, H - 1.15*cm, f"Page {page_num[0]}")
+        c.setFont("Helvetica-Oblique", 7)
+        c.setFillColor(SLATE)
+        c.drawCentredString(W / 2, 0.45*cm,
+            "For planning purposes only. Verify all cutoffs on the official KUCCPS portal (kuccps.net) before submitting applications.")
+        c.setFillColor(colors.black)
+        return H - 2.4*cm
+
+    # ── Page 1: Cover / Profile ───────────────────────────────────────────────
+    y = new_page("Student Profile & Match Summary")
+
+    user_label = "Student"
+    if request.user.is_authenticated:
+        user_label = getattr(request.user, 'full_name', None) or request.user.email
+
+    c.setFillColor(LIGHT)
+    c.roundRect(1.5*cm, y - 3.8*cm, W - 3*cm, 3.5*cm, 8, fill=1, stroke=0)
+    c.setFillColor(NAVY)
+    c.setFont("Helvetica-Bold", 16)
+    c.drawString(2.2*cm, y - 1.1*cm, "KCSE Career Placement Report")
+    c.setFont("Helvetica", 9)
+    c.setFillColor(SLATE)
+    c.drawString(2.2*cm, y - 1.7*cm,  f"Prepared for: {user_label}")
+    c.drawString(2.2*cm, y - 2.15*cm, f"Generated:    {timezone.now().strftime('%d %B %Y, %H:%M')}")
+    c.drawString(2.2*cm, y - 2.6*cm,  f"Pathway:      {pathway}")
+    if pathway == 'Degree':
+        score_line = f"Best Cluster Score: {best_pts:.1f} / 48 pts" if best_pts is not None else "—"
+        c.drawString(2.2*cm, y - 3.05*cm, score_line)
+        c.drawString(2.2*cm, y - 3.5*cm,
+            "Prediction model: 70% Weighted Moving Average + 30% Naive blend")
+    else:
+        c.drawString(2.2*cm, y - 3.05*cm, f"Mean Grade Entered:  {mean_grade}")
+        c.drawString(2.2*cm, y - 3.5*cm,
+            "Eligibility: based on minimum mean grade and subject requirements per programme.")
+    y -= 4.5*cm
+
+    chance_counts = Counter(m['chance'] for m in matches)
+    c.setFont("Helvetica-Bold", 10)
+    c.setFillColor(NAVY)
+    c.drawString(1.5*cm, y, f"MATCH SUMMARY — {len(matches)} qualifying programmes found")
+    y -= 0.55*cm
+
+    if pathway == 'Degree':
+        tier_counts = Counter(m['tier'] for m in matches)
+        for tier in ['Best Match', 'Stretch', 'Safe Option', 'Easy Admission', 'Long Shot']:
+            cnt = tier_counts.get(tier, 0)
+            if cnt == 0:
+                continue
+            c.setFillColor(TIER_COLORS.get(tier, SLATE))
+            c.rect(1.5*cm, y - 0.28*cm, 0.22*cm, 0.28*cm, fill=1, stroke=0)
+            c.setFillColor(colors.black)
+            c.setFont("Helvetica", 9)
+            c.drawString(2.0*cm, y, f"{tier}: {cnt} courses — {TIER_DESC_SHORT.get(tier, '')}")
+            y -= 0.44*cm
+    else:
+        QUAL_COLORS_PDF = {
+            'Strongly Qualifies':    colors.HexColor("#065f46"),
+            'Comfortably Qualifies': colors.HexColor("#15803d"),
+            'Meets Minimum':         colors.HexColor("#1d4ed8"),
+        }
+        qual_counts = Counter(m.get('qual_label', '') for m in matches)
+        QUAL_DESC = {
+            'Strongly Qualifies':    'Mean grade is well above the minimum — very strong candidate.',
+            'Comfortably Qualifies': 'Mean grade exceeds the minimum by 1–2 grades — good candidate.',
+            'Meets Minimum':         'Mean grade exactly meets the minimum — eligible to apply.',
+        }
+        for ql in ['Strongly Qualifies', 'Comfortably Qualifies', 'Meets Minimum']:
+            cnt = qual_counts.get(ql, 0)
+            if cnt == 0:
+                continue
+            c.setFillColor(QUAL_COLORS_PDF.get(ql, SLATE))
+            c.rect(1.5*cm, y - 0.28*cm, 0.22*cm, 0.28*cm, fill=1, stroke=0)
+            c.setFillColor(colors.black)
+            c.setFont("Helvetica", 9)
+            c.drawString(2.0*cm, y, f"{ql}: {cnt} programmes — {QUAL_DESC.get(ql, '')}")
+            y -= 0.44*cm
+
+    y -= 0.4*cm
+    c.setFont("Helvetica-Bold", 10)
+    c.setFillColor(NAVY)
+    c.drawString(1.5*cm, y, "ADMISSION LIKELIHOOD")
+    y -= 0.44*cm
+    for chance in ['High Likelihood', 'Likely']:
+        cnt = chance_counts.get(chance, 0)
+        if cnt == 0:
+            continue
+        c.setFillColor(CHANCE_COLORS.get(chance, SLATE))
+        c.rect(1.5*cm, y - 0.28*cm, 0.22*cm, 0.28*cm, fill=1, stroke=0)
+        c.setFillColor(colors.black)
+        c.setFont("Helvetica", 9)
+        c.drawString(2.0*cm, y, f"{chance}: {cnt} {'courses' if pathway == 'Degree' else 'programmes'}")
+        y -= 0.42*cm
+
+    y -= 0.4*cm
+    # Legend / how-to-read box
+    c.setFillColor(LIGHT)
+    c.rect(1.5*cm, y - 1.7*cm, W - 3*cm, 1.6*cm, fill=1, stroke=0)
+    c.setFont("Helvetica-Bold", 8.5)
+    c.setFillColor(NAVY)
+    c.drawString(2.0*cm, y - 0.38*cm, "HOW TO READ THIS REPORT")
+    c.setFont("Helvetica", 8)
+    c.setFillColor(SLATE)
+    if pathway == 'Degree':
+        c.drawString(2.0*cm, y - 0.75*cm, "CUTOFF = latest known cutoff (2024).   EST 2026 = model prediction.   DIFF = Your score minus the cutoff.")
+        c.drawString(2.0*cm, y - 1.1*cm,  "Best Match: score 0–+3 pts above cutoff.  Stretch: within 3 pts below.  Safe/Easy: comfortably above.")
+        c.drawString(2.0*cm, y - 1.45*cm, "Verify all cutoffs on the official KUCCPS portal (kuccps.net) before applying.")
+    else:
+        c.drawString(2.0*cm, y - 0.75*cm, "MIN = minimum mean grade required for the programme.  STATUS = how well your grade meets that requirement.")
+        c.drawString(2.0*cm, y - 1.1*cm,  "All programmes listed are ones you qualify for.  Sorted strongest qualification first.")
+        c.drawString(2.0*cm, y - 1.45*cm, "Verify requirements at the institution directly or via the KUCCPS portal before applying.")
+    y -= 2.1*cm
+
+    # ── Cluster scores — Degree only ─────────────────────────────────────────
+    if pathway == 'Degree':
+        if cluster_score_table:
+            c.setFont("Helvetica-Bold", 9)
+            c.setFillColor(NAVY)
+            c.drawString(1.5*cm, y, "YOUR KUCCPS CLUSTER SCORES (Groups 1–20, out of 48 pts)")
+            y -= 0.42*cm
+            col_w = (W - 3*cm) / 4
+            BAR_GREEN  = colors.HexColor("#16a34a")
+            BAR_ORANGE = colors.HexColor("#f97316")
+            for i, (knum, gname, score) in enumerate(cluster_score_table):
+                col = i % 4
+                if col == 0 and i > 0:
+                    y -= 0.5*cm
+                    if y < 2.0*cm:
+                        y = new_page("Student Cluster Scores (continued)")
+                x = 1.5*cm + col * col_w
+                bar_max = col_w - 1.4*cm
+                bar_w   = (score / 48.0) * bar_max if score else 0
+                bar_col = BAR_GREEN if score >= 36 else (NAVY if score >= 24 else BAR_ORANGE)
+                c.setFillColor(LIGHT)
+                c.rect(x + 1.05*cm, y - 0.28*cm, bar_max, 0.16*cm, fill=1, stroke=0)
+                c.setFillColor(bar_col)
+                c.rect(x + 1.05*cm, y - 0.28*cm, bar_w, 0.16*cm, fill=1, stroke=0)
+                c.setFont("Helvetica", 7.5)
+                c.setFillColor(colors.black)
+                c.drawString(x, y, f"C{knum}: {score:.1f}")
+            y -= 0.65*cm
+        elif best_pts:
+            c.setFont("Helvetica", 8.5)
+            c.setFillColor(SLATE)
+            c.drawString(1.5*cm, y,
+                f"Single cluster score applied: {best_pts:.1f} pts / 48  "
+                f"(use per-cluster entry for detailed breakdown)")
+            y -= 0.45*cm
+
+    # ── Detail pages ──────────────────────────────────────────────────────────
+    if pathway == 'Degree':
+        COL = {
+            'course': 1.7*cm, 'inst': 9.8*cm, 'cluster': 16.0*cm,
+            'chance': 17.8*cm, 'cutoff': 21.4*cm, 'pred': 23.2*cm,
+            'range': 25.0*cm, 'diff': 28.0*cm,
+        }
+
+        def draw_tier_headers(y_pos):
+            c.setFont("Helvetica-Bold", 7.5)
+            c.setFillColor(SLATE)
+            c.drawString(COL['course'],  y_pos, "COURSE")
+            c.drawString(COL['inst'],    y_pos, "INSTITUTION")
+            c.drawString(COL['cluster'], y_pos, "CLUST")
+            c.drawString(COL['chance'],  y_pos, "LIKELIHOOD")
+            c.drawString(COL['cutoff'],  y_pos, "CUTOFF")
+            c.drawString(COL['pred'],    y_pos, "EST 2026")
+            c.drawString(COL['range'],   y_pos, "PRED RANGE")
+            c.drawString(COL['diff'],    y_pos, "DIFF")
+            y_pos -= 0.1*cm
+            c.setStrokeColor(colors.HexColor("#cbd5e1"))
+            c.line(1.5*cm, y_pos, W - 1.5*cm, y_pos)
+            return y_pos - 0.38*cm
+
+        for tier_label in ['Best Match', 'Stretch', 'Safe Option', 'Easy Admission', 'Long Shot']:
+            tier_matches = [m for m in matches if m['tier'] == tier_label]
+            if not tier_matches:
+                continue
+            y = new_page(f"Tier: {tier_label} — {TIER_DESC_SHORT.get(tier_label, '')}")
+            tier_col = TIER_COLORS.get(tier_label, SLATE)
+            c.setFillColor(tier_col)
+            c.rect(1.5*cm, y - 0.55*cm, W - 3*cm, 0.5*cm, fill=1, stroke=0)
+            c.setFillColor(colors.white)
+            c.setFont("Helvetica-Bold", 9.5)
+            c.drawString(2.0*cm, y - 0.36*cm, f"{tier_label.upper()}  ({len(tier_matches)} courses)")
+            y -= 0.95*cm
+            y = draw_tier_headers(y)
+            for i, m in enumerate(tier_matches):
+                if y < 2.0*cm:
+                    y = new_page(f"Tier: {tier_label} (continued)")
+                    y = draw_tier_headers(y)
+                if i % 2 == 0:
+                    c.setFillColor(LIGHT)
+                    c.rect(1.5*cm, y - 0.22*cm, W - 3*cm, 0.36*cm, fill=1, stroke=0)
+                c.setFont("Helvetica", 7.5)
+                c.setFillColor(colors.black)
+                cn = m['course'].name
+                c.drawString(COL['course'], y, (cn[:44] + '…') if len(cn) > 46 else cn)
+                iname = m['institution'].name
+                c.drawString(COL['inst'], y, (iname[:32] + '…') if len(iname) > 34 else iname)
+                knum = m['cluster'].kuccps_number if m['cluster'] else None
+                c.drawString(COL['cluster'], y, f"C{knum}" if knum else '—')
+                chance_abbr = {'High Likelihood': 'High Like.', 'Likely': 'Likely',
+                               'Borderline': 'Borderline', 'Unlikely': 'Unlikely'}.get(m['chance'], m['chance'])
+                c.setFillColor(CHANCE_COLORS.get(m['chance'], colors.grey))
+                c.setFont("Helvetica-Bold", 7.5)
+                c.drawString(COL['chance'], y, chance_abbr)
+                c.setFont("Helvetica", 7.5)
+                c.setFillColor(colors.black)
+                c.drawString(COL['cutoff'], y, str(m['cutoff'])[:5])
+                pred = m.get('pred')
+                if pred:
+                    c.drawString(COL['pred'],  y, f"{pred['predicted']:.1f}")
+                    c.drawString(COL['range'], y, f"{pred['low']:.1f}–{pred['high']:.1f}")
+                else:
+                    c.drawString(COL['pred'], y, '—')
+                    c.drawString(COL['range'], y, '—')
+                diff_val = m['diff']
+                diff_str = f"+{diff_val:.1f}" if diff_val >= 0 else f"{diff_val:.1f}"
+                c.setFillColor(colors.HexColor("#15803d") if diff_val >= 0 else colors.HexColor("#dc2626"))
+                c.setFont("Helvetica-Bold", 7.5)
+                c.drawString(COL['diff'], y, diff_str)
+                y -= 0.41*cm
+
+    else:
+        # ── Non-degree detail pages — grouped by qualification status ──────────
+        COL_ND = {
+            'course':   1.7*cm,
+            'inst':     9.0*cm,
+            'location': 17.0*cm,
+            'category': 20.5*cm,
+            'chance':   24.0*cm,
+            'min':      26.5*cm,
+            'subj':     27.6*cm,
+        }
+        QUAL_COLORS_ND = {
+            'Strongly Qualifies':    colors.HexColor("#065f46"),
+            'Comfortably Qualifies': colors.HexColor("#15803d"),
+            'Meets Minimum':         colors.HexColor("#1d4ed8"),
+        }
+
+        def draw_nd_headers(y_pos):
+            c.setFont("Helvetica-Bold", 7.5)
+            c.setFillColor(SLATE)
+            c.drawString(COL_ND['course'],   y_pos, "PROGRAMME")
+            c.drawString(COL_ND['inst'],     y_pos, "INSTITUTION")
+            c.drawString(COL_ND['location'], y_pos, "LOCATION")
+            c.drawString(COL_ND['category'], y_pos, "CATEGORY")
+            c.drawString(COL_ND['chance'],   y_pos, "LIKELIHOOD")
+            c.drawString(COL_ND['min'],      y_pos, "MIN")
+            c.drawString(COL_ND['subj'],     y_pos, "SUBJECT REQS")
+            y_pos -= 0.1*cm
+            c.setStrokeColor(colors.HexColor("#cbd5e1"))
+            c.line(1.5*cm, y_pos, W - 1.5*cm, y_pos)
+            return y_pos - 0.38*cm
+
+        for ql_label in ['Strongly Qualifies', 'Comfortably Qualifies', 'Meets Minimum']:
+            ql_matches = [m for m in matches if m.get('qual_label') == ql_label]
+            if not ql_matches:
+                continue
+            y = new_page(f"{ql_label} — {len(ql_matches)} programmes")
+            ql_col = QUAL_COLORS_ND.get(ql_label, SLATE)
+            c.setFillColor(ql_col)
+            c.rect(1.5*cm, y - 0.55*cm, W - 3*cm, 0.5*cm, fill=1, stroke=0)
+            c.setFillColor(colors.white)
+            c.setFont("Helvetica-Bold", 9.5)
+            c.drawString(2.0*cm, y - 0.36*cm, f"{ql_label.upper()}  ({len(ql_matches)} programmes)")
+            y -= 0.95*cm
+            y = draw_nd_headers(y)
+            for i, m in enumerate(ql_matches):
+                if y < 2.0*cm:
+                    y = new_page(f"{ql_label} (continued)")
+                    y = draw_nd_headers(y)
+                if i % 2 == 0:
+                    c.setFillColor(LIGHT)
+                    c.rect(1.5*cm, y - 0.22*cm, W - 3*cm, 0.36*cm, fill=1, stroke=0)
+                c.setFont("Helvetica", 7.5)
+                c.setFillColor(colors.black)
+                cn = m['course'].name
+                c.drawString(COL_ND['course'], y, (cn[:38] + '…') if len(cn) > 40 else cn)
+                iname = m['institution'].name
+                c.drawString(COL_ND['inst'], y, (iname[:24] + '…') if len(iname) > 26 else iname)
+                location = (getattr(m['institution'], 'location', '') or '—')[:14]
+                c.drawString(COL_ND['location'], y, location)
+                cat = m['course'].category.name[:14] if m['course'].category else '—'
+                c.drawString(COL_ND['category'], y, cat)
+                chance_abbr = {'High Likelihood': 'High Like.', 'Likely': 'Likely'}.get(m['chance'], m['chance'])
+                c.setFillColor(CHANCE_COLORS.get(m['chance'], colors.grey))
+                c.setFont("Helvetica-Bold", 7.5)
+                c.drawString(COL_ND['chance'], y, chance_abbr)
+                c.setFont("Helvetica", 7.5)
+                c.setFillColor(colors.black)
+                c.drawString(COL_ND['min'], y, str(m['cutoff'])[:4])
+                reqs = m['course'].subject_requirements or []
+                req_str = '  |  '.join(
+                    f"{r.get('subjects_str','')}: {r.get('min_grade','')}" for r in reqs
+                ) if reqs else '—'
+                if len(req_str) > 28:
+                    req_str = req_str[:26] + '…'
+                c.drawString(COL_ND['subj'], y, req_str)
+                y -= 0.41*cm
+
+    c.save()
+    return response

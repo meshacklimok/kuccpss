@@ -1,0 +1,40 @@
+{
+  "name": "KUCCPSS — Cluster Points Calculator",
+  "short_name": "KUCCPSS",
+  "description": "Calculate your KCSE cluster points and find courses you qualify for at Kenyan universities and colleges.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#1e3a8a",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "/static/images/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/static/images/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Calculator",
+      "short_name": "Calc",
+      "url": "/calculator/",
+      "description": "Calculate your KCSE cluster points"
+    },
+    {
+      "name": "Career Quiz",
+      "short_name": "Quiz",
+      "url": "/career/quiz/",
+      "description": "Discover careers that suit you"
+    }
+  ],
+  "categories": ["education", "utilities"],
+  "lang": "en"
+}

@@ -212,6 +212,34 @@ class LoginHistory(models.Model):
 
 
 # =====================================================
+# APPLICATION TRACKER
+# =====================================================
+class Application(models.Model):
+    STATUS_CHOICES = [
+        ('draft',        'Draft'),
+        ('submitted',    'Submitted'),
+        ('under_review', 'Under Review'),
+        ('waitlisted',   'Waitlisted'),
+        ('accepted',     'Accepted'),
+        ('rejected',     'Rejected'),
+    ]
+    user             = models.ForeignKey(User, on_delete=models.CASCADE, related_name='applications')
+    course_name      = models.CharField(max_length=200)
+    institution_name = models.CharField(max_length=200, blank=True)
+    status           = models.CharField(max_length=20, choices=STATUS_CHOICES, default='draft')
+    deadline         = models.DateField(null=True, blank=True)
+    notes            = models.TextField(blank=True)
+    created_at       = models.DateTimeField(auto_now_add=True)
+    updated_at       = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.course_name} — {self.user.email}"
+
+
+# =====================================================
 # SAVED COURSE
 # =====================================================
 
@@ -254,44 +282,29 @@ class SavedCareer(models.Model):
 
 
 # =====================================================
-# APPLICATION TRACKING
+# COURSE SHORTLIST (comparison tool, max 5 per user)
 # =====================================================
 
-class ApplicationTracking(models.Model):
-    STATUS_CHOICES = [
-        ("draft", "Draft"),
-        ("submitted", "Submitted"),
-        ("under_review", "Under Review"),
-        ("accepted", "Accepted"),
-        ("rejected", "Rejected"),
-        ("waitlisted", "Waitlisted"),
-    ]
-
+class CourseShortlist(models.Model):
     user = models.ForeignKey(
-        User, on_delete=models.CASCADE, related_name="applications"
+        User, on_delete=models.CASCADE, related_name="shortlist"
     )
     course = models.ForeignKey(
-        "courses.Course", on_delete=models.CASCADE, related_name="applications",
-        null=True, blank=True
+        "courses.Course", on_delete=models.CASCADE, related_name="shortlisted_by"
     )
-    institution_name = models.CharField(max_length=200, blank=True)
-    course_name = models.CharField(max_length=200, blank=True)
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="draft")
-    deadline = models.DateField(null=True, blank=True)
-    notes = models.TextField(blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    rank = models.PositiveSmallIntegerField(
+        null=True, blank=True,
+        help_text="KUCCPS choice order (1 = first choice, up to 4)"
+    )
+    notes = models.TextField(blank=True, help_text="Personal notes for this course")
+    added_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        ordering = ["-created_at"]
+        unique_together = ("user", "course")
+        ordering = ["rank", "-added_at"]
 
     def __str__(self):
-        return f"{self.user.email} — {self.course_name or self.course} ({self.status})"
-
-    def get_course_display(self):
-        if self.course:
-            return self.course.name
-        return self.course_name or "Unknown course"
+        return f"{self.user.email} → {self.course.name}"
 
 
 # =====================================================
@@ -310,6 +323,13 @@ class Notification(models.Model):
     user = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name="notifications"
     )
+    published_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name="sent_notifications",
+        limit_choices_to={"is_staff": True},
+    )
     message = models.TextField()
     notif_type = models.CharField(max_length=20, choices=TYPE_CHOICES, default="info")
     is_read = models.BooleanField(default=False)
@@ -324,3 +344,31 @@ class Notification(models.Model):
 
     def __str__(self):
         return f"{self.user.email} — {self.message[:50]}"
+
+
+# =====================================================
+# CAREER SESSION SNAPSHOT
+# Persists career engine results so the dashboard can
+# show "Recommended For You" even after session expires.
+# =====================================================
+
+class CareerSessionSnapshot(models.Model):
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name='career_snapshots'
+    )
+    pathway = models.CharField(max_length=50)
+    cluster_points_json = models.JSONField(default=dict, blank=True)
+    mean_grade = models.CharField(max_length=5, blank=True)
+    aggregate_score = models.FloatField(null=True, blank=True)
+    total_matches = models.PositiveIntegerField(default=0)
+    tier_counts_json = models.JSONField(default=dict, blank=True)
+    top_matches_json = models.JSONField(default=list, blank=True)
+    computed_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-computed_at']
+        verbose_name = 'Career Session Snapshot'
+        verbose_name_plural = 'Career Session Snapshots'
+
+    def __str__(self):
+        return f"{self.user.email} — {self.pathway} ({self.computed_at:%Y-%m-%d})"

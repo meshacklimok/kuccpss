@@ -577,3 +577,70 @@ def career_guidance_engine(kcse_grades: Dict[str, str], pathway: str, tvet_categ
     
     ai = generate_ai_recommendation(matches)
     return matches, ai
+
+
+# =====================================================
+# Career Recommendation Config (singleton)
+# =====================================================
+class CareerConfig(models.Model):
+    """
+    Singleton — one row (pk=1). Configures recommendation tier thresholds.
+    Distances are in cluster points (Degree) or mean-grade points (others).
+    """
+    best_match_max_diff = models.FloatField(
+        default=3.0,
+        help_text=(
+            "Max points ABOVE cutoff for 'Best Match'. "
+            "E.g. 3.0 means diff 0–3 = Best Match."
+        ),
+    )
+    stretch_min_diff = models.FloatField(
+        default=-3.0,
+        help_text=(
+            "Min points BELOW cutoff still counted as 'Stretch Opportunity' (enter as negative). "
+            "E.g. -3.0 means student can be up to 3 pts below cutoff and still see it as Stretch."
+        ),
+    )
+    safe_max_diff = models.FloatField(
+        default=8.0,
+        help_text=(
+            "Max points above cutoff for 'Safe Option'. "
+            "Beyond this becomes 'Easy Admission'. E.g. 8.0 means diff 3–8 = Safe."
+        ),
+    )
+    competitive_threshold = models.FloatField(
+        default=40.0,
+        help_text=(
+            "Courses whose cutoff is at or above this value are flagged 'Competitive'. "
+            "Applies to Degree pathway (cluster points out of 48). Default: 40.0."
+        ),
+    )
+
+    # ── AI Quiz Summary Settings ──────────────────────
+    ai_enabled = models.BooleanField(
+        default=True,
+        help_text="Turn the AI Career Insight box on the quiz results page on or off.",
+    )
+    ai_prompt_template = models.TextField(
+        blank=True,
+        help_text=(
+            "Prompt sent to GPT-4o-mini. Use {tag_str} for interest tags and {careers_str} for matched careers. "
+            "Leave blank to use the default prompt."
+        ),
+    )
+
+    class Meta:
+        verbose_name = "Career Recommendation Config"
+        verbose_name_plural = "Career Recommendation Config"
+
+    def __str__(self):
+        return "Career Recommendation Settings"
+
+    def save(self, *args, **kwargs):
+        self.pk = 1
+        super().save(*args, **kwargs)
+
+    @classmethod
+    def get(cls) -> "CareerConfig":
+        obj, _ = cls.objects.get_or_create(pk=1)
+        return obj

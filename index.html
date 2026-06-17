@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CareerPath Premium Design Preview</title>
+
+<style>
+:root{
+    --navy:#0F172A;
+    --blue:#2563EB;
+    --teal:#14B8A6;
+    --amber:#F59E0B;
+    --bg:#F8FAFC;
+    --text:#1E293B;
+    --white:#FFFFFF;
+    --red:#EF4444;
+}
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:Inter, Segoe UI, Arial, sans-serif;
+}
+
+body{
+    background:var(--bg);
+    color:var(--text);
+}
+
+/* HEADER */
+header{
+    background:var(--navy);
+    color:white;
+    padding:18px 8%;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    position:sticky;
+    top:0;
+}
+
+.logo{
+    font-size:28px;
+    font-weight:700;
+}
+
+nav a{
+    color:white;
+    text-decoration:none;
+    margin-left:25px;
+    opacity:.9;
+}
+
+nav a:hover{
+    opacity:1;
+}
+
+/* HERO */
+.hero{
+    background:linear-gradient(
+        135deg,
+        #0F172A,
+        #1E3A8A,
+        #2563EB
+    );
+    color:white;
+    padding:100px 8%;
+    text-align:center;
+}
+
+.hero h1{
+    font-size:56px;
+    margin-bottom:20px;
+}
+
+.hero p{
+    max-width:800px;
+    margin:auto;
+    font-size:20px;
+    opacity:.95;
+}
+
+.hero-buttons{
+    margin-top:35px;
+}
+
+.btn{
+    padding:14px 28px;
+    border:none;
+    border-radius:10px;
+    cursor:pointer;
+    font-size:16px;
+    font-weight:600;
+    margin:5px;
+}
+
+.btn-primary{
+    background:white;
+    color:var(--navy);
+}
+
+.btn-secondary{
+    background:var(--teal);
+    color:white;
+}
+
+/* SECTION */
+section{
+    padding:70px 8%;
+}
+
+.section-title{
+    font-size:34px;
+    margin-bottom:10px;
+}
+
+.section-subtitle{
+    color:#64748B;
+    margin-bottom:35px;
+}
+
+/* CARDS */
+.cards{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+    gap:25px;
+}
+
+.card{
+    background:white;
+    padding:25px;
+    border-radius:16px;
+    box-shadow:0 10px 30px rgba(0,0,0,.06);
+}
+
+.card h3{
+    margin-bottom:10px;
+}
+
+.chance{
+    display:inline-block;
+    background:var(--teal);
+    color:white;
+    padding:6px 12px;
+    border-radius:20px;
+    margin-top:15px;
+    font-size:14px;
+}
+
+/* PATHWAY */
+.pathway{
+    background:white;
+    border-radius:18px;
+    padding:35px;
+    box-shadow:0 10px 30px rgba(0,0,0,.06);
+}
+
+.path{
+    text-align:center;
+    font-size:20px;
+    line-height:2;
+    font-weight:600;
+}
+
+/* TABLE */
+table{
+    width:100%;
+    border-collapse:collapse;
+    background:white;
+    overflow:hidden;
+    border-radius:16px;
+    box-shadow:0 10px 30px rgba(0,0,0,.06);
+}
+
+th{
+    background:var(--navy);
+    color:white;
+    padding:18px;
+}
+
+td{
+    padding:18px;
+    border-bottom:1px solid #E5E7EB;
+}
+
+.highlight{
+    color:var(--teal);
+    font-weight:bold;
+}
+
+/* STATUS */
+.status-row{
+    display:flex;
+    gap:15px;
+    flex-wrap:wrap;
+}
+
+.badge{
+    padding:10px 18px;
+    color:white;
+    border-radius:30px;
+    font-weight:600;
+}
+
+.high{background:var(--teal);}
+.medium{background:var(--amber);}
+.low{background:var(--red);}
+
+/* FOOTER */
+footer{
+    background:var(--navy);
+    color:white;
+    text-align:center;
+    padding:50px;
+    margin-top:50px;
+}
+
+footer p{
+    opacity:.8;
+    margin-top:10px;
+}
+</style>
+</head>
+<body>
+
+<header>
+    <div class="logo">CareerPath</div>
+
+    <nav>
+        <a href="#">Home</a>
+        <a href="#">Courses</a>
+        <a href="#">Careers</a>
+        <a href="#">Compare</a>
+        <a href="#">Dashboard</a>
+    </nav>
+</header>
+
+<section class="hero">
+    <h1>Discover Your Future Career Path</h1>
+
+    <p>
+        Get personalized course recommendations,
+        admission likelihood predictions,
+        career pathways and application guidance.
+    </p>
+
+    <div class="hero-buttons">
+        <button class="btn btn-primary">
+            Find My Courses
+        </button>
+
+        <button class="btn btn-secondary">
+            Explore Career Paths
+        </button>
+    </div>
+</section>
+
+<section>
+    <h2 class="section-title">Recommended For You</h2>
+    <p class="section-subtitle">
+        Based on your KCSE performance.
+    </p>
+
+    <div class="cards">
+
+        <div class="card">
+            <h3>Diploma in Nursing</h3>
+            <p>Strong demand and excellent progression opportunities.</p>
+            <span class="chance">Admission Chance: 88%</span>
+        </div>
+
+        <div class="card">
+            <h3>Clinical Medicine</h3>
+            <p>Healthcare pathway with high employability.</p>
+            <span class="chance">Admission Chance: 76%</span>
+        </div>
+
+        <div class="card">
+            <h3>Medical Laboratory</h3>
+            <p>Growing field with specialized opportunities.</p>
+            <span class="chance">Admission Chance: 81%</span>
+        </div>
+
+    </div>
+</section>
+
+<section>
+    <h2 class="section-title">Your Career Journey</h2>
+    <p class="section-subtitle">
+        Example pathway for Nursing.
+    </p>
+
+    <div class="pathway">
+        <div class="path">
+            KCSE<br>
+            ↓<br>
+            Diploma in Nursing<br>
+            ↓<br>
+            Registered Nurse<br>
+            ↓<br>
+            Bachelor of Nursing<br>
+            ↓<br>
+            Senior Nurse<br>
+            ↓<br>
+            Nurse Manager
+        </div>
+    </div>
+</section>
+
+<section>
+    <h2 class="section-title">Admission Categories</h2>
+
+    <div class="status-row">
+        <div class="badge high">High Likelihood</div>
+        <div class="badge medium">Borderline</div>
+        <div class="badge low">Unlikely</div>
+    </div>
+</section>
+
+<section>
+    <h2 class="section-title">Course Comparison</h2>
+    <p class="section-subtitle">
+        Compare opportunities side by side.
+    </p>
+
+    <table>
+        <tr>
+            <th>Feature</th>
+            <th>Nursing</th>
+            <th>Clinical Medicine</th>
+        </tr>
+
+        <tr>
+            <td>Admission Chance</td>
+            <td class="highlight">88%</td>
+            <td>76%</td>
+        </tr>
+
+        <tr>
+            <td>Duration</td>
+            <td>3 Years</td>
+            <td>3 Years</td>
+        </tr>
+
+        <tr>
+            <td>Job Demand</td>
+            <td class="highlight">High</td>
+            <td>High</td>
+        </tr>
+
+        <tr>
+            <td>Progression</td>
+            <td>Excellent</td>
+            <td>Very Good</td>
+        </tr>
+    </table>
+</section>
+
+<footer>
+    <h2>CareerPath</h2>
+    <p>
+        Helping students discover the right course,
+        institution and career pathway.
+    </p>
+</footer>
+
+</body>
+</html>

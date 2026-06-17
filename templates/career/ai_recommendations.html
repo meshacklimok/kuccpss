@@ -54,13 +54,13 @@
                                     <p class="card-text mb-1">
                                         <strong>Admission Chance:</strong>
                                         {% if match.admission_chance == "VERY HIGH" %}
-                                            <span class="badge bg-success">{{ match.admission_chance }}</span>
+                                            <span class="badge bg-success">High Likelihood</span>
                                         {% elif match.admission_chance == "HIGH" %}
-                                            <span class="badge bg-info">{{ match.admission_chance }}</span>
+                                            <span class="badge bg-success bg-opacity-75">Likely</span>
                                         {% elif match.admission_chance == "MEDIUM" %}
-                                            <span class="badge bg-warning text-dark">{{ match.admission_chance }}</span>
+                                            <span class="badge bg-warning text-dark">Borderline</span>
                                         {% else %}
-                                            <span class="badge bg-danger">{{ match.admission_chance }}</span>
+                                            <span class="badge bg-danger">Unlikely</span>
                                         {% endif %}
                                     </p>
                                     <p class="card-text mb-3"><strong>Match Score:</strong> {{ match.match_score|floatformat:1 }}%</p>
@@ -86,10 +86,10 @@
                             <label for="admission_chance_filter" class="form-label">Admission Chance</label>
                             <select name="admission_chance" id="admission_chance_filter" class="form-select">
                                 <option value="">All</option>
-                                <option value="VERY HIGH">VERY HIGH</option>
-                                <option value="HIGH">HIGH</option>
-                                <option value="MEDIUM">MEDIUM</option>
-                                <option value="LOW">LOW</option>
+                                <option value="VERY HIGH">High Likelihood</option>
+                                <option value="HIGH">Likely</option>
+                                <option value="MEDIUM">Borderline</option>
+                                <option value="LOW">Unlikely</option>
                             </select>
                         </div>
                         <div class="col-md-3">

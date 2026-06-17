@@ -1,95 +1,230 @@
 {% extends "base.html" %}
-{% block title %}Career Assessment Quiz — KUCCPSS{% endblock %}
+{% block title %}Career Assessment Quiz — Discover Your Path{% endblock %}
 
 {% block content %}
-<div class="page-hero">
-  <div class="container">
-    <h1><i class="fas fa-clipboard-list me-2"></i>Career Assessment Quiz</h1>
-    <p class="mb-0">Answer a few questions and discover careers that match your personality and interests.</p>
+<style>
+.quiz-hero {
+  background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 70%, #4f46e5 100%);
+  padding: 3rem 0 2.5rem;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+.quiz-hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 50% 80%, rgba(99,102,241,0.3) 0%, transparent 60%);
+  pointer-events: none;
+}
+.quiz-card {
+  background: #fff;
+  border-radius: 16px;
+  border: 2px solid #f1f5f9;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  transition: border-color 0.2s;
+}
+.quiz-card:hover { border-color: #c7d2fe; }
+.category-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 4px 12px;
+  border-radius: 50px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 1rem;
+}
+.cat-interest   { background: #eef2ff; color: #4338ca; }
+.cat-strength   { background: #f0fdf4; color: #166534; }
+.cat-personality { background: #fff7ed; color: #9a3412; }
+.cat-values     { background: #fdf4ff; color: #7e22ce; }
+.option-label {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  border-radius: 12px;
+  border: 2px solid #e2e8f0;
+  cursor: pointer;
+  transition: all 0.15s;
+  background: #fafafa;
+}
+.option-label:hover { border-color: #818cf8; background: #f0f4ff; }
+.option-label.selected { border-color: #4f46e5; background: #eef2ff; }
+.option-radio { display: none; }
+.option-dot {
+  width: 20px; height: 20px;
+  border-radius: 50%;
+  border: 2px solid #cbd5e1;
+  flex-shrink: 0;
+  margin-top: 1px;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.15s;
+}
+.option-label.selected .option-dot {
+  border-color: #4f46e5;
+  background: #4f46e5;
+}
+.option-label.selected .option-dot::after {
+  content: '';
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: #fff;
+}
+/* Progress bar */
+.quiz-progress-bar {
+  height: 4px;
+  border-radius: 50px;
+  background: #e2e8f0;
+  overflow: hidden;
+}
+.quiz-progress-fill {
+  height: 100%;
+  border-radius: 50px;
+  background: linear-gradient(90deg, #4f46e5, #818cf8);
+  transition: width 0.4s ease;
+}
+</style>
+
+<!-- Hero -->
+<div class="quiz-hero">
+  <div class="container position-relative">
+    <div class="mb-3">
+      <span class="badge rounded-pill fw-700" style="background:rgba(129,140,248,0.2);color:#a5b4fc;font-size:0.8rem;padding:6px 16px;">
+        <i class="fas fa-clipboard-list me-1"></i>Career Assessment
+      </span>
+    </div>
+    <h1 class="text-white fw-900 mb-2" style="font-size:clamp(1.8rem,4vw,2.4rem);">
+      Discover Your Ideal Career
+    </h1>
+    <p class="mb-0" style="color:rgba(255,255,255,0.7);font-size:0.95rem;max-width:480px;margin:0 auto;">
+      Answer 10 quick questions and we'll match you to careers that fit your personality, strengths, and interests.
+    </p>
+    {% if questions %}
+    <div class="mt-3 d-flex align-items-center justify-content-center gap-3">
+      <span class="text-white-50 small"><i class="fas fa-clock me-1"></i>~2 minutes</span>
+      <span class="text-white-50 small"><i class="fas fa-list me-1"></i>{{ questions|length }} questions</span>
+      <span class="text-white-50 small"><i class="fas fa-shield-alt me-1"></i>No signup needed</span>
+    </div>
+    {% endif %}
   </div>
 </div>
 
-<div class="container pb-5">
-  <div class="row justify-content-center">
-    <div class="col-lg-8">
+<div class="container py-4" style="max-width:720px;">
 
-      {% if questions %}
-      <form method="POST" id="quizForm">
-        {% csrf_token %}
+  {% if questions %}
 
-        {% regroup questions by category as category_groups %}
+  <!-- Progress -->
+  <div class="mb-4">
+    <div class="d-flex justify-content-between small text-muted mb-1">
+      <span id="progressLabel">Question 1 of {{ questions|length }}</span>
+      <span id="answeredCount">0 answered</span>
+    </div>
+    <div class="quiz-progress-bar">
+      <div class="quiz-progress-fill" id="progressFill" style="width:0%;"></div>
+    </div>
+  </div>
 
-        {% for group in category_groups %}
-        <div class="mb-4">
-          <h5 class="fw-bold mb-3 text-capitalize" style="color:var(--primary);">
-            <i class="fas fa-
-              {% if group.grouper == 'interest' %}star
-              {% elif group.grouper == 'strength' %}dumbbell
-              {% elif group.grouper == 'personality' %}user-circle
-              {% else %}heart{% endif %} me-2"></i>
-            {{ group.grouper|capfirst }} Questions
-          </h5>
+  <form method="POST" id="quizForm">
+    {% csrf_token %}
 
-          {% for question in group.list %}
-          <div class="card p-4 mb-3">
-            <p class="fw-bold mb-3">{{ forloop.parentloop.counter }}.{{ forloop.counter }}. {{ question.text }}</p>
-            <div class="row g-2">
-              {% for option in question.options.all %}
-              <div class="col-md-6">
-                <label class="d-flex align-items-start gap-2 p-3 border rounded-3 cursor-pointer"
-                       style="cursor:pointer;transition:all .15s;"
-                       onmouseover="this.style.borderColor='var(--primary)';this.style.background='#e8f0fe'"
-                       onmouseout="if(!this.querySelector('input').checked){this.style.borderColor='';this.style.background=''}">
-                  <input type="radio" name="q_{{ question.pk }}" value="{{ option.pk }}"
-                         class="mt-1 quiz-radio" required
-                         onchange="highlightSelected(this)">
-                  <span class="small">{{ option.text }}</span>
-                </label>
-              </div>
-              {% endfor %}
-            </div>
+    {% regroup questions by category as category_groups %}
+
+    {% for group in category_groups %}
+    <div class="mb-2">
+      <!-- Category header -->
+      <div class="category-badge cat-{{ group.grouper }}">
+        <i class="fas fa-{% if group.grouper == 'interest' %}star{% elif group.grouper == 'strength' %}dumbbell{% elif group.grouper == 'personality' %}user-circle{% else %}heart{% endif %}"></i>
+        {{ group.grouper|capfirst }} Questions
+      </div>
+
+      {% for question in group.list %}
+      <div class="quiz-card" id="qcard-{{ question.pk }}">
+        <p class="fw-800 text-dark mb-3" style="font-size:0.95rem;">
+          <span class="text-primary me-2" style="font-size:0.8rem;">Q{{ forloop.parentloop.counter }}.{{ forloop.counter }}</span>
+          {{ question.text }}
+        </p>
+        <div class="row g-2">
+          {% for option in question.options.all %}
+          <div class="col-12 col-sm-6">
+            <label class="option-label w-100" for="opt-{{ option.pk }}">
+              <input type="radio" class="option-radio" id="opt-{{ option.pk }}"
+                     name="q_{{ question.pk }}" value="{{ option.pk }}" required>
+              <div class="option-dot"></div>
+              <span style="font-size:0.85rem;color:#1e293b;">{{ option.text }}</span>
+            </label>
           </div>
           {% endfor %}
         </div>
-        {% endfor %}
-
-        <div class="text-center mt-4">
-          <button type="submit" class="btn btn-gradient-success btn-lg px-5">
-            <i class="fas fa-magic me-2"></i>See My Career Matches
-          </button>
-        </div>
-      </form>
-
-      {% else %}
-      <div class="text-center py-5">
-        <i class="fas fa-clipboard-list fa-4x text-muted mb-3"></i>
-        <h4>No quiz questions yet</h4>
-        <p class="text-muted">Check back later — we're building your assessment.</p>
-        <a href="{% url 'career:career_profiles' %}" class="btn btn-primary-custom">
-          Browse Career Profiles Instead
-        </a>
       </div>
-      {% endif %}
-
+      {% endfor %}
     </div>
+    {% endfor %}
+
+    <div class="text-center mt-4 pb-4">
+      <button type="submit" class="btn btn-primary fw-800 rounded-pill px-5" style="font-size:1rem;padding:14px 40px;">
+        <i class="fas fa-magic me-2"></i>See My Career Matches
+      </button>
+      <p class="text-muted small mt-2">All questions must be answered to get your results.</p>
+    </div>
+  </form>
+
+  {% else %}
+  <div class="text-center py-5">
+    <i class="fas fa-clipboard-list fa-4x mb-3 d-block" style="color:#c7d2fe;"></i>
+    <h4 class="fw-800 text-dark">Quiz Coming Soon</h4>
+    <p class="text-muted mb-3">Our career assessment is being built. Browse career profiles in the meantime.</p>
+    <a href="{% url 'career:career_profiles' %}" class="btn btn-primary fw-700 rounded-pill px-5">
+      <i class="fas fa-compass me-2"></i>Browse Career Ideas
+    </a>
   </div>
+  {% endif %}
+
 </div>
 {% endblock %}
 
 {% block extra_js %}
+{% if questions %}
 <script>
-function highlightSelected(radio) {
-  const group = radio.closest('.row');
-  group.querySelectorAll('label').forEach(l => {
-    l.style.borderColor = '';
-    l.style.background  = '';
-  });
-  const lbl = radio.closest('label');
-  lbl.style.borderColor = 'var(--primary)';
-  lbl.style.background  = '#e8f0fe';
-}
+var totalQ = {{ questions|length }};
+var answered = {};
 
-// Restore selection state on page back
-document.querySelectorAll('.quiz-radio:checked').forEach(r => highlightSelected(r));
+document.addEventListener('change', function(e) {
+  var radio = e.target.closest('input[type="radio"]');
+  if (!radio) return;
+
+  // Update option styling
+  var card = radio.closest('.quiz-card');
+  card.querySelectorAll('.option-label').forEach(function(lbl) {
+    lbl.classList.remove('selected');
+  });
+  radio.closest('.option-label').classList.add('selected');
+
+  // Track answered
+  answered[radio.name] = true;
+  var count = Object.keys(answered).length;
+  document.getElementById('answeredCount').textContent = count + ' of ' + totalQ + ' answered';
+  document.getElementById('progressFill').style.width = (count / totalQ * 100) + '%';
+});
+
+// Restore selections on back navigation
+document.querySelectorAll('input[type="radio"]:checked').forEach(function(r) {
+  r.closest('.option-label').classList.add('selected');
+  answered[r.name] = true;
+});
+
+// Validate on submit
+document.getElementById('quizForm').addEventListener('submit', function(e) {
+  var unanswered = totalQ - Object.keys(answered).length;
+  if (unanswered > 0) {
+    e.preventDefault();
+    alert('Please answer all ' + totalQ + ' questions before submitting. (' + unanswered + ' remaining)');
+  }
+});
 </script>
+{% endif %}
 {% endblock %}

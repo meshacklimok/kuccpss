@@ -1,80 +1,164 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Terms and Conditions | MyWebsite</title>
-    <link rel="stylesheet" href="{% static 'css/style.css' %}">
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            line-height: 1.6;
-            margin: 0;
-            padding: 0;
-            background-color: #f9f9f9;
-            color: #333;
-        }
-        .container {
-            max-width: 800px;
-            margin: 50px auto;
-            padding: 20px;
-            background-color: #fff;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.05);
-        }
-        h1, h2 {
-            color: #222;
-        }
-        h1 {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-        p {
-            margin-bottom: 15px;
-        }
-        ul {
-            margin-left: 20px;
-        }
-        a {
-            color: #0066cc;
-            text-decoration: none;
-        }
-        a:hover {
-            text-decoration: underline;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>Terms and Conditions</h1>
-        <p>Welcome to MyWebsite! By accessing or using our services, you agree to comply with the following terms and conditions.</p>
+{% extends "base.html" %}
+{% load static %}
 
-        <h2>1. Acceptance of Terms</h2>
-        <p>By using this website, you accept and agree to be bound by these terms and conditions. If you do not agree, please do not use our site.</p>
+{% block title %}Terms &amp; Conditions — KUCCPSS{% endblock %}
 
-        <h2>2. Use of Services</h2>
-        <ul>
-            <li>You must be at least 18 years old to use this site.</li>
-            <li>You agree not to misuse our services or engage in illegal activity.</li>
-            <li>All content provided is for informational purposes only.</li>
-        </ul>
+{% block content %}
+<div class="container py-5" style="max-width:860px;">
 
-        <h2>3. Intellectual Property</h2>
-        <p>All content, logos, and trademarks on this site are property of MyWebsite or its licensors. You may not use them without permission.</p>
-
-        <h2>4. Privacy</h2>
-        <p>Your use of our website is also subject to our <a href="{% url 'accounts:privacy' %}">Privacy Policy</a>.</p>
-
-        <h2>5. Limitation of Liability</h2>
-        <p>MyWebsite is not responsible for any direct, indirect, or consequential damages arising from your use of the site.</p>
-
-        <h2>6. Changes to Terms</h2>
-        <p>We may update these terms at any time. Continued use of the website constitutes acceptance of the updated terms.</p>
-
-        <h2>7. Contact Us</h2>
-        <p>If you have questions about these terms, please <a href="{% url 'accounts:contact' %}">contact us</a>.</p>
-
-        <p style="text-align:center; margin-top:30px;">&copy; {{ year }} MyWebsite. All rights reserved.</p>
+    <!-- Header -->
+    <div class="mb-5">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb small">
+                <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
+                <li class="breadcrumb-item active">Terms &amp; Conditions</li>
+            </ol>
+        </nav>
+        <h1 class="fw-bold mb-1" style="font-size:2rem;">Terms &amp; Conditions</h1>
+        <p class="text-muted small">Last updated: June 2025 &nbsp;&bull;&nbsp; Version 1.0</p>
     </div>
-</body>
-</html>
+
+    <div class="card border-0 shadow-sm rounded-4 p-4 p-md-5">
+
+        <p class="lead mb-4">Welcome to <strong>KUCCPSS</strong> — Kenya's career guidance and university placement platform. By accessing or using this website, you agree to be bound by these Terms and Conditions. Please read them carefully.</p>
+
+        <!-- TOC -->
+        <div class="bg-light rounded-3 p-3 mb-5" style="border-left:4px solid var(--primary,#2563eb);">
+            <p class="fw-semibold small mb-2 text-uppercase" style="letter-spacing:.05em;">Contents</p>
+            <ol class="mb-0 small ps-3">
+                <li><a href="#acceptance" class="text-decoration-none">Acceptance of Terms</a></li>
+                <li><a href="#services" class="text-decoration-none">Description of Services</a></li>
+                <li><a href="#eligibility" class="text-decoration-none">Eligibility</a></li>
+                <li><a href="#accounts" class="text-decoration-none">User Accounts</a></li>
+                <li><a href="#accuracy" class="text-decoration-none">Accuracy of Information</a></li>
+                <li><a href="#payments" class="text-decoration-none">Payments &amp; Refunds</a></li>
+                <li><a href="#ip" class="text-decoration-none">Intellectual Property</a></li>
+                <li><a href="#privacy" class="text-decoration-none">Privacy</a></li>
+                <li><a href="#prohibited" class="text-decoration-none">Prohibited Conduct</a></li>
+                <li><a href="#liability" class="text-decoration-none">Limitation of Liability</a></li>
+                <li><a href="#changes" class="text-decoration-none">Changes to Terms</a></li>
+                <li><a href="#contact" class="text-decoration-none">Contact Us</a></li>
+            </ol>
+        </div>
+
+        <!-- 1 -->
+        <section id="acceptance" class="mb-5">
+            <h2 class="h5 fw-bold mb-3 pb-2" style="border-bottom:2px solid #f1f5f9;">1. Acceptance of Terms</h2>
+            <p>By visiting, registering for, or using any feature of KUCCPSS ("the Platform", "we", "us"), you confirm that you have read, understood, and agree to these Terms and Conditions and our Privacy Policy. If you do not agree, you must stop using the Platform immediately.</p>
+        </section>
+
+        <!-- 2 -->
+        <section id="services" class="mb-5">
+            <h2 class="h5 fw-bold mb-3 pb-2" style="border-bottom:2px solid #f1f5f9;">2. Description of Services</h2>
+            <p>KUCCPSS provides tools to help Kenyan KCSE students:</p>
+            <ul>
+                <li>Calculate cluster points using the official KUCCPS formula</li>
+                <li>Discover university, KMTC, TVET, and TTC courses they may qualify for</li>
+                <li>Access career profiles, guidance articles, and placement information</li>
+                <li>Receive AI-assisted career recommendations (premium feature)</li>
+            </ul>
+            <p class="mb-0">The Platform is intended as a <strong>guidance tool only</strong> and does not guarantee admission to any institution. Actual placement decisions are made solely by KUCCPS and the relevant institutions.</p>
+        </section>
+
+        <!-- 3 -->
+        <section id="eligibility" class="mb-5">
+            <h2 class="h5 fw-bold mb-3 pb-2" style="border-bottom:2px solid #f1f5f9;">3. Eligibility</h2>
+            <p>You may use the Platform if you:</p>
+            <ul>
+                <li>Are at least 13 years old (users under 18 should use the Platform with parental/guardian awareness)</li>
+                <li>Provide accurate information during registration</li>
+                <li>Have not been previously suspended or banned from the Platform</li>
+            </ul>
+        </section>
+
+        <!-- 4 -->
+        <section id="accounts" class="mb-5">
+            <h2 class="h5 fw-bold mb-3 pb-2" style="border-bottom:2px solid #f1f5f9;">4. User Accounts</h2>
+            <p>When you register, you are responsible for:</p>
+            <ul>
+                <li>Keeping your login credentials confidential</li>
+                <li>All activity that occurs under your account</li>
+                <li>Notifying us immediately of any unauthorised use of your account</li>
+            </ul>
+            <p class="mb-0">We reserve the right to suspend or terminate accounts that violate these Terms.</p>
+        </section>
+
+        <!-- 5 -->
+        <section id="accuracy" class="mb-5">
+            <h2 class="h5 fw-bold mb-3 pb-2" style="border-bottom:2px solid #f1f5f9;">5. Accuracy of Information</h2>
+            <p>While we strive to keep course information, cutoff points, and cluster data up to date, KUCCPSS does not warrant the completeness, accuracy, or timeliness of any information on the Platform. Cutoff points change every academic year. Always verify important details directly with <a href="https://www.kuccps.ac.ke" target="_blank" rel="noopener">KUCCPS</a> or the relevant institution before making any decisions.</p>
+        </section>
+
+        <!-- 6 -->
+        <section id="payments" class="mb-5">
+            <h2 class="h5 fw-bold mb-3 pb-2" style="border-bottom:2px solid #f1f5f9;">6. Payments &amp; Refunds</h2>
+            <p>Some features of the Platform (such as unlocking full career results) require payment via M-Pesa. By making a payment, you agree that:</p>
+            <ul>
+                <li>Fees are stated in Kenyan Shillings (KES) and are inclusive of applicable taxes</li>
+                <li>Payments are processed securely via Safaricom Daraja M-Pesa</li>
+                <li>Refunds are issued only where a payment was processed but the feature could not be delivered due to a technical error on our side; change of mind does not qualify</li>
+                <li>To request a refund, contact us within 7 days of the transaction</li>
+            </ul>
+        </section>
+
+        <!-- 7 -->
+        <section id="ip" class="mb-5">
+            <h2 class="h5 fw-bold mb-3 pb-2" style="border-bottom:2px solid #f1f5f9;">7. Intellectual Property</h2>
+            <p>All content on the Platform — including but not limited to text, graphics, logos, templates, and code — is owned by KUCCPSS or its licensors and is protected by Kenyan and international copyright law. You may not reproduce, distribute, or create derivative works without our express written permission.</p>
+            <p class="mb-0">The KUCCPS cluster points formula is based on the official KUCCPS algorithm and is used here purely for educational purposes.</p>
+        </section>
+
+        <!-- 8 -->
+        <section id="privacy" class="mb-5">
+            <h2 class="h5 fw-bold mb-3 pb-2" style="border-bottom:2px solid #f1f5f9;">8. Privacy</h2>
+            <p>We collect only the information necessary to provide our services (name, email address, KCSE grade data entered by you). We do not sell your personal data to third parties. Grade data entered into the calculator is stored only to provide your results and improve the service. For details, please contact us at the address below.</p>
+        </section>
+
+        <!-- 9 -->
+        <section id="prohibited" class="mb-5">
+            <h2 class="h5 fw-bold mb-3 pb-2" style="border-bottom:2px solid #f1f5f9;">9. Prohibited Conduct</h2>
+            <p>You agree not to:</p>
+            <ul>
+                <li>Use the Platform for any unlawful purpose</li>
+                <li>Attempt to gain unauthorised access to any part of the Platform or its servers</li>
+                <li>Scrape, copy, or redistribute Platform content in bulk without permission</li>
+                <li>Submit false or misleading information</li>
+                <li>Use automated bots, scripts, or crawlers without prior written consent</li>
+                <li>Harass, abuse, or harm other users</li>
+            </ul>
+        </section>
+
+        <!-- 10 -->
+        <section id="liability" class="mb-5">
+            <h2 class="h5 fw-bold mb-3 pb-2" style="border-bottom:2px solid #f1f5f9;">10. Limitation of Liability</h2>
+            <p>To the fullest extent permitted by Kenyan law, KUCCPSS and its team shall not be liable for any direct, indirect, incidental, or consequential loss arising from:</p>
+            <ul>
+                <li>Reliance on course or cutoff information displayed on the Platform</li>
+                <li>Failure to gain admission to any institution</li>
+                <li>Interruption, errors, or unavailability of the Platform</li>
+            </ul>
+            <p class="mb-0">The Platform is provided "as is" without warranties of any kind.</p>
+        </section>
+
+        <!-- 11 -->
+        <section id="changes" class="mb-5">
+            <h2 class="h5 fw-bold mb-3 pb-2" style="border-bottom:2px solid #f1f5f9;">11. Changes to Terms</h2>
+            <p>We may revise these Terms at any time. The "Last updated" date at the top will reflect the most recent version. Continued use of the Platform after changes are published constitutes acceptance of the revised Terms. We will notify registered users of material changes via email where possible.</p>
+        </section>
+
+        <!-- 12 -->
+        <section id="contact" class="mb-4">
+            <h2 class="h5 fw-bold mb-3 pb-2" style="border-bottom:2px solid #f1f5f9;">12. Contact Us</h2>
+            <p class="mb-2">If you have questions about these Terms, please reach out:</p>
+            <ul class="list-unstyled">
+                <li><i class="fas fa-envelope me-2 text-primary"></i><a href="mailto:limomeshk@gmail.com">limomeshk@gmail.com</a></li>
+                <li class="mt-1"><i class="fas fa-globe me-2 text-primary"></i>kuccpss.ke</li>
+            </ul>
+        </section>
+
+        <hr>
+        <p class="small text-muted text-center mb-0">&copy; {% now "Y" %} KUCCPSS. These Terms are governed by the laws of the Republic of Kenya.</p>
+    </div>
+
+</div>
+{% endblock %}
