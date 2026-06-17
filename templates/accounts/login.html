@@ -49,15 +49,17 @@
             </button>
         </form>
 
+        {% get_providers as socialaccount_providers %}
+        {% for provider in socialaccount_providers %}{% if provider.id == "google" %}
         <div class="d-flex align-items-center gap-2 my-3">
             <hr class="flex-grow-1 m-0"><span class="small text-muted">or</span><hr class="flex-grow-1 m-0">
         </div>
-
         <a href="{% provider_login_url 'google' method='oauth2' %}"
            class="btn btn-outline-secondary w-100 py-2 mb-3 d-flex align-items-center justify-content-center hover-scale">
             <img src="https://cdn-icons-png.flaticon.com/512/2991/2991148.png" width="18" class="me-2" alt="">
             Continue with Google
         </a>
+        {% endif %}{% endfor %}
 
         <div class="text-center">
             <small class="text-muted">Don't have an account?

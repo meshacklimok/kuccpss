@@ -17,11 +17,14 @@
         </div>
 
         <!-- Google Signup (prominent at top) -->
+        {% get_providers as socialaccount_providers %}
+        {% for provider in socialaccount_providers %}{% if provider.id == "google" %}
         <a href="{% provider_login_url 'google' method='oauth2' %}"
            class="btn btn-outline-secondary w-100 py-2 mb-4 d-flex align-items-center justify-content-center hover-scale">
             <img src="https://cdn-icons-png.flaticon.com/512/2991/2991148.png" width="18" class="me-2" alt="">
             Continue with Google
         </a>
+        {% endif %}{% endfor %}
 
         <div class="d-flex align-items-center gap-2 mb-4">
             <hr class="flex-grow-1 m-0"><span class="small text-muted">or register with email</span><hr class="flex-grow-1 m-0">

@@ -15,7 +15,6 @@ python manage.py loaddata data.json \
   --exclude=clusterpoints.subjectresult \
   --exclude=clusterpoints.userkcseresult \
   --exclude=career.studentcoursematch \
-  --exclude=socialaccount \
   || echo "Data load skipped (may already exist)"
 
 # Set the Site domain for django.contrib.sites + allauth
