@@ -134,7 +134,7 @@
 .lce-footer {
     position: fixed; bottom: 0; left: 0; right: 0; z-index: 300;
     background: #fff; border-top: 1px solid #e2e8f0;
-    padding: 0.9rem 1.5rem; display: flex; align-items: center; gap: 1rem;
+    padding: 0.9rem 1.5rem calc(0.9rem + env(safe-area-inset-bottom, 0px)); display: flex; align-items: center; gap: 1rem;
     box-shadow: 0 -4px 20px rgba(30,58,138,0.1);
 }
 .lce-footer-info { flex: 1; min-width: 0; }
@@ -322,7 +322,10 @@
     .dl-bar { flex-direction: column; align-items: flex-start; }
     .guest-cta { flex-direction: column; }
     .pred-table { display: block; overflow-x: auto; }
-    .lce-footer { flex-wrap: wrap; }
+    .lce-footer { flex-wrap: wrap; gap: 0.6rem; padding: 0.75rem 1rem calc(0.75rem + env(safe-area-inset-bottom, 0px)); }
+    .lce-btn-calc { width: 100%; justify-content: center; order: -1; }
+    .lce-btn-back { font-size: 0.78rem; }
+    .lce-footer-info { width: 100%; order: 2; font-size: 0.78rem; }
 }
 </style>
 {% endblock %}
@@ -696,6 +699,15 @@ updateGlobal();
 if (window.history.replaceState) {
     window.history.replaceState(null, null, window.location.href);
 }
+// Auto-scroll to results section when calculation is done
+{% if results %}
+document.addEventListener('DOMContentLoaded', function() {
+    const resultsEl = document.querySelector('.results-divider');
+    if (resultsEl) {
+        setTimeout(() => resultsEl.scrollIntoView({ behavior: 'smooth', block: 'start' }), 350);
+    }
+});
+{% endif %}
 </script>
 {% endblock %}
 {% endblock %}

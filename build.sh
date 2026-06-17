@@ -22,24 +22,33 @@ python manage.py loaddata seed_content.json || echo "Content seed skipped (may a
 
 # Set the Site domain for django.contrib.sites + allauth
 python manage.py shell -c "
+import os
 from django.contrib.sites.models import Site
 from allauth.socialaccount.models import SocialApp
+
 site, _ = Site.objects.get_or_create(id=1)
 site.domain = 'careernext.co.ke'
 site.name = 'CareerNext'
 site.save()
 print('Site set to careernext.co.ke')
 
-# Link Google social app to this site
-try:
+# Create or update Google OAuth SocialApp from env vars
+client_id = os.environ.get('GOOGLE_CLIENT_ID', '')
+secret    = os.environ.get('GOOGLE_SECRET', '')
+if client_id and secret:
+    app, created = SocialApp.objects.update_or_create(
+        provider='google',
+        defaults={'name': 'Google', 'client_id': client_id, 'secret': secret}
+    )
+    app.sites.add(site)
+    print(f'Google OAuth app {\"created\" if created else \"updated\"} and linked to careernext.co.ke')
+else:
     app = SocialApp.objects.filter(provider='google').first()
     if app:
         app.sites.add(site)
-        print('Google social app linked to careernext.co.ke')
+        print('Existing Google social app linked to careernext.co.ke')
     else:
-        print('No Google social app found - add via admin panel')
-except Exception as e:
-    print(f'Social app setup skipped: {e}')
+        print('GOOGLE_CLIENT_ID / GOOGLE_SECRET not set — Google login button will be hidden')
 "
 
 # Create superuser if not exists
