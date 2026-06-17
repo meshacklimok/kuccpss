@@ -17,6 +17,9 @@ python manage.py loaddata data.json \
   --exclude=career.studentcoursematch \
   || echo "Data load skipped (may already exist)"
 
+# Load career profiles, quiz, articles, FAQs, success stories
+python manage.py loaddata seed_content.json || echo "Content seed skipped (may already exist)"
+
 # Set the Site domain for django.contrib.sites + allauth
 python manage.py shell -c "
 from django.contrib.sites.models import Site
