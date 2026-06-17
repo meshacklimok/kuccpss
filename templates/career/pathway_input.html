@@ -164,13 +164,6 @@
 .tags-sub { font-size: 0.72rem; color: #64748b; }
 .tags-select-all { font-size: 0.72rem; font-weight: 700; color: #2563eb; cursor: pointer; border: none; background: none; padding: 0; text-decoration: underline; }
 .tags-select-all:hover { color: #1e3a8a; }
-.county-search {
-    width: 100%; border: 1.5px solid #e2e8f0; border-radius: 8px;
-    background: #f8fafc; color: #1e293b; font-size: 0.82rem; padding: 8px 12px;
-    margin-bottom: 0.75rem; transition: border-color 0.2s;
-}
-.county-search::placeholder { color: #94a3b8; }
-.county-search:focus { outline: none; border-color: var(--pw); box-shadow: 0 0 0 3px var(--pw-bg); }
 .tags-grid { display: flex; flex-wrap: wrap; gap: 0.45rem; }
 .tag-chip {
     display: inline-flex; align-items: center; gap: 0.3rem;
@@ -428,28 +421,6 @@
     </div>
     {% endif %}
 
-    <!-- ══ Counties ══ -->
-    {% if counties and pathway != 'kmtc' %}
-    <div class="tags-section" id="counties-section">
-        <div class="tags-section-head">
-            <div>
-                <div class="tags-section-title">Preferred Counties <span style="color:#475569;font-weight:500;font-size:0.82rem;">(optional)</span></div>
-                <div class="tags-sub">Filter by campus location</div>
-            </div>
-            <button type="button" class="tags-select-all" onclick="selectAllCounties()">Select all</button>
-        </div>
-        <input type="text" class="county-search" placeholder="Search counties..." oninput="filterCounties(this.value)">
-        <div class="county-grid">
-            {% for county in counties %}
-            <label class="county-cb-label" onclick="toggleCounty(this)">
-                <input type="checkbox" name="counties" value="{{ county }}">
-                <div class="county-cb-box"><i class="bi bi-check"></i></div>
-                <span>{{ county|capfirst|lower|title }}</span>
-            </label>
-            {% endfor %}
-        </div>
-    </div>
-    {% endif %}
 
     <div style="height:16px;"></div>
 </div>
@@ -629,25 +600,6 @@ function updateCatValidation() {
 }
 
 /* ══ County checkboxes ══ */
-function toggleCounty(label) {
-    const cb = label.querySelector('input[type=checkbox]');
-    cb.checked = !cb.checked;
-    label.classList.toggle('checked', cb.checked);
-}
-function selectAllCounties() {
-    const labels = document.querySelectorAll('#counties-section .county-cb-label:not(.hidden-county)');
-    const allSel = [...labels].every(l => l.classList.contains('checked'));
-    labels.forEach(label => {
-        const cb = label.querySelector('input[type=checkbox]');
-        cb.checked = !allSel;
-        label.classList.toggle('checked', !allSel);
-    });
-}
-function filterCounties(q) {
-    document.querySelectorAll('#counties-section .county-cb-label').forEach(label => {
-        label.classList.toggle('hidden-county', !label.textContent.trim().toLowerCase().includes(q.toLowerCase()));
-    });
-}
 </script>
 {% endblock %}
 {% endblock %}

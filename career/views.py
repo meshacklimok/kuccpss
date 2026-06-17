@@ -1505,7 +1505,7 @@ def pathway_input(request, pathway):
     if request.method == 'POST':
         request.session['career_pathway'] = pathway_label
         request.session['career_categories'] = request.POST.getlist('categories')
-        request.session['career_counties'] = request.POST.getlist('counties')
+        request.session.pop('career_counties', None)
         request.session['career_institution_type'] = request.POST.get('institution_type', '').strip()
 
         if use_kcse_form:
@@ -1597,7 +1597,6 @@ def pathway_input(request, pathway):
         'pathway': pathway.lower(),
         'pathway_label': pathway_label,
         'mean_grades': MEAN_GRADES,
-        'counties': KENYAN_COUNTIES,
         'tvet_categories': TVET_CATEGORIES,
         'use_kcse_form': use_kcse_form,
         'form': form,
@@ -1744,15 +1743,6 @@ def career_results(request):
             )
             if search_q:
                 qs = qs.filter(course__name__icontains=search_q)
-
-            # County filter — narrow to preferred campus locations
-            _counties = request.session.get('career_counties', [])
-            if _counties:
-                from django.db.models import Q as _Q
-                _cq = _Q()
-                for _cn in _counties:
-                    _cq |= _Q(institution__location__icontains=_cn)
-                qs = qs.filter(_cq)
 
             # Category filter — narrow to preferred programme areas
             _categories = request.session.get('career_categories', [])
@@ -2072,14 +2062,6 @@ def _build_career_matches(request):
                     'institution', 'institution__institution_type',
                 )
             )
-            # County filter
-            _counties = request.session.get('career_counties', [])
-            if _counties:
-                from django.db.models import Q as _Q2
-                _cq2 = _Q2()
-                for _cn2 in _counties:
-                    _cq2 |= _Q2(institution__location__icontains=_cn2)
-                qs = qs.filter(_cq2)
             # Category filter
             _categories = request.session.get('career_categories', [])
             if _categories:
