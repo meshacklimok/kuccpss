@@ -11,19 +11,19 @@ from resources.models import FAQItem, SuccessStory, SiteSetting
 
 FAQ_DATA = [
     # ── General ──────────────────────────────────────────────────────────────
-    ("general", "What is KUCCPSS?",
-     "KUCCPSS is a free online platform that helps Kenyan KCSE graduates calculate their cluster points, discover which university, KMTC, TVET, and TTC courses they qualify for, and explore career options — all using the official KUCCPS formula and placement criteria."),
+    ("general", "What is CareerNext?",
+     "CareerNext is a free online platform that helps Kenyan KCSE graduates calculate their cluster points, discover which university, KMTC, TVET, and TTC courses they qualify for, and explore career options — all using the official KUCCPS formula and placement criteria."),
 
-    ("general", "Is KUCCPSS the same as KUCCPS?",
-     "No. KUCCPS (Kenya Universities and Colleges Central Placement Service) is the official government body that places students into institutions. You apply at kuccps.ac.ke.\n\nKUCCPSS (this website) is an independent, free tool to help you prepare for that application — by calculating your points and finding your eligible courses before the portal opens. We are not affiliated with the government."),
+    ("general", "Is CareerNext the same as KUCCPS?",
+     "No. KUCCPS (Kenya Universities and Colleges Central Placement Service) is the official government body that places students into institutions. You apply at kuccps.ac.ke.\n\nCareerNext (careernext.co.ke) is an independent, free tool to help you prepare for that application — by calculating your points and finding your eligible courses before the portal opens. We are not affiliated with the government."),
 
-    ("general", "Is KUCCPSS free to use?",
+    ("general", "Is CareerNext free to use?",
      "Yes — completely free. Every feature including the cluster points calculator, eligible courses list, career engine, course shortlist, and PDF exports is free for all students. There are no hidden charges or premium tiers."),
 
     ("general", "Do I need to create an account?",
      "The cluster points calculator and basic course browsing are available without an account. However, creating a free account unlocks: saving your grades between sessions, bookmarking courses to a watchlist, building a shortlist, tracking your applications, and getting personalised career engine recommendations."),
 
-    ("general", "Is my data safe on KUCCPSS?",
+    ("general", "Is my data safe on CareerNext?",
      "Yes. Your grades and personal information are stored securely and are never shared with third parties. We do not sell your data. You can delete your account at any time from your Profile settings."),
 
     # ── Cluster Points ────────────────────────────────────────────────────────
@@ -43,8 +43,8 @@ FAQ_DATA = [
      "Yes. The calculator has an OCR (Optical Character Recognition) feature powered by GPT-4o. Take a clear, well-lit photo of your KNEC result slip and upload it — the system will attempt to read your grades automatically. If the photo is unclear, enter grades manually for best accuracy."),
 
     # ── Courses & Pathways ────────────────────────────────────────────────────
-    ("courses", "What pathways does KUCCPSS cover?",
-     "KUCCPSS covers all four KUCCPS placement pathways:\n\n• Degree — Public and private universities (cluster-points based)\n• KMTC — Kenya Medical Training College programmes (grade-based)\n• TVET — Technical and Vocational Education Training institutions\n• TTC — Teacher Training Colleges"),
+    ("courses", "What pathways does CareerNext cover?",
+     "CareerNext covers all four KUCCPS placement pathways:\n\n• Degree — Public and private universities (cluster-points based)\n• KMTC — Kenya Medical Training College programmes (grade-based)\n• TVET — Technical and Vocational Education Training institutions\n• TTC — Teacher Training Colleges"),
 
     ("courses", "How do I find courses I qualify for?",
      "1. Go to the Cluster Points Calculator and enter your grades.\n2. Click 'View Eligible Courses' — you'll see every course whose cutoff point is at or below your calculated cluster score.\n3. Or use the Career Guidance Engine for a more personalised, filtered recommendation."),
@@ -68,8 +68,8 @@ FAQ_DATA = [
     ("kuccps", "What happens if I don't get my first choice?",
      "KUCCPS works through your ranked choices in order. If you don't qualify for your first choice (because your cluster points are below the cutoff or slots are filled), the system tries your second choice, then third, and so on. If none of your choices are successful, you may participate in the revision or inter-institutional transfer window."),
 
-    ("kuccps", "Does KUCCPSS submit my application to KUCCPS?",
-     "No. KUCCPSS is only a preparation and guidance tool. Your actual placement application must be submitted directly on the official KUCCPS portal at kuccps.ac.ke during the application window. KUCCPSS helps you decide what to apply for — you still complete the application yourself on the official site."),
+    ("kuccps", "Does CareerNext submit my application to KUCCPS?",
+     "No. CareerNext is only a preparation and guidance tool. Your actual placement application must be submitted directly on the official KUCCPS portal at kuccps.ac.ke during the application window. CareerNext helps you decide what to apply for — you still complete the application yourself on the official site."),
 
     ("kuccps", "What is the HELB loan and how do I apply?",
      "The Higher Education Loans Board (HELB) provides subsidised loans and bursaries to Kenyan students in accredited institutions. Applications are done online at helb.co.ke. Apply as soon as you get your placement letter — bursary deadlines are typically strict."),
@@ -79,7 +79,7 @@ FAQ_DATA = [
      "On the Login page, click 'Forgot password?'. Enter your email address and we'll send you a reset link. Check your spam/junk folder if you don't see it within a few minutes."),
 
     ("account", "Can I sign in with Google?",
-     "Yes — the login page has a 'Continue with Google' option powered by Google OAuth. Your KUCCPSS account will be linked to your Google account for quick sign-in on any device."),
+     "Yes — the login page has a 'Continue with Google' option powered by Google OAuth. Your CareerNext account will be linked to your Google account for quick sign-in on any device."),
 
     ("account", "How do I update my county or KCSE year?",
      "Go to My Profile (accessible from the top-right account menu). You can update your full name, county, KCSE year, and profile picture there."),
@@ -88,7 +88,7 @@ FAQ_DATA = [
      "The 'Recommended For You' section on your dashboard shows real results only after you've run the Career Engine at least once. Visit the Career Guidance Engine, enter your grades and preferences, and click Proceed. Your dashboard will then display your personalised matches."),
 
     ("account", "How do I report an error in course data or cutoff points?",
-     "If you spot incorrect course information, outdated cutoff points, or a missing institution, please email us at info@kuccpss.co.ke with details. We update the database regularly and appreciate corrections from students and educators."),
+     "If you spot incorrect course information, outdated cutoff points, or a missing institution, please email us at info@careernext.co.ke with details. We update the database regularly and appreciate corrections from students and educators."),
 ]
 
 
@@ -96,7 +96,7 @@ STORIES_DATA = [
     {
         "name": "Faith Wanjiru", "initials": "FW", "county": "Kiambu County",
         "work_location": "Nairobi", "kcse_grade": "A-",
-        "quote": "I wasn't sure my grades covered Computer Science. KUCCPSS confirmed I qualified and showed me the exact cluster I needed. I'm now in second year at UoN and interning at a Nairobi tech company.",
+        "quote": "I wasn't sure my grades covered Computer Science. CareerNext confirmed I qualified and showed me the exact cluster I needed. I'm now in second year at UoN and interning at a Nairobi tech company.",
         "course_name": "BSc Computer Science", "institution": "University of Nairobi",
         "pathway": "degree", "year": 2023,
         "avatar_bg": "#eef2ff", "avatar_color": "#4f46e5", "order": 1,
@@ -112,7 +112,7 @@ STORIES_DATA = [
     {
         "name": "Njeri Wambui", "initials": "NW", "county": "Muranga County",
         "work_location": "Muranga", "kcse_grade": "B",
-        "quote": "I wanted Medicine but my points fell short. KUCCPSS recommended BSc Nursing as a near-equivalent with strong job prospects. I'm now a Registered Nurse at Muranga County Referral Hospital and I love every shift.",
+        "quote": "I wanted Medicine but my points fell short. CareerNext recommended BSc Nursing as a near-equivalent with strong job prospects. I'm now a Registered Nurse at Muranga County Referral Hospital and I love every shift.",
         "course_name": "BSc Nursing", "institution": "Mount Kenya University",
         "pathway": "degree", "year": 2022,
         "avatar_bg": "#f5f3ff", "avatar_color": "#7c3aed", "order": 3,
@@ -128,7 +128,7 @@ STORIES_DATA = [
     {
         "name": "Hassan Abdullahi", "initials": "HA", "county": "Mombasa County",
         "work_location": "Mombasa", "kcse_grade": "B-",
-        "quote": "KUCCPSS shortlisted diploma options that matched my Commerce grade. I picked Business Administration, graduated in 2023, and now run a small logistics business linking Mombasa traders to Nairobi markets — 8 employees and counting.",
+        "quote": "CareerNext shortlisted diploma options that matched my Commerce grade. I picked Business Administration, graduated in 2023, and now run a small logistics business linking Mombasa traders to Nairobi markets — 8 employees and counting.",
         "course_name": "Diploma in Business Administration", "institution": "Kenya School of Business",
         "pathway": "diploma", "year": 2022,
         "avatar_bg": "#ecfeff", "avatar_color": "#0891b2", "order": 5,
@@ -146,10 +146,10 @@ STORIES_DATA = [
 
 SETTINGS_DATA = [
     # Contact
-    ("contact_email",    "Contact Email",          "info@kuccpss.co.ke",    "email",    "contact"),
+    ("contact_email",    "Contact Email",          "info@careernext.co.ke", "email",    "contact"),
     ("whatsapp_number",  "WhatsApp Number",         "254700000000",          "phone",    "contact"),
-    ("instagram_handle", "Instagram Handle",        "kuccpss",               "text",     "social"),
-    ("twitter_handle",   "Twitter / X Handle",      "kuccpss",               "text",     "social"),
+    ("instagram_handle", "Instagram Handle",        "careernext_ke",         "text",     "social"),
+    ("twitter_handle",   "Twitter / X Handle",      "careernext_ke",         "text",     "social"),
     ("facebook_url",     "Facebook URL",            "",                      "url",      "social"),
     # Hero / branding
     ("hero_badge_text",  "Hero Badge Text",         "Kenya's #1 Placement Guide", "text", "hero"),
@@ -159,7 +159,7 @@ SETTINGS_DATA = [
      "textarea", "hero"),
     # About page
     ("about_mission",    "About — Mission Paragraph",
-     "KUCCPSS was built to change that. We put the full KUCCPS formula into a simple tool, pair it with a complete course database, and wrap it in career guidance — so every student can walk into the application portal knowing exactly where they stand.",
+     "CareerNext was built to change that. We put the full KUCCPS formula into a simple tool, pair it with a complete course database, and wrap it in career guidance — so every student can walk into the application portal knowing exactly where they stand.",
      "textarea", "about"),
 ]
 

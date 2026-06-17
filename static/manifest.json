@@ -1,6 +1,6 @@
 {
-  "name": "KUCCPSS — Cluster Points Calculator",
-  "short_name": "KUCCPSS",
+  "name": "CareerNext — Cluster Points Calculator",
+  "short_name": "CareerNext",
   "description": "Calculate your KCSE cluster points and find courses you qualify for at Kenyan universities and colleges.",
   "start_url": "/",
   "display": "standalone",
