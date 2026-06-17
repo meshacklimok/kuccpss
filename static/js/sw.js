@@ -1,7 +1,6 @@
-const CACHE = 'kuccpss-v1';
+const CACHE = 'careernext-v2';
 const PRECACHE = [
   '/',
-  '/calculator/',
   '/static/css/style.css',
   '/static/js/main.js',
 ];
@@ -21,21 +20,20 @@ self.addEventListener('activate', e => {
 });
 
 self.addEventListener('fetch', e => {
-  // Only handle GET; skip non-http; skip Django admin/API
   if (e.request.method !== 'GET') return;
   const url = new URL(e.request.url);
-  if (url.pathname.startsWith('/admin/') || url.pathname.startsWith('/accounts/')) return;
+  // Skip Django dynamic pages — only cache static assets
+  if (!url.pathname.startsWith('/static/')) return;
 
   e.respondWith(
     caches.match(e.request).then(cached => {
       const network = fetch(e.request).then(resp => {
-        if (resp.ok && url.origin === location.origin) {
+        if (resp.ok) {
           const clone = resp.clone();
           caches.open(CACHE).then(c => c.put(e.request, clone));
         }
         return resp;
       });
-      // Stale-while-revalidate: serve cache immediately, update in background
       return cached || network;
     })
   );
