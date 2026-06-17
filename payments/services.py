@@ -1,5 +1,8 @@
+import logging
 import requests
 from django.conf import settings
+
+logger = logging.getLogger(__name__)
 
 SANDBOX_BASE = "https://sandbox.intasend.com/api/v1"
 PROD_BASE = "https://payment.intasend.com/api/v1"
@@ -49,7 +52,9 @@ def initiate_stk_push(phone_number: str, amount: int, payment_ref: str, narrativ
         "narrative": narrative,
         "api_ref": payment_ref,
     }
+    logger.info("IntaSend STK push → %s | payload: %s", url, payload)
     response = requests.post(url, json=payload, headers=headers, timeout=15)
+    logger.info("IntaSend response %s: %s", response.status_code, response.text[:500])
     response.raise_for_status()
     data = response.json()
     return data.get("id") or data.get("invoice", {}).get("id") or ""
