@@ -13,11 +13,22 @@ def course_types_list(request):
     all_types = list(
         CourseType.objects.annotate(course_count=Count('course')).all()
     )
-    tvet_types = [t for t in all_types if t.name.startswith('TVET')]
-    main_types = [t for t in all_types if not t.name.startswith('TVET')]
+    tvet_types = [t for t in all_types if t.name.startswith('TVET') and t.course_count > 0]
 
-    MAIN_ORDER = ['Degree', 'KMTC', 'TTC']
-    main_types.sort(key=lambda t: MAIN_ORDER.index(t.name) if t.name in MAIN_ORDER else len(MAIN_ORDER))
+    # Promote TVET Certificate (Level 5) into the main cards with a cleaner label
+    cert_tvet = next((t for t in tvet_types if t.slug == 'tvet-certificate-level-5'), None)
+    if cert_tvet:
+        cert_tvet.display_name = 'Certificate'
+        cert_tvet.display_desc = 'TVET Certificate programmes at technical & vocational colleges.'
+        tvet_types = [t for t in tvet_types if t.slug != 'tvet-certificate-level-5']
+
+    # Exclude non-TVET types with 0 courses (removes the empty 'Certificate' DB artefact)
+    main_types = [t for t in all_types if not t.name.startswith('TVET') and t.course_count > 0]
+    if cert_tvet:
+        main_types.append(cert_tvet)
+
+    MAIN_ORDER = ['Degree', 'KMTC', 'TTC', 'Certificate']
+    main_types.sort(key=lambda t: MAIN_ORDER.index(getattr(t, 'display_name', t.name)) if getattr(t, 'display_name', t.name) in MAIN_ORDER else len(MAIN_ORDER))
 
     TVET_ORDER = [
         'TVET Diploma (Level 6)',
