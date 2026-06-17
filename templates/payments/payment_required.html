@@ -30,7 +30,7 @@
         <div class="d-flex gap-4 justify-content-center flex-wrap">
           <div class="text-center">
             <div class="fw-bold text-success fs-3">
-              KES {% if feature == 'advanced_analysis' %}149{% else %}99{% endif %}
+              KES {{ price }}
             </div>
             <div class="small text-muted">One-time</div>
           </div>
@@ -76,7 +76,7 @@
           <div id="pay-error" class="alert alert-danger d-none small"></div>
           <button id="pay-btn" class="btn btn-gradient-success w-100 py-2 fw-bold">
             <i class="fas fa-lock-open me-2"></i>
-            Pay KES {% if feature == 'advanced_analysis' %}149{% else %}99{% endif %} &amp; Unlock
+            Pay KES {{ price }} &amp; Unlock
           </button>
         </div>
 
