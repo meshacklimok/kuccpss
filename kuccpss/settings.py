@@ -33,10 +33,18 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-fallback-do-not-use-i
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DJANGO_DEBUG', 'True') == 'True'
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', '.onrender.com']
+ALLOWED_HOSTS = [
+    'localhost',
+    '127.0.0.1',
+    '.onrender.com',
+    'careernext.co.ke',
+    'www.careernext.co.ke',
+]
 
 CSRF_TRUSTED_ORIGINS = [
     'https://*.onrender.com',
+    'https://careernext.co.ke',
+    'https://www.careernext.co.ke',
 ]
 
 
@@ -75,7 +83,6 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 TIME_ZONE = 'Africa/Nairobi'
-SITE_ID = 2
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -168,7 +175,7 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
-SITE_ID = 2
+SITE_ID = int(os.environ.get('SITE_ID', 1))
 AUTH_USER_MODEL = "accounts.User"
 LOGIN_REDIRECT_URL = "/"
 LOGOUT_REDIRECT_URL = "/accounts/login/"
