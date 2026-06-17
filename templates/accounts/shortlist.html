@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}My Shortlist — KUCCPSS{% endblock %}
+{% block title %}My Shortlist — CareerNext{% endblock %}
 
 {% block content %}
 <style>
@@ -462,7 +462,7 @@ function setRank(courseId, rankVal, selectEl) {
 // WhatsApp share
 document.getElementById('waShareBtn') && document.getElementById('waShareBtn').addEventListener('click', function() {
   const courses = [{% for item in items %}"{{ item.course.name }}"{% if not forloop.last %},{% endif %}{% endfor %}];
-  let msg = "🎓 My KUCCPSS Course Shortlist:\n";
+  let msg = "🎓 My CareerNext Course Shortlist:\n";
   courses.forEach((c, i) => { msg += (i+1) + ". " + c + "\n"; });
   msg += "\nFind your courses free at kuccpss.co.ke";
   window.open("https://wa.me/?text=" + encodeURIComponent(msg), "_blank");

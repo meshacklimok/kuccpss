@@ -219,7 +219,7 @@
 .lce-footer {
     position: fixed; bottom: 0; left: 0; right: 0; z-index: 300;
     background: #fff; border-top: 1px solid #e2e8f0;
-    padding: 0.9rem 1.5rem; display: flex; align-items: center; gap: 1rem;
+    padding: 0.9rem 1.5rem calc(0.9rem + env(safe-area-inset-bottom)); display: flex; align-items: center; gap: 1rem;
     box-shadow: 0 -4px 20px rgba(30,58,138,0.1);
 }
 .lce-footer-info { flex: 1; min-width: 0; }
@@ -242,7 +242,12 @@
 .lce-btn-continue:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(30,58,138,0.45); }
 .lce-btn-continue:disabled { background: #e2e8f0; color: #94a3b8; box-shadow: none; cursor: not-allowed; transform: none; }
 
-@media (max-width: 480px) { .lce-footer { flex-wrap: wrap; } }
+@media (max-width: 480px) {
+    .lce-footer { flex-wrap: wrap; gap: 0.6rem; padding: 0.75rem 1rem calc(0.75rem + env(safe-area-inset-bottom)); }
+    .lce-btn-continue { width: 100%; justify-content: center; order: -1; }
+    .lce-btn-back { font-size: 0.78rem; }
+    .lce-footer-info { width: 100%; order: 2; font-size: 0.78rem; }
+}
 </style>
 
 <!-- ══ sticky step bar ══ -->
@@ -518,6 +523,11 @@ document.querySelectorAll('.mgp').forEach(pill => {
 const _preGrade = document.getElementById('meanGradeHidden').value;
 if (_preGrade) { selectMgp(_preGrade); }
 
+function catsOk() {
+    if (!_hasCats) return true;
+    return document.querySelectorAll('#cat-grid .county-cb-label.checked').length > 0;
+}
+
 {% if use_kcse_form %}
 /* ══ Subject select changes ══ */
 function onSelChange(field, secId, sel) {
@@ -539,10 +549,6 @@ function updateSecCount(secId) {
     if (sec) sec.classList.toggle('has-values', filled > 0);
 }
 
-function catsOk() {
-    if (!_hasCats) return true;
-    return document.querySelectorAll('#cat-grid .county-cb-label.checked').length > 0;
-}
 function updateGlobal() {
     const all      = document.querySelectorAll('select.lce-select.has-value').length;
     const gradesOk = all >= 7;
@@ -629,7 +635,7 @@ function toggleCounty(label) {
     label.classList.toggle('checked', cb.checked);
 }
 function selectAllCounties() {
-    const labels = document.querySelectorAll('.county-cb-label:not(.hidden-county):not([id*=cat])');
+    const labels = document.querySelectorAll('#counties-section .county-cb-label:not(.hidden-county)');
     const allSel = [...labels].every(l => l.classList.contains('checked'));
     labels.forEach(label => {
         const cb = label.querySelector('input[type=checkbox]');

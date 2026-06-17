@@ -2,6 +2,22 @@ from django.db import models
 from django.conf import settings
 
 
+class PaymentFeature(models.Model):
+    """Admin-configurable price and enabled flag per feature."""
+    feature = models.CharField(max_length=50, unique=True)
+    label = models.CharField(max_length=100)
+    price = models.PositiveIntegerField(default=0, help_text="Price in KES (0 = free)")
+    is_enabled = models.BooleanField(default=True, help_text="Disable to make this feature free for everyone")
+
+    class Meta:
+        verbose_name = "Payment Feature"
+        verbose_name_plural = "Payment Features"
+
+    def __str__(self):
+        status = "FREE" if not self.is_enabled or self.price == 0 else f"KES {self.price}"
+        return f"{self.label} ({status})"
+
+
 class Payment(models.Model):
     STATUS_CHOICES = [
         ("pending", "Pending"),

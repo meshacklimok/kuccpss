@@ -737,7 +737,7 @@ def export_shortlist_pdf(request: HttpRequest) -> HttpResponse:
     p.rect(0, h - 3*cm, w, 3*cm, fill=1, stroke=0)
     p.setFillColor(colors.white)
     p.setFont('Helvetica-Bold', 18)
-    p.drawString(1.5*cm, h - 1.6*cm, 'KUCCPSS — My Course Shortlist')
+    p.drawString(1.5*cm, h - 1.6*cm, 'CareerNext — My Course Shortlist')
     p.setFont('Helvetica', 9)
     name = request.user.full_name or request.user.email
     p.drawString(1.5*cm, h - 2.3*cm, f'Student: {name}   |   Generated: {timezone.now().strftime("%d %b %Y")}')
@@ -794,7 +794,8 @@ def export_shortlist_pdf(request: HttpRequest) -> HttpResponse:
     # Footer
     p.setFont('Helvetica', 7)
     p.setFillColor(colors.HexColor('#94a3b8'))
-    p.drawCentredString(w/2, 1*cm, 'KUCCPSS is an independent tool — apply officially at kuccps.ac.ke')
+    p.drawCentredString(w/2, 1.5*cm, 'careernext.co.ke  |  CareerNext — Empowering Kenyan Students')
+    p.drawCentredString(w/2, 1*cm, 'Apply officially at kuccps.ac.ke')
     p.save()
     return response
 

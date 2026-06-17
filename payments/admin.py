@@ -1,5 +1,12 @@
 from django.contrib import admin
-from .models import Payment, Transaction
+from .models import Payment, Transaction, PaymentFeature
+
+
+@admin.register(PaymentFeature)
+class PaymentFeatureAdmin(admin.ModelAdmin):
+    list_display = ("label", "feature", "price", "is_enabled")
+    list_editable = ("price", "is_enabled")
+    ordering = ("feature",)
 
 
 class TransactionInline(admin.TabularInline):
