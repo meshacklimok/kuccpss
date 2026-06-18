@@ -450,6 +450,8 @@ def terms_view(request):
 
 
 def public_home_view(request):
+    if request.user.is_authenticated:
+        return redirect("accounts:dashboard")
     from resources.models import SuccessStory
     stories = SuccessStory.objects.filter(is_active=True).order_by('order', 'id')
     return render(request, "accounts/home.html", {"stories": stories})
