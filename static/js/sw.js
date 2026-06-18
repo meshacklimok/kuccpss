@@ -1,4 +1,4 @@
-const CACHE = 'careernext-v3';
+const CACHE = 'careernext-v4';
 const PRECACHE = [
   '/',
   '/static/css/style.css',
@@ -52,19 +52,37 @@ self.addEventListener('notificationclick', e => {
 self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET') return;
   const url = new URL(e.request.url);
-  // Skip Django dynamic pages — only cache static assets
-  if (!url.pathname.startsWith('/static/')) return;
 
+  // Homepage: cache-first so it works offline
+  if (url.pathname === '/') {
+    e.respondWith(
+      caches.match('/').then(cached => {
+        const network = fetch(e.request).then(resp => {
+          if (resp.ok) caches.open(CACHE).then(c => c.put('/', resp.clone()));
+          return resp;
+        }).catch(() => cached);
+        return cached || network;
+      })
+    );
+    return;
+  }
+
+  // Static assets: cache-first
+  if (url.pathname.startsWith('/static/')) {
+    e.respondWith(
+      caches.match(e.request).then(cached => {
+        const network = fetch(e.request).then(resp => {
+          if (resp.ok) caches.open(CACHE).then(c => c.put(e.request, resp.clone()));
+          return resp;
+        });
+        return cached || network;
+      })
+    );
+    return;
+  }
+
+  // Everything else: network-first, fall back to cached homepage when offline
   e.respondWith(
-    caches.match(e.request).then(cached => {
-      const network = fetch(e.request).then(resp => {
-        if (resp.ok) {
-          const clone = resp.clone();
-          caches.open(CACHE).then(c => c.put(e.request, clone));
-        }
-        return resp;
-      });
-      return cached || network;
-    })
+    fetch(e.request).catch(() => caches.match('/'))
   );
 });
