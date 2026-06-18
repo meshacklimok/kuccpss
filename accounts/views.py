@@ -8,7 +8,7 @@ from django.core.cache import cache
 from django.utils import timezone
 from django.views import View
 from django.views.decorators.http import require_http_methods
-from django.http import HttpRequest, HttpResponse
+from django.http import HttpRequest, HttpResponse, JsonResponse
 
 from .forms import UserRegistrationForm, UserLoginForm
 from .models import (

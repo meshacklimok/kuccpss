@@ -152,7 +152,7 @@ def course_detail(request, type_slug, category_slug=None, course_slug=None):
 
     has_data = [o for o in offerings if o.cutoff_points and len(o.cutoff_points) >= 2]
     if has_data:
-        all_years = set()
+        all_years = set()          
         for o in has_data:
             all_years.update(o.cutoff_points.keys())
         years = sorted(all_years)
