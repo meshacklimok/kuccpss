@@ -219,6 +219,9 @@ OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
 import base64 as _b64
 VAPID_PUBLIC_KEY  = os.environ.get("VAPID_PUBLIC_KEY", "")
 _vapid_priv_b64   = os.environ.get("VAPID_PRIVATE_KEY", "")
+# Add padding if stripped (common when copying base64 keys)
+if _vapid_priv_b64:
+    _vapid_priv_b64 += "=" * (-len(_vapid_priv_b64) % 4)
 VAPID_PRIVATE_KEY = _b64.b64decode(_vapid_priv_b64).decode() if _vapid_priv_b64 else ""
 VAPID_MAILTO      = os.environ.get("VAPID_MAILTO", "info@careernext.co.ke")
 
