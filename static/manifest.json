@@ -2,7 +2,7 @@
   "name": "CareerNext — Cluster Points Calculator",
   "short_name": "CareerNext",
   "description": "Calculate your KCSE cluster points and find courses you qualify for at Kenyan universities and colleges.",
-  "start_url": "/",
+  "start_url": "/dashboard/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#1e3a8a",
