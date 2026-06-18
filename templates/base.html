@@ -230,7 +230,7 @@
 /* Road */
 .splash-road {
   position: relative; width: min(320px, 90vw); height: 60px;
-  opacity: 0; animation: fadeUp 0.6s 0.3s ease forwards;
+  opacity: 0; animation: fadeUp 0.4s 0.2s ease forwards;
 }
 .road-svg { width: 100%; height: 100%; }
 
@@ -238,20 +238,19 @@
 .splash-cap {
   position: absolute; top: 50%; left: 0;
   transform: translate(-50%, -80%);
-  animation: capJourney 2s 0.5s cubic-bezier(0.4,0,0.2,1) forwards;
+  animation: capJourney 1.2s 0.3s cubic-bezier(0.4,0,0.2,1) forwards;
   filter: drop-shadow(0 0 12px rgba(147,197,253,0.8));
 }
 .cap-glow {
   position: absolute; inset: -8px; border-radius: 50%;
   background: radial-gradient(circle, rgba(147,197,253,0.35) 0%, transparent 70%);
-  animation: pulse 1s 0.5s ease infinite alternate;
+  animation: pulse 0.8s 0.3s ease infinite alternate;
 }
 @keyframes capJourney {
-  0%   { left: 0%;   top: 50%; }
+  0%   { left: 0%;    top: 50%; }
   30%  { left: 37.5%; top: 50%; }
-  55%  { left: 37.5%; top: 35%; }
-  70%  { left: 50%;  top: 50%; }
-  85%  { left: 81.25%; top: 50%; }
+  55%  { left: 50%;   top: 50%; }
+  80%  { left: 81.25%; top: 50%; }
   100% { left: 81.25%; top: 50%; }
 }
 @keyframes pulse {
@@ -262,8 +261,11 @@
 /* Logo */
 .splash-logo {
   font-size: clamp(2rem, 8vw, 3.2rem);
-  font-weight: 900; color: #fff; letter-spacing: -1px;
-  opacity: 0; animation: fadeUp 0.6s 0.2s ease forwards;
+  font-weight: 900; letter-spacing: -1px;
+  background: linear-gradient(135deg, #ffffff 0%, #93c5fd 50%, #60a5fa 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+  opacity: 0; animation: fadeUp 0.5s 0.15s ease forwards;
 }
 
 /* Tagline typewriter */
@@ -271,19 +273,19 @@
   font-size: clamp(0.85rem, 3.5vw, 1.05rem);
   color: rgba(147,197,253,0.9); font-weight: 500; letter-spacing: 0.02em;
   min-height: 1.5em;
-  opacity: 0; animation: fadeUp 0.5s 1.2s ease forwards;
+  opacity: 0; animation: fadeUp 0.4s 0.65s ease forwards;
 }
 
 /* Progress bar */
 .splash-bar-wrap {
   width: min(220px, 70vw); height: 3px;
   background: rgba(255,255,255,0.12); border-radius: 99px; overflow: hidden;
-  opacity: 0; animation: fadeUp 0.5s 0.8s ease forwards;
+  opacity: 0; animation: fadeUp 0.4s 0.5s ease forwards;
 }
 .splash-bar {
   height: 100%; width: 0; border-radius: 99px;
   background: linear-gradient(90deg, #60a5fa, #a78bfa);
-  animation: barFill 2s 0.9s cubic-bezier(0.4,0,0.2,1) forwards;
+  animation: barFill 1.5s 0.5s cubic-bezier(0.4,0,0.2,1) forwards;
 }
 @keyframes barFill { to { width: 100%; } }
 @keyframes fadeUp {
@@ -306,12 +308,13 @@
     || window.navigator.standalone === true;
   if (!isStandalone) return;
 
+  var isAuth = {{ user.is_authenticated|yesno:"true,false" }};
   var splash = document.getElementById('pwa-splash');
   splash.style.display = 'block';
 
   // Seed stars
   var starsEl = document.getElementById('splashStars');
-  for (var i = 0; i < 55; i++) {
+  for (var i = 0; i < 40; i++) {
     var s = document.createElement('div');
     s.className = 'splash-star';
     var sz = Math.random() * 2.5 + 1;
@@ -320,27 +323,32 @@
       'height:' + sz + 'px',
       'top:'    + Math.random() * 100 + '%',
       'left:'   + Math.random() * 100 + '%',
-      'animation-delay:' + (Math.random() * 2).toFixed(2) + 's',
-      'animation-duration:' + (1.5 + Math.random()).toFixed(2) + 's',
+      'animation-delay:' + (Math.random() * 1.5).toFixed(2) + 's',
+      'animation-duration:' + (1 + Math.random()).toFixed(2) + 's',
     ].join(';');
     starsEl.appendChild(s);
   }
 
   // Typewriter tagline
-  var phrases = ['Your journey begins here.', 'From KCSE → to Career.', 'Find your perfect course.'];
+  var phrases = ['Your journey begins here.', 'From KCSE to Career.', 'Find your perfect course.'];
   var phrase = phrases[Math.floor(Math.random() * phrases.length)];
   var tagEl = document.getElementById('splashTagline');
-  var i = 0;
+  var idx = 0;
   setTimeout(function tick() {
-    tagEl.textContent = phrase.slice(0, ++i);
-    if (i < phrase.length) setTimeout(tick, 48);
-  }, 1300);
+    tagEl.textContent = phrase.slice(0, ++idx);
+    if (idx < phrase.length) setTimeout(tick, 40);
+  }, 700);
 
-  // Dismiss after 3s
+  // Dismiss after 1.8s then redirect
   setTimeout(function () {
     splash.classList.add('splash-exit');
-    setTimeout(function () { splash.style.display = 'none'; }, 500);
-  }, 3000);
+    setTimeout(function () {
+      splash.style.display = 'none';
+      if (isAuth && window.location.pathname === '/') {
+        window.location.replace('/dashboard/');
+      }
+    }, 400);
+  }, 1800);
 }());
 </script>
 
@@ -409,6 +417,12 @@
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle px-2" href="#" data-bs-toggle="dropdown">More</a>
                         <ul class="dropdown-menu">
+                            {% if user.is_authenticated %}
+                            <li><a class="dropdown-item" href="{% url 'home' %}">
+                                <i class="fas fa-home me-2 text-primary"></i>Home Page
+                            </a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            {% endif %}
                             <li><a class="dropdown-item" href="{% url 'resources:resource_list' %}">
                                 <i class="fas fa-file-pdf me-2 text-danger"></i>Guides &amp; PDFs
                             </a></li>
