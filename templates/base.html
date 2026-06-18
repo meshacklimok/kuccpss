@@ -146,6 +146,204 @@
 </head>
 <body>
 
+<!-- ── PWA SPLASH SCREEN (standalone mode only) ── -->
+<div id="pwa-splash" aria-hidden="true" style="display:none;">
+  <div class="splash-bg"></div>
+  <div class="splash-content">
+    <!-- Stars -->
+    <div class="splash-stars" id="splashStars"></div>
+
+    <!-- Journey road -->
+    <div class="splash-road">
+      <svg viewBox="0 0 320 60" xmlns="http://www.w3.org/2000/svg" class="road-svg">
+        <!-- dashed road line -->
+        <line x1="0" y1="30" x2="320" y2="30" stroke="rgba(255,255,255,0.15)" stroke-width="2" stroke-dasharray="12 8"/>
+        <!-- milestones -->
+        <circle cx="60"  cy="30" r="4" fill="rgba(147,197,253,0.5)"/>
+        <circle cx="160" cy="30" r="4" fill="rgba(147,197,253,0.5)"/>
+        <circle cx="260" cy="30" r="4" fill="rgba(147,197,253,0.5)"/>
+        <!-- milestone labels -->
+        <text x="60"  y="50" text-anchor="middle" font-size="8" fill="rgba(147,197,253,0.7)">KCSE</text>
+        <text x="160" y="50" text-anchor="middle" font-size="8" fill="rgba(147,197,253,0.7)">Course</text>
+        <text x="260" y="50" text-anchor="middle" font-size="8" fill="rgba(147,197,253,0.7)">Career</text>
+      </svg>
+
+      <!-- Graduation cap travelling along the road -->
+      <div class="splash-cap" id="splashCap">
+        <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" width="48" height="48">
+          <!-- board -->
+          <polygon points="24,6 48,18 24,30 0,18" fill="#fff"/>
+          <!-- top shine -->
+          <polygon points="24,6 36,12 24,18 12,12" fill="rgba(255,255,255,0.3)"/>
+          <!-- tassel string -->
+          <line x1="40" y1="18" x2="40" y2="34" stroke="#fbbf24" stroke-width="2.5" stroke-linecap="round"/>
+          <circle cx="40" cy="36" r="3" fill="#fbbf24"/>
+          <!-- stem -->
+          <rect x="21" y="18" width="6" height="16" rx="1" fill="rgba(255,255,255,0.9)"/>
+          <!-- rim -->
+          <ellipse cx="24" cy="34" rx="10" ry="4" fill="rgba(255,255,255,0.85)"/>
+        </svg>
+        <div class="cap-glow"></div>
+      </div>
+    </div>
+
+    <!-- Logo wordmark -->
+    <div class="splash-logo">CareerNext</div>
+
+    <!-- Animated tagline -->
+    <div class="splash-tagline" id="splashTagline"></div>
+
+    <!-- Progress bar -->
+    <div class="splash-bar-wrap">
+      <div class="splash-bar" id="splashBar"></div>
+    </div>
+  </div>
+</div>
+
+<style>
+#pwa-splash {
+  position: fixed; inset: 0; z-index: 99999;
+  overflow: hidden;
+}
+.splash-bg {
+  position: absolute; inset: 0;
+  background: linear-gradient(145deg, #0f172a 0%, #1e3a8a 55%, #1e40af 100%);
+}
+.splash-content {
+  position: relative; z-index: 2;
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; height: 100%;
+  gap: 1.2rem; padding: 2rem;
+}
+
+/* Stars */
+.splash-stars { position: absolute; inset: 0; pointer-events: none; }
+.splash-star {
+  position: absolute; border-radius: 50%; background: #fff;
+  animation: starTwinkle 2s infinite alternate;
+}
+@keyframes starTwinkle {
+  from { opacity: 0.1; transform: scale(0.8); }
+  to   { opacity: 0.9; transform: scale(1.2); }
+}
+
+/* Road */
+.splash-road {
+  position: relative; width: min(320px, 90vw); height: 60px;
+  opacity: 0; animation: fadeUp 0.6s 0.3s ease forwards;
+}
+.road-svg { width: 100%; height: 100%; }
+
+/* Graduation cap */
+.splash-cap {
+  position: absolute; top: 50%; left: 0;
+  transform: translate(-50%, -80%);
+  animation: capJourney 2s 0.5s cubic-bezier(0.4,0,0.2,1) forwards;
+  filter: drop-shadow(0 0 12px rgba(147,197,253,0.8));
+}
+.cap-glow {
+  position: absolute; inset: -8px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(147,197,253,0.35) 0%, transparent 70%);
+  animation: pulse 1s 0.5s ease infinite alternate;
+}
+@keyframes capJourney {
+  0%   { left: 0%;   top: 50%; }
+  30%  { left: 37.5%; top: 50%; }
+  55%  { left: 37.5%; top: 35%; }
+  70%  { left: 50%;  top: 50%; }
+  85%  { left: 81.25%; top: 50%; }
+  100% { left: 81.25%; top: 50%; }
+}
+@keyframes pulse {
+  from { opacity: 0.5; transform: scale(0.9); }
+  to   { opacity: 1;   transform: scale(1.1); }
+}
+
+/* Logo */
+.splash-logo {
+  font-size: clamp(2rem, 8vw, 3.2rem);
+  font-weight: 900; color: #fff; letter-spacing: -1px;
+  opacity: 0; animation: fadeUp 0.6s 0.2s ease forwards;
+}
+
+/* Tagline typewriter */
+.splash-tagline {
+  font-size: clamp(0.85rem, 3.5vw, 1.05rem);
+  color: rgba(147,197,253,0.9); font-weight: 500; letter-spacing: 0.02em;
+  min-height: 1.5em;
+  opacity: 0; animation: fadeUp 0.5s 1.2s ease forwards;
+}
+
+/* Progress bar */
+.splash-bar-wrap {
+  width: min(220px, 70vw); height: 3px;
+  background: rgba(255,255,255,0.12); border-radius: 99px; overflow: hidden;
+  opacity: 0; animation: fadeUp 0.5s 0.8s ease forwards;
+}
+.splash-bar {
+  height: 100%; width: 0; border-radius: 99px;
+  background: linear-gradient(90deg, #60a5fa, #a78bfa);
+  animation: barFill 2s 0.9s cubic-bezier(0.4,0,0.2,1) forwards;
+}
+@keyframes barFill { to { width: 100%; } }
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Exit fade */
+#pwa-splash.splash-exit {
+  animation: splashFade 0.5s ease forwards;
+}
+@keyframes splashFade {
+  to { opacity: 0; transform: scale(1.04); }
+}
+</style>
+
+<script>
+(function () {
+  var isStandalone = window.matchMedia('(display-mode: standalone)').matches
+    || window.navigator.standalone === true;
+  if (!isStandalone) return;
+
+  var splash = document.getElementById('pwa-splash');
+  splash.style.display = 'block';
+
+  // Seed stars
+  var starsEl = document.getElementById('splashStars');
+  for (var i = 0; i < 55; i++) {
+    var s = document.createElement('div');
+    s.className = 'splash-star';
+    var sz = Math.random() * 2.5 + 1;
+    s.style.cssText = [
+      'width:'  + sz + 'px',
+      'height:' + sz + 'px',
+      'top:'    + Math.random() * 100 + '%',
+      'left:'   + Math.random() * 100 + '%',
+      'animation-delay:' + (Math.random() * 2).toFixed(2) + 's',
+      'animation-duration:' + (1.5 + Math.random()).toFixed(2) + 's',
+    ].join(';');
+    starsEl.appendChild(s);
+  }
+
+  // Typewriter tagline
+  var phrases = ['Your journey begins here.', 'From KCSE → to Career.', 'Find your perfect course.'];
+  var phrase = phrases[Math.floor(Math.random() * phrases.length)];
+  var tagEl = document.getElementById('splashTagline');
+  var i = 0;
+  setTimeout(function tick() {
+    tagEl.textContent = phrase.slice(0, ++i);
+    if (i < phrase.length) setTimeout(tick, 48);
+  }, 1300);
+
+  // Dismiss after 3s
+  setTimeout(function () {
+    splash.classList.add('splash-exit');
+    setTimeout(function () { splash.style.display = 'none'; }, 500);
+  }, 3000);
+}());
+</script>
+
     <!-- ── FLASH MESSAGES ── -->
     {% if messages %}
     <div class="messages-container">
