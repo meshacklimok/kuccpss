@@ -72,6 +72,31 @@
 
 </style>
 
+{% if guest %}
+<!-- ════ GUEST BANNER ════ -->
+<div style="background:linear-gradient(135deg,#1e3a8a 0%,#1d4ed8 100%);color:#fff;padding:2rem 0;">
+  <div class="container">
+    <div class="d-flex align-items-center gap-3 flex-wrap">
+      <div class="rounded-circle d-flex align-items-center justify-content-center"
+           style="width:58px;height:58px;background:rgba(255,255,255,0.15);font-size:1.6rem;flex-shrink:0;">
+        <i class="fas fa-graduation-cap"></i>
+      </div>
+      <div class="flex-grow-1">
+        <h1 class="mb-0 fs-4">Welcome to your Dashboard</h1>
+        <p class="mb-0 opacity-75 small">Create a free account to save your results, track courses and unlock your personal dashboard.</p>
+      </div>
+      <div class="d-flex gap-2 flex-wrap">
+        <a href="{% url 'accounts:register' %}" class="btn btn-light fw-bold px-4">
+          <i class="fas fa-user-plus me-1 text-primary"></i>Create Free Account
+        </a>
+        <a href="{% url 'accounts:login' %}" class="btn btn-outline-light px-4">
+          Sign In
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+{% else %}
 <!-- ════ HERO ════ -->
 <div class="page-hero" style="padding:1.6rem 0;">
   <div class="container">
@@ -104,6 +129,7 @@
     </div>
   </div>
 </div>
+{% endif %}
 
 <div class="container pb-5">
 

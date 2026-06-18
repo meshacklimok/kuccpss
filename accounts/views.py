@@ -178,8 +178,59 @@ def logout_view(request: HttpRequest) -> HttpResponse:
 # =====================================================
 # DASHBOARD VIEW
 # =====================================================
-@login_required
 def dashboard_view(request: HttpRequest) -> HttpResponse:
+    # ── Guest (unauthenticated) fast path ─────────────────────────────────────
+    if not request.user.is_authenticated:
+        from django.utils import timezone as tz
+        from datetime import timezone as _dtz
+        from career.models import CareerProfile
+        from resources.models import Article
+        from institutions.models import InstitutionType, Institution
+        from django.urls import reverse
+        _INST_ICONS = {
+            'public university': 'fas fa-university', 'private university': 'fas fa-school',
+            'kmtc': 'fas fa-heartbeat', 'tvet': 'fas fa-tools',
+            'ttc': 'fas fa-chalkboard-teacher', 'specialized': 'fas fa-flask',
+        }
+        inst_type_links = []
+        for itype in InstitutionType.objects.all()[:6]:
+            _count = Institution.objects.filter(institution_type=itype).count()
+            _icon_key = next((k for k in _INST_ICONS if k in itype.name.lower()), None)
+            inst_type_links.append({'label': itype.name, 'count': _count,
+                'url': reverse('institutions:institution_type_detail', kwargs={'type_slug': itype.slug}),
+                'icon': _INST_ICONS.get(_icon_key, 'fas fa-building')})
+        now = tz.now()
+        kuccps_open  = tz.datetime(2026, 7, 3,  12, 0, tzinfo=_dtz.utc)
+        kuccps_close = tz.datetime(2026, 8, 21, 23, 59, tzinfo=_dtz.utc)
+        days_to_open  = (kuccps_open  - now).days
+        days_to_close = (kuccps_close - now).days
+        if days_to_open > 0:
+            timeline_phase, timeline_days, timeline_label, timeline_date = 'before_open', days_to_open, 'Days until portal opens', 'Est. 3 Jul 2026'
+        elif days_to_close > 0:
+            timeline_phase, timeline_days, timeline_label, timeline_date = 'open', days_to_close, 'Days left to apply', 'Closes Est. 21 Aug 2026'
+        else:
+            timeline_phase, timeline_days, timeline_label, timeline_date = 'closed', 0, 'Portal closed for 2026', 'Check kuccps.ac.ke for 2027 dates'
+        return render(request, "accounts/dashboard.html", {
+            "guest": True,
+            "eligible_count": 0, "saved_count": 0, "shortlist_count": 0,
+            "saved_courses": [], "shortlist_items": [], "notifications": [],
+            "cluster_results": [], "latest_result": None, "snapshot": None,
+            "quiz_submission": None, "saved_course_ids": [],
+            "recommended_careers": CareerProfile.objects.all()[:3],
+            "recent_news": Article.objects.filter(is_published=True).order_by('-created_at')[:3],
+            "preview_courses": [
+                {'name': 'Medicine and Surgery',   'cluster_num': 15, 'cutoff': '42.0', 'icon': 'fa-stethoscope',      'bg': '#fee2e2', 'color': '#dc2626'},
+                {'name': 'Civil Engineering',      'cluster_num': 4,  'cutoff': '38.5', 'icon': 'fa-cogs',             'bg': '#dbeafe', 'color': '#1d4ed8'},
+                {'name': 'Computer Science',       'cluster_num': 9,  'cutoff': '36.0', 'icon': 'fa-laptop-code',      'bg': '#ede9fe', 'color': '#6d28d9'},
+                {'name': 'Bachelor of Laws (LLB)', 'cluster_num': 12, 'cutoff': '40.0', 'icon': 'fa-gavel',            'bg': '#fef3c7', 'color': '#b45309'},
+                {'name': 'Nursing (B.Sc.)',        'cluster_num': 13, 'cutoff': '35.5', 'icon': 'fa-heartbeat',        'bg': '#dcfce7', 'color': '#15803d'},
+                {'name': 'Architecture',           'cluster_num': 5,  'cutoff': '37.0', 'icon': 'fa-drafting-compass', 'bg': '#ccfbf1', 'color': '#0f766e'},
+            ],
+            "timeline_phase": timeline_phase, "timeline_days": timeline_days,
+            "timeline_label": timeline_label, "timeline_date": timeline_date,
+            "inst_type_links": inst_type_links,
+        })
+
     user = request.user
     if not user.is_verified:
         messages.warning(request, "You must verify your email to access the dashboard.")
