@@ -171,7 +171,7 @@ def kcse_calculator_view(request):
                 if r.cluster and r.cluster.number
             }
             if cluster_scores:
-                predicted_groups = predict_all_for_student(cluster_scores, top_per_cluster=5)
+                predicted_groups = predict_all_for_student(cluster_scores, top_per_cluster=9999)
 
         else:
             messages.error(request, "Please correct the errors below.")

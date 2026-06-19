@@ -185,7 +185,7 @@ def quick_pdf(request):
             status=400,
         )
 
-    groups = predict_all_for_student(student_scores, top_per_cluster=5)
+    groups = predict_all_for_student(student_scores, top_per_cluster=9999)
 
     response = HttpResponse(content_type="application/pdf")
     response["Content-Disposition"] = 'attachment; filename="kuccpss_eligibility.pdf"'
@@ -337,7 +337,7 @@ def full_report_pdf(request):
     if total_points:
         mean_grade = _mean_grade(total_points)
 
-    groups = predict_all_for_student(student_scores, top_per_cluster=6)
+    groups = predict_all_for_student(student_scores, top_per_cluster=9999)
 
     response = HttpResponse(content_type="application/pdf")
     response["Content-Disposition"] = 'attachment; filename="kuccpss_placement_report.pdf"'
