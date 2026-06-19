@@ -1632,264 +1632,538 @@ NEW_CAREERS = [
 # ── Course keyword mappings for ALL profiles (existing + new) ────────────────
 # Format: {profile_title: [keyword1, keyword2, ...]}
 # Django will match courses where name icontains any keyword.
+# Allowed course types — only high-quality, career-relevant programmes
+ALLOWED_COURSE_TYPES = [
+    "Degree",
+    "TVET Diploma (Level 6)",
+    "TVET Certificate (Level 5)",
+    "KMTC",
+]
+
+# ── Precise keyword map ──────────────────────────────────────────────────────
+# Rules:
+#  - Keywords must be SPECIFIC enough not to match unrelated careers
+#  - Each keyword is matched case-insensitively against course.name
+#  - Only courses with ALLOWED_COURSE_TYPES are linked (Artisan L4, Craft L3,
+#    Trade Tests, TTC, Short Course, Proficiency are excluded)
+# ─────────────────────────────────────────────────────────────────────────────
 COURSE_KEYWORD_MAP = {
-    # ── EXISTING PROFILES ────────────────────────────────────────────────────
+    # ── HEALTH ───────────────────────────────────────────────────────────────
+    # Only MBChB — use "and bachelor of surgery" to exclude "veterinary medicine and surgery"
     "Medical Doctor (Physician)": [
-        "medicine and surgery", "medicine & surgery", "clinical medicine",
-        "medical", "health sciences", "physician",
+        "medicine and bachelor of surgery",
+        "medicine & bachelor of surgery",
+        "mbchb",
+        "m.b.ch.b",
     ],
     "Registered Nurse": [
-        "nursing", "nurse", "midwifery", "community health nursing",
+        "nursing",
+        "nurse",
+        "midwifery",
     ],
     "Clinical Officer": [
-        "clinical officer", "clinical medicine",
+        "clinical officer",
+        "clinical medicine",
     ],
     "Pharmacist": [
-        "pharmacy", "pharmaceutical sciences", "pharmaceutical",
+        "pharmacy",
+        "pharmaceutical",
     ],
-    "Software Developer": [
-        "software engineering", "software development", "computer science",
-        "information technology", "computing", "informatics", "artificial intelligence",
-        "data science", "machine learning",
-    ],
-    "Data Scientist": [
-        "data science", "statistics", "applied statistics", "data analytics",
-        "information science", "big data", "machine learning", "artificial intelligence",
-    ],
-    "Cybersecurity Analyst": [
-        "cybersecurity", "information security", "cyber security", "network security",
-        "computer security", "information assurance",
-    ],
-    "Network Engineer": [
-        "computer networks", "network engineering", "telecommunications engineering",
-        "wireless communication", "information technology",
-    ],
-    "Civil Engineer": [
-        "civil engineering", "structural engineering", "construction engineering",
-        "infrastructure engineering",
-    ],
-    "Electrical Engineer": [
-        "electrical engineering", "power engineering", "electrical and electronic",
-        "electrical systems",
-    ],
-    "Mechanical Engineer": [
-        "mechanical engineering", "production engineering", "manufacturing engineering",
-        "industrial engineering",
-    ],
-    "Agricultural Engineer": [
-        "agricultural engineering", "agricultural mechanisation", "irrigation engineering",
-        "biosystems engineering",
-    ],
-    "Environmental Scientist": [
-        "environmental science", "environmental management", "environmental studies",
-        "natural resource management", "ecology", "conservation",
-    ],
-    "Architect": [
-        "architecture", "architectural studies",
-    ],
-    "Agronomist": [
-        "agronomy", "crop science", "crop production", "horticulture",
-        "plant science", "agricultural science", "agriculture",
-    ],
-    "Accountant (CPA)": [
-        "accounting", "accountancy", "accounts", "financial management",
-        "finance", "cpa",
-    ],
-    "Banker & Financial Analyst": [
-        "banking", "finance", "financial economics", "financial engineering",
-        "economics and finance", "investment",
-    ],
-    "Economist": [
-        "economics", "development economics", "agricultural economics",
-        "applied economics",
-    ],
-    "Advocate / Lawyer": [
-        "law", "legal", "jurisprudence", "bachelor of laws",
-    ],
-    "Secondary School Teacher": [
-        "education (arts)", "education (science)", "arts with education",
-        "science with education", "mathematics with education", "teacher education",
-        "education", "bachelor of education",
-    ],
-    "Human Resource Manager": [
-        "human resource", "human resources", "people management", "personnel management",
-        "industrial relations",
-    ],
-    "Marketing & Sales Professional": [
-        "marketing", "sales and marketing", "business administration",
-        "commerce",
-    ],
-    "Graphic Designer & Creative Director": [
-        "graphic design", "visual communication", "fine art", "design",
-        "animation", "digital media", "creative arts",
-    ],
-    "Journalist & Media Personality": [
-        "journalism", "mass communication", "media", "communication",
-        "broadcasting", "public relations", "information communication",
-    ],
-    "Social Worker": [
-        "social work", "community development", "sociology", "social development",
-        "development studies",
-    ],
-    "Biochemist": [
-        "biochemistry", "molecular biology", "biotechnology", "biochemical",
-    ],
-    "Public Administrator": [
-        "public administration", "public policy", "governance", "political science",
-        "government", "public management",
-    ],
-    # ── NEW PROFILES ─────────────────────────────────────────────────────────
     "Veterinarian": [
-        "veterinary", "animal health", "animal science", "zoology",
-        "wildlife management", "veterinary medicine",
+        # Only proper veterinary degrees/diplomas — NOT animal science or zoology
+        "veterinary",
+        "veterinary medicine",
     ],
     "Dental Surgeon": [
-        "dental", "dentistry", "oral health", "dental surgery", "dental technology",
+        "dental",
+        "dentistry",
+        "oral health",
     ],
     "Physiotherapist": [
-        "physiotherapy", "physical therapy", "rehabilitation", "occupational therapy",
-        "orthopedic technology",
+        "physiotherapy",
+        "physical therapy",
+        "occupational therapy",
     ],
     "Nutritionist & Dietitian": [
-        "nutrition", "dietetics", "food science", "food technology", "food and nutrition",
+        # Specific nutrition/dietetics — NOT generic food science/technology
+        # Avoid "food nutrition" alone as it catches teacher training diplomas
+        "nutrition and dietetics",
+        "human nutrition",
         "nutraceutical",
+        "community nutrition",
+        "dietetics management",
     ],
     "Medical Laboratory Technologist": [
-        "medical laboratory", "laboratory sciences", "laboratory technology",
-        "clinical biochemistry", "microbiology", "haematology", "pathology",
+        "medical laboratory",
+        "laboratory sciences",
+        "laboratory technology",
+        "clinical biochemistry",
+        "haematology",
+        "pathology",
+        "medical microbiology",
     ],
     "Radiographer": [
-        "radiology", "radiography", "medical imaging", "ultrasound", "sonography",
+        "radiography",
+        "medical imaging",
+        "radiology",
         "diagnostic imaging",
     ],
     "Optometrist": [
-        "optometry", "optician", "optics", "vision science",
+        "optometry",
+        "vision science",
+        "applied optics",
     ],
     "Public Health Officer": [
-        "public health", "environmental health", "epidemiology", "community health",
-        "health promotion", "health management", "population health", "health policy",
+        # Specific public/community health — NOT animal health or general health IT
+        "public health",
+        "environmental health",
+        "epidemiology",
+        "community health",
+        "health promotion",
+        "population health",
+    ],
+    "Biochemist": [
+        "biochemistry",
+        "molecular biology",
+        "biochemical",
+    ],
+
+    # ── ENGINEERING ──────────────────────────────────────────────────────────
+    "Civil Engineer": [
+        "civil engineering",
+        "structural engineering",
+        "civil and structural",
+    ],
+    "Electrical Engineer": [
+        "electrical engineering",
+        "electrical and electronic engineering",
+        "electrical and electronics engineering",
+        "power engineering",
+    ],
+    "Mechanical Engineer": [
+        "mechanical engineering",
+        "mechanical and production",
+        "mechanical and industrial",
+        "manufacturing engineering",
+    ],
+    "Agricultural Engineer": [
+        "agricultural engineering",
+        "agricultural mechanisation",
+        "biosystems engineering",
+        "irrigation engineering",
     ],
     "Chemical Engineer": [
-        "chemical engineering", "chemical technology", "petroleum engineering",
-        "process engineering", "materials engineering", "industrial chemistry",
+        "chemical engineering",
+        "chemical and process",
+        "industrial chemistry",
+        "process engineering",
     ],
     "Mining & Petroleum Engineer": [
-        "mining engineering", "petroleum", "geology", "geoscience",
-        "mineral processing", "earth science", "applied geology",
-        "geo-informatics", "geomatic",
-    ],
-    "Quantity Surveyor": [
-        "quantity survey", "construction management", "building economics",
-        "real estate management",
-    ],
-    "Land Surveyor & Geomatics Engineer": [
-        "surveying", "land survey", "geomatic", "geospatial",
-        "cartography", "remote sensing", "geographic information",
-    ],
-    "Telecommunications Engineer": [
-        "telecommunication", "electronics engineering", "communication engineering",
-        "signal processing", "wireless",
+        # Specific mining/petroleum — NOT geomatic (surveying) or geo-informatics
+        "mining engineering",
+        "petroleum engineering",
+        "mineral processing",
+        "mining and mineral",
+        "petroleum chemistry",
+        "petroleum geoscience",
+        "earth science",
+        "geology",
     ],
     "Biomedical Engineer": [
-        "biomedical", "biomedical engineering", "medical engineering",
-        "biotechnology", "biomechanics",
+        # Only proper biomedical engineering — NOT agricultural biotechnology
+        "biomedical engineering",
+        "biomedical science",
+        "medical engineering",
     ],
-    "Actuary": [
-        "actuarial", "actuarial science", "statistics", "financial mathematics",
-        "applied statistics", "risk management",
+    "Telecommunications Engineer": [
+        "telecommunication",
+        "telecommunication and information",
+        "electrical and telecommunication",
+        "communication engineering",
+        "electronics engineering",
+        "wireless communication",
     ],
-    "Supply Chain & Logistics Manager": [
-        "procurement", "supply chain", "logistics", "purchasing", "stores management",
-        "transport management", "shipping", "freight",
+    "Quantity Surveyor": [
+        "quantity survey",
+        "quantity surveying",
+        "construction management",
+        "building economics",
+        # NOTE: real estate management removed — belongs to Real Estate profile
     ],
-    "Real Estate & Property Manager": [
-        "real estate", "land economics", "property management", "estate management",
-        "valuation", "housing",
+    "Land Surveyor & Geomatics Engineer": [
+        # Specific geospatial/surveying — NOT "surveying" alone (matches quantity survey)
+        "land survey",
+        "geomatic engineering",
+        "geospatial engineering",
+        "geospatial information",
+        "geomatics and geospatial",
+        "remote sensing",
+        "geographic information",
+        "cartography",
+        "surveying technology",
     ],
-    "Tourism & Hospitality Manager": [
-        "tourism", "hospitality", "hotel management", "hotel and restaurant",
-        "travel and tourism", "ecotourism", "tour operations",
-        "recreation", "leisure management",
+    "Architect": [
+        "architecture",
+        "architectural studies",
     ],
-    "Chef & Culinary Professional": [
-        "culinary", "food production", "cookery", "catering", "food and beverage",
-        "pastry", "baking", "kitchen", "food service",
+    "Environmental Scientist": [
+        "environmental science",
+        "environmental studies",
+        "environmental management",
+        "environmental conservation",
     ],
-    "Film & Media Producer": [
-        "film", "television", "media production", "broadcast", "mass communication",
-        "journalism", "photography", "animation", "digital media",
+
+    # ── TECHNOLOGY ───────────────────────────────────────────────────────────
+    "Software Developer": [
+        # Specific software/CS degrees — NOT geo-informatics or health IT records
+        "software engineering",
+        "computer science",
+        "software development",
+        "computing",
+        "applied computer science",
+        "artificial intelligence",
+        "machine learning",
     ],
-    "Fashion Designer": [
-        "fashion", "garment", "clothing", "textile", "apparel",
-        "fashion design", "tailoring", "dressmaking", "leatherwork",
+    "Data Scientist": [
+        # Specific data/statistics — NOT library science (information science)
+        "data science",
+        "applied statistics",
+        "actuarial science",
+        "data analytics",
+        "big data",
+        "machine learning",
+        "artificial intelligence",
+        "statistics and information technology",
     ],
-    "Interior Designer": [
-        "interior design", "interior architecture", "interior decoration",
-        "furniture design", "fine art",
+    "Cybersecurity Analyst": [
+        "cybersecurity",
+        "cyber security",
+        "information security",
+        "computer security",
+        "network security",
+        "information assurance",
     ],
-    "Early Childhood & Primary School Teacher": [
-        "early childhood", "ecd", "childhood development", "primary education",
-        "junior secondary", "education (primary)",
-    ],
-    "Special Needs & Inclusive Education Teacher": [
-        "special needs", "special education", "inclusive education",
-        "hearing impairment", "visual impairment", "disability studies",
-    ],
-    "Counseling Psychologist": [
-        "psychology", "counselling", "counseling", "mental health",
-        "guidance and counselling", "psychosocial",
-    ],
-    "Urban & Regional Planner": [
-        "urban planning", "urban and regional planning", "regional planning",
-        "physical planning", "town planning", "urban design", "spatial planning",
-        "housing and urban", "community development",
-    ],
-    "Food Scientist & Technologist": [
-        "food science", "food technology", "food processing", "food safety",
-        "dairy technology", "dairy science", "meat science",
-        "post-harvest", "agricultural processing",
-    ],
-    "Livestock & Animal Husbandry Specialist": [
-        "animal production", "animal husbandry", "livestock", "range management",
-        "animal science", "dairy", "poultry", "pasture",
-    ],
-    "Forestry & Natural Resources Officer": [
-        "forestry", "natural resource", "conservation", "ecology",
-        "environmental science", "agroforestry",
-    ],
-    "Fisheries & Aquaculture Officer": [
-        "fisheries", "aquaculture", "aquatic", "marine",
-        "oceanography", "blue economy",
-    ],
-    "Agricultural Extension Officer": [
-        "agricultural extension", "agronomy", "crop science", "agribusiness",
-        "horticulture", "soil science", "irrigation", "farm management",
-        "agricultural education",
-    ],
-    "Electrician & Electrical Technician": [
-        "electrical installation", "power engineering", "electrical technology",
-        "solar energy", "renewable energy", "electrical and electronic",
-    ],
-    "Automotive Technician (Mechanic)": [
-        "automotive", "motor vehicle", "motor mechanics",
-        "diesel plant", "plant mechanics",
-    ],
-    "Building & Construction Technician": [
-        "building construction", "building technology", "civil engineering technology",
-        "masonry", "carpentry", "plumbing", "architecture technology",
-    ],
-    "Welder & Metal Fabricator": [
-        "welding", "fabrication", "metal work", "metalwork", "sheet metal",
-        "blacksmith", "boilermaking", "fitter",
+    "Network Engineer": [
+        # Specific networking — NOT general IT (avoids health records IT matches)
+        "computer networks",
+        "network engineering",
+        "information technology",  # kept for general IT networking degrees
+        "business information technology",
+        "information systems",
     ],
     "Cloud & DevOps Engineer": [
-        "computer science", "information technology", "software engineering",
-        "computing", "data science", "cloud", "cyber",
-        "network engineering", "information systems",
+        "computer science",
+        "software engineering",
+        "cloud computing",
+        "computing",
+        "information technology",
+        "information systems",
+        "cyber security",
+        "data science",
     ],
     "Digital Marketer & Growth Specialist": [
-        "marketing", "digital marketing", "advertising", "public relations",
-        "media studies", "brand management", "e-commerce",
+        # Specific digital marketing — NOT journalism, PR, or media studies
+        "marketing",
+        "digital marketing",
+        "sales and marketing",
+        "business administration in marketing",
+        "advertising",
+    ],
+
+    # ── BUSINESS & FINANCE ───────────────────────────────────────────────────
+    "Accountant (CPA)": [
+        "accounting",
+        "accountancy",
+        "accounts and finance",
+        "accounting and finance",
+        "financial management",
+    ],
+    "Banker & Financial Analyst": [
+        "banking",
+        "financial economics",
+        "financial engineering",
+        "bachelor of finance",
+        "science in finance",
+        "investment",
+        "economics and finance",
+    ],
+    "Economist": [
+        "economics",
+        "development economics",
+        "agricultural economics",
+        "applied economics",
+    ],
+    "Actuary": [
+        # Specific actuarial/statistics — NOT general statistics alone
+        "actuarial science",
+        "actuarial",
+        "financial mathematics",
+        "applied statistics",
+    ],
+    "Supply Chain & Logistics Manager": [
+        "procurement",
+        "supply chain",
+        "logistics",
+        "purchasing and supplies",
+        "purchasing and supply",
+        "purchasing and logistics",
+        "stores management",
+        "transport management",
+    ],
+    "Real Estate & Property Manager": [
+        "real estate",
+        "land economics",
+        "property management",
+        "estate management",
+        "real estate management",
+    ],
+    "Human Resource Manager": [
+        "human resource",
+        "human resources",
+        "industrial relations",
+    ],
+    "Marketing & Sales Professional": [
+        # Specific marketing — NOT all BBA (too broad)
+        "marketing",
+        "sales and marketing",
+        "business administration in marketing",
+    ],
+
+    # ── LAW & GOVERNANCE ─────────────────────────────────────────────────────
+    "Advocate / Lawyer": [
+        # Only proper law degrees — NOT wildlife law enforcement TVET
+        "bachelor of laws",
+        "llb",
+        "jurisprudence",
+    ],
+    "Public Administrator": [
+        "public administration",
+        "public policy",
+        "political science",
+        "governance",
+        "public management",
+    ],
+
+    # ── EDUCATION ────────────────────────────────────────────────────────────
+    "Secondary School Teacher": [
+        "bachelor of education",
+        "bachelor of arts (with education)",
+        "arts with education",
+        "science with education",
+        "mathematics with education",
+        "teacher education",
+        "education (arts)",
+        "education (science)",
+        "education technology",
+    ],
+    "Early Childhood & Primary School Teacher": [
+        "early childhood",
+        "ecd",
+        "childhood development",
+        "primary education",
+        "early childhood education",
+        "early childhood development",
+    ],
+    "Special Needs & Inclusive Education Teacher": [
+        "special needs education",
+        "special needs",
+        "special education",
+        "inclusive education",
+        "hearing impairment",
+        "visual impairment",
+    ],
+
+    # ── SOCIAL SCIENCES ──────────────────────────────────────────────────────
+    "Social Worker": [
+        "social work",
+        "community development",
+        "sociology",
+        "development studies",
+        "gender and development",
+    ],
+    "Counseling Psychologist": [
+        "psychology",
+        "counselling",
+        "counseling",
+        "guidance and counselling",
+        "mental health",
+    ],
+    "Urban & Regional Planner": [
+        # Specific urban planning — NOT community development (social work)
+        "urban and regional planning",
+        "urban planning",
+        "regional planning",
+        "physical planning",
+        "town planning",
+        "urban design",
+        "spatial planning",
+        "housing and urban",
+    ],
+    "Journalist & Media Personality": [
+        "journalism",
+        "mass communication",
+        "broadcasting",
+        "digital journalism",
+        "broadcast journalism",
+        "communication and media",
+        "communication studies",
+        "media studies",
+        "applied communication",
+    ],
+
+    # ── CREATIVE ─────────────────────────────────────────────────────────────
+    "Graphic Designer & Creative Director": [
+        # Specific design/animation — NOT journalism "digital media" or teacher fine art
+        "graphic design",
+        "visual communication",
+        "animation and graphics",
+        "animation",
+        "creative arts",
+        "graphic communication",
+    ],
+    "Film & Media Producer": [
+        "film",
+        "television",
+        "media production",
+        "broadcast",
+        "mass communication",
+        "performing arts and film",
+        "theatre arts",
+        "arts in journalism",
+        "journalism and mass",
+        "journalism and digital",
+    ],
+    "Fashion Designer": [
+        "fashion design",
+        "fashion and apparel",
+        "apparel and fashion",
+        "clothing technology",
+        "textile and fashion",
+        "textile technology",
+        "dressmaking",
+        "garment",
+        "leatherwork",
+    ],
+    "Interior Designer": [
+        # Specific interior design — NOT fine art teacher training
+        "interior design",
+        "interior architecture",
+        "clothing textile and interior",
+    ],
+
+    # ── TOURISM & HOSPITALITY ────────────────────────────────────────────────
+    "Tourism & Hospitality Manager": [
+        # Remove "recreation" — matched PE education degrees
+        "tourism",
+        "hospitality",
+        "hotel management",
+        "hotel and hospitality",
+        "travel and tourism",
+        "ecotourism",
+        "tour operations",
+        "catering and hospitality",
+        "hotels and hospitality",
+    ],
+    "Chef & Culinary Professional": [
+        "culinary",
+        "food production",
+        "food and beverage production",
+        "food preparation",
+        "cookery",
+        "pastry and baking",
+        "baking technology",
+        "catering and accommodation",
+    ],
+
+    # ── AGRICULTURE & NATURAL RESOURCES ──────────────────────────────────────
+    "Agronomist": [
+        # Specific crop/plant sciences — NOT broad "agriculture" (matches extension too)
+        "agronomy",
+        "crop science",
+        "crop production",
+        "horticulture",
+        "plant science",
+        "dry land agriculture",
+    ],
+    "Agricultural Extension Officer": [
+        "agricultural extension",
+        "agricultural education and extension",
+        "agricultural education & extension",
+        "agribusiness",
+        "agribusiness management",
+        "soil science",
+        "irrigation",
+        "farm management",
+        "agriculture and human ecology",
+    ],
+    "Food Scientist & Technologist": [
+        "food science and technology",
+        "food science & technology",
+        "food science and management",
+        "food technology and quality",
+        "dairy technology",
+        "dairy science",
+        "meat science",
+        "food processing technology",
+        "food safety",
+    ],
+    "Livestock & Animal Husbandry Specialist": [
+        "animal production",
+        "animal science",
+        "animal science and management",
+        "animal health and production",
+        "dairy farm management",
+        "poultry management",
+        "range management",
+        "livestock",
+    ],
+    "Forestry & Natural Resources Officer": [
+        "forestry",
+        "agroforestry",
+        "bio-resources management",
+        "conservation biology",
+        "natural resource management",
+    ],
+    "Fisheries & Aquaculture Officer": [
+        # Remove "marine" — matched marine engineering and marine business
+        "fisheries",
+        "aquaculture",
+        "aquatic science",
+        "applied aquatic",
+        "fisheries and aquatic",
+        "oceanography",
+    ],
+
+    # ── TECHNICAL (TVET DIPLOMA / CERTIFICATE L5 / KMTC) ─────────────────────
+    "Electrician & Electrical Technician": [
+        "electrical installation",
+        "electrical and electronic engineering",
+        "solar energy",
+        "renewable energy",
+        "electrical technology",
+        "power engineering",
+    ],
+    "Automotive Technician (Mechanic)": [
+        "automotive",
+        "motor vehicle",
+        "motor mechanics",
+        "diesel plant",
+    ],
+    "Building & Construction Technician": [
+        "building construction",
+        "building technology",
+        "civil engineering technology",
+        "masonry",
+        "carpentry",
+        "plumbing",
+        "building and civil engineering technology",
+    ],
+    "Welder & Metal Fabricator": [
+        "welding and fabrication",
+        "welding & fabrication",
+        "marine welding",
+        "metal fabrication",
+        "sheet metal",
     ],
 }
 
@@ -1940,6 +2214,10 @@ class Command(BaseCommand):
         profiles_linked = 0
 
         for profile_title, keywords in COURSE_KEYWORD_MAP.items():
+            # Skip profiles where no keywords were defined (e.g. duplicate entries)
+            if not keywords:
+                continue
+
             try:
                 profile = CareerProfile.objects.get(title=profile_title)
             except CareerProfile.DoesNotExist:
@@ -1951,7 +2229,16 @@ class Command(BaseCommand):
             for kw in keywords:
                 q |= Q(name__icontains=kw)
 
-            matched = Course.objects.filter(q)
+            # Only link Degree, TVET Diploma (L6), TVET Certificate (L5), KMTC
+            # Exclude teacher training diplomas from non-teaching career profiles
+            is_teacher_profile = any(
+                kw in profile_title.lower()
+                for kw in ("teacher", "early childhood", "special needs")
+            )
+            qs = Course.objects.filter(q, course_type__name__in=ALLOWED_COURSE_TYPES)
+            if not is_teacher_profile:
+                qs = qs.exclude(name__icontains="secondary teacher education")
+            matched = qs
             count = matched.count()
 
             if count:
@@ -1960,6 +2247,7 @@ class Command(BaseCommand):
                 profiles_linked += 1
                 self.stdout.write(f"  {profile_title}: {count} courses linked")
             else:
+                profile.related_courses.clear()
                 self.stdout.write(self.style.WARNING(f"  {profile_title}: 0 matches"))
 
         self.stdout.write(self.style.SUCCESS(
