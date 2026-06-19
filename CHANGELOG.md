@@ -7,9 +7,28 @@ Format: `[YYYY-MM-DD]` — description of what changed and why.
 ## [Unreleased]
 
 ### In Progress
-- Career engine OpenAI integration
-- Email backend configuration (console backend set; needs SMTP/SendGrid)
-- Cluster requirements data — 3 clusters still have placeholder descriptions: 1A, 2B, 3D (need official KUCCPS PDF to complete)
+- Career engine OpenAI integration (stub in `career/engine.py`; key via `OPENAI_API_KEY` env var)
+- Mentorship views/templates — models and admin done; booking UI not yet built
+- Cluster requirements data — 3 clusters still have placeholder descriptions: 1A, 2B, 3D (need official KUCCPS PDF)
+- M-Pesa Daraja STK push — IntaSend credentials configured; webhook handler stub only
+
+---
+
+## [2026-06-19] — Security hardening + email verification wired
+
+### Security
+- Added `CommonPasswordValidator`, `NumericPasswordValidator`, `UserAttributeSimilarityValidator` to `AUTH_PASSWORD_VALIDATORS` (was only `MinimumLengthValidator`)
+- Set `SOCIALACCOUNT_LOGIN_ON_GET = False` — eliminates CSRF risk on Google OAuth callback
+- Added production-only security block: `SECURE_PROXY_SSL_HEADER` for Render, HSTS (1yr + subdomains + preload), `SESSION_COOKIE_SECURE`, `CSRF_COOKIE_SECURE`, `SECURE_CONTENT_TYPE_NOSNIFF`, `SESSION_COOKIE_HTTPONLY`, `CSRF_COOKIE_HTTPONLY`
+- `SECRET_KEY` now raises `RuntimeError` at startup if the insecure fallback value is used in production
+- Admin URL moved from `/admin/` to `/cn-staff/` to reduce brute-force exposure
+
+### Email
+- Configured Resend SMTP in `settings.py`: activates automatically when `RESEND_API_KEY` env var is set; falls back to `console.EmailBackend` in dev
+- `DEFAULT_FROM_EMAIL` set to `CareerNext <noreply@careernext.co.ke>` (overridable via env var)
+- `RegisterView` now calls `send_mail()` with a real verification link — removed the `is_verified = True` short-circuit that bypassed email verification
+- `is_verified = False` on registration; user must click email link before login is allowed
+- Login error message updated to direct unverified users to check inbox/spam
 
 ---
 
