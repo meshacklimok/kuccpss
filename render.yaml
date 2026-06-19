@@ -3,7 +3,7 @@ services:
     name: kuccpss
     env: python
     buildCommand: "./build.sh"
-    startCommand: "gunicorn kuccpss.wsgi:application"
+    startCommand: "gunicorn kuccpss.wsgi:application --bind 0.0.0.0:$PORT"
     plan: free
     envVars:
       - key: SECRET_KEY
