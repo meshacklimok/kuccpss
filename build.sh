@@ -11,6 +11,7 @@ python manage.py loaddata data.json \
   --exclude=sessions \
   --exclude=accounts \
   --exclude=sites \
+  --exclude=socialaccount \
   --exclude=clusterpoints.clustercalculationresult \
   --exclude=clusterpoints.subjectresult \
   --exclude=clusterpoints.userkcseresult \
