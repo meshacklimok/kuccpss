@@ -330,13 +330,10 @@
     if (idx < phrase.length) setTimeout(tick, 38);
   }, 950);
 
-  /* Dismiss after 2.2s, then go to dashboard if logged in */
+  /* Dismiss after 2.2s — app is already on /dashboard/ via start_url */
   setTimeout(function () {
     splash.classList.add('splash-exit');
-    setTimeout(function () {
-      splash.style.display = 'none';
-      if (isAuth) { window.location.replace('/dashboard/'); }
-    }, 450);
+    setTimeout(function () { splash.style.display = 'none'; }, 450);
   }, 2200);
 }());
 </script>
@@ -596,12 +593,13 @@
         <a href="{% url 'clusterpoints:calculator' %}" class="{% if '/clusterpoints/' in p %}active{% endif %}">
             <i class="fas fa-calculator"></i>Calculator
         </a>
+         <a href="{% url 'career:home' %}" class="{% if '/career/' in p %}active{% endif %}">
+            <i class="fas fa-compass"></i>Careers
+        </a>
         <a href="{% url 'courses:course_types_list' %}" class="{% if '/courses/' in p %}active{% endif %}">
             <i class="fas fa-graduation-cap"></i>Courses
         </a>
-        <a href="{% url 'career:home' %}" class="{% if '/career/' in p %}active{% endif %}">
-            <i class="fas fa-compass"></i>Careers
-        </a>
+       
         <a href="{% url 'clusters:cluster_list' %}" class="{% if '/clusters/' in p %}active{% endif %}">
             <i class="fas fa-layer-group"></i>Clusters
         </a>
@@ -613,7 +611,7 @@
         <div class="pwa-banner-inner">
             <img src="{% static 'images/icon-192.png' %}" alt="" width="48" height="48" class="pwa-banner-icon">
             <div class="pwa-banner-text">
-                <strong>Install CareerNext</strong>
+                <strong>Install CareerNext App</strong>
                 <span>Quick access from your home screen</span>
             </div>
             <div class="pwa-banner-actions">
@@ -628,7 +626,7 @@
         <div class="pwa-ios-sheet">
             <button id="pwa-ios-close" class="pwa-ios-close" aria-label="Close">&times;</button>
             <img src="{% static 'images/icon-192.png' %}" alt="CareerNext" width="64" height="64" class="pwa-ios-icon">
-            <h5 class="pwa-ios-title">Install CareerNext</h5>
+            <h5 class="pwa-ios-title">Install CareerNext App</h5>
             <p class="pwa-ios-body">Add to your home screen for quick access.</p>
             <div class="pwa-ios-steps">
                 <div class="pwa-ios-step">
