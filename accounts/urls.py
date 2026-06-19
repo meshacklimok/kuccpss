@@ -14,8 +14,9 @@ urlpatterns = [
     # Email verification
     path("verify-email/<str:token>/", views.email_verify_view, name="email_verify"),
 
-    # Password change (logged in)
+    # Password change & re-authentication
     path("change-password/", views.change_password_view, name="change_password"),
+    path("re-auth/", views.re_auth_view, name="re_auth"),
 
     # Dashboard / Profile
     path("dashboard/", views.dashboard_view, name="dashboard"),

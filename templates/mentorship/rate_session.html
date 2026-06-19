@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% block title %}Rate Your Session | CareerNext{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-lg-5">
+
+      <div class="text-center mb-4">
+        <h3 class="fw-bold">How was your session?</h3>
+        <p class="text-muted">
+          With <strong>{{ session.mentor.display_name }}</strong> · {{ session.slot.datetime_display }}
+        </p>
+      </div>
+
+      <div class="card border-0 shadow-sm rounded-4">
+        <div class="card-body p-4 p-md-5">
+          <form method="post">
+            {% csrf_token %}
+
+            <!-- Star rating (visual) -->
+            <div class="mb-4 text-center">
+              <label class="form-label fw-semibold d-block mb-3">{{ form.rating.label }}</label>
+              <div id="star-display" class="mb-3" style="font-size: 2.5rem; cursor: pointer; user-select: none;">
+                {% for i in star_range %}
+                  <span class="star-btn text-muted" data-val="{{ i }}" style="transition: color .1s;">☆</span>
+                {% endfor %}
+              </div>
+              <!-- Hidden radio (submitted) -->
+              <div class="d-none">
+                {% for radio in form.rating %}
+                  {{ radio }}
+                {% endfor %}
+              </div>
+              {% if form.rating.errors %}
+                <div class="text-danger small">{{ form.rating.errors }}</div>
+              {% endif %}
+            </div>
+
+            <!-- Review textarea -->
+            <div class="mb-4">
+              <label class="form-label fw-semibold">{{ form.review.label }}</label>
+              {{ form.review }}
+              {% if form.review.errors %}
+                <div class="text-danger small mt-1">{{ form.review.errors }}</div>
+              {% endif %}
+            </div>
+
+            <button type="submit" id="submit-btn" class="btn btn-primary w-100 rounded-pill fw-semibold py-3" disabled>
+              <i class="bi bi-send me-2"></i>Submit Rating
+            </button>
+          </form>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+  const stars   = document.querySelectorAll('.star-btn');
+  const radios  = document.querySelectorAll('input[name="rating"]');
+  const submitBtn = document.getElementById('submit-btn');
+  let chosen = 0;
+
+  function paint(n) {
+    stars.forEach((s, i) => {
+      s.textContent = i < n ? '★' : '☆';
+      s.style.color = i < n ? '#f59e0b' : '#6b7280';
+    });
+  }
+
+  stars.forEach(s => {
+    s.addEventListener('mouseenter', () => paint(+s.dataset.val));
+    s.addEventListener('mouseleave', () => paint(chosen));
+    s.addEventListener('click', () => {
+      chosen = +s.dataset.val;
+      paint(chosen);
+      radios.forEach(r => { r.checked = (r.value === String(chosen)); });
+      submitBtn.disabled = false;
+    });
+  });
+})();
+</script>
+{% endblock %}

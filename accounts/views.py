@@ -1,8 +1,9 @@
 import secrets
+import time
 from typing import Any, Dict
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
-from django.contrib.auth import login, logout, update_session_auth_hash
+from django.contrib.auth import login, logout, authenticate, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
 from django.core.cache import cache
 from django.core.mail import send_mail
@@ -11,6 +12,7 @@ from django.views import View
 from django.views.decorators.http import require_http_methods
 from django.http import HttpRequest, HttpResponse, JsonResponse
 
+from .decorators import require_recent_auth
 from .forms import UserRegistrationForm, UserLoginForm
 from .models import (
     User,
@@ -68,20 +70,23 @@ class RegisterView(View):
             token = secrets.token_urlsafe(32)
             EmailVerificationToken.objects.create(user=user, token=token)
             verify_url = request.build_absolute_uri(f"/accounts/verify-email/{token}/")
-            send_mail(
-                subject="Verify your CareerNext account",
-                message=(
-                    f"Hi {user.full_name or user.email},\n\n"
-                    f"Click the link below to verify your email address:\n\n"
-                    f"{verify_url}\n\n"
-                    f"This link expires in 24 hours.\n\n"
-                    f"If you did not create a CareerNext account, ignore this email.\n\n"
-                    f"— The CareerNext Team"
-                ),
-                from_email=None,  # uses DEFAULT_FROM_EMAIL from settings
-                recipient_list=[user.email],
-                fail_silently=False,
-            )
+            try:
+                send_mail(
+                    subject="Verify your CareerNext account",
+                    message=(
+                        f"Hi {user.full_name or user.email},\n\n"
+                        f"Click the link below to verify your email address:\n\n"
+                        f"{verify_url}\n\n"
+                        f"This link expires in 24 hours.\n\n"
+                        f"If you did not create a CareerNext account, ignore this email.\n\n"
+                        f"— The CareerNext Team"
+                    ),
+                    from_email=None,
+                    recipient_list=[user.email],
+                    fail_silently=False,
+                )
+            except Exception:
+                pass
             # ── Referral attribution ──────────────────────────────
             ref_code = request.session.pop('referral_code', None)
             if ref_code:
@@ -176,11 +181,17 @@ class LoginView(View):
             cache.delete(rl_key)  # Clear fail counter on successful login
             login(request, user)
 
-            # Remember me token
+            # Mark as recently verified (re-auth window starts from login)
+            request.session['_auth_verified_at'] = time.time()
+
+            # Mentor sessions are shorter (stricter security)
+            from mentorship.models import MentorProfile
+            is_mentor = MentorProfile.objects.filter(user=user).exists()
+
             remember_me = form.cleaned_data.get("remember_me")
             if remember_me:
                 token = secrets.token_urlsafe(32)
-                expires_at = timezone.now() + timezone.timedelta(hours=72)
+                expires_at = timezone.now() + timezone.timedelta(days=30 if is_mentor else 90)
                 RememberToken.objects.create(
                     user=user,
                     token=token,
@@ -188,9 +199,11 @@ class LoginView(View):
                     ip_address=get_client_ip(request),
                     user_agent=request.META.get("HTTP_USER_AGENT", ""),
                 )
-                request.session.set_expiry(604800)  # 7 days
+                # Mentors: 30 days with remember me; regular: 90 days
+                request.session.set_expiry(30 * 24 * 3600 if is_mentor else 90 * 24 * 3600)
             else:
-                request.session.set_expiry(0)  # Browser close
+                # Mentors: 14 days; regular users: 30 days
+                request.session.set_expiry(14 * 24 * 3600 if is_mentor else 30 * 24 * 3600)
 
             messages.success(
                 request, f"Welcome back, {user.full_name or user.email}!"
@@ -335,6 +348,23 @@ def dashboard_view(request: HttpRequest) -> HttpResponse:
     shortlist_count = CourseShortlist.objects.filter(user=user).count()
     notifications = Notification.objects.filter(user=user, is_read=False).order_by("-created_at")[:5]
     unread_count  = Notification.objects.filter(user=user, is_read=False).count()
+
+    # ── Mentorship ────────────────────────────────────────────────────────────
+    from mentorship.models import MentorProfile as _MentorProfile, MentorshipSession as _MSession
+    user_mentor_profile = _MentorProfile.objects.filter(user=user).first()
+    next_session = (
+        _MSession.objects
+        .filter(mentee=user, status="confirmed", slot__date__gte=timezone.now().date())
+        .select_related("mentor", "mentor__user", "mentor__course", "slot")
+        .order_by("slot__date", "slot__start_time")
+        .first()
+    )
+    mentor_pending = (
+        _MSession.objects
+        .filter(mentor=user_mentor_profile, status="confirmed", slot__date__gte=timezone.now().date())
+        .select_related("mentee", "slot")
+        .order_by("slot__date")[:3]
+    ) if user_mentor_profile else []
 
     # ── Latest news articles ─────────────────────────────────────────────────
     from resources.models import Article
@@ -482,6 +512,11 @@ def dashboard_view(request: HttpRequest) -> HttpResponse:
         "quiz_submission":     quiz_submission,
         "preview_courses":     preview_courses,
         # News
+        # Mentorship
+        "user_mentor_profile": user_mentor_profile,
+        "next_session":        next_session,
+        "mentor_pending":      mentor_pending,
+        # News
         "recent_news":         recent_news,
         # Timeline
         "timeline_phase":    timeline_phase,
@@ -515,22 +550,49 @@ def profile_update_view(request: HttpRequest) -> HttpResponse:
 # =====================================================
 # PASSWORD CHANGE VIEW
 # =====================================================
-@login_required
+@require_recent_auth
 @require_http_methods(["GET", "POST"])
 def change_password_view(request: HttpRequest) -> HttpResponse:
+    error = None
     if request.method == "POST":
-        password1 = request.POST.get("password1")
-        password2 = request.POST.get("password2")
-        if not password1 or password1 != password2:
-            messages.error(request, "Passwords do not match.")
+        password1 = request.POST.get("password1", "")
+        password2 = request.POST.get("password2", "")
+        if not password1:
+            error = "Please enter a new password."
+        elif len(password1) < 4:
+            error = "Password must be at least 4 characters."
+        elif password1 != password2:
+            error = "Passwords do not match."
         else:
             request.user.set_password(password1)
             request.user.save()
             update_session_auth_hash(request, request.user)
             messages.success(request, "Password changed successfully.")
             return redirect("accounts:dashboard")
+        if error:
+            messages.error(request, error)
 
     return render(request, "accounts/change_password.html")
+
+
+# =====================================================
+# RE-AUTHENTICATION VIEW
+# =====================================================
+@login_required
+@require_http_methods(["GET", "POST"])
+def re_auth_view(request: HttpRequest) -> HttpResponse:
+    """Ask the user to confirm their password before a sensitive action."""
+    next_url = request.POST.get("next") or request.GET.get("next") or "/accounts/dashboard/"
+
+    if request.method == "POST":
+        password = request.POST.get("password", "")
+        user = authenticate(request, email=request.user.email, password=password)
+        if user and user.pk == request.user.pk:
+            request.session["_auth_verified_at"] = time.time()
+            return redirect(next_url)
+        messages.error(request, "Incorrect password. Please try again.")
+
+    return render(request, "accounts/re_auth.html", {"next": next_url})
 
 
 

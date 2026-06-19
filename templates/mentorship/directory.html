@@ -1,0 +1,197 @@
+{% extends "base.html" %}
+{% block title %}Mentorship — Talk to a Real Student | CareerNext{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+
+  <!-- Hero -->
+  <div class="row justify-content-center mb-5">
+    <div class="col-lg-8 text-center">
+      <span class="badge bg-primary bg-opacity-10 text-primary fw-semibold px-3 py-2 rounded-pill mb-3 d-inline-block">
+        <i class="bi bi-people-fill me-1"></i> Peer Mentorship
+      </span>
+      <h1 class="display-5 fw-bold mb-3">Talk to Someone Already There</h1>
+      <p class="lead text-muted mb-4">
+        Book a 15-minute WhatsApp call with a current university or KMTC student
+        studying the course you're considering. Real insights. Real people. KES 100.
+      </p>
+      <div class="d-flex flex-wrap justify-content-center gap-3 mb-4">
+        <div class="d-flex align-items-center gap-2 text-muted small">
+          <i class="bi bi-check-circle-fill text-success fs-5"></i>
+          15-minute voice/video call
+        </div>
+        <div class="d-flex align-items-center gap-2 text-muted small">
+          <i class="bi bi-check-circle-fill text-success fs-5"></i>
+          Pay via M-Pesa
+        </div>
+        <div class="d-flex align-items-center gap-2 text-muted small">
+          <i class="bi bi-check-circle-fill text-success fs-5"></i>
+          Verified students only
+        </div>
+      </div>
+      {% if user.is_authenticated %}
+        {% if not user.mentor_profile %}
+          <a href="{% url 'mentorship:become_mentor' %}" class="btn btn-outline-primary btn-sm rounded-pill px-4">
+            <i class="bi bi-mortarboard me-1"></i> Become a Mentor — Earn KES 70/session
+          </a>
+        {% else %}
+          <a href="{% url 'mentorship:dashboard' %}" class="btn btn-outline-primary btn-sm rounded-pill px-4">
+            <i class="bi bi-speedometer2 me-1"></i> My Mentor Dashboard
+          </a>
+        {% endif %}
+      {% else %}
+        <a href="{% url 'mentorship:become_mentor' %}" class="btn btn-outline-primary btn-sm rounded-pill px-4">
+          <i class="bi bi-mortarboard me-1"></i> Become a Mentor — Earn KES 70/session
+        </a>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Search & Filters -->
+  <div class="row justify-content-center mb-5">
+    <div class="col-lg-8">
+      <form method="get">
+        <div class="d-flex gap-2 mb-3">
+          <input
+            type="text" name="q" value="{{ query }}"
+            class="form-control form-control-lg rounded-pill px-4 shadow-sm"
+            placeholder="Search by course, university, or name…"
+          >
+          <button class="btn btn-primary rounded-pill px-4 fw-semibold" type="submit">Search</button>
+          {% if query or filter_institution or filter_year or filter_rating %}
+            <a href="{% url 'mentorship:directory' %}" class="btn btn-outline-secondary rounded-pill px-3">Clear</a>
+          {% endif %}
+        </div>
+        <!-- Filter row -->
+        <div class="d-flex flex-wrap gap-2 justify-content-center">
+          <select name="institution" class="form-select form-select-sm rounded-pill" style="width:auto;min-width:180px;">
+            <option value="">All Universities</option>
+            {% for inst in institutions %}
+              <option value="{{ inst.pk }}" {% if filter_institution == inst.pk|stringformat:"s" %}selected{% endif %}>
+                {{ inst.name }}
+              </option>
+            {% endfor %}
+          </select>
+          <select name="year" class="form-select form-select-sm rounded-pill" style="width:auto;">
+            <option value="">Any Year</option>
+            {% for val, label in year_choices %}
+              <option value="{{ val }}" {% if filter_year == val|stringformat:"s" %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+          <select name="rating" class="form-select form-select-sm rounded-pill" style="width:auto;">
+            <option value="">Any Rating</option>
+            <option value="4" {% if filter_rating == "4" %}selected{% endif %}>★★★★+ (4+)</option>
+            <option value="3" {% if filter_rating == "3" %}selected{% endif %}>★★★+ (3+)</option>
+          </select>
+          <button type="submit" class="btn btn-outline-primary btn-sm rounded-pill px-3">Apply Filters</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Results -->
+  {% if mentors %}
+    <div class="row g-4">
+      {% for mentor in mentors %}
+        <div class="col-sm-6 col-lg-4">
+          <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden mentor-card" style="transition: box-shadow .2s">
+            <!-- Header gradient strip -->
+            <div style="height: 6px; background: linear-gradient(90deg, #1e3a8a, #3b82f6);"></div>
+
+            <div class="card-body p-4">
+              <div class="d-flex align-items-start gap-3 mb-3">
+                <!-- Avatar -->
+                {% if mentor.photo %}
+                  <img src="{{ mentor.photo.url }}" class="rounded-circle object-fit-cover flex-shrink-0"
+                       width="60" height="60" alt="{{ mentor.display_name }}">
+                {% else %}
+                  <div class="rounded-circle bg-primary bg-opacity-10 d-flex align-items-center justify-content-center flex-shrink-0"
+                       style="width:60px;height:60px;">
+                    <span class="fw-bold text-primary fs-4">{{ mentor.display_name|first|upper }}</span>
+                  </div>
+                {% endif %}
+
+                <div class="min-w-0">
+                  <h5 class="fw-bold mb-0 text-truncate">{{ mentor.display_name }}</h5>
+                  <div class="text-muted small">{{ mentor.get_year_of_study_display }}</div>
+                  <!-- Star rating -->
+                  {% if mentor.total_sessions > 0 %}
+                    <div class="mt-1">
+                      {% for i in "12345" %}
+                        {% if forloop.counter <= mentor.rating_int %}
+                          <i class="bi bi-star-fill text-warning" style="font-size:.75rem;"></i>
+                        {% else %}
+                          <i class="bi bi-star text-warning" style="font-size:.75rem;"></i>
+                        {% endif %}
+                      {% endfor %}
+                      <span class="text-muted ms-1" style="font-size:.75rem;">
+                        {{ mentor.average_rating|floatformat:1 }} ({{ mentor.total_sessions }} session{{ mentor.total_sessions|pluralize }})
+                      </span>
+                    </div>
+                  {% else %}
+                    <span class="badge bg-secondary bg-opacity-10 text-secondary mt-1" style="font-size:.7rem;">New mentor</span>
+                  {% endif %}
+                </div>
+              </div>
+
+              <!-- Course & institution -->
+              <div class="mb-3">
+                {% if mentor.course %}
+                  <div class="fw-semibold text-dark small mb-1 text-truncate">
+                    <i class="bi bi-book text-primary me-1"></i>{{ mentor.course.name }}
+                  </div>
+                {% endif %}
+                {% if mentor.institution %}
+                  <div class="text-muted small text-truncate">
+                    <i class="bi bi-building me-1"></i>{{ mentor.institution.name }}
+                  </div>
+                {% endif %}
+              </div>
+
+              <!-- Bio excerpt -->
+              <p class="text-muted small mb-3" style="display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;">
+                {{ mentor.bio }}
+              </p>
+
+              <!-- Availability badge -->
+              <div class="d-flex align-items-center justify-content-between">
+                {% with slots=mentor.available_slots_count %}
+                  <span class="badge {% if slots > 0 %}bg-success{% else %}bg-secondary{% endif %} bg-opacity-10
+                               {% if slots > 0 %}text-success{% else %}text-secondary{% endif %} rounded-pill px-3 py-2">
+                    <i class="bi bi-calendar-check me-1"></i>
+                    {% if slots > 0 %}{{ slots }} slot{{ slots|pluralize }} open{% else %}No slots{% endif %}
+                  </span>
+                {% endwith %}
+                <a href="{% url 'mentorship:mentor_profile' mentor.pk %}" class="btn btn-primary btn-sm rounded-pill px-3">
+                  View Profile
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+
+  {% else %}
+    <div class="text-center py-5">
+      <div class="mb-3">
+        <i class="bi bi-people display-4 text-muted opacity-50"></i>
+      </div>
+      {% if query %}
+        <h5 class="text-muted">No mentors match "{{ query }}"</h5>
+        <p class="text-muted small">Try a different course name or university.</p>
+        <a href="{% url 'mentorship:directory' %}" class="btn btn-outline-primary rounded-pill mt-2">Clear search</a>
+      {% else %}
+        <h5 class="text-muted">No mentors with open slots right now</h5>
+        <p class="text-muted small">Check back soon — or be the first mentor in your course!</p>
+        <a href="{% url 'mentorship:become_mentor' %}" class="btn btn-primary rounded-pill mt-2">Become a Mentor</a>
+      {% endif %}
+    </div>
+  {% endif %}
+
+</div>
+
+<style>
+.mentor-card:hover { box-shadow: 0 8px 30px rgba(30,58,138,.15) !important; }
+</style>
+{% endblock %}

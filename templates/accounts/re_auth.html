@@ -1,21 +1,25 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block title %}Change Password — CareerNext{% endblock %}
+{% block title %}Confirm Identity — CareerNext{% endblock %}
 
 {% block content %}
 <div class="auth-page">
-  <div class="auth-card" style="max-width:440px;">
+  <div class="auth-card" style="max-width:420px;">
 
+    <!-- Lock icon -->
     <div class="text-center mb-4">
-      <div style="width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,#16a34a,#15803d);
+      <div style="width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#1e3a8a,#2563eb);
                   display:flex;align-items:center;justify-content:center;margin:0 auto 1rem;">
-        <i class="fas fa-key" style="color:#fff;font-size:1.2rem;"></i>
+        <i class="fas fa-shield-alt" style="color:#fff;font-size:1.3rem;"></i>
       </div>
-      <h2 class="fw-bold mb-1" style="font-size:1.3rem;color:#0f172a;">Change Password</h2>
-      <p class="text-muted small mb-0">Choose a new password for your account.</p>
+      <h2 class="fw-bold mb-1" style="font-size:1.3rem;color:#0f172a;">Confirm your identity</h2>
+      <p class="text-muted small mb-0">
+        For your security, please re-enter your password to continue.
+      </p>
     </div>
 
+    <!-- Flash messages -->
     {% if messages %}
       {% for message in messages %}
       <div class="alert alert-{{ message.tags|default:'info' }} py-2 px-3 mb-3 rounded-3" style="font-size:0.83rem;">{{ message }}</div>
@@ -24,30 +28,16 @@
 
     <form method="POST" novalidate>
       {% csrf_token %}
+      <input type="hidden" name="next" value="{{ next }}">
 
       <div class="auth-field">
-        <label for="id_password1">
-          New password
-          <span style="font-weight:400;color:#94a3b8;font-size:0.72rem;"> — at least 4 characters</span>
-        </label>
+        <label for="id_password">Password</label>
         <div class="auth-pw-wrap">
-          <input type="password" name="password1" id="id_password1"
+          <input type="password" name="password" id="id_password"
                  class="form-control"
-                 placeholder="Create a new password"
-                 autocomplete="new-password" required>
-          <button type="button" class="auth-pw-toggle" onclick="authTogglePw(this)" aria-label="Show or hide password">
-            <i class="far fa-eye"></i>
-          </button>
-        </div>
-      </div>
-
-      <div class="auth-field">
-        <label for="id_password2">Confirm new password</label>
-        <div class="auth-pw-wrap">
-          <input type="password" name="password2" id="id_password2"
-                 class="form-control"
-                 placeholder="Repeat the new password"
-                 autocomplete="new-password" required>
+                 placeholder="Enter your current password"
+                 autocomplete="current-password"
+                 autofocus required>
           <button type="button" class="auth-pw-toggle" onclick="authTogglePw(this)" aria-label="Show or hide password">
             <i class="far fa-eye"></i>
           </button>
@@ -55,13 +45,19 @@
       </div>
 
       <button type="submit" class="btn-auth-submit mt-2">
-        <i class="fas fa-check me-2"></i>Update Password
+        <i class="fas fa-unlock me-2"></i>Confirm &amp; Continue
       </button>
     </form>
 
     <div class="text-center mt-3">
       <a href="{% url 'accounts:dashboard' %}" class="small text-decoration-none" style="color:#64748b;">
         <i class="fas fa-arrow-left me-1"></i>Back to dashboard
+      </a>
+    </div>
+
+    <div class="text-center mt-2">
+      <a href="{% url 'account_reset_password' %}" class="small text-decoration-none" style="color:#2563eb;">
+        Forgot your password?
       </a>
     </div>
 

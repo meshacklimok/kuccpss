@@ -74,6 +74,7 @@ INSTALLED_APPS = [
     'import_export',
     'predictor',
     'analytics',
+    'mentorship',
 ]
 
 MEDIA_URL = '/media/'
@@ -155,13 +156,10 @@ INTASEND_SANDBOX = os.environ.get("INTASEND_SANDBOX", "true").lower() == "true"
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
 
 AUTH_PASSWORD_VALIDATORS = [
-    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
     {
         'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-        'OPTIONS': {'min_length': 8},
+        'OPTIONS': {'min_length': 4},
     },
-    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
-    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
 
 
@@ -196,6 +194,9 @@ AUTH_USER_MODEL = "accounts.User"
 LOGIN_REDIRECT_URL = "/accounts/dashboard/"
 LOGOUT_REDIRECT_URL = "/accounts/login/"
 
+# Session: 90-day max (individual views call set_expiry() to match user type)
+SESSION_COOKIE_AGE = 90 * 24 * 3600  # 90 days
+
 AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
     'allauth.account.auth_backends.AuthenticationBackend',
@@ -207,7 +208,7 @@ ACCOUNT_LOGIN_ON_EMAIL_CONFIRMATION = True
 
 SOCIALACCOUNT_AUTO_SIGNUP = True
 SOCIALACCOUNT_EMAIL_VERIFICATION = 'none'
-SOCIALACCOUNT_LOGIN_ON_GET = False
+SOCIALACCOUNT_LOGIN_ON_GET = True
 SOCIALACCOUNT_EMAIL_AUTHENTICATION = True
 SOCIALACCOUNT_EMAIL_AUTHENTICATION_AUTO_CONNECT = True
 SOCIALACCOUNT_ADAPTER = 'accounts.adapters.SocialAccountAdapter'

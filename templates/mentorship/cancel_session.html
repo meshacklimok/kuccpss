@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block title %}Cancel Session | CareerNext{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-lg-5">
+
+      <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+        <div class="p-3 text-center fw-semibold text-white" style="background:#ef4444;">
+          <i class="bi bi-x-circle me-2"></i>Cancel Session
+        </div>
+        <div class="card-body p-4">
+
+          <!-- Session summary -->
+          <div class="d-flex align-items-center gap-3 mb-4 p-3 bg-light rounded-3">
+            {% if session.mentor.photo %}
+              <img src="{{ session.mentor.photo.url }}" class="rounded-circle object-fit-cover flex-shrink-0"
+                   width="48" height="48" alt="{{ session.mentor.display_name }}">
+            {% else %}
+              <div class="rounded-circle bg-primary bg-opacity-10 d-flex align-items-center justify-content-center flex-shrink-0"
+                   style="width:48px;height:48px;">
+                <span class="fw-bold text-primary">{{ session.mentor.display_name|first|upper }}</span>
+              </div>
+            {% endif %}
+            <div>
+              <div class="fw-semibold">{{ session.mentor.display_name }}</div>
+              <div class="text-muted small">{{ session.slot.datetime_display }}</div>
+            </div>
+          </div>
+
+          <div class="alert alert-warning rounded-3 small mb-4">
+            <strong>Before you cancel:</strong>
+            {% if is_mentee %}
+              A refund of KES {{ session.amount }} will be processed to your M-Pesa number within 24 hours.
+            {% else %}
+              The KES {{ session.mentor_payout }} payout for this session will be reversed from your wallet.
+            {% endif %}
+            The other party will be notified by email.
+          </div>
+
+          <form method="post">
+            {% csrf_token %}
+            <div class="mb-4">
+              <label class="form-label fw-semibold">{{ form.reason.label }}</label>
+              {{ form.reason }}
+              {% if form.reason.errors %}
+                <div class="text-danger small mt-1">{{ form.reason.errors }}</div>
+              {% endif %}
+            </div>
+            <div class="d-flex gap-3">
+              <button type="submit" class="btn btn-danger rounded-pill px-4 fw-semibold">
+                Confirm Cancellation
+              </button>
+              {% if is_mentee %}
+                <a href="{% url 'mentorship:my_sessions' %}" class="btn btn-outline-secondary rounded-pill px-4">
+                  Keep Session
+                </a>
+              {% else %}
+                <a href="{% url 'mentorship:dashboard' %}" class="btn btn-outline-secondary rounded-pill px-4">
+                  Keep Session
+                </a>
+              {% endif %}
+            </div>
+          </form>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}

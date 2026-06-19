@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% block title %}Edit Mentor Profile | CareerNext{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-lg-7">
+
+      <div class="d-flex align-items-center gap-3 mb-4">
+        <a href="{% url 'mentorship:dashboard' %}" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+          <i class="bi bi-arrow-left me-1"></i> Dashboard
+        </a>
+        <h4 class="fw-bold mb-0">Edit Your Mentor Profile</h4>
+      </div>
+
+      {% if not mentor.is_approved %}
+        <div class="alert alert-warning rounded-3 mb-4">
+          <i class="bi bi-clock me-2"></i>
+          Your profile is pending approval. Changes will be visible once approved.
+        </div>
+      {% endif %}
+
+      <div class="card border-0 shadow-sm rounded-4">
+        <div class="card-body p-4 p-md-5">
+          <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+              <div class="alert alert-danger rounded-3">{{ form.non_field_errors }}</div>
+            {% endif %}
+
+            <div class="mb-4">
+              <label class="form-label fw-semibold">{{ form.course.label }}</label>
+              {{ form.course }}
+              {% if form.course.errors %}<div class="text-danger small mt-1">{{ form.course.errors }}</div>{% endif %}
+            </div>
+
+            <div class="mb-4">
+              <label class="form-label fw-semibold">{{ form.institution.label }}</label>
+              {{ form.institution }}
+              {% if form.institution.errors %}<div class="text-danger small mt-1">{{ form.institution.errors }}</div>{% endif %}
+            </div>
+
+            <div class="mb-4">
+              <label class="form-label fw-semibold">{{ form.year_of_study.label }}</label>
+              {{ form.year_of_study }}
+              {% if form.year_of_study.errors %}<div class="text-danger small mt-1">{{ form.year_of_study.errors }}</div>{% endif %}
+            </div>
+
+            <div class="mb-4">
+              <label class="form-label fw-semibold">{{ form.bio.label }}</label>
+              {{ form.bio }}
+              {% if form.bio.errors %}<div class="text-danger small mt-1">{{ form.bio.errors }}</div>{% endif %}
+            </div>
+
+            <div class="mb-4">
+              <label class="form-label fw-semibold">{{ form.whatsapp.label }}</label>
+              {{ form.whatsapp }}
+              <div class="form-text">
+                <i class="bi bi-shield-lock me-1 text-success"></i>
+                Only shared with students who have paid. Never shown publicly.
+              </div>
+              {% if form.whatsapp.errors %}<div class="text-danger small mt-1">{{ form.whatsapp.errors }}</div>{% endif %}
+            </div>
+
+            <div class="mb-4">
+              <label class="form-label fw-semibold">{{ form.photo.label }}</label>
+              {% if mentor.photo %}
+                <div class="mb-2 d-flex align-items-center gap-3">
+                  <img src="{{ mentor.photo.url }}" class="rounded-circle object-fit-cover" width="56" height="56" alt="Current photo">
+                  <span class="text-muted small">Current photo</span>
+                </div>
+              {% endif %}
+              {{ form.photo }}
+              {% if form.photo.errors %}<div class="text-danger small mt-1">{{ form.photo.errors }}</div>{% endif %}
+            </div>
+
+            <div class="d-flex gap-3">
+              <button type="submit" class="btn btn-primary rounded-pill px-4 fw-semibold">
+                <i class="bi bi-save me-2"></i>Save Changes
+              </button>
+              <a href="{% url 'mentorship:dashboard' %}" class="btn btn-outline-secondary rounded-pill px-4">Cancel</a>
+            </div>
+          </form>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}

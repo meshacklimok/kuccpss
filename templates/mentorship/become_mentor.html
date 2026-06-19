@@ -1,0 +1,410 @@
+{% extends "base.html" %}
+{% block title %}Become a CareerNext Mentor | CareerNext{% endblock %}
+
+{% block content %}
+
+<!-- Hero -->
+<div style="background: linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 60%, #2563eb 100%);" class="text-white py-5 mb-0">
+  <div class="container py-3">
+    <div class="row align-items-center g-5">
+      <div class="col-lg-7">
+        <span class="badge bg-white bg-opacity-20 text-white fw-semibold px-3 py-2 rounded-pill mb-3 d-inline-block"
+              style="letter-spacing:.04em;font-size:.8rem;">
+          <i class="bi bi-mortarboard-fill me-1"></i> MENTOR PROGRAMME
+        </span>
+        <h1 class="display-5 fw-bold mb-3 lh-sm">
+          Share Your University Journey.<br>
+          <span style="color:#93c5fd;">Earn While You Study.</span>
+        </h1>
+        <p class="lead mb-4" style="color:#bfdbfe;line-height:1.75;">
+          Guide the next generation of Kenyan students — answer their questions about your
+          course, campus life, and career prospects in a focused 15-minute WhatsApp call.
+          You earn <strong class="text-white">KES 70</strong> for every session you complete.
+        </p>
+        <div class="d-flex flex-wrap gap-4 mb-4">
+          <div class="d-flex align-items-center gap-2">
+            <div class="rounded-circle bg-white bg-opacity-20 d-flex align-items-center justify-content-center"
+                 style="width:36px;height:36px;flex-shrink:0;">
+              <i class="bi bi-check2 text-white fw-bold"></i>
+            </div>
+            <span style="color:#dbeafe;font-size:.9rem;">Open to university & KMTC students only</span>
+          </div>
+          <div class="d-flex align-items-center gap-2">
+            <div class="rounded-circle bg-white bg-opacity-20 d-flex align-items-center justify-content-center"
+                 style="width:36px;height:36px;flex-shrink:0;">
+              <i class="bi bi-shield-check text-white fw-bold"></i>
+            </div>
+            <span style="color:#dbeafe;font-size:.9rem;">Every application manually reviewed</span>
+          </div>
+          <div class="d-flex align-items-center gap-2">
+            <div class="rounded-circle bg-white bg-opacity-20 d-flex align-items-center justify-content-center"
+                 style="width:36px;height:36px;flex-shrink:0;">
+              <i class="bi bi-wallet2 text-white fw-bold"></i>
+            </div>
+            <span style="color:#dbeafe;font-size:.9rem;">Earnings paid via M-Pesa on demand</span>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-5 d-none d-lg-block text-center">
+        <div class="p-4 rounded-4 bg-white bg-opacity-10" style="backdrop-filter:blur(10px);">
+          <div class="row g-3">
+            <div class="col-6">
+              <div class="rounded-3 p-3 text-center" style="background:rgba(255,255,255,.12);">
+                <div class="fw-bold" style="font-size:1.6rem;color:#93c5fd;">KES 70</div>
+                <div style="font-size:.78rem;color:#bfdbfe;">per session</div>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="rounded-3 p-3 text-center" style="background:rgba(255,255,255,.12);">
+                <div class="fw-bold" style="font-size:1.6rem;color:#93c5fd;">15 min</div>
+                <div style="font-size:.78rem;color:#bfdbfe;">per call</div>
+              </div>
+            </div>
+            <div class="col-12">
+              <div class="rounded-3 p-3 text-center" style="background:rgba(255,255,255,.12);">
+                <div class="fw-bold" style="font-size:1.1rem;color:#93c5fd;">Your schedule, your terms</div>
+                <div style="font-size:.78rem;color:#bfdbfe;">Add slots only when you're available</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Eligibility banner -->
+<div class="bg-amber-50 border-bottom py-3" style="background:#fffbeb;border-color:#fde68a !important;">
+  <div class="container">
+    <div class="d-flex flex-wrap align-items-center gap-3">
+      <span class="fw-semibold text-dark small">
+        <i class="bi bi-person-check-fill text-warning me-1"></i>WHO CAN APPLY:
+      </span>
+      <span class="badge rounded-pill px-3 py-2" style="background:#d97706;font-size:.8rem;">
+        <i class="bi bi-building me-1"></i>University Students (Degree)
+      </span>
+      <span class="badge rounded-pill px-3 py-2" style="background:#d97706;font-size:.8rem;">
+        <i class="bi bi-hospital me-1"></i>KMTC Students
+      </span>
+      <span class="ms-auto text-muted small d-none d-md-block">
+        <i class="bi bi-x-circle me-1 text-danger"></i>TVET &amp; TTC students are not eligible at this time
+      </span>
+    </div>
+  </div>
+</div>
+
+<div class="container py-5">
+  <div class="row g-5 justify-content-center">
+
+    <!-- LEFT: Application form -->
+    <div class="col-lg-7 order-2 order-lg-1">
+
+      <div class="card border-0 shadow rounded-4 overflow-hidden">
+
+        <!-- Card header -->
+        <div class="p-4 border-bottom" style="background:#f8fafc;">
+          <div class="d-flex align-items-center gap-3">
+            <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
+                 style="width:48px;height:48px;background:linear-gradient(135deg,#1e3a8a,#2563eb);">
+              <i class="bi bi-person-badge-fill text-white fs-5"></i>
+            </div>
+            <div>
+              <h5 class="fw-bold mb-0">Mentor Application</h5>
+              <div class="text-muted small">All fields marked <span class="text-danger">*</span> are required</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card-body p-4 p-md-5">
+
+          <form method="post" enctype="multipart/form-data" novalidate>
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+              <div class="alert alert-danger rounded-3 small">{{ form.non_field_errors }}</div>
+            {% endif %}
+
+            <!-- SECTION 1: Academic details -->
+            <div class="d-flex align-items-center gap-2 mb-4">
+              <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center flex-shrink-0"
+                   style="width:28px;height:28px;font-size:.8rem;font-weight:700;">1</div>
+              <h6 class="fw-bold mb-0 text-dark">Academic Details</h6>
+            </div>
+
+            <div class="row g-3 mb-4">
+              <!-- Institution -->
+              <div class="col-12">
+                <label class="form-label fw-semibold small">{{ form.institution.label }} <span class="text-danger">*</span></label>
+                {{ form.institution }}
+                {% if form.institution.errors %}
+                  <div class="text-danger small mt-1">{{ form.institution.errors }}</div>
+                {% endif %}
+                <div class="form-text">Only universities (degree-granting) and KMTC institutions are listed.</div>
+              </div>
+              <!-- Course -->
+              <div class="col-12">
+                <label class="form-label fw-semibold small">{{ form.course.label }} <span class="text-danger">*</span></label>
+                {{ form.course }}
+                {% if form.course.errors %}
+                  <div class="text-danger small mt-1">{{ form.course.errors }}</div>
+                {% endif %}
+                <div class="form-text">The course you are currently enrolled in.</div>
+              </div>
+              <!-- Year -->
+              <div class="col-sm-6">
+                <label class="form-label fw-semibold small">{{ form.year_of_study.label }} <span class="text-danger">*</span></label>
+                {{ form.year_of_study }}
+                {% if form.year_of_study.errors %}
+                  <div class="text-danger small mt-1">{{ form.year_of_study.errors }}</div>
+                {% endif %}
+              </div>
+              <!-- WhatsApp -->
+              <div class="col-sm-6">
+                <label class="form-label fw-semibold small">{{ form.whatsapp.label }} <span class="text-danger">*</span></label>
+                {{ form.whatsapp }}
+                {% if form.whatsapp.errors %}
+                  <div class="text-danger small mt-1">{{ form.whatsapp.errors }}</div>
+                {% endif %}
+                <div class="form-text">
+                  <i class="bi bi-shield-lock me-1 text-success"></i>Only shared with paying students.
+                </div>
+              </div>
+            </div>
+
+            <hr class="my-4">
+
+            <!-- SECTION 2: Your profile -->
+            <div class="d-flex align-items-center gap-2 mb-4">
+              <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center flex-shrink-0"
+                   style="width:28px;height:28px;font-size:.8rem;font-weight:700;">2</div>
+              <h6 class="fw-bold mb-0 text-dark">Your Public Profile</h6>
+            </div>
+
+            <!-- Bio -->
+            <div class="mb-4">
+              <label class="form-label fw-semibold small">{{ form.bio.label }} <span class="text-danger">*</span></label>
+              {{ form.bio }}
+              {% if form.bio.errors %}
+                <div class="text-danger small mt-1">{{ form.bio.errors }}</div>
+              {% endif %}
+              <div class="form-text">
+                Tell students what you study, what you enjoy, challenges you've overcome,
+                and what you can genuinely help with in 15 minutes. Max 600 characters.
+                <strong>Be honest — students choose mentors based on this.</strong>
+              </div>
+            </div>
+
+            <!-- Photo -->
+            <div class="mb-4">
+              <label class="form-label fw-semibold small">{{ form.photo.label }}</label>
+              {{ form.photo }}
+              {% if form.photo.errors %}
+                <div class="text-danger small mt-1">{{ form.photo.errors }}</div>
+              {% endif %}
+              <div class="form-text">A clear, recent headshot significantly increases your booking rate.</div>
+            </div>
+
+            <hr class="my-4">
+
+            <!-- SECTION 3: Verification -->
+            <div class="d-flex align-items-center gap-2 mb-2">
+              <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center flex-shrink-0"
+                   style="width:28px;height:28px;font-size:.8rem;font-weight:700;">3</div>
+              <h6 class="fw-bold mb-0 text-dark">Identity &amp; Enrolment Verification</h6>
+            </div>
+            <p class="text-muted small mb-4">
+              We verify every applicant before approval. These documents are
+              <strong>strictly confidential</strong> — seen only by CareerNext staff
+              during the review process and never shared or published.
+              Providing false documents will result in immediate and permanent removal.
+            </p>
+
+            <!-- Student ID -->
+            <div class="mb-4">
+              <label class="form-label fw-semibold small">
+                {{ form.student_id_upload.label }} <span class="text-danger">*</span>
+              </label>
+              <div class="border rounded-3 p-3 bg-light mb-2" style="font-size:.82rem;line-height:1.6;">
+                <i class="bi bi-info-circle text-primary me-1"></i>
+                Upload a clear photo or scan of your <strong>student ID card</strong>.
+                Both sides are acceptable. The name and institution must be clearly readable.
+              </div>
+              {{ form.student_id_upload }}
+              {% if form.student_id_upload.errors %}
+                <div class="text-danger small mt-1">{{ form.student_id_upload.errors }}</div>
+              {% endif %}
+              <div class="form-text">Accepted: JPEG, PNG, PDF · Max 5 MB</div>
+            </div>
+
+            <!-- Portal Screenshot -->
+            <div class="mb-4">
+              <label class="form-label fw-semibold small">
+                {{ form.portal_screenshot.label }} <span class="text-danger">*</span>
+              </label>
+              <div class="border rounded-3 p-3 bg-light mb-2" style="font-size:.82rem;line-height:1.6;">
+                <i class="bi bi-info-circle text-primary me-1"></i>
+                Take a screenshot from your <strong>official university or KMTC student portal</strong>
+                that clearly shows all four of the following:
+                <ul class="mb-0 mt-2 ps-3">
+                  <li>Your <strong>full name</strong></li>
+                  <li>Your <strong>registration / admission number</strong></li>
+                  <li>Your <strong>enrolled course / programme</strong></li>
+                  <li>Your <strong>current semester or academic year</strong></li>
+                </ul>
+              </div>
+              {{ form.portal_screenshot }}
+              {% if form.portal_screenshot.errors %}
+                <div class="text-danger small mt-1">{{ form.portal_screenshot.errors }}</div>
+              {% endif %}
+              <div class="form-text">Accepted: JPEG, PNG, PDF · Max 5 MB</div>
+            </div>
+
+            <!-- Institutional email -->
+            <div class="mb-4">
+              <label class="form-label fw-semibold small">
+                {{ form.university_email.label }}
+                <span class="badge bg-secondary bg-opacity-10 text-secondary ms-1 fw-normal" style="font-size:.72rem;">Optional</span>
+              </label>
+              {{ form.university_email }}
+              {% if form.university_email.errors %}
+                <div class="text-danger small mt-1">{{ form.university_email.errors }}</div>
+              {% endif %}
+              <div class="form-text">
+                Your official institutional email (e.g. <em>jm001@students.jkuat.ac.ke</em>)
+                is not required but <strong>significantly strengthens your application</strong>
+                — it provides instant, independent proof of active enrolment.
+              </div>
+            </div>
+
+            <!-- Contact note -->
+            <div class="alert border rounded-4 small mb-4 p-3"
+                 style="background:#f0f9ff;border-color:#bae6fd !important;">
+              <div class="d-flex gap-2">
+                <i class="bi bi-telephone-fill text-primary mt-1 flex-shrink-0"></i>
+                <div>
+                  <strong class="text-dark">Additional verification may be requested.</strong>
+                  <div class="text-muted mt-1">
+                    Our review team may contact you for a brief verification call or additional
+                    documents before approving your profile. Please ensure the email address on
+                    your CareerNext account is active and regularly checked.
+                    For any questions about the process, contact us at
+                    <a href="mailto:support@careernext.co.ke" class="text-primary fw-semibold">support@careernext.co.ke</a>.
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Terms -->
+            <div class="alert alert-light border rounded-4 small mb-4 p-3">
+              <div class="d-flex gap-2">
+                <i class="bi bi-shield-fill-check text-success mt-1 flex-shrink-0"></i>
+                <div>
+                  <strong class="text-dark">By submitting this application you confirm that:</strong>
+                  <ul class="mb-0 mt-2 ps-3 text-muted">
+                    <li>You are currently enrolled at the institution selected above.</li>
+                    <li>All documents provided are genuine and unaltered.</li>
+                    <li>You will be available to conduct sessions in the time slots you set.</li>
+                    <li>You understand that false information leads to permanent account suspension.</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100 rounded-pill fw-semibold py-3"
+                    style="background:linear-gradient(135deg,#1e3a8a,#2563eb);border:none;font-size:1.05rem;">
+              <i class="bi bi-send-check me-2"></i>Submit Mentor Application
+            </button>
+            <div class="text-center text-muted mt-3" style="font-size:.8rem;">
+              <i class="bi bi-clock me-1"></i>Applications are reviewed within 24 hours.
+              You will be notified by email.
+            </div>
+          </form>
+
+        </div>
+      </div>
+
+    </div>
+
+    <!-- RIGHT: What to expect + FAQ -->
+    <div class="col-lg-4 order-1 order-lg-2">
+
+      <!-- How it works -->
+      <div class="card border-0 shadow-sm rounded-4 mb-4">
+        <div class="card-body p-4">
+          <h6 class="fw-bold mb-3 text-dark">
+            <i class="bi bi-list-check text-primary me-2"></i>How It Works
+          </h6>
+          <ol class="mb-0 ps-3 text-muted" style="font-size:.88rem;line-height:2.1;">
+            <li>Submit your application with your documents.</li>
+            <li>Our team verifies your enrolment (within 24 h).</li>
+            <li>On approval, your profile goes live on the directory.</li>
+            <li>Add your available time slots to your dashboard.</li>
+            <li>Students book and pay KES 100 — you receive KES 70.</li>
+            <li>Conduct the 15-minute WhatsApp call at the booked time.</li>
+            <li>Withdraw your earnings anytime via M-Pesa.</li>
+          </ol>
+        </div>
+      </div>
+
+      <!-- Review process -->
+      <div class="card border-0 shadow-sm rounded-4 mb-4">
+        <div class="card-body p-4">
+          <h6 class="fw-bold mb-3 text-dark">
+            <i class="bi bi-search text-primary me-2"></i>Our Verification Process
+          </h6>
+          <div class="text-muted" style="font-size:.88rem;line-height:1.8;">
+            <p class="mb-2">
+              We take mentor quality seriously. Every application is reviewed by a
+              human before approval — we do not auto-approve.
+            </p>
+            <p class="mb-2">
+              Our team cross-checks your student ID, portal screenshot, and (where
+              provided) your institutional email to confirm active enrolment.
+            </p>
+            <p class="mb-0">
+              If additional information is needed, we may contact you directly.
+              Approved mentors must maintain professional conduct or risk removal.
+            </p>
+          </div>
+          <div class="mt-3 pt-3 border-top small text-muted">
+            <i class="bi bi-envelope me-1 text-primary"></i>
+            Questions? Email
+            <a href="mailto:support@careernext.co.ke" class="text-primary fw-semibold">
+              support@careernext.co.ke
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Earnings breakdown -->
+      <div class="card border-0 shadow-sm rounded-4">
+        <div class="card-body p-4">
+          <h6 class="fw-bold mb-3 text-dark">
+            <i class="bi bi-cash-coin text-success me-2"></i>Earnings Breakdown
+          </h6>
+          <div style="font-size:.88rem;">
+            <div class="d-flex justify-content-between py-2 border-bottom">
+              <span class="text-muted">Student pays</span>
+              <span class="fw-semibold">KES 100</span>
+            </div>
+            <div class="d-flex justify-content-between py-2 border-bottom">
+              <span class="text-muted">Platform fee</span>
+              <span class="text-muted">KES 30</span>
+            </div>
+            <div class="d-flex justify-content-between py-2">
+              <span class="fw-bold text-success">You receive</span>
+              <span class="fw-bold text-success fs-5">KES 70</span>
+            </div>
+            <div class="text-muted small mt-2">
+              Paid instantly to your CareerNext wallet after each session is marked complete.
+              Withdraw to M-Pesa anytime (minimum KES 100).
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% block title %}Book a Session with {{ mentor.display_name }} | CareerNext{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-lg-7">
+
+      <!-- Breadcrumb -->
+      <nav class="mb-4" aria-label="breadcrumb">
+        <ol class="breadcrumb small">
+          <li class="breadcrumb-item"><a href="{% url 'mentorship:directory' %}">Mentors</a></li>
+          <li class="breadcrumb-item"><a href="{% url 'mentorship:mentor_profile' mentor.pk %}">{{ mentor.display_name }}</a></li>
+          <li class="breadcrumb-item active">Book Session</li>
+        </ol>
+      </nav>
+
+      <!-- Mentor mini-card -->
+      <div class="d-flex align-items-center gap-3 mb-4 p-3 bg-light rounded-4">
+        {% if mentor.photo %}
+          <img src="{{ mentor.photo.url }}" class="rounded-circle object-fit-cover flex-shrink-0"
+               width="56" height="56" alt="{{ mentor.display_name }}">
+        {% else %}
+          <div class="rounded-circle bg-primary bg-opacity-10 d-flex align-items-center justify-content-center flex-shrink-0"
+               style="width:56px;height:56px;">
+            <span class="fw-bold text-primary fs-5">{{ mentor.display_name|first|upper }}</span>
+          </div>
+        {% endif %}
+        <div>
+          <div class="fw-bold">{{ mentor.display_name }}</div>
+          <div class="text-muted small">{{ mentor.course }} · {{ mentor.institution }}</div>
+          <div class="text-muted small">{{ mentor.get_year_of_study_display }}</div>
+        </div>
+      </div>
+
+      <div class="card border-0 shadow-sm rounded-4">
+        <div class="card-body p-4 p-md-5">
+          <h4 class="fw-bold mb-1">Book a 15-Minute Session</h4>
+          <p class="text-muted mb-4">KES 100 · Paid via M-Pesa · WhatsApp Call</p>
+
+          {% if messages %}
+            {% for msg in messages %}
+              <div class="alert alert-{{ msg.tags }} rounded-3">{{ msg }}</div>
+            {% endfor %}
+          {% endif %}
+
+          <form method="post">
+            {% csrf_token %}
+
+            <!-- Time slot -->
+            <div class="mb-4">
+              <label class="form-label fw-semibold">Choose a Time Slot <span class="text-danger">*</span></label>
+              <div class="border rounded-3 p-3 bg-light">
+                {% for choice in form.slot %}
+                  <div class="form-check py-1">
+                    {{ choice.tag }}
+                    <label class="form-check-label small ms-1" for="{{ choice.id_for_label }}">
+                      {{ choice.choice_label }}
+                    </label>
+                  </div>
+                {% empty %}
+                  <div class="alert alert-warning small mb-0">No open slots available for this mentor right now.</div>
+                {% endfor %}
+              </div>
+              {% if form.slot.errors %}
+                <div class="text-danger small mt-1">{{ form.slot.errors }}</div>
+              {% endif %}
+            </div>
+
+            <!-- Question -->
+            <div class="mb-4">
+              <label class="form-label fw-semibold">{{ form.mentee_question.label }} <span class="text-danger">*</span></label>
+              {{ form.mentee_question }}
+              {% if form.mentee_question.help_text %}
+                <div class="form-text">{{ form.mentee_question.help_text }}</div>
+              {% endif %}
+              {% if form.mentee_question.errors %}
+                <div class="text-danger small mt-1">{{ form.mentee_question.errors }}</div>
+              {% endif %}
+            </div>
+
+            <!-- Pricing note -->
+            <div class="alert alert-light border rounded-3 small mb-4">
+              <div class="d-flex align-items-center gap-2">
+                <i class="bi bi-credit-card text-primary fs-5"></i>
+                <div>
+                  <strong>Payment on the next step:</strong> KES 100 via M-Pesa.
+                  You'll receive the mentor's WhatsApp number by email immediately after payment.
+                </div>
+              </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100 rounded-pill fw-semibold py-3">
+              Continue to Payment <i class="bi bi-arrow-right ms-2"></i>
+            </button>
+          </form>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+{% block title %}Session Details | CareerNext{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-lg-6">
+
+      <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+        <!-- Status bar -->
+        {% if session.status == "confirmed" %}
+          <div class="p-3 text-center fw-semibold text-white"
+               style="background: linear-gradient(90deg, #16a34a, #22c55e);">
+            <i class="bi bi-check-circle me-2"></i>Session Confirmed
+          </div>
+        {% elif session.status == "completed" %}
+          <div class="p-3 text-center fw-semibold text-white bg-secondary">
+            <i class="bi bi-flag-fill me-2"></i>Session Completed
+          </div>
+        {% elif session.status == "pending_payment" %}
+          <div class="p-3 text-center fw-semibold" style="background:#fff3cd;">
+            <i class="bi bi-hourglass-split me-2 text-warning"></i>Awaiting Payment
+          </div>
+        {% else %}
+          <div class="p-3 text-center fw-semibold bg-light text-muted">
+            {{ session.get_status_display }}
+          </div>
+        {% endif %}
+
+        <div class="card-body p-4">
+
+          <!-- Mentor info -->
+          <div class="d-flex align-items-center gap-3 mb-4">
+            {% if session.mentor.photo %}
+              <img src="{{ session.mentor.photo.url }}" class="rounded-circle object-fit-cover flex-shrink-0"
+                   width="60" height="60" alt="{{ session.mentor.display_name }}">
+            {% else %}
+              <div class="rounded-circle bg-primary bg-opacity-10 d-flex align-items-center justify-content-center flex-shrink-0"
+                   style="width:60px;height:60px;">
+                <span class="fw-bold text-primary fs-4">{{ session.mentor.display_name|first|upper }}</span>
+              </div>
+            {% endif %}
+            <div>
+              <div class="fw-bold">{{ session.mentor.display_name }}</div>
+              <div class="text-muted small">{{ session.mentor.course }}</div>
+              <div class="text-muted small">{{ session.mentor.institution }}</div>
+            </div>
+          </div>
+
+          <hr class="my-3">
+
+          <!-- Details grid -->
+          <dl class="row mb-0">
+            <dt class="col-5 text-muted small fw-normal">When</dt>
+            <dd class="col-7 fw-semibold small">{{ session.slot.datetime_display }}</dd>
+
+            <dt class="col-5 text-muted small fw-normal">Duration</dt>
+            <dd class="col-7 small">15 minutes</dd>
+
+            <dt class="col-5 text-muted small fw-normal">Amount Paid</dt>
+            <dd class="col-7 small">KES {{ session.amount }}</dd>
+
+            {% if session.status in "confirmed,completed" %}
+              <dt class="col-5 text-muted small fw-normal">WhatsApp</dt>
+              <dd class="col-7 fw-bold text-success small">{{ session.mentor.whatsapp }}</dd>
+            {% endif %}
+
+            <dt class="col-5 text-muted small fw-normal">Topic</dt>
+            <dd class="col-7 small text-muted">{{ session.mentee_question }}</dd>
+          </dl>
+
+          {% if session.status == "confirmed" %}
+            <div class="alert alert-success rounded-3 mt-4 small">
+              <i class="bi bi-whatsapp fs-5 me-2"></i>
+              <strong>Next step:</strong> Send {{ session.mentor.display_name }} a WhatsApp message at
+              <a href="https://wa.me/{{ session.mentor.whatsapp|cut:'+' }}" target="_blank" class="fw-bold">
+                {{ session.mentor.whatsapp }}
+              </a>
+              to confirm your call time.
+            </div>
+
+            <!-- Calendar buttons -->
+            <div class="d-flex flex-wrap gap-2 mt-3">
+              <a href="{{ gcal_url }}" target="_blank"
+                 class="btn btn-sm btn-outline-primary rounded-pill px-3 fw-semibold">
+                <img src="https://ssl.gstatic.com/calendar/images/dynamiclogo_2020q4/calendar_16_2x.png"
+                     width="16" height="16" class="me-1" alt="">
+                Add to Google Calendar
+              </a>
+              <a href="{% url 'mentorship:download_ics' session.token %}"
+                 class="btn btn-sm btn-outline-secondary rounded-pill px-3">
+                <i class="bi bi-calendar-plus me-1"></i>Download .ics
+              </a>
+            </div>
+            <div class="text-muted mt-1" style="font-size:.75rem;">
+              <i class="bi bi-bell me-1"></i>The calendar event includes reminders 1 hour and 15 minutes before your session.
+            </div>
+          {% endif %}
+
+          {% if session.status == "completed" and not session.rating and user == session.mentee %}
+            <div class="mt-4">
+              <a href="{% url 'mentorship:rate_session' session.token %}"
+                 class="btn btn-warning w-100 rounded-pill fw-semibold">
+                <i class="bi bi-star me-2"></i>Rate Your Session
+              </a>
+            </div>
+          {% endif %}
+
+          {% if session.rating %}
+            <hr class="my-4">
+            <h6 class="fw-bold mb-3">Your Review</h6>
+            <div class="text-warning mb-2">
+              {% for i in "12345" %}
+                {% if forloop.counter <= session.rating %}★{% else %}☆{% endif %}
+              {% endfor %}
+            </div>
+            {% if session.review %}
+              <p class="text-muted small fst-italic">"{{ session.review }}"</p>
+            {% endif %}
+          {% endif %}
+
+        </div>
+      </div>
+
+      {% if session.status == "confirmed" and user == session.mentee %}
+        <div class="mt-3 text-center">
+          <a href="{% url 'mentorship:cancel_session' session.token %}"
+             class="text-danger small text-decoration-none">
+            <i class="bi bi-x-circle me-1"></i>Cancel this session
+          </a>
+        </div>
+      {% endif %}
+
+      <div class="text-center mt-3">
+        <a href="{% url 'mentorship:my_sessions' %}" class="text-muted small me-3">
+          <i class="bi bi-arrow-left me-1"></i>All my sessions
+        </a>
+        <a href="{% url 'mentorship:directory' %}" class="text-muted small">
+          Browse mentors
+        </a>
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}
