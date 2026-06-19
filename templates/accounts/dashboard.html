@@ -796,6 +796,17 @@
       </div>
 
       <!-- Profile Card -->
+      {% if guest %}
+      <div class="card mb-4 p-4 text-center border-0" style="border-radius:1.1rem;box-shadow:0 2px 12px rgba(0,0,0,0.07);background:linear-gradient(135deg,#eff6ff,#f8fafc);">
+        <div class="avatar-circle mx-auto mb-2" style="background:#dbeafe;color:#1d4ed8;font-size:1.8rem;">
+          <i class="fas fa-user"></i>
+        </div>
+        <h6 class="fw-bold mb-1">Guest User</h6>
+        <p class="text-muted small mb-3">Sign in to see your profile and saved courses.</p>
+        <a href="{% url 'accounts:register' %}" class="btn btn-primary btn-sm fw-bold mb-1 w-100">Create Free Account</a>
+        <a href="{% url 'accounts:login' %}" class="btn btn-outline-secondary btn-sm w-100">Sign In</a>
+      </div>
+      {% else %}
       <div class="card mb-4 p-4 text-center border-0" style="border-radius:1.1rem;box-shadow:0 2px 12px rgba(0,0,0,0.07);">
         {% if user.profile_picture %}
         <img src="{{ user.profile_picture.url }}" width="76" height="76"
@@ -814,6 +825,7 @@
         </p>
         {% endif %}
       </div>
+      {% endif %}
 
       <!-- Quick Links -->
       <div class="card mb-4 border-0" style="border-radius:1.1rem;box-shadow:0 2px 12px rgba(0,0,0,0.07);overflow:hidden;">
@@ -1144,10 +1156,12 @@ Tawk_API.customStyle = {
   }
 };
 Tawk_API.onLoad = function(){
+  {% if not guest %}
   Tawk_API.setAttributes({
     name:  '{{ user.full_name|default:user.email|escapejs }}',
     email: '{{ user.email|escapejs }}'
   }, function(error){});
+  {% endif %}
 };
 (function(){
 var s1=document.createElement("script"),s0=document.getElementsByTagName("script")[0];
