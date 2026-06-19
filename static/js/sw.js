@@ -1,4 +1,4 @@
-const CACHE = 'careernext-v4';
+const CACHE = 'careernext-v5';
 const PRECACHE = [
   '/',
   '/static/css/style.css',
