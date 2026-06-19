@@ -182,6 +182,20 @@
         <div class="stat-lbl">Invite Friends</div>
       </a>
     </div>
+    <div class="col-4 col-xl-2">
+      <a href="{% url 'mentorship:directory' %}" class="stat-card" style="border-color:#bbf7d0;">
+        {% if next_session %}
+          <div class="stat-num" style="color:#16a34a;font-size:1.5rem;"><i class="bi bi-calendar-check-fill"></i></div>
+          <div class="stat-lbl">Session Booked</div>
+        {% elif user_mentor_profile and user_mentor_profile.is_approved %}
+          <div class="stat-num" style="color:#16a34a;">{{ user_mentor_profile.wallet_balance }}</div>
+          <div class="stat-lbl">Wallet (KES)</div>
+        {% else %}
+          <div class="stat-num" style="color:#16a34a;font-size:1.5rem;"><i class="bi bi-people-fill"></i></div>
+          <div class="stat-lbl">Mentorship</div>
+        {% endif %}
+      </a>
+    </div>
   </div>
 
   <!-- ══ ONBOARDING CHECKLIST (shown until all steps done) ══ -->
@@ -294,14 +308,21 @@
                     Min. Grade: <strong style="color:#b91c1c;">{{ m.cutoff|default:"—" }}</strong>
                     {% endif %}
                   </span>
-                  <button class="save-btn-dash btn btn-link btn-sm p-0"
-                          data-course-id="{{ m.course_id }}"
-                          data-saved="{% if m.course_id in saved_course_ids %}true{% else %}false{% endif %}"
-                          title="{% if m.course_id in saved_course_ids %}Saved{% else %}Save to watchlist{% endif %}"
-                          style="font-size:0.95rem;border:none;background:none;
-                                 color:{% if m.course_id in saved_course_ids %}#f59e0b{% else %}#cbd5e1{% endif %};">
-                    <i class="{% if m.course_id in saved_course_ids %}fas{% else %}far{% endif %} fa-bookmark"></i>
-                  </button>
+                  <div class="d-flex align-items-center gap-2">
+                    <a href="{% url 'mentorship:directory' %}?q={{ m.course_name|urlencode }}"
+                       title="Find a mentor for this course"
+                       style="font-size:0.88rem;color:#16a34a;text-decoration:none;">
+                      <i class="bi bi-people-fill"></i>
+                    </a>
+                    <button class="save-btn-dash btn btn-link btn-sm p-0"
+                            data-course-id="{{ m.course_id }}"
+                            data-saved="{% if m.course_id in saved_course_ids %}true{% else %}false{% endif %}"
+                            title="{% if m.course_id in saved_course_ids %}Saved{% else %}Save to watchlist{% endif %}"
+                            style="font-size:0.95rem;border:none;background:none;
+                                   color:{% if m.course_id in saved_course_ids %}#f59e0b{% else %}#cbd5e1{% endif %};">
+                      <i class="{% if m.course_id in saved_course_ids %}fas{% else %}far{% endif %} fa-bookmark"></i>
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -476,6 +497,121 @@
 
   </div>
   {% endif %}
+
+  <!-- ══ MENTORSHIP STRIP ══ -->
+  <div class="card mb-4 border-0 overflow-hidden" style="border-radius:1.1rem;box-shadow:0 2px 12px rgba(0,0,0,0.07);">
+    <div class="px-4 pt-4 pb-3 d-flex justify-content-between align-items-center"
+         style="background:linear-gradient(120deg,#064e3b 0%,#059669 100%);color:#fff;">
+      <div class="d-flex align-items-center gap-2">
+        <i class="bi bi-people-fill" style="font-size:1.1rem;"></i>
+        <span style="font-size:1rem;font-weight:800;">Mentorship</span>
+        {% if next_session %}
+          <span class="badge bg-white text-success ms-1" style="font-size:.7rem;">1 upcoming</span>
+        {% endif %}
+      </div>
+      <a href="{% url 'mentorship:directory' %}" class="btn btn-sm btn-light fw-600">
+        Find a Mentor <i class="bi bi-arrow-right ms-1"></i>
+      </a>
+    </div>
+
+    <div class="p-4 bg-white">
+
+      {% if next_session %}
+      <!-- Upcoming session banner -->
+      <div class="d-flex align-items-center gap-3 p-3 rounded-3 mb-4"
+           style="background:#f0fdf4;border:1.5px solid #86efac;">
+        {% if next_session.mentor.photo %}
+          <img src="{{ next_session.mentor.photo.url }}" class="rounded-circle object-fit-cover flex-shrink-0"
+               width="52" height="52" alt="{{ next_session.mentor.display_name }}">
+        {% else %}
+          <div class="rounded-circle bg-success bg-opacity-10 d-flex align-items-center justify-content-center flex-shrink-0"
+               style="width:52px;height:52px;">
+            <span class="fw-bold text-success">{{ next_session.mentor.display_name|first|upper }}</span>
+          </div>
+        {% endif %}
+        <div class="flex-grow-1 min-w-0">
+          <div class="fw-bold text-dark">{{ next_session.slot.datetime_display }}</div>
+          <div class="text-muted small">with <strong>{{ next_session.mentor.display_name }}</strong>
+            · {{ next_session.mentor.course }}</div>
+          <div class="small mt-1">
+            <i class="bi bi-whatsapp text-success me-1"></i>
+            <a href="https://wa.me/{{ next_session.mentor.whatsapp|cut:'+' }}" target="_blank"
+               class="fw-semibold text-success">{{ next_session.mentor.whatsapp }}</a>
+          </div>
+        </div>
+        <a href="{{ next_session.get_absolute_url }}" class="btn btn-success btn-sm rounded-pill px-3 flex-shrink-0">
+          View Details
+        </a>
+      </div>
+      {% endif %}
+
+      <!-- Shortlisted courses → Find a Mentor -->
+      {% if shortlist_items %}
+      <div class="mb-3">
+        <div class="text-muted small fw-semibold mb-2 text-uppercase" style="letter-spacing:.05em;">
+          <i class="bi bi-bookmark-star me-1"></i>Find a mentor for your shortlisted courses
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+          {% for item in shortlist_items %}
+            <a href="{% url 'mentorship:directory' %}?q={{ item.course.name|urlencode }}"
+               class="btn btn-outline-success btn-sm rounded-pill d-flex align-items-center gap-2"
+               style="font-size:.8rem;max-width:260px;">
+              <i class="bi bi-people"></i>
+              <span class="text-truncate">{{ item.course.name }}</span>
+            </a>
+          {% endfor %}
+          {% if shortlist_count > shortlist_items|length %}
+            <a href="{% url 'mentorship:directory' %}" class="btn btn-light btn-sm rounded-pill"
+               style="font-size:.8rem;">
+              +{{ shortlist_count|add:"-4" }} more →
+            </a>
+          {% endif %}
+        </div>
+      </div>
+      {% else %}
+        {% if not next_session %}
+          <p class="text-muted small mb-3">
+            <i class="bi bi-lightbulb me-1 text-warning"></i>
+            Shortlist courses you're interested in and find a current student to ask questions.
+          </p>
+        {% endif %}
+      {% endif %}
+
+      <!-- Mentor mode panel -->
+      {% if user_mentor_profile %}
+      <div class="border-top pt-3 mt-2">
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+          <div class="small">
+            <span class="fw-semibold">You are a mentor</span>
+            <span class="text-muted ms-2">·</span>
+            {% if user_mentor_profile.is_approved %}
+              <span class="text-success ms-2"><i class="bi bi-check-circle-fill me-1"></i>Active</span>
+              <span class="text-muted ms-2">·</span>
+              <span class="ms-2">Wallet: <strong class="text-success">KES {{ user_mentor_profile.wallet_balance }}</strong></span>
+              {% if mentor_pending %}
+                <span class="text-muted ms-2">·</span>
+                <span class="ms-2"><strong>{{ mentor_pending|length }}</strong> pending booking{{ mentor_pending|length|pluralize }}</span>
+              {% endif %}
+            {% else %}
+              <span class="text-warning ms-2"><i class="bi bi-hourglass-split me-1"></i>Pending approval</span>
+            {% endif %}
+          </div>
+          <a href="{% url 'mentorship:dashboard' %}" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+            Mentor Dashboard <i class="bi bi-arrow-right ms-1"></i>
+          </a>
+        </div>
+      </div>
+      {% else %}
+      <div class="border-top pt-3 mt-2 d-flex align-items-center justify-content-between flex-wrap gap-2">
+        <span class="text-muted small">Are you a university student? Help others and earn KES 70/session.</span>
+        <a href="{% url 'mentorship:become_mentor' %}" class="btn btn-outline-success btn-sm rounded-pill px-3">
+          <i class="bi bi-mortarboard me-1"></i>Become a Mentor
+        </a>
+      </div>
+      {% endif %}
+
+    </div>
+  </div>
 
   <!-- ══ MAIN 2-COLUMN LAYOUT ══ -->
   <div class="row g-4">

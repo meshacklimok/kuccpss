@@ -417,6 +417,15 @@
                             </a></li>
                             <li><hr class="dropdown-divider"></li>
                             {% endif %}
+                            <li><a class="dropdown-item" href="{% url 'mentorship:directory' %}">
+                                <i class="bi bi-people-fill me-2 text-success"></i>Mentorship
+                            </a></li>
+                            {% if user.is_authenticated %}
+                            <li><a class="dropdown-item" href="{% url 'mentorship:my_sessions' %}">
+                                <i class="bi bi-calendar2-check me-2 text-primary"></i>My Sessions
+                            </a></li>
+                            {% endif %}
+                            <li><hr class="dropdown-divider"></li>
                             <li><a class="dropdown-item" href="{% url 'resources:resource_list' %}">
                                 <i class="fas fa-file-pdf me-2 text-danger"></i>Guides &amp; PDFs
                             </a></li>
@@ -565,6 +574,7 @@
                         <li class="mb-1"><a href="{% url 'courses:course_types_list' %}">Courses</a></li>
                         <li class="mb-1"><a href="{% url 'career:career_profiles' %}">Careers</a></li>
                         <li class="mb-1"><a href="{% url 'institutions:institution_types_list' %}">Institutions</a></li>
+                        <li class="mb-1"><a href="{% url 'mentorship:directory' %}">Mentorship</a></li>
                     </ul>
                 </div>
                 <div class="col-6 col-md-2">
