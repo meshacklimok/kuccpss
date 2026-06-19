@@ -143,10 +143,13 @@ INTASEND_SANDBOX = os.environ.get("INTASEND_SANDBOX", "true").lower() == "true"
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
 
 AUTH_PASSWORD_VALIDATORS = [
+    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
     {
         'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
         'OPTIONS': {'min_length': 8},
     },
+    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
 
 
@@ -192,7 +195,7 @@ ACCOUNT_LOGIN_ON_EMAIL_CONFIRMATION = True
 
 SOCIALACCOUNT_AUTO_SIGNUP = True
 SOCIALACCOUNT_EMAIL_VERIFICATION = 'none'
-SOCIALACCOUNT_LOGIN_ON_GET = True
+SOCIALACCOUNT_LOGIN_ON_GET = False
 SOCIALACCOUNT_EMAIL_AUTHENTICATION = True
 SOCIALACCOUNT_EMAIL_AUTHENTICATION_AUTO_CONNECT = True
 SOCIALACCOUNT_ADAPTER = 'accounts.adapters.SocialAccountAdapter'
@@ -231,3 +234,28 @@ _DATABASE_URL = os.environ.get('DATABASE_URL')
 if _DATABASE_URL:
     import dj_database_url
     DATABASES['default'] = dj_database_url.parse(_DATABASE_URL, conn_max_age=600, ssl_require=True)
+
+# ── Production security ───────────────────────────────────────────────────────
+if not DEBUG:
+    # Crash loudly if SECRET_KEY is still the insecure fallback
+    if SECRET_KEY.startswith('django-insecure-'):
+        raise RuntimeError("SECRET_KEY must be set via environment variable in production.")
+
+    # Render terminates TLS at its edge; tell Django the real proto via the header.
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+    # HSTS: browsers remember to use HTTPS for 1 year
+    SECURE_HSTS_SECONDS = 31536000
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+
+    # Cookies must only travel over HTTPS
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+
+    # Prevent browsers from MIME-sniffing responses
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+
+    # Additional cookie hardening
+    SESSION_COOKIE_HTTPONLY = True
+    CSRF_COOKIE_HTTPONLY = True
