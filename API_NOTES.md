@@ -3,18 +3,14 @@
 ## OpenAI Integration
 
 ### Current State
-`OPENAI_API_KEY` is set to a placeholder string in `kuccpss/settings.py`. The career guidance engine in `career/engine.py` is a stub that returns hardcoded placeholder matches and a dummy AI message.
+`OPENAI_API_KEY` is read from the `OPENAI_API_KEY` environment variable (empty string default — no placeholder in code). The career guidance engine in `career/engine.py` is a stub that returns hardcoded placeholder matches and a dummy AI message.
 
-### Before Integrating
+**What IS already live:** The document scanner (`degree_upload` view in `career/views.py`) uses GPT-4o vision. When `OPENAI_API_KEY` is set it accepts JPG/PNG/PDF uploads, detects whether it's a KCSE grade slip or a cluster points document, extracts grades with subject alias resolution, and returns structured JSON. Falls back to manual entry if key is absent.
 
-1. Move the key to an environment variable:
-   ```python
-   # settings.py
-   import os
-   OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
-   ```
-2. Add `python-dotenv` or use a `.env` file (never commit the real key)
-3. Install the SDK: `pip install openai`
+### Setup (already done)
+- Key reads from `OPENAI_API_KEY` env var — set this on Render to enable OCR and AI features
+- `python-dotenv` installed; `.env` for local dev
+- `openai` SDK installed
 
 ### Recommended Model
 Use `claude-haiku-4-5-20251001` (via Anthropic, cheapest) or `gpt-4o-mini` (via OpenAI) for short recommendation text. Use `claude-sonnet-4-6` if richer reasoning is needed. See full model IDs in CLAUDE.md.
