@@ -80,7 +80,18 @@ MEDIA_URL = '/media/'
 import os
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+# Email — uses Resend SMTP in production, console in dev so you see emails in terminal
+if os.environ.get('RESEND_API_KEY'):
+    EMAIL_BACKEND   = 'django.core.mail.backends.smtp.EmailBackend'
+    EMAIL_HOST      = 'smtp.resend.com'
+    EMAIL_PORT      = 465
+    EMAIL_USE_SSL   = True
+    EMAIL_HOST_USER = 'resend'
+    EMAIL_HOST_PASSWORD = os.environ.get('RESEND_API_KEY', '')
+else:
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'CareerNext <noreply@careernext.co.ke>')
 
 TIME_ZONE = 'Africa/Nairobi'
 

@@ -5,6 +5,7 @@ from django.contrib import messages
 from django.contrib.auth import login, logout, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
 from django.core.cache import cache
+from django.core.mail import send_mail
 from django.utils import timezone
 from django.views import View
 from django.views.decorators.http import require_http_methods
@@ -60,16 +61,30 @@ class RegisterView(View):
         if form.is_valid():
             user = form.save(commit=False)
             user.is_active = True
-            user.is_verified = True
+            user.is_verified = False  # stays False until they click the email link
             user.save()
 
-            # Generate email verification token
+            # Generate and send email verification link
             token = secrets.token_urlsafe(32)
             EmailVerificationToken.objects.create(user=user, token=token)
-
-            # TODO: Send verification email with token
+            verify_url = request.build_absolute_uri(f"/accounts/verify-email/{token}/")
+            send_mail(
+                subject="Verify your CareerNext account",
+                message=(
+                    f"Hi {user.full_name or user.email},\n\n"
+                    f"Click the link below to verify your email address:\n\n"
+                    f"{verify_url}\n\n"
+                    f"This link expires in 24 hours.\n\n"
+                    f"If you did not create a CareerNext account, ignore this email.\n\n"
+                    f"— The CareerNext Team"
+                ),
+                from_email=None,  # uses DEFAULT_FROM_EMAIL from settings
+                recipient_list=[user.email],
+                fail_silently=False,
+            )
             messages.success(
-                request, "Account created. Check your email to verify your account."
+                request,
+                "Account created! Check your email and click the verification link to log in."
             )
             return redirect("accounts:login")
 
@@ -132,7 +147,10 @@ class LoginView(View):
                 messages.error(request, "Your account is suspended.")
                 return redirect("accounts:login")
             if not user.is_verified:
-                messages.error(request, "You must verify your email before login.")
+                messages.error(
+                    request,
+                    "Please verify your email first — check your inbox (and spam) for a link from CareerNext."
+                )
                 return redirect("accounts:login")
 
             cache.delete(rl_key)  # Clear fail counter on successful login
