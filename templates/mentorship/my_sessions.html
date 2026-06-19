@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+{% block title %}My Mentorship Sessions | CareerNext{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+
+  <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 mb-4">
+    <div>
+      <h3 class="fw-bold mb-1">My Sessions</h3>
+      <p class="text-muted mb-0 small">All your mentorship bookings</p>
+    </div>
+    <a href="{% url 'mentorship:directory' %}" class="btn btn-primary rounded-pill px-4 fw-semibold">
+      <i class="bi bi-plus me-1"></i>Book a Session
+    </a>
+  </div>
+
+  {% if sessions %}
+    <div class="row g-4">
+      {% for session in sessions %}
+        <div class="col-lg-6">
+          <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden">
+
+            <!-- Status strip -->
+            {% if session.status == "confirmed" %}
+              <div style="height:4px;background:linear-gradient(90deg,#16a34a,#22c55e);"></div>
+            {% elif session.status == "completed" %}
+              <div style="height:4px;background:#94a3b8;"></div>
+            {% elif session.status == "pending_payment" %}
+              <div style="height:4px;background:#f59e0b;"></div>
+            {% elif session.status == "cancelled" %}
+              <div style="height:4px;background:#ef4444;"></div>
+            {% else %}
+              <div style="height:4px;background:#e2e8f0;"></div>
+            {% endif %}
+
+            <div class="card-body p-4">
+              <div class="d-flex align-items-start gap-3 mb-3">
+                {% if session.mentor.photo %}
+                  <img src="{{ session.mentor.photo.url }}" class="rounded-circle object-fit-cover flex-shrink-0"
+                       width="50" height="50" alt="{{ session.mentor.display_name }}">
+                {% else %}
+                  <div class="rounded-circle bg-primary bg-opacity-10 d-flex align-items-center justify-content-center flex-shrink-0"
+                       style="width:50px;height:50px;">
+                    <span class="fw-bold text-primary">{{ session.mentor.display_name|first|upper }}</span>
+                  </div>
+                {% endif %}
+                <div class="flex-grow-1 min-w-0">
+                  <div class="fw-bold text-dark">{{ session.mentor.display_name }}</div>
+                  <div class="text-muted small text-truncate">{{ session.mentor.course }}</div>
+                  <div class="text-muted small">{{ session.slot.datetime_display }}</div>
+                </div>
+                <span class="badge rounded-pill px-3 py-2 flex-shrink-0
+                  {% if session.status == 'confirmed' %}bg-success
+                  {% elif session.status == 'completed' %}bg-secondary
+                  {% elif session.status == 'pending_payment' %}bg-warning text-dark
+                  {% elif session.status == 'cancelled' %}bg-danger
+                  {% else %}bg-light text-dark{% endif %}"
+                  style="font-size:.72rem;">
+                  {{ session.get_status_display }}
+                </span>
+              </div>
+
+              <p class="text-muted small mb-3" style="display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">
+                <i class="bi bi-chat-dots me-1"></i>{{ session.mentee_question }}
+              </p>
+
+              {% if session.status == "confirmed" %}
+                <div class="d-flex align-items-center gap-2 mb-3 p-2 rounded-3 bg-success bg-opacity-5">
+                  <i class="bi bi-whatsapp text-success"></i>
+                  <a href="https://wa.me/{{ session.mentor.whatsapp|cut:'+' }}" target="_blank"
+                     class="fw-semibold text-success small">{{ session.mentor.whatsapp }}</a>
+                </div>
+              {% endif %}
+
+              <div class="d-flex gap-2 flex-wrap">
+                <a href="{{ session.get_absolute_url }}" class="btn btn-sm btn-outline-primary rounded-pill px-3">
+                  View Details
+                </a>
+                {% if session.status == "completed" and not session.rating %}
+                  <a href="{% url 'mentorship:rate_session' session.token %}"
+                     class="btn btn-sm btn-warning rounded-pill px-3 fw-semibold">
+                    <i class="bi bi-star me-1"></i>Rate Session
+                  </a>
+                {% endif %}
+                {% if session.status == "confirmed" %}
+                  <a href="{% url 'mentorship:cancel_session' session.token %}"
+                     class="btn btn-sm btn-outline-danger rounded-pill px-3">
+                    Cancel
+                  </a>
+                {% endif %}
+                {% if session.status == "pending_payment" %}
+                  <a href="{% url 'mentorship:checkout' session.token %}"
+                     class="btn btn-sm btn-success rounded-pill px-3 fw-semibold">
+                    <i class="bi bi-phone me-1"></i>Complete Payment
+                  </a>
+                {% endif %}
+              </div>
+
+              {% if session.rating %}
+                <div class="mt-3 pt-3 border-top small text-muted">
+                  <span class="text-warning">
+                    {% for i in "12345" %}{% if forloop.counter <= session.rating %}★{% else %}☆{% endif %}{% endfor %}
+                  </span>
+                  {% if session.review %} · {{ session.review|truncatewords:12 }}{% endif %}
+                </div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+
+  {% else %}
+    <div class="text-center py-5">
+      <i class="bi bi-calendar-x display-4 text-muted opacity-50 d-block mb-3"></i>
+      <h5 class="text-muted">No sessions yet</h5>
+      <p class="text-muted small">Book a 15-minute call with a student studying the course you're interested in.</p>
+      <a href="{% url 'mentorship:directory' %}" class="btn btn-primary rounded-pill px-4 mt-2">
+        Find a Mentor
+      </a>
+    </div>
+  {% endif %}
+
+</div>
+{% endblock %}

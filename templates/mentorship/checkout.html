@@ -1,0 +1,191 @@
+{% extends "base.html" %}
+{% block title %}Pay for Mentorship Session | CareerNext{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-lg-5">
+
+      <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+        <div style="background: linear-gradient(135deg, #1e3a8a, #3b82f6); padding: 2rem; color: #fff;">
+          <div class="d-flex align-items-center gap-3 mb-3">
+            {% if session.mentor.photo %}
+              <img src="{{ session.mentor.photo.url }}" class="rounded-circle object-fit-cover flex-shrink-0"
+                   width="56" height="56" alt="{{ session.mentor.display_name }}">
+            {% else %}
+              <div class="rounded-circle bg-white bg-opacity-25 d-flex align-items-center justify-content-center flex-shrink-0"
+                   style="width:56px;height:56px;">
+                <span class="fw-bold text-white fs-5">{{ session.mentor.display_name|first|upper }}</span>
+              </div>
+            {% endif %}
+            <div>
+              <div class="fw-bold">{{ session.mentor.display_name }}</div>
+              <div class="opacity-75 small">{{ session.mentor.course }}</div>
+            </div>
+          </div>
+          <div class="d-flex justify-content-between align-items-end">
+            <div>
+              <div class="opacity-75 small">Session</div>
+              <div class="fw-semibold">{{ session.slot.datetime_display }} · 15 min</div>
+            </div>
+            <div class="text-end">
+              <div class="opacity-75 small">Total</div>
+              <div class="fw-bold fs-4">KES {{ session.amount }}</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card-body p-4">
+          <h5 class="fw-bold mb-1 text-center">Pay via M-Pesa</h5>
+          <p class="text-muted small text-center mb-4">
+            Enter your M-Pesa number and tap Pay. An STK push will appear on your phone.
+          </p>
+
+          <div id="pay-error" class="alert alert-danger rounded-3 d-none"></div>
+          <div id="pay-success" class="alert alert-success rounded-3 d-none"></div>
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold">M-Pesa Phone Number</label>
+            <div class="input-group">
+              <span class="input-group-text bg-light border-end-0 pe-2">
+                <img src="https://flagcdn.com/16x12/ke.png" alt="KE" class="me-1"> +254
+              </span>
+              <input
+                type="tel"
+                id="phone-input"
+                class="form-control border-start-0 ps-1"
+                placeholder="712 345 678"
+                maxlength="12"
+                style="letter-spacing: .05em;"
+              >
+            </div>
+            <div class="form-text">The number that will receive the M-Pesa STK push.</div>
+          </div>
+
+          <button id="pay-btn" class="btn btn-success w-100 rounded-pill fw-semibold py-3" style="font-size:1.05rem;">
+            <i class="bi bi-phone me-2"></i>Pay KES {{ session.amount }} via M-Pesa
+          </button>
+
+          <div id="pay-spinner" class="text-center mt-3 d-none">
+            <div class="spinner-border text-primary" role="status"></div>
+            <div class="text-muted small mt-2">Waiting for your M-Pesa PIN… check your phone.</div>
+          </div>
+
+          <hr class="my-4">
+
+          <ul class="list-unstyled text-muted small mb-0">
+            <li class="d-flex align-items-start gap-2 mb-2">
+              <i class="bi bi-check-circle-fill text-success mt-1"></i>
+              <span>Mentor's WhatsApp number sent to your email after payment</span>
+            </li>
+            <li class="d-flex align-items-start gap-2 mb-2">
+              <i class="bi bi-check-circle-fill text-success mt-1"></i>
+              <span>Secure M-Pesa payment via IntaSend</span>
+            </li>
+            <li class="d-flex align-items-start gap-2">
+              <i class="bi bi-check-circle-fill text-success mt-1"></i>
+              <span>KES 70 goes directly to your mentor</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="text-center mt-3">
+        <a href="{% url 'mentorship:directory' %}" class="text-muted small">
+          <i class="bi bi-arrow-left me-1"></i>Browse other mentors
+        </a>
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_head %}
+<style>
+  .input-group-text { font-size: .85rem; }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function() {
+  const payBtn   = document.getElementById('pay-btn');
+  const spinner  = document.getElementById('pay-spinner');
+  const errBox   = document.getElementById('pay-error');
+  const okBox    = document.getElementById('pay-success');
+  const phoneIn  = document.getElementById('phone-input');
+
+  function showErr(msg) {
+    errBox.textContent = msg;
+    errBox.classList.remove('d-none');
+    okBox.classList.add('d-none');
+    spinner.classList.add('d-none');
+    payBtn.disabled = false;
+  }
+
+  function showOk(msg) {
+    okBox.textContent = msg;
+    okBox.classList.remove('d-none');
+    errBox.classList.add('d-none');
+    spinner.classList.remove('d-none');
+    payBtn.disabled = true;
+  }
+
+  payBtn.addEventListener('click', async function() {
+    errBox.classList.add('d-none');
+    okBox.classList.add('d-none');
+
+    let phone = phoneIn.value.trim().replace(/\s/g, '');
+    if (!phone) { showErr('Please enter your M-Pesa phone number.'); return; }
+
+    // Normalise: 07... → +2547...
+    if (phone.startsWith('07') || phone.startsWith('01')) phone = '+254' + phone.slice(1);
+    else if (phone.startsWith('254')) phone = '+' + phone;
+    else if (!phone.startsWith('+254')) { showErr('Enter a valid Kenyan number, e.g. 0712345678'); return; }
+
+    payBtn.disabled = true;
+    spinner.classList.remove('d-none');
+
+    try {
+      const resp = await fetch("{% url 'mentorship:initiate_payment' session.token %}", {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': '{{ csrf_token }}',
+        },
+        body: JSON.stringify({ phone }),
+      });
+      const data = await resp.json();
+      if (data.ok) {
+        showOk(data.message || 'STK push sent — enter your PIN on your phone.');
+        // Poll the status endpoint every 4 seconds (max 90 sec = 22 checks)
+        let checks = 0;
+        const statusUrl = "{% url 'mentorship:session_status' session.token %}";
+        const interval = setInterval(async () => {
+          checks++;
+          if (checks > 22) {
+            clearInterval(interval);
+            showErr('Payment not confirmed yet. Check your M-Pesa messages or contact support.');
+            payBtn.disabled = false;
+            return;
+          }
+          try {
+            const r = await fetch(statusUrl);
+            const d = await r.json();
+            if (d.status === 'confirmed' && d.redirect_url) {
+              clearInterval(interval);
+              window.location.href = d.redirect_url;
+            }
+          } catch {}
+        }, 4000);
+      } else {
+        showErr(data.error || 'Payment failed. Please try again.');
+      }
+    } catch (e) {
+      showErr('Network error. Please check your connection and try again.');
+    }
+  });
+})();
+</script>
+{% endblock %}

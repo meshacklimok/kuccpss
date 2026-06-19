@@ -1,4 +1,3 @@
-import re
 from django import forms
 from django.contrib.auth.forms import ReadOnlyPasswordHashField
 from django.core.exceptions import ValidationError
@@ -10,16 +9,8 @@ from .models import User, RememberToken
 # HELPER VALIDATORS
 # =====================================================
 def validate_password_strength(password: str):
-    if len(password) < 8:
-        raise ValidationError("Password must be at least 8 characters long.")
-    if not re.search(r"[A-Z]", password):
-        raise ValidationError("Password must contain at least one uppercase letter.")
-    if not re.search(r"[a-z]", password):
-        raise ValidationError("Password must contain at least one lowercase letter.")
-    if not re.search(r"\d", password):
-        raise ValidationError("Password must contain at least one number.")
-    if not re.search(r"[!@#$%^&*(),.?\":{}|<>]", password):
-        raise ValidationError("Password must contain at least one special character.")
+    if len(password) < 4:
+        raise ValidationError("Password must be at least 4 characters long.")
 
 # =====================================================
 # USER REGISTRATION FORM
@@ -29,7 +20,7 @@ class UserRegistrationForm(forms.ModelForm):
         label=_("Password"),
         widget=forms.PasswordInput(attrs={'placeholder': 'Enter password'}),
         strip=False,
-        help_text=_("Minimum 8 characters, including uppercase, lowercase, number, and special character."),
+        help_text=_("Minimum 4 characters."),
     )
     password2 = forms.CharField(
         label=_("Confirm Password"),
@@ -38,27 +29,9 @@ class UserRegistrationForm(forms.ModelForm):
     )
     agreed_terms = forms.BooleanField(label=_("I agree to the Terms and Conditions"))
 
-    phone_number = forms.CharField(
-        label=_("Phone Number"),
-        max_length=20,
-        required=False,
-        widget=forms.TextInput(attrs={'placeholder': 'e.g. 0712 345 678'}),
-    )
-    county = forms.CharField(
-        label=_("County"),
-        max_length=100,
-        required=False,
-        widget=forms.TextInput(attrs={'placeholder': 'e.g. Nairobi'}),
-    )
-    kcse_year = forms.IntegerField(
-        label=_("KCSE Year"),
-        required=False,
-        widget=forms.NumberInput(attrs={'placeholder': 'e.g. 2024', 'min': 2000, 'max': 2030}),
-    )
-
     class Meta:
         model = User
-        fields = ['email', 'full_name', 'phone_number', 'county', 'kcse_year', 'agreed_terms']
+        fields = ['email', 'full_name', 'agreed_terms']
 
     def clean_email(self):
         email = self.cleaned_data.get('email', '').lower()
@@ -82,10 +55,6 @@ class UserRegistrationForm(forms.ModelForm):
         user = super().save(commit=False)
         user.set_password(self.cleaned_data["password1"])
         user.agreed_terms = self.cleaned_data["agreed_terms"]
-        user.phone_number = self.cleaned_data.get("phone_number", "")
-        user.county = self.cleaned_data.get("county", "")
-        if self.cleaned_data.get("kcse_year"):
-            user.kcse_year = self.cleaned_data["kcse_year"]
         if commit:
             user.save()
         return user

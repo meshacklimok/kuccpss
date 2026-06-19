@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}Application Submitted | CareerNext{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-md-6 text-center">
+      <div class="mb-4">
+        <div class="rounded-circle bg-success bg-opacity-10 d-inline-flex align-items-center
+                    justify-content-center" style="width:90px;height:90px;">
+          <i class="bi bi-check-circle-fill text-success" style="font-size:2.5rem;"></i>
+        </div>
+      </div>
+      <h2 class="fw-bold mb-3">Application Received!</h2>
+      <p class="text-muted lead mb-4">
+        We'll review your profile within 24 hours and send you an email.
+        Once approved, students in your course can book sessions with you.
+      </p>
+      <div class="card border-0 bg-light rounded-4 p-4 mb-4 text-start">
+        <h6 class="fw-bold mb-3">What happens next:</h6>
+        <div class="d-flex align-items-start gap-2 mb-2">
+          <i class="bi bi-1-circle-fill text-primary mt-1"></i>
+          <span class="text-muted small">Our team reviews your profile for authenticity</span>
+        </div>
+        <div class="d-flex align-items-start gap-2 mb-2">
+          <i class="bi bi-2-circle-fill text-primary mt-1"></i>
+          <span class="text-muted small">You receive an approval email within 24 hours</span>
+        </div>
+        <div class="d-flex align-items-start gap-2 mb-2">
+          <i class="bi bi-3-circle-fill text-primary mt-1"></i>
+          <span class="text-muted small">Log in and add your available time slots</span>
+        </div>
+        <div class="d-flex align-items-start gap-2">
+          <i class="bi bi-4-circle-fill text-primary mt-1"></i>
+          <span class="text-muted small">Students book sessions and you earn KES 70 each</span>
+        </div>
+      </div>
+      <a href="{% url 'mentorship:directory' %}" class="btn btn-primary rounded-pill px-4">
+        Browse Mentors
+      </a>
+    </div>
+  </div>
+</div>
+{% endblock %}
