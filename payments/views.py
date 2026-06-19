@@ -118,6 +118,42 @@ def mpesa_webhook(request):
     phone = payload.get("phone_number", "")
     value = payload.get("value", "0")
 
+    # Try to match a mentorship session first (api_ref is a UUID token)
+    try:
+        import uuid
+        session_token = uuid.UUID(api_ref)
+        from mentorship.models import MentorshipSession
+        try:
+            session = MentorshipSession.objects.select_related(
+                "mentor", "mentor__user", "mentee", "slot"
+            ).get(token=session_token, status="pending_payment")
+        except MentorshipSession.DoesNotExist:
+            logger.warning("Webhook: no pending mentorship session for ref %s", api_ref)
+            return HttpResponse(status=200)
+
+        if state == "COMPLETE":
+            session.status = "confirmed"
+            invoice_id = (
+                payload.get("invoice_id")
+                or payload.get("invoice", {}).get("invoice_id", "")
+            )
+            if invoice_id:
+                session.payment_ref = invoice_id
+            session.save(update_fields=["status", "payment_ref"])
+
+            mentor = session.mentor
+            mentor.wallet_balance += session.mentor_payout
+            mentor.total_earned += session.mentor_payout
+            mentor.save(update_fields=["wallet_balance", "total_earned"])
+
+            from mentorship.views import _send_booking_confirmation
+            _send_booking_confirmation(session)
+
+        return HttpResponse(status=200)
+
+    except (ValueError, AttributeError):
+        pass  # api_ref is not a UUID — fall through to Payment lookup
+
     # Find the Payment using api_ref (which we set to str(payment.pk))
     try:
         payment_id = int(api_ref)

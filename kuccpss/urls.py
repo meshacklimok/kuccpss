@@ -51,6 +51,7 @@ urlpatterns = [
     path('api/search/', api_search_suggest, name='api_search_suggest'),
     path('api/email-lead/', email_lead_capture, name='email_lead_capture'),
     path('analytics/', include('analytics.urls', namespace='analytics')),
+    path('mentorship/', include('mentorship.urls', namespace='mentorship')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 if settings.DEBUG:

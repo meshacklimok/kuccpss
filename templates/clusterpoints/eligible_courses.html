@@ -60,6 +60,22 @@
   </div>
   {% endif %}
 
+  <!-- Mentorship nudge -->
+  <div class="d-flex align-items-center gap-3 flex-wrap p-3 mb-4 rounded-3"
+       style="background:linear-gradient(135deg,#f0fdf4,#dcfce7);border:1.5px solid #86efac;">
+    <div class="flex-grow-1">
+      <div class="fw-700" style="color:#166534;font-size:0.93rem;">
+        <i class="bi bi-people-fill me-2 text-success"></i>Want to know what a course is really like?
+      </div>
+      <div class="small text-muted mt-1">
+        Book a 15-minute WhatsApp call with a current student. KES 100. Real answers from someone already there.
+      </div>
+    </div>
+    <a href="{% url 'mentorship:directory' %}" class="btn btn-success btn-sm fw-semibold flex-shrink-0 rounded-pill px-3">
+      Find a Mentor
+    </a>
+  </div>
+
   <!-- Summary stat cards -->
   <div class="row g-3 mb-4">
     <div class="col-4">
