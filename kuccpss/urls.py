@@ -34,7 +34,7 @@ handler500 = 'django.views.defaults.server_error'
 
 urlpatterns = [
     path('sw.js', serve_sw, name='service_worker'),
-    path('admin/', admin.site.urls),
+    path('cn-staff/', admin.site.urls),
     path('accounts/', include('accounts.urls')),
     path('', public_home_view, name='home'),
     path('dashboard/', dashboard_view, name='dashboard_root'),
