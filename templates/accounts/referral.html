@@ -1,0 +1,283 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Refer Friends — CareerNext{% endblock %}
+
+{% block content %}
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+
+<style>
+.ref-hero {
+    background: linear-gradient(135deg, #1e3a8a 0%, #7c3aed 100%);
+    color: white; padding: 3rem 0 2.5rem;
+}
+.ref-code-box {
+    background: rgba(255,255,255,0.12); border: 1.5px solid rgba(255,255,255,0.25);
+    border-radius: 14px; padding: 1.25rem 1.5rem;
+    display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;
+}
+.ref-code {
+    font-family: 'Courier New', monospace; font-size: 1.6rem; font-weight: 900;
+    letter-spacing: 4px; color: #fbbf24; flex: 1; min-width: 140px;
+}
+.stat-chip {
+    background: var(--white); border-radius: 14px; padding: 1.25rem;
+    text-align: center; border: 1.5px solid var(--border);
+    box-shadow: 0 2px 8px var(--shadow);
+}
+.stat-chip .num { font-size: 2rem; font-weight: 800; color: var(--primary); line-height: 1; }
+.stat-chip .lbl { font-size: 0.78rem; color: var(--muted); font-weight: 600; margin-top: 4px; }
+.share-btn {
+    display: flex; align-items: center; gap: 0.6rem;
+    padding: 0.65rem 1.25rem; border-radius: 10px; font-weight: 700;
+    font-size: 0.88rem; text-decoration: none; border: none; cursor: pointer;
+    transition: transform 0.2s, opacity 0.2s; white-space: nowrap;
+}
+.share-btn:hover { transform: translateY(-2px); opacity: 0.92; text-decoration: none; }
+.share-btn:active { transform: scale(0.95); }
+.how-step {
+    display: flex; gap: 1rem; align-items: flex-start;
+    padding: 1rem 0; border-bottom: 1px solid var(--border);
+}
+.how-step:last-child { border-bottom: none; }
+.step-num {
+    width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0;
+    background: linear-gradient(135deg, var(--primary-light), var(--primary));
+    color: white; font-weight: 800; font-size: 0.9rem;
+    display: flex; align-items: center; justify-content: center;
+}
+.ref-row {
+    display: flex; align-items: center; gap: 0.75rem;
+    padding: 0.85rem 0; border-bottom: 1px solid #f1f5f9;
+}
+.ref-row:last-child { border-bottom: none; }
+.ref-avatar {
+    width: 38px; height: 38px; border-radius: 50%; background: #eff6ff;
+    color: var(--primary-light); font-weight: 800; font-size: 0.9rem;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+</style>
+
+<!-- Hero -->
+<div class="ref-hero">
+    <div class="container">
+        <nav aria-label="breadcrumb" class="mb-3">
+            <ol class="breadcrumb" style="--bs-breadcrumb-divider-color:rgba(255,255,255,0.5);">
+                <li class="breadcrumb-item"><a href="{% url 'accounts:dashboard' %}" class="text-white-50 text-decoration-none">Dashboard</a></li>
+                <li class="breadcrumb-item active text-white">Refer Friends</li>
+            </ol>
+        </nav>
+        <div class="row align-items-center g-4">
+            <div class="col-lg-7">
+                <span style="background:rgba(251,191,36,0.2);border:1px solid rgba(251,191,36,0.4);color:#fbbf24;border-radius:20px;padding:4px 14px;font-size:0.75rem;font-weight:700;display:inline-block;margin-bottom:0.75rem;">
+                    <i class="bi bi-gift-fill me-1"></i> Referral Programme
+                </span>
+                <h1 class="fw-bold mb-2" style="font-size:1.9rem;">Invite Friends to CareerNext</h1>
+                <p style="opacity:0.85;font-size:1rem;max-width:480px;">
+                    Share your unique link. When a friend signs up through it, they get a head-start on their career guidance journey — and you get credit for growing the community.
+                </p>
+            </div>
+            <div class="col-lg-5">
+                <div class="ref-code-box">
+                    <div>
+                        <div style="font-size:0.72rem;color:rgba(255,255,255,0.65);font-weight:700;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:4px;">Your Invite Code</div>
+                        <div class="ref-code" id="refCode">{{ ref.code }}</div>
+                    </div>
+                    <button onclick="copyCode()" class="share-btn" style="background:white;color:var(--primary);" id="copyCodeBtn">
+                        <i class="bi bi-copy"></i> Copy Code
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container py-4">
+    <div class="row g-4">
+
+        <!-- LEFT: Stats + Share options -->
+        <div class="col-lg-8">
+
+            <!-- Stats -->
+            <div class="row g-3 mb-4">
+                <div class="col-4">
+                    <div class="stat-chip">
+                        <div class="num">{{ total_referred }}</div>
+                        <div class="lbl">Friends Joined</div>
+                    </div>
+                </div>
+                <div class="col-4">
+                    <div class="stat-chip">
+                        <div class="num" style="color:#16a34a;">{{ total_referred }}</div>
+                        <div class="lbl">Conversions</div>
+                    </div>
+                </div>
+                <div class="col-4">
+                    <div class="stat-chip">
+                        <div class="num" style="color:#7c3aed;">{{ pending.count }}</div>
+                        <div class="lbl">Pending</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Share link card -->
+            <div class="card border-0 shadow-sm mb-4" style="border-radius:16px;">
+                <div class="card-body p-4">
+                    <h5 class="fw-bold mb-3"><i class="bi bi-share-fill me-2 text-primary"></i>Share Your Link</h5>
+
+                    <!-- Link display + copy -->
+                    <div class="d-flex gap-2 mb-4 flex-wrap">
+                        <input type="text" id="refUrl" value="{{ ref_url }}" readonly
+                               class="form-control form-control-sm fw-semibold"
+                               style="font-size:0.82rem;background:#f8fafc;border-radius:8px;flex:1;min-width:200px;"
+                               onclick="this.select()">
+                        <button onclick="copyLink()" class="share-btn" style="background:var(--primary);color:white;font-size:0.82rem;padding:0.5rem 1rem;" id="copyLinkBtn">
+                            <i class="bi bi-clipboard" id="copyLinkIcon"></i> <span id="copyLinkText">Copy Link</span>
+                        </button>
+                    </div>
+
+                    <!-- Social share buttons -->
+                    <p class="text-muted small fw-semibold mb-2">Share directly:</p>
+                    <div class="d-flex flex-wrap gap-2">
+                        <a href="https://wa.me/?text={{ whatsapp_text|urlencode }}"
+                           target="_blank" rel="noopener"
+                           class="share-btn" style="background:#25d366;color:white;">
+                            <i class="bi bi-whatsapp"></i> WhatsApp
+                        </a>
+                        <a href="https://twitter.com/intent/tweet?text={{ twitter_text|urlencode }}&url={{ ref_url|urlencode }}"
+                           target="_blank" rel="noopener"
+                           class="share-btn" style="background:#000;color:white;">
+                            <i class="bi bi-twitter-x"></i> X / Twitter
+                        </a>
+                        <a href="https://t.me/share/url?url={{ ref_url|urlencode }}&text={{ telegram_text|urlencode }}"
+                           target="_blank" rel="noopener"
+                           class="share-btn" style="background:#0088cc;color:white;">
+                            <i class="bi bi-telegram"></i> Telegram
+                        </a>
+                        <button onclick="nativeShare()" class="share-btn d-lg-none" style="background:#6366f1;color:white;">
+                            <i class="bi bi-box-arrow-up"></i> More
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Friends who joined -->
+            <div class="card border-0 shadow-sm" style="border-radius:16px;">
+                <div class="card-body p-4">
+                    <h5 class="fw-bold mb-3"><i class="bi bi-people-fill me-2 text-success"></i>Friends Who Joined ({{ total_referred }})</h5>
+                    {% if conversions %}
+                    {% for r in conversions %}
+                    <div class="ref-row">
+                        <div class="ref-avatar">{{ r.referred_user.full_name|first|upper|default:r.referred_email|first|upper }}</div>
+                        <div class="flex-1">
+                            <div class="fw-semibold" style="font-size:0.88rem;">{{ r.referred_user.full_name|default:"—" }}</div>
+                            <div class="text-muted" style="font-size:0.75rem;">{{ r.referred_email }}</div>
+                        </div>
+                        <span class="badge rounded-pill" style="background:#dcfce7;color:#15803d;font-size:0.7rem;padding:4px 10px;">
+                            <i class="bi bi-check-circle-fill me-1"></i>Joined
+                        </span>
+                        <span class="text-muted" style="font-size:0.73rem;">{{ r.converted_at|date:"d M Y" }}</span>
+                    </div>
+                    {% endfor %}
+                    {% else %}
+                    <div class="empty-state py-4">
+                        <i class="bi bi-person-plus" style="font-size:2.5rem;opacity:0.3;display:block;text-align:center;margin-bottom:0.75rem;"></i>
+                        <p class="text-muted small text-center mb-0">No referrals yet — share your link above to invite friends!</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+        </div>
+
+        <!-- RIGHT: How it works -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm mb-4" style="border-radius:16px;">
+                <div class="card-body p-4">
+                    <h5 class="fw-bold mb-3"><i class="bi bi-info-circle-fill me-2 text-primary"></i>How It Works</h5>
+                    <div class="how-step">
+                        <div class="step-num">1</div>
+                        <div>
+                            <div class="fw-bold" style="font-size:0.9rem;">Share your link</div>
+                            <div class="text-muted small">Send your personal referral link to classmates, siblings or friends who just finished KCSE.</div>
+                        </div>
+                    </div>
+                    <div class="how-step">
+                        <div class="step-num">2</div>
+                        <div>
+                            <div class="fw-bold" style="font-size:0.9rem;">They sign up</div>
+                            <div class="text-muted small">When they create a free account via your link, they're automatically linked to you.</div>
+                        </div>
+                    </div>
+                    <div class="how-step">
+                        <div class="step-num">3</div>
+                        <div>
+                            <div class="fw-bold" style="font-size:0.9rem;">Both benefit</div>
+                            <div class="text-muted small">Your referral count grows. Future reward tiers unlock as we build the community together.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Suggested message -->
+            <div class="card border-0 shadow-sm" style="border-radius:16px;border-left:4px solid #7c3aed !important;">
+                <div class="card-body p-4">
+                    <h6 class="fw-bold mb-2"><i class="bi bi-chat-quote-fill me-2" style="color:#7c3aed;"></i>Suggested Message</h6>
+                    <p class="text-muted small mb-3" style="font-style:italic;line-height:1.6;">
+                        "Hey! I found this free website that calculates your KCSE cluster points and shows every university, KMTC and TVET course you qualify for. Use my link: {{ ref_url }}"
+                    </p>
+                    <button onclick="copySuggestedMsg()" class="btn btn-outline-secondary btn-sm w-100" style="border-radius:8px;">
+                        <i class="bi bi-clipboard me-1"></i> Copy Message
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+{{ ref_url|json_script:"ref-url-data" }}
+{% block extra_js %}
+<script>
+const refUrl = JSON.parse(document.getElementById('ref-url-data').textContent);
+
+const SUGGESTED_MSG = "Hey! I found this free website that calculates your KCSE cluster points and shows every university, KMTC and TVET course you qualify for. Sign up free using my link: " + refUrl;
+
+function copyCode() {
+    navigator.clipboard.writeText('{{ ref.code }}').then(() => {
+        const btn = document.getElementById('copyCodeBtn');
+        btn.innerHTML = '<i class="bi bi-check-circle-fill"></i> Copied!';
+        btn.style.background = '#dcfce7'; btn.style.color = '#15803d';
+        setTimeout(() => { btn.innerHTML = '<i class="bi bi-copy"></i> Copy Code'; btn.style.background='white'; btn.style.color='var(--primary)'; }, 2000);
+    });
+}
+
+function copyLink() {
+    navigator.clipboard.writeText(refUrl).then(() => {
+        document.getElementById('copyLinkIcon').className = 'bi bi-check-circle-fill';
+        document.getElementById('copyLinkText').textContent = 'Copied!';
+        setTimeout(() => { document.getElementById('copyLinkIcon').className='bi bi-clipboard'; document.getElementById('copyLinkText').textContent='Copy Link'; }, 2500);
+    });
+}
+
+function copySuggestedMsg() {
+    navigator.clipboard.writeText(SUGGESTED_MSG).then(() => {
+        const btn = event.currentTarget;
+        btn.innerHTML = '<i class="bi bi-check-circle-fill me-1"></i> Copied!';
+        btn.className = 'btn btn-success btn-sm w-100';
+        setTimeout(() => { btn.innerHTML = '<i class="bi bi-clipboard me-1"></i> Copy Message'; btn.className = 'btn btn-outline-secondary btn-sm w-100'; btn.style='border-radius:8px;'; }, 2500);
+    });
+}
+
+function nativeShare() {
+    if (navigator.share) {
+        navigator.share({
+            title: 'CareerNext — Kenya\'s #1 KCSE Career Guide',
+            text: SUGGESTED_MSG,
+            url: refUrl,
+        }).catch(() => {});
+    }
+}
+</script>
+{% endblock %}
+{% endblock %}

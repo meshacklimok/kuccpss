@@ -176,7 +176,72 @@
         <div class="stat-lbl">Notifications</div>
       </a>
     </div>
+    <div class="col-4 col-xl-2">
+      <a href="{% url 'accounts:referral' %}" class="stat-card" style="border-color:#fef08a;">
+        <div class="stat-num" style="color:#ca8a04;font-size:1.5rem;"><i class="bi bi-gift-fill"></i></div>
+        <div class="stat-lbl">Invite Friends</div>
+      </a>
+    </div>
   </div>
+
+  <!-- ══ ONBOARDING CHECKLIST (shown until all steps done) ══ -->
+  {% if not guest %}
+  {% with has_results=snapshot has_shortlist=shortlist_count %}
+  {% if not has_results or not user.county or not has_shortlist %}
+  <div class="card mb-4 border-0" id="onboardCard"
+       style="border-radius:1.1rem;box-shadow:0 2px 12px rgba(0,0,0,0.07);border-left:4px solid #4f46e5 !important;">
+    <div class="card-body p-4">
+      <div class="d-flex align-items-center justify-content-between mb-3">
+        <div>
+          <h6 class="fw-bold mb-0"><i class="bi bi-rocket-takeoff-fill me-2 text-primary"></i>Get Started — 3 Steps</h6>
+          <p class="text-muted small mb-0">Complete these to get the most out of CareerNext</p>
+        </div>
+        <button onclick="this.closest('#onboardCard').style.display='none';localStorage.setItem('cn_onboard_dismissed','1')"
+                class="btn btn-link text-muted p-0" style="font-size:1.1rem;">×</button>
+      </div>
+      {% if has_results %}
+      <div class="d-flex align-items-center gap-3 mb-2 p-2 rounded-3" style="background:#f0fdf4;">
+        <div style="width:28px;height:28px;border-radius:50%;background:#16a34a;color:white;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:0.8rem;"><i class="bi bi-check-lg"></i></div>
+        <div class="flex-1"><span class="fw-semibold small">Run the Career Engine</span><span class="text-muted small ms-2">Done ✓</span></div>
+      </div>
+      {% else %}
+      <a href="{% url 'career:home' %}" class="d-flex align-items-center gap-3 mb-2 p-2 rounded-3 text-decoration-none" style="background:#eff6ff;border:1px solid #bfdbfe;">
+        <div style="width:28px;height:28px;border-radius:50%;background:#3b82f6;color:white;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:0.8rem;font-weight:800;">1</div>
+        <div class="flex-1"><span class="fw-semibold small text-dark">Run the Career Engine</span><p class="text-muted small mb-0">Enter your KCSE results to see all courses you qualify for</p></div>
+        <i class="bi bi-chevron-right text-primary"></i>
+      </a>
+      {% endif %}
+
+      {% if user.county %}
+      <div class="d-flex align-items-center gap-3 mb-2 p-2 rounded-3" style="background:#f0fdf4;">
+        <div style="width:28px;height:28px;border-radius:50%;background:#16a34a;color:white;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:0.8rem;"><i class="bi bi-check-lg"></i></div>
+        <div class="flex-1"><span class="fw-semibold small">Complete your profile</span><span class="text-muted small ms-2">Done ✓</span></div>
+      </div>
+      {% else %}
+      <a href="{% url 'accounts:profile' %}" class="d-flex align-items-center gap-3 mb-2 p-2 rounded-3 text-decoration-none" style="background:#fefce8;border:1px solid #fde68a;">
+        <div style="width:28px;height:28px;border-radius:50%;background:#f59e0b;color:white;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:0.8rem;font-weight:800;">2</div>
+        <div class="flex-1"><span class="fw-semibold small text-dark">Complete your profile</span><p class="text-muted small mb-0">Add your county and KCSE year for personalised guidance</p></div>
+        <i class="bi bi-chevron-right" style="color:#d97706;"></i>
+      </a>
+      {% endif %}
+
+      {% if has_shortlist %}
+      <div class="d-flex align-items-center gap-3 mb-0 p-2 rounded-3" style="background:#f0fdf4;">
+        <div style="width:28px;height:28px;border-radius:50%;background:#16a34a;color:white;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:0.8rem;"><i class="bi bi-check-lg"></i></div>
+        <div class="flex-1"><span class="fw-semibold small">Shortlist your top courses</span><span class="text-muted small ms-2">Done ✓</span></div>
+      </div>
+      {% else %}
+      <a href="{% url 'accounts:shortlist' %}" class="d-flex align-items-center gap-3 mb-0 p-2 rounded-3 text-decoration-none" style="background:#fdf4ff;border:1px solid #e9d5ff;">
+        <div style="width:28px;height:28px;border-radius:50%;background:#7c3aed;color:white;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:0.8rem;font-weight:800;">3</div>
+        <div class="flex-1"><span class="fw-semibold small text-dark">Shortlist your top courses</span><p class="text-muted small mb-0">Save and rank the courses you want to apply to</p></div>
+        <i class="bi bi-chevron-right" style="color:#7c3aed;"></i>
+      </a>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+  {% endwith %}
+  {% endif %}
 
   <!-- ══ RECOMMENDED FOR YOU ══ -->
   {% if snapshot and snapshot.top_matches_json %}
@@ -913,6 +978,21 @@
         </div>
       </div>
 
+      <!-- WhatsApp Community -->
+      <div class="card mb-4 border-0" style="border-radius:1.1rem;background:linear-gradient(135deg,#dcfce7 0%,#d1fae5 100%);border:1.5px solid #86efac !important;box-shadow:0 2px 12px rgba(0,0,0,0.05);">
+        <div class="p-4">
+          <div class="d-flex align-items-center gap-2 mb-2">
+            <i class="bi bi-whatsapp" style="color:#16a34a;font-size:1.3rem;"></i>
+            <span class="fw-bold" style="font-size:0.92rem;color:#14532d;">Join Our Community</span>
+          </div>
+          <p class="text-muted small mb-3" style="color:#166534 !important;opacity:0.85;">Get KUCCPS tips, deadline reminders, and connect with other students in our free WhatsApp group.</p>
+          <a href="https://chat.whatsapp.com/careernext-community" target="_blank" rel="noopener"
+             class="btn w-100 fw-bold" style="background:#25d366;color:white;border-radius:10px;font-size:0.88rem;">
+            <i class="bi bi-whatsapp me-1"></i>Join Free WhatsApp Group
+          </a>
+        </div>
+      </div>
+
       <!-- Notifications -->
       {% if notifications %}
       <div class="card p-4 border-0" style="border-radius:1.1rem;box-shadow:0 2px 12px rgba(0,0,0,0.07);">
@@ -1173,4 +1253,13 @@ s0.parentNode.insertBefore(s1,s0);
 })();
 </script>
 <!--End of Tawk.to Script-->
+<script>
+// Hide onboarding card if user already dismissed it
+(function () {
+    if (localStorage.getItem('cn_onboard_dismissed')) {
+        var c = document.getElementById('onboardCard');
+        if (c) c.style.display = 'none';
+    }
+}());
+</script>
 {% endblock %}

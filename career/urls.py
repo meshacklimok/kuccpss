@@ -62,4 +62,8 @@ urlpatterns = [
 
     # ── Session management ───────────────────────────
     path("clear/", views.clear_session, name="clear_session"),
+
+    # ── Share results ────────────────────────────────
+    path("share/create/",         views.share_result_create, name="share_result_create"),
+    path("share/<uuid:token>/",   views.shared_result_view,  name="shared_result"),
 ]

@@ -82,6 +82,26 @@ class RegisterView(View):
                 recipient_list=[user.email],
                 fail_silently=False,
             )
+            # ── Referral attribution ──────────────────────────────
+            ref_code = request.session.pop('referral_code', None)
+            if ref_code:
+                from accounts.models import Referral as ReferralModel
+                try:
+                    ref = ReferralModel.objects.get(code=ref_code, converted=False)
+                    ref.referred_user  = user
+                    ref.referred_email = user.email
+                    ref.converted      = True
+                    ref.converted_at   = timezone.now()
+                    ref.save(update_fields=['referred_user', 'referred_email', 'converted', 'converted_at'])
+                except ReferralModel.DoesNotExist:
+                    pass
+
+            # ── Email lead conversion ─────────────────────────────
+            from accounts.models import EmailLead
+            EmailLead.objects.filter(email=user.email, converted_to_user__isnull=True).update(
+                converted_to_user=user
+            )
+
             messages.success(
                 request,
                 "Account created! Check your email and click the verification link to log in."
@@ -518,12 +538,90 @@ def terms_view(request):
     return render(request, "accounts/terms.html")
 
 
+@login_required
+def referral_view(request):
+    from accounts.models import Referral, _make_referral_code
+    # Get or create a referral entry for this user (their personal invite code)
+    ref, _ = Referral.objects.get_or_create(
+        referrer=request.user, referred_user__isnull=True, converted=False,
+        defaults={'code': _make_referral_code()}
+    )
+    # If somehow all codes are used (converted), make a fresh one
+    if ref.converted:
+        ref = Referral.objects.create(referrer=request.user, code=_make_referral_code())
+
+    conversions = Referral.objects.filter(referrer=request.user, converted=True).select_related('referred_user')
+    pending     = Referral.objects.filter(referrer=request.user, converted=False).exclude(id=ref.id)
+    ref_url = request.build_absolute_uri(f"/?ref={ref.code}")
+    share_msg = f"I use CareerNext to check KCSE cluster points & find courses I qualify for — it's free! Join via my link: {ref_url}"
+    return render(request, 'accounts/referral.html', {
+        'ref': ref,
+        'ref_url': ref_url,
+        'conversions': conversions,
+        'pending': pending,
+        'total_referred': conversions.count(),
+        'whatsapp_text': share_msg,
+        'twitter_text': "Check your KCSE cluster points & find courses you qualify for — free! 🎓",
+        'telegram_text': share_msg,
+    })
+
+
+def email_lead_capture(request):
+    """AJAX endpoint — capture visitor email before registration."""
+    if request.method != 'POST':
+        from django.http import JsonResponse
+        return JsonResponse({'ok': False}, status=405)
+
+    import json
+    from django.http import JsonResponse
+    from accounts.models import EmailLead
+
+    try:
+        body  = json.loads(request.body)
+        email = body.get('email', '').strip().lower()
+        source = body.get('source', 'other')[:20]
+    except (json.JSONDecodeError, AttributeError):
+        return JsonResponse({'ok': False, 'error': 'invalid'}, status=400)
+
+    if not email or '@' not in email or len(email) > 254:
+        return JsonResponse({'ok': False, 'error': 'invalid_email'}, status=400)
+
+    if request.user.is_authenticated:
+        return JsonResponse({'ok': False, 'error': 'already_registered'}, status=400)
+
+    # Don't duplicate within the same session
+    session_key = f'lead_captured_{source}'
+    if request.session.get(session_key):
+        return JsonResponse({'ok': True, 'dup': True})
+
+    ip = get_client_ip(request)
+    ref_code = request.session.get('referral_code', '')
+    EmailLead.objects.get_or_create(
+        email=email,
+        source=source,
+        defaults={'ip_address': ip, 'ref_code': ref_code}
+    )
+    request.session[session_key] = True
+    return JsonResponse({'ok': True})
+
+
 def public_home_view(request):
     if request.user.is_authenticated:
         return redirect("accounts:dashboard")
     from resources.models import SuccessStory
     stories = SuccessStory.objects.filter(is_active=True).order_by('order', 'id')
-    return render(request, "accounts/home.html", {"stories": stories})
+
+    # Sample cluster preview bars for the hero card (static illustrative data)
+    sample_clusters = [
+        ("Cluster 1", 75, "#4f46e5"),
+        ("Cluster 4", 60, "#0891b2"),
+        ("Cluster 9", 88, "#16a34a"),
+        ("Cluster 12", 52, "#d97706"),
+    ]
+    return render(request, "accounts/home.html", {
+        "stories": stories,
+        "sample_clusters": sample_clusters,
+    })
 
 
 def privacy_view(request):

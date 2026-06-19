@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block title %}Link Expired — CareerNext{% endblock %}
+
+{% block content %}
+<div class="container py-5 text-center">
+    <div style="font-size:4rem;margin-bottom:1rem;">⏰</div>
+    <h2 class="fw-bold mb-2">This shared link has expired</h2>
+    <p class="text-muted mb-4">Shared career results are available for 30 days. This one has passed its expiry date.</p>
+    <a href="{% url 'career:home' %}" class="btn btn-primary px-5">Discover Your Own Courses</a>
+</div>
+{% endblock %}

@@ -263,8 +263,13 @@
     <a href="{% url 'career:home' %}" class="lce-btn-back">
         <i class="bi bi-arrow-left"></i> Back
     </a>
-    <button type="submit" form="gradeForm" class="lce-btn-continue" id="proceedBtn" disabled>
-        Continue to Method <i class="bi bi-arrow-right"></i>
+    <button type="submit" form="gradeForm" class="lce-btn-continue" id="proceedBtn" disabled
+            data-no-loading aria-label="Continue to next step">
+        <span id="proceedLabel">Continue <i class="bi bi-arrow-right"></i></span>
+        <span id="proceedSpinner" style="display:none;">
+            <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+            Processing…
+        </span>
     </button>
 </div>
 
@@ -339,6 +344,19 @@ document.querySelectorAll('select.lce-select').forEach(sel => {
 /* Initial counts (for all section IDs) */
 ['compulsory', 1, 2, 3, 4].forEach(id => updateSectionCount(id));
 updateGlobalCount();
+
+/* ── Form submit loading state ── */
+document.getElementById('gradeForm').addEventListener('submit', function(){
+    const btn = document.getElementById('proceedBtn');
+    const lbl = document.getElementById('proceedLabel');
+    const spin = document.getElementById('proceedSpinner');
+    if (btn && !btn.disabled) {
+        btn.disabled = true;
+        if (lbl) lbl.style.display = 'none';
+        if (spin) spin.style.display = 'inline-flex';
+        btn.style.opacity = '0.8';
+    }
+});
 </script>
 {% endblock %}
 {% endblock %}

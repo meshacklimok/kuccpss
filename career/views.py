@@ -1,15 +1,17 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
+from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_http_methods, require_POST
 from django.http import JsonResponse
 from django.core.paginator import Paginator
 from django.urls import reverse, NoReverseMatch
+from django.db import models
 from math import sqrt as _sqrt
 import re as _re
 import time as _time
 from .models import (
     TVETCourse, StudentCourseMatch, AIRecommendation, CareerInsight, TVETCategory,
-    CareerProfile, QuizQuestion, QuizSubmission, QuizAnswer,
+    CareerProfile, QuizQuestion, QuizSubmission, QuizAnswer, SharedResult,
 )
 from .engine import career_guidance_engine
 from typing import Dict, List
@@ -1236,8 +1238,110 @@ def degree_options(request):
 
 
 # ─────────────────────────────────────────────
-# C. DEGREE: Upload KCSE slip image → OCR via OpenAI Vision
+# C. DEGREE: Upload KCSE slip OR cluster points doc → OCR via OpenAI Vision
 # ─────────────────────────────────────────────
+
+# Maps common KCSE slip abbreviations / alternate spellings → DB subject names
+_SUBJECT_ALIASES = {
+    # Core subjects
+    'english language': 'english',
+    'eng': 'english',
+    'kis': 'kiswahili',
+    'kiswahili language': 'kiswahili',
+    'maths': 'mathematics',
+    'math': 'mathematics',
+    # Sciences
+    'bio': 'biology',
+    'chem': 'chemistry',
+    'phy': 'physics',
+    'phys': 'physics',
+    # Humanities
+    'history': 'history and government',
+    'history & government': 'history and government',
+    'hist': 'history and government',
+    'geo': 'geography',
+    'geog': 'geography',
+    # Religious education
+    'cre': 'christian religious education',
+    'christian religious': 'christian religious education',
+    'christian re': 'christian religious education',
+    'c.r.e': 'christian religious education',
+    'c.r.e.': 'christian religious education',
+    'ire': 'islamic religious education',
+    'islamic religious': 'islamic religious education',
+    'i.r.e': 'islamic religious education',
+    'i.r.e.': 'islamic religious education',
+    'hre': 'hindu religious education',
+    # Technical
+    'bst': 'business studies',
+    'business': 'business studies',
+    'comp': 'computer studies',
+    'computer science': 'computer studies',
+    'it': 'computer studies',
+    'ict': 'computer studies',
+    'agri': 'agriculture',
+    'art': 'art and design',
+    'art & design': 'art and design',
+    'home sc': 'home science',
+    'home sciences': 'home science',
+    # Technical subjects
+    'building': 'building construction',
+    'elec': 'electricity',
+    'metal': 'metalwork',
+    'wood': 'woodwork',
+    'power mech': 'power mechanics',
+    'drawing': 'drawing and design',
+    'aviation': 'aviation technology',
+    'ksl': 'kenyan sign language',
+    'sign language': 'kenyan sign language',
+    # Languages
+    'fr': 'french',
+    'ger': 'german',
+    'arb': 'arabic',
+    'arab': 'arabic',
+}
+
+
+def _extract_json_from_text(text: str) -> dict:
+    """Pull the first JSON object out of any GPT response, handling code fences."""
+    import json, re
+    text = text.strip()
+    # Remove code fences
+    text = re.sub(r'^```(?:json)?\s*', '', text, flags=re.I)
+    text = re.sub(r'\s*```$', '', text)
+    text = text.strip()
+    # Try straight parse first
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError:
+        pass
+    # Extract first {...} block via regex
+    m = re.search(r'\{[^{}]+\}', text, re.DOTALL)
+    if m:
+        try:
+            return json.loads(m.group(0))
+        except json.JSONDecodeError:
+            pass
+    return {}
+
+
+def _resolve_subject(name: str, all_subjects: dict):
+    """Return Subject object or None; tries exact match then aliases."""
+    key = name.lower().strip()
+    # Direct match
+    if key in all_subjects:
+        return all_subjects[key]
+    # Alias map
+    mapped = _SUBJECT_ALIASES.get(key)
+    if mapped and mapped in all_subjects:
+        return all_subjects[mapped]
+    # Partial match: if key is a substring of exactly one DB subject name
+    matches = [s for s in all_subjects.values() if key in s.name.lower()]
+    if len(matches) == 1:
+        return matches[0]
+    return None
+
+
 def degree_upload(request):
     if request.method == 'POST':
         img = request.FILES.get('slip_image')
@@ -1257,18 +1361,15 @@ def degree_upload(request):
             return redirect('career:degree_calculate')
 
         try:
-            import base64
+            import base64, json, logging
             from openai import OpenAI
 
+            log = logging.getLogger(__name__)
             img_bytes = img.read()
             mime = img.content_type or 'image/jpeg'
 
             # PDF → render first page to PNG in memory
-            is_pdf = (
-                mime == 'application/pdf' or
-                img.name.lower().endswith('.pdf')
-            )
-            if is_pdf:
+            if mime == 'application/pdf' or img.name.lower().endswith('.pdf'):
                 import fitz  # PyMuPDF
                 doc = fitz.open(stream=img_bytes, filetype='pdf')
                 page = doc[0]
@@ -1280,17 +1381,22 @@ def degree_upload(request):
             b64 = base64.b64encode(img_bytes).decode('utf-8')
             client = OpenAI(api_key=api_key)
 
-            prompt = """You are reading a Kenyan KCSE (secondary school) results slip.
-Extract all subject grades visible on the slip.
-Return ONLY a JSON object where:
-- keys are subject names exactly as they appear on KCSE slips (e.g. "Mathematics", "English", "Kiswahili", "Biology", "Physics", "Chemistry", "History", "Geography", "CRE", "IRE", "Home Science", "Agriculture", "Business Studies", "Computer Studies", "French", "German", "Music", "Art and Design", "Aviation Technology", "Drawing and Design", "Building Construction", "Power Mechanics", "Electricity", "Woodwork", "Metalwork")
-- values are the grade string (one of: A, A-, B+, B, B-, C+, C, C-, D+, D, D-, E)
+            # ── Prompt: detect document type and extract accordingly ──────────
+            prompt = """You are reading a Kenyan education document. It is EITHER:
+(A) A KCSE results slip showing individual subject grades, OR
+(B) A KUCCPS/KNEC cluster points document showing cluster numbers and their point scores.
 
-Example output:
-{"Mathematics": "B+", "English": "A-", "Kiswahili": "B", "Biology": "C+", "Chemistry": "B-"}
+CASE A — KCSE grade slip:
+Return JSON with key "type": "grades" and key "data" containing subject→grade pairs.
+Subject names: use the full official KCSE name (Mathematics, English, Kiswahili, Biology, Physics, Chemistry, History and Government, Geography, Christian Religious Education, Islamic Religious Education, Hindu Religious Education, Home Science, Agriculture, Business Studies, Computer Studies, French, German, Arabic, Music, Art and Design, Aviation Technology, Drawing and Design, Building Construction, Power Mechanics, Electricity, Woodwork, Metalwork, Kenyan Sign Language).
+Grades: A, A-, B+, B, B-, C+, C, C-, D+, D, D-, E.
+Example: {"type": "grades", "data": {"Mathematics": "B+", "English": "A-", "Kiswahili": "B"}}
 
-If you cannot read a grade clearly, omit that subject.
-Return ONLY the JSON object, nothing else."""
+CASE B — Cluster points document:
+Return JSON with key "type": "cluster_points" and key "data" containing cluster_number→points pairs (cluster numbers 1–20, points 0.0–48.0).
+Example: {"type": "cluster_points", "data": {"1": 42.5, "4": 38.2, "9": 35.0}}
+
+Return ONLY the JSON object, nothing else. If unclear, attempt Case A."""
 
             response = client.chat.completions.create(
                 model='gpt-4o',
@@ -1304,64 +1410,102 @@ Return ONLY the JSON object, nothing else."""
                         }},
                     ],
                 }],
-                max_tokens=400,
+                max_tokens=600,
             )
 
-            raw_json = response.choices[0].message.content.strip()
-            # Strip markdown code fences if present
-            if raw_json.startswith('```'):
-                raw_json = raw_json.split('```')[1]
-                if raw_json.startswith('json'):
-                    raw_json = raw_json[4:]
-                raw_json = raw_json.strip()
-
-            import json
-            extracted = json.loads(raw_json)
+            raw = response.choices[0].message.content.strip()
+            log.info('OCR raw response: %s', raw[:300])
+            extracted = _extract_json_from_text(raw)
 
             if not extracted:
-                raise ValueError('No grades found in image')
+                raise ValueError('GPT returned no parseable JSON')
 
-            # Map extracted {name: grade_str} to {subject_id: points_int}
+            doc_type = extracted.get('type', 'grades')
+            data = extracted.get('data', {})
+
+            # ── Handle cluster points document ────────────────────────────────
+            if doc_type == 'cluster_points' and data:
+                cluster_points = {}
+                found = []
+                for k, v in data.items():
+                    try:
+                        num = int(str(k).strip())
+                        pts = max(0.0, min(48.0, float(v)))
+                        cluster_points[str(num)] = pts
+                        found.append(f'Cluster {num}: {pts:.1f}')
+                    except (ValueError, TypeError):
+                        continue
+
+                if not cluster_points:
+                    raise ValueError('No valid cluster points found in document')
+
+                request.session['career_pathway'] = 'Degree'
+                request.session['career_degree_method'] = 'manual'
+                request.session['career_cluster_points'] = cluster_points
+                count = len(cluster_points)
+                messages.success(
+                    request,
+                    f'OCR extracted {count} cluster score{"s" if count != 1 else ""}: '
+                    f'{", ".join(found[:5])}{"…" if count > 5 else ""}. '
+                    'Proceeding to your results.'
+                )
+                return redirect('career:loading_page', pathway='degree')
+
+            # ── Handle KCSE grade slip ────────────────────────────────────────
+            if not data:
+                raise ValueError('No subject grades found in image')
+
             from clusters.models import Subject
 
-            GRADE_STR_TO_PTS = {
+            GRADE_PTS = {
                 'A': 12, 'A-': 11, 'B+': 10, 'B': 9, 'B-': 8,
                 'C+': 7, 'C': 6, 'C-': 5, 'D+': 4, 'D': 3, 'D-': 2, 'E': 1,
             }
 
             all_subjects = {s.name.lower(): s for s in Subject.objects.all()}
-            prefill = {}
-            subject_grades_ocr = {}
-            matched_names = []
-            for subj_name, grade_str in extracted.items():
-                grade_str = grade_str.strip().upper()
-                pts = GRADE_STR_TO_PTS.get(grade_str)
+            prefill, subject_grades_ocr, matched_names, unmatched = {}, {}, [], []
+
+            for subj_name, grade_str in data.items():
+                grade_str = str(grade_str).strip().upper()
+                pts = GRADE_PTS.get(grade_str)
                 if pts is None:
                     continue
-                subj_obj = all_subjects.get(subj_name.lower())
+                subj_obj = _resolve_subject(subj_name, all_subjects)
                 if subj_obj:
                     prefill[str(subj_obj.id)] = pts
                     subject_grades_ocr[subj_obj.name.lower()] = pts
-                    matched_names.append(f"{subj_name}: {grade_str}")
+                    matched_names.append(f'{subj_obj.name}: {grade_str}')
+                else:
+                    unmatched.append(subj_name)
+
+            if unmatched:
+                log.warning('OCR: unmatched subjects: %s', unmatched)
 
             if not prefill:
-                raise ValueError('Could not match any extracted subjects to the database')
+                raise ValueError(
+                    f'Could not match any subjects to our database. '
+                    f'GPT returned: {list(data.keys())[:5]}'
+                )
 
             request.session['ocr_prefill'] = prefill
             request.session['career_subject_grades'] = subject_grades_ocr
             count = len(prefill)
+            extra = f' ({len(unmatched)} subject(s) not recognised — enter those manually)' if unmatched else ''
             messages.success(
                 request,
-                f'OCR extracted {count} subject grade{"s" if count != 1 else ""}: '
-                f'{", ".join(matched_names[:5])}{"..." if count > 5 else ""}. '
-                'Review and complete any missing grades below.'
+                f'OCR read {count} subject grade{"s" if count != 1 else ""}: '
+                f'{", ".join(matched_names[:5])}{"…" if count > 5 else ""}.'
+                f'{extra} Review and fill in any missing grades below.'
             )
             return redirect('career:degree_calculate')
 
         except Exception as e:
+            import logging
+            logging.getLogger(__name__).error('OCR error: %s', e, exc_info=True)
             messages.warning(
                 request,
-                f'Could not read grades from image ({e}). Please enter your grades manually.'
+                f'Could not read the document ({e}). '
+                'Please enter your grades manually below.'
             )
             return redirect('career:degree_calculate')
 
@@ -2760,3 +2904,60 @@ def career_results_pdf_detailed(request):
 
     c.save()
     return response
+
+
+# ── Share Result ────────────────────────────────────────────────────────────
+
+@login_required
+def share_result_create(request):
+    """AJAX POST — snapshot current session into a SharedResult; return share URL."""
+    from django.http import JsonResponse
+    if request.method != 'POST':
+        return JsonResponse({'ok': False}, status=405)
+
+    pathway = request.session.get('career_pathway', '')
+    if not pathway:
+        return JsonResponse({'ok': False, 'error': 'No results in session.'}, status=400)
+
+    cluster_pts_single  = float(request.session.get('career_cluster_pts_single', 0) or 0)
+    cluster_points_json = request.session.get('career_cluster_points', {})
+
+    matches, _, _, _, _, _ = _build_career_matches(request)
+    top_courses = [
+        {
+            'course':       m['course'].name,
+            'institution':  m['institution'].name,
+            'tier':         m.get('tier', ''),
+            'chance':       m.get('chance', ''),
+            'cutoff':       str(m.get('cutoff', '')),
+        }
+        for m in matches[:5]
+    ]
+
+    sr = SharedResult.objects.create(
+        user=request.user,
+        pathway=pathway,
+        cluster_points_json=cluster_points_json or {},
+        cluster_pts_single=cluster_pts_single,
+        total_matches=len(matches),
+        top_courses_json=top_courses,
+    )
+    share_url = request.build_absolute_uri(sr.get_absolute_url())
+    return JsonResponse({'ok': True, 'url': share_url, 'token': str(sr.token)})
+
+
+def shared_result_view(request, token):
+    """Public page — no login required. Displays a shared career result snapshot."""
+    from django.shortcuts import get_object_or_404
+
+    sr = get_object_or_404(SharedResult, token=token)
+    if sr.is_expired:
+        return render(request, 'career/shared_result_expired.html', {'sr': sr})
+
+    SharedResult.objects.filter(pk=sr.pk).update(view_count=models.F('view_count') + 1)
+    sr.refresh_from_db(fields=['view_count'])
+
+    return render(request, 'career/shared_result.html', {
+        'sr': sr,
+        'share_url': request.build_absolute_uri(request.path),
+    })

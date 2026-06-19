@@ -49,6 +49,9 @@ urlpatterns = [
     path("privacy/", views.privacy_view, name="privacy"),
     path("faq/", views.faq_view, name="faq"),
 
+    # Referral system
+    path("referral/",                    views.referral_view,            name="referral"),
+
     # Application tracker
     path("applications/",                views.applications_view,        name="applications"),
     path("applications/add/",            views.application_add_view,     name="application_add"),
