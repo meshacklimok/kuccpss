@@ -385,16 +385,83 @@
                     <i class="bi bi-file-earmark-text"></i>
                     <span class="d-none d-md-inline">Full Report</span>
                 </a>
-                <a href="https://wa.me/?text={{ 'I found '|urlencode }}{{ total_count }}{{ ' courses I qualify for after KCSE! Check yours free at kuccpss.ke — Kenya%27s #1 placement guide.'|urlencode }}"
-                   target="_blank" rel="noopener"
-                   class="btn btn-sm d-flex align-items-center gap-1"
-                   style="background:#25d366;color:#fff;border-radius:8px;font-size:0.78rem;font-weight:600;white-space:nowrap;padding:5px 10px;">
-                    <i class="fab fa-whatsapp"></i>
+                <button onclick="openShareModal()" id="shareResultsBtn"
+                        class="btn btn-sm d-flex align-items-center gap-1"
+                        style="background:#059669;color:#fff;border-radius:8px;font-size:0.78rem;font-weight:600;white-space:nowrap;padding:5px 10px;">
+                    <i class="bi bi-share-fill"></i>
                     <span class="d-none d-md-inline">Share</span>
-                </a>
+                </button>
             </div>
         </div>
     </div>
+</div>
+
+<!-- Share Results Modal -->
+<div class="modal fade" id="shareModal" tabindex="-1" aria-labelledby="shareModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content" style="border-radius:16px;border:none;">
+      <div class="modal-header border-0 pb-0">
+        <h5 class="modal-title fw-bold" id="shareModalLabel"><i class="bi bi-share-fill me-2 text-primary"></i>Share Your Results</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body pt-2">
+        <!-- Generate link -->
+        <div id="shareUrlSection" style="display:none;">
+          <p class="text-muted small mb-2">Your personal share link (valid 30 days):</p>
+          <div class="d-flex gap-2 mb-3">
+            <input type="text" id="generatedUrl" readonly class="form-control form-control-sm fw-semibold"
+                   style="font-size:0.8rem;background:#f8fafc;" onclick="this.select()">
+            <button onclick="copyGeneratedUrl()" class="btn btn-sm btn-primary px-3" id="copyGenBtn">
+              <i class="bi bi-clipboard" id="copyGenIcon"></i>
+            </button>
+          </div>
+          <div class="d-flex gap-2 flex-wrap mb-3">
+            <a id="waShareBtn" href="#" target="_blank" rel="noopener"
+               class="btn btn-sm flex-1 fw-bold" style="background:#25d366;color:white;">
+              <i class="bi bi-whatsapp me-1"></i>WhatsApp
+            </a>
+            <a id="twShareBtn" href="#" target="_blank" rel="noopener"
+               class="btn btn-sm flex-1 fw-bold" style="background:#000;color:white;">
+              <i class="bi bi-twitter-x me-1"></i>X / Twitter
+            </a>
+            <button onclick="nativeShareResult()" class="btn btn-sm flex-1 fw-bold d-lg-none"
+                    style="background:#6366f1;color:white;">
+              <i class="bi bi-box-arrow-up me-1"></i>More
+            </button>
+          </div>
+        </div>
+
+        <!-- Generate button (shown before link is created) -->
+        <div id="generateSection">
+          <p class="text-muted small mb-3">Create a shareable snapshot of your results — anyone with the link can view your top matches without logging in.</p>
+          {% if user.is_authenticated %}
+          <button onclick="generateShareLink()" id="generateBtn"
+                  class="btn btn-primary w-100 fw-bold mb-2">
+            <i class="bi bi-link-45deg me-1"></i>Generate Share Link
+          </button>
+          {% else %}
+          <a href="{% url 'accounts:register' %}?next=/career/results/" class="btn btn-primary w-100 fw-bold mb-2">
+            <i class="bi bi-person-plus me-1"></i>Sign Up to Share
+          </a>
+          {% endif %}
+          <hr class="my-3">
+          <p class="text-muted small mb-2 fw-semibold">Or share without a link:</p>
+          <div class="d-flex gap-2 flex-wrap">
+            <a href="https://wa.me/?text=I+found+{{ total_count }}+courses+I+qualify+for+after+KCSE!+Check+yours+free+at+careernext.co.ke+%E2%80%94+Kenya%27s+%231+career+guidance+platform."
+               target="_blank" rel="noopener"
+               class="btn btn-sm fw-bold" style="background:#25d366;color:white;">
+              <i class="bi bi-whatsapp me-1"></i>WhatsApp
+            </a>
+            <a href="https://twitter.com/intent/tweet?text=I+found+{{ total_count }}+courses+I+qualify+for+after+KCSE!+%F0%9F%8E%93+Check+yours+free+%40CareerNextKE&url=https://careernext.co.ke"
+               target="_blank" rel="noopener"
+               class="btn btn-sm fw-bold" style="background:#000;color:white;">
+              <i class="bi bi-twitter-x me-1"></i>X / Twitter
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- Results -->
@@ -627,6 +694,34 @@
         </div>
     {% endif %}
 </div>
+
+<!-- ── Classmate Invite CTA ─────────────────────────────────────────────── -->
+{% if page_obj and not page_obj.has_next %}
+<div class="container pb-2">
+  <div style="background:linear-gradient(135deg,#eff6ff 0%,#f0fdf4 100%);border:1.5px solid #bfdbfe;border-radius:18px;padding:1.75rem;margin-bottom:1.5rem;">
+    <div class="row align-items-center g-3">
+      <div class="col-md-7">
+        <div style="font-size:1.6rem;margin-bottom:0.3rem;">👥</div>
+        <h5 class="fw-bold mb-1">Know someone else sitting KCSE this year?</h5>
+        <p class="text-muted small mb-0">Share CareerNext with your classmates — it's free, instant, and shows every university and TVET course they qualify for. Most students don't know about it.</p>
+      </div>
+      <div class="col-md-5">
+        <div class="d-flex gap-2 flex-wrap justify-content-md-end">
+          <a href="https://wa.me/?text={{ 'I found '|urlencode }}{{ total_count }}{{ ' courses I qualify for on CareerNext — it%27s free and shows every university%2C KMTC and TVET you can join. Check it out: https://careernext.co.ke'|urlencode }}"
+             target="_blank" rel="noopener"
+             class="btn fw-bold" style="background:#25d366;color:white;border-radius:10px;">
+             <i class="bi bi-whatsapp me-1"></i>WhatsApp Classmates
+          </a>
+          <button onclick="openShareModal()"
+                  class="btn btn-outline-primary fw-bold" style="border-radius:10px;">
+              <i class="bi bi-share me-1"></i>Share My Results
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
 
 <!-- ── Backup Plan ──────────────────────────────────────────────────────── -->
 {% if backup_plan %}
@@ -1129,5 +1224,72 @@ function aipSendText(text) {
 
 // Auto-greet after 2s even if panel not opened yet
 setTimeout(() => { if (!greeted) { greeted = true; aipGreet(); } }, 2000);
+
+// ── Share Results ──────────────────────────────────────────────────────────
+let _shareUrl = null;
+
+function openShareModal() {
+    const modal = new bootstrap.Modal(document.getElementById('shareModal'));
+    modal.show();
+}
+
+function generateShareLink() {
+    const btn = document.getElementById('generateBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Creating link…';
+
+    fetch("{% url 'career:share_result_create' %}", {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': document.cookie.match(/csrftoken=([^;]+)/)?.[1] || '',
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({}),
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (!data.ok) {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="bi bi-link-45deg me-1"></i>Generate Share Link';
+            alert('Could not create link: ' + (data.error || 'Unknown error'));
+            return;
+        }
+        _shareUrl = data.url;
+        document.getElementById('generatedUrl').value = _shareUrl;
+        document.getElementById('waShareBtn').href = 'https://wa.me/?text=' + encodeURIComponent(
+            'I found {{ total_count }} courses I qualify for on CareerNext 🎓 Check my results: ' + _shareUrl);
+        document.getElementById('twShareBtn').href = 'https://twitter.com/intent/tweet?text=' +
+            encodeURIComponent('Check out my KCSE career matches on CareerNext! 🎓 ' + _shareUrl);
+        document.getElementById('generateSection').style.display = 'none';
+        document.getElementById('shareUrlSection').style.display = '';
+    })
+    .catch(() => {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-link-45deg me-1"></i>Generate Share Link';
+    });
+}
+
+function copyGeneratedUrl() {
+    if (!_shareUrl) return;
+    navigator.clipboard.writeText(_shareUrl).then(() => {
+        const icon = document.getElementById('copyGenIcon');
+        icon.className = 'bi bi-check-circle-fill';
+        document.getElementById('copyGenBtn').className = 'btn btn-sm btn-success px-3';
+        setTimeout(() => {
+            icon.className = 'bi bi-clipboard';
+            document.getElementById('copyGenBtn').className = 'btn btn-sm btn-primary px-3';
+        }, 2000);
+    });
+}
+
+function nativeShareResult() {
+    if (navigator.share && _shareUrl) {
+        navigator.share({
+            title: "My KCSE Career Matches — CareerNext",
+            text: "I found {{ total_count }} courses I qualify for! Check my results:",
+            url: _shareUrl,
+        }).catch(() => {});
+    }
+}
 </script>
 {% endblock %}

@@ -375,6 +375,74 @@ class CareerSessionSnapshot(models.Model):
 
 
 # =====================================================
+# REFERRAL SYSTEM
+# =====================================================
+
+import random, string as _string
+
+def _make_referral_code():
+    return ''.join(random.choices(_string.ascii_uppercase + _string.digits, k=8))
+
+class Referral(models.Model):
+    referrer       = models.ForeignKey(User, on_delete=models.CASCADE, related_name='referrals_sent')
+    code           = models.CharField(max_length=12, unique=True, db_index=True)
+    referred_user  = models.OneToOneField(
+        User, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='referred_by'
+    )
+    referred_email = models.EmailField(blank=True)
+    converted      = models.BooleanField(default=False)
+    created_at     = models.DateTimeField(auto_now_add=True)
+    converted_at   = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [models.Index(fields=['code']), models.Index(fields=['referrer'])]
+
+    def __str__(self):
+        return f"{self.referrer.email} → {self.code}"
+
+    @staticmethod
+    def get_or_create_for_user(user):
+        obj, _ = Referral.objects.get_or_create(
+            referrer=user, referred_user=None, converted=False,
+            defaults={'code': _make_referral_code()}
+        )
+        return obj
+
+
+# =====================================================
+# EMAIL LEAD (visitor email capture)
+# =====================================================
+
+class EmailLead(models.Model):
+    SOURCE_CHOICES = [
+        ('home',       'Homepage'),
+        ('calculator', 'Calculator'),
+        ('courses',    'Eligible Courses'),
+        ('results',    'Career Results'),
+        ('share',      'Shared Link'),
+        ('other',      'Other'),
+    ]
+    email            = models.EmailField(db_index=True)
+    source           = models.CharField(max_length=20, choices=SOURCE_CHOICES, default='home')
+    ref_code         = models.CharField(max_length=12, blank=True)
+    ip_address       = models.GenericIPAddressField(blank=True, null=True)
+    converted_to_user = models.ForeignKey(
+        User, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='email_lead'
+    )
+    created_at       = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering  = ['-created_at']
+        indexes   = [models.Index(fields=['email'])]
+
+    def __str__(self):
+        return f"{self.email} ({self.source})"
+
+
+# =====================================================
 # WEB PUSH SUBSCRIPTIONS
 # Stores browser push subscriptions for Web Push API.
 # One user can have multiple subscriptions (phone + laptop).

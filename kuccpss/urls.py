@@ -20,7 +20,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.http import FileResponse
 import os
-from accounts.views import dashboard_view, public_home_view
+from accounts.views import dashboard_view, public_home_view, email_lead_capture
 from kuccpss.search_views import api_search_suggest
 
 
@@ -49,6 +49,7 @@ urlpatterns = [
     path('predictor/', include('predictor.urls', namespace='predictor')),
     path('payments/', include('payments.urls', namespace='payments')),
     path('api/search/', api_search_suggest, name='api_search_suggest'),
+    path('api/email-lead/', email_lead_capture, name='email_lead_capture'),
     path('analytics/', include('analytics.urls', namespace='analytics')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

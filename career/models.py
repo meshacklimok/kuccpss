@@ -644,3 +644,43 @@ class CareerConfig(models.Model):
     def get(cls) -> "CareerConfig":
         obj, _ = cls.objects.get_or_create(pk=1)
         return obj
+
+# =====================================================
+# SHARED RESULT (public shareable career result links)
+# =====================================================
+import uuid as _uuid
+from datetime import timedelta as _td
+
+def _default_share_expiry():
+    from django.utils import timezone
+    return timezone.now() + _td(days=30)
+
+class SharedResult(models.Model):
+    token           = models.UUIDField(default=_uuid.uuid4, unique=True, db_index=True, editable=False)
+    user            = models.ForeignKey(
+        'accounts.User', on_delete=models.SET_NULL,
+        null=True, blank=True, related_name='shared_results'
+    )
+    pathway         = models.CharField(max_length=50)
+    cluster_points_json = models.JSONField(default=dict)
+    cluster_pts_single  = models.FloatField(default=0)
+    total_matches   = models.PositiveIntegerField(default=0)
+    top_courses_json = models.JSONField(default=list)
+    view_count      = models.PositiveIntegerField(default=0)
+    created_at      = models.DateTimeField(auto_now_add=True)
+    expires_at      = models.DateTimeField(default=_default_share_expiry)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Share/{self.token} — {self.pathway} ({self.total_matches} matches)"
+
+    @property
+    def is_expired(self):
+        from django.utils import timezone
+        return timezone.now() > self.expires_at
+
+    def get_absolute_url(self):
+        from django.urls import reverse
+        return reverse('career:shared_result', args=[str(self.token)])

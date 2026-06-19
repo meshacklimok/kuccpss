@@ -47,8 +47,8 @@ body { background: #f0f4ff; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sa
     max-width: 900px;
     margin: 0 auto;
 }
-@media (max-width: 768px) { .pathway-grid { grid-template-columns: repeat(2, 1fr); } }
-@media (max-width: 480px) { .pathway-grid { grid-template-columns: 1fr 1fr; gap: 0.9rem; } }
+@media (max-width: 768px) { .pathway-grid { grid-template-columns: repeat(2, 1fr); gap: 1rem; } }
+@media (max-width: 400px) { .pathway-grid { grid-template-columns: 1fr; gap: 0.75rem; max-width: 360px; } }
 
 .pathway-card {
     position: relative; overflow: hidden;
@@ -60,6 +60,9 @@ body { background: #f0f4ff; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sa
     border: 2px solid transparent;
     text-decoration: none; color: inherit;
     display: flex; flex-direction: column; align-items: center; gap: 0.75rem;
+    min-height: 44px; /* touch target baseline */
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
     /* spring easing for hover */
     transition:
         transform      0.38s cubic-bezier(0.34, 1.56, 0.64, 1),
@@ -68,6 +71,17 @@ body { background: #f0f4ff; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sa
     /* staggered entrance */
     animation: cardIn 0.52s cubic-bezier(0.22, 1, 0.36, 1) both;
     will-change: transform;
+}
+/* Single column: side-by-side icon+text layout */
+@media (max-width: 400px) {
+    .pathway-card {
+        flex-direction: row; text-align: left;
+        padding: 1rem 1.25rem; gap: 1rem;
+    }
+    .pathway-card .pathway-icon { width: 48px; height: 48px; font-size: 1.3rem; flex-shrink: 0; }
+    .pathway-card .pathway-title { font-size: 0.95rem; }
+    .pathway-card .pathway-subtitle { font-size: 0.73rem; }
+    .pathway-card::after { display: none; }
 }
 .pathway-card:nth-child(1) { animation-delay: 0.05s; }
 .pathway-card:nth-child(2) { animation-delay: 0.13s; }
@@ -174,6 +188,25 @@ body { background: #f0f4ff; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sa
 </style>
 
 <div class="container py-5">
+
+    <!-- Resume session banner -->
+    {% if request.session.career_cluster_points or request.session.career_subject_grades %}
+    <div class="alert d-flex align-items-center gap-3 mb-4"
+         style="background:#f0fdf4;border:1.5px solid #86efac;border-radius:14px;padding:1rem 1.25rem;">
+        <i class="bi bi-lightning-charge-fill" style="color:#16a34a;font-size:1.3rem;flex-shrink:0;"></i>
+        <div class="flex-1">
+            <strong style="color:#15803d;">You have a previous session</strong>
+            <div class="small text-muted mt-1">Pick a pathway below to continue, or go straight to your results.</div>
+        </div>
+        {% if request.session.career_pathway %}
+        <a href="{% url 'career:loading_page' request.session.career_pathway|lower %}"
+           class="btn btn-sm fw-bold text-white flex-shrink-0"
+           style="background:#16a34a;border-radius:8px;white-space:nowrap;">
+            View Results <i class="bi bi-arrow-right ms-1"></i>
+        </a>
+        {% endif %}
+    </div>
+    {% endif %}
 
     <!-- Hero -->
     <div class="hero-section">

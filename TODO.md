@@ -2,19 +2,19 @@
 
 Format: `[ ]` not done | `[x]` done | `[~]` in progress | `[-]` dropped/deferred
 
-Last updated: 2026-06-15
+Last updated: 2026-06-19
 
 ---
 
 ## P0 — Blockers (Fix Before Launch)
 
-- [ ] Configure email backend (SMTP / SendGrid) — console backend currently set; verification emails never delivered
-- [ ] Remove the `is_verified = True` short-circuit in `accounts/views.py` RegisterView (bypasses email verification)
-- [ ] Send verification email — token is created in RegisterView but `send_verification_email()` utility never called
-- [ ] Add `STATICFILES_DIRS` and run `collectstatic` for production
-- [ ] Set `ALLOWED_HOSTS` and `DEBUG = False` for production deploy
-- [ ] Rotate `SECRET_KEY` — current value is insecure default, committed to code
-- [ ] Remove hardcoded `OPENAI_API_KEY` placeholder from settings — load from environment variable only
+- [x] Configure email backend (SMTP / SendGrid) — Resend SMTP wired; keys via `RESEND_API_KEY` env var; falls back to console in dev
+- [x] Remove the `is_verified = True` short-circuit in `accounts/views.py` RegisterView (bypasses email verification)
+- [x] Send verification email — RegisterView now creates token and calls `send_mail()` with verify link
+- [x] Add `STATICFILES_DIRS` — set to `[BASE_DIR / 'static']`; run `python manage.py collectstatic` before each production deploy
+- [x] Set `ALLOWED_HOSTS` — configured for localhost + `.onrender.com` + `careernext.co.ke`; set `DJANGO_DEBUG=False` in production env
+- [x] Rotate `SECRET_KEY` — now loaded from `SECRET_KEY` env var; raises `RuntimeError` if insecure default used in production
+- [x] Remove hardcoded `OPENAI_API_KEY` placeholder from settings — already reads from `OPENAI_API_KEY` env var
 - [ ] Session expiry graceful handling — if career engine session expires mid-flow user sees a blank results page; needs a redirect to re-enter grades with a friendly message
 - [x] Set `MEDIA_ROOT` and `MEDIA_URL` in settings so uploaded logos/PDFs are served
 - [x] Fix `TIME_ZONE` double-definition — consistently `Africa/Nairobi`
@@ -33,11 +33,11 @@ Last updated: 2026-06-15
 - [x] `pathway_input.html` — KCSE accordions for Degree/Diploma/Certificate/KMTC; mean grade picker for TTC/Artisan; light theme
 - [x] `loading.html` top-tier redesign — animated gradient, star particles, triple-ring SVG, glass-effect card, staggered step reveal
 - [x] KMTC subject entry — now uses full KCSE subject accordion (same as Diploma/Certificate) instead of single mean-grade picker
-- [ ] OCR activation — `degree_upload` OCR still stubbed; waiting for valid `OPENAI_API_KEY` in `.env`
-- [ ] `degree_upload` redirect — after OCR success, flow should pass through grade entry before options; currently skips it
+- [x] OCR activation — `degree_upload` uses OpenAI GPT-4o vision; handles both KCSE grade slips and cluster points documents; robust subject alias matching; falls back to manual entry if no key
+- [x] `degree_upload` redirect — cluster points docs → `loading_page` directly; KCSE slips → `degree_calculate` for review/correction
 - [ ] `degree_manual` — limit cluster list to the ~20 clusters that have actual degree `CourseOffering` records (shows all 61 now)
 - [ ] `degree_paste` — paste view + URL + template not yet built
-- [ ] **Document Scanner (OCR)** — scan all uploaded KCSE result documents (slips, marksheets, certificates); extract subject grades automatically using OpenAI Vision API; support JPG/PNG/PDF; pre-fill grade entry form from scan result; update `degree_upload` view once `OPENAI_API_KEY` is live
+- [x] **Document Scanner (OCR)** — supports JPG/PNG/PDF; dual-mode prompt detects KCSE grade slips vs KUCCPS cluster points docs; subject alias resolution; JSON extraction with code-fence stripping and regex fallback
 
 ---
 
@@ -70,7 +70,7 @@ Last updated: 2026-06-15
 - [ ] Populate `CareerInsight` data (demand level, average salary) for major courses
 - [ ] Populate `CareerProfile` data — models exist; no real Kenyan career data loaded
 - [ ] Course offering count on cluster result cards — "X courses available in this cluster" so students know which clusters open more doors
-- [ ] Search autocomplete — live course/institution suggestions as the user types; client-side filter against existing `?q=` endpoint, no new view needed
+- [x] Search autocomplete — live course/institution suggestions as the user types; client-side filter against existing `?q=` endpoint, no new view needed
 - [ ] Recently viewed courses — track last 5 course detail visits per user; show on dashboard quick-access strip; needs `ViewLog` model
 - [ ] Institution accreditation badge — tag institutions as CUE-accredited / TVETA-registered / MoE-approved; display as a small badge on cards and detail pages
 - [ ] KUCCPS fee structure data — add government tuition fee tier per course type (Govt-sponsored vs Self-Sponsored slot cost); shown on course detail page
