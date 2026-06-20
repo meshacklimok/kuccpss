@@ -24,7 +24,7 @@
     <a href="{% url 'admin:institutions_institutiontype_change' inst_type.id %}" class="btn btn-sm btn-outline-secondary">
       <i class="fas fa-edit me-1"></i>Edit Type
     </a>
-    <a href="/admin/institutions/institution/add/" class="btn btn-sm btn-outline-primary ms-2">
+    <a href="/cn-staff/institutions/institution/add/" class="btn btn-sm btn-outline-primary ms-2">
       <i class="fas fa-plus me-1"></i>Add Institution
     </a>
   </div>
@@ -123,7 +123,7 @@
     <i class="fas fa-university fa-3x mb-3 opacity-50"></i>
     <h5>No institutions found</h5>
     {% if not q and request.user.is_staff %}
-    <a href="/admin/institutions/institution/add/" class="btn btn-primary mt-2">
+    <a href="/cn-staff/institutions/institution/add/" class="btn btn-primary mt-2">
       <i class="fas fa-plus me-1"></i>Add Institution
     </a>
     {% endif %}
