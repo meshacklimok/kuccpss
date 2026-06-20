@@ -211,6 +211,30 @@ def kcse_calculator_view(request):
             _gmap[_s.group].append(_e)
     optional_groups = [(_GM[g], _gmap[g]) for g, _ in _GC if g != 'I' and _gmap.get(g)]
 
+    # Top-5 courses per cluster for the results section
+    cluster_courses_map = {}   # {cluster_id: [Course, ...]}
+    cluster_course_counts = {} # {cluster_id: int}
+    if results:
+        from courses.models import Course as _Course
+        cluster_ids = [r.cluster_id for r in results if r.cluster_id]
+        _all_courses = (
+            _Course.objects
+            .filter(cluster_id__in=cluster_ids)
+            .select_related('course_type')
+            .order_by('cluster_id', 'name')
+        )
+        for _c in _all_courses:
+            cid = _c.cluster_id
+            cluster_course_counts[cid] = cluster_course_counts.get(cid, 0) + 1
+            lst = cluster_courses_map.setdefault(cid, [])
+            if len(lst) < 5:
+                lst.append(_c)
+
+        # Attach to each result so the template needs no extra queries
+        for _r in results:
+            _r.top_courses = cluster_courses_map.get(_r.cluster_id, [])
+            _r.course_count = cluster_course_counts.get(_r.cluster_id, 0)
+
     return render(request, "clusterpoints/calculator.html", {
         "form": form,
         "results": results,
@@ -223,6 +247,8 @@ def kcse_calculator_view(request):
         "predicted_groups": predicted_groups,
         "compulsory_fields": compulsory_fields,
         "optional_groups": optional_groups,
+        "cluster_courses_map": cluster_courses_map,
+        "cluster_course_counts": cluster_course_counts,
     })
 
 

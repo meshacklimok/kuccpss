@@ -260,7 +260,26 @@
 .cta-btn-outline { font-size: 0.8rem; font-weight: 600; color: #fff; background: rgba(255,255,255,0.15); border: 1.5px solid rgba(255,255,255,0.35); border-radius: 7px; padding: 6px 14px; text-decoration: none; }
 .cta-btn-outline:hover { background: rgba(255,255,255,0.25); color: #fff; text-decoration: none; }
 
-/* cluster results grid */
+/* ── calc loading overlay ── */
+#calc-loading {
+    display:none; position:fixed; inset:0; z-index:9999;
+    background:linear-gradient(135deg,#1e3a8a 0%,#2563eb 60%,#0891b2 100%);
+    flex-direction:column; align-items:center; justify-content:center; gap:1.5rem;
+}
+#calc-loading .cl-spinner {
+    width:64px; height:64px; border:6px solid rgba(255,255,255,0.2);
+    border-top-color:#fff; border-radius:50%;
+    animation:cl-spin 0.85s linear infinite;
+}
+@keyframes cl-spin { to { transform:rotate(360deg); } }
+#calc-loading .cl-title { font-size:1.2rem; font-weight:900; color:#fff; }
+#calc-loading .cl-sub { font-size:0.82rem; color:rgba(255,255,255,0.7); }
+#calc-loading .cl-dots span { animation:cl-dot 1.2s infinite; opacity:0; }
+#calc-loading .cl-dots span:nth-child(2) { animation-delay:0.2s; }
+#calc-loading .cl-dots span:nth-child(3) { animation-delay:0.4s; }
+@keyframes cl-dot { 0%,80%,100%{opacity:0} 40%{opacity:1} }
+
+/* cluster results grid (compact summary stays) */
 .cluster-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.55rem; margin-bottom: 1.5rem; }
 @media (min-width: 640px) { .cluster-grid { grid-template-columns: 1fr 1fr 1fr; } }
 @media (min-width: 900px) { .cluster-grid { grid-template-columns: repeat(4, 1fr); } }
@@ -279,6 +298,61 @@
 .cluster-pts   { font-size: 1.15rem; font-weight: 900; color: #16a34a; line-height: 1; text-align: right; }
 .cluster-card.zero .cluster-pts { color: #cbd5e1; }
 .cluster-max   { font-size: 0.58rem; color: #94a3b8; font-weight: 500; text-align: right; }
+
+/* ── cluster courses accordion ── */
+.cca-panel {
+    background:#fff; border:1.5px solid #e2e8f0; border-radius:14px;
+    margin-bottom:0.6rem; overflow:hidden;
+    box-shadow:0 1px 4px rgba(30,58,138,0.05);
+    transition:border-color 0.2s;
+}
+.cca-panel.open { border-color:#93c5fd; box-shadow:0 2px 12px rgba(37,99,235,0.1); }
+.cca-header {
+    width:100%; background:none; border:none; padding:0.85rem 1.1rem;
+    display:flex; align-items:center; gap:0.7rem;
+    cursor:pointer; text-align:left; -webkit-tap-highlight-color:transparent;
+}
+.cca-num {
+    width:34px; height:34px; border-radius:9px; flex-shrink:0;
+    background:#eff6ff; color:#2563eb; font-size:0.7rem; font-weight:900;
+    display:flex; align-items:center; justify-content:center;
+}
+.cca-name { font-weight:700; font-size:0.82rem; color:#1e293b; flex:1; text-align:left; line-height:1.3; }
+.cca-pts-badge {
+    flex-shrink:0; font-weight:900; font-size:0.82rem; padding:2px 10px;
+    border-radius:20px; border:1.5px solid;
+}
+.cca-pts-high { background:#dcfce7; color:#16a34a; border-color:#86efac; }
+.cca-pts-mid  { background:#dbeafe; color:#2563eb; border-color:#93c5fd; }
+.cca-pts-low  { background:#ffedd5; color:#ea580c; border-color:#fdba74; }
+.cca-chevron { font-size:0.85rem; color:#94a3b8; flex-shrink:0; transition:transform 0.25s; }
+.cca-panel.open .cca-chevron { transform:rotate(180deg); }
+.cca-body { display:none; border-top:1px solid #f1f5f9; padding:0.7rem 1.1rem 0.9rem; }
+.cca-panel.open .cca-body { display:block; }
+.cca-course-row {
+    display:flex; align-items:center; gap:0.6rem;
+    padding:0.5rem 0; border-bottom:1px solid #f8fafc;
+    text-decoration:none; color:inherit;
+}
+.cca-course-row:last-of-type { border-bottom:none; }
+.cca-course-row:hover .cca-course-name-text { color:#2563eb; }
+.cca-dot { width:6px; height:6px; border-radius:50%; background:#cbd5e1; flex-shrink:0; }
+.cca-course-name-text { flex:1; font-size:0.8rem; color:#374151; font-weight:500; line-height:1.35; }
+.cca-course-type { font-size:0.65rem; color:#94a3b8; flex-shrink:0; }
+.cca-footer {
+    display:flex; align-items:center; justify-content:space-between;
+    margin-top:0.65rem; padding-top:0.65rem; border-top:1px solid #f1f5f9;
+}
+.cca-view-all {
+    font-size:0.78rem; font-weight:700; color:#2563eb;
+    text-decoration:none; display:inline-flex; align-items:center; gap:0.3rem;
+}
+.cca-view-all:hover { color:#1d4ed8; text-decoration:underline; }
+.cca-count-pill {
+    font-size:0.68rem; color:#64748b;
+    background:#f8fafc; border:1px solid #e2e8f0;
+    border-radius:20px; padding:2px 9px;
+}
 
 /* prediction */
 .pred-section {
@@ -344,6 +418,13 @@
 {% endblock %}
 
 {% block content %}
+<!-- Loading overlay (shown while calculating) -->
+<div id="calc-loading">
+    <div class="cl-spinner"></div>
+    <div class="cl-title">Calculating your cluster points<span class="cl-dots"><span>.</span><span>.</span><span>.</span></span></div>
+    <div class="cl-sub">Analysing all 20 KUCCPS clusters</div>
+</div>
+
 <!-- ══ sticky step bar ══ -->
 <div class="step-bar-wrap" id="stepBarWrap">
 <div class="step-bar">
@@ -505,6 +586,7 @@
         <div class="results-divider-label"><i class="bi bi-grid-3x3-gap-fill me-1"></i>All 20 Cluster Points</div>
         <div class="results-divider-line"></div>
     </div>
+    <!-- Compact score summary grid -->
     <div class="cluster-grid">
         {% for r in results %}
         <div class="cluster-card {% if r.cluster_points == 0 %}zero{% endif %}">
@@ -519,6 +601,42 @@
         </div>
         {% endfor %}
     </div>
+
+    <!-- Cluster courses accordion -->
+    <div class="results-divider">
+        <div class="results-divider-line"></div>
+        <div class="results-divider-label"><i class="bi bi-collection-fill me-1"></i>Courses Per Cluster</div>
+        <div class="results-divider-line"></div>
+    </div>
+    <p style="font-size:0.75rem;color:#94a3b8;text-align:center;margin:-0.5rem 0 1rem;">Top 5 courses shown per cluster · tap to expand</p>
+
+    {% for r in results %}
+    <div class="cca-panel">
+        <button type="button" class="cca-header" onclick="toggleCCA(this)">
+            <div class="cca-num">{{ r.cluster.kuccps_number }}</div>
+            <div class="cca-name">{{ r.cluster.name }}</div>
+            <span class="cca-pts-badge {% if r.cluster_points >= 36 %}cca-pts-high{% elif r.cluster_points >= 24 %}cca-pts-mid{% else %}cca-pts-low{% endif %}">{{ r.cluster_points|floatformat:1 }}</span>
+            <i class="bi bi-chevron-down cca-chevron"></i>
+        </button>
+        <div class="cca-body">
+            {% for course in r.top_courses %}
+            <a href="{{ course.get_absolute_url }}" class="cca-course-row">
+                <div class="cca-dot"></div>
+                <div class="cca-course-name-text">{{ course.name }}</div>
+                <span class="cca-course-type">{{ course.course_type.name }}</span>
+            </a>
+            {% empty %}
+            <p style="font-size:0.78rem;color:#94a3b8;padding:0.4rem 0;margin:0;">No courses linked to this cluster yet.</p>
+            {% endfor %}
+            <div class="cca-footer">
+                <span class="cca-count-pill">{{ r.course_count }} course{{ r.course_count|pluralize }} total</span>
+                <a href="{% url 'clusters:cluster_courses' r.cluster.slug %}" class="cca-view-all">
+                    View all <i class="bi bi-arrow-right"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
 
     {% if pathway_rec %}
     <div class="pw-rec-card">
@@ -678,6 +796,20 @@ document.querySelectorAll('select.lce-select').forEach(sel => {
 });
 ['compulsory',1,2,3,4].forEach(id => updateSecCount(id));
 updateGlobal();
+
+// Loading overlay on form submit
+document.getElementById('calcBtn').addEventListener('click', function() {
+    const sel = document.querySelectorAll('select.lce-select.has-value').length;
+    if (sel >= 7) {
+        document.getElementById('calc-loading').style.display = 'flex';
+    }
+});
+
+// Cluster courses accordion
+function toggleCCA(btn) {
+    const panel = btn.closest('.cca-panel');
+    panel.classList.toggle('open');
+}
 
 {% if results %}
 (function() {
