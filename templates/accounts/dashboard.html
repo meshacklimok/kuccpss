@@ -418,6 +418,11 @@
       <span class="stat-chip-num" style="color:#4ade80;font-size:1.1rem;">KES {{ affiliate_profile.wallet_balance|floatformat:0 }}</span>
       <span class="stat-chip-label">Affiliate</span>
     </a>
+    {% elif not guest %}
+    <a href="{% url 'accounts:referral' %}" class="stat-chip">
+      <span class="stat-chip-num" style="color:#fbbf24;font-size:1.4rem;"><i class="bi bi-gift-fill"></i></span>
+      <span class="stat-chip-label">Invite Friends</span>
+    </a>
     {% endif %}
     {% if user_mentor_profile and user_mentor_profile.is_approved %}
     <a href="{% url 'mentorship:dashboard' %}" class="stat-chip">
@@ -1326,6 +1331,26 @@
       </a>
     </div>
   </div>
+
+
+  {# ── REFER A FRIEND ── #}
+  {% if not guest %}
+  <div class="sidebar-card" style="background:linear-gradient(135deg,#fefce8,#fef9c3);border:1.5px solid #fde68a !important;">
+    <div class="sidebar-card-body">
+      <div class="d-flex align-items-center gap-2 mb-2">
+        <i class="bi bi-gift-fill" style="color:#ca8a04;font-size:1.2rem;"></i>
+        <span class="fw-800 small" style="color:#92400e;">Invite Friends, Earn Rewards</span>
+      </div>
+      <p class="small mb-3" style="color:#78350f;opacity:0.85;">
+        Share your referral link — earn rewards every time a friend joins CareerNext.
+      </p>
+      <a href="{% url 'accounts:referral' %}"
+         class="btn w-100 fw-700" style="background:#ca8a04;color:#fff;border-radius:10px;font-size:0.83rem;">
+        <i class="bi bi-share-fill me-1"></i>Get Your Referral Link
+      </a>
+    </div>
+  </div>
+  {% endif %}
 
 
 </div>{# /col-lg-4 #}
