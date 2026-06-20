@@ -402,6 +402,79 @@
     .lce-footer { bottom: calc(64px + env(safe-area-inset-bottom, 0px)); }
 }
 
+/* ── Dark mode ── */
+body.dark .step-bar          { background: var(--surface); border-bottom-color: var(--border); }
+body.dark .sb-badge          { background: rgba(37,99,235,0.15); border-color: rgba(37,99,235,0.3); color: #93C5FD; }
+body.dark .sb-counter        { background: var(--surface-2); border-color: var(--border); color: var(--text-3); }
+body.dark .sb-counter.ready  { background: rgba(22,163,74,0.12); border-color: rgba(22,163,74,0.3); color: #4ADE80; }
+body.dark .sb-progress       { background: var(--surface-2); }
+body.dark .lce-head          { background: var(--surface); border-color: var(--border); }
+body.dark .lce-head h2       { color: var(--text); }
+body.dark .lce-head p        { color: var(--text-2); }
+body.dark .lce-alert.danger  { background: #1C0505; border-color: #7F1D1D; color: #FCA5A5; }
+body.dark .lce-alert.success { background: #052E16; border-color: #166534; color: #86EFAC; }
+body.dark .acc-section       { background: var(--surface); border-color: var(--border); box-shadow: none; }
+body.dark .acc-section.has-values { border-color: rgba(37,99,235,0.4); }
+body.dark .acc-header:hover  { background: var(--surface-2); }
+body.dark .acc-title         { color: var(--text); }
+body.dark .acc-badge.req     { background: rgba(220,38,38,0.12); border-color: rgba(220,38,38,0.3); color: #FCA5A5; }
+body.dark .acc-badge.opt     { background: var(--surface-2); border-color: var(--border); color: var(--text-3); }
+body.dark .acc-count         { background: rgba(22,163,74,0.12); border-color: rgba(22,163,74,0.25); color: #4ADE80; }
+body.dark .acc-chevron       { color: var(--text-3); }
+body.dark .acc-row           { border-top-color: var(--surface-2); }
+body.dark .acc-row:hover     { background: var(--surface-2); }
+body.dark .acc-row.filled    { background: rgba(37,99,235,0.1); }
+body.dark .row-icon          { background: var(--surface-2); color: var(--text-3); }
+body.dark .acc-row.filled .row-icon { background: rgba(37,99,235,0.2); color: #60A5FA; }
+body.dark .row-name          { color: var(--text-2); }
+body.dark .acc-row.filled .row-name { color: var(--text); }
+body.dark .lce-select        { background-color: var(--surface-2); border-color: var(--border); color: var(--text); }
+body.dark .lce-select.has-value { background-color: rgba(37,99,235,0.1); border-color: rgba(37,99,235,0.4); color: #93C5FD; }
+body.dark .results-divider-line  { background: var(--border); }
+body.dark .results-divider-label { color: var(--text-3); }
+body.dark .score-card        { background: var(--surface); border-color: var(--border); box-shadow: none; }
+body.dark .score-label       { color: var(--text-3); }
+body.dark .score-sep         { background: var(--border); }
+body.dark .grade-chip        { background: var(--surface-2); border-color: var(--border); }
+body.dark .grade-chip .gl    { color: var(--text-2); }
+body.dark .grade-chip.active { background: var(--primary-dark); border-color: var(--primary); }
+body.dark .cluster-card      { background: var(--surface); border-color: var(--border); box-shadow: none; }
+body.dark .cluster-card:hover { border-color: rgba(37,99,235,0.5); }
+body.dark .cluster-label     { color: #93C5FD; }
+body.dark .cluster-name      { color: var(--text-3); }
+body.dark .cca-panel         { background: var(--surface); border-color: var(--border); box-shadow: none; }
+body.dark .cca-panel.open    { border-color: rgba(37,99,235,0.4); }
+body.dark .cca-num           { background: rgba(37,99,235,0.15); color: #93C5FD; }
+body.dark .cca-name          { color: var(--text); }
+body.dark .cca-body          { border-top-color: var(--border); }
+body.dark .cca-course-row    { border-bottom-color: var(--surface-2); }
+body.dark .cca-course-name-text { color: var(--text-2); }
+body.dark .cca-course-row:hover .cca-course-name-text { color: #93C5FD; }
+body.dark .cca-dot           { background: var(--surface-3); }
+body.dark .cca-course-type   { color: var(--text-3); }
+body.dark .cca-footer        { border-top-color: var(--border); }
+body.dark .cca-count-pill    { background: var(--surface-2); border-color: var(--border); color: var(--text-3); }
+body.dark .cca-view-all      { color: #93C5FD; }
+body.dark .pred-section      { background: var(--surface); border-color: var(--border); }
+body.dark .pred-cluster-badge { background: rgba(37,99,235,0.15); border-color: rgba(37,99,235,0.3); color: #93C5FD; }
+body.dark .pred-table th     { color: var(--text-3); border-bottom-color: var(--border); }
+body.dark .pred-table td     { color: var(--text-2); border-bottom-color: var(--surface-2); }
+body.dark .pred-table tr:nth-child(even) td { background: var(--surface-2); }
+body.dark .chart-wrap        { background: var(--surface); border-color: var(--border); }
+body.dark .chart-title       { color: var(--text-3); }
+body.dark .info-banner       { background: rgba(146,64,14,0.12); border-color: rgba(146,64,14,0.3); color: #FDE68A; }
+body.dark .dl-bar            { background: var(--surface); border-color: var(--border); }
+body.dark .dl-label          { color: var(--text-3); }
+body.dark .dl-btn.red  { background: rgba(220,38,38,0.12); border-color: rgba(220,38,38,0.25); color: #FCA5A5; }
+body.dark .dl-btn.blue { background: rgba(37,99,235,0.12); border-color: rgba(37,99,235,0.25); color: #93C5FD; }
+body.dark .dl-btn.gray { background: var(--surface-2); border-color: var(--border); color: var(--text-2); }
+body.dark .lce-footer        { background: var(--surface); border-top-color: var(--border); }
+body.dark .lce-footer-title  { color: var(--text-2); }
+body.dark .lce-footer-title strong { color: var(--text); }
+body.dark .lce-btn-back      { background: var(--surface-2); border-color: var(--border); color: var(--text-2); }
+body.dark .lce-btn-back:hover { color: var(--text); border-color: var(--text-3); }
+body.dark .lce-btn-calc:disabled { background: var(--surface-2); color: var(--text-3); }
+
 @media (max-width: 480px) {
     .score-card { flex-direction: column; align-items: flex-start; gap: 0.85rem; }
     .score-sep  { width: 100%; height: 1px; }
@@ -451,9 +524,7 @@
 
     <div class="lce-head">
         <h2><i class="fas fa-calculator me-2" style="color:#2563eb;"></i>KCSE Cluster Points Calculator</h2>
-        <p>Enter your KCSE subject grades. We'll compute your cluster points for all 20 KUCCPS clusters.Note this are not
-    the actual KUCCPS points but an estimate .
-        </p>
+        <p>Enter your KCSE subject grades. We'll compute your cluster points for all 20 KUCCPS clusters. Note: these are estimates based on the official KUCCPS formula — verify final results on the KUCCPS portal.</p>
     </div>
 
     {% if messages %}{% for message in messages %}
