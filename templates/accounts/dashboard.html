@@ -63,6 +63,7 @@
     font-size: 0.8rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
 }
 .timeline-days { font-size: 3.2rem; font-weight: 900; line-height: 1; }
+.cluster-row:hover { background:#eff6ff !important; border-color:#93c5fd !important; }
 .avatar-circle {
     width: 76px; height: 76px; border-radius: 50%;
     background: #e8f0fe; color: #4f46e5;
@@ -628,7 +629,7 @@
     <!-- LEFT (col-lg-8) -->
     <div class="col-lg-8">
 
-      <!-- Cluster Scores chart -->
+      <!-- Cluster Scores chart + full breakdown -->
       {% if latest_result and cluster_results %}
       <div class="card mb-4 p-4 border-0" style="border-radius:1.1rem;box-shadow:0 2px 12px rgba(0,0,0,0.07);">
         <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
@@ -656,6 +657,63 @@
           <span class="d-flex align-items-center gap-1" style="font-size:0.74rem;color:#64748b;">
             <span style="width:10px;height:10px;border-radius:3px;background:#f97316;display:inline-block;"></span>Fair (&lt;24)
           </span>
+        </div>
+      </div>
+
+      <!-- Full cluster breakdown grid -->
+      <div class="card mb-4 border-0 overflow-hidden" style="border-radius:1.1rem;box-shadow:0 2px 12px rgba(0,0,0,0.07);">
+        <div class="px-4 py-3 d-flex justify-content-between align-items-center"
+             style="background:linear-gradient(120deg,#1e3a8a 0%,#2563eb 100%);color:#fff;">
+          <div>
+            <div class="d-flex align-items-center gap-2">
+              <i class="fas fa-layer-group" style="color:#93c5fd;"></i>
+              <span class="fw-800" style="font-size:0.95rem;">All Cluster Scores</span>
+            </div>
+            <p class="mb-0 opacity-75" style="font-size:0.72rem;">{{ cluster_results|length }} clusters calculated · max 48 pts each</p>
+          </div>
+          <a href="{% url 'clusters:cluster_list' %}" class="btn btn-sm"
+             style="background:rgba(255,255,255,0.15);color:#fff;border:1px solid rgba(255,255,255,0.25);font-size:0.75rem;border-radius:20px;">
+            Browse Clusters <i class="fas fa-arrow-right ms-1"></i>
+          </a>
+        </div>
+        <div class="p-3 bg-white">
+          <div class="row g-2">
+            {% for r in cluster_results %}
+            {% with pts=r.cluster_points %}
+            <div class="col-12 col-sm-6">
+              <a href="{% url 'clusters:cluster_detail' r.cluster.slug %}"
+                 class="d-flex align-items-center gap-2 p-2 rounded-3 text-decoration-none cluster-row"
+                 style="background:#f8fafc;border:1.5px solid #e2e8f0;transition:border-color 0.15s,background 0.15s;">
+                <div class="rounded-2 d-flex align-items-center justify-content-center flex-shrink-0 fw-800"
+                     style="width:36px;height:36px;font-size:0.75rem;
+                            {% if pts >= 36 %}background:#dcfce7;color:#16a34a;
+                            {% elif pts >= 24 %}background:#dbeafe;color:#2563eb;
+                            {% else %}background:#ffedd5;color:#ea580c;{% endif %}">
+                  {{ r.cluster.kuccps_number }}
+                </div>
+                <div style="min-width:0;flex:1;">
+                  <div class="fw-700 text-dark" style="font-size:0.78rem;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                    {{ r.cluster.name|truncatechars:30 }}
+                  </div>
+                  <div style="margin-top:3px;height:5px;border-radius:3px;background:#e2e8f0;overflow:hidden;">
+                    <div style="height:100%;border-radius:3px;width:{% widthratio pts 48 100 %}%;
+                                {% if pts >= 36 %}background:#16a34a;
+                                {% elif pts >= 24 %}background:#2563eb;
+                                {% else %}background:#ea580c;{% endif %}"></div>
+                  </div>
+                </div>
+                <span class="fw-800 flex-shrink-0"
+                      style="font-size:0.85rem;
+                             {% if pts >= 36 %}color:#16a34a;
+                             {% elif pts >= 24 %}color:#2563eb;
+                             {% else %}color:#ea580c;{% endif %}">
+                  {{ pts|floatformat:1 }}
+                </span>
+              </a>
+            </div>
+            {% endwith %}
+            {% endfor %}
+          </div>
         </div>
       </div>
       {% else %}
@@ -1279,10 +1337,10 @@
 {% block extra_js %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-// ── Cluster bar chart ────────────────────────────────────────────────────
+// ── Cluster bar chart (top 8) ────────────────────────────────────────────
 {% if cluster_results %}
-const clusterLabels = [{% for r in cluster_results %}"{{ r.cluster.name|truncatechars:18 }}"{% if not forloop.last %},{% endif %}{% endfor %}];
-const clusterData   = [{% for r in cluster_results %}{{ r.cluster_points }}{% if not forloop.last %},{% endif %}{% endfor %}];
+const clusterLabels = [{% for r in cluster_results|slice:":8" %}"{{ r.cluster.name|truncatechars:18 }}"{% if not forloop.last %},{% endif %}{% endfor %}];
+const clusterData   = [{% for r in cluster_results|slice:":8" %}{{ r.cluster_points }}{% if not forloop.last %},{% endif %}{% endfor %}];
 const barColors     = clusterData.map(v => v >= 36 ? '#16a34a' : v >= 24 ? '#2563eb' : '#f97316');
 
 new Chart(document.getElementById('clusterChart'), {

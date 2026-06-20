@@ -1,6 +1,6 @@
 from django import forms
 from django.contrib import admin
-from django.utils.html import format_html
+from django.utils.html import format_html, mark_safe
 from import_export.admin import ImportExportModelAdmin
 from import_export.formats.base_formats import CSV
 from .models import CourseType, CourseCategory, Course, CourseOffering, Review, CourseSpotlight
@@ -163,6 +163,6 @@ class CourseSpotlightAdmin(admin.ModelAdmin):
 
     def live_badge(self, obj):
         if obj.is_live:
-            return format_html('<span style="color:#16a34a;font-weight:700;">&#9679; Live</span>')
-        return format_html('<span style="color:#94a3b8;">&#9679; Inactive</span>')
+            return mark_safe('<span style="color:#16a34a;font-weight:700;">&#9679; Live</span>')
+        return mark_safe('<span style="color:#94a3b8;">&#9679; Inactive</span>')
     live_badge.short_description = "Status"

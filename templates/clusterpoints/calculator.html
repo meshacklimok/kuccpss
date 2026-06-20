@@ -323,6 +323,11 @@
     display: flex; gap: 0.5rem; align-items: flex-start; margin-bottom: 1rem;
 }
 
+/* Lift the footer bar above the mobile bottom nav on phones/tablets */
+@media (max-width: 991.98px) {
+    .lce-footer { bottom: calc(64px + env(safe-area-inset-bottom, 0px)); }
+}
+
 @media (max-width: 480px) {
     .score-card { flex-direction: column; align-items: flex-start; gap: 0.85rem; }
     .score-sep  { width: 100%; height: 1px; }
@@ -330,7 +335,7 @@
     .dl-bar { flex-direction: column; align-items: flex-start; }
     .guest-cta { flex-direction: column; }
     .pred-table { display: block; overflow-x: auto; }
-    .lce-footer { flex-wrap: wrap; gap: 0.6rem; padding: 0.75rem 1rem calc(0.75rem + env(safe-area-inset-bottom, 0px)); }
+    .lce-footer { flex-wrap: wrap; gap: 0.6rem; padding: 0.75rem 1rem 0.75rem; bottom: calc(64px + env(safe-area-inset-bottom, 0px)); }
     .lce-btn-calc { width: 100%; justify-content: center; order: -1; }
     .lce-btn-back { font-size: 0.78rem; }
     .lce-footer-info { width: 100%; order: 2; font-size: 0.78rem; }
