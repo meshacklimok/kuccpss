@@ -243,8 +243,12 @@ def verify_payment(request, payment_id):
     if payment.status == "completed":
         return JsonResponse({"status": "completed", "feature": payment.feature, "message": "Already unlocked."})
 
+    logger.info(
+        "verify_payment %s: checkout_id=%r phone=%r amount=%s created=%s",
+        payment_id, payment.checkout_id, payment.phone_number, payment.amount, payment.created_at,
+    )
     remote_state = fetch_intasend_status(payment.checkout_id)
-    logger.info("verify_payment %s: IntaSend says %s", payment_id, remote_state)
+    logger.info("verify_payment %s: IntaSend says %r", payment_id, remote_state)
 
     if remote_state == "COMPLETE":
         payment.status = "completed"

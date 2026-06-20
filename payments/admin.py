@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.utils.timezone import now
 from .models import Payment, Transaction, PaymentFeature
 
 
@@ -16,12 +17,26 @@ class TransactionInline(admin.TabularInline):
     can_delete = False
 
 
+def mark_completed(modeladmin, request, queryset):
+    updated = queryset.filter(status__in=["pending", "failed"]).update(status="completed")
+    modeladmin.message_user(request, f"{updated} payment(s) marked as completed.")
+mark_completed.short_description = "Mark selected payments as COMPLETED (manual override)"
+
+
+def mark_failed(modeladmin, request, queryset):
+    updated = queryset.filter(status="pending").update(status="failed")
+    modeladmin.message_user(request, f"{updated} payment(s) marked as failed.")
+mark_failed.short_description = "Mark selected payments as FAILED"
+
+
 @admin.register(Payment)
 class PaymentAdmin(admin.ModelAdmin):
-    list_display = ("user", "feature", "amount", "status", "created_at")
+    list_display = ("user", "feature", "amount", "phone_number", "status", "checkout_id", "created_at")
     list_filter = ("status", "feature")
-    search_fields = ("user__email",)
+    search_fields = ("user__email", "checkout_id", "phone_number")
     readonly_fields = ("created_at", "updated_at")
+    list_editable = ("status",)
+    actions = [mark_completed, mark_failed]
     inlines = [TransactionInline]
 
 
