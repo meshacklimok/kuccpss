@@ -117,7 +117,7 @@ def become_mentor(request):
                     f"Review: https://www.careernext.co.ke/cn-staff/mentorship/mentorprofile/{mentor.pk}/change/"
                 ),
                 from_email=settings.DEFAULT_FROM_EMAIL,
-                recipient_list=[settings.DEFAULT_FROM_EMAIL],
+                recipient_list=[settings.ADMIN_EMAIL],
                 fail_silently=True,
             )
 
@@ -713,7 +713,7 @@ def _send_cancellation_emails(session, cancelled_by, reason):
             f"Session token: {session.token}"
         ),
         from_email=settings.DEFAULT_FROM_EMAIL,
-        recipient_list=[settings.DEFAULT_FROM_EMAIL],
+        recipient_list=[settings.ADMIN_EMAIL],
         fail_silently=True,
     )
 
@@ -748,7 +748,7 @@ def request_withdrawal(request):
                 f"Approve in admin: https://www.careernext.co.ke/cn-staff/mentorship/withdrawalrequest/"
             ),
             from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[settings.DEFAULT_FROM_EMAIL],
+            recipient_list=[settings.ADMIN_EMAIL],
             fail_silently=True,
         )
 

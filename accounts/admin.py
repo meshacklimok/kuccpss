@@ -12,6 +12,8 @@ from .models import (
     Notification,
     CareerSessionSnapshot,
     PushSubscription,
+    AffiliateProfile,
+    AffiliateCommission,
 )
 from .forms import UserAdminCreationForm, UserAdminChangeForm
 
@@ -28,6 +30,24 @@ def unsuspend_users(modeladmin, request, queryset):
     modeladmin.message_user(request, f"{queryset.count()} user(s) unsuspended.")
 unsuspend_users.short_description = "Unsuspend selected users"
 
+def activate_as_affiliate(modeladmin, request, queryset):
+    from django.utils import timezone
+    created = 0
+    for user in queryset:
+        _, was_created = AffiliateProfile.objects.get_or_create(
+            user=user,
+            defaults={
+                'is_active': True,
+                'commission_rate': 20.00,
+                'approved_by': request.user,
+                'approved_at': timezone.now(),
+            }
+        )
+        if was_created:
+            created += 1
+    modeladmin.message_user(request, f"Activated {created} new affiliate(s). ({queryset.count() - created} already existed.)")
+activate_as_affiliate.short_description = "Activate selected users as affiliates (20%)"
+
 
 class UserAdmin(BaseUserAdmin):
     # Forms for adding and changing users
@@ -40,7 +60,7 @@ class UserAdmin(BaseUserAdmin):
     search_fields = ('email', 'full_name')
     ordering = ('email',)
     readonly_fields = ('last_login', 'created_at', 'updated_at', 'deleted_at')
-    actions = [suspend_users, unsuspend_users]
+    actions = [suspend_users, unsuspend_users, activate_as_affiliate]
 
     # Fieldsets for changing a user
     fieldsets = (
@@ -183,3 +203,52 @@ class CareerSessionSnapshotAdmin(admin.ModelAdmin):
     list_filter   = ('pathway', 'computed_at')
     search_fields = ('user__email',)
     readonly_fields = ('computed_at',)
+
+
+# =====================================================
+# AFFILIATE SYSTEM
+# =====================================================
+@admin.register(AffiliateProfile)
+class AffiliateProfileAdmin(admin.ModelAdmin):
+    list_display  = ('user', 'is_active', 'commission_rate', 'wallet_balance', 'total_earned', 'approved_by', 'approved_at')
+    list_filter   = ('is_active',)
+    search_fields = ('user__email', 'notes')
+    readonly_fields = ('total_earned', 'wallet_balance', 'created_at')
+    raw_id_fields   = ('user', 'approved_by')
+
+
+def _mask_email(email):
+    parts = email.split('@')
+    if len(parts) == 2:
+        return parts[0][:2] + '***@' + parts[1]
+    return '***'
+
+
+@admin.register(AffiliateCommission)
+class AffiliateCommissionAdmin(admin.ModelAdmin):
+    list_display  = ('affiliate', 'referred_masked', 'amount', 'rate_snapshot', 'status', 'created_at', 'paid_out_at')
+    list_filter   = ('status', 'affiliate')
+    search_fields = ('affiliate__user__email',)
+    readonly_fields = ('affiliate', 'payment', 'referred_user', 'referral', 'amount', 'rate_snapshot', 'created_at')
+    actions = ['mark_paid_out']
+
+    def referred_masked(self, obj):
+        if obj.referred_user:
+            return _mask_email(obj.referred_user.email)
+        return '—'
+    referred_masked.short_description = 'Referred User'
+
+    def mark_paid_out(self, request, queryset):
+        from django.utils import timezone
+        from django.db.models import F
+        updated = 0
+        for commission in queryset.filter(status='pending'):
+            commission.status = 'paid_out'
+            commission.paid_out_at = timezone.now()
+            commission.save(update_fields=['status', 'paid_out_at'])
+            AffiliateProfile.objects.filter(pk=commission.affiliate_id).update(
+                wallet_balance=F('wallet_balance') - commission.amount
+            )
+            updated += 1
+        self.message_user(request, f"Marked {updated} commission(s) as paid out and deducted from wallet.")
+    mark_paid_out.short_description = "Mark selected as paid out (deducts from wallet)"

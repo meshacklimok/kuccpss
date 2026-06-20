@@ -262,6 +262,12 @@ def dashboard_view(request: HttpRequest) -> HttpResponse:
             timeline_phase, timeline_days, timeline_label, timeline_date = 'open', days_to_close, 'Days left to apply', 'Closes Est. 21 Aug 2026'
         else:
             timeline_phase, timeline_days, timeline_label, timeline_date = 'closed', 0, 'Portal closed for 2026', 'Check kuccps.ac.ke for 2027 dates'
+        from institutions.models import InstitutionPromotion as _IP
+        from datetime import date as _date
+        _today = _date.today()
+        _live = _IP.objects.filter(start_date__lte=_today, end_date__gte=_today).select_related(
+            'institution', 'institution__institution_type'
+        ).prefetch_related('institution__offerings__course')
         return render(request, "accounts/dashboard.html", {
             "guest": True,
             "eligible_count": 0, "saved_count": 0, "shortlist_count": 0,
@@ -270,6 +276,8 @@ def dashboard_view(request: HttpRequest) -> HttpResponse:
             "quiz_submission": None, "saved_course_ids": [],
             "recommended_careers": CareerProfile.objects.all()[:3],
             "recent_news": Article.objects.filter(is_published=True).order_by('-created_at')[:3],
+            "featured_promos": list(_live.filter(tier='featured')[:3]),
+            "scholarship_alerts": list(_live.filter(tier='scholarship')[:4]),
             "preview_courses": [
                 {'name': 'Medicine and Surgery',   'cluster_num': 15, 'cutoff': '42.0', 'icon': 'fa-stethoscope',      'bg': '#fee2e2', 'color': '#dc2626'},
                 {'name': 'Civil Engineering',      'cluster_num': 4,  'cutoff': '38.5', 'icon': 'fa-cogs',             'bg': '#dbeafe', 'color': '#1d4ed8'},
@@ -373,6 +381,13 @@ def dashboard_view(request: HttpRequest) -> HttpResponse:
     snapshot            = CareerSessionSnapshot.objects.filter(user=user).order_by('-computed_at').first()
     quiz_submission     = QuizSubmission.objects.filter(user=user).order_by('-created_at').first()
 
+    # ── Affiliate ─────────────────────────────────────────────────────────────
+    from .models import AffiliateProfile
+    try:
+        affiliate_profile = AffiliateProfile.objects.get(user=user, is_active=True)
+    except AffiliateProfile.DoesNotExist:
+        affiliate_profile = None
+
     # ── Preview courses for new users (no career session yet) ─────────────
     preview_courses = []
     if not snapshot:
@@ -468,8 +483,20 @@ def dashboard_view(request: HttpRequest) -> HttpResponse:
         timeline_label = 'Portal closed for 2026'
         timeline_date  = 'Check kuccps.ac.ke for 2027 dates'
 
+    # ── Active promotions ─────────────────────────────────────────────────────
+    from institutions.models import InstitutionType, Institution, InstitutionPromotion
+    from datetime import date as _date
+    _today = _date.today()
+    _live_promos = (
+        InstitutionPromotion.objects
+        .filter(start_date__lte=_today, end_date__gte=_today)
+        .select_related('institution', 'institution__institution_type')
+        .prefetch_related('institution__offerings__course')
+    )
+    featured_promos    = list(_live_promos.filter(tier='featured')[:3])
+    scholarship_alerts = list(_live_promos.filter(tier='scholarship')[:4])
+
     # ── Institutions quick links ──────────────────────────────────────────────
-    from institutions.models import InstitutionType, Institution
     from django.urls import reverse
     _INST_ICONS = {
         'public university':   'fas fa-university',
@@ -523,6 +550,11 @@ def dashboard_view(request: HttpRequest) -> HttpResponse:
         "timeline_date":     timeline_date,
         # Institutions
         "inst_type_links":   inst_type_links,
+        # Promotions
+        "featured_promos":    featured_promos,
+        "scholarship_alerts": scholarship_alerts,
+        # Affiliate
+        "affiliate_profile":  affiliate_profile,
     })
 
 
@@ -626,6 +658,99 @@ def referral_view(request):
     })
 
 
+@login_required
+def affiliate_dashboard(request):
+    from accounts.models import AffiliateProfile, AffiliateCommission, Referral, _make_referral_code
+    from django.http import Http404
+
+    try:
+        affiliate = request.user.affiliate_profile
+    except AffiliateProfile.DoesNotExist:
+        raise Http404
+
+    if not affiliate.is_active:
+        raise Http404
+
+    # Ensure a referral code exists for this affiliate
+    ref, _ = Referral.objects.get_or_create(
+        referrer=request.user, referred_user__isnull=True, converted=False,
+        defaults={'code': _make_referral_code()}
+    )
+    if ref.converted:
+        ref = Referral.objects.create(referrer=request.user, code=_make_referral_code())
+
+    ref_url   = request.build_absolute_uri(f"/?ref={ref.code}")
+    share_msg = f"Join CareerNext — Kenya's free KCSE cluster points calculator. Find courses you qualify for: {ref_url}"
+
+    # All sign-up conversions via this affiliate's link
+    referrals = (
+        Referral.objects
+        .filter(referrer=request.user, converted=True)
+        .select_related('referred_user')
+        .order_by('-converted_at')
+    )
+
+    # All commissions earned
+    commissions = (
+        AffiliateCommission.objects
+        .filter(affiliate=affiliate)
+        .select_related('referred_user', 'payment')
+        .order_by('-created_at')
+    )
+
+    # Build a quick lookup: referred_user_id → commission
+    commission_by_user = {c.referred_user_id: c for c in commissions if c.referred_user_id}
+
+    def _mask(user):
+        if not user:
+            return '—', '—'
+        email = user.email
+        parts = email.split('@')
+        masked_email = (parts[0][:2] + '***@' + parts[1]) if len(parts) == 2 else '***'
+        name = (user.full_name or '').strip()
+        if name:
+            words = name.split()
+            masked_name = words[0][0] + '*** ' + (words[-1][0] + '***' if len(words) > 1 else '')
+        else:
+            masked_name = masked_email
+        return masked_email, masked_name.strip()
+
+    referral_rows = []
+    for r in referrals:
+        email, name = _mask(r.referred_user)
+        uid = r.referred_user_id
+        commission = commission_by_user.get(uid)
+        referral_rows.append({
+            'email':      email,
+            'name':       name,
+            'joined':     r.converted_at,
+            'has_paid':   uid in commission_by_user,
+            'commission': commission.amount if commission else None,
+            'feature':    commission.payment.get_feature_display() if commission else None,
+        })
+
+    pending_amount  = sum(c.amount for c in commissions if c.status == 'pending')
+    paid_out_amount = sum(c.amount for c in commissions if c.status == 'paid_out')
+
+    from django.conf import settings as _settings
+    payout_phone = getattr(_settings, 'AFFILIATE_PAYOUT_PHONE', '254700000000')
+
+    return render(request, 'accounts/affiliate_dashboard.html', {
+        'affiliate':        affiliate,
+        'ref_url':          ref_url,
+        'ref_code':         ref.code,
+        'share_msg':        share_msg,
+        'total_referred':   referrals.count(),
+        'paid_conversions': len(commission_by_user),
+        'referral_rows':    referral_rows,
+        'commissions':      commissions,
+        'pending_amount':   pending_amount,
+        'paid_out_amount':  paid_out_amount,
+        'can_request_payout': affiliate.wallet_balance >= 500,
+        'payout_phone':     payout_phone,
+    })
+
+
 def email_lead_capture(request):
     """AJAX endpoint — capture visitor email before registration."""
     if request.method != 'POST':
@@ -667,7 +792,20 @@ def email_lead_capture(request):
 
 def public_home_view(request):
     from resources.models import SuccessStory
+    from institutions.models import InstitutionPromotion
+    from courses.trends import get_trends_context
+    from datetime import date as _date
+
     stories = SuccessStory.objects.filter(is_active=True).order_by('order', 'id')
+
+    _today = _date.today()
+    _live = InstitutionPromotion.objects.filter(
+        start_date__lte=_today, end_date__gte=_today
+    ).select_related('institution', 'institution__institution_type').prefetch_related(
+        'institution__offerings__course'
+    )
+    featured_promos    = list(_live.filter(tier='featured')[:4])
+    scholarship_alerts = list(_live.filter(tier='scholarship')[:4])
 
     # Sample cluster preview bars for the hero card (static illustrative data)
     sample_clusters = [
@@ -676,10 +814,15 @@ def public_home_view(request):
         ("Cluster 9", 88, "#16a34a"),
         ("Cluster 12", 52, "#d97706"),
     ]
-    return render(request, "accounts/home.html", {
+
+    ctx = {
         "stories": stories,
         "sample_clusters": sample_clusters,
-    })
+        "featured_promos":    featured_promos,
+        "scholarship_alerts": scholarship_alerts,
+    }
+    ctx.update(get_trends_context())
+    return render(request, "accounts/home.html", ctx)
 
 
 def privacy_view(request):

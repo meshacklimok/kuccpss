@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>No Internet Connection — CareerNext</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f0f4ff;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      color: #1e293b;
+    }
+    .card {
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 4px 24px rgba(30,58,138,.10);
+      padding: 48px 40px;
+      max-width: 420px;
+      width: 100%;
+      text-align: center;
+    }
+    .icon {
+      width: 72px;
+      height: 72px;
+      margin: 0 auto 24px;
+      background: #eff6ff;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .icon svg { width: 36px; height: 36px; color: #2563eb; }
+    h1 { font-size: 1.35rem; font-weight: 700; margin-bottom: 10px; color: #1e3a8a; }
+    p { font-size: 0.95rem; color: #64748b; line-height: 1.6; margin-bottom: 28px; }
+    .btn {
+      display: inline-block;
+      background: #1e3a8a;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 12px 32px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background .2s;
+      text-decoration: none;
+    }
+    .btn:hover { background: #2563eb; }
+    .brand {
+      margin-top: 32px;
+      font-size: 0.8rem;
+      color: #94a3b8;
+      font-weight: 600;
+      letter-spacing: .5px;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="1" y1="1" x2="23" y2="23"/>
+        <path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"/>
+        <path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"/>
+        <path d="M10.71 5.05A16 16 0 0 1 22.56 9"/>
+        <path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"/>
+        <path d="M8.53 16.11a6 6 0 0 1 6.95 0"/>
+        <line x1="12" y1="20" x2="12.01" y2="20"/>
+      </svg>
+    </div>
+    <h1>No Internet Connection</h1>
+    <p>It looks like you're offline. Check your Wi-Fi or mobile data, then try again.</p>
+    <button class="btn" id="retry-btn">Try Again</button>
+    <div class="brand">CareerNext</div>
+  </div>
+  <script>
+    document.getElementById('retry-btn').addEventListener('click', function () {
+      window.location.reload();
+    });
+    // Auto-reload once back online
+    window.addEventListener('online', function () {
+      window.location.reload();
+    });
+  </script>
+</body>
+</html>

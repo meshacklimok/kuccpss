@@ -3,7 +3,7 @@ from django.contrib import admin
 from django.utils.html import format_html
 from import_export.admin import ImportExportModelAdmin
 from import_export.formats.base_formats import CSV
-from .models import CourseType, CourseCategory, Course, CourseOffering, Review
+from .models import CourseType, CourseCategory, Course, CourseOffering, Review, CourseSpotlight
 from .resources import CourseResource, CourseOfferingResource
 
 
@@ -138,3 +138,31 @@ class ReviewAdmin(admin.ModelAdmin):
     def short_body(self, obj):
         return obj.body[:60] + '…' if len(obj.body) > 60 else obj.body
     short_body.short_description = "Review"
+
+
+@admin.register(CourseSpotlight)
+class CourseSpotlightAdmin(admin.ModelAdmin):
+    list_display  = ('course', 'headline', 'start_date', 'end_date', 'live_badge')
+    list_filter   = ('start_date',)
+    search_fields = ('course__name', 'headline')
+    autocomplete_fields = ('course',)
+    readonly_fields = ('created_at', 'updated_at')
+
+    fieldsets = (
+        (None, {
+            'fields': ('course', 'headline', 'summary', 'hero_image'),
+        }),
+        ('Schedule', {
+            'fields': ('start_date', 'end_date'),
+        }),
+        ('Timestamps', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',),
+        }),
+    )
+
+    def live_badge(self, obj):
+        if obj.is_live:
+            return format_html('<span style="color:#16a34a;font-weight:700;">&#9679; Live</span>')
+        return format_html('<span style="color:#94a3b8;">&#9679; Inactive</span>')
+    live_badge.short_description = "Status"

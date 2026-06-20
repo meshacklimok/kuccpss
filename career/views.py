@@ -1839,7 +1839,7 @@ def career_results(request):
 
     # Payment gate for logged-in users only
     if not is_guest and is_feature_enabled('premium_career_report') and not has_paid_for_feature(request.user, 'premium_career_report'):
-        return redirect("/payments/required/?feature=premium_career_report")
+        return redirect("/payments/required/?feature=premium_career_report&next=/career/results/")
 
     pathway             = request.session.get('career_pathway', '')
     filter_chance       = request.GET.get('chance', '')
@@ -1849,6 +1849,18 @@ def career_results(request):
 
     if not pathway:
         messages.info(request, "Your session has expired. Please start the Career Engine again.")
+        return redirect('career:home')
+
+    # Guard: score data must still be in session (it's separate from pathway and expires independently)
+    if pathway == 'Degree':
+        _has_score = bool(
+            request.session.get('career_cluster_pts_single') or
+            request.session.get('career_cluster_points')
+        )
+    else:
+        _has_score = bool(request.session.get('career_mean_grade'))
+    if not _has_score:
+        messages.info(request, "Your session expired. Please re-enter your grades to see results.")
         return redirect('career:home')
 
     cfg = _get_career_config()

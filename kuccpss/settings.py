@@ -90,6 +90,7 @@ else:
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'CareerNext <noreply@careernext.co.ke>')
+ADMIN_EMAIL = os.environ.get('ADMIN_EMAIL', 'limomeshk@gmail.com')
 
 TIME_ZONE = 'Africa/Nairobi'
 
@@ -200,6 +201,7 @@ AUTHENTICATION_BACKENDS = [
 ]
 ACCOUNT_LOGIN_METHODS = {"email"}
 ACCOUNT_SIGNUP_FIELDS = ["email*", "password1*", "password2*"]
+ACCOUNT_USER_MODEL_USERNAME_FIELD = None
 ACCOUNT_EMAIL_VERIFICATION = 'none' if os.environ.get('DJANGO_DEBUG', 'True') != 'True' else 'optional'
 ACCOUNT_LOGIN_ON_EMAIL_CONFIRMATION = True
 ACCOUNT_LOGIN_ON_PASSWORD_RESET = True
@@ -228,6 +230,9 @@ GOOGLE_OAUTH_AVAILABLE = bool(_google_client_id)
 
 
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
+
+# Affiliate payout — admin WhatsApp number for payout requests
+AFFILIATE_PAYOUT_PHONE = os.environ.get("AFFILIATE_PAYOUT_PHONE", "254700000000")
 
 # Web Push (VAPID)
 import base64 as _b64

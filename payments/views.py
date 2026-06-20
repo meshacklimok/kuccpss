@@ -19,8 +19,13 @@ logger = logging.getLogger(__name__)
 @login_required
 def payment_required(request):
     feature = request.GET.get("feature", "")
+    next_url = request.GET.get("next", "/accounts/dashboard/")
     price = price_for_feature(feature)
-    return render(request, "payments/payment_required.html", {"feature": feature, "price": price})
+    return render(request, "payments/payment_required.html", {
+        "feature": feature,
+        "price": price,
+        "next_url": next_url,
+    })
 
 
 @login_required
@@ -179,6 +184,39 @@ def mpesa_webhook(request):
     # PENDING state → leave as-is
 
     payment.save(update_fields=["status", "updated_at"])
+
+    # Award affiliate commission if the paying user was referred by an active affiliate
+    if state == "COMPLETE":
+        try:
+            from django.db.models import F
+            from accounts.models import Referral, AffiliateProfile, AffiliateCommission
+            referral = Referral.objects.select_related('referrer').get(
+                referred_user=payment.user, converted=True
+            )
+            affiliate = AffiliateProfile.objects.get(user=referral.referrer, is_active=True)
+            if not AffiliateCommission.objects.filter(payment=payment).exists():
+                rate = affiliate.commission_rate
+                commission_amount = (rate / 100) * payment.amount
+                AffiliateCommission.objects.create(
+                    affiliate=affiliate,
+                    payment=payment,
+                    referred_user=payment.user,
+                    referral=referral,
+                    amount=commission_amount,
+                    rate_snapshot=rate,
+                    status='pending',
+                )
+                AffiliateProfile.objects.filter(pk=affiliate.pk).update(
+                    wallet_balance=F('wallet_balance') + commission_amount,
+                    total_earned=F('total_earned') + commission_amount,
+                )
+                logger.info("Affiliate commission KES %s awarded to %s for payment %s",
+                            commission_amount, affiliate.user.email, payment.pk)
+        except (Referral.DoesNotExist, AffiliateProfile.DoesNotExist):
+            pass  # user wasn't referred, or referrer isn't an affiliate
+        except Exception as exc:
+            logger.error("Affiliate commission error for payment %s: %s", payment.pk, exc)
+
     return HttpResponse(status=200)
 
 

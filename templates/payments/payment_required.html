@@ -127,6 +127,7 @@
 const FEATURE = "{{ feature }}";
 const INITIATE_URL = "{% url 'payments:initiate_payment' %}";
 const CSRF_TOKEN = "{{ csrf_token }}";
+const NEXT_URL = "{{ next_url|escapejs }}";
 let pollInterval = null;
 let dotsInterval = null;
 
@@ -192,7 +193,7 @@ function startPolling(paymentId) {
       if (data.status === "completed") {
         clearIntervals();
         showStep("success");
-        setTimeout(() => { window.location.href = "/accounts/dashboard/"; }, 2000);
+        setTimeout(() => { window.location.href = NEXT_URL || "/accounts/dashboard/"; }, 2000);
       } else if (data.status === "failed") {
         clearIntervals();
         showStep("failed");

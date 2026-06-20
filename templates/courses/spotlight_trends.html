@@ -1,0 +1,583 @@
+{% load static %}
+{# ── Course Spotlight & Trends ─────────────────────────────────────────────── #}
+{% if spotlight or trending_viewed or trending_competitive or trending_offered or trending_rated %}
+<section class="st-section" id="spotlight-trends">
+<style>
+/* ── Section shell ── */
+.st-section {
+    background: linear-gradient(160deg, #0f172a 0%, #1e1b4b 55%, #0f172a 100%);
+    padding: 5rem 0 5.5rem;
+    position: relative;
+    overflow: hidden;
+}
+.st-section::before {
+    content: '';
+    position: absolute; inset: 0;
+    background:
+        radial-gradient(ellipse 60% 55% at 10% 20%, rgba(99,102,241,0.18) 0%, transparent 60%),
+        radial-gradient(ellipse 45% 40% at 90% 80%, rgba(16,185,129,0.10) 0%, transparent 60%);
+    pointer-events: none;
+}
+.st-section .container { position: relative; }
+
+/* ── Section header ── */
+.st-eyebrow {
+    display: inline-flex; align-items: center; gap: 0.45rem;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 20px;
+    padding: 4px 14px;
+    font-size: 0.72rem; font-weight: 700;
+    letter-spacing: 0.09em; text-transform: uppercase;
+    color: rgba(255,255,255,0.65);
+    margin-bottom: 0.65rem;
+}
+.st-title {
+    font-size: clamp(1.6rem, 3.5vw, 2.4rem);
+    font-weight: 900; color: #fff; line-height: 1.15;
+    margin-bottom: 0.35rem;
+}
+.st-subtitle { font-size: 0.9rem; color: rgba(255,255,255,0.5); margin-bottom: 0; }
+
+/* ── Grid ── */
+.st-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    align-items: start;
+    margin-top: 2.5rem;
+}
+@media (max-width: 991px) {
+    .st-grid { grid-template-columns: 1fr; }
+}
+
+/* ── Spotlight card ── */
+.st-spotlight {
+    background: rgba(255,255,255,0.04);
+    border: 1.5px solid rgba(255,255,255,0.1);
+    border-radius: 20px;
+    overflow: hidden;
+    backdrop-filter: blur(12px);
+    transition: border-color 0.3s, box-shadow 0.3s;
+    height: 100%;
+    display: flex; flex-direction: column;
+}
+.st-spotlight:hover {
+    border-color: rgba(99,102,241,0.45);
+    box-shadow: 0 0 40px rgba(99,102,241,0.12);
+}
+
+/* Hero image */
+.st-hero {
+    width: 100%; height: 200px;
+    object-fit: cover;
+    display: block;
+}
+.st-hero-placeholder {
+    height: 200px;
+    background: linear-gradient(135deg, #1e3a8a 0%, #4f46e5 50%, #7c3aed 100%);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 3.5rem;
+    position: relative; overflow: hidden;
+}
+.st-hero-placeholder::after {
+    content: '';
+    position: absolute; inset: 0;
+    background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+}
+
+/* Body */
+.st-spotlight-body { padding: 1.5rem; flex: 1; display: flex; flex-direction: column; }
+
+.st-week-badge {
+    display: inline-flex; align-items: center; gap: 0.35rem;
+    background: linear-gradient(90deg, #f59e0b, #ef4444);
+    border-radius: 6px; padding: 3px 10px;
+    font-size: 0.65rem; font-weight: 800; letter-spacing: 0.08em;
+    text-transform: uppercase; color: #fff;
+    margin-bottom: 0.85rem; align-self: flex-start;
+}
+.st-course-name {
+    font-size: 1.25rem; font-weight: 800; color: #fff;
+    line-height: 1.25; margin-bottom: 0.5rem;
+}
+.st-headline {
+    font-size: 0.82rem; color: rgba(255,255,255,0.55);
+    font-style: italic; margin-bottom: 0.85rem;
+    line-height: 1.5;
+}
+.st-summary {
+    font-size: 0.85rem; color: rgba(255,255,255,0.7);
+    line-height: 1.65; margin-bottom: 1.1rem; flex: 1;
+}
+
+/* Stat chips */
+.st-chips { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1.1rem; }
+.st-chip {
+    display: inline-flex; align-items: center; gap: 0.35rem;
+    background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 8px; padding: 4px 10px;
+    font-size: 0.72rem; font-weight: 600; color: rgba(255,255,255,0.75);
+}
+.st-chip i { font-size: 0.65rem; opacity: 0.7; }
+
+/* Top institutions */
+.st-unis { margin-bottom: 1.25rem; }
+.st-unis-label {
+    font-size: 0.68rem; font-weight: 700; letter-spacing: 0.07em;
+    text-transform: uppercase; color: rgba(255,255,255,0.35);
+    margin-bottom: 0.55rem;
+}
+.st-uni-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 6px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    gap: 0.5rem;
+}
+.st-uni-row:last-child { border-bottom: none; }
+.st-uni-name {
+    font-size: 0.78rem; font-weight: 600; color: rgba(255,255,255,0.8);
+    min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.st-uni-cut {
+    flex-shrink: 0;
+    font-size: 0.72rem; font-weight: 800;
+    background: rgba(99,102,241,0.2);
+    border: 1px solid rgba(99,102,241,0.35);
+    border-radius: 5px; padding: 2px 8px;
+    color: #a5b4fc;
+    white-space: nowrap;
+}
+
+/* CTA */
+.st-cta {
+    display: inline-flex; align-items: center; gap: 0.5rem;
+    background: linear-gradient(135deg, #4f46e5, #7c3aed);
+    color: #fff; font-size: 0.85rem; font-weight: 700;
+    padding: 10px 20px; border-radius: 10px;
+    text-decoration: none;
+    transition: transform 0.2s, box-shadow 0.2s;
+    box-shadow: 0 4px 14px rgba(79,70,229,0.4);
+    align-self: flex-start;
+}
+.st-cta:hover {
+    color: #fff; transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(79,70,229,0.55);
+}
+
+/* No spotlight placeholder */
+.st-spotlight-empty {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    height: 100%; min-height: 320px; text-align: center;
+    padding: 2rem;
+    color: rgba(255,255,255,0.3);
+    gap: 0.75rem;
+}
+.st-spotlight-empty i { font-size: 2.5rem; opacity: 0.25; }
+.st-spotlight-empty p { font-size: 0.82rem; margin: 0; }
+
+/* ── Trending panel ── */
+.st-trending {
+    background: rgba(255,255,255,0.04);
+    border: 1.5px solid rgba(255,255,255,0.1);
+    border-radius: 20px;
+    overflow: hidden;
+    backdrop-filter: blur(12px);
+    height: 100%;
+    display: flex; flex-direction: column;
+}
+
+/* Tab bar */
+.st-tabs {
+    display: flex;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    overflow-x: auto; scrollbar-width: none;
+    flex-shrink: 0;
+}
+.st-tabs::-webkit-scrollbar { display: none; }
+
+.st-tab {
+    flex: 1; min-width: 0;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 3px;
+    padding: 0.85rem 0.5rem;
+    font-size: 0.65rem; font-weight: 700; letter-spacing: 0.04em;
+    text-transform: uppercase; text-align: center;
+    color: rgba(255,255,255,0.35);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: color 0.2s, border-color 0.2s, background 0.2s;
+    background: none; border-left: none; border-right: none; border-top: none;
+    white-space: nowrap;
+    outline: none;
+}
+.st-tab i { font-size: 0.9rem; }
+.st-tab:hover { color: rgba(255,255,255,0.6); background: rgba(255,255,255,0.04); }
+.st-tab.active { color: #fff; }
+.st-tab[data-color="blue"].active   { border-bottom-color: #3b82f6; color: #93c5fd; }
+.st-tab[data-color="red"].active    { border-bottom-color: #ef4444; color: #fca5a5; }
+.st-tab[data-color="green"].active  { border-bottom-color: #10b981; color: #6ee7b7; }
+.st-tab[data-color="amber"].active  { border-bottom-color: #f59e0b; color: #fcd34d; }
+
+/* Tab panels */
+.st-panels { flex: 1; overflow: hidden; }
+.st-panel { display: none; padding: 1rem 0; }
+.st-panel.active { display: block; }
+
+/* Rank item */
+.st-rank-item {
+    display: flex; align-items: center; gap: 0.85rem;
+    padding: 0.7rem 1.25rem;
+    text-decoration: none;
+    border-radius: 0;
+    transition: background 0.15s;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+.st-rank-item:last-child { border-bottom: none; }
+.st-rank-item:hover { background: rgba(255,255,255,0.05); }
+
+.st-rank-num {
+    width: 26px; height: 26px; flex-shrink: 0;
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.72rem; font-weight: 900;
+}
+.st-rank-num.rank-1 { background: linear-gradient(135deg, #f59e0b, #fbbf24); color: #78350f; }
+.st-rank-num.rank-2 { background: rgba(148,163,184,0.2); color: #94a3b8; border: 1px solid rgba(148,163,184,0.25); }
+.st-rank-num.rank-3 { background: rgba(180,83,9,0.18); color: #d97706; border: 1px solid rgba(180,83,9,0.25); }
+.st-rank-num.rank-other { background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.3); font-size: 0.68rem; }
+
+.st-rank-info { flex: 1; min-width: 0; }
+.st-rank-name {
+    font-size: 0.82rem; font-weight: 700; color: rgba(255,255,255,0.88);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    display: block;
+}
+.st-rank-type {
+    font-size: 0.66rem; color: rgba(255,255,255,0.35); font-weight: 500;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    display: block; margin-top: 1px;
+}
+
+.st-rank-stat { flex-shrink: 0; text-align: right; }
+.st-rank-val {
+    display: block; font-size: 0.8rem; font-weight: 800;
+    color: rgba(255,255,255,0.9);
+}
+.st-rank-desc {
+    display: block; font-size: 0.62rem;
+    color: rgba(255,255,255,0.3); margin-top: 1px;
+}
+.st-rank-arrow {
+    flex-shrink: 0; color: rgba(255,255,255,0.2);
+    font-size: 0.65rem; transition: color 0.15s, transform 0.15s;
+}
+.st-rank-item:hover .st-rank-arrow {
+    color: rgba(255,255,255,0.6); transform: translateX(3px);
+}
+
+.st-panel-empty {
+    text-align: center; padding: 2.5rem 1rem;
+    color: rgba(255,255,255,0.2); font-size: 0.8rem;
+}
+
+/* Trending header */
+.st-trending-header {
+    padding: 1.25rem 1.25rem 0;
+    display: flex; align-items: center; justify-content: space-between;
+    flex-shrink: 0;
+}
+.st-trending-title {
+    font-size: 1rem; font-weight: 800; color: #fff;
+    display: flex; align-items: center; gap: 0.5rem;
+}
+.st-live-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: #22c55e;
+    box-shadow: 0 0 0 0 rgba(34,197,94,0.6);
+    animation: live-pulse 2s infinite;
+    flex-shrink: 0;
+}
+@keyframes live-pulse {
+    0%   { box-shadow: 0 0 0 0 rgba(34,197,94,0.6); }
+    70%  { box-shadow: 0 0 0 7px rgba(34,197,94,0); }
+    100% { box-shadow: 0 0 0 0 rgba(34,197,94,0); }
+}
+.st-update-badge {
+    font-size: 0.65rem; font-weight: 600; color: rgba(255,255,255,0.3);
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 6px; padding: 2px 8px;
+}
+
+/* ── View all CTA row ── */
+.st-footer-link {
+    display: block; text-align: center; padding: 0.9rem;
+    font-size: 0.75rem; font-weight: 700;
+    color: rgba(255,255,255,0.3);
+    text-decoration: none;
+    border-top: 1px solid rgba(255,255,255,0.06);
+    transition: color 0.2s, background 0.2s;
+    flex-shrink: 0;
+    letter-spacing: 0.04em;
+}
+.st-footer-link:hover { color: rgba(255,255,255,0.7); background: rgba(255,255,255,0.04); }
+</style>
+
+<div class="container">
+    <!-- Header -->
+    <div class="text-center mb-1">
+        <div class="st-eyebrow">
+            <i class="fas fa-chart-line"></i> Spotlight &amp; Trends
+        </div>
+        <h2 class="st-title">What's Hot Right Now</h2>
+        <p class="st-subtitle">Curated picks &amp; live rankings updated every 30 minutes</p>
+    </div>
+
+    <div class="st-grid">
+
+        <!-- ── LEFT: Course of the Week ── -->
+        <div class="st-spotlight">
+            {% if spotlight %}
+                {% with c=spotlight.course %}
+                    {% if spotlight.hero_image %}
+                        <img src="{{ spotlight.hero_image.url }}" alt="{{ c.name }}" class="st-hero">
+                    {% else %}
+                        <div class="st-hero-placeholder">
+                            <i class="fas fa-graduation-cap" style="color:rgba(255,255,255,0.5);position:relative;z-index:1;"></i>
+                        </div>
+                    {% endif %}
+
+                    <div class="st-spotlight-body">
+                        <div class="st-week-badge">
+                            <i class="fas fa-fire-flame-curved"></i> Course of the Week
+                        </div>
+
+                        <div class="st-course-name">{{ c.name }}</div>
+                        {% if spotlight.headline %}
+                            <div class="st-headline">"{{ spotlight.headline }}"</div>
+                        {% endif %}
+                        <div class="st-summary">{{ spotlight.summary }}</div>
+
+                        <!-- Stat chips -->
+                        <div class="st-chips">
+                            {% if c.course_type %}
+                            <span class="st-chip">
+                                <i class="fas fa-tag"></i> {{ c.course_type.name }}
+                            </span>
+                            {% endif %}
+                            {% if c.duration %}
+                            <span class="st-chip">
+                                <i class="fas fa-clock"></i> {{ c.duration }}
+                            </span>
+                            {% endif %}
+                            {% if c.minimum_mean_grade %}
+                            <span class="st-chip">
+                                <i class="fas fa-chart-bar"></i> Min grade: {{ c.minimum_mean_grade }}
+                            </span>
+                            {% endif %}
+                            {% with count=c.offerings.count %}
+                            {% if count %}
+                            <span class="st-chip">
+                                <i class="fas fa-university"></i> {{ count }} institution{{ count|pluralize }}
+                            </span>
+                            {% endif %}
+                            {% endwith %}
+                        </div>
+
+                        <!-- Top universities with cutoffs -->
+                        {% with top_offs=c.offerings.all|slice:":4" %}
+                        {% if top_offs %}
+                        <div class="st-unis">
+                            <div class="st-unis-label">
+                                <i class="fas fa-map-marker-alt" style="margin-right:3px;"></i> Where to study
+                            </div>
+                            {% for off in top_offs %}
+                            {% with lc=off.latest_cutoff %}
+                            <div class="st-uni-row">
+                                <span class="st-uni-name">{{ off.institution.name }}</span>
+                                {% if lc %}
+                                <span class="st-uni-cut">{{ lc }} pts</span>
+                                {% endif %}
+                            </div>
+                            {% endwith %}
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                        {% endwith %}
+
+                        <a href="{{ c.get_absolute_url }}" class="st-cta">
+                            Explore this Course <i class="fas fa-arrow-right"></i>
+                        </a>
+                    </div>
+                {% endwith %}
+            {% else %}
+                <div class="st-hero-placeholder">
+                    <i class="fas fa-calendar-week" style="color:rgba(255,255,255,0.2);position:relative;z-index:1;"></i>
+                </div>
+                <div class="st-spotlight-empty">
+                    <i class="fas fa-star"></i>
+                    <p><strong style="color:rgba(255,255,255,0.4);">No spotlight this week yet</strong><br>
+                    Admin can pick a Course of the Week from the dashboard.</p>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- ── RIGHT: Trending Rankings ── -->
+        <div class="st-trending">
+            <div class="st-trending-header">
+                <div class="st-trending-title">
+                    <div class="st-live-dot"></div>
+                    Trending Now
+                </div>
+                <span class="st-update-badge"><i class="fas fa-rotate me-1" style="font-size:0.55rem;"></i>Updated 30 min</span>
+            </div>
+
+            <!-- Tabs -->
+            <div class="st-tabs" role="tablist" id="st-tablist">
+                <button class="st-tab active" data-panel="viewed" data-color="blue" role="tab" aria-selected="true">
+                    <i class="fas fa-eye"></i> Most Viewed
+                </button>
+                <button class="st-tab" data-panel="competitive" data-color="red" role="tab">
+                    <i class="fas fa-fire"></i> Competitive
+                </button>
+                <button class="st-tab" data-panel="offered" data-color="green" role="tab">
+                    <i class="fas fa-university"></i> Most Offered
+                </button>
+                <button class="st-tab" data-panel="rated" data-color="amber" role="tab">
+                    <i class="fas fa-star"></i> Top Rated
+                </button>
+            </div>
+
+            <!-- Panels -->
+            <div class="st-panels">
+
+                <!-- Most Viewed -->
+                <div class="st-panel active" id="st-panel-viewed">
+                    {% for c in trending_viewed %}
+                    <a href="{{ c.get_absolute_url }}" class="st-rank-item">
+                        <div class="st-rank-num {% if forloop.counter == 1 %}rank-1{% elif forloop.counter == 2 %}rank-2{% elif forloop.counter == 3 %}rank-3{% else %}rank-other{% endif %}">
+                            {{ forloop.counter }}
+                        </div>
+                        <div class="st-rank-info">
+                            <span class="st-rank-name">{{ c.name }}</span>
+                            <span class="st-rank-type">{{ c.course_type.name }}{% if c.category %} · {{ c.category.name }}{% endif %}</span>
+                        </div>
+                        <div class="st-rank-stat">
+                            <span class="st-rank-val" style="color:#93c5fd;">{{ c._trend_stat }}</span>
+                            <span class="st-rank-desc">{{ c._trend_label }}</span>
+                        </div>
+                        <i class="fas fa-chevron-right st-rank-arrow"></i>
+                    </a>
+                    {% empty %}
+                    <div class="st-panel-empty">
+                        <i class="fas fa-eye-slash" style="font-size:1.5rem;display:block;margin-bottom:0.5rem;"></i>
+                        No view data yet — check back soon.
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Most Competitive -->
+                <div class="st-panel" id="st-panel-competitive">
+                    {% for c in trending_competitive %}
+                    <a href="{{ c.get_absolute_url }}" class="st-rank-item">
+                        <div class="st-rank-num {% if forloop.counter == 1 %}rank-1{% elif forloop.counter == 2 %}rank-2{% elif forloop.counter == 3 %}rank-3{% else %}rank-other{% endif %}">
+                            {{ forloop.counter }}
+                        </div>
+                        <div class="st-rank-info">
+                            <span class="st-rank-name">{{ c.name }}</span>
+                            <span class="st-rank-type">{{ c.course_type.name }}{% if c.category %} · {{ c.category.name }}{% endif %}</span>
+                        </div>
+                        <div class="st-rank-stat">
+                            <span class="st-rank-val" style="color:#fca5a5;">{{ c._trend_stat }}</span>
+                            <span class="st-rank-desc">{{ c._trend_label }}</span>
+                        </div>
+                        <i class="fas fa-chevron-right st-rank-arrow"></i>
+                    </a>
+                    {% empty %}
+                    <div class="st-panel-empty">
+                        <i class="fas fa-chart-bar" style="font-size:1.5rem;display:block;margin-bottom:0.5rem;"></i>
+                        No cutoff data available yet.
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Most Offered -->
+                <div class="st-panel" id="st-panel-offered">
+                    {% for c in trending_offered %}
+                    <a href="{{ c.get_absolute_url }}" class="st-rank-item">
+                        <div class="st-rank-num {% if forloop.counter == 1 %}rank-1{% elif forloop.counter == 2 %}rank-2{% elif forloop.counter == 3 %}rank-3{% else %}rank-other{% endif %}">
+                            {{ forloop.counter }}
+                        </div>
+                        <div class="st-rank-info">
+                            <span class="st-rank-name">{{ c.name }}</span>
+                            <span class="st-rank-type">{{ c.course_type.name }}{% if c.category %} · {{ c.category.name }}{% endif %}</span>
+                        </div>
+                        <div class="st-rank-stat">
+                            <span class="st-rank-val" style="color:#6ee7b7;">{{ c._trend_stat }}</span>
+                            <span class="st-rank-desc">{{ c._trend_label }}</span>
+                        </div>
+                        <i class="fas fa-chevron-right st-rank-arrow"></i>
+                    </a>
+                    {% empty %}
+                    <div class="st-panel-empty">
+                        <i class="fas fa-university" style="font-size:1.5rem;display:block;margin-bottom:0.5rem;"></i>
+                        No institution data yet.
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Top Rated -->
+                <div class="st-panel" id="st-panel-rated">
+                    {% for c in trending_rated %}
+                    <a href="{{ c.get_absolute_url }}" class="st-rank-item">
+                        <div class="st-rank-num {% if forloop.counter == 1 %}rank-1{% elif forloop.counter == 2 %}rank-2{% elif forloop.counter == 3 %}rank-3{% else %}rank-other{% endif %}">
+                            {{ forloop.counter }}
+                        </div>
+                        <div class="st-rank-info">
+                            <span class="st-rank-name">{{ c.name }}</span>
+                            <span class="st-rank-type">{{ c.course_type.name }}{% if c.category %} · {{ c.category.name }}{% endif %}</span>
+                        </div>
+                        <div class="st-rank-stat">
+                            <span class="st-rank-val" style="color:#fcd34d;">{{ c._trend_stat }}</span>
+                            <span class="st-rank-desc">{{ c._trend_label }}</span>
+                        </div>
+                        <i class="fas fa-chevron-right st-rank-arrow"></i>
+                    </a>
+                    {% empty %}
+                    <div class="st-panel-empty">
+                        <i class="fas fa-star" style="font-size:1.5rem;display:block;margin-bottom:0.5rem;"></i>
+                        No reviews yet — be the first!
+                    </div>
+                    {% endfor %}
+                </div>
+
+            </div><!-- /st-panels -->
+
+            <a href="{% url 'courses:course_types_list' %}" class="st-footer-link">
+                Browse all courses <i class="fas fa-arrow-right ms-1"></i>
+            </a>
+        </div><!-- /st-trending -->
+
+    </div><!-- /st-grid -->
+</div>
+
+<script>
+(function () {
+    var tabs   = document.querySelectorAll('#st-tablist .st-tab');
+    var panels = document.querySelectorAll('.st-panel');
+    tabs.forEach(function (tab) {
+        tab.addEventListener('click', function () {
+            var target = tab.dataset.panel;
+            tabs.forEach(function (t) { t.classList.remove('active'); });
+            panels.forEach(function (p) { p.classList.remove('active'); });
+            tab.classList.add('active');
+            var panel = document.getElementById('st-panel-' + target);
+            if (panel) panel.classList.add('active');
+        });
+    });
+})();
+</script>
+</section>
+{% endif %}

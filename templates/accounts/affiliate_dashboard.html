@@ -1,0 +1,218 @@
+{% extends "base.html" %}
+{% block title %}Affiliate Dashboard — CareerNext{% endblock %}
+
+{% block content %}
+<div class="container py-4" style="max-width:860px;">
+
+  <!-- Header -->
+  <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-4">
+    <div>
+      <h1 class="h4 fw-bold mb-0" style="color:#1e3a8a;">Affiliate Dashboard</h1>
+      <p class="text-muted small mb-0">Earn 20% on every payment made by students you refer.</p>
+    </div>
+    <span class="badge rounded-pill px-3 py-2"
+          style="background:#dcfce7;color:#166534;font-size:.8rem;">
+      Active Affiliate
+    </span>
+  </div>
+
+  <!-- Stats row -->
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+      <div class="card border-0 shadow-sm text-center p-3 h-100">
+        <div class="fw-bold fs-2 mb-0" style="color:#1e3a8a;">{{ total_referred }}</div>
+        <div class="small text-muted">Total Invited</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="card border-0 shadow-sm text-center p-3 h-100">
+        <div class="fw-bold fs-2 mb-0 text-success">{{ paid_conversions }}</div>
+        <div class="small text-muted">Paid Conversions</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="card border-0 shadow-sm text-center p-3 h-100">
+        <div class="fw-bold fs-2 mb-0" style="color:#d97706;">KES {{ affiliate.total_earned|floatformat:0 }}</div>
+        <div class="small text-muted">Total Earned</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="card border-0 shadow-sm text-center p-3 h-100">
+        <div class="fw-bold fs-2 mb-0 text-success">KES {{ affiliate.wallet_balance|floatformat:0 }}</div>
+        <div class="small text-muted">Wallet (Pending)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Invite link -->
+  <div class="card border-0 shadow-sm p-4 mb-4">
+    <h6 class="fw-bold mb-3"><i class="bi bi-link-45deg me-1" style="color:#2563eb;"></i>Your Invite Link</h6>
+    <div class="input-group mb-3">
+      <input type="text" id="ref-link" class="form-control" value="{{ ref_url }}" readonly>
+      <button class="btn btn-outline-primary" onclick="copyLink()">
+        <i class="bi bi-clipboard"></i> Copy
+      </button>
+    </div>
+    <div class="d-flex gap-2 flex-wrap">
+      <a href="https://wa.me/?text={{ share_msg|urlencode }}"
+         target="_blank" rel="noopener"
+         class="btn btn-sm btn-success">
+        <i class="bi bi-whatsapp me-1"></i>Share on WhatsApp
+      </a>
+      <a href="https://t.me/share/url?url={{ ref_url|urlencode }}&text={{ share_msg|urlencode }}"
+         target="_blank" rel="noopener"
+         class="btn btn-sm" style="background:#0088cc;color:#fff;">
+        <i class="bi bi-telegram me-1"></i>Share on Telegram
+      </a>
+    </div>
+  </div>
+
+  <!-- Payout section -->
+  <div class="card mb-4 border-0 shadow-sm p-4"
+       style="background:{% if can_request_payout %}#f0fdf4{% else %}#f8fafc{% endif %};">
+    <h6 class="fw-bold mb-2">
+      <i class="bi bi-cash-coin me-1 text-success"></i>Request Payout
+    </h6>
+    {% if can_request_payout %}
+      <p class="text-muted small mb-2">
+        Your wallet has <strong class="text-success">KES {{ affiliate.wallet_balance|floatformat:0 }}</strong>
+        available. Send a WhatsApp message to your admin to request an M-Pesa transfer.
+      </p>
+      <a href="https://wa.me/{{ payout_phone }}?text=Hi%2C%20I%27d%20like%20to%20request%20my%20affiliate%20payout%20of%20KES%20{{ affiliate.wallet_balance|floatformat:0 }}%20to%20my%20M-Pesa."
+         target="_blank" rel="noopener" class="btn btn-success btn-sm">
+        <i class="bi bi-whatsapp me-1"></i>Request Payout via WhatsApp
+      </a>
+    {% else %}
+      <p class="text-muted small mb-0">
+        Minimum payout is <strong>KES 500</strong>. Your current wallet balance is
+        <strong>KES {{ affiliate.wallet_balance|floatformat:0 }}</strong>.
+        Keep referring to reach the threshold!
+      </p>
+      <div class="progress mt-2" style="height:6px;">
+        {% with pct=affiliate.wallet_balance|floatformat:0 %}
+        <div class="progress-bar bg-success"
+             style="width:{% widthratio affiliate.wallet_balance 500 100 %}%;max-width:100%;"></div>
+        {% endwith %}
+      </div>
+      <div class="d-flex justify-content-between small text-muted mt-1">
+        <span>KES {{ affiliate.wallet_balance|floatformat:0 }}</span>
+        <span>KES 500</span>
+      </div>
+    {% endif %}
+  </div>
+
+  <!-- Referrals table -->
+  <div class="card border-0 shadow-sm p-4 mb-4">
+    <h6 class="fw-bold mb-3">
+      <i class="bi bi-people me-1" style="color:#1e3a8a;"></i>
+      People You've Invited ({{ total_referred }})
+    </h6>
+    {% if referral_rows %}
+    <div class="table-responsive">
+      <table class="table table-sm align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Joined</th>
+            <th>Paid?</th>
+            <th class="text-end">Your Commission</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in referral_rows %}
+          <tr>
+            <td class="fw-semibold small">{{ row.name }}</td>
+            <td class="text-muted small">{{ row.email }}</td>
+            <td class="text-muted small">
+              {% if row.joined %}{{ row.joined|date:"d M Y" }}{% else %}—{% endif %}
+            </td>
+            <td>
+              {% if row.has_paid %}
+                <span class="badge bg-success">Yes</span>
+              {% else %}
+                <span class="badge bg-secondary">Not yet</span>
+              {% endif %}
+            </td>
+            <td class="text-end small">
+              {% if row.commission %}
+                <span class="text-success fw-bold">KES {{ row.commission|floatformat:0 }}</span>
+                <div class="text-muted" style="font-size:.7rem;">{{ row.feature }}</div>
+              {% else %}
+                <span class="text-muted">—</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+      <p class="text-muted small mb-0">No one has joined via your link yet. Share it to start earning!</p>
+    {% endif %}
+  </div>
+
+  <!-- Commission history -->
+  {% if commissions %}
+  <div class="card border-0 shadow-sm p-4">
+    <h6 class="fw-bold mb-3">
+      <i class="bi bi-receipt me-1 text-warning"></i>Commission History
+    </h6>
+    <div class="table-responsive">
+      <table class="table table-sm align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>Date</th>
+            <th>Feature Paid For</th>
+            <th>Payment (KES)</th>
+            <th>Your Cut ({{ affiliate.commission_rate|floatformat:0 }}%)</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for c in commissions %}
+          <tr>
+            <td class="small text-muted">{{ c.created_at|date:"d M Y" }}</td>
+            <td class="small">{{ c.payment.get_feature_display }}</td>
+            <td class="small">{{ c.payment.amount|floatformat:0 }}</td>
+            <td class="fw-bold text-success small">{{ c.amount|floatformat:0 }}</td>
+            <td>
+              {% if c.status == 'paid_out' %}
+                <span class="badge bg-success">Paid Out</span>
+              {% else %}
+                <span class="badge bg-warning text-dark">Pending</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+        <tfoot class="table-light">
+          <tr>
+            <td colspan="3" class="small fw-bold text-end">Total Pending Payout:</td>
+            <td class="fw-bold text-success">KES {{ pending_amount|floatformat:0 }}</td>
+            <td></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  </div>
+  {% endif %}
+
+</div>
+
+<script>
+function copyLink() {
+  const input = document.getElementById('ref-link');
+  input.select();
+  navigator.clipboard.writeText(input.value).then(() => {
+    const btn = input.nextElementSibling;
+    btn.innerHTML = '<i class="bi bi-check2"></i> Copied!';
+    btn.classList.replace('btn-outline-primary', 'btn-success');
+    setTimeout(() => {
+      btn.innerHTML = '<i class="bi bi-clipboard"></i> Copy';
+      btn.classList.replace('btn-success', 'btn-outline-primary');
+    }, 2000);
+  });
+}
+</script>
+{% endblock %}
