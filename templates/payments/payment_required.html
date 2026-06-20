@@ -108,6 +108,25 @@
           <p class="text-muted small">The M-Pesa payment was not completed.</p>
           <button class="btn btn-outline-success btn-sm" onclick="resetForm()">Try Again</button>
         </div>
+
+        <!-- Step 5: Timeout (webhook delayed) -->
+        <div id="step-timeout" class="text-center d-none">
+          <div class="mb-3">
+            <i class="fas fa-hourglass-half fa-4x text-warning"></i>
+          </div>
+          <h6 class="fw-bold text-warning">Still Processing…</h6>
+          <p class="text-muted small" id="timeout-msg">If you entered your M-Pesa PIN, your payment may have gone through but confirmation is delayed.</p>
+          <button class="btn btn-success btn-sm me-2" onclick="verifyPayment()">
+            <i class="fas fa-search me-1"></i>Verify My Payment
+          </button>
+          <button class="btn btn-outline-secondary btn-sm" onclick="resetForm()">Pay Again</button>
+        </div>
+
+        <!-- Step 6: Checking -->
+        <div id="step-checking" class="text-center d-none">
+          <div class="mb-3 spinner-border text-success" style="width:2.5rem;height:2.5rem;"></div>
+          <p class="text-muted small">Checking with M-Pesa…</p>
+        </div>
       </div>
 
       <div class="text-center mt-3">
@@ -130,8 +149,19 @@ const CSRF_TOKEN = "{{ csrf_token }}";
 const NEXT_URL = "{{ next_url|escapejs }}";
 let pollInterval = null;
 let dotsInterval = null;
+let currentPaymentId = null;
+const MAX_ATTEMPTS = 40;
 
 document.getElementById("pay-btn").addEventListener("click", initiatePayment);
+
+// On load: surface a pending payment so user can verify without paying again
+(async function checkPending(){
+  try{
+    const r = await fetch('/payments/pending/?feature='+encodeURIComponent(FEATURE));
+    const d = await r.json();
+    if(d.found){ currentPaymentId = d.payment_id; }
+  }catch(e){}
+})();
 
 async function initiatePayment() {
   const rawPhone = document.getElementById("phone-input").value.trim().replace(/\s/g, "");
@@ -144,8 +174,6 @@ async function initiatePayment() {
   }
   errEl.classList.add("d-none");
 
-  const phone = "0" + rawPhone; // normalise to 07XXXXXXXX
-
   document.getElementById("pay-btn").disabled = true;
   document.getElementById("pay-btn").innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Sending STK push...';
 
@@ -153,11 +181,12 @@ async function initiatePayment() {
     const res = await fetch(INITIATE_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json", "X-CSRFToken": CSRF_TOKEN },
-      body: JSON.stringify({ feature: FEATURE, phone: phone }),
+      body: JSON.stringify({ feature: FEATURE, phone: "0" + rawPhone }),
     });
     const data = await res.json();
 
     if (data.success) {
+      currentPaymentId = data.payment_id;
       showStep("waiting");
       startPolling(data.payment_id);
     } else {
@@ -176,9 +205,6 @@ async function initiatePayment() {
 
 function startPolling(paymentId) {
   let attempts = 0;
-  const statusUrl = `/payments/status/${paymentId}/`;
-
-  // Animate dots
   dotsInterval = setInterval(() => {
     const el = document.getElementById("dots");
     if (el) el.textContent = el.textContent.length >= 3 ? "." : el.textContent + ".";
@@ -187,9 +213,8 @@ function startPolling(paymentId) {
   pollInterval = setInterval(async () => {
     attempts++;
     try {
-      const res = await fetch(statusUrl);
+      const res = await fetch(`/payments/status/${paymentId}/`);
       const data = await res.json();
-
       if (data.status === "completed") {
         clearIntervals();
         showStep("success");
@@ -197,13 +222,35 @@ function startPolling(paymentId) {
       } else if (data.status === "failed") {
         clearIntervals();
         showStep("failed");
-      } else if (attempts >= 40) {
-        // Timeout after ~2 minutes
+      } else if (attempts >= MAX_ATTEMPTS) {
         clearIntervals();
-        showStep("failed");
+        showStep("timeout");
       }
-    } catch (e) { /* keep polling */ }
+    } catch (e) {
+      if (attempts >= MAX_ATTEMPTS) { clearIntervals(); showStep("timeout"); }
+    }
   }, 3000);
+}
+
+async function verifyPayment() {
+  if (!currentPaymentId) { alert("No payment to verify."); return; }
+  showStep("checking");
+  try {
+    const r = await fetch(`/payments/verify/${currentPaymentId}/`);
+    const d = await r.json();
+    if (d.status === "completed") {
+      showStep("success");
+      setTimeout(() => { window.location.href = NEXT_URL || "/accounts/dashboard/"; }, 2000);
+    } else if (d.status === "failed") {
+      showStep("failed");
+    } else {
+      document.getElementById("timeout-msg").textContent = d.message || "Payment still processing. Please wait a few minutes then try verifying again.";
+      showStep("timeout");
+    }
+  } catch(e) {
+    document.getElementById("timeout-msg").textContent = "Could not reach the server. Please check your internet and try again.";
+    showStep("timeout");
+  }
 }
 
 function clearIntervals() {
@@ -212,10 +259,10 @@ function clearIntervals() {
 }
 
 function showStep(step) {
-  ["phone", "waiting", "success", "failed"].forEach(s => {
-    document.getElementById(`step-${s}`).classList.add("d-none");
+  ["phone", "waiting", "success", "failed", "timeout", "checking"].forEach(s => {
+    document.getElementById(`step-${s}`)?.classList.add("d-none");
   });
-  document.getElementById(`step-${step}`).classList.remove("d-none");
+  document.getElementById(`step-${step}`)?.classList.remove("d-none");
 }
 
 function resetForm() {

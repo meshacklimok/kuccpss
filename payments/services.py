@@ -61,6 +61,32 @@ def initiate_stk_push(phone_number: str, amount: int, payment_ref: str, email: s
     return data.get("id") or data.get("invoice", {}).get("id") or ""
 
 
+def fetch_intasend_status(checkout_id: str) -> str | None:
+    """
+    Pull the current payment state directly from IntaSend.
+    Returns 'COMPLETE', 'FAILED', 'PENDING', or None on error.
+    """
+    if not checkout_id:
+        return None
+    url = f"{get_base_url()}/payment/collection/?id={checkout_id}"
+    headers = {
+        "Authorization": f"Bearer {settings.INTASEND_SECRET_KEY}",
+        "Content-Type": "application/json",
+    }
+    try:
+        response = requests.get(url, headers=headers, timeout=10)
+        response.raise_for_status()
+        data = response.json()
+        # IntaSend returns results list or a single invoice object
+        results = data.get("results") or []
+        if results:
+            return (results[0].get("state") or "").upper()
+        return (data.get("state") or "").upper() or None
+    except Exception as exc:
+        logger.warning("IntaSend status fetch failed for %s: %s", checkout_id, exc)
+        return None
+
+
 def price_for_feature(feature: str) -> int:
     try:
         from .models import PaymentFeature
