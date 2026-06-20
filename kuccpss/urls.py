@@ -19,6 +19,7 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from django.http import FileResponse
+from django.views.generic import TemplateView
 import os
 from accounts.views import dashboard_view, public_home_view, email_lead_capture
 from kuccpss.search_views import api_search_suggest
@@ -34,6 +35,7 @@ handler500 = 'django.views.defaults.server_error'
 
 urlpatterns = [
     path('sw.js', serve_sw, name='service_worker'),
+    path('offline/', TemplateView.as_view(template_name='offline.html'), name='offline'),
     path('cn-staff/', admin.site.urls),
     path('accounts/', include('accounts.urls')),
     path('', public_home_view, name='home'),

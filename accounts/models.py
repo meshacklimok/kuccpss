@@ -412,6 +412,71 @@ class Referral(models.Model):
 
 
 # =====================================================
+# AFFILIATE SYSTEM
+# =====================================================
+
+class AffiliateProfile(models.Model):
+    """Hand-picked accounts that earn commission when their referrals pay."""
+    user            = models.OneToOneField(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='affiliate_profile'
+    )
+    is_active       = models.BooleanField(default=True)
+    commission_rate = models.DecimalField(max_digits=5, decimal_places=2, default=20.00,
+                                          help_text="Percentage of each payment awarded as commission")
+    wallet_balance  = models.DecimalField(max_digits=10, decimal_places=2, default=0,
+                                          help_text="Pending payout in KES")
+    total_earned    = models.DecimalField(max_digits=10, decimal_places=2, default=0,
+                                          help_text="Lifetime commissions earned in KES")
+    notes           = models.TextField(blank=True, help_text="Admin notes (e.g. WhatsApp group admin, 8K members)")
+    approved_by     = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,
+        null=True, blank=True, related_name='approved_affiliates'
+    )
+    approved_at     = models.DateTimeField(null=True, blank=True)
+    created_at      = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Affiliate Profile"
+        verbose_name_plural = "Affiliate Profiles"
+        ordering = ['-created_at']
+
+    def __str__(self):
+        status = "active" if self.is_active else "inactive"
+        return f"{self.user.email} ({status}) — KES {self.wallet_balance} pending"
+
+
+class AffiliateCommission(models.Model):
+    """One record per payment made by a referred user of an active affiliate."""
+    STATUS_CHOICES = [
+        ('pending',  'Pending Payout'),
+        ('paid_out', 'Paid Out'),
+    ]
+
+    affiliate     = models.ForeignKey(AffiliateProfile, on_delete=models.CASCADE, related_name='commissions')
+    payment       = models.OneToOneField('payments.Payment', on_delete=models.CASCADE,
+                                          related_name='affiliate_commission')
+    referred_user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,
+        null=True, related_name='commissions_generated'
+    )
+    referral      = models.ForeignKey(Referral, on_delete=models.SET_NULL, null=True, related_name='commissions')
+    amount        = models.DecimalField(max_digits=10, decimal_places=2, help_text="Commission in KES")
+    rate_snapshot = models.DecimalField(max_digits=5, decimal_places=2,
+                                         help_text="Rate at time of award (in case rate changes later)")
+    status        = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    paid_out_at   = models.DateTimeField(null=True, blank=True)
+    created_at    = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Affiliate Commission"
+        verbose_name_plural = "Affiliate Commissions"
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.affiliate.user.email} — KES {self.amount} ({self.status})"
+
+
+# =====================================================
 # EMAIL LEAD (visitor email capture)
 # =====================================================
 

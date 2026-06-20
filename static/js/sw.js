@@ -1,13 +1,11 @@
-const CACHE = 'careernext-v5';
-const PRECACHE = [
-  '/',
-  '/static/css/style.css',
-  '/static/js/main.js',
-];
+const CACHE = 'careernext-v6';
+const OFFLINE_URL = '/offline/';
 
 self.addEventListener('install', e => {
   e.waitUntil(
-    caches.open(CACHE).then(c => c.addAll(PRECACHE)).then(() => self.skipWaiting())
+    caches.open(CACHE)
+      .then(c => c.add(new Request(OFFLINE_URL, { cache: 'reload' })))
+      .then(() => self.skipWaiting())
   );
 });
 
@@ -53,21 +51,7 @@ self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET') return;
   const url = new URL(e.request.url);
 
-  // Homepage: cache-first so it works offline
-  if (url.pathname === '/') {
-    e.respondWith(
-      caches.match('/').then(cached => {
-        const network = fetch(e.request).then(resp => {
-          if (resp.ok) caches.open(CACHE).then(c => c.put('/', resp.clone()));
-          return resp;
-        }).catch(() => cached);
-        return cached || network;
-      })
-    );
-    return;
-  }
-
-  // Static assets: cache-first
+  // Static assets: cache-first for load speed
   if (url.pathname.startsWith('/static/')) {
     e.respondWith(
       caches.match(e.request).then(cached => {
@@ -81,8 +65,16 @@ self.addEventListener('fetch', e => {
     return;
   }
 
-  // Everything else: network-first, fall back to cached homepage when offline
+  // Page navigations: network-only; serve offline page if connection is lost
+  if (e.request.mode === 'navigate') {
+    e.respondWith(
+      fetch(e.request).catch(() => caches.match(OFFLINE_URL))
+    );
+    return;
+  }
+
+  // Everything else: straight to network
   e.respondWith(
-    fetch(e.request).catch(() => caches.match('/'))
+    fetch(e.request).catch(() => new Response('', { status: 503 }))
   );
 });

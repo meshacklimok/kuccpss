@@ -508,6 +508,11 @@
                                 <i class="fas fa-list-check me-2 text-info"></i>My Shortlist
                             </a></li>
                             <li><hr class="dropdown-divider"></li>
+                            {% if user.affiliate_profile.is_active %}
+                            <li><a class="dropdown-item" href="{% url 'accounts:affiliate_dashboard' %}">
+                                <i class="bi bi-graph-up-arrow me-2 text-success"></i>Affiliate Dashboard
+                            </a></li>
+                            {% endif %}
                             {% if user.is_staff %}
                             <li><a class="dropdown-item" href="/cn-staff/">
                                 <i class="fas fa-cog me-2 text-secondary"></i>Admin Panel
@@ -971,12 +976,12 @@ if ('serviceWorker' in navigator) {
 (function () {
     // KUCCPS key dates — update these each year
     const DEADLINES = [
-        { label: 'KUCCPS Application Window Opens',  date: new Date('2025-09-01T00:00:00+03:00'), urgent: false },
-        { label: 'KUCCPS Application Deadline',       date: new Date('2025-10-15T23:59:00+03:00'), urgent: true  },
-        { label: 'KUCCPS Placement Results',          date: new Date('2025-11-30T00:00:00+03:00'), urgent: false },
+        { label: 'KUCCPS Portal Opens — Build Your Shortlist Now', date: new Date('2026-09-01T00:00:00+03:00'), urgent: false },
+        { label: 'KUCCPS Application Deadline',                     date: new Date('2026-10-15T23:59:00+03:00'), urgent: true  },
+        { label: 'KUCCPS Placement Results',                         date: new Date('2026-11-30T00:00:00+03:00'), urgent: false },
     ];
 
-    const DISMISS_KEY = 'cn_deadline_dismissed_v1';
+    const DISMISS_KEY = 'cn_deadline_dismissed_v2';
     if (sessionStorage.getItem(DISMISS_KEY)) return;
 
     const now = new Date();
@@ -990,8 +995,8 @@ if ('serviceWorker' in navigator) {
     const diffMs   = upcoming.date - now;
     const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
 
-    // Only show if within 60 days
-    if (diffDays > 60) return;
+    // Show throughout the June–August peak season (≤ 90 days out)
+    if (diffDays > 90) return;
 
     const bar     = document.getElementById('deadlineBar');
     const msg     = document.getElementById('deadlineMsg');
@@ -1034,6 +1039,21 @@ if ('serviceWorker' in navigator) {
 }());
 </script>
 
+<!-- Offline connection banner -->
+<div id="offline-banner" style="display:none;position:fixed;top:0;left:0;right:0;z-index:99999;background:#1e3a8a;color:#fff;text-align:center;padding:10px 16px;font-size:14px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+  No internet connection &nbsp;·&nbsp;
+  <button onclick="window.location.reload()" style="background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.4);color:#fff;border-radius:4px;padding:3px 12px;font-size:13px;cursor:pointer;">Retry</button>
+</div>
+<script>
+(function () {
+  var banner = document.getElementById('offline-banner');
+  function show() { banner.style.display = 'block'; }
+  function hide() { banner.style.display = 'none'; }
+  if (!navigator.onLine) show();
+  window.addEventListener('offline', show);
+  window.addEventListener('online', hide);
+}());
+</script>
 
 </body>
 </html>

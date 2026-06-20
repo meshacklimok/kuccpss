@@ -52,6 +52,7 @@ urlpatterns = [
 
     # Referral system
     path("referral/",                    views.referral_view,            name="referral"),
+    path("affiliate/",                   views.affiliate_dashboard,      name="affiliate_dashboard"),
 
     # Application tracker
     path("applications/",                views.applications_view,        name="applications"),

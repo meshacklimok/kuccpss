@@ -108,6 +108,19 @@ class Course(models.Model):
     def is_university_course(self):
         return self.cluster is not None
 
+    def get_absolute_url(self):
+        from django.urls import reverse
+        if self.category_id:
+            return reverse('courses:course_detail', kwargs={
+                'type_slug': self.course_type.slug,
+                'category_slug': self.category.slug,
+                'course_slug': self.slug,
+            })
+        return reverse('courses:course_detail_no_category', kwargs={
+            'type_slug': self.course_type.slug,
+            'course_slug': self.slug,
+        })
+
 
 class CourseOffering(models.Model):
     """
@@ -158,3 +171,41 @@ class Review(models.Model):
     def __str__(self):
         target = self.course or self.institution
         return f"{self.user} → {target} ({self.rating}★)"
+
+
+class CourseSpotlight(models.Model):
+    """Admin-curated 'Course of the Week' — one active spotlight at a time."""
+    course     = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='spotlights')
+    headline   = models.CharField(max_length=200, help_text="Editorial headline shown on homepage")
+    summary    = models.TextField(help_text="2-3 sentence editorial blurb")
+    hero_image = models.ImageField(upload_to='course_spotlights/', blank=True, null=True)
+    start_date = models.DateField()
+    end_date   = models.DateField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'Course Spotlight'
+        verbose_name_plural = 'Course Spotlights'
+        ordering = ['-start_date']
+
+    def __str__(self):
+        return f"{self.course.name} ({self.start_date} → {self.end_date})"
+
+    @classmethod
+    def current(cls):
+        from datetime import date
+        today = date.today()
+        return (
+            cls.objects
+            .filter(start_date__lte=today, end_date__gte=today)
+            .select_related('course', 'course__course_type', 'course__category', 'course__cluster')
+            .prefetch_related('course__offerings__institution', 'course__core_subjects')
+            .first()
+        )
+
+    @property
+    def is_live(self):
+        from datetime import date
+        today = date.today()
+        return self.start_date <= today <= self.end_date

@@ -1,10 +1,12 @@
+from datetime import date
+
 from django.contrib.auth.decorators import login_required
 from django.db.models import Avg, Count
 from django.http import JsonResponse
 from django.shortcuts import render, get_object_or_404
 from django.views.decorators.http import require_POST
 from courses.models import Review
-from .models import InstitutionType, Institution
+from .models import InstitutionType, Institution, InstitutionPromotion
 
 
 def institution_types_list(request):
@@ -36,9 +38,22 @@ def institution_type_detail(request, type_slug):
                 f |= _Q(name__icontains=tok)
         institutions = institutions.filter(f)
 
+    # IDs of currently-live promoted institutions in this type
+    today = date.today()
+    sponsored_ids = set(
+        InstitutionPromotion.objects.filter(
+            start_date__lte=today, end_date__gte=today,
+            institution__institution_type=inst_type,
+        ).values_list('institution_id', flat=True)
+    )
+
+    # Sort: sponsored first, then alphabetically
+    inst_list = sorted(institutions, key=lambda i: (0 if i.pk in sponsored_ids else 1, i.name))
+
     return render(request, 'institutions/institution_type_detail.html', {
         'inst_type': inst_type,
-        'institutions': institutions,
+        'institutions': inst_list,
+        'sponsored_ids': sponsored_ids,
         'q': q,
     })
 
