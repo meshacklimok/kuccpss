@@ -20,7 +20,7 @@ urlpatterns = [
     # Export Cluster Results as PDF
     # ===============================
     path(
-        "export/<int:result_id>/",
+        "export/",
         views.export_cluster_pdf,
         name="export_cluster_pdf"
     ),

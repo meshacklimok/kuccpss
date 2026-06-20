@@ -3,7 +3,7 @@ from django.contrib import admin
 from django.utils.html import format_html
 from import_export.admin import ImportExportModelAdmin
 from import_export.formats.base_formats import CSV
-from .models import CourseType, CourseCategory, Course, CourseOffering
+from .models import CourseType, CourseCategory, Course, CourseOffering, Review
 from .resources import CourseResource, CourseOfferingResource
 
 
@@ -126,3 +126,15 @@ class CourseOfferingAdmin(ImportExportModelAdmin):
         val = obj.latest_cutoff()
         return f"{val} pts" if val else "-"
     latest_cutoff_display.short_description = "Latest Cutoff"
+
+
+@admin.register(Review)
+class ReviewAdmin(admin.ModelAdmin):
+    list_display = ('user', 'rating', 'course', 'institution', 'short_body', 'created_at')
+    list_filter = ('rating',)
+    search_fields = ('user__email', 'course__name', 'institution__name', 'body')
+    readonly_fields = ('created_at',)
+
+    def short_body(self, obj):
+        return obj.body[:60] + '…' if len(obj.body) > 60 else obj.body
+    short_body.short_description = "Review"

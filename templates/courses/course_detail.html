@@ -480,6 +480,34 @@
       </div>
       {% endif %}
 
+      <!-- Job Market Intelligence -->
+      {% if job_market %}
+      <div class="card p-4 mb-4 border-0" style="background:linear-gradient(135deg,#f0fdf4,#dcfce7);border-left:4px solid #16a34a!important;border-left-style:solid!important;">
+        <h6 class="fw-bold mb-3" style="color:#166534;"><i class="fas fa-chart-line me-2"></i>Career Market Snapshot</h6>
+        <div class="fw-bold mb-1" style="font-size:0.95rem;color:#14532d;">{{ job_market.career_name }}</div>
+        <div class="d-flex align-items-center gap-2 mb-2 flex-wrap">
+          <span style="font-size:1rem;font-weight:700;color:#15803d;">{{ job_market.salary_display }}</span>
+          <span class="badge rounded-pill px-2 py-1 fw-semibold"
+                style="font-size:0.72rem;
+                       background:{% if job_market.demand == 'High' %}#dcfce7;color:#166534{% elif job_market.demand == 'Low' %}#f1f5f9;color:#64748b{% else %}#fef9c3;color:#854d0e{% endif %};">
+            {% if job_market.demand == 'High' %}<i class="fas fa-arrow-trend-up me-1"></i>{% endif %}
+            {{ job_market.demand }} Demand
+          </span>
+        </div>
+        {% if job_market.sectors_list %}
+        <div style="font-size:0.78rem;color:#166534;line-height:1.5;">
+          <span class="fw-semibold">Top employers:</span>
+          {{ job_market.top_sectors }}
+        </div>
+        {% endif %}
+        <div class="mt-3 pt-2" style="border-top:1px solid #bbf7d0;font-size:0.68rem;color:#4ade80;">
+          <i class="fas fa-circle-info me-1"></i>
+          Source: <a href="{{ job_market.source_url }}" target="_blank" rel="noopener" style="color:#16a34a;text-decoration:none;">{{ job_market.source_name }}</a>
+          &amp; KNBS Economic Survey {{ job_market.source_year }}. Figures are gross monthly estimates; actual pay varies by employer, experience &amp; location.
+        </div>
+      </div>
+      {% endif %}
+
       <!-- Mentorship CTA -->
       <div class="card p-4 border-0 shadow-sm rounded-4" style="background: linear-gradient(135deg, #f0f9ff, #e0f2fe);">
         <div class="d-flex align-items-start gap-3">
@@ -509,6 +537,10 @@
 
     </div><!-- /col-lg-4 -->
   </div><!-- /row -->
+
+  <!-- ── Reviews ── -->
+  {% include "partials/reviews_section.html" with target_type="course" review_url=request.path|add:"review/" %}
+
 </div>
 
 {% if chart_json %}

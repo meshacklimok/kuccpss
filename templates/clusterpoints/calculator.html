@@ -8,9 +8,14 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
 <style>
-/* ── sticky step bar ── */
-.step-bar {
+/* ── sticky step bar wrapper ── */
+.step-bar-wrap {
     position: sticky; top: 56px; z-index: 200;
+    transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
+    will-change: transform;
+}
+.step-bar-wrap.bar-hidden { transform: translateY(calc(-100% - 56px)); }
+.step-bar {
     background: #fff; border-bottom: 1px solid #e2e8f0;
     padding: 0.6rem 1.25rem;
     display: flex; align-items: center; gap: 0.75rem;
@@ -136,7 +141,10 @@
     background: #fff; border-top: 1px solid #e2e8f0;
     padding: 0.9rem 1.5rem calc(0.9rem + env(safe-area-inset-bottom, 0px)); display: flex; align-items: center; gap: 1rem;
     box-shadow: 0 -4px 20px rgba(30,58,138,0.1);
+    transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
+    will-change: transform;
 }
+.lce-footer.bar-hidden { transform: translateY(100%); }
 .lce-footer-info { flex: 1; min-width: 0; }
 .lce-footer-title { font-size: 0.82rem; font-weight: 600; color: #64748b; }
 .lce-footer-title strong { color: #1e293b; }
@@ -332,6 +340,7 @@
 
 {% block content %}
 <!-- ══ sticky step bar ══ -->
+<div class="step-bar-wrap" id="stepBarWrap">
 <div class="step-bar">
     <div class="sb-badge"><i class="bi bi-calculator-fill me-1"></i>Calculator</div>
     <div class="sb-steps">
@@ -346,6 +355,7 @@
     <div class="sb-counter" id="sbCounter">0 / 7 subjects</div>
 </div>
 <div class="sb-progress"><div class="sb-progress-fill" id="sbFill"></div></div>
+</div>
 
 <!-- ══ FORM ══ -->
 <form method="post" id="calcForm">
@@ -699,6 +709,26 @@ updateGlobal();
 if (window.history.replaceState) {
     window.history.replaceState(null, null, window.location.href);
 }
+
+// Hide step-bar and footer when scrolling down; show on scroll up
+(function () {
+    var wrap   = document.getElementById('stepBarWrap');
+    var footer = document.querySelector('.lce-footer');
+    var lastY  = 0;
+    var raf    = false;
+    window.addEventListener('scroll', function () {
+        if (raf) return;
+        raf = true;
+        requestAnimationFrame(function () {
+            var y    = window.scrollY;
+            var down = y > lastY && y > 80;
+            if (wrap)   wrap.classList.toggle('bar-hidden', down);
+            if (footer) footer.classList.toggle('bar-hidden', down);
+            lastY = y;
+            raf = false;
+        });
+    }, { passive: true });
+}());
 // Auto-scroll to results section when calculation is done
 {% if results %}
 document.addEventListener('DOMContentLoaded', function() {

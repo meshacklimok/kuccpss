@@ -1,6 +1,10 @@
 import json
+from django.contrib.auth.decorators import login_required
+from django.db.models import Avg, Count
+from django.http import JsonResponse
 from django.shortcuts import render, get_object_or_404, redirect
-from .models import CourseType, CourseCategory, Course
+from django.views.decorators.http import require_POST
+from .models import CourseType, CourseCategory, Course, Review
 
 # ------------------------------
 # Course Types List View
@@ -199,11 +203,45 @@ def course_detail(request, type_slug, category_slug=None, course_slug=None):
         is_shortlisted = CourseShortlist.objects.filter(user=request.user, course=course).exists()
         shortlist_count = CourseShortlist.objects.filter(user=request.user).count()
 
+    reviews_qs = Review.objects.filter(course=course).select_related('user')
+    agg = reviews_qs.aggregate(avg=Avg('rating'), total=Count('id'))
+    user_review = reviews_qs.filter(user=request.user).first() if request.user.is_authenticated else None
+
+    from career.job_market import get_jmd_for_course
+    job_market = get_jmd_for_course(course)
+
     context = {
         'course': course,
         'offerings': offerings,
         'chart_json': chart_json,
         'is_shortlisted': is_shortlisted,
         'shortlist_count': shortlist_count,
+        'reviews': reviews_qs[:20],
+        'avg_rating': round(agg['avg'], 1) if agg['avg'] else None,
+        'review_count': agg['total'],
+        'user_review': user_review,
+        'job_market': job_market,
     }
     return render(request, 'courses/course_detail.html', context)
+
+
+@login_required
+@require_POST
+def submit_course_review(request, type_slug, category_slug=None, course_slug=None):
+    course = get_object_or_404(Course, slug=course_slug)
+    try:
+        rating = int(request.POST.get('rating', 0))
+    except (ValueError, TypeError):
+        rating = 0
+    if not 1 <= rating <= 5:
+        return JsonResponse({'error': 'Invalid rating'}, status=400)
+    body = request.POST.get('body', '').strip()[:280]
+    Review.objects.update_or_create(
+        user=request.user, course=course,
+        defaults={'rating': rating, 'body': body},
+    )
+    agg = Review.objects.filter(course=course).aggregate(avg=Avg('rating'), total=Count('id'))
+    return JsonResponse({
+        'avg': round(agg['avg'], 1) if agg['avg'] else rating,
+        'total': agg['total'],
+    })

@@ -12,6 +12,66 @@ def validate_password_strength(password: str):
     if len(password) < 4:
         raise ValidationError("Password must be at least 4 characters long.")
 
+
+# Known disposable / throwaway email domains
+_DISPOSABLE_DOMAINS = {
+    "mailinator.com", "guerrillamail.com", "guerrillamail.net", "guerrillamail.org",
+    "guerrillamail.biz", "guerrillamail.de", "guerrillamailblock.com",
+    "tempmail.com", "temp-mail.org", "throwam.com", "throwam.net",
+    "yopmail.com", "yopmail.fr", "cool.fr.nf", "jetable.fr.nf",
+    "sharklasers.com", "guerrillamailblock.com", "grr.la", "guerrillamail.info",
+    "spam4.me", "trashmail.com", "trashmail.me", "trashmail.net", "trashmail.at",
+    "trashmail.io", "dispostable.com", "fakeinbox.com", "maildrop.cc",
+    "getnada.com", "discard.email", "mailnull.com", "spamgourmet.com",
+    "spamgourmet.net", "spamgourmet.org", "spamherelots.com", "binkmail.com",
+    "bob.email", "mailinater.com", "spamavert.com", "mt2015.com",
+    "spamfree24.org", "speed.1s.fr", "superrito.com", "tempalias.com",
+    "tempe-mail.com", "thisisnotmyrealemail.com", "throwam.com",
+    "tradermail.info", "trash2009.com", "trashmail.at", "trashmail.me",
+    "trashmail.net", "trbvm.com", "turual.com", "twinmail.de",
+    "tyldd.com", "uggsrock.com", "umail.net", "getairmail.com",
+    "filzmail.com", "fivemail.de", "fleckens.hu", "frapmail.com",
+    "free-temp.net", "gishpuppy.com", "glitch.sx", "gmal.com",
+    "hailmail.net", "hazelnut.instasend.io", "hushmail.com",
+    "ieatspam.eu", "ieatspam.info", "imgof.com", "imstations.com",
+    "inoutmail.de", "inoutmail.eu", "inoutmail.info", "inoutmail.net",
+    "internet-e-mail.de", "internet-mail.org", "internetemails.net",
+    "nwytg.net", "odaymail.com", "oneoffemail.com",
+    "onewaymail.com", "outlooksupport.net", "pecinan.com",
+    "pecinan.net", "pecinan.org", "pjjkp.com", "plexolan.de",
+    "poczta.onet.pl", "proxymail.eu", "rppkn.com", "rtrtr.com",
+    "s0ny.net", "safe-mail.net",
+    "safetymail.info", "sendspamhere.com", "shiftmail.com", "skeefmail.com",
+    "slapsfromlastnight.com", "slopsbox.com", "slushmail.com", "smarttalent.pw",
+}
+
+
+def _check_email_domain(email: str):
+    """
+    1. Block disposable domains.
+    2. Check the domain has live MX records (can actually receive email).
+    Raises ValidationError with a user-friendly message if either check fails.
+    """
+    domain = email.split("@", 1)[-1].lower()
+
+    if domain in _DISPOSABLE_DOMAINS:
+        raise ValidationError(
+            "Temporary or disposable email addresses are not allowed. "
+            "Please use your real email so we can help you."
+        )
+
+    try:
+        import dns.resolver
+        dns.resolver.resolve(domain, "MX", lifetime=3)
+    except ImportError:
+        pass  # dnspython not installed — skip check
+    except Exception:
+        # NXDOMAIN, NoAnswer, Timeout, etc.
+        raise ValidationError(
+            f"'{domain}' doesn't look like a valid email domain. "
+            "Please double-check your email address."
+        )
+
 # =====================================================
 # USER REGISTRATION FORM
 # =====================================================
@@ -37,6 +97,7 @@ class UserRegistrationForm(forms.ModelForm):
         email = self.cleaned_data.get('email', '').lower()
         if User.objects.filter(email=email).exists():
             raise ValidationError(_("Email is already registered."))
+        _check_email_domain(email)
         return email
 
     def clean_password1(self):

@@ -1,0 +1,329 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}CareerNext AI — Career Guidance Chat{% endblock %}
+
+{% block content %}
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+
+<style>
+/* ── Layout ── */
+.chat-wrapper {
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 120px);
+    max-width: 820px;
+    margin: 0 auto;
+    padding: 0 1rem;
+}
+
+/* ── Header ── */
+.chat-header {
+    padding: 1rem 0 0.75rem;
+    border-bottom: 1px solid #e2e8f0;
+    flex-shrink: 0;
+}
+
+/* ── Starter chips ── */
+.starter-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding: 0.75rem 0;
+    flex-shrink: 0;
+}
+.starter-chip {
+    padding: 6px 14px;
+    border-radius: 20px;
+    border: 1.5px solid #cbd5e1;
+    background: #f8fafc;
+    color: #334155;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+}
+.starter-chip:hover {
+    border-color: #0891b2;
+    background: #ecfeff;
+    color: #0e7490;
+}
+
+/* ── Message list ── */
+.chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1rem 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.9rem;
+}
+
+/* ── Bubbles ── */
+.msg {
+    display: flex;
+    align-items: flex-end;
+    gap: 0.5rem;
+    max-width: 82%;
+}
+.msg.user { align-self: flex-end; flex-direction: row-reverse; }
+.msg.bot  { align-self: flex-start; }
+
+.bubble {
+    padding: 0.65rem 1rem;
+    border-radius: 18px;
+    font-size: 0.9rem;
+    line-height: 1.55;
+    word-break: break-word;
+}
+.msg.user .bubble {
+    background: #0891b2;
+    color: #fff;
+    border-bottom-right-radius: 4px;
+}
+.msg.bot .bubble {
+    background: #f1f5f9;
+    color: #1e293b;
+    border-bottom-left-radius: 4px;
+}
+.bubble ul { margin: 0.4rem 0 0 1.1rem; padding: 0; }
+.bubble li { margin-bottom: 0.2rem; }
+
+/* Avatar */
+.avatar {
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.8rem;
+    flex-shrink: 0;
+}
+.msg.bot  .avatar { background: #e0f2fe; color: #0284c7; }
+.msg.user .avatar { background: #0891b2; color: #fff; }
+
+/* Typing dots */
+.typing-dot {
+    display: inline-block;
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: #94a3b8;
+    margin: 0 2px;
+    animation: blink 1.2s infinite;
+}
+.typing-dot:nth-child(2) { animation-delay: 0.2s; }
+.typing-dot:nth-child(3) { animation-delay: 0.4s; }
+@keyframes blink { 0%,80%,100% { opacity:.2; } 40% { opacity:1; } }
+
+/* ── Input bar ── */
+.chat-input-bar {
+    padding: 0.75rem 0 1rem;
+    border-top: 1px solid #e2e8f0;
+    flex-shrink: 0;
+}
+.chat-input-row {
+    display: flex;
+    gap: 0.5rem;
+    align-items: flex-end;
+}
+#chatInput {
+    flex: 1;
+    border: 1.5px solid #cbd5e1;
+    border-radius: 12px;
+    padding: 0.6rem 1rem;
+    font-size: 0.9rem;
+    resize: none;
+    outline: none;
+    min-height: 42px;
+    max-height: 120px;
+    overflow-y: auto;
+    line-height: 1.5;
+    transition: border-color 0.15s;
+}
+#chatInput:focus { border-color: #0891b2; }
+#sendBtn {
+    width: 42px; height: 42px;
+    border-radius: 10px;
+    background: #0891b2;
+    border: none;
+    color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background 0.15s;
+}
+#sendBtn:hover:not(:disabled) { background: #0e7490; }
+#sendBtn:disabled { background: #94a3b8; cursor: not-allowed; }
+
+.char-hint { font-size: 0.72rem; color: #94a3b8; text-align: right; margin-top: 3px; }
+</style>
+
+<div class="chat-wrapper">
+
+    <!-- Header -->
+    <div class="chat-header d-flex align-items-center gap-3">
+        <div class="avatar" style="width:40px;height:40px;background:#e0f2fe;color:#0284c7;font-size:1.1rem;">
+            <i class="bi bi-stars"></i>
+        </div>
+        <div>
+            <div class="fw-bold" style="color:#0f172a;font-size:1rem;">CareerNext AI</div>
+            <div class="small text-muted">Career guidance for Kenyan students · Answers from verified database</div>
+        </div>
+        <a href="{% url 'career:home' %}" class="btn btn-outline-secondary btn-sm ms-auto" style="border-radius:8px;">
+            <i class="bi bi-arrow-left me-1"></i>Back
+        </a>
+    </div>
+
+    {% if not ai_ready %}
+    <div class="alert alert-warning mt-3 mb-0" style="border-radius:10px;">
+        <i class="bi bi-exclamation-triangle me-2"></i>
+        AI chat requires an <strong>OPENAI_API_KEY</strong> in your <code>.env</code> file.
+    </div>
+    {% endif %}
+
+    <!-- Starter chips -->
+    <div class="starter-chips" id="starterChips">
+        <span class="starter-chip" onclick="sendStarter(this)">I got C+, what can I study?</span>
+        <span class="starter-chip" onclick="sendStarter(this)">What careers suit someone who likes biology?</span>
+        <span class="starter-chip" onclick="sendStarter(this)">What is the difference between Degree and Diploma?</span>
+        <span class="starter-chip" onclick="sendStarter(this)">How much does a software engineer earn in Kenya?</span>
+        <span class="starter-chip" onclick="sendStarter(this)">What can I study with a D+ in KCSE?</span>
+        <span class="starter-chip" onclick="sendStarter(this)">Which careers are in demand in Kenya?</span>
+        <span class="starter-chip" onclick="sendStarter(this)">Compare Medicine vs Nursing in Kenya</span>
+        <span class="starter-chip" onclick="sendStarter(this)">I don't know what to study, help me choose</span>
+    </div>
+
+    <!-- Messages -->
+    <div class="chat-messages" id="chatMessages">
+        <div class="msg bot">
+            <div class="avatar"><i class="bi bi-stars"></i></div>
+            <div class="bubble">
+                Hi! I'm <strong>CareerNext AI</strong>. I can help you choose courses and careers based on your KCSE grade, subjects, and interests.<br><br>
+                Ask me anything — like <em>"I got C+, what can I study?"</em> or <em>"What jobs can I get with a nursing diploma?"</em>
+            </div>
+        </div>
+    </div>
+
+    <!-- Input bar -->
+    <div class="chat-input-bar">
+        <div class="chat-input-row">
+            <textarea id="chatInput" placeholder="Ask about courses, careers, grades, salaries…"
+                      rows="1" {% if not ai_ready %}disabled{% endif %}></textarea>
+            <button id="sendBtn" title="Send" {% if not ai_ready %}disabled{% endif %}>
+                <i class="bi bi-send-fill"></i>
+            </button>
+        </div>
+        <div class="char-hint" id="charHint"></div>
+    </div>
+
+</div>
+
+{% block extra_js %}
+<script>
+const CHAT_URL = "{% url 'career:ajax_ai_chat' %}";
+const CSRF     = "{{ csrf_token }}";
+let history    = [];   // [{role, content}, ...]
+
+/* ── Auto-resize textarea ── */
+const inp = document.getElementById('chatInput');
+inp.addEventListener('input', () => {
+    inp.style.height = 'auto';
+    inp.style.height = Math.min(inp.scrollHeight, 120) + 'px';
+    const n = inp.value.length;
+    document.getElementById('charHint').textContent = n > 200 ? `${n}/400` : '';
+});
+
+/* ── Enter to send, Shift+Enter for newline ── */
+inp.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
+});
+
+/* ── Starter chips ── */
+function sendStarter(el) {
+    inp.value = el.textContent;
+    document.getElementById('starterChips').style.display = 'none';
+    send();
+}
+
+/* ── Append a message bubble ── */
+function appendMsg(role, html) {
+    const box   = document.getElementById('chatMessages');
+    const isBot = role === 'bot';
+    const div   = document.createElement('div');
+    div.className = `msg ${role}`;
+    div.innerHTML = `
+        <div class="avatar"><i class="bi bi-${isBot ? 'stars' : 'person-fill'}"></i></div>
+        <div class="bubble">${html}</div>`;
+    box.appendChild(div);
+    box.scrollTop = box.scrollHeight;
+    return div;
+}
+
+/* ── Simple markdown-ish formatter ── */
+function fmt(text) {
+    // Bold **word**
+    text = text.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+    // Bullet lines starting with • or -
+    const lines = text.split('\n');
+    let out = '', inList = false;
+    for (let line of lines) {
+        const bullet = line.match(/^[•\-]\s+(.*)/);
+        if (bullet) {
+            if (!inList) { out += '<ul>'; inList = true; }
+            out += `<li>${bullet[1]}</li>`;
+        } else {
+            if (inList) { out += '</ul>'; inList = false; }
+            out += line ? `<p style="margin:0 0 4px">${line}</p>` : '<br>';
+        }
+    }
+    if (inList) out += '</ul>';
+    return out;
+}
+
+/* ── Send message ── */
+async function send() {
+    const text = inp.value.trim();
+    if (!text || text.length > 400) return;
+
+    document.getElementById('starterChips').style.display = 'none';
+    inp.value = ''; inp.style.height = 'auto';
+    document.getElementById('charHint').textContent = '';
+
+    appendMsg('user', text.replace(/</g, '&lt;'));
+
+    const btn = document.getElementById('sendBtn');
+    btn.disabled = true;
+
+    // Typing indicator
+    const typing = appendMsg('bot',
+        '<span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span>');
+
+    try {
+        const res  = await fetch(CHAT_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF },
+            body: JSON.stringify({ message: text, history }),
+        });
+        const data = await res.json();
+
+        typing.remove();
+
+        if (data.error) {
+            appendMsg('bot', `<span style="color:#dc2626">${data.error}</span>`);
+        } else {
+            appendMsg('bot', fmt(data.reply));
+            history.push({ role: 'user',      content: text });
+            history.push({ role: 'assistant', content: data.reply });
+            if (history.length > 16) history = history.slice(-16);
+        }
+    } catch {
+        typing.remove();
+        appendMsg('bot', '<span style="color:#dc2626">Network error — please try again.</span>');
+    }
+
+    btn.disabled = false;
+    inp.focus();
+}
+
+document.getElementById('sendBtn').addEventListener('click', send);
+</script>
+{% endblock %}
+{% endblock %}

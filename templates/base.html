@@ -939,6 +939,35 @@ if ('serviceWorker' in navigator) {
 </script>
 
 <script>
+/* Portrait orientation lock — stay portrait until device is clearly landscape (≥3:2).
+   Lock API works in PWA/standalone and fullscreen; silently ignored in plain browser tabs. */
+(function () {
+    function tryLockPortrait() {
+        if (screen.orientation && typeof screen.orientation.lock === 'function') {
+            screen.orientation.lock('portrait').catch(function () {});
+        }
+    }
+    tryLockPortrait();
+    document.addEventListener('visibilitychange', function () {
+        if (document.visibilityState === 'visible') tryLockPortrait();
+    });
+
+    /* Browser fallback: suppress landscape body class until aspect ratio ≥ 1.5:1.
+       Applies .layout-landscape only when truly horizontal so CSS can key off it. */
+    function checkRatio() {
+        var ratio = window.innerWidth / window.innerHeight;
+        document.body.classList.toggle('layout-landscape', ratio >= 1.5);
+    }
+    checkRatio();
+    var rafId;
+    window.addEventListener('resize', function () {
+        cancelAnimationFrame(rafId);
+        rafId = requestAnimationFrame(checkRatio);
+    });
+}());
+</script>
+
+<script>
 (function () {
     // KUCCPS key dates — update these each year
     const DEADLINES = [
@@ -1005,123 +1034,6 @@ if ('serviceWorker' in navigator) {
 }());
 </script>
 
-{% if not user.is_authenticated %}
-<!-- Email Capture Modal (shown to guests after 30s or after calculator use) -->
-<div class="modal fade" id="emailCaptureModal" tabindex="-1" aria-labelledby="emailCaptureLabel" aria-hidden="true"
-     data-bs-backdrop="static" data-bs-keyboard="false">
-  <div class="modal-dialog modal-dialog-centered" style="max-width:440px;">
-    <div class="modal-content" style="border-radius:20px;border:none;overflow:hidden;">
-      <div style="background:linear-gradient(135deg,#1e3a8a 0%,#7c3aed 100%);padding:1.75rem 1.5rem 1.25rem;color:white;">
-        <div style="font-size:2.2rem;margin-bottom:0.4rem;">🎓</div>
-        <h5 class="fw-bold mb-1" id="emailCaptureLabel">Get Your Results Delivered</h5>
-        <p style="opacity:0.85;font-size:0.88rem;margin:0;">Save your course matches and receive the full list — free, no spam.</p>
-      </div>
-      <div class="modal-body p-4">
-        <form id="emailCaptureForm" novalidate>
-          {% csrf_token %}
-          <div class="mb-3">
-            <label for="captureEmail" class="form-label fw-semibold small">Your email address</label>
-            <input type="email" id="captureEmail" name="email"
-                   class="form-control" placeholder="you@example.com"
-                   autocomplete="email" required
-                   style="border-radius:10px;font-size:0.95rem;">
-            <div class="invalid-feedback">Please enter a valid email.</div>
-          </div>
-          <button type="submit" id="captureSubmitBtn" class="btn btn-primary w-100 fw-bold" style="border-radius:10px;">
-            <span id="captureLabel">Get Free Access</span>
-            <span id="captureSpinner" class="spinner-border spinner-border-sm ms-1" style="display:none;"></span>
-          </button>
-          <p class="text-muted text-center mt-2 mb-0" style="font-size:0.72rem;">No spam. Unsubscribe any time.</p>
-        </form>
-        <div id="captureSuccess" style="display:none;text-align:center;padding:1rem 0;">
-          <div style="font-size:2.5rem;">✅</div>
-          <p class="fw-bold mt-2 mb-1">You're in!</p>
-          <p class="text-muted small">Now create a free account to see your full results and save your courses.</p>
-          <a href="{% url 'accounts:register' %}" class="btn btn-primary w-100 fw-bold" style="border-radius:10px;">Create Free Account</a>
-        </div>
-        <div class="d-flex align-items-center my-3"><hr class="flex-1"><span class="text-muted small px-2">or</span><hr class="flex-1"></div>
-        <a href="{% url 'accounts:register' %}" class="btn btn-outline-primary w-100 fw-semibold" style="border-radius:10px;">
-          Create Free Account
-        </a>
-        <button type="button" class="btn btn-link w-100 text-muted small mt-1" data-bs-dismiss="modal" onclick="dismissEmailCapture()">
-          No thanks, I'll continue as guest
-        </button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<script>
-(function () {
-    const DISMISS_KEY = 'cn_email_dismissed';
-    const CAPTURED_KEY = 'cn_email_captured';
-
-    function shouldShow() {
-        if (sessionStorage.getItem(DISMISS_KEY)) return false;
-        if (localStorage.getItem(CAPTURED_KEY)) return false;
-        return true;
-    }
-
-    function showModal() {
-        if (!shouldShow()) return;
-        const modal = new bootstrap.Modal(document.getElementById('emailCaptureModal'));
-        modal.show();
-    }
-
-    window.dismissEmailCapture = function () {
-        sessionStorage.setItem(DISMISS_KEY, '1');
-    };
-
-    // Show after 30s on any page, or immediately after calculator use
-    let timer = setTimeout(showModal, 30000);
-
-    // Detect calculator form submit — fire modal sooner
-    document.addEventListener('submit', function (e) {
-        const form = e.target;
-        if (form.id === 'calculator-form' || form.classList.contains('career-form') ||
-            form.action && (form.action.includes('/career/') || form.action.includes('/clusterpoints/'))) {
-            clearTimeout(timer);
-            timer = setTimeout(showModal, 4000);
-        }
-    });
-
-    // Handle form submit
-    document.getElementById('emailCaptureForm').addEventListener('submit', function (e) {
-        e.preventDefault();
-        const emailInput = document.getElementById('captureEmail');
-        if (!emailInput.validity.valid) {
-            emailInput.classList.add('was-validated');
-            emailInput.reportValidity();
-            return;
-        }
-        const btn = document.getElementById('captureSubmitBtn');
-        document.getElementById('captureLabel').style.display = 'none';
-        document.getElementById('captureSpinner').style.display = '';
-        btn.disabled = true;
-
-        fetch("{% url 'email_lead_capture' %}", {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
-            },
-            body: JSON.stringify({ email: emailInput.value, source: 'home' }),
-        })
-        .then(r => r.json())
-        .then(data => {
-            localStorage.setItem(CAPTURED_KEY, '1');
-            document.getElementById('emailCaptureForm').style.display = 'none';
-            document.getElementById('captureSuccess').style.display = '';
-        })
-        .catch(() => {
-            btn.disabled = false;
-            document.getElementById('captureLabel').style.display = '';
-            document.getElementById('captureSpinner').style.display = 'none';
-        });
-    });
-}());
-</script>
-{% endif %}
 
 </body>
 </html>

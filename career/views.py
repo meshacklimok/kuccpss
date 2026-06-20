@@ -697,12 +697,71 @@ def ajax_ai_insight(request):
 
 
 # =====================================================
-# 15. AJAX — AI Chat for floating widget
+# Knowledge base search — DB-first before calling GPT
+# =====================================================
+_KB_STOP_WORDS = {
+    'i', 'a', 'an', 'the', 'is', 'are', 'was', 'be', 'can', 'do', 'does',
+    'for', 'of', 'in', 'to', 'my', 'me', 'what', 'how', 'which', 'why',
+    'and', 'or', 'if', 'it', 'this', 'that', 'with', 'have', 'has', 'will',
+    'good', 'best', 'better', 'any', 'some', 'about', 'get', 'give', 'tell',
+    'want', 'would', 'could', 'should', 'need', 'like', 'who', 'where', 'when',
+    'am', 'got', 'get', 'did', 'had', 'not', 'so', 'on', 'at', 'as', 'by',
+    'from', 'its', 'than', 'then', 'them', 'they', 'just', 'also', 'after',
+}
+
+
+def _search_knowledge_base(query: str, max_results: int = 4) -> list:
+    """
+    Search AIKnowledgeEntry by keyword matching.
+    Returns up to max_results entries ranked by relevance score.
+    """
+    from .models import AIKnowledgeEntry
+    from django.db.models import Q
+
+    if not query:
+        return []
+
+    raw_words = [w.lower().strip('?!.,;:') for w in query.split() if len(w) > 1]
+    keywords  = [w for w in raw_words if w not in _KB_STOP_WORDS] or raw_words
+
+    if not keywords:
+        return []
+
+    q = Q()
+    for kw in keywords[:8]:
+        q |= Q(question__icontains=kw) | Q(keywords__icontains=kw) | Q(answer__icontains=kw)
+
+    entries = list(AIKnowledgeEntry.objects.filter(q, is_active=True).distinct()[:60])
+
+    scored = []
+    for entry in entries:
+        text_q  = entry.question.lower()
+        text_kw = entry.keywords.lower()
+        text_a  = entry.answer.lower()
+        score = 0
+        for kw in keywords:
+            if kw in text_q:
+                score += 4
+            if kw in text_kw:
+                score += 3
+            if kw in text_a:
+                score += 1
+        scored.append((score, entry))
+
+    scored.sort(key=lambda x: x[0], reverse=True)
+    return [e for _, e in scored[:max_results] if _ > 0]
+
+
+# =====================================================
+# 15. AJAX — AI Chat (DB-first, then GPT)
 # =====================================================
 @require_POST
 def ajax_ai_chat(request):
     """
-    Multi-turn AI chat. Uses real DB course data in the system prompt.
+    Multi-turn AI chat.
+    1. Search AIKnowledgeEntry for relevant verified facts.
+    2. Inject them into the system prompt so GPT answers from DB data.
+    3. Also include the student's matched course context.
     Body: { message, history: [{role, content}, ...] }
     """
     import json as _json
@@ -723,16 +782,54 @@ def ajax_ai_chat(request):
     if not user_message:
         return JsonResponse({"error": "Empty message."}, status=400)
 
+    # ── 1. Search knowledge base ─────────────────────────
+    kb_entries = _search_knowledge_base(user_message)
+    kb_section = ""
+    if kb_entries:
+        lines = ["VERIFIED FACTS FROM DATABASE (use these first):"]
+        for e in kb_entries:
+            lines.append(f"Q: {e.question}\nA: {e.answer}")
+        kb_section = "\n\n".join(lines)
+
+    # ── 2. Student's own course match context ────────────
     db_context = _build_ai_db_context(request)
 
-    system_prompt = (
-        "You are CareerNext AI, a Kenyan KUCCPS career guidance assistant. "
-        "You have access to this student's REAL matched course data from the database:\n\n"
-        f"{db_context}\n\n"
-        "Answer questions using ONLY this real data. Be specific — name actual courses and institutions. "
-        "Keep responses under 100 words. Be warm and address the student as 'you'. "
-        "No bullet points unless listing 3+ items."
-    )
+    # ── 3. Compose system prompt ─────────────────────────
+    system_parts = [
+        "You are CareerNext AI, a professional career guidance assistant for Kenyan students. "
+        "You help students choose courses, careers, and universities based on KCSE results and interests.",
+        "",
+        "GRADE → PATHWAY RULES (Kenya):",
+        "- Degree: minimum mean grade C+ (cluster points 0–48 used for ranking)",
+        "- Diploma: minimum mean grade C or C- depending on course",
+        "- Certificate: minimum mean grade C- or D+ depending on course",
+        "- Artisan: for students with D and below",
+        "- KMTC: most courses require minimum C; Clinical Medicine/Nursing may require higher",
+        "- TTC (Primary teacher): minimum C or C-",
+        "- Non-degree KUCCPS choices: students submit only 2 course choices (not 6)",
+        "",
+    ]
+
+    if kb_section:
+        system_parts += [kb_section, ""]
+
+    if db_context:
+        system_parts += [
+            "STUDENT'S MATCHED COURSES FROM DATABASE:",
+            db_context,
+            "",
+        ]
+
+    system_parts += [
+        "RULES:",
+        "- Answer using the VERIFIED FACTS above first. Only add your own knowledge if the facts don't cover it.",
+        "- Keep responses under 120 words. Use bullet points only when listing 3+ items.",
+        "- Be warm and address the student as 'you'.",
+        "- If unsure about specific cutoff numbers, say 'varies yearly — check KUCCPS portal'.",
+        "- Never invent institution names or exact cutoff figures not in the verified facts.",
+    ]
+
+    system_prompt = "\n".join(system_parts)
 
     messages = [{"role": "system", "content": system_prompt}]
     for turn in history[-6:]:
@@ -746,16 +843,26 @@ def ajax_ai_chat(request):
         resp = client.chat.completions.create(
             model='gpt-4o-mini',
             messages=messages,
-            max_tokens=180,
-            temperature=0.7,
+            max_tokens=220,
+            temperature=0.5,
         )
         reply = resp.choices[0].message.content.strip()
-        return JsonResponse({"reply": reply})
+        return JsonResponse({"reply": reply, "kb_used": len(kb_entries)})
 
     except Exception as e:
         import logging as _lg
         _lg.getLogger(__name__).error("AI chat error: %s", e)
         return JsonResponse({"error": "AI error, please try again."}, status=500)
+
+
+# =====================================================
+# 15b. Standalone Chat page
+# =====================================================
+def career_chat(request):
+    """Full-page CareerNext AI chat for students."""
+    from django.conf import settings as _s
+    ai_ready = bool(getattr(_s, 'OPENAI_API_KEY', ''))
+    return render(request, 'career/chat.html', {'ai_ready': ai_ready})
 
 
 # ═══════════════════════════════════════════════════════
@@ -1315,13 +1422,20 @@ def _extract_json_from_text(text: str) -> dict:
         return json.loads(text)
     except json.JSONDecodeError:
         pass
-    # Extract first {...} block via regex
-    m = re.search(r'\{[^{}]+\}', text, re.DOTALL)
-    if m:
-        try:
-            return json.loads(m.group(0))
-        except json.JSONDecodeError:
-            pass
+    # Walk brace pairs to extract the outermost JSON object (handles nested dicts)
+    start = text.find('{')
+    if start != -1:
+        depth = 0
+        for i, ch in enumerate(text[start:], start):
+            if ch == '{':
+                depth += 1
+            elif ch == '}':
+                depth -= 1
+                if depth == 0:
+                    try:
+                        return json.loads(text[start:i + 1])
+                    except json.JSONDecodeError:
+                        break
     return {}
 
 
@@ -1356,9 +1470,9 @@ def degree_upload(request):
             messages.warning(
                 request,
                 'OCR is not configured yet — please add your OPENAI_API_KEY to the .env file. '
-                'Enter your grades manually below.'
+                'Enter your cluster points manually instead.'
             )
-            return redirect('career:degree_calculate')
+            return redirect('career:degree_manual')
 
         try:
             import base64, json, logging
@@ -1381,22 +1495,19 @@ def degree_upload(request):
             b64 = base64.b64encode(img_bytes).decode('utf-8')
             client = OpenAI(api_key=api_key)
 
-            # ── Prompt: detect document type and extract accordingly ──────────
-            prompt = """You are reading a Kenyan education document. It is EITHER:
-(A) A KCSE results slip showing individual subject grades, OR
-(B) A KUCCPS/KNEC cluster points document showing cluster numbers and their point scores.
+            prompt = """You are reading a KUCCPS cluster points document issued in Kenya.
+It contains cluster numbers (1–20) and their corresponding cluster point scores (0.0–48.0).
 
-CASE A — KCSE grade slip:
-Return JSON with key "type": "grades" and key "data" containing subject→grade pairs.
-Subject names: use the full official KCSE name (Mathematics, English, Kiswahili, Biology, Physics, Chemistry, History and Government, Geography, Christian Religious Education, Islamic Religious Education, Hindu Religious Education, Home Science, Agriculture, Business Studies, Computer Studies, French, German, Arabic, Music, Art and Design, Aviation Technology, Drawing and Design, Building Construction, Power Mechanics, Electricity, Woodwork, Metalwork, Kenyan Sign Language).
-Grades: A, A-, B+, B, B-, C+, C, C-, D+, D, D-, E.
-Example: {"type": "grades", "data": {"Mathematics": "B+", "English": "A-", "Kiswahili": "B"}}
+Extract every cluster number and its point score that you can see.
 
-CASE B — Cluster points document:
-Return JSON with key "type": "cluster_points" and key "data" containing cluster_number→points pairs (cluster numbers 1–20, points 0.0–48.0).
-Example: {"type": "cluster_points", "data": {"1": 42.5, "4": 38.2, "9": 35.0}}
+Return ONLY a JSON object in this exact format — no explanation, no extra text:
+{"data": {"1": 42.5, "4": 38.2, "9": 35.0}}
 
-Return ONLY the JSON object, nothing else. If unclear, attempt Case A."""
+Rules:
+- Keys are cluster numbers as strings ("1" through "20").
+- Values are the point scores as numbers (e.g. 42.5, not "42.5").
+- Include every cluster whose score appears in the document.
+- If no cluster points are visible, return {"data": {}}."""
 
             response = client.chat.completions.create(
                 model='gpt-4o',
@@ -1414,100 +1525,53 @@ Return ONLY the JSON object, nothing else. If unclear, attempt Case A."""
             )
 
             raw = response.choices[0].message.content.strip()
-            log.info('OCR raw response: %s', raw[:300])
+            log.info('OCR cluster points raw response: %s', raw[:400])
             extracted = _extract_json_from_text(raw)
 
             if not extracted:
-                raise ValueError('GPT returned no parseable JSON')
+                raise ValueError('AI returned no parseable JSON — try a clearer photo')
 
-            doc_type = extracted.get('type', 'grades')
             data = extracted.get('data', {})
-
-            # ── Handle cluster points document ────────────────────────────────
-            if doc_type == 'cluster_points' and data:
-                cluster_points = {}
-                found = []
-                for k, v in data.items():
-                    try:
-                        num = int(str(k).strip())
-                        pts = max(0.0, min(48.0, float(v)))
-                        cluster_points[str(num)] = pts
-                        found.append(f'Cluster {num}: {pts:.1f}')
-                    except (ValueError, TypeError):
-                        continue
-
-                if not cluster_points:
-                    raise ValueError('No valid cluster points found in document')
-
-                request.session['career_pathway'] = 'Degree'
-                request.session['career_degree_method'] = 'manual'
-                request.session['career_cluster_points'] = cluster_points
-                count = len(cluster_points)
-                messages.success(
-                    request,
-                    f'OCR extracted {count} cluster score{"s" if count != 1 else ""}: '
-                    f'{", ".join(found[:5])}{"…" if count > 5 else ""}. '
-                    'Proceeding to your results.'
-                )
-                return redirect('career:loading_page', pathway='degree')
-
-            # ── Handle KCSE grade slip ────────────────────────────────────────
             if not data:
-                raise ValueError('No subject grades found in image')
+                raise ValueError('No cluster points found in the document — make sure you upload a KUCCPS cluster points document')
 
-            from clusters.models import Subject
-
-            GRADE_PTS = {
-                'A': 12, 'A-': 11, 'B+': 10, 'B': 9, 'B-': 8,
-                'C+': 7, 'C': 6, 'C-': 5, 'D+': 4, 'D': 3, 'D-': 2, 'E': 1,
-            }
-
-            all_subjects = {s.name.lower(): s for s in Subject.objects.all()}
-            prefill, subject_grades_ocr, matched_names, unmatched = {}, {}, [], []
-
-            for subj_name, grade_str in data.items():
-                grade_str = str(grade_str).strip().upper()
-                pts = GRADE_PTS.get(grade_str)
-                if pts is None:
+            cluster_points = {}
+            found = []
+            for k, v in data.items():
+                try:
+                    num = int(str(k).strip())
+                    if not (1 <= num <= 20):
+                        continue
+                    pts = max(0.0, min(48.0, float(v)))
+                    cluster_points[str(num)] = pts
+                    found.append(f'Cluster {num}: {pts:.1f}')
+                except (ValueError, TypeError):
                     continue
-                subj_obj = _resolve_subject(subj_name, all_subjects)
-                if subj_obj:
-                    prefill[str(subj_obj.id)] = pts
-                    subject_grades_ocr[subj_obj.name.lower()] = pts
-                    matched_names.append(f'{subj_obj.name}: {grade_str}')
-                else:
-                    unmatched.append(subj_name)
 
-            if unmatched:
-                log.warning('OCR: unmatched subjects: %s', unmatched)
+            if not cluster_points:
+                raise ValueError('No valid cluster numbers (1–20) with scores (0–48) found')
 
-            if not prefill:
-                raise ValueError(
-                    f'Could not match any subjects to our database. '
-                    f'GPT returned: {list(data.keys())[:5]}'
-                )
-
-            request.session['ocr_prefill'] = prefill
-            request.session['career_subject_grades'] = subject_grades_ocr
-            count = len(prefill)
-            extra = f' ({len(unmatched)} subject(s) not recognised — enter those manually)' if unmatched else ''
+            request.session['career_pathway'] = 'Degree'
+            request.session['career_degree_method'] = 'manual'
+            request.session['career_cluster_points'] = cluster_points
+            count = len(cluster_points)
             messages.success(
                 request,
-                f'OCR read {count} subject grade{"s" if count != 1 else ""}: '
-                f'{", ".join(matched_names[:5])}{"…" if count > 5 else ""}.'
-                f'{extra} Review and fill in any missing grades below.'
+                f'Scanned {count} cluster score{"s" if count != 1 else ""}: '
+                f'{", ".join(found[:6])}{"…" if count > 6 else ""}. '
+                'Proceeding to your results.'
             )
-            return redirect('career:degree_calculate')
+            return redirect('career:loading_page', pathway='degree')
 
         except Exception as e:
             import logging
             logging.getLogger(__name__).error('OCR error: %s', e, exc_info=True)
             messages.warning(
                 request,
-                f'Could not read the document ({e}). '
-                'Please enter your grades manually below.'
+                f'Could not read the document: {e}. '
+                'Please enter your cluster points manually instead.'
             )
-            return redirect('career:degree_calculate')
+            return redirect('career:degree_manual')
 
     return render(request, 'career/degree_upload.html')
 
@@ -1644,12 +1708,12 @@ def pathway_input(request, pathway):
     if not pathway_label:
         return redirect('career:home')
 
-    use_kcse_form = pathway.lower() in ('diploma', 'certificate', 'kmtc')
+    use_kcse_form = pathway.lower() in ('diploma', 'certificate', 'kmtc', 'artisan')
 
     if request.method == 'POST':
         request.session['career_pathway'] = pathway_label
         request.session['career_categories'] = request.POST.getlist('categories')
-        request.session.pop('career_counties', None)
+        request.session['career_counties'] = request.POST.getlist('counties')
         request.session['career_institution_type'] = request.POST.get('institution_type', '').strip()
 
         if use_kcse_form:
@@ -1748,6 +1812,7 @@ def pathway_input(request, pathway):
         'optional_groups': optional_groups,
         'current_mean_grade': current_mean_grade,
         'is_edit': bool(request.GET.get('edit')),
+        'kenyan_counties': KENYAN_COUNTIES if pathway.lower() == 'artisan' else [],
     })
 
 
@@ -1770,13 +1835,10 @@ def career_results(request):
     from predictor.services import predict_cutoff as _predict_cutoff, TREND_ICON, TREND_COLOR, TREND_TIP
     from payments.services import has_paid_for_feature, is_feature_enabled
 
-    # Require login
-    if not request.user.is_authenticated:
-        messages.info(request, "Please log in or register to view your career results.")
-        return redirect(f"/accounts/login/?next=/career/results/")
+    is_guest = not request.user.is_authenticated
 
-    # Require payment only if feature is enabled and not already paid
-    if is_feature_enabled('premium_career_report') and not has_paid_for_feature(request.user, 'premium_career_report'):
+    # Payment gate for logged-in users only
+    if not is_guest and is_feature_enabled('premium_career_report') and not has_paid_for_feature(request.user, 'premium_career_report'):
         return redirect("/payments/required/?feature=premium_career_report")
 
     pathway             = request.session.get('career_pathway', '')
@@ -2077,6 +2139,14 @@ def career_results(request):
         except Exception:
             pass
 
+    # Attach job market data to every match (in-memory dict lookup, no extra DB queries)
+    try:
+        from career.job_market import get_jmd_for_course
+        for m in matches:
+            m['job_market'] = get_jmd_for_course(m.get('course'))
+    except Exception:
+        pass
+
     paginator = Paginator(matches, 20)
     page_obj  = paginator.get_page(request.GET.get('page', 1))
 
@@ -2107,6 +2177,7 @@ def career_results(request):
         'backup_plan':         backup_plan,
         'edit_url':            _edit_url,
         'clear_url':           reverse('career:clear_session'),
+        'guest':               is_guest,
     })
 
 
@@ -2337,9 +2408,16 @@ def career_results_pdf_quick(request):
         c.drawString(1.5*cm, H - 0.95*cm, "CareerNext — Career Course Matches Summary")
         c.setFont("Helvetica", 9)
         c.drawRightString(W - 1.5*cm, H - 0.95*cm, f"Page {page_num[0]}")
-        c.setFont("Helvetica-Oblique", 7)
-        c.setFillColor(SLATE)
-        c.drawCentredString(W / 2, 0.85*cm, "careernext.co.ke  |  CareerNext — Empowering Kenyan Students")
+        c.setFillColor(colors.HexColor("#0e7490"))
+        c.rect(0, 1.35*cm, W, 0.08*cm, fill=1, stroke=0)
+        c.setFillColor(NAVY)
+        c.rect(0, 0, W, 1.35*cm, fill=1, stroke=0)
+        c.setFillColor(colors.white)
+        c.setFont("Helvetica-Bold", 7.5)
+        c.drawCentredString(W / 2, 0.82*cm,
+            "careernext.co.ke  —  Your Journey Begins Here")
+        c.setFont("Helvetica", 6.5)
+        c.setFillColor(colors.HexColor("#93c5fd"))
         c.drawCentredString(W / 2, 0.45*cm,
             "For guidance only. Verify all cutoffs on the official KUCCPS portal (kuccps.net) before applying.")
         c.setFillColor(colors.black)
@@ -2602,9 +2680,16 @@ def career_results_pdf_detailed(request):
             c.drawString(1.5*cm, H - 1.55*cm, subtitle)
         c.setFont("Helvetica", 9)
         c.drawRightString(W - 1.5*cm, H - 1.15*cm, f"Page {page_num[0]}")
-        c.setFont("Helvetica-Oblique", 7)
-        c.setFillColor(SLATE)
-        c.drawCentredString(W / 2, 0.85*cm, "careernext.co.ke  |  CareerNext — Empowering Kenyan Students")
+        c.setFillColor(colors.HexColor("#0e7490"))
+        c.rect(0, 1.35*cm, W, 0.08*cm, fill=1, stroke=0)
+        c.setFillColor(NAVY)
+        c.rect(0, 0, W, 1.35*cm, fill=1, stroke=0)
+        c.setFillColor(colors.white)
+        c.setFont("Helvetica-Bold", 7.5)
+        c.drawCentredString(W / 2, 0.82*cm,
+            "careernext.co.ke  —  Your Journey Begins Here")
+        c.setFont("Helvetica", 6.5)
+        c.setFillColor(colors.HexColor("#93c5fd"))
         c.drawCentredString(W / 2, 0.45*cm,
             "For planning purposes only. Verify all cutoffs on the official KUCCPS portal (kuccps.net) before submitting applications.")
         c.setFillColor(colors.black)

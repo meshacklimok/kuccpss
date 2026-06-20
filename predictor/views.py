@@ -193,22 +193,37 @@ def quick_pdf(request):
     c = canvas.Canvas(response, pagesize=A4)
     W, H = A4
 
+    TEAL = colors.HexColor("#0e7490")
+
     def header(page_num):
         c.setFillColor(colors.HexColor("#1e3a8a"))
         c.rect(0, H - 2*cm, W, 2*cm, fill=1, stroke=0)
+        c.setFillColor(TEAL)
+        c.rect(0, H - 2.1*cm, W, 0.1*cm, fill=1, stroke=0)
         c.setFillColor(colors.white)
         c.setFont("Helvetica-Bold", 14)
-        c.drawString(1.5*cm, H - 1.3*cm, "CareerNext — Predicted 2026 Eligibility Report")
-        c.setFont("Helvetica", 9)
-        c.drawRightString(W - 1.5*cm, H - 1.3*cm, f"Page {page_num}")
+        c.drawString(1.5*cm, H - 1.25*cm, "CareerNext — Predicted 2026 Eligibility Report")
+        c.setFont("Helvetica-Oblique", 7.5)
+        c.setFillColor(colors.HexColor("#93c5fd"))
+        c.drawString(1.5*cm, H - 1.72*cm, "Your Journey Begins Here")
+        c.setFont("Helvetica", 8.5)
+        c.setFillColor(colors.HexColor("#bfdbfe"))
+        c.drawRightString(W - 1.5*cm, H - 1.3*cm, f"Page {page_num}  |  careernext.co.ke")
         c.setFillColor(colors.black)
 
     def footer():
-        c.setFont("Helvetica-Oblique", 7.5)
-        c.setFillColor(colors.HexColor("#64748b"))
-        c.drawCentredString(W / 2, 0.7*cm,
+        c.setFillColor(TEAL)
+        c.rect(0, 1.35*cm, W, 0.08*cm, fill=1, stroke=0)
+        c.setFillColor(colors.HexColor("#1e3a8a"))
+        c.rect(0, 0, W, 1.35*cm, fill=1, stroke=0)
+        c.setFillColor(colors.white)
+        c.setFont("Helvetica-Bold", 7.5)
+        c.drawCentredString(W / 2, 0.82*cm,
+            "careernext.co.ke  —  Your Journey Begins Here")
+        c.setFont("Helvetica", 6.5)
+        c.setFillColor(colors.HexColor("#93c5fd"))
+        c.drawCentredString(W / 2, 0.45*cm,
             "For guidance only. Based on 2021–2024 data. Verify cutoffs on the official KUCCPS portal before applying.")
-        c.setFillColor(colors.black)
 
     STATUS_COLOR = {
         "HighLikelihood": colors.HexColor("#16a34a"),
@@ -359,33 +374,41 @@ def full_report_pdf(request):
 
     page_num = [0]
 
+    TEAL_C = colors.HexColor("#0e7490")
+
     def new_page(title=""):
         page_num[0] += 1
         if page_num[0] > 1:
             c.showPage()
 
         c.setFillColor(NAVY)
-        c.rect(0, H - 1.8*cm, W, 1.8*cm, fill=1, stroke=0)
+        c.rect(0, H - 2.0*cm, W, 2.0*cm, fill=1, stroke=0)
+        c.setFillColor(TEAL_C)
+        c.rect(0, H - 2.1*cm, W, 0.12*cm, fill=1, stroke=0)
         c.setFillColor(colors.white)
         c.setFont("Helvetica-Bold", 12)
-        c.drawString(1.5*cm, H - 1.15*cm, "CareerNext — Placement Report 2026")
-        if title:
-            c.setFont("Helvetica", 9)
-            c.drawString(1.5*cm, H - 1.55*cm, title)
-        c.setFont("Helvetica", 9)
-        c.drawRightString(W - 1.5*cm, H - 1.15*cm, f"Page {page_num[0]} of 3")
+        c.drawString(1.5*cm, H - 1.2*cm, "CareerNext — KCSE Placement Readiness Report 2026")
+        c.setFont("Helvetica", 8.5)
+        c.setFillColor(colors.HexColor("#bfdbfe"))
+        subtitle = title or "Your Journey Begins Here"
+        c.drawString(1.5*cm, H - 1.68*cm, subtitle)
+        c.setFont("Helvetica", 8.5)
+        c.drawRightString(W - 1.5*cm, H - 1.25*cm, f"Page {page_num[0]}  |  careernext.co.ke")
 
-        c.setFillColor(GREEN)
-        c.rect(0, H - 1.85*cm, W, 0.08*cm, fill=1, stroke=0)
-
-        c.setFont("Helvetica-Oblique", 7)
-        c.setFillColor(SLATE)
-        c.drawCentredString(W / 2, 0.85*cm, "careernext.co.ke  |  CareerNext — Empowering Kenyan Students")
+        # Footer
+        c.setFillColor(TEAL_C)
+        c.rect(0, 1.35*cm, W, 0.08*cm, fill=1, stroke=0)
+        c.setFillColor(NAVY)
+        c.rect(0, 0, W, 1.35*cm, fill=1, stroke=0)
+        c.setFillColor(colors.white)
+        c.setFont("Helvetica-Bold", 7.5)
+        c.drawCentredString(W / 2, 0.82*cm, "careernext.co.ke  —  Your Journey Begins Here")
+        c.setFont("Helvetica", 6.5)
+        c.setFillColor(colors.HexColor("#93c5fd"))
         c.drawCentredString(W / 2, 0.45*cm,
-            "CareerNext Predicted Report — For planning purposes only. "
-            "Verify all cutoffs on the official KUCCPS portal (kuccps.net) before submitting applications.")
+            "For planning purposes only. Verify all cutoffs on the official KUCCPS portal (kuccps.net) before applying.")
         c.setFillColor(colors.black)
-        return H - 2.4*cm
+        return H - 2.5*cm
 
     # ── PAGE 1: Cover / Profile ───────────────────────────────────────────────
     y = new_page("Page 1 — Student KCSE Profile")
@@ -413,41 +436,67 @@ def full_report_pdf(request):
 
     y -= 4.2*cm
 
-    # Cluster scores mini bar-chart — use KUCCPS 1–20 labels
+    # Cluster scores — card table matching calculator display (no bar charts)
     c.setFont("Helvetica-Bold", 10)
     c.setFillColor(NAVY)
-    c.drawString(1.5*cm, y, "YOUR CLUSTER SCORES (out of 48)")
-    y -= 0.5*cm
+    c.drawString(1.5*cm, y, "YOUR CLUSTER SCORES (out of 48 pts)")
+    y -= 0.42*cm
 
-    kuccps_list = list(range(1, 21))
-    col_w = (W - 3*cm) / 4
-    for i, kuccps_n in enumerate(kuccps_list):
-        calc_n = kuccps_n + 100
-        score  = student_scores.get(calc_n)
-        col    = i % 4
-        if col == 0 and i > 0:
-            y -= 1*cm
-        x = 1.5*cm + col * col_w
+    # Legend
+    AMBER_C = colors.HexColor("#d97706")
+    for lx, lc, lt in [
+        (1.5*cm,  GREEN,   "Strong (36–48 pts)"),
+        (5.5*cm,  NAVY,    "Moderate (24–35 pts)"),
+        (10.0*cm, AMBER_C, "Below 24 pts"),
+    ]:
+        c.setFillColor(lc)
+        c.roundRect(lx, y - 0.18*cm, 0.15*cm, 0.15*cm, 2, fill=1, stroke=0)
+        c.setFillColor(SLATE)
+        c.setFont("Helvetica", 7)
+        c.drawString(lx + 0.24*cm, y - 0.1*cm, lt)
+    y -= 0.42*cm
 
-        bar_w = (score / 48 * (col_w - 0.4*cm)) if score else 0
-        c.setFillColor(LIGHT)
-        c.rect(x, y - 0.5*cm, col_w - 0.3*cm, 0.3*cm, fill=1, stroke=0)
-        c.setFillColor(
-            GREEN if score and score >= 36
-            else NAVY if score and score >= 24
-            else colors.HexColor("#f97316")
-        )
-        c.rect(x, y - 0.5*cm, bar_w, 0.3*cm, fill=1, stroke=0)
-        c.setFont("Helvetica", 7.5)
-        c.setFillColor(colors.black)
-        label_txt = f"C{kuccps_n}: {score:.1f}" if score else f"C{kuccps_n}: —"
-        c.drawString(x, y - 0.9*cm, label_txt)
+    # 4-column grid of cluster cards
+    col_w = (W - 3.0*cm) / 4
+    CELL_H_C = 1.0*cm
+    GAP_C    = 0.1*cm
 
-    y -= 1.8*cm
-    c.setFont("Helvetica", 8)
-    c.setFillColor(SLATE)
-    c.drawString(1.5*cm, y,
-        "Green = 36+ pts (Strong)   |   Blue = 24–35 pts (Moderate)   |   Orange = below 24 pts")
+    for i in range(20):
+        kuccps_n = i + 1
+        score = student_scores.get(kuccps_n + 100) or 0.0
+        col = i % 4
+        row = i // 4
+
+        if score >= 36:
+            sc, bg = GREEN, colors.HexColor("#d1fae5")
+        elif score >= 24:
+            sc, bg = NAVY, colors.HexColor("#dbeafe")
+        else:
+            sc, bg = AMBER_C, colors.HexColor("#fef3c7")
+
+        x      = 1.5*cm + col * (col_w + 0.05*cm)
+        cell_y = y - row * (CELL_H_C + GAP_C)
+
+        # Card background
+        c.setFillColor(bg)
+        c.roundRect(x, cell_y - CELL_H_C, col_w - 0.1*cm, CELL_H_C, 3, fill=1, stroke=0)
+        # Left colour stripe
+        c.setFillColor(sc)
+        c.rect(x, cell_y - CELL_H_C, 0.18*cm, CELL_H_C, fill=1, stroke=0)
+
+        cname = KUCCPS_NAMES.get(kuccps_n, '')
+        if len(cname) > 14:
+            cname = cname[:13] + '…'
+
+        c.setFillColor(NAVY)
+        c.setFont("Helvetica-Bold", 7)
+        c.drawString(x + 0.28*cm, cell_y - 0.3*cm, f"C{kuccps_n}  {cname}")
+        c.setFillColor(sc)
+        c.setFont("Helvetica-Bold", 8.5)
+        score_txt = f"{score:.1f} / 48" if score else "— / 48"
+        c.drawString(x + 0.28*cm, cell_y - 0.72*cm, score_txt)
+
+    y -= 5 * (CELL_H_C + GAP_C) + 0.4*cm
 
     # ── PAGE 2: Predicted Eligibility ─────────────────────────────────────────
     y = new_page("Page 2 — Predicted 2026 Course Eligibility")

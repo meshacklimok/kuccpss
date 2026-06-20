@@ -25,7 +25,10 @@
     top: 56px;
     z-index: 100;
     box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
+    will-change: transform;
 }
+.filter-bar.bar-hidden { transform: translateY(calc(-100% - 56px)); }
 
 .chance-badge {
     display: inline-block;
@@ -312,6 +315,25 @@
         </div>
     </div>
 </div>
+
+<!-- Guest CTA banner -->
+{% if guest %}
+<div style="background:#eff6ff;border-bottom:2px solid #bfdbfe;padding:0.65rem 0;">
+  <div class="container d-flex align-items-center justify-content-between flex-wrap gap-2">
+    <div style="font-size:0.84rem;">
+      <i class="fas fa-lock me-1" style="color:#1d4ed8;"></i>
+      <strong style="color:#1e3a8a;">Free account unlocks:</strong>
+      <span style="color:#3b82f6;"> save courses · share results · AI career chat · personal dashboard</span>
+    </div>
+    <div class="d-flex gap-2 flex-shrink-0">
+      <a href="{% url 'accounts:register' %}?next=/career/results/" class="btn btn-primary btn-sm fw-bold px-3">
+        <i class="fas fa-user-plus me-1"></i>Create Free Account
+      </a>
+      <a href="{% url 'accounts:login' %}?next=/career/results/" class="btn btn-outline-primary btn-sm px-3">Sign In</a>
+    </div>
+  </div>
+</div>
+{% endif %}
 
 <!-- Filter bar -->
 <div class="filter-bar">
@@ -649,6 +671,18 @@
                             {% endif %}
                         </div>
                         {% endif %}
+
+                        {% if match.job_market %}
+                        <div class="meta-row mt-2" style="padding-top:0.35rem;border-top:1px solid #f1f5f9;">
+                            <span class="meta-chip" style="background:#f0fdf4;color:#15803d;border:1px solid #bbf7d0;font-weight:600;">
+                                <i class="fas fa-coins me-1" style="font-size:0.65rem;"></i>{{ match.job_market.salary_display }}
+                            </span>
+                            <span class="meta-chip" style="background:{% if match.job_market.demand == 'High' %}#f0fdf4;color:#166534;border:1px solid #86efac{% elif match.job_market.demand == 'Low' %}#f8fafc;color:#64748b;border:1px solid #e2e8f0{% else %}#fefce8;color:#854d0e;border:1px solid #fde68a{% endif %};">
+                                {% if match.job_market.demand == 'High' %}<i class="fas fa-arrow-trend-up me-1" style="font-size:0.65rem;"></i>{% endif %}{{ match.job_market.demand }} Demand
+                            </span>
+                        </div>
+                        {% endif %}
+
                     </div>
                 </div>
             </div>
@@ -1041,11 +1075,25 @@ document.body.insertAdjacentHTML('beforeend', `
 <!-- Pulse ring behind button -->
 <div id="aiPulse" style="position:fixed;bottom:28px;right:28px;z-index:1053;pointer-events:none;"></div>
 
+{% if guest %}
+<!-- Guest: AI nudge button linking to register -->
+<a href="{% url 'accounts:register' %}?next=/career/results/"
+   title="Create a free account to chat with the AI Career Advisor"
+   style="position:fixed;bottom:28px;right:28px;z-index:1052;
+          width:56px;height:56px;border-radius:50%;
+          background:linear-gradient(135deg,#4f46e5,#7c3aed);
+          color:#fff;display:flex;align-items:center;justify-content:center;
+          font-size:1.3rem;box-shadow:0 4px 20px rgba(79,70,229,0.45);
+          text-decoration:none;">
+  <i class="fas fa-robot"></i>
+</a>
+{% else %}
 <!-- Float button -->
 <button id="aiFloatBtn" onclick="aipToggle()" title="Ask AI about your results">
   <span id="aiUnreadBadge">1</span>
   <i class="fas fa-robot" id="aiFabIcon"></i>
 </button>
+{% endif %}
 
 <!-- Chat panel -->
 <div id="aiChatPanel">
@@ -1291,5 +1339,35 @@ function nativeShareResult() {
         }).catch(() => {});
     }
 }
+
+// Salary data source note — injected once on page load
+(function () {
+    var hasJmd = document.querySelector('.meta-chip[style*="coins"]');
+    if (!hasJmd) return;
+    var note = document.createElement('p');
+    note.style.cssText = 'font-size:0.68rem;color:#94a3b8;text-align:center;margin:0.5rem 0 1.5rem;padding:0 1rem;';
+    note.innerHTML = '<i class="fas fa-circle-info me-1"></i>Salary ranges are gross monthly estimates for Kenya ({{ job_market_year|default:"2024" }}) from <a href="https://www.brightermonday.co.ke/research" target="_blank" rel="noopener" style="color:#94a3b8;">BrighterMonday Kenya Salary Report</a> &amp; <a href="https://www.knbs.or.ke" target="_blank" rel="noopener" style="color:#94a3b8;">KNBS Economic Survey</a>. Actual pay varies by employer, experience &amp; location.';
+    var paginationEl = document.querySelector('.pagination');
+    var target = paginationEl ? paginationEl.closest('nav') : document.querySelector('.results-list');
+    if (target) target.insertAdjacentElement('afterend', note);
+}());
+
+// Hide filter-bar on scroll down, reveal on scroll up
+(function () {
+    var bar   = document.querySelector('.filter-bar');
+    var lastY = 0;
+    var raf   = false;
+    window.addEventListener('scroll', function () {
+        if (raf) return;
+        raf = true;
+        requestAnimationFrame(function () {
+            var y    = window.scrollY;
+            var down = y > lastY && y > 100;
+            if (bar) bar.classList.toggle('bar-hidden', down);
+            lastY = y;
+            raf = false;
+        });
+    }, { passive: true });
+}());
 </script>
 {% endblock %}

@@ -5,7 +5,7 @@ from .models import (
     TVETCategory, TVETCourse, KMTCampus, KMTCourse, TTCCollege, TTCCourse,
     CareerInsight,
     CareerProfile, QuizQuestion, QuizOption, QuizSubmission, QuizAnswer,
-    CareerConfig,
+    CareerConfig, AIKnowledgeEntry, JobMarketData,
 )
 
 
@@ -158,3 +158,63 @@ class CareerConfigAdmin(admin.ModelAdmin):
         return HttpResponseRedirect(
             reverse("admin:career_careerconfig_change", args=[config.pk])
         )
+
+
+# =====================================================
+# AI Knowledge Base
+# =====================================================
+@admin.register(AIKnowledgeEntry)
+class AIKnowledgeEntryAdmin(admin.ModelAdmin):
+    list_display  = ("question_short", "category", "is_active", "order", "updated_at")
+    list_filter   = ("category", "is_active")
+    search_fields = ("question", "answer", "keywords")
+    list_editable = ("is_active", "order")
+    ordering      = ("category", "order", "id")
+    fieldsets = (
+        (None, {
+            "fields": ("question", "answer"),
+        }),
+        ("Classification & Search", {
+            "fields": ("category", "keywords", "order", "is_active"),
+            "description": (
+                "Keywords are comma-separated words the chatbot uses to find this entry "
+                "(e.g. 'c+,degree,qualify,university'). The more relevant keywords you add, "
+                "the better the AI will match student questions to this answer."
+            ),
+        }),
+    )
+
+    def question_short(self, obj):
+        return obj.question[:90]
+    question_short.short_description = "Question"
+
+
+# =====================================================
+# Job Market Intelligence
+# =====================================================
+@admin.register(JobMarketData)
+class JobMarketDataAdmin(admin.ModelAdmin):
+    list_display  = ('career_name', 'demand', 'salary_display', 'top_sectors', 'source_year')
+    list_filter   = ('demand', 'source_year')
+    search_fields = ('career_name', 'keywords', 'top_sectors')
+    list_editable = ('demand',)
+    ordering      = ('career_name',)
+    fieldsets = (
+        (None, {
+            'fields': ('career_name', 'keywords', 'demand'),
+            'description': 'Keywords are matched against course career_outcomes — use comma-separated lowercase job titles.',
+        }),
+        ('Salary (monthly gross KES)', {
+            'fields': ('salary_min', 'salary_max'),
+        }),
+        ('Market Info', {
+            'fields': ('top_sectors',),
+        }),
+        ('Source', {
+            'fields': ('source_year', 'source_name', 'source_url'),
+        }),
+    )
+
+    def salary_display(self, obj):
+        return obj.salary_display()
+    salary_display.short_description = 'Salary Range'

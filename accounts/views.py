@@ -63,19 +63,20 @@ class RegisterView(View):
         if form.is_valid():
             user = form.save(commit=False)
             user.is_active = True
-            user.is_verified = False  # stays False until they click the email link
+            user.is_verified = True
             user.save()
 
-            # Generate and send email verification link
+            # Send a welcome / confirm-your-email message in the background (non-blocking)
             token = secrets.token_urlsafe(32)
             EmailVerificationToken.objects.create(user=user, token=token)
             verify_url = request.build_absolute_uri(f"/accounts/verify-email/{token}/")
             try:
                 send_mail(
-                    subject="Verify your CareerNext account",
+                    subject="Welcome to CareerNext!",
                     message=(
                         f"Hi {user.full_name or user.email},\n\n"
-                        f"Click the link below to verify your email address:\n\n"
+                        f"Your account is ready. You're already logged in!\n\n"
+                        f"To keep your account secure, please confirm your email address:\n\n"
                         f"{verify_url}\n\n"
                         f"This link expires in 24 hours.\n\n"
                         f"If you did not create a CareerNext account, ignore this email.\n\n"
@@ -83,10 +84,11 @@ class RegisterView(View):
                     ),
                     from_email=None,
                     recipient_list=[user.email],
-                    fail_silently=False,
+                    fail_silently=True,
                 )
             except Exception:
                 pass
+
             # ── Referral attribution ──────────────────────────────
             ref_code = request.session.pop('referral_code', None)
             if ref_code:
@@ -110,11 +112,10 @@ class RegisterView(View):
             except Exception:
                 pass
 
-            messages.success(
-                request,
-                "Account created! Check your email and click the verification link to log in."
-            )
-            return redirect("accounts:login")
+            login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+            request.session['_auth_verified_at'] = time.time()
+            messages.success(request, f"Welcome to CareerNext, {user.full_name or user.email}!")
+            return redirect("accounts:dashboard")
 
         return render(request, self.template_name, {"form": form})
 
@@ -173,12 +174,6 @@ class LoginView(View):
                 return redirect("accounts:login")
             if user.is_suspended:
                 messages.error(request, "Your account is suspended.")
-                return redirect("accounts:login")
-            if not user.is_verified:
-                messages.error(
-                    request,
-                    "Please verify your email first — check your inbox (and spam) for a link from CareerNext."
-                )
                 return redirect("accounts:login")
 
             cache.delete(rl_key)  # Clear fail counter on successful login
@@ -289,9 +284,6 @@ def dashboard_view(request: HttpRequest) -> HttpResponse:
         })
 
     user = request.user
-    if not user.is_verified:
-        messages.warning(request, "You must verify your email to access the dashboard.")
-        return redirect("accounts:login")
     if not user.is_active or user.is_suspended:
         messages.error(request, "Your account is inactive or suspended.")
         return redirect("accounts:login")
@@ -965,21 +957,59 @@ def export_shortlist_pdf(request: HttpRequest) -> HttpResponse:
     p = canvas.Canvas(response, pagesize=A4)
     w, h = A4
 
-    # Header
-    p.setFillColor(colors.HexColor('#1e3a8a'))
-    p.rect(0, h - 3*cm, w, 3*cm, fill=1, stroke=0)
-    p.setFillColor(colors.white)
-    p.setFont('Helvetica-Bold', 18)
-    p.drawString(1.5*cm, h - 1.6*cm, 'CareerNext — My Course Shortlist')
-    p.setFont('Helvetica', 9)
-    name = request.user.full_name or request.user.email
-    p.drawString(1.5*cm, h - 2.3*cm, f'Student: {name}   |   Generated: {timezone.now().strftime("%d %b %Y")}')
+    NAVY    = colors.HexColor('#1e3a8a')
+    TEAL    = colors.HexColor('#0e7490')
+    PURPLE  = colors.HexColor('#7c3aed')
+    SLATE   = colors.HexColor('#475569')
+    LIGHT   = colors.HexColor('#f0f9ff')
+    WHITE   = colors.white
 
-    y = h - 4*cm
+    name = request.user.full_name or request.user.email
+    page_num = [0]
+
+    def new_page():
+        page_num[0] += 1
+        if page_num[0] > 1:
+            p.showPage()
+        # Header
+        p.setFillColor(NAVY)
+        p.rect(0, h - 2.6*cm, w, 2.6*cm, fill=1, stroke=0)
+        p.setFillColor(TEAL)
+        p.rect(0, h - 2.7*cm, w, 0.12*cm, fill=1, stroke=0)
+        p.setFillColor(WHITE)
+        p.setFont('Helvetica-Bold', 16)
+        p.drawString(1.5*cm, h - 1.3*cm, 'CareerNext — My Course Shortlist')
+        p.setFont('Helvetica-Oblique', 7.5)
+        p.setFillColor(colors.HexColor('#93c5fd'))
+        p.drawString(1.5*cm, h - 1.78*cm, 'Your Journey Begins Here')
+        p.setFont('Helvetica', 8.5)
+        p.setFillColor(colors.HexColor('#bfdbfe'))
+        p.drawString(1.5*cm, h - 2.22*cm,
+            f'Student: {name}   |   Generated: {timezone.now().strftime("%d %b %Y")}')
+        p.setFont('Helvetica', 8)
+        p.drawRightString(w - 1.5*cm, h - 1.35*cm,
+            f'careernext.co.ke   |   Page {page_num[0]}')
+        # Footer
+        p.setFillColor(TEAL)
+        p.rect(0, 1.35*cm, w, 0.08*cm, fill=1, stroke=0)
+        p.setFillColor(NAVY)
+        p.rect(0, 0, w, 1.35*cm, fill=1, stroke=0)
+        p.setFillColor(WHITE)
+        p.setFont('Helvetica-Bold', 7.5)
+        p.drawCentredString(w / 2, 0.82*cm,
+            'careernext.co.ke  —  Your Journey Begins Here')
+        p.setFont('Helvetica', 6.5)
+        p.setFillColor(colors.HexColor('#93c5fd'))
+        p.drawCentredString(w / 2, 0.45*cm,
+            'Apply officially at kuccps.net  |  For guidance only — verify all details before applying')
+        return h - 3.2*cm
+
+    y = new_page()
     p.setFillColor(colors.HexColor('#1e293b'))
 
     if not items:
         p.setFont('Helvetica', 11)
+        p.setFillColor(SLATE)
         p.drawString(1.5*cm, y, 'Your shortlist is empty.')
         p.save()
         return response
@@ -987,48 +1017,52 @@ def export_shortlist_pdf(request: HttpRequest) -> HttpResponse:
     for i, item in enumerate(items, 1):
         course = item.course
         if y < 6*cm:
-            p.showPage()
-            y = h - 2*cm
+            y = new_page()
 
         rank_label = f'Choice #{item.rank}' if item.rank else f'#{i}'
-        p.setFont('Helvetica-Bold', 11)
-        p.setFillColor(colors.HexColor('#1d4ed8'))
-        p.drawString(1.5*cm, y, f'{rank_label}  {course.name}')
+
+        # Course title row with choice badge
+        p.setFillColor(PURPLE)
+        p.roundRect(1.5*cm, y - 0.32*cm, 1.1*cm, 0.32*cm, 3, fill=1, stroke=0)
+        p.setFillColor(WHITE)
+        p.setFont('Helvetica-Bold', 7.5)
+        p.drawCentredString(2.05*cm, y - 0.2*cm, rank_label)
+
+        p.setFont('Helvetica-Bold', 10.5)
+        p.setFillColor(NAVY)
+        course_name = course.name[:55] if len(course.name) > 55 else course.name
+        p.drawString(2.8*cm, y - 0.2*cm, course_name)
         y -= 0.5*cm
 
-        p.setFont('Helvetica', 9)
-        p.setFillColor(colors.HexColor('#475569'))
-        type_label = course.course_type.name if course.course_type else '—'
-        cluster_label = course.cluster.name if course.cluster else '—'
-        grade_label = course.minimum_mean_grade or '—'
+        p.setFont('Helvetica', 8.5)
+        p.setFillColor(SLATE)
+        type_label     = course.course_type.name if course.course_type else '—'
+        cluster_label  = course.cluster.name if course.cluster else '—'
+        grade_label    = course.minimum_mean_grade or '—'
         duration_label = course.duration or '—'
-        p.drawString(2*cm, y, f'Type: {type_label}   |   Cluster: {cluster_label}   |   Min Grade: {grade_label}   |   Duration: {duration_label}')
-        y -= 0.45*cm
+        p.drawString(1.5*cm, y,
+            f'Type: {type_label}   |   Cluster: {cluster_label}   |   Min Grade: {grade_label}   |   Duration: {duration_label}')
+        y -= 0.42*cm
 
         offs = list(course.offerings.all()[:4])
         if offs:
             inst_names = ', '.join(o.institution.name for o in offs)
             if course.offerings.count() > 4:
                 inst_names += f' +{course.offerings.count()-4} more'
-            p.drawString(2*cm, y, f'Institutions: {inst_names}')
-            y -= 0.45*cm
+            p.drawString(1.5*cm, y, f'Institutions: {inst_names}')
+            y -= 0.42*cm
 
         if item.notes:
             p.setFont('Helvetica-Oblique', 8)
             p.setFillColor(colors.HexColor('#64748b'))
-            p.drawString(2*cm, y, f'Notes: {item.notes[:120]}')
-            y -= 0.45*cm
+            p.drawString(1.5*cm, y, f'Notes: {item.notes[:120]}')
+            y -= 0.42*cm
 
         # Divider
         p.setStrokeColor(colors.HexColor('#e2e8f0'))
         p.line(1.5*cm, y, w - 1.5*cm, y)
-        y -= 0.6*cm
+        y -= 0.55*cm
 
-    # Footer
-    p.setFont('Helvetica', 7)
-    p.setFillColor(colors.HexColor('#94a3b8'))
-    p.drawCentredString(w/2, 1.5*cm, 'careernext.co.ke  |  CareerNext — Empowering Kenyan Students')
-    p.drawCentredString(w/2, 1*cm, 'Apply officially at kuccps.ac.ke')
     p.save()
     return response
 

@@ -1,5 +1,9 @@
+from django.contrib.auth.decorators import login_required
+from django.db.models import Avg, Count
+from django.http import JsonResponse
 from django.shortcuts import render, get_object_or_404
-from django.db.models import Count
+from django.views.decorators.http import require_POST
+from courses.models import Review
 from .models import InstitutionType, Institution
 
 
@@ -63,8 +67,38 @@ def institution_detail(request, type_slug, institution_slug):
     from analytics.utils import log_view
     log_view(request, content_type='institution', object_id=institution.pk, object_name=institution.name)
 
+    reviews_qs = Review.objects.filter(institution=institution).select_related('user')
+    agg = reviews_qs.aggregate(avg=Avg('rating'), total=Count('id'))
+    user_review = reviews_qs.filter(user=request.user).first() if request.user.is_authenticated else None
+
     return render(request, 'institutions/institution_detail.html', {
         'institution': institution,
         'grouped_offerings': grouped,
         'total_courses': offerings.count(),
+        'reviews': reviews_qs[:20],
+        'avg_rating': round(agg['avg'], 1) if agg['avg'] else None,
+        'review_count': agg['total'],
+        'user_review': user_review,
+    })
+
+
+@login_required
+@require_POST
+def submit_institution_review(request, type_slug, institution_slug):
+    institution = get_object_or_404(Institution, slug=institution_slug)
+    try:
+        rating = int(request.POST.get('rating', 0))
+    except (ValueError, TypeError):
+        rating = 0
+    if not 1 <= rating <= 5:
+        return JsonResponse({'error': 'Invalid rating'}, status=400)
+    body = request.POST.get('body', '').strip()[:280]
+    Review.objects.update_or_create(
+        user=request.user, institution=institution,
+        defaults={'rating': rating, 'body': body},
+    )
+    agg = Review.objects.filter(institution=institution).aggregate(avg=Avg('rating'), total=Count('id'))
+    return JsonResponse({
+        'avg': round(agg['avg'], 1) if agg['avg'] else rating,
+        'total': agg['total'],
     })

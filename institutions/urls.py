@@ -12,4 +12,7 @@ urlpatterns = [
 
     # Institution detail page
     path('<slug:type_slug>/<slug:institution_slug>/', views.institution_detail, name='institution_detail'),
+
+    # Review submission (AJAX POST)
+    path('<slug:type_slug>/<slug:institution_slug>/review/', views.submit_institution_review, name='submit_institution_review'),
 ]

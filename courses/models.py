@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.db import models
 from django.utils.text import slugify
 from clusters.models import Cluster
@@ -136,3 +137,24 @@ class CourseOffering(models.Model):
             return None
         years = sorted(self.cutoff_points.keys(), reverse=True)
         return self.cutoff_points.get(years[0]) if years else None
+
+
+class Review(models.Model):
+    """Star rating + optional short text for a course or institution."""
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='reviews')
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, null=True, blank=True, related_name='reviews')
+    institution = models.ForeignKey(Institution, on_delete=models.CASCADE, null=True, blank=True, related_name='reviews')
+    rating = models.PositiveSmallIntegerField(choices=[(i, i) for i in range(1, 6)])
+    body = models.CharField(max_length=280, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        constraints = [
+            models.UniqueConstraint(fields=['user', 'course'], condition=models.Q(course__isnull=False), name='unique_course_review'),
+            models.UniqueConstraint(fields=['user', 'institution'], condition=models.Q(institution__isnull=False), name='unique_institution_review'),
+        ]
+
+    def __str__(self):
+        target = self.course or self.institution
+        return f"{self.user} → {target} ({self.rating}★)"
