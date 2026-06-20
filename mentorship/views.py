@@ -321,6 +321,7 @@ def initiate_payment(request, token):
             phone_number=phone,
             amount=session.amount,
             payment_ref=str(session.token),
+            email=request.user.email,
             narrative=f"CareerNext Mentorship — {session.mentor.display_name}",
         )
         session.phone_used = normalise_phone(phone)
