@@ -212,22 +212,17 @@ SOCIALACCOUNT_EMAIL_AUTHENTICATION_AUTO_CONNECT = True
 ACCOUNT_ADAPTER = 'accounts.adapters.AccountAdapter'
 SOCIALACCOUNT_ADAPTER = 'accounts.adapters.SocialAccountAdapter'
 
-_google_provider = {
-    'SCOPE': ['profile', 'email'],
-    'AUTH_PARAMS': {'access_type': 'online'},
-    'FETCH_USERINFO': True,
+SOCIALACCOUNT_PROVIDERS = {
+    'google': {
+        'SCOPE': ['profile', 'email'],
+        'AUTH_PARAMS': {'access_type': 'online'},
+        'FETCH_USERINFO': True,
+    }
 }
-# When GOOGLE_CLIENT_ID env var is set, allauth uses it directly (no DB SocialApp needed)
+# build.sh creates/updates the DB SocialApp from GOOGLE_CLIENT_ID + GOOGLE_SECRET env vars.
+# Templates use this flag to hide the Google button when credentials are not configured.
 _google_client_id = os.environ.get('GOOGLE_CLIENT_ID', '')
-# True only when Google credentials are present — templates check this to hide the button
 GOOGLE_OAUTH_AVAILABLE = bool(_google_client_id)
-if _google_client_id:
-    _google_provider['APPS'] = [{
-        'client_id': _google_client_id,
-        'secret': os.environ.get('GOOGLE_SECRET', ''),
-        'key': '',
-    }]
-SOCIALACCOUNT_PROVIDERS = {'google': _google_provider}
 
 
 
