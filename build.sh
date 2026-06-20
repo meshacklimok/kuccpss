@@ -69,11 +69,20 @@ from django.contrib.auth import get_user_model
 User = get_user_model()
 email = os.environ.get('DJANGO_SUPERUSER_EMAIL', '')
 password = os.environ.get('DJANGO_SUPERUSER_PASSWORD', '')
-if email and password and not User.objects.filter(email=email).exists():
-    User.objects.create_superuser(email=email, password=password)
-    print(f'Superuser {email} created')
+if email and password:
+    user, created = User.objects.get_or_create(email=email, defaults={'is_staff': True, 'is_superuser': True})
+    if created:
+        user.set_password(password)
+        user.save()
+        print(f'Superuser {email} created')
+    else:
+        user.set_password(password)
+        user.is_staff = True
+        user.is_superuser = True
+        user.save()
+        print(f'Superuser {email} password updated')
 elif email:
-    print(f'Superuser {email} already exists')
+    print('DJANGO_SUPERUSER_PASSWORD not set — skipping')
 else:
     print('No DJANGO_SUPERUSER_EMAIL set, skipping superuser creation')
 "
