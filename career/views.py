@@ -51,14 +51,16 @@ def get_course_from_match(match: StudentCourseMatch):
 # 1. Home / Pathway Selection
 # =====================================================
 def home(request):
-    """
-    Home page: select pathway (Degree, Diploma, TVET, KMTC, TTC)
-    """
+    from courses.models import Course
+    from institutions.models import Institution
+
     categories = ["Degree", "Diploma", "TVET", "KMTC", "TTC"]
     tvet_categories = TVETCategory.objects.all()
     context = {
         "categories": categories,
-        "tvet_categories": tvet_categories
+        "tvet_categories": tvet_categories,
+        "course_count": Course.objects.count(),
+        "institution_count": Institution.objects.count(),
     }
     return render(request, "career/home.html", context)
 

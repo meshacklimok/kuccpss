@@ -17,12 +17,20 @@ GROUP_LABELS = {
     'V':   'Group V – Languages, Business & Music',
 }
 
-# Subjects every student must enter
+# Subjects shown in the "Core Subjects" accordion (most students take these)
 COMPULSORY_SUBJECT_NAMES = [
     'English',
     'Kiswahili',
     'Mathematics',
     'Chemistry',
+]
+
+# Subjects that are truly required by every KCSE candidate
+# Chemistry is kept in core display but NOT required — many students sit Biology/Physics instead
+REQUIRED_SUBJECT_NAMES = [
+    'English',
+    'Kiswahili',
+    'Mathematics',
 ]
 
 
@@ -52,10 +60,10 @@ class KCSEForm(forms.Form):
         self.compulsory_subjects = COMPULSORY_SUBJECT_NAMES
 
         for subject in self.subjects:
-            is_compulsory = subject.name in self.compulsory_subjects
+            is_required = subject.name in REQUIRED_SUBJECT_NAMES
             self.fields[f'subject_{subject.id}'] = forms.ChoiceField(
                 choices=grade_choices,
-                required=is_compulsory,
+                required=is_required,
                 label=subject.name,
                 widget=forms.Select(attrs={
                     'class': 'form-select',
