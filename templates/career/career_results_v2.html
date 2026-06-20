@@ -4,6 +4,7 @@
 {% block title %}{{ pathway }} Course Matches — Career Guidance{% endblock %}
 
 {% block content %}
+{% if is_locked %}{% include "payments/paywall_overlay.html" %}{% endif %}
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
 
 <style>
@@ -262,6 +263,9 @@
 .bp-footnote a { color:#7c3aed; }
 @media(max-width:640px) { .bp-grid { grid-template-columns:1fr; } .bp-header { flex-direction:column; gap:.6rem; } }
 </style>
+
+<!-- Main content (blurred when locked) -->
+<div id="pw-main-content" {% if is_locked %}class="pw-blurred"{% endif %}>
 
 <!-- Hero stats bar -->
 <div class="results-hero">
@@ -834,6 +838,8 @@
   </p>
 </div>
 {% endif %}
+
+</div>{# /pw-main-content #}
 
 {% endblock %}
 

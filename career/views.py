@@ -1837,10 +1837,6 @@ def career_results(request):
 
     is_guest = not request.user.is_authenticated
 
-    # Payment gate for logged-in users only
-    if not is_guest and is_feature_enabled('premium_career_report') and not has_paid_for_feature(request.user, 'premium_career_report'):
-        return redirect("/payments/required/?feature=premium_career_report&next=/career/results/")
-
     pathway             = request.session.get('career_pathway', '')
     filter_chance       = request.GET.get('chance', '')
     filter_tier         = request.GET.get('tier', '')
@@ -2171,6 +2167,22 @@ def career_results(request):
     else:
         _edit_url = reverse('career:home')
 
+    # Payment gate — computed after matches so we can show the real count on the overlay
+    from payments.services import price_for_feature as _price_for
+    _is_locked = (
+        not is_guest
+        and is_feature_enabled('premium_career_report')
+        and not has_paid_for_feature(request.user, 'premium_career_report')
+    )
+    _gate_items = [
+        "Your full personalised course list — filtered for YOUR exact cluster points",
+        "Admission probability for every course: Very High, Likely, Borderline, Long Shot",
+        "Cutoff trend analysis — see if competition is rising or falling this season",
+        "Smart Backup Plan: ranked alternatives if your top choice is out of reach",
+        "Save & shortlist your favourites for KUCCPS application season",
+        "Share your results with family via WhatsApp in one tap",
+    ]
+
     return render(request, 'career/career_results_v2.html', {
         'page_obj':            page_obj,
         'pathway':             pathway,
@@ -2190,6 +2202,11 @@ def career_results(request):
         'edit_url':            _edit_url,
         'clear_url':           reverse('career:clear_session'),
         'guest':               is_guest,
+        'is_locked':           _is_locked,
+        'gate_feature':        'premium_career_report',
+        'gate_price':          _price_for('premium_career_report'),
+        'gate_items':          _gate_items,
+        'gate_subtext':        f"We've scanned every university, KMTC, TVET & TTC in Kenya against your exact grades — {len(matches)} courses are waiting for you.",
     })
 
 

@@ -3,6 +3,8 @@
 {% block title %}My Eligible Courses — CareerNext{% endblock %}
 
 {% block content %}
+{% if is_locked %}{% include "payments/paywall_overlay.html" %}{% endif %}
+<div id="pw-main-content" {% if is_locked %}class="pw-blurred"{% endif %}>
 
 <!-- Page Hero -->
 <div class="page-hero" style="padding:1.5rem 0;">
@@ -294,6 +296,7 @@
   {% endif %}
 
 </div>
+</div>{# /pw-main-content #}
 {% endblock %}
 
 {% block extra_js %}
