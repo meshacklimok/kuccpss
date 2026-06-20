@@ -137,11 +137,11 @@ def course_detail(request, type_slug, category_slug=None, course_slug=None):
         course = Course.objects.filter(slug=course_slug, course_type__slug=type_slug).first()
 
     if course is None:
-        # Course may have been moved to a different type — find by slug alone and redirect
+        # Course may have been moved — find by slug and redirect to its actual URL
         course = get_object_or_404(Course, slug=course_slug)
-        if category_slug:
+        if course.category:
             return redirect('courses:course_detail', type_slug=course.course_type.slug,
-                            category_slug=category_slug, course_slug=course_slug)
+                            category_slug=course.category.slug, course_slug=course_slug)
         return redirect('courses:course_detail_no_category', type_slug=course.course_type.slug,
                         course_slug=course_slug)
 
@@ -154,47 +154,55 @@ def course_detail(request, type_slug, category_slug=None, course_slug=None):
     chart_json = None
     _PALETTE = ['#1e3a8a', '#7c3aed', '#16a34a', '#d97706', '#dc2626', '#0891b2', '#db2777']
 
-    has_data = [o for o in offerings if o.cutoff_points and len(o.cutoff_points) >= 2]
-    if has_data:
-        all_years = set()          
-        for o in has_data:
-            all_years.update(o.cutoff_points.keys())
-        years = sorted(all_years)
+    try:
+        # Normalize cutoff_points keys to strings — JSON fixtures may store years as int or str
+        def _norm_cp(cp):
+            return {str(k): v for k, v in cp.items()} if cp else {}
 
-        top = sorted(has_data, key=lambda o: o.latest_cutoff() or 0, reverse=True)[:6]
-        datasets = []
-        for i, off in enumerate(top):
-            datasets.append({
-                'label': off.institution.abbreviation or off.institution.name[:22],
-                'data': [off.cutoff_points.get(y) for y in years],
-                'borderColor': _PALETTE[i % len(_PALETTE)],
-                'backgroundColor': _PALETTE[i % len(_PALETTE)] + '18',
-                'tension': 0.38,
-                'pointRadius': 5,
-                'pointHoverRadius': 7,
-                'borderWidth': 2.5,
-                'fill': False,
-            })
+        has_data = [(o, _norm_cp(o.cutoff_points)) for o in offerings
+                    if o.cutoff_points and len(o.cutoff_points) >= 2]
+        if has_data:
+            all_years = set()
+            for _, cp in has_data:
+                all_years.update(cp.keys())
+            years = sorted(all_years)
 
-        if len(has_data) > 1:
-            avg = []
-            for y in years:
-                vals = [o.cutoff_points[y] for o in has_data if o.cutoff_points.get(y) is not None]
-                avg.append(round(sum(vals) / len(vals), 1) if vals else None)
-            datasets.append({
-                'label': 'Average',
-                'data': avg,
-                'borderColor': '#94a3b8',
-                'backgroundColor': 'transparent',
-                'borderDash': [6, 3],
-                'tension': 0.38,
-                'pointRadius': 3,
-                'pointHoverRadius': 5,
-                'borderWidth': 2,
-                'fill': False,
-            })
+            top = sorted(has_data, key=lambda t: t[0].latest_cutoff() or 0, reverse=True)[:6]
+            datasets = []
+            for i, (off, cp) in enumerate(top):
+                datasets.append({
+                    'label': off.institution.abbreviation or off.institution.name[:22],
+                    'data': [cp.get(y) for y in years],
+                    'borderColor': _PALETTE[i % len(_PALETTE)],
+                    'backgroundColor': _PALETTE[i % len(_PALETTE)] + '18',
+                    'tension': 0.38,
+                    'pointRadius': 5,
+                    'pointHoverRadius': 7,
+                    'borderWidth': 2.5,
+                    'fill': False,
+                })
 
-        chart_json = json.dumps({'labels': years, 'datasets': datasets})
+            if len(has_data) > 1:
+                avg = []
+                for y in years:
+                    vals = [cp.get(y) for _, cp in has_data if cp.get(y) is not None]
+                    avg.append(round(sum(vals) / len(vals), 1) if vals else None)
+                datasets.append({
+                    'label': 'Average',
+                    'data': avg,
+                    'borderColor': '#94a3b8',
+                    'backgroundColor': 'transparent',
+                    'borderDash': [6, 3],
+                    'tension': 0.38,
+                    'pointRadius': 3,
+                    'pointHoverRadius': 5,
+                    'borderWidth': 2,
+                    'fill': False,
+                })
+
+            chart_json = json.dumps({'labels': years, 'datasets': datasets})
+    except Exception:
+        chart_json = None
 
     is_shortlisted = False
     shortlist_count = 0
@@ -207,8 +215,11 @@ def course_detail(request, type_slug, category_slug=None, course_slug=None):
     agg = reviews_qs.aggregate(avg=Avg('rating'), total=Count('id'))
     user_review = reviews_qs.filter(user=request.user).first() if request.user.is_authenticated else None
 
-    from career.job_market import get_jmd_for_course
-    job_market = get_jmd_for_course(course)
+    try:
+        from career.job_market import get_jmd_for_course
+        job_market = get_jmd_for_course(course)
+    except Exception:
+        job_market = None
 
     context = {
         'course': course,
