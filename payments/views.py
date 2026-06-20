@@ -11,7 +11,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 
 from .models import Payment, Transaction
-from .services import initiate_stk_push, price_for_feature
+from .services import initiate_stk_push, price_for_feature, fetch_intasend_status
 
 logger = logging.getLogger(__name__)
 
@@ -229,3 +229,49 @@ def payment_status(request, payment_id):
     """
     payment = get_object_or_404(Payment, pk=payment_id, user=request.user)
     return JsonResponse({"status": payment.status, "feature": payment.feature})
+
+
+@login_required
+def verify_payment(request, payment_id):
+    """
+    Fallback: pull the current status directly from IntaSend's API and update DB.
+    Called when the webhook didn't arrive (user navigated away, timeout, etc.)
+    Returns: { status, feature, message }
+    """
+    payment = get_object_or_404(Payment, pk=payment_id, user=request.user)
+
+    if payment.status == "completed":
+        return JsonResponse({"status": "completed", "feature": payment.feature, "message": "Already unlocked."})
+
+    remote_state = fetch_intasend_status(payment.checkout_id)
+    logger.info("verify_payment %s: IntaSend says %s", payment_id, remote_state)
+
+    if remote_state == "COMPLETE":
+        payment.status = "completed"
+        payment.save(update_fields=["status", "updated_at"])
+        return JsonResponse({"status": "completed", "feature": payment.feature, "message": "Payment confirmed!"})
+    elif remote_state == "FAILED":
+        payment.status = "failed"
+        payment.save(update_fields=["status", "updated_at"])
+        return JsonResponse({"status": "failed", "feature": payment.feature, "message": "Payment failed."})
+    elif remote_state is None and not payment.checkout_id:
+        return JsonResponse({"status": payment.status, "feature": payment.feature, "message": "No checkout ID — payment may not have been sent."})
+    else:
+        return JsonResponse({"status": "pending", "feature": payment.feature, "message": "Payment is still processing. Please wait a moment."})
+
+
+@login_required
+def pending_payment_for_feature(request):
+    """
+    Returns the most recent pending payment for a feature, so the frontend can
+    offer 'I already paid — verify' without making the user pay again.
+    """
+    feature = request.GET.get("feature", "")
+    payment = (
+        Payment.objects.filter(user=request.user, feature=feature, status="pending")
+        .order_by("-created_at")
+        .first()
+    )
+    if payment:
+        return JsonResponse({"found": True, "payment_id": payment.pk, "created_at": payment.created_at.isoformat()})
+    return JsonResponse({"found": False})

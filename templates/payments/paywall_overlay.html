@@ -231,16 +231,38 @@
             </button>
         </div>
 
+        <!-- Timeout step (webhook didn't arrive in time) -->
+        <div class="pw-state" id="pw-step-timeout">
+            <div class="pw-state-icon">⏳</div>
+            <div class="pw-state-title" style="color:#f59e0b;">Still Processing…</div>
+            <div class="pw-state-sub" id="pw-timeout-sub">If you entered your M-Pesa PIN, click below to verify — your payment may have gone through but confirmation is delayed.</div>
+            <button class="pw-btn" style="margin:0.9rem auto 0;font-size:0.85rem;" id="pw-verify-btn" onclick="pwVerify()">
+                <i class="fas fa-search"></i> Verify My Payment
+            </button>
+            <button class="pw-btn" style="max-width:180px;margin:0.6rem auto 0;font-size:0.82rem;background:rgba(255,255,255,0.08);box-shadow:none;" onclick="pwReset()">
+                <i class="fas fa-redo"></i> Pay Again
+            </button>
+        </div>
+
+        <!-- Already-paid check step -->
+        <div class="pw-state" id="pw-step-checking">
+            <div class="pw-state-icon">🔍</div>
+            <div class="pw-state-title">Checking…</div>
+            <div class="pw-state-sub">Looking up your payment with M-Pesa.</div>
+        </div>
+
         <a class="pw-later" id="pw-later">Maybe later (results will be blurred)</a>
+        <a class="pw-later" id="pw-already-paid" style="margin-top:0.2rem;color:rgba(255,255,255,0.18);">I already paid — verify my payment</a>
     </div>
 </div>
 
 <script>
 (function(){
-    var FEATURE  = "{{ gate_feature }}";
-    var INITIATE = "{% url 'payments:initiate_payment' %}";
-    var CSRF     = "{{ csrf_token }}";
-    var poll, dots;
+    var FEATURE   = "{{ gate_feature }}";
+    var INITIATE  = "{% url 'payments:initiate_payment' %}";
+    var CSRF      = "{{ csrf_token }}";
+    var poll, dots, currentPaymentId = null;
+    var MAX_ATTEMPTS = 40; // 40 × 3 s = 2 minutes
 
     document.getElementById('pw-btn').addEventListener('click', pwPay);
     document.getElementById('pw-later').addEventListener('click', function(){
@@ -248,6 +270,20 @@
         var main = document.getElementById('pw-main-content');
         if(main) main.style.filter = 'blur(3px) brightness(0.7)';
     });
+    document.getElementById('pw-already-paid').addEventListener('click', pwCheckAlreadyPaid);
+
+    // On load: check for an existing pending payment so the user doesn't pay twice
+    (async function checkPending(){
+        try{
+            var r = await fetch('/payments/pending/?feature='+encodeURIComponent(FEATURE));
+            var d = await r.json();
+            if(d.found){
+                currentPaymentId = d.payment_id;
+                document.getElementById('pw-already-paid').style.color = 'rgba(251,191,36,0.7)';
+                document.getElementById('pw-already-paid').textContent = 'I already paid — verify my payment';
+            }
+        }catch(e){}
+    })();
 
     async function pwPay(){
         var raw = document.getElementById('pw-phone').value.trim().replace(/\s/g,'');
@@ -269,19 +305,8 @@
             });
             var d = await res.json();
             if(d.success){
-                pwState('waiting');
-                var dotsEl = document.getElementById('pw-dots');
-                dots = setInterval(function(){
-                    if(dotsEl) dotsEl.textContent = dotsEl.textContent.length >= 3 ? '.' : dotsEl.textContent+'.';
-                },500);
-                poll = setInterval(async function(){
-                    try{
-                        var sr = await fetch('/payments/status/'+d.payment_id+'/');
-                        var sd = await sr.json();
-                        if(sd.status==='completed'){ pwClear(); pwState('success'); setTimeout(()=>location.reload(),2000); }
-                        else if(sd.status==='failed'){ pwClear(); pwState('failed'); }
-                    }catch(e){}
-                },3000);
+                currentPaymentId = d.payment_id;
+                pwStartPolling(d.payment_id);
             } else {
                 err.textContent = d.message || 'Something went wrong. Please try again.';
                 err.style.display = 'block';
@@ -296,8 +321,67 @@
         }
     }
 
+    function pwStartPolling(paymentId){
+        pwState('waiting');
+        var dotsEl = document.getElementById('pw-dots');
+        var attempts = 0;
+        dots = setInterval(function(){
+            if(dotsEl) dotsEl.textContent = dotsEl.textContent.length >= 3 ? '.' : dotsEl.textContent+'.';
+        },500);
+        poll = setInterval(async function(){
+            attempts++;
+            try{
+                var sr = await fetch('/payments/status/'+paymentId+'/');
+                var sd = await sr.json();
+                if(sd.status==='completed'){ pwClear(); pwState('success'); setTimeout(function(){ location.reload(); },2000); }
+                else if(sd.status==='failed'){ pwClear(); pwState('failed'); }
+                else if(attempts >= MAX_ATTEMPTS){ pwClear(); pwState('timeout'); }
+            }catch(e){
+                if(attempts >= MAX_ATTEMPTS){ pwClear(); pwState('timeout'); }
+            }
+        },3000);
+    }
+
+    async function pwCheckAlreadyPaid(){
+        if(!currentPaymentId){
+            // Try to fetch from server
+            try{
+                var r = await fetch('/payments/pending/?feature='+encodeURIComponent(FEATURE));
+                var d = await r.json();
+                if(!d.found){ alert('No pending payment found for your account. Please pay to unlock.'); return; }
+                currentPaymentId = d.payment_id;
+            }catch(e){ alert('Could not check payment status. Please try again.'); return; }
+        }
+        pwVerifyById(currentPaymentId);
+    }
+
+    window.pwVerify = function(){
+        if(currentPaymentId) pwVerifyById(currentPaymentId);
+    };
+
+    async function pwVerifyById(paymentId){
+        pwState('checking');
+        try{
+            var r = await fetch('/payments/verify/'+paymentId+'/');
+            var d = await r.json();
+            if(d.status === 'completed'){
+                pwState('success');
+                setTimeout(function(){ location.reload(); },2000);
+            } else if(d.status === 'failed'){
+                pwState('failed');
+            } else {
+                // Still pending — show timeout state with updated message
+                document.getElementById('pw-timeout-sub').textContent = d.message || 'Payment still processing. Please wait a few minutes and try again.';
+                pwState('timeout');
+            }
+        }catch(e){
+            document.getElementById('pw-timeout-sub').textContent = 'Could not reach the server. Please check your internet and try again.';
+            pwState('timeout');
+        }
+    }
+
     function pwState(s){
-        ['phone','waiting','success','failed'].forEach(function(x){
+        ['phone','waiting','success','failed','timeout','checking'].forEach(function(x){
             var el = document.getElementById('pw-step-'+x);
             if(el){ el.classList.remove('pw-active'); }
         });
