@@ -98,14 +98,17 @@ class RegisterView(View):
                     ref.converted      = True
                     ref.converted_at   = timezone.now()
                     ref.save(update_fields=['referred_user', 'referred_email', 'converted', 'converted_at'])
-                except ReferralModel.DoesNotExist:
+                except Exception:
                     pass
 
             # ── Email lead conversion ─────────────────────────────
-            from accounts.models import EmailLead
-            EmailLead.objects.filter(email=user.email, converted_to_user__isnull=True).update(
-                converted_to_user=user
-            )
+            try:
+                from accounts.models import EmailLead
+                EmailLead.objects.filter(email=user.email, converted_to_user__isnull=True).update(
+                    converted_to_user=user
+                )
+            except Exception:
+                pass
 
             messages.success(
                 request,
@@ -185,8 +188,11 @@ class LoginView(View):
             request.session['_auth_verified_at'] = time.time()
 
             # Mentor sessions are shorter (stricter security)
-            from mentorship.models import MentorProfile
-            is_mentor = MentorProfile.objects.filter(user=user).exists()
+            try:
+                from mentorship.models import MentorProfile
+                is_mentor = MentorProfile.objects.filter(user=user).exists()
+            except Exception:
+                is_mentor = False
 
             remember_me = form.cleaned_data.get("remember_me")
             if remember_me:

@@ -19,6 +19,7 @@
         </div>
 
         <!-- Google Login -->
+        {% if GOOGLE_OAUTH_AVAILABLE %}
         <a href="/accounts/google/login/?next={{ request.GET.next|urlencode }}"
            class="btn btn-outline-secondary w-100 py-2 mb-4 d-flex align-items-center justify-content-center gap-2 hover-scale">
             <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true" style="flex-shrink:0;">
@@ -35,6 +36,7 @@
             <span class="small text-muted">or sign in with email</span>
             <hr class="flex-grow-1 m-0">
         </div>
+        {% endif %}
 
         <!-- Login Form -->
         <form method="POST" novalidate>
