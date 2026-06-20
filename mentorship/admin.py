@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.conf import settings
 from django.core.mail import send_mail
-from django.utils.html import format_html
+from django.utils.html import format_html, mark_safe
 
 from .models import MentorProfile, TimeSlot, MentorshipSession, WithdrawalRequest
 
@@ -125,8 +125,8 @@ class MentorProfileAdmin(admin.ModelAdmin):
 
     def approval_badge(self, obj):
         if obj.is_approved:
-            return format_html('<span style="color:green;font-weight:bold">✓ Approved</span>')
-        return format_html('<span style="color:orange;font-weight:bold">⏳ Pending</span>')
+            return mark_safe('<span style="color:green;font-weight:bold">✓ Approved</span>')
+        return mark_safe('<span style="color:orange;font-weight:bold">⏳ Pending</span>')
     approval_badge.short_description = "Status"
 
     def avg_rating_display(self, obj):
