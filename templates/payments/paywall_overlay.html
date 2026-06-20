@@ -1,0 +1,310 @@
+{% load static %}
+{#
+  Reusable paywall overlay.
+  Required context: total_count, gate_feature, gate_price, gate_items (list of strings),
+                    gate_headline (optional), gate_subtext (optional)
+#}
+<style>
+.pw-overlay {
+    position: fixed; inset: 0; z-index: 9999;
+    background: rgba(5, 5, 20, 0.82);
+    backdrop-filter: blur(10px) saturate(0.6);
+    display: flex; align-items: center; justify-content: center;
+    padding: 1rem;
+    animation: pw-fade 0.35s ease;
+}
+@keyframes pw-fade { from { opacity:0; } to { opacity:1; } }
+
+.pw-card {
+    background: linear-gradient(160deg, #0f172a 0%, #1a1040 60%, #0f172a 100%);
+    border: 1.5px solid rgba(139,92,246,0.3);
+    border-radius: 24px;
+    padding: 2rem 1.75rem 1.5rem;
+    max-width: 430px; width: 100%;
+    max-height: 92vh; overflow-y: auto;
+    box-shadow: 0 40px 100px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.04);
+    animation: pw-up 0.4s cubic-bezier(0.34,1.4,0.64,1);
+    scrollbar-width: none;
+}
+.pw-card::-webkit-scrollbar { display:none; }
+@keyframes pw-up {
+    from { transform: translateY(40px) scale(0.93); opacity:0; }
+    to   { transform: none; opacity:1; }
+}
+
+/* Top check icon */
+.pw-icon {
+    width: 68px; height: 68px;
+    background: linear-gradient(135deg, #10b981, #059669);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 1.2rem;
+    font-size: 1.8rem; color: #fff;
+    box-shadow: 0 0 0 10px rgba(16,185,129,0.12), 0 0 0 20px rgba(16,185,129,0.05);
+}
+
+/* Count */
+.pw-count {
+    text-align: center;
+    font-size: clamp(1.5rem,5vw,2.1rem);
+    font-weight: 900; line-height: 1.1;
+    margin-bottom: 0.4rem;
+    background: linear-gradient(90deg, #a78bfa 0%, #60a5fa 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+.pw-sub {
+    text-align: center; font-size: 0.83rem;
+    color: rgba(255,255,255,0.45); line-height: 1.55;
+    margin-bottom: 1.4rem;
+}
+
+/* Included list */
+.pw-box {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 14px; padding: 1rem 1.1rem;
+    margin-bottom: 1.1rem;
+}
+.pw-box-label {
+    font-size: 0.66rem; font-weight: 800;
+    text-transform: uppercase; letter-spacing: 0.09em;
+    color: rgba(255,255,255,0.3); margin-bottom: 0.7rem;
+}
+.pw-item {
+    display: flex; align-items: flex-start; gap: 0.6rem;
+    margin-bottom: 0.55rem; font-size: 0.81rem;
+    color: rgba(255,255,255,0.78); line-height: 1.45;
+}
+.pw-item:last-child { margin-bottom: 0; }
+.pw-dot {
+    width: 17px; height: 17px; flex-shrink: 0; margin-top: 1px;
+    background: linear-gradient(135deg, #10b981, #059669);
+    border-radius: 50%; display: flex; align-items: center;
+    justify-content: center; font-size: 0.55rem; color: #fff;
+}
+
+/* Price */
+.pw-price-box {
+    background: linear-gradient(135deg, rgba(79,70,229,0.25), rgba(124,58,237,0.25));
+    border: 1.5px solid rgba(139,92,246,0.35);
+    border-radius: 14px; padding: 0.9rem;
+    text-align: center; margin-bottom: 1rem;
+}
+.pw-price-label { font-size: 0.68rem; color: rgba(255,255,255,0.35); text-transform:uppercase; letter-spacing:0.06em; margin-bottom:0.2rem; }
+.pw-price-amount { font-size: 2rem; font-weight: 900; color: #fff; line-height:1; margin-bottom:0.15rem; }
+.pw-price-note { font-size: 0.68rem; color: rgba(255,255,255,0.3); }
+
+/* Phone input */
+.pw-phone-row {
+    display: flex;
+    border: 1.5px solid rgba(255,255,255,0.12);
+    border-radius: 12px; overflow: hidden;
+    background: rgba(255,255,255,0.05);
+    margin-bottom: 0.7rem;
+    transition: border-color 0.2s;
+}
+.pw-phone-row:focus-within { border-color: rgba(139,92,246,0.55); }
+.pw-prefix {
+    padding: 0.8rem 0.85rem;
+    font-size: 0.9rem; font-weight: 700; color: rgba(255,255,255,0.45);
+    background: rgba(255,255,255,0.05);
+    border-right: 1px solid rgba(255,255,255,0.07);
+    white-space: nowrap; flex-shrink: 0;
+}
+.pw-phone-inp {
+    flex: 1; background: transparent; border: none; outline: none;
+    color: #fff; font-size: 1rem; font-weight: 600; padding: 0.8rem 0.9rem;
+    letter-spacing: 0.02em;
+}
+.pw-phone-inp::placeholder { color: rgba(255,255,255,0.22); font-weight: 400; }
+
+/* Pay button */
+.pw-btn {
+    width: 100%;
+    background: linear-gradient(135deg, #7c3aed, #4f46e5);
+    border: none; border-radius: 12px; color: #fff;
+    font-size: 1rem; font-weight: 800; padding: 0.9rem;
+    cursor: pointer; transition: transform 0.2s, box-shadow 0.2s, opacity 0.15s;
+    box-shadow: 0 6px 22px rgba(79,70,229,0.5);
+    display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+}
+.pw-btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(79,70,229,0.6); }
+.pw-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+/* Error */
+.pw-err {
+    background: rgba(239,68,68,0.14); border: 1px solid rgba(239,68,68,0.28);
+    border-radius: 8px; padding: 0.55rem 0.85rem;
+    color: #fca5a5; font-size: 0.77rem; margin-bottom: 0.7rem; display: none;
+}
+
+/* States */
+.pw-state { display: none; text-align: center; padding: 0.75rem 0 0.25rem; }
+.pw-state.pw-active { display: block; }
+.pw-state-icon { font-size: 2.2rem; margin-bottom: 0.6rem; }
+.pw-state-title { font-size: 1.05rem; font-weight: 800; color: #fff; margin-bottom: 0.3rem; }
+.pw-state-sub { font-size: 0.8rem; color: rgba(255,255,255,0.45); line-height: 1.5; }
+
+/* Later link */
+.pw-later {
+    display: block; text-align: center; margin-top: 0.9rem;
+    font-size: 0.75rem; color: rgba(255,255,255,0.25);
+    cursor: pointer; text-decoration: none;
+    transition: color 0.2s;
+}
+.pw-later:hover { color: rgba(255,255,255,0.5); }
+
+/* Blur wrapper for content behind */
+.pw-blurred { filter: blur(5px) brightness(0.5); pointer-events: none; user-select: none; transition: filter 0.3s; }
+</style>
+
+<div class="pw-overlay" id="pw-overlay">
+    <div class="pw-card">
+
+        <div class="pw-icon"><i class="fas fa-check"></i></div>
+
+        <div class="pw-count">
+            {{ total_count }} Course{{ total_count|pluralize }} Found{% if total_count > 1 %}!{% endif %}
+        </div>
+        <div class="pw-sub">
+            {% if gate_subtext %}
+                {{ gate_subtext }}
+            {% else %}
+                We've scanned every university, KMTC, TVET &amp; TTC in Kenya<br>
+                against your exact grades &mdash; your results are ready and waiting.
+            {% endif %}
+        </div>
+
+        <!-- What's included -->
+        <div class="pw-box">
+            <div class="pw-box-label">What's included</div>
+            {% for item in gate_items %}
+            <div class="pw-item">
+                <div class="pw-dot"><i class="fas fa-check" style="font-size:0.5rem;"></i></div>
+                <span>{{ item }}</span>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Price -->
+        <div class="pw-price-box">
+            <div class="pw-price-label">One-time payment &nbsp;·&nbsp; Lifetime access</div>
+            <div class="pw-price-amount">KES {{ gate_price }}</div>
+            <div class="pw-price-note"><i class="fas fa-shield-alt" style="color:#10b981;margin-right:4px;"></i>Secure M-Pesa &nbsp;·&nbsp; No subscription, ever</div>
+        </div>
+
+        <!-- Phone step -->
+        <div id="pw-step-phone">
+            <div class="pw-err" id="pw-err"></div>
+            <div class="pw-phone-row">
+                <span class="pw-prefix">+254</span>
+                <input type="tel" id="pw-phone" class="pw-phone-inp"
+                       placeholder="712 345 678" maxlength="9" inputmode="numeric">
+            </div>
+            <button class="pw-btn" id="pw-btn">
+                <i class="fas fa-lock-open"></i> Unlock My Results &rarr;
+            </button>
+        </div>
+
+        <!-- Waiting step -->
+        <div class="pw-state" id="pw-step-waiting">
+            <div class="pw-state-icon">📲</div>
+            <div class="pw-state-title">Check Your Phone!</div>
+            <div class="pw-state-sub">An M-Pesa prompt has been sent.<br>Enter your PIN to complete payment.<br><br>Waiting for confirmation<span id="pw-dots">.</span></div>
+        </div>
+
+        <!-- Success step -->
+        <div class="pw-state" id="pw-step-success">
+            <div class="pw-state-icon" style="color:#10b981;">✅</div>
+            <div class="pw-state-title" style="color:#10b981;">Payment Confirmed!</div>
+            <div class="pw-state-sub">Unlocking your results now&hellip;</div>
+        </div>
+
+        <!-- Failed step -->
+        <div class="pw-state" id="pw-step-failed">
+            <div class="pw-state-icon">❌</div>
+            <div class="pw-state-title" style="color:#ef4444;">Payment Not Completed</div>
+            <div class="pw-state-sub">The M-Pesa PIN was not entered or the payment was cancelled.</div>
+            <button class="pw-btn" style="max-width:180px;margin:0.9rem auto 0;font-size:0.85rem;" onclick="pwReset()">
+                <i class="fas fa-redo"></i> Try Again
+            </button>
+        </div>
+
+        <a class="pw-later" id="pw-later">Maybe later (results will be blurred)</a>
+    </div>
+</div>
+
+<script>
+(function(){
+    var FEATURE  = "{{ gate_feature }}";
+    var INITIATE = "{% url 'payments:initiate_payment' %}";
+    var CSRF     = "{{ csrf_token }}";
+    var poll, dots;
+
+    document.getElementById('pw-btn').addEventListener('click', pwPay);
+    document.getElementById('pw-later').addEventListener('click', function(){
+        document.getElementById('pw-overlay').style.display = 'none';
+        var main = document.getElementById('pw-main-content');
+        if(main) main.style.filter = 'blur(3px) brightness(0.7)';
+    });
+
+    async function pwPay(){
+        var raw = document.getElementById('pw-phone').value.trim().replace(/\s/g,'');
+        var err = document.getElementById('pw-err');
+        if(!/^\d{9}$/.test(raw)){
+            err.textContent = 'Enter a valid 9-digit Safaricom number (e.g. 712345678)';
+            err.style.display = 'block'; return;
+        }
+        err.style.display = 'none';
+        var btn = document.getElementById('pw-btn');
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm" style="width:.9rem;height:.9rem;border-width:2px;"></span>&nbsp;Sending STK push&hellip;';
+
+        try{
+            var res = await fetch(INITIATE,{
+                method:'POST',
+                headers:{'Content-Type':'application/json','X-CSRFToken':CSRF},
+                body:JSON.stringify({feature:FEATURE, phone:'0'+raw})
+            });
+            var d = await res.json();
+            if(d.success){
+                pwState('waiting');
+                var dotsEl = document.getElementById('pw-dots');
+                dots = setInterval(function(){
+                    if(dotsEl) dotsEl.textContent = dotsEl.textContent.length >= 3 ? '.' : dotsEl.textContent+'.';
+                },500);
+                poll = setInterval(async function(){
+                    try{
+                        var sr = await fetch('/payments/status/'+d.payment_id+'/');
+                        var sd = await sr.json();
+                        if(sd.status==='completed'){ pwClear(); pwState('success'); setTimeout(()=>location.reload(),2000); }
+                        else if(sd.status==='failed'){ pwClear(); pwState('failed'); }
+                    }catch(e){}
+                },3000);
+            } else {
+                err.textContent = d.message || 'Something went wrong. Please try again.';
+                err.style.display = 'block';
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-lock-open"></i> Unlock My Results &rarr;';
+            }
+        } catch(e){
+            err.textContent = 'Network error. Check your connection and try again.';
+            err.style.display = 'block';
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-lock-open"></i> Unlock My Results &rarr;';
+        }
+    }
+
+    function pwState(s){
+        ['phone','waiting','success','failed'].forEach(function(x){
+            var el = document.getElementById('pw-step-'+x);
+            if(el){ el.classList.remove('pw-active'); }
+        });
+        var t = document.getElementById('pw-step-'+s);
+        if(t) t.classList.add('pw-active');
+    }
+    function pwClear(){ if(poll) clearInterval(poll); if(dots) clearInterval(dots); }
+    window.pwReset = function(){ pwClear(); var btn=document.getElementById('pw-btn'); btn.disabled=false; btn.innerHTML='<i class="fas fa-lock-open"></i> Unlock My Results &rarr;'; pwState('phone'); };
+})();
+</script>

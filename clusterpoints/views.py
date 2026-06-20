@@ -467,14 +467,31 @@ def eligible_courses_view(request):
     eligible_count = sum(1 for r in all_results if r["status"] == "eligible")
     nearly_count   = sum(1 for r in all_results if r["status"] == "nearly")
     not_elig_count = sum(1 for r in all_results if r["status"] == "not_eligible")
+    total_found    = eligible_count + nearly_count
 
     course_types = CourseType.objects.all()
+
+    from payments.services import has_paid_for_feature, is_feature_enabled, price_for_feature
+    _mn = _mean_grade(total_points)
+    _is_locked = (
+        not is_guest
+        and is_feature_enabled('view_eligible_courses')
+        and not has_paid_for_feature(request.user, 'view_eligible_courses')
+    )
+    _gate_items = [
+        f"Every degree, diploma, KMTC, TVET & TTC course you qualify for right now",
+        "Eligibility breakdown: Eligible ✓, Nearly There, and Worth Considering",
+        "Minimum grade & cluster point requirements for each programme",
+        "Institution details — type, location & contact info for each college",
+        "Save any course to your personal shortlist with one tap",
+        "Filter & search across all your matched courses instantly",
+    ]
 
     return render(request, "clusterpoints/eligible_courses.html", {
         "results": filtered,
         "kcse_result": kcse_result,
         "total_points": total_points,
-        "mean_grade": _mean_grade(total_points),
+        "mean_grade": _mn,
         "eligible_count": eligible_count,
         "nearly_count": nearly_count,
         "not_eligible_count": not_elig_count,
@@ -484,6 +501,12 @@ def eligible_courses_view(request):
         "course_types": course_types,
         "saved_ids": saved_ids,
         "is_guest": is_guest,
+        "is_locked": _is_locked,
+        "total_count": total_found,
+        "gate_feature": "view_eligible_courses",
+        "gate_price": price_for_feature("view_eligible_courses"),
+        "gate_items": _gate_items,
+        "gate_subtext": f"Based on your KCSE score of {total_points} pts ({_mn}) — here's what you qualify for.",
     })
 
 
