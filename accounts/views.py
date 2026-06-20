@@ -308,7 +308,7 @@ def dashboard_view(request: HttpRequest) -> HttpResponse:
     if latest_result:
         cluster_results = list(
             ClusterCalculationResult.objects.filter(kcse_result=latest_result)
-            .select_related("cluster").order_by("-cluster_points")[:8]
+            .select_related("cluster").order_by("-cluster_points")
         )
         from courses.models import CourseOffering
         kcn_map = {}
