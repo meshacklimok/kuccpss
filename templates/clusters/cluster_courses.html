@@ -1,0 +1,184 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}{{ cluster.name }} — All Courses — CareerNext{% endblock %}
+
+{% block extra_head %}
+<style>
+.cc-hero {
+    background: linear-gradient(135deg,#1e3a8a 0%,#2563eb 60%,#0891b2 100%);
+    color:#fff; padding:2.5rem 0 1.5rem;
+}
+.cc-hero h1 { font-size:clamp(1.3rem,4vw,1.8rem); font-weight:900; margin-bottom:0.3rem; }
+.cc-badge {
+    display:inline-flex; align-items:center; gap:6px;
+    background:rgba(255,255,255,0.15); border:1px solid rgba(255,255,255,0.25);
+    border-radius:20px; padding:4px 14px; font-size:0.75rem; font-weight:700; margin-bottom:0.7rem;
+}
+.cc-card {
+    background:#fff; border:1.5px solid #e2e8f0; border-radius:14px;
+    padding:1rem 1.1rem; margin-bottom:0.7rem;
+    transition:border-color 0.15s,box-shadow 0.15s;
+    text-decoration:none; display:block; color:inherit;
+}
+.cc-card:hover { border-color:#93c5fd; box-shadow:0 3px 14px rgba(37,99,235,0.1); color:inherit; }
+.cc-course-name { font-weight:700; font-size:0.9rem; color:#1e293b; margin-bottom:0.2rem; }
+.cc-meta { font-size:0.75rem; color:#64748b; display:flex; gap:0.75rem; flex-wrap:wrap; }
+.cc-type-chip {
+    display:inline-flex; align-items:center; gap:4px;
+    background:#eff6ff; color:#2563eb; border-radius:8px;
+    padding:2px 8px; font-size:0.7rem; font-weight:700; flex-shrink:0;
+}
+.cc-lock-section {
+    background:linear-gradient(to bottom,rgba(255,255,255,0) 0%,#fff 35%);
+    padding-top:2rem; text-align:center; position:relative;
+}
+.cc-lock-card {
+    background:#fff; border:2px solid #e2e8f0; border-radius:20px;
+    padding:2rem 1.5rem; max-width:420px; margin:0 auto;
+}
+.cc-lock-icon {
+    width:64px; height:64px; border-radius:50%;
+    background:linear-gradient(135deg,#7c3aed,#4f46e5);
+    display:flex; align-items:center; justify-content:center;
+    font-size:1.5rem; color:#fff; margin:0 auto 1rem;
+    box-shadow:0 0 0 10px rgba(124,58,237,0.1);
+}
+.cc-unlock-btn {
+    display:block; width:100%;
+    background:linear-gradient(135deg,#1e3a8a,#2563eb);
+    color:#fff; border:none; border-radius:12px;
+    padding:0.85rem; font-weight:800; font-size:0.95rem;
+    text-decoration:none; text-align:center;
+    box-shadow:0 6px 20px rgba(30,58,138,0.35);
+    transition:transform 0.2s,box-shadow 0.2s;
+}
+.cc-unlock-btn:hover { transform:translateY(-2px); box-shadow:0 10px 28px rgba(30,58,138,0.45); color:#fff; }
+.cc-count-pill {
+    background:#f0fdf4; color:#16a34a; border:1px solid #bbf7d0;
+    border-radius:20px; padding:3px 12px; font-size:0.75rem; font-weight:700;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Hero -->
+<div class="cc-hero">
+  <div class="container">
+    <nav aria-label="breadcrumb" class="mb-3">
+      <ol class="breadcrumb mb-0" style="--bs-breadcrumb-divider-color:rgba(255,255,255,.4)">
+        <li class="breadcrumb-item"><a href="{% url 'clusterpoints:calculator' %}" class="text-white-50 text-decoration-none">Calculator</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'clusters:cluster_list' %}" class="text-white-50 text-decoration-none">Clusters</a></li>
+        {% if main_label %}<li class="breadcrumb-item text-white-50">{{ main_label }}</li>{% endif %}
+        <li class="breadcrumb-item active text-white">Courses</li>
+      </ol>
+    </nav>
+    <div class="cc-badge"><i class="fas fa-layer-group"></i>{{ cluster.name }}</div>
+    <h1>All Courses in This Cluster</h1>
+    <p class="mb-0 opacity-75" style="font-size:0.85rem;">
+      {{ total_count }} course{{ total_count|pluralize }} found &nbsp;·&nbsp;
+      First 5 shown free &nbsp;·&nbsp;
+      <span style="color:#86efac;">Unlock all with one payment</span>
+    </p>
+  </div>
+</div>
+
+<div class="container py-4" style="max-width:700px;">
+
+  {% if not free_courses and not paid_courses %}
+  <div class="text-center py-5">
+    <i class="fas fa-folder-open fa-3x text-muted mb-3"></i>
+    <p class="text-muted">No courses found for this cluster yet.</p>
+    <a href="{% url 'clusters:cluster_list' %}" class="btn btn-outline-primary btn-sm">Browse all clusters</a>
+  </div>
+  {% else %}
+
+  <!-- Free top-5 -->
+  {% for course in free_courses %}
+  <a href="{{ course.get_absolute_url }}" class="cc-card">
+    <div class="d-flex align-items-start gap-2">
+      <div style="flex:1;min-width:0;">
+        <div class="cc-course-name">{{ course.name }}</div>
+        <div class="cc-meta">
+          <span class="cc-type-chip"><i class="fas fa-graduation-cap" style="font-size:0.6rem;"></i>{{ course.course_type.name }}</span>
+          {% if course.duration %}<span><i class="far fa-clock me-1"></i>{{ course.duration }}</span>{% endif %}
+          {% if course.minimum_mean_grade %}<span>Min grade: <strong>{{ course.minimum_mean_grade }}</strong></span>{% endif %}
+        </div>
+      </div>
+      <i class="fas fa-chevron-right text-muted mt-1" style="font-size:0.75rem;flex-shrink:0;"></i>
+    </div>
+  </a>
+  {% endfor %}
+
+  <!-- Locked section -->
+  {% if paid_courses %}
+    {% if is_locked %}
+    <!-- Blur the first few locked items then show paywall -->
+    <div style="position:relative;overflow:hidden;border-radius:14px;">
+      <div style="filter:blur(4px) brightness(0.7);pointer-events:none;user-select:none;">
+        {% for course in paid_courses|slice:":4" %}
+        <div class="cc-card" style="margin-bottom:0.7rem;">
+          <div class="cc-course-name">{{ course.name }}</div>
+          <div class="cc-meta">
+            <span class="cc-type-chip">{{ course.course_type.name }}</span>
+          </div>
+        </div>
+        {% endfor %}
+        {% if paid_courses|length > 4 %}
+        <div class="text-center text-muted" style="padding:0.5rem;font-size:0.8rem;">+ {{ paid_courses|length|add:"-4" }} more courses…</div>
+        {% endif %}
+      </div>
+      <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:1rem;">
+        <div class="cc-lock-card">
+          <div class="cc-lock-icon"><i class="fas fa-lock"></i></div>
+          <div style="font-size:1.1rem;font-weight:900;color:#1e293b;margin-bottom:0.4rem;">
+            {{ paid_courses|length }} More Course{{ paid_courses|length|pluralize }} Locked
+          </div>
+          <p style="font-size:0.82rem;color:#64748b;margin-bottom:1.2rem;">
+            Unlock all {{ total_count }} courses in this cluster — and every other cluster — with a single one-time payment.
+          </p>
+          <div style="background:#f8fafc;border-radius:10px;padding:0.7rem 1rem;margin-bottom:1rem;font-size:0.8rem;color:#475569;">
+            <div class="d-flex justify-content-between"><span>All 20 cluster full course lists</span><i class="fas fa-check text-success"></i></div>
+            <div class="d-flex justify-content-between mt-1"><span>Eligibility status per course</span><i class="fas fa-check text-success"></i></div>
+            <div class="d-flex justify-content-between mt-1"><span>Institution details & cutoff points</span><i class="fas fa-check text-success"></i></div>
+          </div>
+          <a href="{% url 'payments:payment_required' %}?feature=view_eligible_courses&next={{ request.path }}"
+             class="cc-unlock-btn">
+            <i class="fas fa-lock-open me-2"></i>Unlock All — KES {{ gate_price }}
+          </a>
+          <div style="font-size:0.7rem;color:#94a3b8;margin-top:0.6rem;text-align:center;">One-time · Lifetime access · Secure M-Pesa</div>
+        </div>
+      </div>
+    </div>
+
+    {% else %}
+    <!-- Paid — show all remaining courses -->
+    {% for course in paid_courses %}
+    <a href="{{ course.get_absolute_url }}" class="cc-card">
+      <div class="d-flex align-items-start gap-2">
+        <div style="flex:1;min-width:0;">
+          <div class="cc-course-name">{{ course.name }}</div>
+          <div class="cc-meta">
+            <span class="cc-type-chip"><i class="fas fa-graduation-cap" style="font-size:0.6rem;"></i>{{ course.course_type.name }}</span>
+            {% if course.duration %}<span><i class="far fa-clock me-1"></i>{{ course.duration }}</span>{% endif %}
+            {% if course.minimum_mean_grade %}<span>Min grade: <strong>{{ course.minimum_mean_grade }}</strong></span>{% endif %}
+          </div>
+        </div>
+        <i class="fas fa-chevron-right text-muted mt-1" style="font-size:0.75rem;flex-shrink:0;"></i>
+      </div>
+    </a>
+    {% endfor %}
+    {% endif %}
+  {% endif %}
+
+  <div class="text-center mt-4">
+    <a href="{% url 'clusters:cluster_detail' cluster.slug %}" class="btn btn-outline-secondary btn-sm me-2">
+      <i class="fas fa-info-circle me-1"></i>Cluster Details
+    </a>
+    <a href="{% url 'clusterpoints:calculator' %}" class="btn btn-outline-primary btn-sm">
+      <i class="fas fa-calculator me-1"></i>Back to Calculator
+    </a>
+  </div>
+
+  {% endif %}
+</div>
+{% endblock %}

@@ -105,6 +105,44 @@ def cluster_detail(request, slug):
 
 
 # =====================================================
+# 2b. CLUSTER COURSES — all courses for a cluster (gated)
+# =====================================================
+def cluster_courses(request, slug):
+    from courses.models import Course
+    from payments.services import has_paid_for_feature, is_feature_enabled, price_for_feature
+
+    cluster = get_object_or_404(Cluster, slug=slug)
+    all_courses = (
+        Course.objects
+        .filter(cluster=cluster)
+        .select_related('course_type')
+        .prefetch_related('offerings__institution')
+        .order_by('name')
+    )
+    total_count = all_courses.count()
+    free_courses = list(all_courses[:5])
+    paid_courses = list(all_courses[5:])
+
+    is_locked = (
+        request.user.is_authenticated
+        and is_feature_enabled('view_eligible_courses')
+        and not has_paid_for_feature(request.user, 'view_eligible_courses')
+    )
+
+    num = _main_num(cluster)
+    return render(request, 'clusters/cluster_courses.html', {
+        'cluster': cluster,
+        'main_label': CLUSTER_LABELS.get(num, ''),
+        'free_courses': free_courses,
+        'paid_courses': paid_courses,
+        'total_count': total_count,
+        'is_locked': is_locked,
+        'gate_feature': 'view_eligible_courses',
+        'gate_price': price_for_feature('view_eligible_courses'),
+    })
+
+
+# =====================================================
 # 3️⃣ CREATE CLUSTER (Front-end Optional)
 # =====================================================
 @login_required
