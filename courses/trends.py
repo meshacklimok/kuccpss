@@ -40,10 +40,10 @@ def _most_viewed(limit=5):
     for obj_id in id_list:
         c = courses.get(obj_id)
         if c:
-            c._trend_stat  = f"{view_map[obj_id]:,}"
-            c._trend_label = "views this week"
-            c._trend_icon  = "fa-eye"
-            c._trend_color = "#2563eb"
+            c.trend_stat  = f"{view_map[obj_id]:,}"
+            c.trend_label = "views this week"
+            c.trend_icon  = "fa-eye"
+            c.trend_color = "#2563eb"
             result.append(c)
             if len(result) >= limit:
                 break
@@ -69,10 +69,10 @@ def _most_competitive(limit=5):
     sorted_pairs = sorted(course_max.values(), key=lambda x: x[1], reverse=True)[:limit]
     result = []
     for course, cutoff in sorted_pairs:
-        course._trend_stat  = f"{cutoff}"
-        course._trend_label = "pts cutoff"
-        course._trend_icon  = "fa-fire"
-        course._trend_color = "#dc2626"
+        course.trend_stat  = f"{cutoff}"
+        course.trend_label = "pts cutoff"
+        course.trend_icon  = "fa-fire"
+        course.trend_color = "#dc2626"
         result.append(course)
     return result
 
@@ -88,10 +88,10 @@ def _most_offered(limit=5):
         .select_related('course_type', 'category')[:limit]
     )
     for c in courses:
-        c._trend_stat  = str(c.offering_count)
-        c._trend_label = "institutions"
-        c._trend_icon  = "fa-university"
-        c._trend_color = "#059669"
+        c.trend_stat  = str(c.offering_count)
+        c.trend_label = "institutions"
+        c.trend_icon  = "fa-university"
+        c.trend_color = "#059669"
     return courses
 
 
@@ -109,10 +109,10 @@ def _top_rated(limit=5):
         .select_related('course_type', 'category')[:limit]
     )
     for c in courses:
-        c._trend_stat  = f"{round(c.avg_rating, 1)}★"
-        c._trend_label = f"{c.review_count} review{'s' if c.review_count != 1 else ''}"
-        c._trend_icon  = "fa-star"
-        c._trend_color = "#d97706"
+        c.trend_stat  = f"{round(c.avg_rating, 1)}★"
+        c.trend_label = f"{c.review_count} review{'s' if c.review_count != 1 else ''}"
+        c.trend_icon  = "fa-star"
+        c.trend_color = "#d97706"
     return courses
 
 

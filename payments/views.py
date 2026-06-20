@@ -72,6 +72,7 @@ def initiate_payment(request):
             phone_number=phone,
             amount=amount,
             payment_ref=str(payment.pk),
+            email=request.user.email,
             narrative=f"CareerNext {payment.get_feature_display()}",
         )
         payment.checkout_id = checkout_id
