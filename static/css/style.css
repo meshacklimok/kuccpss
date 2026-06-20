@@ -519,14 +519,14 @@ body {
   border-top: 1px solid var(--border); padding-top: 0.75rem; margin-top: 0;
 }
 
-/* Landscape phones */
-@media (max-height: 500px) and (max-width: 900px) {
+/* Landscape phones — only when clearly horizontal (≥3:2 ratio) to avoid triggering on accidental tilts */
+@media (orientation: landscape) and (min-aspect-ratio: 3/2) and (max-height: 500px) {
   .hero-section { padding: 2rem 0 1.5rem; }
   .hero-section h1 { font-size: 1.5rem; }
   .mobile-bottom-nav { padding: 0.25rem 0 calc(0.25rem + env(safe-area-inset-bottom)); }
   .mobile-bottom-nav a { padding: 0.2rem 0; }
   .mobile-bottom-nav a i { font-size: 0.95rem; }
-  .mobile-bottom-nav a { font-size: 0; } /* hide labels in landscape */
+  .mobile-bottom-nav a { font-size: 0; }
 }
 
 /* ── AUTH PAGES ── */

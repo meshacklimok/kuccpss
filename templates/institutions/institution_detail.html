@@ -186,5 +186,9 @@
     </div><!-- /col-lg-4 -->
 
   </div><!-- /row -->
+
+  <!-- ── Reviews ── -->
+  {% include "partials/reviews_section.html" with target_type="institution" review_url=request.path|add:"review/" %}
+
 </div>
 {% endblock %}

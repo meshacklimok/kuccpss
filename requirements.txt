@@ -16,3 +16,4 @@ gunicorn>=21.2
 whitenoise>=6.7
 dj-database-url>=2.1
 pywebpush>=2.0
+dnspython>=2.4

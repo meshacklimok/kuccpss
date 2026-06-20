@@ -227,56 +227,192 @@ def kcse_calculator_view(request):
 
 
 # =====================================================
-# EXPORT CLUSTER RESULT AS PDF
+# EXPORT ALL CLUSTER RESULTS AS PDF
 # =====================================================
 @login_required
-def export_cluster_pdf(request, result_id):
-    """
-    Export a specific cluster calculation result to PDF.
-    """
-    try:
-        result = ClusterCalculationResult.objects.get(id=result_id, user=request.user)
-    except ClusterCalculationResult.DoesNotExist:
-        messages.error(request, "Cluster result not found.")
+def export_cluster_pdf(request):
+    """Export all 20 cluster results for user's latest KCSE result — styled report."""
+    from reportlab.lib import colors as rc
+
+    kcse_result = UserKCSEResult.objects.filter(
+        user=request.user
+    ).order_by('-created_at').first()
+
+    if not kcse_result:
+        messages.error(request, "No KCSE results found. Please use the calculator first.")
         return redirect("clusterpoints:calculator")
 
-    # PDF response
-    response = HttpResponse(content_type="application/pdf")
-    response['Content-Disposition'] = f'attachment; filename="cluster_result_{result_id}.pdf"'
+    cluster_results = list(
+        kcse_result.cluster_results.select_related('cluster').order_by('cluster__kuccps_number')
+    )
+
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = 'attachment; filename="cluster_points_report.pdf"'
 
     p = canvas.Canvas(response, pagesize=A4)
-    width, height = A4
+    W, H = A4
 
-    # Title
-    p.setFont("Helvetica-Bold", 16)
-    p.drawCentredString(width / 2, height - 2*cm, "KCSE Cluster Points Result")
+    # Brand colour palette
+    NAVY    = rc.HexColor("#1e3a8a")
+    TEAL    = rc.HexColor("#0e7490")
+    EMERALD = rc.HexColor("#059669")
+    AMBER   = rc.HexColor("#d97706")
+    PURPLE  = rc.HexColor("#7c3aed")
+    SLATE   = rc.HexColor("#475569")
+    LIGHT   = rc.HexColor("#f0f9ff")
+    WHITE   = rc.white
 
-    # User info
-    p.setFont("Helvetica", 12)
-    user_email = result.user.email if result.user else "Guest"
-    p.drawString(2*cm, height - 3*cm, f"User: {user_email}")
-    p.drawString(2*cm, height - 4*cm, f"Cluster: {result.cluster.name}")
-    p.drawString(2*cm, height - 5*cm, f"Cluster Points: {result.cluster_points}")
-    p.drawString(2*cm, height - 6*cm, f"Core Subject Total: {result.core_subject_total}")
-    p.drawString(2*cm, height - 7*cm, f"Aggregate Total: {result.aggregate_total}")
-    p.drawString(2*cm, height - 8*cm, f"Weighted Calculation: {result.weighted_calculation}")
+    page_num = [0]
 
-    # Subjects used
-    p.drawString(2*cm, height - 9*cm, "Subjects Used:")
-    y_pos = height - 10*cm
-    for subj in result.subjects_used.all():
-        p.drawString(3*cm, y_pos, f"- {subj.name}")
-        y_pos -= 0.5*cm
-        if y_pos < 2*cm:
+    def draw_page():
+        page_num[0] += 1
+        if page_num[0] > 1:
             p.showPage()
-            y_pos = height - 2*cm
+        # ── Header ──────────────────────────────────────────────────────────
+        p.setFillColor(NAVY)
+        p.rect(0, H - 2.0*cm, W, 2.0*cm, fill=1, stroke=0)
+        p.setFillColor(TEAL)
+        p.rect(0, H - 2.1*cm, W, 0.12*cm, fill=1, stroke=0)
+        p.setFillColor(WHITE)
+        p.setFont("Helvetica-Bold", 13)
+        p.drawString(1.5*cm, H - 1.2*cm, "CareerNext — KCSE Cluster Points Report")
+        p.setFont("Helvetica-Oblique", 7.5)
+        p.setFillColor(rc.HexColor("#93c5fd"))
+        p.drawString(1.5*cm, H - 1.72*cm, "Your Journey Begins Here")
+        p.setFont("Helvetica", 8)
+        p.setFillColor(rc.HexColor("#bfdbfe"))
+        p.drawRightString(W - 1.5*cm, H - 1.3*cm, f"careernext.co.ke   |   Page {page_num[0]}")
+        # ── Footer ──────────────────────────────────────────────────────────
+        p.setFillColor(TEAL)
+        p.rect(0, 1.35*cm, W, 0.08*cm, fill=1, stroke=0)
+        p.setFillColor(NAVY)
+        p.rect(0, 0, W, 1.35*cm, fill=1, stroke=0)
+        p.setFillColor(WHITE)
+        p.setFont("Helvetica-Bold", 7.5)
+        p.drawCentredString(W / 2, 0.82*cm, "careernext.co.ke  —  Your Journey Begins Here")
+        p.setFont("Helvetica", 6.5)
+        p.setFillColor(rc.HexColor("#93c5fd"))
+        p.drawCentredString(W / 2, 0.45*cm,
+            "Apply officially at kuccps.net  |  For guidance only — verify all details before applying")
+        return H - 2.5*cm
 
-    # Footer on last page
+    y = draw_page()
+
+    user_name = getattr(request.user, 'full_name', None) or request.user.email
+    mg = _mean_grade(kcse_result.total_points)
+
+    # Grade badge colour
+    if mg and mg[0] == 'A':
+        grade_col = PURPLE
+    elif mg and mg[0] == 'B':
+        grade_col = EMERALD
+    elif mg and mg[0] == 'C':
+        grade_col = AMBER
+    else:
+        grade_col = rc.HexColor("#dc2626")
+
+    # ── Student profile card ─────────────────────────────────────────────────
+    p.setFillColor(LIGHT)
+    p.roundRect(1.2*cm, y - 2.6*cm, W - 2.4*cm, 2.4*cm, 6, fill=1, stroke=0)
+    p.setFillColor(TEAL)
+    p.rect(1.2*cm, y - 2.6*cm, 0.35*cm, 2.4*cm, fill=1, stroke=0)
+
+    p.setFillColor(NAVY)
+    p.setFont("Helvetica-Bold", 11)
+    p.drawString(1.9*cm, y - 0.65*cm, (user_name or '')[:50])
+    p.setFillColor(SLATE)
+    p.setFont("Helvetica", 9)
+    p.drawString(1.9*cm, y - 1.15*cm, f"Generated: {timezone.now().strftime('%d %B %Y')}")
+    p.drawString(1.9*cm, y - 1.62*cm, f"KCSE Aggregate Total: {kcse_result.total_points} / 84")
+    p.drawString(1.9*cm, y - 2.08*cm, f"Mean Grade: {mg or '—'}")
+
+    # Grade badge (right side of card)
+    p.setFillColor(grade_col)
+    p.roundRect(W - 4.0*cm, y - 2.35*cm, 2.4*cm, 1.9*cm, 8, fill=1, stroke=0)
+    p.setFillColor(WHITE)
+    p.setFont("Helvetica-Bold", 28)
+    p.drawCentredString(W - 2.8*cm, y - 1.5*cm, mg or '—')
     p.setFont("Helvetica", 7)
-    p.setFillColorRGB(0.58, 0.63, 0.69)
-    p.drawCentredString(width/2, 1.5*cm, "careernext.co.ke  |  CareerNext — Empowering Kenyan Students")
-    p.drawCentredString(width/2, 1*cm, "Apply officially at kuccps.ac.ke")
-    p.showPage()
+    p.drawCentredString(W - 2.8*cm, y - 2.1*cm, "Mean Grade")
+
+    y -= 3.1*cm
+
+    # ── Section heading ──────────────────────────────────────────────────────
+    p.setFillColor(NAVY)
+    p.setFont("Helvetica-Bold", 9.5)
+    p.drawString(1.5*cm, y, "ALL 20 KUCCPS CLUSTER SCORES")
+    p.setFillColor(SLATE)
+    p.setFont("Helvetica", 7.5)
+    p.drawString(1.5*cm, y - 0.4*cm,
+        f"Calculated {len(cluster_results)} clusters   |   Maximum per cluster: 48 pts")
+    y -= 0.82*cm
+
+    # ── Colour legend ────────────────────────────────────────────────────────
+    for lx, lc, lt in [
+        (1.5*cm,  EMERALD, "Strong (36–48 pts)"),
+        (6.0*cm,  NAVY,    "Moderate (24–35 pts)"),
+        (11.2*cm, AMBER,   "Below 24 pts"),
+    ]:
+        p.setFillColor(lc)
+        p.roundRect(lx, y - 0.2*cm, 0.18*cm, 0.18*cm, 2, fill=1, stroke=0)
+        p.setFillColor(SLATE)
+        p.setFont("Helvetica", 7)
+        p.drawString(lx + 0.28*cm, y - 0.12*cm, lt)
+    y -= 0.52*cm
+
+    # ── Cluster grid — 2 columns ─────────────────────────────────────────────
+    COL_W  = (W - 3.2*cm) / 2
+    CELL_H = 1.05*cm
+    GAP    = 0.12*cm
+    col_x  = [1.5*cm, 1.5*cm + COL_W + 0.2*cm]
+
+    def score_col_bg(pts):
+        if pts >= 36:
+            return EMERALD, rc.HexColor("#d1fae5")
+        if pts >= 24:
+            return NAVY, rc.HexColor("#dbeafe")
+        return AMBER, rc.HexColor("#fef3c7")
+
+    row_offset = 0
+    for i, r in enumerate(cluster_results):
+        col = i % 2
+        if col == 0 and i > 0:
+            row_offset += 1
+
+        # Page break at the start of each new row pair
+        if col == 0 and (y - row_offset * (CELL_H + GAP) - CELL_H) < 1.7*cm:
+            y = draw_page()
+            row_offset = 0
+
+        cell_y = y - row_offset * (CELL_H + GAP)
+        x = col_x[col]
+        pts = float(r.cluster_points)
+        sc, bg = score_col_bg(pts)
+
+        # Card background
+        p.setFillColor(bg)
+        p.roundRect(x, cell_y - CELL_H, COL_W - 0.1*cm, CELL_H, 4, fill=1, stroke=0)
+        # Left colour stripe
+        p.setFillColor(sc)
+        p.rect(x, cell_y - CELL_H, 0.22*cm, CELL_H, fill=1, stroke=0)
+
+        knum  = r.cluster.kuccps_number if r.cluster else '?'
+        cname = (r.cluster.name if r.cluster else 'Unknown')[:30]
+
+        p.setFillColor(NAVY)
+        p.setFont("Helvetica-Bold", 7.5)
+        p.drawString(x + 0.38*cm, cell_y - 0.32*cm, f"Cluster {knum}")
+        p.setFillColor(SLATE)
+        p.setFont("Helvetica", 6.8)
+        p.drawString(x + 0.38*cm, cell_y - 0.63*cm, cname)
+
+        # Score badge
+        p.setFillColor(sc)
+        p.roundRect(x + COL_W - 2.6*cm, cell_y - 0.88*cm, 2.3*cm, 0.72*cm, 4, fill=1, stroke=0)
+        p.setFillColor(WHITE)
+        p.setFont("Helvetica-Bold", 8.5)
+        p.drawCentredString(x + COL_W - 1.45*cm, cell_y - 0.55*cm, f"{pts:.1f} / 48")
+
     p.save()
     return response
 

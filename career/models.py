@@ -648,6 +648,87 @@ class CareerConfig(models.Model):
 # =====================================================
 # SHARED RESULT (public shareable career result links)
 # =====================================================
+# =====================================================
+# AI Knowledge Base (admin-managed Q&A for chatbot)
+# =====================================================
+class AIKnowledgeEntry(models.Model):
+    CATEGORY_CHOICES = [
+        ('grade_career',    'Grade → Career'),
+        ('interest_career', 'Interest → Career'),
+        ('course_info',     'Course Explanation'),
+        ('career_outcome',  'Career Outcomes & Salary'),
+        ('admission',       'University & Admission'),
+        ('comparison',      'Comparisons'),
+        ('decision',        'Decision Help'),
+        ('future_trends',   'Future & Trends'),
+        ('pathway',         'Pathways (Degree/Diploma/TVET)'),
+        ('kuccps',          'KUCCPS Process'),
+        ('general',         'General'),
+    ]
+
+    question   = models.CharField(max_length=500)
+    answer     = models.TextField(help_text="The verified, factual answer the AI will use")
+    keywords   = models.CharField(
+        max_length=500, blank=True,
+        help_text="Comma-separated search words (e.g. c+,degree,university,qualify)"
+    )
+    category   = models.CharField(max_length=30, choices=CATEGORY_CHOICES, default='general')
+    is_active  = models.BooleanField(default=True)
+    order      = models.PositiveIntegerField(default=0, help_text="Lower = shown first in admin")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['category', 'order', 'id']
+        verbose_name        = 'AI Knowledge Entry'
+        verbose_name_plural = 'AI Knowledge Base'
+
+    def __str__(self):
+        return f"[{self.get_category_display()}] {self.question[:80]}"
+
+    def get_keywords_list(self):
+        return [k.strip().lower() for k in self.keywords.split(',') if k.strip()]
+
+
+# =====================================================
+# Job Market Intelligence
+# =====================================================
+class JobMarketData(models.Model):
+    DEMAND_CHOICES = [('High', 'High'), ('Medium', 'Medium'), ('Low', 'Low')]
+
+    career_name  = models.CharField(max_length=150, unique=True)
+    keywords     = models.CharField(
+        max_length=600,
+        help_text="Comma-separated lowercase terms matched against course career_outcomes (e.g. doctor,physician,surgeon)"
+    )
+    salary_min   = models.PositiveIntegerField(help_text="Monthly gross KES — lower end")
+    salary_max   = models.PositiveIntegerField(help_text="Monthly gross KES — upper end")
+    demand       = models.CharField(max_length=10, choices=DEMAND_CHOICES, default='Medium')
+    top_sectors  = models.CharField(max_length=300, help_text="Comma-separated hiring sectors")
+    source_year  = models.PositiveSmallIntegerField(default=2024)
+    source_name  = models.CharField(max_length=200, default="BrighterMonday Kenya Salary Report 2024")
+    source_url   = models.URLField(blank=True, default="https://www.brightermonday.co.ke/research")
+
+    class Meta:
+        ordering = ['career_name']
+        verbose_name        = 'Job Market Data'
+        verbose_name_plural = 'Job Market Data'
+
+    def __str__(self):
+        return f"{self.career_name} (KSh {self.salary_min:,}–{self.salary_max:,})"
+
+    def salary_display(self):
+        def _fmt(n):
+            return f"{n // 1000}k" if n % 1000 == 0 else f"{n:,}"
+        return f"KSh {_fmt(self.salary_min)} – {_fmt(self.salary_max)} / mo"
+
+    def keywords_list(self):
+        return [k.strip().lower() for k in self.keywords.split(',') if k.strip()]
+
+    def sectors_list(self):
+        return [s.strip() for s in self.top_sectors.split(',') if s.strip()]
+
+
 import uuid as _uuid
 from datetime import timedelta as _td
 

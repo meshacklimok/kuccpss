@@ -60,6 +60,9 @@ urlpatterns = [
     path("ajax/ai-insight/", views.ajax_ai_insight, name="ajax_ai_insight"),
     path("ajax/ai-chat/",    views.ajax_ai_chat,    name="ajax_ai_chat"),
 
+    # ── CareerNext AI Chat page ───────────────────────
+    path("chat/", views.career_chat, name="career_chat"),
+
     # ── Session management ───────────────────────────
     path("clear/", views.clear_session, name="clear_session"),
 
