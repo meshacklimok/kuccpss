@@ -25,6 +25,12 @@ python manage.py loaddata seed_content.json || echo "Content seed skipped (may a
 python manage.py seed_careers
 python manage.py expand_careers
 
+# Seed AI knowledge base entries
+python manage.py seed_knowledge || echo "Knowledge seed skipped"
+
+# Seed Kenya job market salary intelligence (87 careers — idempotent)
+python manage.py seed_job_market
+
 # Set the Site domain for django.contrib.sites + allauth
 python manage.py shell -c "
 import os
