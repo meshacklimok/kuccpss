@@ -622,7 +622,8 @@
 <div class="lce-footer">
     <div class="lce-footer-info"><div class="lce-footer-title" id="footerNote">Enter <strong>7 subjects</strong> to calculate</div></div>
     <a href="{% url 'home' %}" class="lce-btn-back"><i class="bi bi-arrow-left"></i> Back</a>
-    <button type="submit" form="calcForm" class="lce-btn-calc" id="calcBtn" disabled>
+    <button type="button" class="lce-btn-calc" id="calcBtn" disabled
+            onclick="document.getElementById('calcForm').submit()">
         <i class="bi bi-calculator-fill"></i> Calculate
     </button>
 </div>
