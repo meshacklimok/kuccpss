@@ -51,16 +51,67 @@ def get_course_from_match(match: StudentCourseMatch):
 # 1. Home / Pathway Selection
 # =====================================================
 def home(request):
-    from courses.models import Course
+    from courses.models import Course, CourseOffering
     from institutions.models import Institution
+    from django.db.models import Count
 
     categories = ["Degree", "Diploma", "TVET", "KMTC", "TTC"]
     tvet_categories = TVETCategory.objects.all()
+
+    # ── Trending: top 8 most-saved courses ──────────────────────────────
+    trending_courses = []
+    try:
+        from accounts.models import SavedCourse
+        top = list(
+            SavedCourse.objects
+            .values('course_id')
+            .annotate(saves=Count('id'))
+            .order_by('-saves')
+            .values_list('course_id', 'saves')[:8]
+        )
+        id_save_map = dict(top)
+        if id_save_map:
+            qs = (Course.objects
+                  .filter(pk__in=id_save_map)
+                  .select_related('course_type', 'cluster'))
+            for c in qs:
+                off = (CourseOffering.objects
+                       .filter(course=c)
+                       .select_related('institution')
+                       .first())
+                trending_courses.append({
+                    'name': c.name,
+                    'course_type': c.course_type.name if c.course_type else '',
+                    'course_type_slug': c.course_type.slug if c.course_type else '',
+                    'slug': c.slug,
+                    'cluster_num': c.cluster.kuccps_number if c.cluster else None,
+                    'cutoff': (off.cutoff_points or {}).get('2024') if off else None,
+                    'institution': off.institution.name if off and off.institution else '',
+                    'saves': id_save_map[c.pk],
+                })
+            trending_courses.sort(key=lambda x: x['saves'], reverse=True)
+    except Exception:
+        pass
+
+    # Fallback when DB has no saves yet
+    if not trending_courses:
+        trending_courses = [
+            {'name': 'Medicine and Surgery', 'course_type': 'Degree', 'course_type_slug': 'degree', 'slug': None, 'cluster_num': 15, 'cutoff': '42.0', 'institution': 'University of Nairobi', 'saves': None},
+            {'name': 'Computer Science (BSc)', 'course_type': 'Degree', 'course_type_slug': 'degree', 'slug': None, 'cluster_num': 9, 'cutoff': '36.0', 'institution': 'JKUAT', 'saves': None},
+            {'name': 'Civil Engineering', 'course_type': 'Degree', 'course_type_slug': 'degree', 'slug': None, 'cluster_num': 4, 'cutoff': '38.5', 'institution': 'University of Nairobi', 'saves': None},
+            {'name': 'Bachelor of Laws (LLB)', 'course_type': 'Degree', 'course_type_slug': 'degree', 'slug': None, 'cluster_num': 12, 'cutoff': '40.0', 'institution': 'University of Nairobi', 'saves': None},
+            {'name': 'Nursing (B.Sc.)', 'course_type': 'Degree', 'course_type_slug': 'degree', 'slug': None, 'cluster_num': 13, 'cutoff': '35.5', 'institution': 'Kenyatta University', 'saves': None},
+            {'name': 'Architecture (BArch)', 'course_type': 'Degree', 'course_type_slug': 'degree', 'slug': None, 'cluster_num': 5, 'cutoff': '37.0', 'institution': 'University of Nairobi', 'saves': None},
+            {'name': 'Pharmacy (B.Pharm)', 'course_type': 'Degree', 'course_type_slug': 'degree', 'slug': None, 'cluster_num': 15, 'cutoff': '38.0', 'institution': 'University of Nairobi', 'saves': None},
+            {'name': 'Clinical Medicine & Surgery', 'course_type': 'KMTC', 'course_type_slug': 'kmtc', 'slug': None, 'cluster_num': None, 'cutoff': 'B', 'institution': 'KMTC Nairobi', 'saves': None},
+        ]
+
     context = {
         "categories": categories,
         "tvet_categories": tvet_categories,
         "course_count": Course.objects.count(),
         "institution_count": Institution.objects.count(),
+        "trending_courses": trending_courses,
     }
     return render(request, "career/home.html", context)
 
