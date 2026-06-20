@@ -9,4 +9,5 @@ def unread_notifications(request):
     return {
         "unread_notification_count": count,
         "VAPID_PUBLIC_KEY": settings.VAPID_PUBLIC_KEY,
+        "GOOGLE_OAUTH_AVAILABLE": settings.GOOGLE_OAUTH_AVAILABLE,
     }
