@@ -1,10 +1,13 @@
 import json
+import logging
 from django.contrib.auth.decorators import login_required
 from django.db.models import Avg, Count
 from django.http import JsonResponse
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views.decorators.http import require_POST
 from .models import CourseType, CourseCategory, Course, Review
+
+log = logging.getLogger(__name__)
 
 # ------------------------------
 # Course Types List View
