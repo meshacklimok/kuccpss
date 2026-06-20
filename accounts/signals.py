@@ -55,10 +55,21 @@ def log_user_login(sender, request, user, **kwargs):
         success=True
     )
 
-    # Create device session
+    # Create device session — session_key may be None if the session hasn't been
+    # persisted yet (e.g. admin login), so save it first or fall back to a token.
+    session_key = request.session.session_key
+    if not session_key:
+        try:
+            request.session.save()
+            session_key = request.session.session_key
+        except Exception:
+            pass
+    if not session_key:
+        session_key = secrets.token_hex(16)
+
     DeviceSession.objects.create(
         user=user,
-        session_key=request.session.session_key,
+        session_key=session_key,
         ip_address=ip,
         user_agent=user_agent,
         device_name="Unknown Device"
