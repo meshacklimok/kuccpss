@@ -304,6 +304,81 @@
   .sidebar-card-body { padding: 0.85rem; }
 }
 
+/* ═══════════════════════════════════════════════
+   DARK MODE — dashboard overrides
+═══════════════════════════════════════════════ */
+
+/* Notification banner */
+body.dark .notif-banner {
+  background: #1c1507;
+  border-bottom-color: #78350f;
+}
+
+/* Content cards */
+body.dark .dash-card {
+  background: var(--surface);
+  border-color: var(--border);
+}
+body.dark .dash-card-header {
+  border-bottom-color: var(--border);
+}
+body.dark .dash-card-title { color: var(--text); }
+
+/* Metric tiles */
+body.dark .metric-tile {
+  background: var(--surface-2);
+  border-color: var(--border);
+}
+body.dark .metric-tile .mt-num  { color: var(--text); }
+body.dark .metric-tile .mt-label { color: var(--text-3); }
+
+/* Recommendation carousel */
+body.dark .reco-car-btn {
+  background: var(--surface);
+  color: #93c5fd;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+}
+body.dark .reco-car-btn:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.5); }
+body.dark .reco-card {
+  background: var(--surface);
+  border-color: var(--border);
+}
+body.dark .reco-card .r-course { color: var(--text); }
+body.dark .reco-card .r-inst   { color: var(--text-2); }
+body.dark .reco-dot             { background: #334155; }
+body.dark .reco-dot.active      { background: #6366f1; }
+
+/* My Courses tabs */
+body.dark .courses-nav          { border-bottom-color: var(--border); }
+body.dark .courses-tab-btn      { color: var(--text-3); }
+body.dark .courses-tab-btn.active { color: #818cf8; border-bottom-color: #818cf8; }
+body.dark .courses-tab-btn:hover  { color: #818cf8; }
+
+/* Watchlist / cluster items */
+body.dark .wl-item         { background: var(--surface-2); border-color: var(--border); }
+body.dark .wl-item:hover   { border-color: #6366f1; }
+body.dark .wl-badge        { background: rgba(79,70,229,0.2); color: #a5b4fc; }
+body.dark .cluster-row     { background: var(--surface-2); border-color: var(--border); }
+body.dark .cluster-row:hover { background: rgba(59,130,246,0.1); border-color: #3b82f6; }
+
+/* Sidebar cards */
+body.dark .sidebar-card          { background: var(--surface); border-color: var(--border); }
+body.dark .sidebar-card-header   { border-bottom-color: var(--border); }
+body.dark .sidebar-card-title    { color: var(--text); }
+
+/* Quick action buttons */
+body.dark .qa-btn       { background: var(--surface-2); border-color: var(--border); color: var(--text); }
+body.dark .qa-btn:hover { background: rgba(59,130,246,0.1); border-color: #3b82f6; color: var(--text); }
+
+/* News + external link rows */
+body.dark .news-row:hover            { background: var(--surface-2); }
+body.dark .news-row + .news-row      { border-top-color: var(--border); }
+body.dark .ext-link-row:hover        { background: var(--surface-2); }
+body.dark .ext-link-row + .ext-link-row { border-top-color: var(--border); }
+
+/* Onboarding step hover */
+body.dark .ob-step:hover { background: var(--surface-2); }
+
 </style>
 
 
@@ -435,7 +510,7 @@
 
 
 {# ════ MAIN CONTENT ════ #}
-<div style="background:#f0f4ff;min-height:100vh;">
+<div style="background:var(--bg);min-height:100vh;">
 <div class="container py-4">
 <div class="row g-4">
 

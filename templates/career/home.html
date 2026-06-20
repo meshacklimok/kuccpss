@@ -503,6 +503,58 @@
   background-size: 28px 28px;
 }
 
+/* ═══════════════════════════════════════════════
+   DARK MODE — home page overrides
+═══════════════════════════════════════════════ */
+
+/* Hero wave clip matches dark bg */
+body.dark .cn-hero::after { background: var(--bg); }
+
+/* Resume session strip */
+body.dark .resume-strip {
+  background: #0a1f10;
+  border-bottom-color: #14532d;
+}
+
+/* How it works */
+body.dark .hiw-section          { background: var(--bg); }
+body.dark .hiw-step h6          { color: var(--text); }
+body.dark .hiw-step p           { color: var(--text-2); }
+body.dark .hiw-num-ring         { border-color: rgba(165,180,252,0.18); }
+
+/* Section labels */
+body.dark .section-eyebrow { background: rgba(79,70,229,0.18); color: #a5b4fc; }
+body.dark .section-title   { color: var(--text); }
+body.dark .section-sub     { color: var(--text-2); }
+
+/* Pathway section */
+body.dark .pathway-section { background: var(--surface-2); }
+body.dark .pathway-card {
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+}
+body.dark .pathway-card::before { /* shimmer on dark surface */
+  background: linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.06) 50%, transparent 60%);
+}
+body.dark .pathway-title    { color: var(--text); }
+body.dark .pathway-subtitle { color: var(--text-2); }
+
+/* pathway icon backgrounds — lighter tints on dark surface */
+body.dark .degree      .pathway-icon { background: rgba(79,70,229,0.15);  }
+body.dark .diploma     .pathway-icon { background: rgba(8,145,178,0.15);  }
+body.dark .certificate .pathway-icon { background: rgba(5,150,105,0.15);  }
+body.dark .kmtc        .pathway-icon { background: rgba(220,38,38,0.15);  }
+body.dark .artisan     .pathway-icon { background: rgba(217,119,6,0.15);  }
+body.dark .shortcourse .pathway-icon { background: rgba(124,58,237,0.15); }
+
+/* pathway hover glows — stronger on dark */
+body.dark .pathway-card.degree:hover      { box-shadow: 0 16px 40px rgba(79,70,229,0.28),  0 4px 12px rgba(79,70,229,0.18);  }
+body.dark .pathway-card.diploma:hover     { box-shadow: 0 16px 40px rgba(8,145,178,0.28),  0 4px 12px rgba(8,145,178,0.18);  }
+body.dark .pathway-card.certificate:hover { box-shadow: 0 16px 40px rgba(5,150,105,0.28),  0 4px 12px rgba(5,150,105,0.18);  }
+body.dark .pathway-card.kmtc:hover        { box-shadow: 0 16px 40px rgba(220,38,38,0.28),  0 4px 12px rgba(220,38,38,0.18);  }
+body.dark .pathway-card.artisan:hover     { box-shadow: 0 16px 40px rgba(217,119,6,0.28),  0 4px 12px rgba(217,119,6,0.18);  }
+body.dark .pathway-card.shortcourse:hover { box-shadow: 0 16px 40px rgba(124,58,237,0.28), 0 4px 12px rgba(124,58,237,0.18); }
+
 </style>
 
 
