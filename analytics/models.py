@@ -69,6 +69,27 @@ class DownloadLog(models.Model):
         return f'{self.content_type}: {self.object_name}'
 
 
+class EventLog(models.Model):
+    """Generic server-side event store for anything not covered by specialised logs."""
+    name        = models.CharField(max_length=80, db_index=True)
+    properties  = models.JSONField(default=dict, blank=True)
+    user        = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True,
+                                    on_delete=models.SET_NULL, related_name='+')
+    session_key = models.CharField(max_length=40, blank=True)
+    ip          = models.GenericIPAddressField(null=True, blank=True)
+    created_at  = models.DateTimeField(auto_now_add=True, db_index=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        indexes  = [
+            models.Index(fields=['name', 'created_at']),
+            models.Index(fields=['created_at']),
+        ]
+
+    def __str__(self):
+        return f'{self.name} — {self.created_at:%Y-%m-%d %H:%M}'
+
+
 class CareerEngineLog(models.Model):
     PATHWAY_CHOICES = [
         ('degree',      'Degree'),

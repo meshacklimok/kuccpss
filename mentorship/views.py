@@ -20,6 +20,12 @@ from .models import MentorProfile, MentorshipSession, TimeSlot, WithdrawalReques
 logger = logging.getLogger(__name__)
 
 
+def _admin_email():
+    """Return the admin notification email from SiteSetting, falling back to settings."""
+    from resources.models import SiteSetting
+    return SiteSetting.get('admin_email', default=settings.ADMIN_EMAIL)
+
+
 # ── Public: Mentor Directory ─────────────────────────────────────────────────
 
 def directory(request):
@@ -90,6 +96,26 @@ def mentor_profile(request, mentor_pk):
     })
 
 
+# ── AJAX: courses for a given institution ────────────────────────────────────
+
+def courses_for_institution(request):
+    """Return JSON list of courses offered at an institution (for become-mentor form cascade)."""
+    institution_id = request.GET.get("institution", "").strip()
+    if not institution_id:
+        return JsonResponse({"courses": []})
+    try:
+        from courses.models import Course
+        qs = (
+            Course.objects
+            .filter(institutions__id=institution_id)
+            .values("id", "name")
+            .order_by("name")
+        )
+        return JsonResponse({"courses": list(qs)})
+    except Exception:
+        return JsonResponse({"courses": []})
+
+
 # ── Become a Mentor ───────────────────────────────────────────────────────────
 
 @login_required
@@ -117,7 +143,7 @@ def become_mentor(request):
                     f"Review: https://www.careernext.co.ke/cn-staff/mentorship/mentorprofile/{mentor.pk}/change/"
                 ),
                 from_email=settings.DEFAULT_FROM_EMAIL,
-                recipient_list=[settings.ADMIN_EMAIL],
+                recipient_list=[_admin_email()],
                 fail_silently=True,
             )
 
@@ -371,6 +397,7 @@ def payment_webhook(request):
             mentor.save(update_fields=["wallet_balance", "total_earned"])
 
             _send_booking_confirmation(session)
+            _maybe_auto_pay_mentor(mentor)
 
         except MentorshipSession.DoesNotExist:
             pass  # Already processed or unrelated ref
@@ -496,6 +523,62 @@ def edit_mentor_profile(request):
 
 
 # ── Internal helpers ──────────────────────────────────────────────────────────
+
+AUTO_PAY_THRESHOLD = getattr(settings, "MENTOR_AUTO_PAY_THRESHOLD", 500)
+
+
+def _maybe_auto_pay_mentor(mentor):
+    """
+    Automatically send an M-Pesa B2C payout when the mentor's wallet
+    reaches AUTO_PAY_THRESHOLD (default KES 500).
+    Swallows all errors so a payout failure never breaks the webhook response.
+    """
+    if mentor.wallet_balance < AUTO_PAY_THRESHOLD:
+        return
+    if not mentor.whatsapp:
+        logger.warning("Auto-pay skipped for mentor %s: no WhatsApp/M-Pesa number", mentor.pk)
+        return
+
+    # Guard: skip if there's already a pending auto-pay for this mentor
+    if WithdrawalRequest.objects.filter(mentor=mentor, status="pending").exists():
+        logger.info("Auto-pay skipped for mentor %s: pending withdrawal exists", mentor.pk)
+        return
+
+    payout_amount = mentor.wallet_balance
+    try:
+        from payments.services import send_mentor_payout
+        send_mentor_payout(
+            phone=mentor.whatsapp,
+            amount=payout_amount,
+            mentor_name=mentor.display_name,
+            ref=str(mentor.pk)[:8],
+        )
+        # Record for audit trail
+        WithdrawalRequest.objects.create(
+            mentor=mentor,
+            amount=payout_amount,
+            mpesa_number=mentor.whatsapp,
+            status="processed",
+        )
+        mentor.wallet_balance = 0
+        mentor.save(update_fields=["wallet_balance"])
+        logger.info("Auto-pay KES %s sent to mentor %s (%s)", payout_amount, mentor.display_name, mentor.whatsapp)
+
+        send_mail(
+            subject="CareerNext — Your earnings have been sent!",
+            message=(
+                f"Hi {mentor.display_name},\n\n"
+                f"Your CareerNext earnings of KES {payout_amount} have been automatically "
+                f"sent to {mentor.whatsapp} via M-Pesa.\n\n"
+                f"Great work! Keep up the mentoring.\n\nCareerNext Team"
+            ),
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[mentor.user.email],
+            fail_silently=True,
+        )
+    except Exception as exc:
+        logger.error("Auto-pay failed for mentor %s: %s", mentor.pk, exc)
+
 
 def _send_booking_confirmation(session: MentorshipSession):
     from .calendar_utils import generate_ics, google_calendar_url
@@ -714,7 +797,7 @@ def _send_cancellation_emails(session, cancelled_by, reason):
             f"Session token: {session.token}"
         ),
         from_email=settings.DEFAULT_FROM_EMAIL,
-        recipient_list=[settings.ADMIN_EMAIL],
+        recipient_list=[_admin_email()],
         fail_silently=True,
     )
 
@@ -749,7 +832,7 @@ def request_withdrawal(request):
                 f"Approve in admin: https://www.careernext.co.ke/cn-staff/mentorship/withdrawalrequest/"
             ),
             from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[settings.ADMIN_EMAIL],
+            recipient_list=[_admin_email()],
             fail_silently=True,
         )
 

@@ -141,14 +141,17 @@
                 {% endif %}
                 <div class="form-text">Only universities (degree-granting) and KMTC institutions are listed.</div>
               </div>
-              <!-- Course -->
+              <!-- Course (populated via AJAX after institution is chosen) -->
               <div class="col-12">
                 <label class="form-label fw-semibold small">{{ form.course.label }} <span class="text-danger">*</span></label>
-                {{ form.course }}
+                <select name="course" id="id_course" class="form-select" required>
+                  <option value="">— Select your institution first —</option>
+                  {% for opt in form.course %}{{ opt }}{% endfor %}
+                </select>
                 {% if form.course.errors %}
                   <div class="text-danger small mt-1">{{ form.course.errors }}</div>
                 {% endif %}
-                <div class="form-text">The course you are currently enrolled in.</div>
+                <div class="form-text" id="courseHint">Select your institution above to see available courses.</div>
               </div>
               <!-- Year -->
               <div class="col-sm-6">
@@ -407,4 +410,56 @@
   </div>
 </div>
 
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+  var instSel   = document.getElementById('id_institution');
+  var courseSel = document.getElementById('id_course');
+  var hint      = document.getElementById('courseHint');
+  if (!instSel || !courseSel) return;
+
+  function loadCourses(institutionId, selectedId) {
+    courseSel.innerHTML = '<option value="">Loading courses…</option>';
+    courseSel.disabled = true;
+    if (!institutionId) {
+      courseSel.innerHTML = '<option value="">— Select your institution first —</option>';
+      courseSel.disabled = false;
+      if (hint) hint.textContent = 'Select your institution above to see available courses.';
+      return;
+    }
+    fetch('/mentorship/courses-for-institution/?institution=' + encodeURIComponent(institutionId))
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        courseSel.innerHTML = '<option value="">— Select your course —</option>';
+        if (data.courses.length === 0) {
+          courseSel.innerHTML = '<option value="">No courses found for this institution</option>';
+          if (hint) hint.textContent = 'No courses linked to this institution yet — contact support.';
+        } else {
+          data.courses.forEach(function (c) {
+            var opt = document.createElement('option');
+            opt.value = c.id;
+            opt.textContent = c.name;
+            if (String(c.id) === String(selectedId)) opt.selected = true;
+            courseSel.appendChild(opt);
+          });
+          if (hint) hint.textContent = data.courses.length + ' course(s) available at this institution.';
+        }
+        courseSel.disabled = false;
+      })
+      .catch(function () {
+        courseSel.innerHTML = '<option value="">Error loading courses — try refreshing</option>';
+        courseSel.disabled = false;
+      });
+  }
+
+  instSel.addEventListener('change', function () { loadCourses(this.value, null); });
+
+  // Restore on validation-error re-render
+  if (instSel.value) {
+    loadCourses(instSel.value, '{{ form.data.course|default:form.instance.course_id|default:"" }}');
+  }
+}());
+</script>
 {% endblock %}

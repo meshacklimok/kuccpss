@@ -62,21 +62,23 @@
   </div>
   {% endif %}
 
-  <!-- Mentorship nudge -->
+  <!-- Mentorship nudge — only for degree/KMTC views -->
+  {% if not type_filter or type_filter == 'degree' or type_filter == 'KMTC' %}
   <div class="d-flex align-items-center gap-3 flex-wrap p-3 mb-4 rounded-3"
        style="background:linear-gradient(135deg,#f0fdf4,#dcfce7);border:1.5px solid #86efac;">
     <div class="flex-grow-1">
-      <div class="fw-700" style="color:#166534;font-size:0.93rem;">
+      <div class="fw-700" style="color:#166634;font-size:0.93rem;">
         <i class="bi bi-people-fill me-2 text-success"></i>Want to know what a course is really like?
       </div>
       <div class="small text-muted mt-1">
-        Book a 15-minute WhatsApp call with a current student. KES 100. Real answers from someone already there.
+        Book a 15-minute WhatsApp call with a current university or KMTC student. KES 100. Real answers.
       </div>
     </div>
     <a href="{% url 'mentorship:directory' %}" class="btn btn-success btn-sm fw-semibold flex-shrink-0 rounded-pill px-3">
       Find a Mentor
     </a>
   </div>
+  {% endif %}
 
   <!-- Summary stat cards -->
   <div class="row g-3 mb-4">

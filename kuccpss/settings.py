@@ -121,6 +121,8 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'accounts.context_processors.unread_notifications',
+                'analytics.context_processors.posthog_keys',
+                'analytics.context_processors.sentry_context',
             ],
         },
     },
@@ -231,6 +233,10 @@ GOOGLE_OAUTH_AVAILABLE = bool(_google_client_id)
 
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
 
+# PostHog analytics — JS key is public; Python key stays server-side
+POSTHOG_API_KEY = os.environ.get("POSTHOG_API_KEY", "")
+POSTHOG_HOST    = os.environ.get("POSTHOG_HOST", "https://eu.i.posthog.com")
+
 # Affiliate payout — admin WhatsApp number for payout requests
 AFFILIATE_PAYOUT_PHONE = os.environ.get("AFFILIATE_PAYOUT_PHONE", "254700000000")
 
@@ -296,3 +302,58 @@ LOGGING = {
         },
     },
 }
+
+# ── Sentry error monitoring ───────────────────────────────────────────────────
+# Only initialises when SENTRY_DSN is set; completely silent in local dev.
+_SENTRY_DSN  = os.environ.get('SENTRY_DSN', '')
+# Build a consistent release string shared by both backend and frontend JS SDK.
+# Render injects RENDER_GIT_COMMIT (full SHA) on every deploy.
+SENTRY_RELEASE      = os.environ.get('RENDER_GIT_COMMIT', '') or None
+SENTRY_ENVIRONMENT  = 'production' if not DEBUG else 'development'
+
+if _SENTRY_DSN:
+    import logging as _logging
+    import sentry_sdk
+    from sentry_sdk.integrations.django import DjangoIntegration
+    from sentry_sdk.integrations.logging import LoggingIntegration
+    from django.http import Http404
+    from django.core.exceptions import BadRequest, PermissionDenied, SuspiciousOperation
+
+    sentry_sdk.init(
+        dsn=_SENTRY_DSN,
+        environment=SENTRY_ENVIRONMENT,
+        release=SENTRY_RELEASE,
+        integrations=[
+            DjangoIntegration(
+                transaction_style='url',  # group by URL pattern, not function name
+                middleware_spans=True,
+                signals_spans=False,      # Django signals are too noisy
+                cache_spans=False,
+            ),
+            LoggingIntegration(
+                level=_logging.WARNING,       # WARNING+ captured as breadcrumbs
+                event_level=_logging.ERROR,   # ERROR+ sent as Sentry events
+            ),
+        ],
+        # Highlight CareerNext frames vs Django/library internals in every trace.
+        in_app_include=[
+            'accounts', 'clusters', 'clusterpoints', 'institutions',
+            'courses', 'career', 'resources', 'payments', 'predictor',
+            'analytics', 'mentorship', 'kuccpss',
+        ],
+        # Performance: sample 10 % of requests; tune via env var without redeploy.
+        traces_sample_rate=float(os.environ.get('SENTRY_TRACES_RATE', '0.1')),
+        profiles_sample_rate=float(os.environ.get('SENTRY_PROFILES_RATE', '0.05')),
+        # Attach a stack trace to every captured log message (not just exceptions).
+        attach_stacktrace=True,
+        # Never send PII — no emails, IPs, cookies, or auth headers.
+        send_default_pii=False,
+        max_breadcrumbs=50,
+        # Ignore expected / non-actionable exceptions to keep the issue list clean.
+        ignore_errors=[
+            Http404,
+            PermissionDenied,
+            SuspiciousOperation,  # covers DisallowedHost, CSRF failures, bad headers
+            BadRequest,
+        ],
+    )

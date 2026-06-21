@@ -5,6 +5,7 @@ app_name = "mentorship"
 
 urlpatterns = [
     path("", views.directory, name="directory"),
+    path("courses-for-institution/", views.courses_for_institution, name="courses_for_institution"),
     path("become-mentor/", views.become_mentor, name="become_mentor"),
     path("become-mentor/success/", views.become_mentor_success, name="become_mentor_success"),
     path("dashboard/", views.mentor_dashboard, name="dashboard"),

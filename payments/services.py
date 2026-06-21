@@ -85,6 +85,36 @@ def fetch_intasend_status(checkout_id: str) -> str | None:
         return None
 
 
+def send_mentor_payout(phone: str, amount: int, mentor_name: str, ref: str = "") -> dict:
+    """
+    Send M-Pesa B2C payout to a mentor via Intasend Send Money API.
+    Returns the API response dict on success, raises requests.HTTPError on failure.
+
+    Requires the "Send Money" feature to be enabled on the Intasend account.
+    """
+    url = f"{get_base_url()}/send-money/mpesa/"
+    headers = {
+        "Authorization": f"Bearer {settings.INTASEND_SECRET_KEY}",
+        "Content-Type": "application/json",
+    }
+    payload = {
+        "currency": "KES",
+        "transactions": [
+            {
+                "name": mentor_name,
+                "account": normalise_phone(phone),
+                "amount": amount,
+                "narrative": f"CareerNext mentor payout {ref}".strip(),
+            }
+        ],
+    }
+    logger.info("IntaSend B2C payout → %s | payload: %s", url, payload)
+    response = requests.post(url, json=payload, headers=headers, timeout=15)
+    logger.info("IntaSend B2C response %s: %s", response.status_code, response.text[:500])
+    response.raise_for_status()
+    return response.json()
+
+
 def price_for_feature(feature: str) -> int:
     try:
         from .models import PaymentFeature

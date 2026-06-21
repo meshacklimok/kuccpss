@@ -807,37 +807,43 @@ body.dark .t-saves              { color: rgba(255,255,255,0.4); }
 
     <div class="pathway-grid">
 
-      <a href="{% url 'career:degree_calculate' %}" class="pathway-card degree">
+      <a href="{% url 'career:degree_calculate' %}" class="pathway-card degree"
+         data-ph-event="pathway_selected" data-ph-props='{"pathway":"degree"}'>
         <div class="pathway-icon"><i class="bi bi-mortarboard-fill"></i></div>
         <div class="pathway-title">Degree</div>
         <div class="pathway-subtitle">Bachelor's programmes at universities</div>
       </a>
 
-      <a href="{% url 'career:pathway_input' 'diploma' %}" class="pathway-card diploma">
+      <a href="{% url 'career:pathway_input' 'diploma' %}" class="pathway-card diploma"
+         data-ph-event="pathway_selected" data-ph-props='{"pathway":"diploma"}'>
         <div class="pathway-icon"><i class="bi bi-award-fill"></i></div>
         <div class="pathway-title">Diploma</div>
         <div class="pathway-subtitle">Diploma courses at universities &amp; colleges</div>
       </a>
 
-      <a href="{% url 'career:pathway_input' 'certificate' %}" class="pathway-card certificate">
+      <a href="{% url 'career:pathway_input' 'certificate' %}" class="pathway-card certificate"
+         data-ph-event="pathway_selected" data-ph-props='{"pathway":"certificate"}'>
         <div class="pathway-icon"><i class="bi bi-patch-check-fill"></i></div>
         <div class="pathway-title">Certificate</div>
         <div class="pathway-subtitle">Certificate programmes at TVETs &amp; colleges</div>
       </a>
 
-      <a href="{% url 'career:pathway_input' 'kmtc' %}" class="pathway-card kmtc">
+      <a href="{% url 'career:pathway_input' 'kmtc' %}" class="pathway-card kmtc"
+         data-ph-event="pathway_selected" data-ph-props='{"pathway":"kmtc"}'>
         <div class="pathway-icon"><i class="bi bi-hospital-fill"></i></div>
         <div class="pathway-title">KMTC</div>
         <div class="pathway-subtitle">Kenya Medical Training College courses</div>
       </a>
 
-      <a href="{% url 'career:pathway_input' 'artisan' %}" class="pathway-card artisan">
+      <a href="{% url 'career:pathway_input' 'artisan' %}" class="pathway-card artisan"
+         data-ph-event="pathway_selected" data-ph-props='{"pathway":"artisan"}'>
         <div class="pathway-icon"><i class="bi bi-tools"></i></div>
         <div class="pathway-title">Artisan</div>
         <div class="pathway-subtitle">Craft &amp; trade courses at TVET institutes</div>
       </a>
 
-      <a href="{% url 'career:pathway_input' 'shortcourse' %}" class="pathway-card shortcourse">
+      <a href="{% url 'career:pathway_input' 'shortcourse' %}" class="pathway-card shortcourse"
+         data-ph-event="pathway_selected" data-ph-props='{"pathway":"shortcourse"}'>
         <div class="pathway-icon"><i class="bi bi-clock-history"></i></div>
         <div class="pathway-title">Short Courses</div>
         <div class="pathway-subtitle">Skills-based short training programmes</div>

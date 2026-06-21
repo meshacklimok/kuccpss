@@ -177,8 +177,8 @@ Last updated: 2026-06-19
 - [ ] **Shareable score card** — after calculator runs, "Share your score" button generates a pre-filled WhatsApp message with cluster score + eligible course count; catch viral moment right after results
 - [ ] **Post-registration WhatsApp share prompt** — on registration success screen, one-click WhatsApp button: "I used KUCCPSS to find my courses → kuccpss.co.ke"; students share when excitement is highest
 - [ ] **SEO page titles** — login and register pages use generic titles; update to include target keywords e.g. "Create Free Account | KUCCPSS — Kenya Cluster Points Calculator"
-- [ ] **Urgency banner (peak season)** — site-wide banner June–August: "KUCCPS portal opens in X days — build your shortlist now"; show countdown to non-logged-in users; drives registrations before deadline
-- [ ] **"Save your results" non-blocking prompt** — on calculator results, show sticky bottom bar (not a wall) prompting guest to register; grades already in session so it feels instant
+- [x] **Urgency banner (peak season)** — site-wide banner June–August: "KUCCPS portal opens in X days — build your shortlist now"; show countdown to non-logged-in users; drives registrations before deadline
+- [x] **"Save your results" non-blocking prompt** — on calculator results, show sticky bottom bar (not a wall) prompting guest to register; grades already in session so it feels instant
 - [ ] **Google Analytics / Posthog funnel** — track: landing → calculator → eligible courses → register conversion; identify where users drop off
 
 ### Content & Data
@@ -197,7 +197,7 @@ Last updated: 2026-06-19
 - [ ] Write unit tests for cluster points calculation — the formula must never regress
 - [ ] Write integration tests for grade entry → loading → results flow
 - [ ] Progressive Web App (PWA) manifest + service worker for offline support
-- [ ] Google Analytics / Posthog event tracking (page views, pathway selections, payment funnel)
-- [ ] Sentry or similar error monitoring for production exceptions
+- [x] Google Analytics / Posthog event tracking (page views, pathway selections, payment funnel)
+- [x] Sentry or similar error monitoring for production exceptions
 - [x] Add rate limiting to login and registration views
 - [x] SEO — meta tags, OpenGraph, Twitter Card on all key pages
