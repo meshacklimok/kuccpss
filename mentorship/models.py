@@ -73,6 +73,10 @@ class MentorProfile(models.Model):
     # Approval workflow
     is_approved = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
+    is_rejected = models.BooleanField(
+        default=False,
+        help_text="Set by admin on rejection — permanently prevents reapplication.",
+    )
     rejection_reason = models.TextField(blank=True)
 
     created_at = models.DateTimeField(auto_now_add=True)

@@ -13,465 +13,402 @@
 <meta name="twitter:description" content="Calculate your KCSE cluster points and find courses you qualify for. Free, instant, and accurate.">
 {% endblock %}
 
-{% block content %}
-
-<!-- ── HERO ── -->
-<section class="hero-section">
-    <div class="container">
-        <div class="row align-items-center g-5">
-            <div class="col-lg-7 fade-in-up">
-                <div class="d-flex flex-wrap gap-2 mb-3">
-                    <div class="hero-badge">
-                        <i class="fas fa-star me-1"></i> Kenya's #1 Placement Guide
-                    </div>
-                    <div class="trust-badge">
-                        <i class="fas fa-shield-check me-1"></i> Official KUCCPS Formula
-                    </div>
-                </div>
-                <h1 class="mb-3">Find Your Perfect Course After <span style="color:#93c5fd;">KCSE</span></h1>
-                <p class="lead mb-4">
-                    Calculate your cluster points, discover courses you qualify for, and explore career paths — all in one place, free for Kenyan students.
-                </p>
-                <div class="d-flex flex-wrap gap-3 mb-4">
-                    {% if user.is_authenticated %}
-                    <a href="{% url 'clusterpoints:calculator' %}" class="btn btn-light fw-bold px-4 py-2">
-                        <i class="fas fa-calculator me-2 text-primary"></i>Open Calculator
-                    </a>
-                    <a href="{% url 'accounts:dashboard' %}" class="btn btn-outline-light fw-semibold px-4 py-2">
-                        <i class="fas fa-tachometer-alt me-2"></i>My Dashboard
-                    </a>
-                    {% else %}
-                    <a href="{% url 'accounts:register' %}" class="btn btn-light fw-bold px-4 py-2" style="min-width:160px;">
-                        <i class="fas fa-rocket me-2 text-primary"></i>Get Started Free
-                    </a>
-                    <a href="{% url 'clusterpoints:calculator' %}" class="btn btn-outline-light fw-semibold px-4 py-2">
-                        <i class="fas fa-calculator me-2"></i>Try Calculator
-                    </a>
-                    {% endif %}
-                </div>
-                <!-- Social proof line -->
-                <p class="mb-0" style="font-size:0.82rem;color:rgba(255,255,255,0.65);">
-                    <i class="fas fa-users me-1"></i> Trusted by students across 47 counties
-                </p>
-            </div>
-            <div class="col-lg-5 d-none d-lg-flex justify-content-center fade-in-up">
-                <!-- Mini feature preview card -->
-                <div style="background:rgba(255,255,255,0.1);border-radius:20px;padding:1.5rem;backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.18);width:100%;max-width:320px;">
-                    <div class="d-flex align-items-center gap-2 mb-3">
-                        <div style="width:8px;height:8px;border-radius:50%;background:#4ade80;"></div>
-                        <span style="font-size:0.75rem;color:rgba(255,255,255,0.7);font-weight:600;">Sample Cluster Result</span>
-                    </div>
-                    {% for label, pts, color in sample_clusters %}
-                    <div class="d-flex align-items-center gap-2 mb-2">
-                        <span style="font-size:0.78rem;color:rgba(255,255,255,0.75);min-width:70px;">{{ label }}</span>
-                        <div style="flex:1;background:rgba(255,255,255,0.1);border-radius:99px;height:6px;overflow:hidden;">
-                            <div style="height:100%;width:{{ pts }}%;background:{{ color }};border-radius:99px;"></div>
-                        </div>
-                        <span style="font-size:0.75rem;font-weight:700;color:white;min-width:32px;text-align:right;">{{ pts|floatformat:0 }}</span>
-                    </div>
-                    {% empty %}
-                    <div class="text-center py-2">
-                        <i class="fas fa-graduation-cap" style="font-size:3.5rem;color:rgba(255,255,255,0.75);"></i>
-                        <p class="mt-2 mb-0 fw-semibold" style="color:rgba(255,255,255,0.9);font-size:0.9rem;">Calculate your cluster points</p>
-                    </div>
-                    {% endfor %}
-                    <div class="mt-3 pt-2" style="border-top:1px solid rgba(255,255,255,0.1);">
-                        <a href="{% url 'clusterpoints:calculator' %}" class="btn btn-light btn-sm w-100 fw-bold" style="font-size:0.8rem;">
-                            <i class="fas fa-calculator me-1 text-primary"></i> Calculate Mine
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Stats row with counter animation -->
-        <div class="row g-3 mt-4 pt-3 border-top border-white border-opacity-10">
-            <div class="col-6 col-md-3">
-                <div class="hero-stat">
-                    <div class="stat-num"><span class="counter" data-target="1000">0</span>+</div>
-                    <div class="stat-label">Courses Listed</div>
-                </div>
-            </div>
-            <div class="col-6 col-md-3">
-                <div class="hero-stat">
-                    <div class="stat-num"><span class="counter" data-target="200">0</span>+</div>
-                    <div class="stat-label">Institutions</div>
-                </div>
-            </div>
-            <div class="col-6 col-md-3">
-                <div class="hero-stat">
-                    <div class="stat-num"><span class="counter" data-target="50">0</span>+</div>
-                    <div class="stat-label">Career Profiles</div>
-                </div>
-            </div>
-            <div class="col-6 col-md-3">
-                <div class="hero-stat">
-                    <div class="stat-num">Free</div>
-                    <div class="stat-label">Always</div>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
-
-<script>
-/* Counter animation for stats */
-(function(){
-    var counters = document.querySelectorAll('.counter[data-target]');
-    if (!counters.length || !('IntersectionObserver' in window)) {
-        counters.forEach(function(c){ c.textContent = Number(c.dataset.target).toLocaleString(); });
-        return;
-    }
-    var io = new IntersectionObserver(function(entries){
-        entries.forEach(function(e){
-            if (!e.isIntersecting) return;
-            var el = e.target, target = parseInt(el.dataset.target), start = 0,
-                duration = 1400, startTime = null;
-            function step(ts){
-                if (!startTime) startTime = ts;
-                var prog = Math.min((ts - startTime) / duration, 1);
-                var ease = 1 - Math.pow(1 - prog, 3); /* cubic ease-out */
-                el.textContent = Math.round(ease * target).toLocaleString();
-                if (prog < 1) requestAnimationFrame(step);
-            }
-            requestAnimationFrame(step);
-            io.unobserve(el);
-        });
-    }, { threshold: 0.5 });
-    counters.forEach(function(c){ io.observe(c); });
-})();
-</script>
-
-<!-- ── HOW IT WORKS ── -->
-<section style="background:var(--surface-2);padding:4rem 0 4.5rem;border-top:1px solid var(--border);border-bottom:1px solid var(--border);">
-    <div class="container">
-        <div class="text-center mb-5">
-            <span style="display:inline-block;font-size:0.7rem;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;color:#4f46e5;background:rgba(79,70,229,0.1);border-radius:20px;padding:4px 14px;margin-bottom:0.8rem;">How It Works</span>
-            <h2 class="section-header">Three Simple Steps</h2>
-            <p class="section-sub">From your KCSE grades to your ideal career path</p>
-        </div>
-        <div class="row g-4 justify-content-center">
-            <div class="col-md-4">
-                <div class="card card-accent-blue h-100 text-center p-4" style="background:var(--surface);">
-                    <div class="feature-icon feature-icon-blue mx-auto" style="width:60px;height:60px;font-size:1.5rem;">
-                        <i class="fas fa-calculator"></i>
-                    </div>
-                    <h5 class="fw-bold mt-3 mb-2" style="color:var(--text);">1. Calculate Points</h5>
-                    <p class="small mb-0" style="color:var(--text-2);">Enter your KCSE grades and get your cluster points calculated instantly using the official KUCCPS formula.</p>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card card-accent-green h-100 text-center p-4" style="background:var(--surface);">
-                    <div class="feature-icon feature-icon-green mx-auto" style="width:60px;height:60px;font-size:1.5rem;">
-                        <i class="fas fa-search"></i>
-                    </div>
-                    <h5 class="fw-bold mt-3 mb-2" style="color:var(--text);">2. Discover Courses</h5>
-                    <p class="small mb-0" style="color:var(--text-2);">Browse Degree, Diploma, KMTC, TVET, and TTC courses you qualify for based on your cluster points.</p>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card card-accent-purple h-100 text-center p-4" style="background:var(--surface);">
-                    <div class="feature-icon feature-icon-purple mx-auto" style="width:60px;height:60px;font-size:1.5rem;">
-                        <i class="fas fa-compass"></i>
-                    </div>
-                    <h5 class="fw-bold mt-3 mb-2" style="color:var(--text);">3. Plan Your Career</h5>
-                    <p class="small mb-0" style="color:var(--text-2);">Explore career profiles, take the career quiz, and get AI-powered guidance to pick the right path.</p>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- ── FEATURES ── -->
+{% block extra_head %}
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
 <style>
+/* ── Feature tiles ── */
 .feature-tile {
   background: var(--surface);
   border: 1.5px solid var(--border);
-  border-radius: 14px;
+  border-radius: var(--radius);
   padding: 1.1rem 1rem;
   display: flex; gap: 0.9rem; align-items: flex-start;
   text-decoration: none;
   box-shadow: var(--shadow-sm);
-  transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1),
-              box-shadow 0.25s ease,
-              border-color 0.2s ease;
+  transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.25s ease, border-color 0.2s;
   height: 100%;
 }
-.feature-tile:hover {
-  transform: translateY(-5px);
-  box-shadow: var(--shadow-md);
-  border-color: var(--primary-light);
-  text-decoration: none;
-}
-.feature-tile .feature-icon {
-  flex-shrink: 0;
-  transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
-}
-.feature-tile:hover .feature-icon { transform: scale(1.12) rotate(-5deg); }
+.feature-tile:hover { transform: translateY(-5px); box-shadow: var(--shadow-md); border-color: var(--primary-light); text-decoration: none; }
 .feature-tile h6 { color: var(--text); font-size: 0.88rem; font-weight: 800; margin-bottom: 0.25rem; }
 .feature-tile p  { color: var(--text-2); font-size: 0.78rem; line-height: 1.5; margin: 0; }
-</style>
 
-<section style="background:var(--bg);padding:4rem 0 4.5rem;">
-    <div class="container">
-        <div class="text-center mb-5">
-            <span style="display:inline-block;font-size:0.7rem;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;color:#16a34a;background:rgba(22,163,74,0.1);border-radius:20px;padding:4px 14px;margin-bottom:0.8rem;">Platform</span>
-            <h2 class="section-header">Everything You Need</h2>
-            <p class="section-sub">Powerful tools built for Kenyan KCSE students</p>
+/* ── Step cards (How it works) ── */
+.step-card {
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 2rem 1.5rem;
+  text-align: center;
+  box-shadow: var(--shadow-sm);
+  height: 100%;
+  transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.25s ease;
+}
+.step-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-md); }
+.step-number {
+  width: 36px; height: 36px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.82rem; font-weight: 900; margin: 0 auto 1rem;
+}
+
+/* ── Success story cards ── */
+.story-card {
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  display: flex; flex-direction: column; gap: 1rem;
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.25s ease, border-color 0.2s;
+  height: 100%;
+  opacity: 0; transform: translateY(24px);
+}
+.story-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-md); border-color: #bfdbfe; }
+@keyframes storyIn {
+  from { opacity: 0; transform: translateY(24px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+.story-card.visible { animation: storyIn 0.55s cubic-bezier(0.22,1,0.36,1) forwards; }
+.story-card:nth-child(2).visible { animation-delay: 0.08s; }
+.story-card:nth-child(3).visible { animation-delay: 0.16s; }
+.story-card:nth-child(4).visible { animation-delay: 0.08s; }
+.story-card:nth-child(5).visible { animation-delay: 0.16s; }
+.story-card:nth-child(6).visible { animation-delay: 0.24s; }
+
+.story-meta    { display: flex; align-items: center; gap: 0.85rem; }
+.story-avatar  { width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1rem; font-weight: 900; flex-shrink: 0; }
+.story-name    { font-size: 0.9rem; font-weight: 800; color: var(--text); line-height: 1.2; }
+.story-county  { font-size: 0.7rem; color: var(--text-3); margin-top: 2px; }
+.story-quote   { font-size: 0.84rem; color: var(--text-2); line-height: 1.6; font-style: italic; flex: 1; position: relative; padding-left: 1rem; }
+.story-quote::before { content: '\201C'; position: absolute; left: 0; top: -4px; font-size: 1.8rem; color: #bfdbfe; font-style: normal; line-height: 1; font-family: Georgia, serif; }
+.story-prog      { border-top: 1px solid var(--border); padding-top: 0.85rem; }
+.story-prog-name { font-size: 0.8rem; font-weight: 700; color: var(--text); }
+.story-prog-inst { font-size: 0.72rem; color: var(--text-2); }
+.story-pathway   { display: inline-flex; align-items: center; gap: 0.3rem; margin-top: 0.4rem; font-size: 0.68rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; padding: 2px 9px; border-radius: 5px; }
+.grade-badge     { display: inline-flex; align-items: center; gap: 0.3rem; font-size: 0.7rem; font-weight: 800; padding: 3px 10px; border-radius: 20px; border: 1px solid; }
+
+/* Mobile story horizontal scroll */
+@media (max-width: 576px) {
+  .stories-track { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; gap: 1rem; padding: 0 1rem 0.5rem; margin: 0 -1rem; scrollbar-width: none; }
+  .stories-track::-webkit-scrollbar { display: none; }
+  .stories-track .col { min-width: 280px; scroll-snap-align: start; flex-shrink: 0; }
+}
+
+/* Dark mode overrides */
+body.dark .story-card:hover   { border-color: var(--primary-light); }
+body.dark .story-quote::before { color: #3b5998; }
+body.dark .step-card          { background: var(--surface); border-color: var(--border); }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- ── HERO ── -->
+<section class="hero-section">
+  <div class="container">
+    <div class="row align-items-center g-5">
+
+      <!-- Left: Copy + CTAs -->
+      <div class="col-lg-7 fade-in-up">
+        <div class="d-flex flex-wrap gap-2 mb-3">
+          <span class="hero-badge"><i class="fas fa-graduation-cap me-1"></i>KCSE Career Guidance</span>
+          <span class="trust-badge"><i class="fas fa-check-circle me-1" style="color:#4ade80;"></i>KUCCPS-Aligned</span>
         </div>
-        <div class="row g-3">
-            {% for feat in features_list %}
-            <div class="col-6 col-md-4">
-                <a href="{{ feat.url }}" class="feature-tile">
-                    <div class="feature-icon feature-icon-{{ feat.color }}">
-                        <i class="fas {{ feat.icon }}"></i>
-                    </div>
-                    <div>
-                        <h6>{{ feat.title }}</h6>
-                        <p>{{ feat.desc }}</p>
-                    </div>
-                </a>
-            </div>
-            {% empty %}
-            <div class="col-6 col-md-4">
-                <a href="{% url 'clusterpoints:calculator' %}" class="feature-tile">
-                    <div class="feature-icon feature-icon-blue"><i class="fas fa-calculator"></i></div>
-                    <div><h6>Cluster Calculator</h6><p>Official KUCCPS formula. Get results instantly.</p></div>
-                </a>
-            </div>
-            <div class="col-6 col-md-4">
-                <a href="{% url 'clusterpoints:eligible_courses' %}" class="feature-tile">
-                    <div class="feature-icon feature-icon-green"><i class="fas fa-check-circle"></i></div>
-                    <div><h6>Eligible Courses</h6><p>See only courses you qualify for.</p></div>
-                </a>
-            </div>
-            <div class="col-6 col-md-4">
-                <a href="{% url 'institutions:institution_types_list' %}" class="feature-tile">
-                    <div class="feature-icon feature-icon-orange"><i class="fas fa-university"></i></div>
-                    <div><h6>All Institutions</h6><p>Universities, KMTCs, TVETs &amp; TTCs.</p></div>
-                </a>
-            </div>
-            <div class="col-6 col-md-4">
-                <a href="{% url 'career:career_profiles' %}" class="feature-tile">
-                    <div class="feature-icon feature-icon-purple"><i class="fas fa-user-tie"></i></div>
-                    <div><h6>Career Profiles</h6><p>50+ detailed career profiles with salary info.</p></div>
-                </a>
-            </div>
-            <div class="col-6 col-md-4">
-                <a href="{% url 'career:quiz' %}" class="feature-tile">
-                    <div class="feature-icon feature-icon-teal"><i class="fas fa-clipboard-question"></i></div>
-                    <div><h6>Career Quiz</h6><p>Discover careers that match your interests.</p></div>
-                </a>
-            </div>
-            <div class="col-6 col-md-4">
-                <a href="{% url 'resources:resource_list' %}" class="feature-tile">
-                    <div class="feature-icon feature-icon-red"><i class="fas fa-file-pdf"></i></div>
-                    <div><h6>Guides &amp; Resources</h6><p>PDFs, articles and placement tips.</p></div>
-                </a>
-            </div>
-            {% endfor %}
+
+        <h1 class="mb-3">
+          Find Your Perfect Course After
+          <span style="background:linear-gradient(90deg,#93c5fd,#c4b5fd);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">KCSE</span>
+        </h1>
+
+        <p class="lead mb-4" style="color:rgba(255,255,255,0.85);">
+          Calculate your cluster points, discover courses you qualify for, and explore career paths — all in one place.
+        </p>
+
+        <div class="d-flex flex-wrap gap-3 mb-3">
+          {% if user.is_authenticated %}
+          <a href="{% url 'accounts:dashboard' %}" class="btn btn-light fw-bold px-5">
+            <i class="fas fa-tachometer-alt me-2 text-primary"></i>My Dashboard
+          </a>
+          <a href="{% url 'clusterpoints:calculator' %}" class="btn btn-outline-light fw-semibold px-4">
+            <i class="fas fa-calculator me-2"></i>Calculator
+          </a>
+          {% else %}
+          <a href="{% url 'accounts:register' %}" class="btn btn-light fw-bold px-5">
+            <i class="fas fa-rocket me-2 text-primary"></i>Get Started Free
+          </a>
+          <a href="{% url 'clusterpoints:calculator' %}" class="btn btn-outline-light fw-semibold px-4">
+            <i class="fas fa-calculator me-2"></i>Try Calculator
+          </a>
+          {% endif %}
         </div>
+
+        <p style="font-size:0.8rem;color:rgba(255,255,255,0.55);">
+          <i class="fas fa-users me-1"></i>Trusted by students across all 47 counties &nbsp;·&nbsp;
+          <i class="fas fa-lock me-1"></i>Free forever
+        </p>
+      </div>
+
+      <!-- Right: Sample cluster preview card -->
+      <div class="col-lg-5 d-none d-lg-flex justify-content-center fade-in-up">
+        <div style="background:rgba(255,255,255,0.08);border-radius:20px;padding:1.5rem;backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,0.15);width:100%;max-width:320px;">
+          <div class="d-flex align-items-center justify-content-between mb-3">
+            <span style="font-size:0.72rem;font-weight:700;color:rgba(255,255,255,0.6);letter-spacing:0.06em;text-transform:uppercase;">Sample Cluster Result</span>
+            <div style="width:8px;height:8px;border-radius:50%;background:#4ade80;box-shadow:0 0 6px #4ade80;"></div>
+          </div>
+          {% for label, pts, color in sample_clusters %}
+          <div class="d-flex align-items-center gap-2 mb-2">
+            <span style="font-size:0.76rem;color:rgba(255,255,255,0.7);min-width:72px;">{{ label }}</span>
+            <div style="flex:1;background:rgba(255,255,255,0.08);border-radius:99px;height:6px;overflow:hidden;">
+              <div style="height:100%;width:{{ pts }}%;background:{{ color }};border-radius:99px;"></div>
+            </div>
+            <span style="font-size:0.75rem;font-weight:800;color:white;min-width:28px;text-align:right;">{{ pts|floatformat:0 }}</span>
+          </div>
+          {% empty %}
+          <div class="text-center py-3">
+            <i class="fas fa-graduation-cap" style="font-size:3rem;color:rgba(255,255,255,0.6);"></i>
+            <p class="mt-2 mb-0" style="font-size:0.85rem;color:rgba(255,255,255,0.8);">Calculate your cluster points</p>
+          </div>
+          {% endfor %}
+          <div class="mt-3 pt-3" style="border-top:1px solid rgba(255,255,255,0.1);">
+            <a href="{% url 'clusterpoints:calculator' %}" class="btn btn-light btn-sm w-100 fw-bold" style="font-size:0.8rem;">
+              <i class="fas fa-calculator me-1 text-primary"></i>Calculate Mine
+            </a>
+          </div>
+        </div>
+      </div>
+
     </div>
+
+    <!-- Stats row -->
+    <div class="row g-3 mt-4 pt-4" style="border-top:1px solid rgba(255,255,255,0.1);">
+      <div class="col-6 col-md-3">
+        <div class="hero-stat">
+          <div class="stat-num"><span class="counter" data-target="1000">0</span>+</div>
+          <div class="stat-label">Courses Listed</div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="hero-stat">
+          <div class="stat-num"><span class="counter" data-target="699">0</span>+</div>
+          <div class="stat-label">Institutions</div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="hero-stat">
+          <div class="stat-num"><span class="counter" data-target="60">0</span>+</div>
+          <div class="stat-label">Career Profiles</div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="hero-stat">
+          <div class="stat-num">47</div>
+          <div class="stat-label">Counties Covered</div>
+        </div>
+      </div>
+    </div>
+  </div>
 </section>
+
+<script>
+(function(){
+  var counters = document.querySelectorAll('.counter[data-target]');
+  if (!counters.length || !('IntersectionObserver' in window)) {
+    counters.forEach(function(c){ c.textContent = Number(c.dataset.target).toLocaleString(); });
+    return;
+  }
+  var io = new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
+      if (!e.isIntersecting) return;
+      var el = e.target, target = parseInt(el.dataset.target), startTime = null, duration = 1400;
+      function step(ts){
+        if (!startTime) startTime = ts;
+        var prog = Math.min((ts - startTime) / duration, 1);
+        var ease = 1 - Math.pow(1 - prog, 3);
+        el.textContent = Math.round(ease * target).toLocaleString();
+        if (prog < 1) requestAnimationFrame(step);
+      }
+      requestAnimationFrame(step);
+      io.unobserve(el);
+    });
+  }, { threshold: 0.5 });
+  counters.forEach(function(c){ io.observe(c); });
+})();
+</script>
+
+
+<!-- ── HOW IT WORKS ── -->
+<section style="background:var(--surface-2);padding:4.5rem 0;border-top:1px solid var(--border);border-bottom:1px solid var(--border);">
+  <div class="container">
+    <div class="text-center mb-5 reveal">
+      <span class="section-eyebrow" style="color:var(--primary);background:rgba(37,99,235,0.08);">How It Works</span>
+      <h2 class="section-header mt-2">Three Simple Steps</h2>
+      <p class="section-sub">From your KCSE grades to your ideal career path</p>
+    </div>
+    <div class="row g-4 justify-content-center">
+      <div class="col-md-4 reveal">
+        <div class="step-card card-accent-blue">
+          <div class="step-number" style="background:rgba(37,99,235,0.1);color:var(--primary);">1</div>
+          <div class="feature-icon feature-icon-blue mx-auto mb-3" style="width:56px;height:56px;font-size:1.4rem;">
+            <i class="fas fa-calculator"></i>
+          </div>
+          <h5 class="fw-bold mb-2">Calculate Points</h5>
+          <p class="small mb-0">Enter your KCSE grades and get your cluster points calculated instantly using the official KUCCPS formula.</p>
+        </div>
+      </div>
+      <div class="col-md-4 reveal">
+        <div class="step-card card-accent-green">
+          <div class="step-number" style="background:rgba(22,163,74,0.1);color:var(--accent);">2</div>
+          <div class="feature-icon feature-icon-green mx-auto mb-3" style="width:56px;height:56px;font-size:1.4rem;">
+            <i class="fas fa-search"></i>
+          </div>
+          <h5 class="fw-bold mb-2">Discover Courses</h5>
+          <p class="small mb-0">Browse Degree, Diploma, KMTC, TVET and TTC courses you qualify for based on your cluster points.</p>
+        </div>
+      </div>
+      <div class="col-md-4 reveal">
+        <div class="step-card card-accent-purple">
+          <div class="step-number" style="background:rgba(124,58,237,0.1);color:var(--purple);">3</div>
+          <div class="feature-icon feature-icon-purple mx-auto mb-3" style="width:56px;height:56px;font-size:1.4rem;">
+            <i class="fas fa-compass"></i>
+          </div>
+          <h5 class="fw-bold mb-2">Plan Your Career</h5>
+          <p class="small mb-0">Explore career profiles, take the career quiz, and get AI-powered guidance to pick the right path.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ── FEATURES ── -->
+<section style="background:var(--bg);padding:4.5rem 0;">
+  <div class="container">
+    <div class="text-center mb-5 reveal">
+      <span class="section-eyebrow" style="color:var(--accent);background:rgba(22,163,74,0.08);">Platform</span>
+      <h2 class="section-header mt-2">Everything You Need</h2>
+      <p class="section-sub">Powerful tools built for Kenyan KCSE students</p>
+    </div>
+    <div class="row g-3">
+      {% for feat in features_list %}
+      <div class="col-6 col-md-4 reveal">
+        <a href="{{ feat.url }}" class="feature-tile">
+          <div class="feature-icon feature-icon-{{ feat.color }}"><i class="fas {{ feat.icon }}"></i></div>
+          <div><h6>{{ feat.title }}</h6><p>{{ feat.desc }}</p></div>
+        </a>
+      </div>
+      {% empty %}
+      <div class="col-6 col-md-4 reveal">
+        <a href="{% url 'clusterpoints:calculator' %}" class="feature-tile">
+          <div class="feature-icon feature-icon-blue"><i class="fas fa-calculator"></i></div>
+          <div><h6>Cluster Calculator</h6><p>Input your KCSE grades. Get results instantly.</p></div>
+        </a>
+      </div>
+      <div class="col-6 col-md-4 reveal">
+        <a href="{% url 'clusterpoints:eligible_courses' %}" class="feature-tile">
+          <div class="feature-icon feature-icon-green"><i class="fas fa-check-circle"></i></div>
+          <div><h6>Eligible Courses</h6><p>See only courses you qualify for.</p></div>
+        </a>
+      </div>
+      <div class="col-6 col-md-4 reveal">
+        <a href="{% url 'institutions:institution_types_list' %}" class="feature-tile">
+          <div class="feature-icon feature-icon-orange"><i class="fas fa-university"></i></div>
+          <div><h6>All Institutions</h6><p>Universities, KMTCs, TVETs &amp; TTCs.</p></div>
+        </a>
+      </div>
+      <div class="col-6 col-md-4 reveal">
+        <a href="{% url 'career:career_profiles' %}" class="feature-tile">
+          <div class="feature-icon feature-icon-purple"><i class="fas fa-user-tie"></i></div>
+          <div><h6>Career Profiles</h6><p>60+ detailed career profiles with salary info.</p></div>
+        </a>
+      </div>
+      <div class="col-6 col-md-4 reveal">
+        <a href="{% url 'career:quiz' %}" class="feature-tile">
+          <div class="feature-icon feature-icon-teal"><i class="fas fa-clipboard-question"></i></div>
+          <div><h6>Career Quiz</h6><p>Discover careers that match your interests.</p></div>
+        </a>
+      </div>
+      <div class="col-6 col-md-4 reveal">
+        <a href="{% url 'resources:resource_list' %}" class="feature-tile">
+          <div class="feature-icon feature-icon-red"><i class="fas fa-file-pdf"></i></div>
+          <div><h6>Guides &amp; Resources</h6><p>PDFs, articles and placement tips.</p></div>
+        </a>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
 
 <!-- ── SPOTLIGHT & TRENDS ── -->
 {% include "courses/spotlight_trends.html" %}
 
+
 <!-- ── SUCCESS STORIES ── -->
-<section class="py-5 stories-section" style="background:var(--surface-2);border-top:1px solid var(--border);">
-<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
-<style>
-.stories-section { overflow: hidden; }
-
-/* scroll-triggered entrance */
-@keyframes storyIn {
-    from { opacity: 0; transform: translateY(30px) scale(0.97); }
-    to   { opacity: 1; transform: translateY(0)   scale(1); }
-}
-.story-card {
-    opacity: 0;
-    transform: translateY(30px);
-}
-.story-card.visible {
-    animation: storyIn 0.55s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-}
-.story-card:nth-child(2).visible { animation-delay: 0.1s; }
-.story-card:nth-child(3).visible { animation-delay: 0.2s; }
-.story-card:nth-child(4).visible { animation-delay: 0.1s; }
-.story-card:nth-child(5).visible { animation-delay: 0.2s; }
-.story-card:nth-child(6).visible { animation-delay: 0.3s; }
-
-/* card */
-.story-card {
-    background: #fff;
-    border-radius: 1.1rem;
-    border: 1.5px solid #e2e8f0;
-    padding: 1.5rem;
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-    box-shadow: 0 2px 12px rgba(30,58,138,0.06);
-    transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.25s ease, border-color 0.2s ease;
-    height: 100%;
-    position: relative; overflow: hidden;
-}
-.story-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 14px 36px rgba(30,58,138,0.12);
-    border-color: #bfdbfe;
-}
-
-/* avatar + meta row */
-.story-meta { display: flex; align-items: center; gap: 0.85rem; }
-.story-avatar {
-    width: 46px; height: 46px; border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 1.05rem; font-weight: 900; flex-shrink: 0;
-    letter-spacing: -0.5px;
-}
-.story-name  { font-size: 0.92rem; font-weight: 800; color: #1e293b; line-height: 1.2; }
-.story-county { font-size: 0.72rem; color: #64748b; margin-top: 1px; }
-.story-work-loc {
-    font-size: 0.72rem; color: #059669; font-weight: 600; margin-top: 0.4rem;
-    display: flex; align-items: center; gap: 0.3rem;
-}
-
-/* grade badge */
-.grade-badge {
-    display: inline-flex; align-items: center; gap: 0.3rem;
-    font-size: 0.7rem; font-weight: 800; letter-spacing: 0.04em;
-    padding: 3px 10px; border-radius: 20px;
-    border: 1px solid; align-self: flex-start;
-}
-
-/* quote */
-.story-quote {
-    font-size: 0.84rem; color: #374151; line-height: 1.6;
-    font-style: italic; flex: 1;
-    position: relative; padding-left: 1rem;
-}
-.story-quote::before {
-    content: '"';
-    position: absolute; left: 0; top: -4px;
-    font-size: 1.8rem; color: #bfdbfe; font-style: normal; line-height: 1;
-    font-family: Georgia, serif;
-}
-
-/* programme */
-.story-prog {
-    border-top: 1px solid #f1f5f9;
-    padding-top: 0.85rem;
-    display: flex; flex-direction: column; gap: 0.25rem;
-}
-.story-prog-name { font-size: 0.8rem; font-weight: 700; color: #1e293b; }
-.story-prog-inst { font-size: 0.73rem; color: #64748b; }
-.story-pathway {
-    display: inline-flex; align-items: center; gap: 0.3rem;
-    margin-top: 0.4rem;
-    font-size: 0.68rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;
-    padding: 2px 9px; border-radius: 5px;
-}
-
-/* mobile horizontal scroll */
-@media (max-width: 576px) {
-    .stories-track {
-        display: flex;
-        overflow-x: auto;
-        scroll-snap-type: x mandatory;
-        -webkit-overflow-scrolling: touch;
-        gap: 1rem;
-        padding: 0 1rem 0.5rem;
-        margin: 0 -1rem;
-    }
-    .stories-track .col { min-width: 280px; scroll-snap-align: start; flex-shrink: 0; }
-    .stories-track { scrollbar-width: none; }
-    .stories-track::-webkit-scrollbar { display: none; }
-}
-
-/* ── dark mode ── */
-body.dark .story-card        { background: var(--surface); border-color: var(--border); box-shadow: var(--shadow-sm); }
-body.dark .story-card:hover  { border-color: #3b82f6; box-shadow: var(--shadow-md); }
-body.dark .story-name        { color: var(--text); }
-body.dark .story-county      { color: var(--text-2); }
-body.dark .story-quote       { color: var(--text-2); }
-body.dark .story-quote::before { color: #3b5998; }
-body.dark .story-prog-name   { color: var(--text); }
-body.dark .story-prog-inst   { color: var(--text-2); }
-body.dark .story-prog        { border-top-color: var(--border); }
-</style>
-
-<div class="container">
-    <div class="text-center mb-5">
-        <span style="display:inline-flex;align-items:center;gap:.4rem;background:#eff6ff;border:1px solid #bfdbfe;color:#1d4ed8;border-radius:20px;padding:4px 14px;font-size:.75rem;font-weight:700;margin-bottom:.85rem;">
-            <i class="bi bi-people-fill"></i>Student Stories
-        </span>
-        <h2 class="section-header">From KCSE Results to Real Careers</h2>
-        <p class="section-sub">Students across Kenya who used CareerNext to find their right path</p>
+<section class="py-5" style="background:var(--surface-2);border-top:1px solid var(--border);">
+  <div class="container">
+    <div class="text-center mb-5 reveal">
+      <span class="section-eyebrow" style="color:var(--primary);background:rgba(37,99,235,0.08);">
+        <i class="bi bi-people-fill me-1"></i>Student Stories
+      </span>
+      <h2 class="section-header mt-2">From KCSE Results to Real Careers</h2>
+      <p class="section-sub">Students across Kenya who used CareerNext to find their right path</p>
     </div>
 
     <div class="row g-4 stories-track">
-
-        {% for story in stories %}
-        <div class="col-md-4">
+      {% for story in stories %}
+      <div class="col-md-4">
         <div class="story-card">
-            <div class="story-meta">
-                <div class="story-avatar" style="background:{{ story.avatar_bg }};color:{{ story.avatar_color }};">{{ story.initials }}</div>
-                <div>
-                    <div class="story-name">{{ story.name }}</div>
-                    {% if story.county %}<div class="story-county"><i class="bi bi-geo-alt-fill me-1" style="font-size:.6rem;"></i>{{ story.county }}</div>{% endif %}
-                </div>
-                {% if story.kcse_grade %}
-                <span class="grade-badge ms-auto" style="background:#f0fdf4;color:#15803d;border-color:#86efac;">
-                    <i class="bi bi-star-fill" style="font-size:.55rem;"></i>{{ story.kcse_grade }}
-                </span>
-                {% endif %}
+          <div class="story-meta">
+            <div class="story-avatar" style="background:{{ story.avatar_bg }};color:{{ story.avatar_color }};">{{ story.initials }}</div>
+            <div>
+              <div class="story-name">{{ story.name }}</div>
+              {% if story.county %}<div class="story-county"><i class="bi bi-geo-alt-fill me-1"></i>{{ story.county }}</div>{% endif %}
             </div>
-            {% if story.work_location %}<div class="story-work-loc"><i class="bi bi-briefcase-fill"></i>Now working in {{ story.work_location }}</div>{% endif %}
-            <div class="story-quote">{{ story.quote }}</div>
-            <div class="story-prog">
-                <div class="story-prog-name">{{ story.course_name }}</div>
-                <div class="story-prog-inst"><i class="bi bi-building me-1"></i>{{ story.institution }}</div>
-                <span class="story-pathway" style="background:{{ story.avatar_bg }};color:{{ story.avatar_color }};">
-                    <i class="bi bi-mortarboard-fill"></i>{{ story.get_pathway_display }}{% if story.year %} · {{ story.year }}{% endif %}
-                </span>
-            </div>
+            {% if story.kcse_grade %}
+            <span class="grade-badge ms-auto" style="background:#f0fdf4;color:#15803d;border-color:#86efac;">
+              <i class="bi bi-star-fill" style="font-size:.55rem;"></i>{{ story.kcse_grade }}
+            </span>
+            {% endif %}
+          </div>
+          {% if story.work_location %}
+          <div style="font-size:0.72rem;color:#059669;font-weight:600;display:flex;align-items:center;gap:.3rem;">
+            <i class="bi bi-briefcase-fill"></i>Now working in {{ story.work_location }}
+          </div>
+          {% endif %}
+          <div class="story-quote">{{ story.quote }}</div>
+          <div class="story-prog">
+            <div class="story-prog-name">{{ story.course_name }}</div>
+            <div class="story-prog-inst mt-1"><i class="bi bi-building me-1"></i>{{ story.institution }}</div>
+            <span class="story-pathway" style="background:{{ story.avatar_bg }};color:{{ story.avatar_color }};">
+              <i class="bi bi-mortarboard-fill"></i>{{ story.get_pathway_display }}{% if story.year %} · {{ story.year }}{% endif %}
+            </span>
+          </div>
         </div>
-        </div>
-        {% empty %}
-        <!-- Fallback: no stories in DB yet — hidden from view (admin should add via /admin/) -->
-        <div class="col-12 text-center text-muted py-4 small">No success stories yet. Add them in the admin.</div>
-        {% endfor %}
-
-        <!-- placeholder ghost cards below if you want padding: removed -->
-
-    </div><!-- /row -->
-</div><!-- /container -->
+      </div>
+      {% empty %}
+      <div class="col-12 text-center py-4 small" style="color:var(--text-3);">No success stories yet. Add them in the admin.</div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
 
 <script>
 (function(){
-    var cards = document.querySelectorAll('.story-card');
-    if (!cards.length) return;
-    if ('IntersectionObserver' in window) {
-        var io = new IntersectionObserver(function(entries){
-            entries.forEach(function(e){
-                if (e.isIntersecting) {
-                    e.target.classList.add('visible');
-                    io.unobserve(e.target);
-                }
-            });
-        }, { threshold: 0.05 });
-        cards.forEach(function(c){ io.observe(c); });
-        /* Fallback: if cards are still hidden after 1.5s (e.g. section off-screen on load), show them */
-        setTimeout(function(){
-            cards.forEach(function(c){ if (!c.classList.contains('visible')) c.classList.add('visible'); });
-        }, 1500);
-    } else {
-        /* No IntersectionObserver support — show all immediately */
-        cards.forEach(function(c){ c.classList.add('visible'); });
-    }
+  var cards = document.querySelectorAll('.story-card');
+  if (!cards.length) return;
+  if ('IntersectionObserver' in window) {
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(e){
+        if (e.isIntersecting) { e.target.classList.add('visible'); io.unobserve(e.target); }
+      });
+    }, { threshold: 0.05 });
+    cards.forEach(function(c){ io.observe(c); });
+    setTimeout(function(){ cards.forEach(function(c){ if (!c.classList.contains('visible')) c.classList.add('visible'); }); }, 1500);
+  } else {
+    cards.forEach(function(c){ c.classList.add('visible'); });
+  }
 })();
 </script>
-</section>
+
 
 <!-- ── PARTNER INSTITUTIONS ── -->
 {% if featured_promos or scholarship_alerts %}
@@ -479,38 +416,32 @@ body.dark .story-prog        { border-top-color: var(--border); }
   <div class="container">
 
     {% if featured_promos %}
-    <!-- Section header -->
-    <div class="d-flex align-items-end justify-content-between mb-4 flex-wrap gap-2">
+    <div class="d-flex align-items-end justify-content-between mb-4 flex-wrap gap-2 reveal">
       <div>
-        <p class="text-uppercase fw-700 mb-1" style="font-size:0.72rem;letter-spacing:0.1em;color:#d97706;">
+        <p class="text-uppercase fw-bold mb-1" style="font-size:0.72rem;letter-spacing:0.1em;color:#d97706;">
           <i class="fas fa-handshake me-1"></i>Partner Institutions
         </p>
-        <h2 class="fw-900 mb-0" style="font-size:1.45rem;color:var(--text);">Institutions Featured on CareerNext</h2>
+        <h2 class="fw-bold mb-0" style="font-size:1.4rem;color:var(--text);">Institutions Featured on CareerNext</h2>
       </div>
       <a href="{% url 'institutions:institution_types_list' %}" class="btn btn-sm btn-outline-secondary rounded-pill px-3" style="font-size:0.8rem;">
         Browse all <i class="fas fa-arrow-right ms-1"></i>
       </a>
     </div>
-
     <div class="row g-3 mb-5">
       {% for promo in featured_promos %}
       {% with inst=promo.institution %}
-      <div class="col-sm-6 col-lg-3">
+      <div class="col-sm-6 col-lg-3 reveal">
         <a href="{% url 'institutions:institution_detail' inst.institution_type.slug inst.slug %}"
            class="d-flex flex-column h-100 text-decoration-none rounded-4 overflow-hidden"
            style="background:var(--surface);border:1.5px solid var(--border);box-shadow:var(--shadow-sm);transition:box-shadow 0.2s,transform 0.2s,border-color 0.2s;"
            onmouseover="this.style.boxShadow='0 8px 28px rgba(0,0,0,0.1)';this.style.transform='translateY(-3px)';this.style.borderColor='#fde68a'"
-           onmouseout="this.style.boxShadow='0 1px 6px rgba(0,0,0,0.04)';this.style.transform='';this.style.borderColor='#e2e8f0'">
-
-          <!-- Top accent bar -->
+           onmouseout="this.style.boxShadow='';this.style.transform='';this.style.borderColor=''">
           <div style="height:4px;background:linear-gradient(90deg,#d97706,#fbbf24);"></div>
-
           <div class="p-4 d-flex flex-column flex-grow-1">
-            <!-- Logo + name -->
             <div class="d-flex align-items-center gap-3 mb-3">
               {% if inst.logo %}
               <img src="{{ inst.logo.url }}" width="46" height="46" class="rounded-2 flex-shrink-0"
-                   style="object-fit:contain;border:1px solid #f1f5f9;" alt="{{ inst.name }}">
+                   style="object-fit:contain;border:1px solid var(--border);" alt="{{ inst.name }}">
               {% else %}
               <div class="rounded-2 flex-shrink-0 d-flex align-items-center justify-content-center"
                    style="width:46px;height:46px;background:#fef3c7;color:#d97706;">
@@ -518,40 +449,29 @@ body.dark .story-prog        { border-top-color: var(--border); }
               </div>
               {% endif %}
               <div style="min-width:0;">
-                <div class="fw-800 text-dark" style="font-size:0.88rem;line-height:1.25;">{{ inst.name }}</div>
+                <div class="fw-bold" style="font-size:0.88rem;line-height:1.25;color:var(--text);">{{ inst.name }}</div>
                 {% if inst.location %}
-                <div class="text-muted mt-1" style="font-size:0.7rem;">
-                  <i class="fas fa-map-marker-alt me-1"></i>{{ inst.location }}
-                </div>
+                <div style="font-size:0.7rem;color:var(--text-3);margin-top:2px;"><i class="fas fa-map-marker-alt me-1"></i>{{ inst.location }}</div>
                 {% endif %}
               </div>
             </div>
-
-            <!-- Tagline -->
             {% if promo.tagline %}
-            <p class="mb-3 flex-grow-1" style="font-size:0.8rem;color:#475569;line-height:1.5;">{{ promo.tagline }}</p>
+            <p class="mb-3 flex-grow-1" style="font-size:0.8rem;color:var(--text-2);line-height:1.5;">{{ promo.tagline }}</p>
             {% endif %}
-
-            <!-- Top courses -->
             {% with top=inst.offerings.all|slice:":3" %}
             {% if top %}
             <div class="d-flex flex-wrap gap-1 mb-3">
               {% for off in top %}
-              <span style="display:inline-block;font-size:0.65rem;font-weight:600;padding:2px 8px;border-radius:4px;background:#f8fafc;border:1px solid #e2e8f0;color:#475569;">
+              <span style="font-size:0.65rem;font-weight:600;padding:2px 8px;border-radius:4px;background:var(--surface-2);border:1px solid var(--border);color:var(--text-2);">
                 {{ off.course.name|truncatewords:4 }}
               </span>
               {% endfor %}
             </div>
             {% endif %}
             {% endwith %}
-
-            <!-- CTA row -->
-            <div class="d-flex align-items-center justify-content-between mt-auto pt-3"
-                 style="border-top:1px solid #f1f5f9;">
-              <span style="font-size:0.72rem;color:#94a3b8;">{{ inst.institution_type.name }}</span>
-              <span style="font-size:0.78rem;font-weight:700;color:#d97706;">
-                View details <i class="fas fa-arrow-right ms-1"></i>
-              </span>
+            <div class="d-flex align-items-center justify-content-between mt-auto pt-3" style="border-top:1px solid var(--border);">
+              <span style="font-size:0.72rem;color:var(--text-3);">{{ inst.institution_type.name }}</span>
+              <span style="font-size:0.78rem;font-weight:700;color:#d97706;">View details <i class="fas fa-arrow-right ms-1"></i></span>
             </div>
           </div>
         </a>
@@ -562,63 +482,50 @@ body.dark .story-prog        { border-top-color: var(--border); }
     {% endif %}
 
     {% if scholarship_alerts %}
-    <!-- Scholarship section header -->
-    <div class="d-flex align-items-end justify-content-between mb-4 flex-wrap gap-2">
+    <div class="d-flex align-items-end justify-content-between mb-4 flex-wrap gap-2 reveal">
       <div>
-        <p class="text-uppercase fw-700 mb-1" style="font-size:0.72rem;letter-spacing:0.1em;color:#7c3aed;">
+        <p class="text-uppercase fw-bold mb-1" style="font-size:0.72rem;letter-spacing:0.1em;color:var(--purple);">
           <i class="fas fa-award me-1"></i>Scholarships &amp; Bursaries
         </p>
-        <h2 class="fw-900 mb-0" style="font-size:1.45rem;color:var(--text);">Funding Opportunities</h2>
-        <p class="text-muted mb-0 mt-1" style="font-size:0.85rem;">Scholarships and bursaries offered by institutions on CareerNext</p>
+        <h2 class="fw-bold mb-0" style="font-size:1.4rem;color:var(--text);">Funding Opportunities</h2>
+        <p style="font-size:0.85rem;color:var(--text-2);margin-top:4px;">Scholarships and bursaries offered by institutions on CareerNext</p>
       </div>
     </div>
-
     <div class="row g-3">
       {% for promo in scholarship_alerts %}
       {% with inst=promo.institution %}
-      <div class="col-md-6">
+      <div class="col-md-6 reveal">
         <a href="{% url 'institutions:institution_detail' inst.institution_type.slug inst.slug %}"
            class="d-flex gap-4 align-items-start p-4 rounded-4 text-decoration-none h-100"
            style="background:var(--surface);border:1.5px solid var(--border);box-shadow:var(--shadow-sm);transition:box-shadow 0.2s,transform 0.2s,border-color 0.2s;"
            onmouseover="this.style.boxShadow='0 8px 24px rgba(124,58,237,0.12)';this.style.transform='translateY(-2px)';this.style.borderColor='#e9d5ff'"
-           onmouseout="this.style.boxShadow='0 1px 6px rgba(0,0,0,0.04)';this.style.transform='';this.style.borderColor='#e2e8f0'">
-
-          <!-- Logo -->
+           onmouseout="this.style.boxShadow='';this.style.transform='';this.style.borderColor=''">
           {% if inst.logo %}
           <img src="{{ inst.logo.url }}" width="50" height="50" class="rounded-2 flex-shrink-0"
-               style="object-fit:contain;border:1px solid #f1f5f9;" alt="{{ inst.name }}">
+               style="object-fit:contain;border:1px solid var(--border);" alt="{{ inst.name }}">
           {% else %}
           <div class="rounded-2 flex-shrink-0 d-flex align-items-center justify-content-center"
-               style="width:50px;height:50px;background:#ede9fe;color:#7c3aed;">
+               style="width:50px;height:50px;background:#ede9fe;color:var(--purple);">
             <i class="fas fa-university"></i>
           </div>
           {% endif %}
-
           <div style="min-width:0;">
-            <div class="fw-800 text-dark" style="font-size:0.92rem;line-height:1.3;">
-              {{ promo.scholarship_title|default:inst.name }}
-            </div>
-            <div class="text-muted mt-1" style="font-size:0.75rem;">
-              Offered by {{ inst.name }}
-            </div>
+            <div class="fw-bold" style="font-size:0.92rem;line-height:1.3;color:var(--text);">{{ promo.scholarship_title|default:inst.name }}</div>
+            <div style="font-size:0.75rem;color:var(--text-3);margin-top:2px;">Offered by {{ inst.name }}</div>
             {% if promo.scholarship_description %}
-            <p class="mt-2 mb-0" style="font-size:0.8rem;color:#475569;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">
-              {{ promo.scholarship_description }}
-            </p>
+            <p class="mt-2 mb-0" style="font-size:0.8rem;color:var(--text-2);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">{{ promo.scholarship_description }}</p>
             {% endif %}
             <div class="d-flex flex-wrap gap-2 mt-2 align-items-center">
               {% if promo.scholarship_amount %}
-              <span style="display:inline-flex;align-items:center;gap:4px;font-size:0.72rem;font-weight:700;
-                           padding:3px 10px;border-radius:6px;background:#ede9fe;color:#7c3aed;">
-                <i class="fas fa-tag" style="font-size:0.6rem;"></i>{{ promo.scholarship_amount }}
+              <span style="font-size:0.72rem;font-weight:700;padding:3px 10px;border-radius:6px;background:#ede9fe;color:var(--purple);">
+                <i class="fas fa-tag me-1" style="font-size:0.6rem;"></i>{{ promo.scholarship_amount }}
               </span>
               {% endif %}
               {% if promo.scholarship_deadline %}
-              <span style="font-size:0.72rem;font-weight:600;
-                           color:{% if promo.scholarship_deadline_soon %}#dc2626{% else %}#64748b{% endif %};">
+              <span style="font-size:0.72rem;font-weight:600;color:{% if promo.scholarship_deadline_soon %}var(--danger){% else %}var(--text-3){% endif %};">
                 <i class="fas fa-calendar me-1"></i>Closes {{ promo.scholarship_deadline|date:"d M Y" }}
                 {% if promo.scholarship_deadline_soon %}
-                <span style="font-size:0.65rem;font-weight:800;padding:1px 6px;border-radius:4px;background:#fee2e2;color:#dc2626;margin-left:4px;">Closing soon</span>
+                <span style="font-size:0.65rem;font-weight:800;padding:1px 6px;border-radius:4px;background:#fee2e2;color:var(--danger);margin-left:4px;">Closing soon</span>
                 {% endif %}
               </span>
               {% endif %}
@@ -635,25 +542,50 @@ body.dark .story-prog        { border-top-color: var(--border); }
 </section>
 {% endif %}
 
+
 <!-- ── CTA ── -->
 {% if not user.is_authenticated %}
-<section class="py-5">
-    <div class="container">
-        <div class="card text-center p-5" style="background:linear-gradient(135deg,var(--primary) 0%,#1d4ed8 100%);border:none;color:white;">
-            <h2 class="fw-bold mb-2">Ready to find your course?</h2>
-            <p class="mb-4" style="opacity:0.85;">Join thousands of Kenyan students already using CareerNext.</p>
-            <div class="d-flex justify-content-center gap-3 flex-wrap">
-                <a href="{% url 'accounts:register' %}" class="btn btn-light fw-bold px-5 py-2">
-                    <i class="fas fa-user-plus me-2 text-primary"></i>Create Free Account
-                </a>
-                <a href="{% url 'clusterpoints:calculator' %}" class="btn btn-outline-light fw-semibold px-4 py-2">
-                    Try Without Account
-                </a>
-            </div>
-        </div>
+<section class="py-5" style="background:var(--surface-2);border-top:1px solid var(--border);">
+  <div class="container">
+    <div class="card p-5 text-center reveal"
+         style="background:linear-gradient(135deg,var(--primary-dark) 0%,var(--primary) 60%,#6366f1 100%);border:none;color:white;border-radius:var(--radius-xl);">
+      <div class="mb-3">
+        <span style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);color:white;padding:4px 14px;border-radius:999px;font-size:0.78rem;font-weight:600;">
+          <i class="fas fa-star" style="color:#fbbf24;"></i>Free Forever
+        </span>
+      </div>
+      <h2 class="fw-bold mb-2" style="color:white;font-size:clamp(1.4rem,3vw,2rem);">Ready to find your course?</h2>
+      <p class="mb-4" style="opacity:0.85;max-width:480px;margin-left:auto;margin-right:auto;">
+        Join thousands of Kenyan students already using CareerNext to plan their futures.
+      </p>
+      <div class="d-flex justify-content-center gap-3 flex-wrap">
+        <a href="{% url 'accounts:register' %}" class="btn btn-light fw-bold px-5">
+          <i class="fas fa-user-plus me-2 text-primary"></i>Create Free Account
+        </a>
+        <a href="{% url 'clusterpoints:calculator' %}" class="btn btn-outline-light fw-semibold px-4">
+          Try Without Account
+        </a>
+      </div>
     </div>
+  </div>
 </section>
 {% endif %}
 
-{% endblock %}
+<script>
+(function(){
+  var els = document.querySelectorAll('.reveal');
+  if (!els.length) return;
+  if ('IntersectionObserver' in window) {
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(e){
+        if (e.isIntersecting) { e.target.classList.add('visible'); io.unobserve(e.target); }
+      });
+    }, { threshold: 0.08 });
+    els.forEach(function(el){ io.observe(el); });
+  } else {
+    els.forEach(function(el){ el.classList.add('visible'); });
+  }
+})();
+</script>
 
+{% endblock %}

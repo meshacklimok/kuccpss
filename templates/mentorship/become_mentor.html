@@ -117,6 +117,15 @@
 
         <div class="card-body p-4 p-md-5">
 
+          {% if rejected %}
+          <div class="text-center py-4">
+            <div class="mb-3" style="font-size:3rem;">⛔</div>
+            <h5 class="fw-bold text-danger mb-2">Application Rejected</h5>
+            <p class="text-muted">Your mentor application was not approved and you are not eligible to reapply.<br>
+            Contact <a href="mailto:support@careernext.co.ke">support@careernext.co.ke</a> if you believe this is an error.</p>
+          </div>
+          {% else %}
+
           <form method="post" enctype="multipart/form-data" novalidate>
             {% csrf_token %}
 
@@ -144,6 +153,10 @@
               <!-- Course (populated via AJAX after institution is chosen) -->
               <div class="col-12">
                 <label class="form-label fw-semibold small">{{ form.course.label }} <span class="text-danger">*</span></label>
+                <div id="courseFilterWrap" style="display:none; margin-bottom:6px;">
+                  <input type="text" id="courseFilterInput" class="form-control form-control-sm"
+                         placeholder="Type to filter courses…" autocomplete="off">
+                </div>
                 <select name="course" id="id_course" class="form-select" required>
                   <option value="">— Select your institution first —</option>
                   {% for opt in form.course %}{{ opt }}{% endfor %}
@@ -323,6 +336,8 @@
             </div>
           </form>
 
+          {% endif %}{# end if not rejected #}
+
         </div>
       </div>
 
@@ -415,14 +430,41 @@
 {% block extra_js %}
 <script>
 (function () {
-  var instSel   = document.getElementById('id_institution');
-  var courseSel = document.getElementById('id_course');
-  var hint      = document.getElementById('courseHint');
+  var instSel        = document.getElementById('id_institution');
+  var courseSel      = document.getElementById('id_course');
+  var hint           = document.getElementById('courseHint');
+  var filterWrap     = document.getElementById('courseFilterWrap');
+  var filterInput    = document.getElementById('courseFilterInput');
   if (!instSel || !courseSel) return;
+
+  var _allCourses = [];  // master list for client-side filtering
+
+  function _rebuildOptions(filter, selectedId) {
+    var q = (filter || '').toLowerCase();
+    var prev = courseSel.value;
+    courseSel.innerHTML = '<option value="">— Select your course —</option>';
+    var count = 0;
+    _allCourses.forEach(function (c) {
+      if (q && c.name.toLowerCase().indexOf(q) === -1) return;
+      var opt = document.createElement('option');
+      opt.value = c.id;
+      opt.textContent = c.name;
+      if (String(c.id) === String(selectedId || prev)) opt.selected = true;
+      courseSel.appendChild(opt);
+      count++;
+    });
+    if (hint) hint.textContent = q
+      ? count + ' of ' + _allCourses.length + ' courses match "' + filter + '"'
+      : _allCourses.length + ' course(s) available at this institution.';
+  }
 
   function loadCourses(institutionId, selectedId) {
     courseSel.innerHTML = '<option value="">Loading courses…</option>';
     courseSel.disabled = true;
+    if (filterWrap) filterWrap.style.display = 'none';
+    if (filterInput) filterInput.value = '';
+    _allCourses = [];
+
     if (!institutionId) {
       courseSel.innerHTML = '<option value="">— Select your institution first —</option>';
       courseSel.disabled = false;
@@ -432,19 +474,13 @@
     fetch('/mentorship/courses-for-institution/?institution=' + encodeURIComponent(institutionId))
       .then(function (r) { return r.json(); })
       .then(function (data) {
-        courseSel.innerHTML = '<option value="">— Select your course —</option>';
         if (data.courses.length === 0) {
           courseSel.innerHTML = '<option value="">No courses found for this institution</option>';
           if (hint) hint.textContent = 'No courses linked to this institution yet — contact support.';
         } else {
-          data.courses.forEach(function (c) {
-            var opt = document.createElement('option');
-            opt.value = c.id;
-            opt.textContent = c.name;
-            if (String(c.id) === String(selectedId)) opt.selected = true;
-            courseSel.appendChild(opt);
-          });
-          if (hint) hint.textContent = data.courses.length + ' course(s) available at this institution.';
+          _allCourses = data.courses;
+          _rebuildOptions('', selectedId);
+          if (filterWrap && data.courses.length > 6) filterWrap.style.display = '';
         }
         courseSel.disabled = false;
       })
@@ -452,6 +488,12 @@
         courseSel.innerHTML = '<option value="">Error loading courses — try refreshing</option>';
         courseSel.disabled = false;
       });
+  }
+
+  if (filterInput) {
+    filterInput.addEventListener('input', function () {
+      _rebuildOptions(this.value, null);
+    });
   }
 
   instSel.addEventListener('change', function () { loadCourses(this.value, null); });

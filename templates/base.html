@@ -3,7 +3,10 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <meta name="screen-orientation" content="portrait">
+    <meta name="x5-orientation" content="portrait">
+    <meta name="full-screen" content="yes">
     <title>{% block title %}CareerNext — Kenya Career Guidance{% endblock %}</title>
 
     <!-- SEO -->
@@ -19,7 +22,7 @@
     <meta property="og:site_name" content="CareerNext">
     <meta property="og:url" content="{{ request.build_absolute_uri }}">
     {% block og_meta %}
-    <meta property="og:title" content="CareerNext — Kenya's #1 KCSE Career Guidance Platform">
+    <meta property="og:title" content="CareerNext — Your next step after KCSE starts here">
     <meta property="og:description" content="Free KCSE cluster points calculator. Discover university, KMTC, TVET and TTC courses you qualify for via KUCCPS.">
     {% endblock %}
     <meta property="og:image" content="{% static 'images/logo-og.png' %}">
@@ -30,7 +33,7 @@
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:site" content="@careernext_ke">
     {% block twitter_meta %}
-    <meta name="twitter:title" content="CareerNext — Kenya's #1 KCSE Career Guidance Platform">
+    <meta name="twitter:title" content="CareerNext — CareerNext — Your next step after KCSE starts here">
     <meta name="twitter:description" content="Free KCSE cluster points calculator. Discover courses you qualify for via KUCCPS.">
     {% endblock %}
     <meta name="twitter:image" content="{% static 'images/logo-og.png' %}">
@@ -93,7 +96,7 @@
     box-shadow: 0 10px 40px rgba(30,58,138,0.18), 0 2px 8px rgba(0,0,0,0.08);
     border: 1.5px solid #e2e8f0;
     overflow: hidden; z-index: 9999;
-    max-height: 440px; overflow-y: auto;
+    max-height: 340px; overflow-y: auto;
     animation: dropIn 0.18s cubic-bezier(0.22,1,0.36,1);
 }
 .nav-search-dropdown.open { display: block; }
@@ -137,15 +140,49 @@
 .nsd-item-sub  { font-size: 0.73rem; color: #64748b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .nsd-empty     { padding: 1.2rem 1rem; font-size: 0.83rem; color: #94a3b8; text-align: center; }
 .nsd-footer    { padding: 8px 14px; background: #f8fafc; border-top: 1px solid #e2e8f0; font-size: 0.73rem; color: #94a3b8; text-align: center; }
+.nsd-see-all   { color: #2563eb; font-weight: 600; text-decoration: none; }
+.nsd-see-all:hover { text-decoration: underline; }
 
 /* on mobile the search goes inside the collapsed menu */
 @media (max-width: 991px) {
     .nav-search-wrap { flex: none; width: 100%; }
     .nav-search-dropdown { position: fixed; top: auto; left: 1rem; right: 1rem; width: auto; }
 }
+
+/* Hide content in landscape on mobile, show rotate prompt */
+@media screen and (orientation: landscape) and (max-height: 600px) {
+    #rotate-overlay { display: flex !important; }
+    body > *:not(#rotate-overlay) { visibility: hidden; }
+}
+#rotate-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 99999;
+    background: var(--bg-primary, #0f172a);
+    color: var(--text-primary, #f1f5f9);
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    text-align: center;
+    padding: 2rem;
+}
+#rotate-overlay svg { width: 64px; height: 64px; animation: rotate-hint 1.5s ease-in-out infinite alternate; }
+@keyframes rotate-hint { from { transform: rotate(0deg); } to { transform: rotate(-90deg); } }
+#rotate-overlay p { font-size: 1.1rem; font-weight: 500; margin: 0; }
 </style>
 </head>
 <body>
+
+<!-- Portrait-only overlay (shown in landscape on mobile) -->
+<div id="rotate-overlay" aria-live="polite">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="5" y="2" width="14" height="20" rx="2"/>
+        <path d="M12 18h.01"/>
+    </svg>
+    <p>Please rotate your phone to portrait mode</p>
+</div>
 
 <!-- Skip to main content (keyboard accessibility) -->
 <a class="skip-link" href="#main-content">Skip to main content</a>
@@ -571,7 +608,7 @@
             <div class="row g-4">
                 <div class="col-md-4">
                     <div class="footer-brand mb-2">KUCCP<span>SS</span></div>
-                    <p class="small mb-3">Kenya's #1 career guidance and university placement platform for KCSE graduates.</p>
+                    <p class="small mb-3">From KCSE to your dream career. Kenya's smartest guide to the right university course.</p>
                     <div class="d-flex gap-3">
                         <a href="#" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
                         <a href="#" aria-label="Twitter/X"><i class="fab fa-x-twitter"></i></a>
@@ -870,7 +907,9 @@
         if (!html) {
             html = '<div class="nsd-empty"><i class="fas fa-search-minus me-1"></i>No results — try different spelling or an acronym (e.g. "UoN", "KMTC")</div>';
         } else {
-            html += '<div class="nsd-footer">↑↓ navigate &nbsp;·&nbsp; Enter to open &nbsp;·&nbsp; Esc to close</div>';
+            var more = (data.more_courses || 0);
+            var seeAll = data.search_url ? '<a href="' + esc(data.search_url) + '" class="nsd-see-all">See all results' + (more > 0 ? ' (+' + more + ' more)' : '') + ' <i class="fas fa-arrow-right ms-1"></i></a>' : '';
+            html += '<div class="nsd-footer">↑↓ navigate &nbsp;·&nbsp; Enter to open &nbsp;·&nbsp; Esc to close' + (seeAll ? '&nbsp;&nbsp;' + seeAll : '') + '</div>';
         }
 
         dropdown.innerHTML  = html;
@@ -948,6 +987,16 @@ if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('/sw.js').catch(() => {});
 }
 </script>
+
+{% if GA_MEASUREMENT_ID %}
+<script async src="https://www.googletagmanager.com/gtag/js?id={{ GA_MEASUREMENT_ID }}"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', '{{ GA_MEASUREMENT_ID }}');
+</script>
+{% endif %}
 
 {% if SENTRY_DSN %}
 {# Sentry Browser SDK — tracing + session replay bundle #}
@@ -1134,6 +1183,15 @@ window._ph = function (name, props) {
   if (!navigator.onLine) show();
   window.addEventListener('offline', show);
   window.addEventListener('online', hide);
+}());
+</script>
+
+<script>
+/* Try to lock orientation to portrait via Screen Orientation API (works in PWA/fullscreen) */
+(function () {
+    if (screen.orientation && screen.orientation.lock) {
+        screen.orientation.lock('portrait').catch(function () { /* silently ignored in browser context */ });
+    }
 }());
 </script>
 
