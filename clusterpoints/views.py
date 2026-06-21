@@ -216,7 +216,7 @@ def kcse_calculator_view(request):
     cluster_course_counts = {} # {cluster_id: int}
     if results:
         from courses.models import Course as _Course
-        cluster_ids = [r.cluster_id for r in results if r.cluster_id]
+        cluster_ids = [r.cluster.id for r in results if r.cluster]
         _all_courses = (
             _Course.objects
             .filter(cluster_id__in=cluster_ids)
@@ -232,8 +232,9 @@ def kcse_calculator_view(request):
 
         # Attach to each result so the template needs no extra queries
         for _r in results:
-            _r.top_courses = cluster_courses_map.get(_r.cluster_id, [])
-            _r.course_count = cluster_course_counts.get(_r.cluster_id, 0)
+            cid = _r.cluster.id if _r.cluster else None
+            _r.top_courses = cluster_courses_map.get(cid, [])
+            _r.course_count = cluster_course_counts.get(cid, 0)
 
     return render(request, "clusterpoints/calculator.html", {
         "form": form,
