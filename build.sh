@@ -67,7 +67,7 @@ else:
 # Creates a named release tied to the git commit so errors map to exact code.
 if [ -n "${SENTRY_AUTH_TOKEN:-}" ] && [ -n "${RENDER_GIT_COMMIT:-}" ]; then
   echo "Setting up Sentry CLI..."
-  command -v sentry-cli &>/dev/null && sentry-cli update || curl -sL https://sentry.io/get-cli/ | bash
+  command -v sentry-cli &>/dev/null || curl -sL https://sentry.io/get-cli/ | bash
 
   sentry-cli releases new "$RENDER_GIT_COMMIT" \
     --org  "$SENTRY_ORG"     \
