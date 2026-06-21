@@ -853,7 +853,7 @@
     var input    = document.getElementById('navSearchInput');
     var dropdown = document.getElementById('navSearchDropdown');
     var clearBtn = document.getElementById('navSearchClear');
-    if (!input) return;
+    if (!input || !dropdown || !clearBtn) return;
 
     var timer       = null;
     var activeIndex = -1;
