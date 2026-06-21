@@ -853,6 +853,31 @@ body.dark .ob-step:hover { background: var(--surface-2); }
 
 
   {# ── MY COURSES (tabbed: Watchlist | Shortlist) ── #}
+  {% if guest %}
+  <div class="dash-card">
+    <div class="dash-card-header-gradient" style="background:linear-gradient(120deg,#1e3a8a 0%,#4f46e5 100%);">
+      <div>
+        <div class="fw-800" style="font-size:0.9rem;display:flex;align-items:center;gap:7px;">
+          <i class="fas fa-layer-group" style="color:#a5b4fc;"></i>My Courses
+        </div>
+        <div style="font-size:0.72rem;opacity:0.7;margin-top:2px;">Watchlist · Shortlist · Compare</div>
+      </div>
+    </div>
+    <div class="dash-card-body text-center" style="padding:2rem 1.5rem;">
+      <i class="fas fa-bookmark" style="font-size:2.2rem;color:#e2e8f0;display:block;margin-bottom:0.85rem;"></i>
+      <h6 class="fw-800 mb-1" style="font-size:0.95rem;color:#1e293b;">Track Your Courses Here</h6>
+      <p class="text-muted small mb-3">Register free to save courses to a watchlist, shortlist your top picks, and compare them before applying.</p>
+      <div class="d-flex gap-2 justify-content-center flex-wrap">
+        <a href="{% url 'accounts:register' %}" class="btn btn-primary px-4 fw-700" style="border-radius:10px;font-size:0.85rem;">
+          <i class="fas fa-user-plus me-1"></i>Register Free
+        </a>
+        <a href="{% url 'accounts:login' %}" class="btn btn-outline-secondary px-4" style="border-radius:10px;font-size:0.85rem;">
+          Sign In
+        </a>
+      </div>
+    </div>
+  </div>
+  {% else %}
   <div class="dash-card">
     <div class="dash-card-header">
       <h6 class="dash-card-title"><i class="fas fa-layer-group" style="color:#4f46e5;"></i>My Courses</h6>
@@ -957,6 +982,7 @@ body.dark .ob-step:hover { background: var(--surface-2); }
 
     </div>
   </div>
+  {% endif %}{# /not guest My Courses #}
 
 
   {# ── FEATURED INSTITUTIONS ── #}

@@ -63,12 +63,30 @@ class MentorRegistrationForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         from institutions.models import Institution
+        from courses.models import Course
         # Only universities (degree) and KMTC — not TVETs or TTCs
         self.fields["institution"].queryset = Institution.objects.filter(
             institution_type_id__in=[2, 3, 4]  # KMTC=2, Public Uni=3, Private Uni=4
         ).order_by("institution_type_id", "name")
         self.fields["student_id_upload"].required = True
         self.fields["portal_screenshot"].required = True
+
+        # Filter courses to only those offered at the selected institution.
+        # On POST: use submitted institution value.
+        # On edit (existing instance): use the saved institution.
+        # No institution selected yet: empty queryset so the select shows nothing.
+        institution_id = (
+            self.data.get("institution")
+            or (self.instance.pk and self.instance.institution_id)
+        )
+        if institution_id:
+            self.fields["course"].queryset = (
+                Course.objects
+                .filter(institutions__id=institution_id)
+                .order_by("name")
+            )
+        else:
+            self.fields["course"].queryset = Course.objects.none()
 
     def clean_whatsapp(self):
         number = self.cleaned_data["whatsapp"].strip().replace(" ", "")

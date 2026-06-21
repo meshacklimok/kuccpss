@@ -219,6 +219,7 @@ Status legend: ✅ Done | 🚧 In Progress | 📋 Planned | ❌ Blocked | [-] Dr
 | Student Success Stories | ✅ | 6 curated stories on homepage; tagged by grade/pathway/institution |
 | News Panel | 📋 | Platform updates, KUCCPS announcements on dashboard |
 | Shareable results link | 📋 | Token-based URL so results can be shared without login |
+| Urgency / deadline banner | ✅ | Site-wide red/amber/blue countdown bar June–Aug; auto-hides outside 60-day window; color escalates at 21d/7d; CTA differs for auth vs guest; sessionStorage dismiss |
 
 ---
 
@@ -255,6 +256,6 @@ Status legend: ✅ Done | 🚧 In Progress | 📋 Planned | ❌ Blocked | [-] Dr
 | Referral tracking | ✅ | ReferralMiddleware captures referral source to User model |
 | SEO meta tags | ✅ | OpenGraph + Twitter Card on key pages |
 | Google Analytics / event tracking | 📋 | Page views, pathway selections, payment funnel |
-| Sentry error monitoring | 📋 | Production exception tracking |
+| Sentry error monitoring | ✅ | sentry-sdk[django] 2.x; init guarded by SENTRY_DSN env var; filters 404/403/CSRF noise; 10% trace sampling; no PII |
 | Unit tests (cluster formula) | 📋 | Formula must never regress |
 | N+1 query audit | 📋 | Eligible courses + career results loops need select_related pass |

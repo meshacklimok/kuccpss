@@ -1,467 +1,1068 @@
 {% extends "base.html" %}
-{% block title %}Analytics Dashboard{% endblock %}
+{% block title %}Analytics — CareerNext Staff{% endblock %}
 
 {% block content %}
 <style>
+/* ── Design tokens ── */
 :root {
-  --primary: #1e3a8a;
-  --primary-light: #eff6ff;
-  --primary-border: #bfdbfe;
-  --green: #16a34a;
-  --green-bg: #f0fdf4;
-  --amber: #d97706;
-  --amber-bg: #fffbeb;
-  --red: #dc2626;
-  --red-bg: #fef2f2;
-  --purple: #7c3aed;
-  --purple-bg: #f5f3ff;
-  --text: #1e293b;
-  --muted: #64748b;
-  --border: #e2e8f0;
-  --card-shadow: 0 2px 12px rgba(30,58,138,0.07);
+  --navy:   #1e3a8a; --blue:   #2563eb; --blue-lt: #eff6ff; --blue-bd: #bfdbfe;
+  --green:  #16a34a; --green-lt:#f0fdf4;
+  --amber:  #d97706; --amber-lt:#fffbeb;
+  --red:    #dc2626; --red-lt:  #fef2f2;
+  --purple: #7c3aed; --purple-lt:#f5f3ff;
+  --teal:   #0891b2; --teal-lt: #ecfeff;
+  --text:   #0f172a; --muted:   #64748b; --border:  #e2e8f0;
+  --bg:     #f8fafc; --card:    #ffffff;
+  --shadow: 0 1px 3px rgba(0,0,0,.06), 0 4px 16px rgba(30,58,138,.06);
+  --radius: 14px;
 }
-.dash-wrap { max-width: 1280px; margin: 0 auto; padding: 2rem 1rem 4rem; }
-.dash-header { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:1rem; margin-bottom:2rem; }
-.dash-title { font-size:1.6rem; font-weight:700; color:var(--primary); margin:0; }
-.dash-subtitle { color:var(--muted); font-size:.9rem; margin:.25rem 0 0; }
-.refresh-btn { background:var(--primary); color:#fff; border:none; padding:.5rem 1.2rem; border-radius:8px; font-size:.875rem; font-weight:600; cursor:pointer; text-decoration:none; }
-.refresh-btn:hover { background:#1d4ed8; color:#fff; }
+body { background: var(--bg); }
 
-/* KPI grid */
-.kpi-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:1rem; margin-bottom:2rem; }
-.kpi-card { background:#fff; border:1px solid var(--border); border-radius:14px; padding:1.1rem 1.2rem; box-shadow:var(--card-shadow); }
-.kpi-label { font-size:.72rem; font-weight:600; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); margin:0 0 .35rem; }
-.kpi-value { font-size:1.8rem; font-weight:800; color:var(--text); margin:0; line-height:1; }
-.kpi-sub { font-size:.75rem; color:var(--muted); margin:.3rem 0 0; }
-.kpi-card.green  { border-left:4px solid var(--green);  } .kpi-card.green  .kpi-value { color:var(--green);  }
-.kpi-card.amber  { border-left:4px solid var(--amber);  } .kpi-card.amber  .kpi-value { color:var(--amber);  }
-.kpi-card.red    { border-left:4px solid var(--red);    } .kpi-card.red    .kpi-value { color:var(--red);    }
-.kpi-card.purple { border-left:4px solid var(--purple); } .kpi-card.purple .kpi-value { color:var(--purple); }
-.kpi-card.blue   { border-left:4px solid var(--primary);} .kpi-card.blue   .kpi-value { color:var(--primary);}
+/* ── Layout ── */
+.bi-wrap { max-width: 1400px; margin: 0 auto; padding: 1.5rem 1rem 5rem; }
 
-/* Section layout */
-.section-title { font-size:1rem; font-weight:700; color:var(--text); margin:0 0 .75rem; display:flex; align-items:center; gap:.5rem; }
-.section-title::after { content:''; flex:1; height:1px; background:var(--border); }
-.card { background:#fff; border:1px solid var(--border); border-radius:14px; padding:1.25rem 1.5rem; box-shadow:var(--card-shadow); margin-bottom:1.25rem; }
-.two-col { display:grid; grid-template-columns:1fr 1fr; gap:1.25rem; margin-bottom:1.25rem; }
-.three-col { display:grid; grid-template-columns:repeat(3,1fr); gap:1.25rem; margin-bottom:1.25rem; }
-@media(max-width:900px) { .two-col,.three-col { grid-template-columns:1fr; } }
+/* ── Top bar ── */
+.bi-topbar {
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: .75rem; margin-bottom: 1.5rem;
+}
+.bi-topbar-left h1 { font-size: 1.45rem; font-weight: 800; color: var(--navy); margin: 0; letter-spacing: -.02em; }
+.bi-topbar-left p  { font-size: .78rem; color: var(--muted); margin: .15rem 0 0; }
+.bi-topbar-right   { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; }
 
-/* Chart containers */
-.chart-wrap { position:relative; height:220px; }
-.chart-wrap.tall  { height:280px; }
-.chart-wrap.donut { height:240px; max-width:280px; margin:0 auto; }
+/* Day-range pills */
+.day-pills { display: flex; gap: .3rem; }
+.day-pill {
+  padding: .3rem .75rem; border-radius: 20px; font-size: .78rem; font-weight: 600;
+  border: 1.5px solid var(--border); background: var(--card); color: var(--muted);
+  text-decoration: none; transition: all .15s;
+}
+.day-pill:hover { border-color: var(--blue); color: var(--blue); }
+.day-pill.active { background: var(--navy); border-color: var(--navy); color: #fff; }
 
-/* Tables */
-.rank-table { width:100%; border-collapse:collapse; font-size:.85rem; }
-.rank-table th { text-align:left; font-size:.7rem; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); padding:.4rem .5rem; border-bottom:2px solid var(--border); }
-.rank-table td { padding:.45rem .5rem; border-bottom:1px solid #f1f5f9; color:var(--text); }
-.rank-table tr:last-child td { border-bottom:none; }
-.rank-table tr:hover td { background:#f8fafc; }
-.rank-num { font-weight:700; color:var(--muted); min-width:1.8rem; display:inline-block; }
-.rank-bar { height:6px; border-radius:3px; background:var(--primary-border); margin-top:3px; }
-.rank-bar-fill { height:100%; border-radius:3px; background:var(--primary); }
-.badge-pill { display:inline-block; padding:.15rem .55rem; border-radius:20px; font-size:.7rem; font-weight:600; }
-.pill-green  { background:var(--green-bg);  color:var(--green);  }
-.pill-amber  { background:var(--amber-bg);  color:var(--amber);  }
-.pill-red    { background:var(--red-bg);    color:var(--red);    }
-.pill-blue   { background:var(--primary-light); color:var(--primary); }
-.pill-purple { background:var(--purple-bg); color:var(--purple); }
+/* Export + refresh */
+.btn-export {
+  display: flex; align-items: center; gap: .4rem;
+  padding: .35rem 1rem; border-radius: 8px; font-size: .8rem; font-weight: 700;
+  background: var(--green); color: #fff; text-decoration: none; border: none; cursor: pointer;
+  transition: background .15s;
+}
+.btn-export:hover { background: #15803d; color: #fff; }
+.btn-refresh {
+  display: flex; align-items: center; gap: .4rem;
+  padding: .35rem .9rem; border-radius: 8px; font-size: .8rem; font-weight: 700;
+  background: var(--navy); color: #fff; text-decoration: none; border: none; cursor: pointer;
+}
+.btn-refresh:hover { background: var(--blue); color: #fff; }
 
-/* Auth split bar */
-.split-bar-wrap { display:flex; gap:.5rem; align-items:center; margin:.75rem 0; font-size:.8rem; }
-.split-bar-track { flex:1; height:10px; border-radius:5px; background:#f1f5f9; overflow:hidden; }
-.split-bar-auth  { height:100%; border-radius:5px; background:var(--primary); transition:width .5s ease; }
-.split-label { white-space:nowrap; color:var(--muted); }
+/* ── Tab nav ── */
+.bi-tabs {
+  display: flex; gap: .15rem; border-bottom: 2px solid var(--border);
+  margin-bottom: 1.5rem; overflow-x: auto; -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.bi-tabs::-webkit-scrollbar { display: none; }
+.bi-tab {
+  display: flex; align-items: center; gap: .4rem;
+  padding: .6rem 1.1rem; border-radius: 8px 8px 0 0;
+  font-size: .82rem; font-weight: 600; color: var(--muted);
+  border: none; background: none; cursor: pointer; white-space: nowrap;
+  border-bottom: 2px solid transparent; margin-bottom: -2px;
+  transition: color .15s;
+}
+.bi-tab:hover { color: var(--navy); }
+.bi-tab.active { color: var(--navy); border-bottom-color: var(--navy); background: var(--blue-lt); }
+.tab-icon { font-size: .9rem; }
 
-.no-data { color:var(--muted); font-size:.85rem; text-align:center; padding:2rem; }
+/* ── Sections ── */
+.bi-section { display: none; }
+.bi-section.active { display: block; }
+
+/* ── KPI grid ── */
+.kpi-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(175px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+.kpi-card {
+  background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 1.1rem 1.25rem; box-shadow: var(--shadow); border-left: 4px solid transparent;
+  transition: box-shadow .2s;
+}
+.kpi-card:hover { box-shadow: 0 4px 24px rgba(30,58,138,.12); }
+.kpi-card.c-blue   { border-left-color: var(--blue);   }
+.kpi-card.c-green  { border-left-color: var(--green);  }
+.kpi-card.c-amber  { border-left-color: var(--amber);  }
+.kpi-card.c-red    { border-left-color: var(--red);    }
+.kpi-card.c-purple { border-left-color: var(--purple); }
+.kpi-card.c-teal   { border-left-color: var(--teal);   }
+.kpi-label { font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); margin: 0 0 .3rem; }
+.kpi-value { font-size: 1.9rem; font-weight: 800; color: var(--text); margin: 0; line-height: 1; }
+.kpi-card.c-blue   .kpi-value { color: var(--navy);   }
+.kpi-card.c-green  .kpi-value { color: var(--green);  }
+.kpi-card.c-amber  .kpi-value { color: var(--amber);  }
+.kpi-card.c-red    .kpi-value { color: var(--red);    }
+.kpi-card.c-purple .kpi-value { color: var(--purple); }
+.kpi-card.c-teal   .kpi-value { color: var(--teal);   }
+.kpi-meta { display: flex; align-items: center; gap: .35rem; margin-top: .35rem; }
+.kpi-sub  { font-size: .73rem; color: var(--muted); }
+.trend-up   { font-size: .7rem; font-weight: 700; color: var(--green);  background: var(--green-lt);  border-radius: 20px; padding: 1px 6px; }
+.trend-down { font-size: .7rem; font-weight: 700; color: var(--red);    background: var(--red-lt);    border-radius: 20px; padding: 1px 6px; }
+.trend-flat { font-size: .7rem; font-weight: 700; color: var(--muted);  background: #f1f5f9;          border-radius: 20px; padding: 1px 6px; }
+
+/* ── Card + grid helpers ── */
+.card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.25rem 1.4rem; box-shadow: var(--shadow); margin-bottom: 1.25rem; }
+.card-title { font-size: .85rem; font-weight: 700; color: var(--text); margin: 0 0 1rem; display: flex; align-items: center; gap: .5rem; }
+.card-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+.two-col   { display: grid; grid-template-columns: 1fr 1fr;       gap: 1.25rem; }
+.three-col { display: grid; grid-template-columns: 1fr 1fr 1fr;   gap: 1.25rem; }
+.four-col  { display: grid; grid-template-columns: repeat(4,1fr); gap: 1rem; }
+@media(max-width:1100px) { .three-col,.four-col { grid-template-columns:1fr 1fr; } }
+@media(max-width: 700px) { .two-col,.three-col,.four-col { grid-template-columns:1fr; } }
+
+/* ── Section header ── */
+.sec-head { font-size: 1rem; font-weight: 800; color: var(--navy); margin: 1.5rem 0 1rem; display: flex; align-items: center; gap: .5rem; }
+.sec-head::after { content: ''; flex: 1; height: 1px; background: var(--border); margin-left: .5rem; }
+
+/* ── Charts ── */
+.chart-box { position: relative; }
+.chart-box.h220 { height: 220px; }
+.chart-box.h260 { height: 260px; }
+.chart-box.h200 { height: 200px; }
+.chart-box.donut { height: 220px; max-width: 260px; margin: 0 auto; }
+
+/* ── Tables ── */
+.bi-table { width: 100%; border-collapse: collapse; font-size: .83rem; }
+.bi-table th { text-align: left; font-size: .67rem; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); padding: .4rem .5rem; border-bottom: 2px solid var(--border); white-space: nowrap; }
+.bi-table td { padding: .45rem .5rem; border-bottom: 1px solid #f1f5f9; color: var(--text); vertical-align: middle; }
+.bi-table tr:last-child td { border-bottom: none; }
+.bi-table tr:hover td { background: #f8fafc; }
+.rn { font-weight: 700; color: var(--muted); min-width: 1.6rem; display: inline-block; }
+
+/* Progress bar */
+.bar-wrap { height: 5px; border-radius: 3px; background: #f1f5f9; margin-top: 4px; min-width: 60px; }
+.bar-fill { height: 100%; border-radius: 3px; background: var(--navy); }
+.bar-fill.green  { background: var(--green); }
+.bar-fill.purple { background: var(--purple); }
+.bar-fill.amber  { background: var(--amber); }
+
+/* Badges */
+.badge { display: inline-flex; align-items: center; padding: .15rem .55rem; border-radius: 20px; font-size: .7rem; font-weight: 700; white-space: nowrap; }
+.b-blue   { background: var(--blue-lt);   color: var(--blue);   }
+.b-green  { background: var(--green-lt);  color: var(--green);  }
+.b-amber  { background: var(--amber-lt);  color: var(--amber);  }
+.b-red    { background: var(--red-lt);    color: var(--red);    }
+.b-purple { background: var(--purple-lt); color: var(--purple); }
+.b-teal   { background: var(--teal-lt);   color: var(--teal);   }
+.b-gray   { background: #f1f5f9;          color: var(--muted);  }
+
+/* ── Funnel ── */
+.funnel-row { display: flex; align-items: center; gap: .75rem; margin-bottom: .65rem; }
+.funnel-label { min-width: 110px; font-size: .78rem; color: var(--muted); font-weight: 600; text-align: right; }
+.funnel-track { flex: 1; height: 28px; background: #f1f5f9; border-radius: 6px; overflow: hidden; position: relative; }
+.funnel-fill  { height: 100%; border-radius: 6px; background: linear-gradient(90deg, var(--navy), var(--blue)); display: flex; align-items: center; padding: 0 10px; transition: width .6s cubic-bezier(.4,0,.2,1); }
+.funnel-fill span { font-size: .73rem; font-weight: 700; color: #fff; white-space: nowrap; }
+.funnel-n { min-width: 50px; font-size: .83rem; font-weight: 700; color: var(--text); }
+
+/* ── Split bar ── */
+.split-track { height: 8px; border-radius: 4px; background: #f1f5f9; overflow: hidden; margin: .4rem 0; }
+.split-fill  { height: 100%; border-radius: 4px; background: var(--navy); }
+.split-row   { display: flex; justify-content: space-between; font-size: .73rem; color: var(--muted); }
+
+/* ── Activity feed ── */
+.feed-item { display: flex; align-items: flex-start; gap: .75rem; padding: .6rem 0; border-bottom: 1px solid #f1f5f9; }
+.feed-item:last-child { border-bottom: none; }
+.feed-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 5px; }
+.fd-search  { background: var(--blue); }
+.fd-view    { background: var(--purple); }
+.fd-career  { background: var(--green); }
+.fd-event   { background: var(--amber); }
+.feed-label { font-size: .8rem; font-weight: 600; color: var(--text); line-height: 1.3; }
+.feed-sub   { font-size: .72rem; color: var(--muted); }
+.feed-ts    { font-size: .7rem; color: var(--muted); white-space: nowrap; margin-left: auto; }
+
+/* ── Success rate ring ── */
+.rate-ring { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 1.25rem; }
+.rate-val  { font-size: 2.6rem; font-weight: 900; color: var(--green); line-height: 1; }
+.rate-lbl  { font-size: .75rem; color: var(--muted); font-weight: 600; margin-top: .2rem; }
+.rate-sub  { font-size: .73rem; color: var(--muted); margin-top: .5rem; text-align: center; }
+
+/* ── User table specifics ── */
+.user-email { font-weight: 600; color: var(--navy); }
+.user-name  { font-size: .75rem; color: var(--muted); }
+
+/* ── No-data state ── */
+.no-data { color: var(--muted); font-size: .85rem; text-align: center; padding: 2.5rem 1rem; }
+
+/* ── Responsive ── */
+@media(max-width:640px) {
+  .bi-topbar { flex-direction: column; align-items: flex-start; }
+  .kpi-grid  { grid-template-columns: 1fr 1fr; }
+}
 </style>
 
-<div class="dash-wrap">
+<div class="bi-wrap">
 
-  <!-- Header -->
-  <div class="dash-header">
-    <div>
-      <h1 class="dash-title">Analytics Dashboard</h1>
-      <p class="dash-subtitle">Last updated: {{ request.META.SERVER_NAME }} &bull; Staff view only</p>
+  <!-- ── Top bar ───────────────────────────────────────────────────────────── -->
+  <div class="bi-topbar">
+    <div class="bi-topbar-left">
+      <h1>📊 CareerNext Analytics</h1>
+      <p>Staff-only · Live platform data · Showing last <strong>{{ days }} days</strong></p>
     </div>
-    <a href="{% url 'analytics:dashboard' %}" class="refresh-btn">&#8635; Refresh</a>
-  </div>
-
-  <!-- ── KPI Row ──────────────────────────────────────────────────── -->
-  <div class="kpi-grid">
-    <div class="kpi-card blue">
-      <p class="kpi-label">Total Users</p>
-      <p class="kpi-value">{{ total_users }}</p>
-      <p class="kpi-sub">+{{ new_users_7d }} this week</p>
-    </div>
-    <div class="kpi-card green">
-      <p class="kpi-label">New (30 days)</p>
-      <p class="kpi-value">{{ new_users_30d }}</p>
-      <p class="kpi-sub">{{ verified_pct }}% verified</p>
-    </div>
-    <div class="kpi-card blue">
-      <p class="kpi-label">Searches</p>
-      <p class="kpi-value">{{ total_searches }}</p>
-      <p class="kpi-sub">{{ searches_today }} today</p>
-    </div>
-    <div class="kpi-card amber">
-      <p class="kpi-label">Zero-Result %</p>
-      <p class="kpi-value">{{ zero_result_pct }}%</p>
-      <p class="kpi-sub">of all searches</p>
-    </div>
-    <div class="kpi-card purple">
-      <p class="kpi-label">Page Views</p>
-      <p class="kpi-value">{{ total_views }}</p>
-      <p class="kpi-sub">{{ views_7d }} this week</p>
-    </div>
-    <div class="kpi-card green">
-      <p class="kpi-label">Downloads</p>
-      <p class="kpi-value">{{ total_downloads }}</p>
-      <p class="kpi-sub">{{ downloads_7d }} this week</p>
-    </div>
-    <div class="kpi-card blue">
-      <p class="kpi-label">Saved Courses</p>
-      <p class="kpi-value">{{ total_saves }}</p>
-      <p class="kpi-sub">across all users</p>
-    </div>
-    <div class="kpi-card purple">
-      <p class="kpi-label">Career Engine</p>
-      <p class="kpi-value">{{ total_engine }}</p>
-      <p class="kpi-sub">{{ engine_7d }} this week</p>
-    </div>
-  </div>
-
-  <!-- ── Activity Chart (30 days) ─────────────────────────────────── -->
-  <h2 class="section-title">30-Day Activity</h2>
-  <div class="card">
-    <div class="chart-wrap tall">
-      <canvas id="activityChart"></canvas>
-    </div>
-  </div>
-
-  <!-- ── Search Section ───────────────────────────────────────────── -->
-  <h2 class="section-title">Search Insights</h2>
-  <div class="two-col">
-    <!-- Top Queries -->
-    <div class="card">
-      <p class="section-title" style="font-size:.85rem;">Top Queries</p>
-      {% if top_queries %}
-      <table class="rank-table">
-        <thead><tr><th>#</th><th>Query</th><th>Searches</th><th>Zero?</th></tr></thead>
-        <tbody>
-        {% for row in top_queries %}
-        <tr>
-          <td><span class="rank-num">{{ forloop.counter }}</span></td>
-          <td>{{ row.query }}</td>
-          <td>{{ row.n }}</td>
-          <td>
-            {% if row.zeros %}
-              <span class="badge-pill pill-red">{{ row.zeros }}</span>
-            {% else %}
-              <span class="badge-pill pill-green">0</span>
-            {% endif %}
-          </td>
-        </tr>
+    <div class="bi-topbar-right">
+      <!-- Date range -->
+      <div class="day-pills">
+        {% for d in "7,30,90,365"|split:"," %}
+        <a href="?days={{ d }}" class="day-pill {% if days|stringformat:'s' == d %}active{% endif %}">{{ d }}d</a>
         {% endfor %}
-        </tbody>
-      </table>
-      {% else %}<p class="no-data">No searches yet.</p>{% endif %}
-    </div>
-
-    <!-- Zero-Result Queries -->
-    <div class="card">
-      <p class="section-title" style="font-size:.85rem;">Queries With Zero Results</p>
-      {% if zero_result_queries %}
-      <table class="rank-table">
-        <thead><tr><th>#</th><th>Query</th><th>Times</th></tr></thead>
-        <tbody>
-        {% for row in zero_result_queries %}
-        <tr>
-          <td><span class="rank-num">{{ forloop.counter }}</span></td>
-          <td>{{ row.query }}</td>
-          <td><span class="badge-pill pill-red">{{ row.n }}</span></td>
-        </tr>
-        {% endfor %}
-        </tbody>
-      </table>
-      {% else %}<p class="no-data">No zero-result queries — great!</p>{% endif %}
+      </div>
+      <a href="{% url 'analytics:export_csv' %}?days={{ days }}" class="btn-export">
+        <i class="fas fa-download"></i> Export CSV
+      </a>
+      <a href="?days={{ days }}" class="btn-refresh">
+        <i class="fas fa-sync-alt"></i> Refresh
+      </a>
     </div>
   </div>
 
-  <!-- Auth vs Anonymous split -->
-  <div class="card" style="margin-bottom:1.25rem;">
-    <p class="section-title" style="font-size:.85rem; margin-bottom:.5rem;">Authenticated vs Anonymous</p>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;">
-      <div>
-        <p style="font-size:.8rem;color:var(--muted);margin:0 0 .4rem;">Searches</p>
-        <div class="split-bar-wrap">
-          <span class="split-label">Auth {{ auth_searches }}</span>
-          <div class="split-bar-track">
-            <div class="split-bar-auth" style="width:{% if total_searches %}{{ auth_searches|floatformat:0 }}{% else %}0{% endif %}%"></div>
-          </div>
-          <span class="split-label">Anon {{ anon_searches }}</span>
+  <!-- ── Tab navigation ─────────────────────────────────────────────────────── -->
+  <div class="bi-tabs" role="tablist">
+    <button class="bi-tab active" data-tab="overview"  role="tab"><span class="tab-icon">🏠</span> Overview</button>
+    <button class="bi-tab"        data-tab="users"     role="tab"><span class="tab-icon">👥</span> Users</button>
+    <button class="bi-tab"        data-tab="content"   role="tab"><span class="tab-icon">🔍</span> Content &amp; Search</button>
+    <button class="bi-tab"        data-tab="career"    role="tab"><span class="tab-icon">🎓</span> Career Engine</button>
+    <button class="bi-tab"        data-tab="payments"  role="tab"><span class="tab-icon">💳</span> Payments</button>
+    <button class="bi-tab"        data-tab="activity"  role="tab"><span class="tab-icon">📡</span> Live Activity</button>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════════════════════════ -->
+  <!-- OVERVIEW TAB                                                           -->
+  <!-- ════════════════════════════════════════════════════════════════════════ -->
+  <div class="bi-section active" id="tab-overview">
+
+    <!-- KPI row -->
+    <div class="kpi-grid">
+
+      <div class="kpi-card c-blue">
+        <p class="kpi-label">Total Users</p>
+        <p class="kpi-value">{{ total_users|floatformat:"0g" }}</p>
+        <div class="kpi-meta">
+          <span class="kpi-sub">+{{ new_today }} today</span>
+          {% if trend_users.pct is not None %}
+            {% if trend_users.up %}<span class="trend-up">↑ {{ trend_users.pct }}%</span>
+            {% else %}<span class="trend-down">↓ {{ trend_users.pct }}%</span>{% endif %}
+          {% endif %}
         </div>
       </div>
-      <div>
-        <p style="font-size:.8rem;color:var(--muted);margin:0 0 .4rem;">Career Engine Uses</p>
-        <div class="split-bar-wrap">
-          <span class="split-label">Auth {{ auth_engine }}</span>
-          <div class="split-bar-track">
-            <div class="split-bar-auth" style="width:{% if total_engine %}{{ auth_engine|floatformat:0 }}{% else %}0{% endif %}%"></div>
+
+      <div class="kpi-card c-green">
+        <p class="kpi-label">New ({{ days }}d)</p>
+        <p class="kpi-value">{{ new_users }}</p>
+        <div class="kpi-meta">
+          <span class="kpi-sub">{{ verified_pct }}% verified</span>
+          {% if trend_users.pct is not None %}
+            {% if trend_users.up %}<span class="trend-up">↑ {{ trend_users.pct }}%</span>
+            {% else %}<span class="trend-down">↓ {{ trend_users.pct }}%</span>{% endif %}
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="kpi-card c-blue">
+        <p class="kpi-label">Searches</p>
+        <p class="kpi-value">{{ total_searches }}</p>
+        <div class="kpi-meta">
+          <span class="kpi-sub">{{ searches_today }} today</span>
+          {% if trend_searches.pct is not None %}
+            {% if trend_searches.up %}<span class="trend-up">↑ {{ trend_searches.pct }}%</span>
+            {% else %}<span class="trend-down">↓ {{ trend_searches.pct }}%</span>{% endif %}
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="kpi-card c-purple">
+        <p class="kpi-label">Page Views</p>
+        <p class="kpi-value">{{ total_views }}</p>
+        <div class="kpi-meta">
+          <span class="kpi-sub">{{ views_today }} today</span>
+          {% if trend_views.pct is not None %}
+            {% if trend_views.up %}<span class="trend-up">↑ {{ trend_views.pct }}%</span>
+            {% else %}<span class="trend-down">↓ {{ trend_views.pct }}%</span>{% endif %}
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="kpi-card c-teal">
+        <p class="kpi-label">Career Engine</p>
+        <p class="kpi-value">{{ total_engine }}</p>
+        <div class="kpi-meta">
+          <span class="kpi-sub">{{ engine_today }} today</span>
+          {% if trend_engine.pct is not None %}
+            {% if trend_engine.up %}<span class="trend-up">↑ {{ trend_engine.pct }}%</span>
+            {% else %}<span class="trend-down">↓ {{ trend_engine.pct }}%</span>{% endif %}
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="kpi-card c-green">
+        <p class="kpi-label">Revenue (KES)</p>
+        <p class="kpi-value">{{ revenue|floatformat:0 }}</p>
+        <div class="kpi-meta">
+          <span class="kpi-sub">{{ pay_completed }} payments</span>
+          {% if trend_revenue.pct is not None %}
+            {% if trend_revenue.up %}<span class="trend-up">↑ {{ trend_revenue.pct }}%</span>
+            {% else %}<span class="trend-down">↓ {{ trend_revenue.pct }}%</span>{% endif %}
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="kpi-card c-amber">
+        <p class="kpi-label">Zero-Result %</p>
+        <p class="kpi-value">{{ zero_pct }}%</p>
+        <p class="kpi-sub">of all searches</p>
+      </div>
+
+      <div class="kpi-card c-red">
+        <p class="kpi-label">Pay Failed</p>
+        <p class="kpi-value">{{ pay_failed }}</p>
+        <p class="kpi-sub">{{ success_rate }}% success rate</p>
+      </div>
+
+    </div><!-- /kpi-grid -->
+
+    <!-- Activity chart -->
+    <div class="card">
+      <p class="card-title"><i class="fas fa-chart-line me-1" style="color:var(--blue)"></i> {{ days }}-Day Platform Activity</p>
+      <div class="chart-box h260"><canvas id="activityChart"></canvas></div>
+    </div>
+
+    <!-- Conversion funnel + auth split + pathway donut -->
+    <div class="three-col">
+      <div class="card">
+        <p class="card-title"><i class="fas fa-filter me-1" style="color:var(--purple)"></i> Conversion Funnel</p>
+        {% for f in funnel %}
+        <div class="funnel-row">
+          <span class="funnel-label">{{ f.label }}</span>
+          <div class="funnel-track">
+            <div class="funnel-fill" style="width:{{ f.pct }}%"><span>{{ f.n }}</span></div>
           </div>
-          <span class="split-label">Anon {{ anon_engine }}</span>
+        </div>
+        {% endfor %}
+      </div>
+
+      <div class="card">
+        <p class="card-title"><i class="fas fa-users me-1" style="color:var(--green)"></i> Auth Split</p>
+        <div style="margin-bottom:1.25rem;">
+          <div class="split-row"><span>Logged-in searches</span><span>{{ auth_searches_pct }}%</span></div>
+          <div class="split-track"><div class="split-fill" style="width:{{ auth_searches_pct }}%"></div></div>
+          <div class="split-row"><span class="text-muted">Auth: {{ auth_searches }}</span><span class="text-muted">Anon: {{ anon_searches }}</span></div>
+        </div>
+        <div style="margin-bottom:1.25rem;">
+          <div class="split-row"><span>Career engine (auth)</span>
+            <span>{% if total_engine %}{% widthratio auth_engine total_engine 100 %}{% else %}0{% endif %}%</span>
+          </div>
+          <div class="split-track">
+            <div class="split-fill" style="width:{% if total_engine %}{% widthratio auth_engine total_engine 100 %}{% else %}0{% endif %}%"></div>
+          </div>
+          <div class="split-row"><span class="text-muted">Auth: {{ auth_engine }}</span><span class="text-muted">Anon: {{ anon_engine }}</span></div>
+        </div>
+        <div style="margin-top:1rem;padding-top:1rem;border-top:1px solid var(--border);">
+          <div class="d-flex justify-content-between" style="font-size:.78rem;margin-bottom:.4rem;">
+            <span style="color:var(--muted)">Google OAuth</span><span style="font-weight:700;color:var(--navy)">{{ google_pct }}%</span>
+          </div>
+          <div class="split-track"><div class="split-fill" style="width:{{ google_pct }}%;background:var(--teal)"></div></div>
+          <div class="split-row"><span class="text-muted">Google: {{ google_users }}</span><span class="text-muted">Email: {{ total_users|add:"-"|add:google_users }}</span></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <p class="card-title"><i class="fas fa-chart-pie me-1" style="color:var(--purple)"></i> Career Pathways</p>
+        {% if pathway_dist %}
+        <div class="chart-box donut"><canvas id="pathwayChart"></canvas></div>
+        {% else %}<p class="no-data">No career engine data yet.</p>{% endif %}
+      </div>
+    </div>
+
+  </div><!-- /overview -->
+
+
+  <!-- ════════════════════════════════════════════════════════════════════════ -->
+  <!-- USERS TAB                                                              -->
+  <!-- ════════════════════════════════════════════════════════════════════════ -->
+  <div class="bi-section" id="tab-users">
+
+    <div class="four-col" style="margin-bottom:1.5rem;">
+      <div class="kpi-card c-blue">
+        <p class="kpi-label">Total Users</p>
+        <p class="kpi-value">{{ total_users }}</p>
+        <p class="kpi-sub">all time</p>
+      </div>
+      <div class="kpi-card c-green">
+        <p class="kpi-label">New ({{ days }}d)</p>
+        <p class="kpi-value">{{ new_users }}</p>
+        <div class="kpi-meta">
+          {% if trend_users.pct is not None %}
+            {% if trend_users.up %}<span class="trend-up">↑ {{ trend_users.pct }}% vs prev</span>
+            {% else %}<span class="trend-down">↓ {{ trend_users.pct }}% vs prev</span>{% endif %}
+          {% endif %}
+        </div>
+      </div>
+      <div class="kpi-card c-teal">
+        <p class="kpi-label">Verified</p>
+        <p class="kpi-value">{{ verified_pct }}%</p>
+        <p class="kpi-sub">{{ verified }} of {{ total_users }}</p>
+      </div>
+      <div class="kpi-card c-purple">
+        <p class="kpi-label">Google OAuth</p>
+        <p class="kpi-value">{{ google_pct }}%</p>
+        <p class="kpi-sub">{{ google_users }} users</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <p class="card-title"><i class="fas fa-user-plus me-1" style="color:var(--green)"></i> Daily Registrations ({{ days }}d)</p>
+      <div class="chart-box h220"><canvas id="regChart"></canvas></div>
+    </div>
+
+    <div class="card">
+      <p class="card-title"><i class="fas fa-list me-1" style="color:var(--navy)"></i> Recent Sign-ups</p>
+      {% if recent_users %}
+      <table class="bi-table">
+        <thead><tr><th>#</th><th>Email</th><th>Name</th><th>Auth</th><th>Verified</th><th>Joined</th></tr></thead>
+        <tbody>
+        {% for u in recent_users %}
+        <tr>
+          <td><span class="rn">{{ forloop.counter }}</span></td>
+          <td class="user-email">{{ u.email }}</td>
+          <td class="user-name">{{ u.full_name|default:"—" }}</td>
+          <td>
+            {% if u.is_google_user %}<span class="badge b-teal"><i class="fab fa-google me-1"></i>Google</span>
+            {% else %}<span class="badge b-blue">Email</span>{% endif %}
+          </td>
+          <td>
+            {% if u.is_verified %}<span class="badge b-green">✓ Verified</span>
+            {% else %}<span class="badge b-amber">Pending</span>{% endif %}
+          </td>
+          <td style="font-size:.75rem;color:var(--muted);">{{ u.date_joined|date:"d M Y H:i" }}</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+      {% else %}<p class="no-data">No users yet.</p>{% endif %}
+    </div>
+
+  </div><!-- /users -->
+
+
+  <!-- ════════════════════════════════════════════════════════════════════════ -->
+  <!-- CONTENT & SEARCH TAB                                                   -->
+  <!-- ════════════════════════════════════════════════════════════════════════ -->
+  <div class="bi-section" id="tab-content">
+
+    <div class="four-col" style="margin-bottom:1.5rem;">
+      <div class="kpi-card c-blue">
+        <p class="kpi-label">Searches ({{ days }}d)</p>
+        <p class="kpi-value">{{ total_searches }}</p>
+        <p class="kpi-sub">{{ searches_today }} today</p>
+      </div>
+      <div class="kpi-card c-amber">
+        <p class="kpi-label">Zero Results</p>
+        <p class="kpi-value">{{ zero_pct }}%</p>
+        <p class="kpi-sub">content gaps</p>
+      </div>
+      <div class="kpi-card c-purple">
+        <p class="kpi-label">Page Views</p>
+        <p class="kpi-value">{{ total_views }}</p>
+        <p class="kpi-sub">{{ views_today }} today</p>
+      </div>
+      <div class="kpi-card c-green">
+        <p class="kpi-label">Downloads</p>
+        <p class="kpi-value">{{ total_downloads }}</p>
+        <p class="kpi-sub">PDFs &amp; reports</p>
+      </div>
+    </div>
+
+    <div class="two-col">
+      <div class="card">
+        <p class="card-title"><i class="fas fa-search me-1" style="color:var(--blue)"></i> Top Search Queries</p>
+        {% if top_queries %}
+        <table class="bi-table">
+          <thead><tr><th>#</th><th>Query</th><th>Count</th><th>No Results</th></tr></thead>
+          <tbody>
+          {% for row in top_queries %}
+          <tr>
+            <td><span class="rn">{{ forloop.counter }}</span></td>
+            <td>{{ row.query }}</td>
+            <td>
+              <strong>{{ row.n }}</strong>
+              <div class="bar-wrap"><div class="bar-fill" style="width:{% widthratio row.n top_queries.0.n 100 %}%"></div></div>
+            </td>
+            <td>
+              {% if row.zeros %}<span class="badge b-red">{{ row.zeros }}</span>
+              {% else %}<span class="badge b-green">0</span>{% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+        {% else %}<p class="no-data">No searches yet.</p>{% endif %}
+      </div>
+
+      <div class="card">
+        <p class="card-title"><i class="fas fa-exclamation-circle me-1" style="color:var(--amber)"></i> Content Gaps (Zero Results)</p>
+        {% if zero_queries %}
+        <table class="bi-table">
+          <thead><tr><th>#</th><th>Query</th><th>Times</th></tr></thead>
+          <tbody>
+          {% for row in zero_queries %}
+          <tr>
+            <td><span class="rn">{{ forloop.counter }}</span></td>
+            <td>{{ row.query }}</td>
+            <td><span class="badge b-red">{{ row.n }}</span></td>
+          </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+        {% else %}<p class="no-data">No zero-result searches — great!</p>{% endif %}
+      </div>
+    </div>
+
+    <div class="two-col">
+      <div class="card">
+        <p class="card-title"><i class="fas fa-graduation-cap me-1" style="color:var(--purple)"></i> Top Courses Viewed</p>
+        {% if top_courses %}
+        <table class="bi-table">
+          <thead><tr><th>#</th><th>Course</th><th>Views</th></tr></thead>
+          <tbody>
+          {% for row in top_courses %}
+          <tr>
+            <td><span class="rn">{{ forloop.counter }}</span></td>
+            <td>{{ row.object_name }}</td>
+            <td>
+              <span class="badge b-purple">{{ row.n }}</span>
+              <div class="bar-wrap"><div class="bar-fill purple" style="width:{% widthratio row.n top_courses.0.n 100 %}%"></div></div>
+            </td>
+          </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+        {% else %}<p class="no-data">No course views logged yet.</p>{% endif %}
+      </div>
+
+      <div class="card">
+        <p class="card-title"><i class="fas fa-university me-1" style="color:var(--teal)"></i> Top Institutions Viewed</p>
+        {% if top_insts %}
+        <table class="bi-table">
+          <thead><tr><th>#</th><th>Institution</th><th>Views</th></tr></thead>
+          <tbody>
+          {% for row in top_insts %}
+          <tr>
+            <td><span class="rn">{{ forloop.counter }}</span></td>
+            <td>{{ row.object_name }}</td>
+            <td>
+              <span class="badge b-teal">{{ row.n }}</span>
+              <div class="bar-wrap"><div class="bar-fill" style="width:{% widthratio row.n top_insts.0.n 100 %}%;background:var(--teal)"></div></div>
+            </td>
+          </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+        {% else %}<p class="no-data">No institution views logged yet.</p>{% endif %}
+      </div>
+    </div>
+
+    <div class="two-col">
+      <div class="card">
+        <p class="card-title"><i class="fas fa-bookmark me-1" style="color:var(--amber)"></i> Most Saved Programmes</p>
+        {% if top_saved %}
+        <table class="bi-table">
+          <thead><tr><th>#</th><th>Course</th><th>Type</th><th>Saves</th></tr></thead>
+          <tbody>
+          {% for row in top_saved %}
+          <tr>
+            <td><span class="rn">{{ forloop.counter }}</span></td>
+            <td>{{ row.course__name }}</td>
+            <td><span class="badge b-gray">{{ row.course__course_type__name }}</span></td>
+            <td><span class="badge b-amber">{{ row.n }}</span></td>
+          </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+        {% else %}<p class="no-data">No saved courses yet.</p>{% endif %}
+      </div>
+
+      <div class="card">
+        <p class="card-title"><i class="fas fa-file-download me-1" style="color:var(--red)"></i> Top Downloads</p>
+        {% if top_downloads %}
+        <table class="bi-table">
+          <thead><tr><th>#</th><th>Resource</th><th>Type</th><th>DL</th></tr></thead>
+          <tbody>
+          {% for row in top_downloads %}
+          <tr>
+            <td><span class="rn">{{ forloop.counter }}</span></td>
+            <td>{{ row.object_name|truncatechars:30 }}</td>
+            <td><span class="badge b-gray">{{ row.content_type }}</span></td>
+            <td>{{ row.n }}</td>
+          </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+        {% else %}<p class="no-data">No downloads yet.</p>{% endif %}
+      </div>
+    </div>
+
+  </div><!-- /content -->
+
+
+  <!-- ════════════════════════════════════════════════════════════════════════ -->
+  <!-- CAREER ENGINE TAB                                                      -->
+  <!-- ════════════════════════════════════════════════════════════════════════ -->
+  <div class="bi-section" id="tab-career">
+
+    <div class="four-col" style="margin-bottom:1.5rem;">
+      <div class="kpi-card c-teal">
+        <p class="kpi-label">Engine Runs ({{ days }}d)</p>
+        <p class="kpi-value">{{ total_engine }}</p>
+        <p class="kpi-sub">{{ engine_today }} today</p>
+      </div>
+      <div class="kpi-card c-blue">
+        <p class="kpi-label">Avg Matches</p>
+        <p class="kpi-value">{{ avg_results }}</p>
+        <p class="kpi-sub">per run</p>
+      </div>
+      <div class="kpi-card c-green">
+        <p class="kpi-label">Auth Users</p>
+        <p class="kpi-value">{{ auth_engine }}</p>
+        <p class="kpi-sub">{{ anon_engine }} anonymous</p>
+      </div>
+      <div class="kpi-card c-purple">
+        <p class="kpi-label">Pathways</p>
+        <p class="kpi-value">{{ pathway_dist|length }}</p>
+        <p class="kpi-sub">active pathways</p>
+      </div>
+    </div>
+
+    <div class="three-col">
+      <div class="card">
+        <p class="card-title"><i class="fas fa-chart-pie me-1" style="color:var(--purple)"></i> Pathway Split</p>
+        {% if pathway_dist %}
+        <div class="chart-box donut"><canvas id="pathwayChart2"></canvas></div>
+        {% else %}<p class="no-data">No data yet.</p>{% endif %}
+      </div>
+
+      <div class="card">
+        <p class="card-title"><i class="fas fa-list-ol me-1" style="color:var(--navy)"></i> Pathway Breakdown</p>
+        {% if pathway_dist %}
+        <table class="bi-table">
+          <thead><tr><th>Pathway</th><th>Uses</th><th>Share</th></tr></thead>
+          <tbody>
+          {% for row in pathway_dist %}
+          <tr>
+            <td><strong>{{ row.pathway|title }}</strong></td>
+            <td>{{ row.n }}</td>
+            <td>
+              <div class="bar-wrap"><div class="bar-fill" style="width:{% widthratio row.n pathway_dist.0.n 100 %}%"></div></div>
+            </td>
+          </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+        {% else %}<p class="no-data">No engine usage yet.</p>{% endif %}
+      </div>
+
+      <div class="card">
+        <p class="card-title"><i class="fas fa-star me-1" style="color:var(--amber)"></i> Mean Grades Entered</p>
+        {% if top_grades %}
+        <div class="chart-box h200"><canvas id="gradeChart"></canvas></div>
+        {% else %}<p class="no-data">No grade data yet.</p>{% endif %}
+      </div>
+    </div>
+
+    <div class="card">
+      <p class="card-title"><i class="fas fa-chart-line me-1" style="color:var(--teal)"></i> Career Engine Activity ({{ days }}d)</p>
+      <div class="chart-box h220"><canvas id="engineChart"></canvas></div>
+    </div>
+
+  </div><!-- /career -->
+
+
+  <!-- ════════════════════════════════════════════════════════════════════════ -->
+  <!-- PAYMENTS TAB                                                           -->
+  <!-- ════════════════════════════════════════════════════════════════════════ -->
+  <div class="bi-section" id="tab-payments">
+
+    <div class="four-col" style="margin-bottom:1.5rem;">
+      <div class="kpi-card c-blue">
+        <p class="kpi-label">Initiated ({{ days }}d)</p>
+        <p class="kpi-value">{{ pay_initiated }}</p>
+        <p class="kpi-sub">payment attempts</p>
+      </div>
+      <div class="kpi-card c-green">
+        <p class="kpi-label">Completed</p>
+        <p class="kpi-value">{{ pay_completed }}</p>
+        <div class="kpi-meta">
+          {% if trend_revenue.pct is not None %}
+            {% if trend_revenue.up %}<span class="trend-up">↑ {{ trend_revenue.pct }}%</span>
+            {% else %}<span class="trend-down">↓ {{ trend_revenue.pct }}%</span>{% endif %}
+          {% endif %}
+        </div>
+      </div>
+      <div class="kpi-card c-red">
+        <p class="kpi-label">Failed</p>
+        <p class="kpi-value">{{ pay_failed }}</p>
+        <p class="kpi-sub">{{ pay_pending }} pending</p>
+      </div>
+      <div class="kpi-card c-green">
+        <p class="kpi-label">Revenue (KES)</p>
+        <p class="kpi-value">{{ revenue|floatformat:0 }}</p>
+        <p class="kpi-sub">confirmed</p>
+      </div>
+    </div>
+
+    <div class="three-col">
+      <!-- Success rate -->
+      <div class="card" style="text-align:center;">
+        <p class="card-title"><i class="fas fa-check-circle me-1" style="color:var(--green)"></i> Success Rate</p>
+        <div class="rate-ring">
+          <span class="rate-val">{{ success_rate }}%</span>
+          <span class="rate-lbl">Payment Success</span>
+          <span class="rate-sub">{{ pay_completed }} of {{ pay_initiated }} attempts succeeded</span>
+        </div>
+        <div style="margin:1rem 0 .5rem;">
+          <div class="split-track" style="height:12px;">
+            <div class="split-fill" style="width:{{ success_rate }}%;background:var(--green)"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Revenue by feature -->
+      <div class="card">
+        <p class="card-title"><i class="fas fa-layer-group me-1" style="color:var(--blue)"></i> Revenue by Feature</p>
+        {% if pay_by_feature %}
+        <table class="bi-table">
+          <thead><tr><th>Feature</th><th>Count</th><th>Revenue</th></tr></thead>
+          <tbody>
+          {% for row in pay_by_feature %}
+          <tr>
+            <td>{{ row.feature|title }}</td>
+            <td><span class="badge b-blue">{{ row.n }}</span></td>
+            <td style="font-weight:700;color:var(--green)">KES {{ row.total|floatformat:0 }}</td>
+          </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+        {% else %}<p class="no-data">No completed payments yet.</p>{% endif %}
+      </div>
+
+      <!-- Payment trend chart -->
+      <div class="card">
+        <p class="card-title"><i class="fas fa-chart-bar me-1" style="color:var(--green)"></i> Daily Payments ({{ days }}d)</p>
+        <div class="chart-box h200"><canvas id="payChart"></canvas></div>
+      </div>
+    </div>
+
+    <!-- Recent payments table -->
+    <div class="card">
+      <p class="card-title"><i class="fas fa-receipt me-1" style="color:var(--navy)"></i> Recent Payment Events</p>
+      {% if recent_payments %}
+      <table class="bi-table">
+        <thead><tr><th>#</th><th>User</th><th>Feature</th><th>Amount</th><th>Status</th><th>Date</th></tr></thead>
+        <tbody>
+        {% for p in recent_payments %}
+        <tr>
+          <td><span class="rn">{{ forloop.counter }}</span></td>
+          <td class="user-email">{{ p.user__email|truncatechars:30 }}</td>
+          <td><span class="badge b-blue">{{ p.feature }}</span></td>
+          <td style="font-weight:700">KES {{ p.amount|floatformat:0 }}</td>
+          <td>
+            {% if p.status == 'completed' %}<span class="badge b-green">✓ Paid</span>
+            {% elif p.status == 'failed' %}<span class="badge b-red">✗ Failed</span>
+            {% elif p.status == 'pending' %}<span class="badge b-amber">Pending</span>
+            {% else %}<span class="badge b-gray">{{ p.status }}</span>{% endif %}
+          </td>
+          <td style="font-size:.73rem;color:var(--muted)">{{ p.created_at|date:"d M Y H:i" }}</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+      {% else %}<p class="no-data">No payment events in this period.</p>{% endif %}
+    </div>
+
+  </div><!-- /payments -->
+
+
+  <!-- ════════════════════════════════════════════════════════════════════════ -->
+  <!-- LIVE ACTIVITY TAB                                                      -->
+  <!-- ════════════════════════════════════════════════════════════════════════ -->
+  <div class="bi-section" id="tab-activity">
+
+    <div class="two-col" style="align-items:start;">
+      <div class="card">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem;">
+          <p class="card-title" style="margin:0"><i class="fas fa-satellite-dish me-1" style="color:var(--green)"></i> Live Activity Feed</p>
+          <div style="display:flex;align-items:center;gap:.5rem;">
+            <span id="feed-dot" style="width:8px;height:8px;background:var(--green);border-radius:50%;display:inline-block;animation:pulse 1.5s infinite;"></span>
+            <span style="font-size:.72rem;color:var(--green);font-weight:700;">Live</span>
+            <button id="feed-toggle" onclick="toggleFeed()" style="font-size:.72rem;padding:.2rem .6rem;border-radius:6px;border:1px solid var(--border);background:#fff;cursor:pointer;color:var(--muted);font-weight:600;">Pause</button>
+          </div>
+        </div>
+        <div id="feed-list">
+          {% for item in feed_items %}
+          <div class="feed-item">
+            <span class="feed-dot fd-{{ item.type }}"></span>
+            <div style="flex:1;min-width:0;">
+              <div class="feed-label">{{ item.label|truncatechars:60 }}</div>
+              {% if item.sub %}<div class="feed-sub">{{ item.sub }}</div>{% endif %}
+            </div>
+            <span class="feed-ts">{{ item.ts|date:"H:i:s" }}</span>
+          </div>
+          {% empty %}
+          <p class="no-data">No activity logged yet.</p>
+          {% endfor %}
+        </div>
+      </div>
+
+      <div>
+        <!-- Event type legend -->
+        <div class="card" style="margin-bottom:1.25rem;">
+          <p class="card-title"><i class="fas fa-tags me-1" style="color:var(--navy)"></i> Event Types</p>
+          <div style="display:flex;flex-direction:column;gap:.6rem;">
+            <div style="display:flex;align-items:center;gap:.6rem;font-size:.82rem;">
+              <span style="width:10px;height:10px;border-radius:50%;background:var(--blue);flex-shrink:0;"></span>
+              <strong>Search</strong> <span style="color:var(--muted)">— user typed into the search bar</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:.6rem;font-size:.82rem;">
+              <span style="width:10px;height:10px;border-radius:50%;background:var(--purple);flex-shrink:0;"></span>
+              <strong>View</strong> <span style="color:var(--muted)">— course / institution / article viewed</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:.6rem;font-size:.82rem;">
+              <span style="width:10px;height:10px;border-radius:50%;background:var(--green);flex-shrink:0;"></span>
+              <strong>Career</strong> <span style="color:var(--muted)">— career engine run completed</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:.6rem;font-size:.82rem;">
+              <span style="width:10px;height:10px;border-radius:50%;background:var(--amber);flex-shrink:0;"></span>
+              <strong>Event</strong> <span style="color:var(--muted)">— registration, payment, or system event</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Today at a glance -->
+        <div class="card">
+          <p class="card-title"><i class="fas fa-sun me-1" style="color:var(--amber)"></i> Today at a Glance</p>
+          <table class="bi-table">
+            <tbody>
+              <tr><td>New users</td><td><span class="badge b-blue">{{ new_today }}</span></td></tr>
+              <tr><td>Searches</td><td><span class="badge b-blue">{{ searches_today }}</span></td></tr>
+              <tr><td>Page views</td><td><span class="badge b-purple">{{ views_today }}</span></td></tr>
+              <tr><td>Career engine</td><td><span class="badge b-teal">{{ engine_today }}</span></td></tr>
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
-  </div>
 
-  <!-- ── Content Views ─────────────────────────────────────────────── -->
-  <h2 class="section-title">Most Viewed Content</h2>
-  <div class="two-col">
-    <div class="card">
-      <p class="section-title" style="font-size:.85rem;">Top Courses Viewed</p>
-      {% if top_courses_viewed %}
-      <table class="rank-table">
-        <thead><tr><th>#</th><th>Course</th><th>Views</th></tr></thead>
-        <tbody>
-        {% for row in top_courses_viewed %}
-        <tr>
-          <td><span class="rank-num">{{ forloop.counter }}</span></td>
-          <td>{{ row.object_name }}</td>
-          <td>
-            <span class="badge-pill pill-blue">{{ row.n }}</span>
-            <div class="rank-bar"><div class="rank-bar-fill" style="width:{% widthratio row.n top_courses_viewed.0.n 100 %}%"></div></div>
-          </td>
-        </tr>
-        {% endfor %}
-        </tbody>
-      </table>
-      {% else %}<p class="no-data">No course views logged yet.</p>{% endif %}
-    </div>
+  </div><!-- /activity -->
 
-    <div class="card">
-      <p class="section-title" style="font-size:.85rem;">Top Institutions Viewed</p>
-      {% if top_insts_viewed %}
-      <table class="rank-table">
-        <thead><tr><th>#</th><th>Institution</th><th>Views</th></tr></thead>
-        <tbody>
-        {% for row in top_insts_viewed %}
-        <tr>
-          <td><span class="rank-num">{{ forloop.counter }}</span></td>
-          <td>{{ row.object_name }}</td>
-          <td>
-            <span class="badge-pill pill-purple">{{ row.n }}</span>
-            <div class="rank-bar" style="--fill:var(--purple)"><div class="rank-bar-fill" style="width:{% widthratio row.n top_insts_viewed.0.n 100 %}%;background:var(--purple)"></div></div>
-          </td>
-        </tr>
-        {% endfor %}
-        </tbody>
-      </table>
-      {% else %}<p class="no-data">No institution views logged yet.</p>{% endif %}
-    </div>
-  </div>
+</div><!-- /bi-wrap -->
 
-  <!-- ── Downloads + Saved ─────────────────────────────────────────── -->
-  <h2 class="section-title">Downloads &amp; Saved Courses</h2>
-  <div class="two-col">
-    <div class="card">
-      <p class="section-title" style="font-size:.85rem;">Top Downloads</p>
-      {% if top_downloads %}
-      <table class="rank-table">
-        <thead><tr><th>#</th><th>Resource</th><th>Type</th><th>Downloads</th></tr></thead>
-        <tbody>
-        {% for row in top_downloads %}
-        <tr>
-          <td><span class="rank-num">{{ forloop.counter }}</span></td>
-          <td>{{ row.object_name }}</td>
-          <td><span class="badge-pill pill-amber">{{ row.content_type }}</span></td>
-          <td>{{ row.n }}</td>
-        </tr>
-        {% endfor %}
-        </tbody>
-      </table>
-      {% else %}<p class="no-data">No downloads logged yet.</p>{% endif %}
-    </div>
-
-    <div class="card">
-      <p class="section-title" style="font-size:.85rem;">Most Saved Programmes</p>
-      {% if top_saved %}
-      <table class="rank-table">
-        <thead><tr><th>#</th><th>Course</th><th>Type</th><th>Saves</th></tr></thead>
-        <tbody>
-        {% for row in top_saved %}
-        <tr>
-          <td><span class="rank-num">{{ forloop.counter }}</span></td>
-          <td>{{ row.course__name }}</td>
-          <td><span class="badge-pill pill-green">{{ row.course__course_type__name }}</span></td>
-          <td>{{ row.n }}</td>
-        </tr>
-        {% endfor %}
-        </tbody>
-      </table>
-      {% else %}<p class="no-data">No saved courses yet.</p>{% endif %}
-    </div>
-  </div>
-
-  <!-- ── Career Engine ─────────────────────────────────────────────── -->
-  <h2 class="section-title">Career Engine</h2>
-  <div class="three-col">
-    <!-- Pathway donut -->
-    <div class="card">
-      <p class="section-title" style="font-size:.85rem;">Pathway Distribution</p>
-      {% if pathway_dist %}
-      <div class="chart-wrap donut">
-        <canvas id="pathwayChart"></canvas>
-      </div>
-      {% else %}<p class="no-data">No engine data yet.</p>{% endif %}
-    </div>
-
-    <!-- Top mean grades -->
-    <div class="card">
-      <p class="section-title" style="font-size:.85rem;">Mean Grades Entered</p>
-      {% if top_grades %}
-      <table class="rank-table">
-        <thead><tr><th>Grade</th><th>Count</th></tr></thead>
-        <tbody>
-        {% for row in top_grades %}
-        <tr>
-          <td><strong>{{ row.mean_grade|upper }}</strong></td>
-          <td>
-            <span class="badge-pill pill-blue">{{ row.n }}</span>
-            <div class="rank-bar"><div class="rank-bar-fill" style="width:{% widthratio row.n top_grades.0.n 100 %}%"></div></div>
-          </td>
-        </tr>
-        {% endfor %}
-        </tbody>
-      </table>
-      {% else %}<p class="no-data">No grade data yet.</p>{% endif %}
-    </div>
-
-    <!-- Pathway breakdown table -->
-    <div class="card">
-      <p class="section-title" style="font-size:.85rem;">Pathway Breakdown</p>
-      {% if pathway_dist %}
-      <table class="rank-table">
-        <thead><tr><th>Pathway</th><th>Uses</th></tr></thead>
-        <tbody>
-        {% for row in pathway_dist %}
-        <tr>
-          <td>{{ row.pathway|title }}</td>
-          <td>
-            <span class="badge-pill {% if forloop.first %}pill-blue{% else %}pill-purple{% endif %}">{{ row.n }}</span>
-            <div class="rank-bar"><div class="rank-bar-fill" style="width:{% widthratio row.n pathway_dist.0.n 100 %}%"></div></div>
-          </td>
-        </tr>
-        {% endfor %}
-        </tbody>
-      </table>
-      {% else %}<p class="no-data">No engine usage yet.</p>{% endif %}
-    </div>
-  </div>
-
-</div><!-- end dash-wrap -->
+<style>
+@keyframes pulse {
+  0%,100% { opacity:1; transform:scale(1); }
+  50%      { opacity:.4; transform:scale(1.4); }
+}
+</style>
 
 <!-- Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
-(function(){
+(function () {
   'use strict';
-  const dates   = {{ chart_dates|safe }};
-  const regs    = {{ chart_regs|safe }};
-  const searches = {{ chart_searches|safe }};
-  const engine  = {{ chart_engine|safe }};
-  const views   = {{ chart_views|safe }};
 
-  // ── Activity line chart ──────────────────────────────────────────
+  /* ── Tab switching ── */
+  const tabs     = document.querySelectorAll('.bi-tab');
+  const sections = document.querySelectorAll('.bi-section');
+
+  function activateTab(name) {
+    tabs.forEach(t => t.classList.toggle('active', t.dataset.tab === name));
+    sections.forEach(s => s.classList.toggle('active', s.id === 'tab-' + name));
+    location.hash = name;
+  }
+
+  tabs.forEach(t => t.addEventListener('click', () => activateTab(t.dataset.tab)));
+
+  // Restore tab from URL hash
+  const hash = location.hash.replace('#', '');
+  if (hash && document.getElementById('tab-' + hash)) activateTab(hash);
+
+  /* ── Chart defaults ── */
+  Chart.defaults.font.family = "'Inter', system-ui, sans-serif";
+  Chart.defaults.font.size   = 11;
+  Chart.defaults.color       = '#64748b';
+
+  const PALETTE = ['#1e3a8a','#7c3aed','#0891b2','#16a34a','#d97706','#dc2626','#0ea5e9','#8b5cf6'];
+
+  function lineDataset(label, data, color, fill) {
+    return {
+      label, data,
+      borderColor: color,
+      backgroundColor: color.replace('rgb', 'rgba').replace(')', ',.08)') || color + '14',
+      tension: 0.35, fill: !!fill, pointRadius: 2, pointHoverRadius: 5, borderWidth: 2,
+    };
+  }
+
+  const labels   = {{ chart_labels|safe }};
+  const regs     = {{ chart_regs|safe }};
+  const searches = {{ chart_searches|safe }};
+  const engine   = {{ chart_engine|safe }};
+  const views    = {{ chart_views|safe }};
+  const payments = {{ chart_payments|safe }};
+
+  const baseOpts = {
+    responsive: true, maintainAspectRatio: false,
+    plugins: {
+      legend: { position: 'top', labels: { boxWidth: 10, padding: 12, font: { size: 11 } } },
+      tooltip: { mode: 'index', intersect: false, padding: 10 },
+    },
+    scales: {
+      x: { grid: { display: false }, ticks: { maxTicksLimit: 8, maxRotation: 0 } },
+      y: { beginAtZero: true, grid: { color: '#f1f5f9' }, ticks: { precision: 0 } },
+    },
+    interaction: { mode: 'index', intersect: false },
+  };
+
+  /* Overview: multi-line activity */
   const actCtx = document.getElementById('activityChart');
   if (actCtx) {
     new Chart(actCtx, {
       type: 'line',
-      data: {
-        labels: dates,
-        datasets: [
-          {
-            label: 'Registrations',
-            data: regs,
-            borderColor: '#1e3a8a',
-            backgroundColor: 'rgba(30,58,138,0.08)',
-            tension: 0.35,
-            fill: true,
-            pointRadius: 2,
-          },
-          {
-            label: 'Searches',
-            data: searches,
-            borderColor: '#d97706',
-            backgroundColor: 'rgba(217,119,6,0.07)',
-            tension: 0.35,
-            fill: true,
-            pointRadius: 2,
-          },
-          {
-            label: 'Career Engine',
-            data: engine,
-            borderColor: '#7c3aed',
-            backgroundColor: 'rgba(124,58,237,0.06)',
-            tension: 0.35,
-            fill: true,
-            pointRadius: 2,
-          },
-          {
-            label: 'Page Views',
-            data: views,
-            borderColor: '#16a34a',
-            backgroundColor: 'rgba(22,163,74,0.06)',
-            tension: 0.35,
-            fill: true,
-            pointRadius: 2,
-          },
-        ],
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: { position: 'top', labels: { font: { size: 12 }, boxWidth: 12 } },
-          tooltip: { mode: 'index', intersect: false },
-        },
-        scales: {
-          x: { grid: { display: false }, ticks: { maxTicksLimit: 10, font: { size: 11 } } },
-          y: { beginAtZero: true, ticks: { font: { size: 11 } }, grid: { color: '#f1f5f9' } },
-        },
+      data: { labels, datasets: [
+        lineDataset('Registrations', regs,     '#1e3a8a', true),
+        lineDataset('Searches',      searches,  '#d97706', true),
+        lineDataset('Career Engine', engine,    '#7c3aed', true),
+        lineDataset('Page Views',    views,     '#16a34a', false),
+        lineDataset('Payments',      payments,  '#0891b2', false),
+      ]},
+      options: baseOpts,
+    });
+  }
+
+  /* Pathway donut (overview) */
+  function makeDonut(id) {
+    const ctx = document.getElementById(id);
+    if (!ctx) return;
+    const pwLabels = {{ chart_pw_labels|safe }};
+    const pwData   = {{ chart_pw_data|safe }};
+    if (!pwData.length) return;
+    new Chart(ctx, {
+      type: 'doughnut',
+      data: { labels: pwLabels, datasets: [{ data: pwData, backgroundColor: PALETTE, borderWidth: 2, borderColor: '#fff', hoverOffset: 8 }] },
+      options: { responsive: true, maintainAspectRatio: false, cutout: '60%',
+        plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, padding: 10 } } } },
+    });
+  }
+  makeDonut('pathwayChart');
+  makeDonut('pathwayChart2');
+
+  /* Users tab: registration line */
+  const regCtx = document.getElementById('regChart');
+  if (regCtx) {
+    new Chart(regCtx, {
+      type: 'bar',
+      data: { labels, datasets: [{
+        label: 'New Registrations', data: regs,
+        backgroundColor: 'rgba(30,58,138,.75)', borderRadius: 4, borderSkipped: false,
+      }]},
+      options: { ...baseOpts, plugins: { ...baseOpts.plugins, legend: { display: false } } },
+    });
+  }
+
+  /* Career tab: engine activity */
+  const engCtx = document.getElementById('engineChart');
+  if (engCtx) {
+    new Chart(engCtx, {
+      type: 'line',
+      data: { labels, datasets: [lineDataset('Career Engine Runs', engine, '#0891b2', true)] },
+      options: { ...baseOpts, plugins: { ...baseOpts.plugins, legend: { display: false } } },
+    });
+  }
+
+  /* Career tab: grade bar chart */
+  const gradeCtx = document.getElementById('gradeChart');
+  if (gradeCtx) {
+    const gradeLabels = {{ chart_grade_labels|safe }};
+    const gradeData   = {{ chart_grade_data|safe }};
+    new Chart(gradeCtx, {
+      type: 'bar',
+      data: { labels: gradeLabels, datasets: [{
+        label: 'Students', data: gradeData,
+        backgroundColor: PALETTE.slice(0, gradeData.length), borderRadius: 4,
+      }]},
+      options: { ...baseOpts,
+        plugins: { ...baseOpts.plugins, legend: { display: false } },
+        indexAxis: 'y',
       },
     });
   }
 
-  // ── Pathway donut ────────────────────────────────────────────────
-  const pwLabels = {{ chart_pw_labels|safe }};
-  const pwData   = {{ chart_pw_data|safe }};
-  const pwCtx    = document.getElementById('pathwayChart');
-  if (pwCtx && pwData.length) {
-    const PALETTE = ['#1e3a8a','#7c3aed','#0891b2','#16a34a','#d97706','#dc2626'];
-    new Chart(pwCtx, {
-      type: 'doughnut',
-      data: {
-        labels: pwLabels,
-        datasets: [{
-          data: pwData,
-          backgroundColor: PALETTE.slice(0, pwData.length),
-          borderWidth: 2,
-          borderColor: '#fff',
-          hoverOffset: 8,
-        }],
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        cutout: '62%',
-        plugins: {
-          legend: { position: 'bottom', labels: { font: { size: 11 }, boxWidth: 12 } },
-        },
-      },
+  /* Payments tab: completed payments bar */
+  const payCtx = document.getElementById('payChart');
+  if (payCtx) {
+    new Chart(payCtx, {
+      type: 'bar',
+      data: { labels, datasets: [{
+        label: 'Completed Payments', data: payments,
+        backgroundColor: 'rgba(22,163,74,.75)', borderRadius: 4, borderSkipped: false,
+      }]},
+      options: { ...baseOpts, plugins: { ...baseOpts.plugins, legend: { display: false } } },
     });
   }
-})();
+
+  /* ── Live feed auto-refresh ── */
+  let feedInterval = null;
+  let feedRunning  = true;
+
+  function refreshFeed() {
+    fetch('{% url "analytics:live_feed" %}')
+      .then(r => r.json())
+      .then(data => {
+        const list = document.getElementById('feed-list');
+        if (!list || !data.items) return;
+        list.innerHTML = data.items.map(item => `
+          <div class="feed-item">
+            <span class="feed-dot fd-${item.type}"></span>
+            <div style="flex:1;min-width:0;">
+              <div class="feed-label">${item.label}</div>
+              ${item.sub ? `<div class="feed-sub">${item.sub}</div>` : ''}
+            </div>
+            <span class="feed-ts">${item.ts}</span>
+          </div>`).join('');
+      })
+      .catch(() => {});
+  }
+
+  window.toggleFeed = function () {
+    const btn = document.getElementById('feed-toggle');
+    const dot = document.getElementById('feed-dot');
+    if (feedRunning) {
+      clearInterval(feedInterval);
+      feedRunning = false;
+      btn.textContent = 'Resume';
+      dot.style.animation = 'none';
+      dot.style.background = 'var(--muted)';
+    } else {
+      feedInterval = setInterval(refreshFeed, 15000);
+      feedRunning  = true;
+      btn.textContent = 'Pause';
+      dot.style.animation = '';
+      dot.style.background = 'var(--green)';
+    }
+  };
+
+  // Start live feed only when activity tab is active
+  document.querySelectorAll('.bi-tab').forEach(t => {
+    if (t.dataset.tab === 'activity') {
+      t.addEventListener('click', () => {
+        if (feedRunning && !feedInterval) {
+          feedInterval = setInterval(refreshFeed, 15000);
+        }
+      });
+    }
+  });
+}());
 </script>
 {% endblock %}

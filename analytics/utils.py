@@ -1,6 +1,5 @@
 """
-Lightweight logging helpers — all wrapped in try/except so they never
-break the main request flow if the analytics DB table is unavailable.
+Logging helpers — all wrapped in try/except so they never break the main request.
 """
 
 
@@ -16,6 +15,14 @@ def _session_key(request):
 def _user(request):
     try:
         return request.user if request.user.is_authenticated else None
+    except Exception:
+        return None
+
+
+def _get_ip(request):
+    try:
+        xff = request.META.get('HTTP_X_FORWARDED_FOR')
+        return xff.split(',')[0].strip() if xff else request.META.get('REMOTE_ADDR')
     except Exception:
         return None
 
@@ -71,5 +78,36 @@ def log_career_engine(request, pathway: str, result_count: int = 0, mean_grade: 
             user=_user(request),
             session_key=_session_key(request),
         )
+    except Exception:
+        pass
+
+
+def log_event(request, name: str, properties: dict = None):
+    """Generic event — use for calculator runs, quiz completions, OCR scans, etc."""
+    try:
+        from .models import EventLog
+        EventLog.objects.create(
+            name=name[:80],
+            properties=properties or {},
+            user=_user(request),
+            session_key=_session_key(request),
+            ip=_get_ip(request),
+        )
+    except Exception:
+        pass
+
+
+def track_posthog(distinct_id: str, event: str, properties: dict = None):
+    """Server-side PostHog capture. Fire-and-forget, never raises."""
+    try:
+        import posthog
+        from django.conf import settings
+        key  = getattr(settings, 'POSTHOG_API_KEY', '')
+        host = getattr(settings, 'POSTHOG_HOST', 'https://us.i.posthog.com')
+        if not key:
+            return
+        posthog.api_key = key
+        posthog.host    = host
+        posthog.capture(distinct_id, event, properties or {})
     except Exception:
         pass

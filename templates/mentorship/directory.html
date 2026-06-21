@@ -2,167 +2,229 @@
 {% block title %}Mentorship — Talk to a Real Student | CareerNext{% endblock %}
 
 {% block content %}
-<div class="container py-5">
 
-  <!-- Hero -->
-  <div class="row justify-content-center mb-5">
-    <div class="col-lg-8 text-center">
-      <span class="badge bg-primary bg-opacity-10 text-primary fw-semibold px-3 py-2 rounded-pill mb-3 d-inline-block">
-        <i class="bi bi-people-fill me-1"></i> Peer Mentorship
-      </span>
-      <h1 class="display-5 fw-bold mb-3">Talk to Someone Already There</h1>
-      <p class="lead text-muted mb-4">
-        Book a 15-minute WhatsApp call with a current university or KMTC student
-        studying the course you're considering. Real insights. Real people. KES 100.
-      </p>
-      <div class="d-flex flex-wrap justify-content-center gap-3 mb-4">
-        <div class="d-flex align-items-center gap-2 text-muted small">
-          <i class="bi bi-check-circle-fill text-success fs-5"></i>
-          15-minute voice/video call
+<!-- ── Hero ──────────────────────────────────────────────────────────────── -->
+<div class="mentor-hero py-5 mb-0">
+  <div class="container">
+    <div class="row justify-content-center text-center">
+      <div class="col-lg-7">
+        <span class="badge bg-white bg-opacity-20 text-white fw-semibold px-3 py-2 rounded-pill mb-3 d-inline-flex align-items-center gap-2" style="border:1px solid rgba(255,255,255,.3);">
+          <i class="bi bi-patch-check-fill text-warning"></i> Verified Current Students
+        </span>
+        <h1 class="display-5 fw-800 mb-3" style="color:#fff;letter-spacing:-.5px;">
+          Talk to Someone Already There
+        </h1>
+        <p class="mb-4" style="color:rgba(255,255,255,.85);font-size:1.1rem;max-width:520px;margin:0 auto 1.5rem;">
+          15-minute WhatsApp call with a real university or KMTC student. Honest answers, real insights. <strong style="color:#fde68a;">KES 100.</strong>
+        </p>
+
+        <!-- Trust pills -->
+        <div class="d-flex flex-wrap justify-content-center gap-3 mb-4">
+          <div class="hero-pill"><i class="bi bi-clock me-1"></i>15-min session</div>
+          <div class="hero-pill"><i class="bi bi-phone me-1"></i>M-Pesa payment</div>
+          <div class="hero-pill"><i class="bi bi-shield-check me-1"></i>ID-verified mentors</div>
         </div>
-        <div class="d-flex align-items-center gap-2 text-muted small">
-          <i class="bi bi-check-circle-fill text-success fs-5"></i>
-          Pay via M-Pesa
-        </div>
-        <div class="d-flex align-items-center gap-2 text-muted small">
-          <i class="bi bi-check-circle-fill text-success fs-5"></i>
-          Verified students only
-        </div>
-      </div>
-      {% if user.is_authenticated %}
-        {% if not user.mentor_profile %}
-          <a href="{% url 'mentorship:become_mentor' %}" class="btn btn-outline-primary btn-sm rounded-pill px-4">
-            <i class="bi bi-mortarboard me-1"></i> Become a Mentor — Earn KES 70/session
-          </a>
+
+        {% if user.is_authenticated %}
+          {% if not user.mentor_profile %}
+            <a href="{% url 'mentorship:become_mentor' %}" class="btn btn-warning fw-700 rounded-pill px-4 py-2">
+              <i class="bi bi-mortarboard me-2"></i>Become a Mentor — Earn KES 70/session
+            </a>
+          {% else %}
+            <a href="{% url 'mentorship:dashboard' %}" class="btn btn-warning fw-700 rounded-pill px-4 py-2">
+              <i class="bi bi-speedometer2 me-2"></i>My Mentor Dashboard
+            </a>
+          {% endif %}
         {% else %}
-          <a href="{% url 'mentorship:dashboard' %}" class="btn btn-outline-primary btn-sm rounded-pill px-4">
-            <i class="bi bi-speedometer2 me-1"></i> My Mentor Dashboard
+          <a href="{% url 'mentorship:become_mentor' %}" class="btn btn-warning fw-700 rounded-pill px-4 py-2">
+            <i class="bi bi-mortarboard me-2"></i>Become a Mentor — Earn KES 70/session
           </a>
         {% endif %}
-      {% else %}
-        <a href="{% url 'mentorship:become_mentor' %}" class="btn btn-outline-primary btn-sm rounded-pill px-4">
-          <i class="bi bi-mortarboard me-1"></i> Become a Mentor — Earn KES 70/session
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── How it works strip ──────────────────────────────────────────────── -->
+<div class="hiw-strip py-3 mb-4">
+  <div class="container">
+    <div class="row g-0 justify-content-center text-center">
+      <div class="col-auto hiw-step">
+        <div class="hiw-num">1</div>
+        <div class="hiw-label">Find a mentor<br><span>Search by course</span></div>
+      </div>
+      <div class="col-auto hiw-arrow"><i class="bi bi-chevron-right"></i></div>
+      <div class="col-auto hiw-step">
+        <div class="hiw-num">2</div>
+        <div class="hiw-label">Book a slot<br><span>Pick a time</span></div>
+      </div>
+      <div class="col-auto hiw-arrow"><i class="bi bi-chevron-right"></i></div>
+      <div class="col-auto hiw-step">
+        <div class="hiw-num">3</div>
+        <div class="hiw-label">Pay KES 100<br><span>via M-Pesa</span></div>
+      </div>
+      <div class="col-auto hiw-arrow"><i class="bi bi-chevron-right"></i></div>
+      <div class="col-auto hiw-step">
+        <div class="hiw-num">4</div>
+        <div class="hiw-label">WhatsApp call<br><span>15 minutes, real talk</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Search & Filters ────────────────────────────────────────────────── -->
+<div class="container mb-5">
+  <div class="row justify-content-center">
+    <div class="col-lg-9">
+      <div class="card border-0 shadow-sm rounded-4 p-3 p-md-4">
+        <form method="get">
+          <div class="row g-2 align-items-end">
+            <div class="col-12 col-md">
+              <div class="input-group input-group-lg">
+                <span class="input-group-text bg-white border-end-0 rounded-start-pill ps-3">
+                  <i class="bi bi-search text-muted"></i>
+                </span>
+                <input
+                  type="text" name="q" value="{{ query }}"
+                  class="form-control border-start-0 rounded-end-pill pe-4"
+                  style="box-shadow:none;"
+                  placeholder="Search by course, university, or name…"
+                >
+              </div>
+            </div>
+            <div class="col-6 col-md-auto">
+              <select name="institution" class="form-select rounded-pill">
+                <option value="">All Institutions</option>
+                {% for inst in institutions %}
+                  <option value="{{ inst.pk }}" {% if filter_institution == inst.pk|stringformat:"s" %}selected{% endif %}>
+                    {{ inst.name }}
+                  </option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-6 col-md-auto">
+              <select name="year" class="form-select rounded-pill">
+                <option value="">Any Year</option>
+                {% for val, label in year_choices %}
+                  <option value="{{ val }}" {% if filter_year == val|stringformat:"s" %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-6 col-md-auto">
+              <select name="rating" class="form-select rounded-pill">
+                <option value="">Any Rating</option>
+                <option value="4" {% if filter_rating == "4" %}selected{% endif %}>★★★★+ (4+)</option>
+                <option value="3" {% if filter_rating == "3" %}selected{% endif %}>★★★+ (3+)</option>
+              </select>
+            </div>
+            <div class="col-6 col-md-auto d-flex gap-2">
+              <button type="submit" class="btn btn-primary rounded-pill px-4 fw-semibold flex-grow-1">Search</button>
+              {% if query or filter_institution or filter_year or filter_rating %}
+                <a href="{% url 'mentorship:directory' %}" class="btn btn-outline-secondary rounded-pill px-3" title="Clear filters">
+                  <i class="bi bi-x-lg"></i>
+                </a>
+              {% endif %}
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Results ────────────────────────────────────────────────────────── -->
+<div class="container pb-5">
+
+  {% if mentors %}
+    <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-2">
+      <h6 class="fw-700 mb-0 text-muted" style="font-size:.85rem;letter-spacing:.02em;">
+        {{ mentors|length }} mentor{{ mentors|length|pluralize }}
+        {% if query %}for "{{ query }}"{% endif %}
+        with open slots
+      </h6>
+      {% if query or filter_institution or filter_year or filter_rating %}
+        <a href="{% url 'mentorship:directory' %}" class="btn btn-sm btn-outline-secondary rounded-pill px-3">
+          <i class="bi bi-x-circle me-1"></i>Clear filters
         </a>
       {% endif %}
     </div>
-  </div>
 
-  <!-- Search & Filters -->
-  <div class="row justify-content-center mb-5">
-    <div class="col-lg-8">
-      <form method="get">
-        <div class="d-flex gap-2 mb-3">
-          <input
-            type="text" name="q" value="{{ query }}"
-            class="form-control form-control-lg rounded-pill px-4 shadow-sm"
-            placeholder="Search by course, university, or name…"
-          >
-          <button class="btn btn-primary rounded-pill px-4 fw-semibold" type="submit">Search</button>
-          {% if query or filter_institution or filter_year or filter_rating %}
-            <a href="{% url 'mentorship:directory' %}" class="btn btn-outline-secondary rounded-pill px-3">Clear</a>
-          {% endif %}
-        </div>
-        <!-- Filter row -->
-        <div class="d-flex flex-wrap gap-2 justify-content-center">
-          <select name="institution" class="form-select form-select-sm rounded-pill" style="width:auto;min-width:180px;">
-            <option value="">All Universities</option>
-            {% for inst in institutions %}
-              <option value="{{ inst.pk }}" {% if filter_institution == inst.pk|stringformat:"s" %}selected{% endif %}>
-                {{ inst.name }}
-              </option>
-            {% endfor %}
-          </select>
-          <select name="year" class="form-select form-select-sm rounded-pill" style="width:auto;">
-            <option value="">Any Year</option>
-            {% for val, label in year_choices %}
-              <option value="{{ val }}" {% if filter_year == val|stringformat:"s" %}selected{% endif %}>{{ label }}</option>
-            {% endfor %}
-          </select>
-          <select name="rating" class="form-select form-select-sm rounded-pill" style="width:auto;">
-            <option value="">Any Rating</option>
-            <option value="4" {% if filter_rating == "4" %}selected{% endif %}>★★★★+ (4+)</option>
-            <option value="3" {% if filter_rating == "3" %}selected{% endif %}>★★★+ (3+)</option>
-          </select>
-          <button type="submit" class="btn btn-outline-primary btn-sm rounded-pill px-3">Apply Filters</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- Results -->
-  {% if mentors %}
     <div class="row g-4">
       {% for mentor in mentors %}
         <div class="col-sm-6 col-lg-4">
-          <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden mentor-card" style="transition: box-shadow .2s">
-            <!-- Header gradient strip -->
-            <div style="height: 6px; background: linear-gradient(90deg, #1e3a8a, #3b82f6);"></div>
+          <div class="mentor-card h-100">
+            <!-- Colour bar -->
+            <div class="mentor-card-bar"></div>
 
-            <div class="card-body p-4">
+            <div class="mentor-card-body">
+              <!-- Top row: avatar + name + rating -->
               <div class="d-flex align-items-start gap-3 mb-3">
-                <!-- Avatar -->
                 {% if mentor.photo %}
-                  <img src="{{ mentor.photo.url }}" class="rounded-circle object-fit-cover flex-shrink-0"
-                       width="60" height="60" alt="{{ mentor.display_name }}">
+                  <img src="{{ mentor.photo.url }}"
+                       class="mentor-avatar object-fit-cover flex-shrink-0"
+                       alt="{{ mentor.display_name }}">
                 {% else %}
-                  <div class="rounded-circle bg-primary bg-opacity-10 d-flex align-items-center justify-content-center flex-shrink-0"
-                       style="width:60px;height:60px;">
-                    <span class="fw-bold text-primary fs-4">{{ mentor.display_name|first|upper }}</span>
+                  <div class="mentor-avatar-initials flex-shrink-0">
+                    {{ mentor.display_name|first|upper }}
                   </div>
                 {% endif %}
 
-                <div class="min-w-0">
-                  <h5 class="fw-bold mb-0 text-truncate">{{ mentor.display_name }}</h5>
-                  <div class="text-muted small">{{ mentor.get_year_of_study_display }}</div>
-                  <!-- Star rating -->
+                <div class="min-w-0 flex-grow-1">
+                  <h5 class="fw-800 mb-0 text-truncate" style="font-size:1rem;">{{ mentor.display_name }}</h5>
+                  <div class="text-muted" style="font-size:.8rem;">{{ mentor.get_year_of_study_display }}</div>
                   {% if mentor.total_sessions > 0 %}
-                    <div class="mt-1">
+                    <div class="d-flex align-items-center gap-1 mt-1">
                       {% for i in "12345" %}
-                        {% if forloop.counter <= mentor.rating_int %}
-                          <i class="bi bi-star-fill text-warning" style="font-size:.75rem;"></i>
-                        {% else %}
-                          <i class="bi bi-star text-warning" style="font-size:.75rem;"></i>
-                        {% endif %}
+                        <i class="bi bi-star{% if forloop.counter <= mentor.rating_int %}-fill{% endif %} text-warning"
+                           style="font-size:.7rem;"></i>
                       {% endfor %}
-                      <span class="text-muted ms-1" style="font-size:.75rem;">
-                        {{ mentor.average_rating|floatformat:1 }} ({{ mentor.total_sessions }} session{{ mentor.total_sessions|pluralize }})
+                      <span class="text-muted ms-1" style="font-size:.72rem;">
+                        {{ mentor.average_rating|floatformat:1 }} · {{ mentor.total_sessions }} session{{ mentor.total_sessions|pluralize }}
                       </span>
                     </div>
                   {% else %}
-                    <span class="badge bg-secondary bg-opacity-10 text-secondary mt-1" style="font-size:.7rem;">New mentor</span>
+                    <span class="badge rounded-pill mt-1" style="font-size:.68rem;background:#f0f9ff;color:#0369a1;">New mentor</span>
                   {% endif %}
                 </div>
+
+                <!-- Price pill -->
+                <div class="mentor-price flex-shrink-0">KES 100</div>
               </div>
 
-              <!-- Course & institution -->
-              <div class="mb-3">
+              <!-- Course & Institution -->
+              <div class="mentor-meta mb-2">
                 {% if mentor.course %}
-                  <div class="fw-semibold text-dark small mb-1 text-truncate">
-                    <i class="bi bi-book text-primary me-1"></i>{{ mentor.course.name }}
+                  <div class="mentor-meta-item">
+                    <i class="bi bi-book-fill text-primary"></i>
+                    <span class="text-truncate">{{ mentor.course.name }}</span>
                   </div>
                 {% endif %}
                 {% if mentor.institution %}
-                  <div class="text-muted small text-truncate">
-                    <i class="bi bi-building me-1"></i>{{ mentor.institution.name }}
+                  <div class="mentor-meta-item">
+                    <i class="bi bi-building text-secondary"></i>
+                    <span class="text-truncate">{{ mentor.institution.name }}</span>
                   </div>
                 {% endif %}
               </div>
 
-              <!-- Bio excerpt -->
-              <p class="text-muted small mb-3" style="display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;">
-                {{ mentor.bio }}
-              </p>
+              <!-- Bio -->
+              <p class="mentor-bio">{{ mentor.bio }}</p>
 
-              <!-- Availability badge -->
-              <div class="d-flex align-items-center justify-content-between">
+              <!-- Footer: availability + CTA -->
+              <div class="d-flex align-items-center justify-content-between gap-2 mt-auto">
                 {% with slots=mentor.available_slots_count %}
-                  <span class="badge {% if slots > 0 %}bg-success{% else %}bg-secondary{% endif %} bg-opacity-10
-                               {% if slots > 0 %}text-success{% else %}text-secondary{% endif %} rounded-pill px-3 py-2">
-                    <i class="bi bi-calendar-check me-1"></i>
-                    {% if slots > 0 %}{{ slots }} slot{{ slots|pluralize }} open{% else %}No slots{% endif %}
-                  </span>
+                  {% if slots > 0 %}
+                    <span class="avail-badge avail-open">
+                      <i class="bi bi-calendar-check me-1"></i>{{ slots }} slot{{ slots|pluralize }} open
+                    </span>
+                  {% else %}
+                    <span class="avail-badge avail-closed">
+                      <i class="bi bi-calendar-x me-1"></i>No open slots
+                    </span>
+                  {% endif %}
                 {% endwith %}
-                <a href="{% url 'mentorship:mentor_profile' mentor.pk %}" class="btn btn-primary btn-sm rounded-pill px-3">
+                <a href="{% url 'mentorship:mentor_profile' mentor.pk %}"
+                   class="btn btn-primary btn-sm rounded-pill px-3 fw-semibold">
                   View Profile
                 </a>
               </div>
@@ -173,18 +235,19 @@
     </div>
 
   {% else %}
+    <!-- Empty state -->
     <div class="text-center py-5">
-      <div class="mb-3">
-        <i class="bi bi-people display-4 text-muted opacity-50"></i>
+      <div class="empty-icon mb-3">
+        <i class="bi bi-people"></i>
       </div>
       {% if query %}
-        <h5 class="text-muted">No mentors match "{{ query }}"</h5>
-        <p class="text-muted small">Try a different course name or university.</p>
-        <a href="{% url 'mentorship:directory' %}" class="btn btn-outline-primary rounded-pill mt-2">Clear search</a>
+        <h5 class="fw-700 mb-2">No mentors match "{{ query }}"</h5>
+        <p class="text-muted small mb-4">Try a different course name or university, or clear all filters.</p>
+        <a href="{% url 'mentorship:directory' %}" class="btn btn-outline-primary rounded-pill px-4">Clear search</a>
       {% else %}
-        <h5 class="text-muted">No mentors with open slots right now</h5>
-        <p class="text-muted small">Check back soon — or be the first mentor in your course!</p>
-        <a href="{% url 'mentorship:become_mentor' %}" class="btn btn-primary rounded-pill mt-2">Become a Mentor</a>
+        <h5 class="fw-700 mb-2">No mentors with open slots right now</h5>
+        <p class="text-muted small mb-4">Check back soon — or be the first mentor in your course!</p>
+        <a href="{% url 'mentorship:become_mentor' %}" class="btn btn-primary rounded-pill px-4 fw-semibold">Become a Mentor</a>
       {% endif %}
     </div>
   {% endif %}
@@ -192,6 +255,184 @@
 </div>
 
 <style>
-.mentor-card:hover { box-shadow: 0 8px 30px rgba(30,58,138,.15) !important; }
+/* ── Hero ── */
+.mentor-hero {
+  background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 60%, #06b6d4 100%);
+  position: relative;
+  overflow: hidden;
+}
+.mentor-hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+}
+.hero-pill {
+  background: rgba(255,255,255,.15);
+  border: 1px solid rgba(255,255,255,.25);
+  color: #fff;
+  font-size: .8rem;
+  padding: .35rem .9rem;
+  border-radius: 999px;
+  font-weight: 600;
+}
+
+/* ── How it works ── */
+.hiw-strip {
+  background: #f8faff;
+  border-bottom: 1px solid #e9eeff;
+}
+.hiw-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: .3rem;
+  padding: .5rem 1.2rem;
+}
+.hiw-num {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #1e3a8a;
+  color: #fff;
+  font-weight: 800;
+  font-size: .85rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.hiw-label {
+  font-size: .75rem;
+  font-weight: 700;
+  color: #1e293b;
+  text-align: center;
+  line-height: 1.3;
+}
+.hiw-label span {
+  font-weight: 400;
+  color: #64748b;
+}
+.hiw-arrow {
+  display: flex;
+  align-items: center;
+  color: #94a3b8;
+  font-size: .9rem;
+  padding: 0 .25rem;
+}
+@media(max-width:576px){ .hiw-arrow { display: none; } }
+
+/* ── Mentor card ── */
+.mentor-card {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 2px 12px rgba(30,58,138,.07);
+  border: 1px solid #e9eeff;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: box-shadow .2s, transform .2s;
+}
+.mentor-card:hover {
+  box-shadow: 0 8px 32px rgba(30,58,138,.15);
+  transform: translateY(-2px);
+}
+.mentor-card-bar {
+  height: 5px;
+  background: linear-gradient(90deg, #1e3a8a, #3b82f6, #06b6d4);
+}
+.mentor-card-body {
+  padding: 1.25rem 1.25rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+.mentor-avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: 2.5px solid #e9eeff;
+}
+.mentor-avatar-initials {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #e0e7ff, #bfdbfe);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: #1e3a8a;
+  border: 2.5px solid #e9eeff;
+}
+.mentor-price {
+  font-size: .7rem;
+  font-weight: 800;
+  color: #16a34a;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 999px;
+  padding: .2rem .6rem;
+  white-space: nowrap;
+  align-self: flex-start;
+}
+.mentor-meta { display: flex; flex-direction: column; gap: .25rem; }
+.mentor-meta-item {
+  display: flex;
+  align-items: center;
+  gap: .4rem;
+  font-size: .78rem;
+  color: #475569;
+  min-width: 0;
+}
+.mentor-meta-item i { flex-shrink: 0; font-size: .8rem; }
+.mentor-meta-item span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mentor-bio {
+  font-size: .8rem;
+  color: #64748b;
+  margin: .75rem 0 .75rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  line-height: 1.5;
+}
+.avail-badge {
+  font-size: .72rem;
+  font-weight: 700;
+  padding: .28rem .75rem;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+.avail-open  { background:#f0fdf4; color:#15803d; border:1px solid #bbf7d0; }
+.avail-closed { background:#f8fafc; color:#64748b; border:1px solid #e2e8f0; }
+
+/* ── Empty state ── */
+.empty-icon {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: #f1f5f9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  color: #94a3b8;
+  margin: 0 auto;
+}
+
+/* ── Dark mode ── */
+[data-bs-theme="dark"] .mentor-card { background:#1e293b; border-color:#334155; }
+[data-bs-theme="dark"] .mentor-avatar { border-color:#334155; }
+[data-bs-theme="dark"] .mentor-avatar-initials { background:linear-gradient(135deg,#1e3a8a,#1d4ed8); border-color:#334155; }
+[data-bs-theme="dark"] .hiw-strip { background:#1e293b; border-bottom-color:#334155; }
+[data-bs-theme="dark"] .hiw-label { color:#e2e8f0; }
+[data-bs-theme="dark"] .mentor-meta-item { color:#94a3b8; }
+[data-bs-theme="dark"] .mentor-bio { color:#94a3b8; }
+[data-bs-theme="dark"] .avail-closed { background:#0f172a; color:#64748b; border-color:#334155; }
+[data-bs-theme="dark"] .mentor-price { background:#052e16; color:#4ade80; border-color:#166534; }
+[data-bs-theme="dark"] .empty-icon { background:#334155; color:#64748b; }
+[data-bs-theme="dark"] .hero-pill { background:rgba(255,255,255,.1); }
 </style>
+
 {% endblock %}

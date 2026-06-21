@@ -525,11 +525,13 @@
                     </li>
                     {% else %}
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'accounts:login' %}">Login</a>
+                        <a class="nav-link" href="{% url 'accounts:login' %}"
+                       data-ph-event="nav_login_clicked">Login</a>
                     </li>
                     <li class="nav-item ms-2">
                         <a class="btn btn-gradient-success px-4 py-2 fw-semibold"
-                           href="{% url 'accounts:register' %}">
+                           href="{% url 'accounts:register' %}"
+                           data-ph-event="nav_register_clicked">
                             Get Started
                         </a>
                     </li>
@@ -543,12 +545,16 @@
     <div id="deadlineBar" style="display:none;background:linear-gradient(90deg,#dc2626,#b91c1c);color:white;font-size:0.8rem;padding:7px 0;position:relative;z-index:999;">
         <div class="container d-flex align-items-center justify-content-between gap-2 flex-wrap">
             <div class="d-flex align-items-center gap-2 flex-wrap">
-                <span style="font-weight:800;letter-spacing:0.04em;">⏰ KUCCPS</span>
+                <span style="font-weight:800;letter-spacing:0.04em;">⏰ KUCCPS 2026</span>
                 <span id="deadlineMsg" style="font-weight:600;"></span>
                 <span id="deadlineCounter" style="background:rgba(255,255,255,0.2);border-radius:6px;padding:2px 10px;font-weight:800;font-size:0.85rem;letter-spacing:0.03em;"></span>
             </div>
             <div class="d-flex align-items-center gap-3">
+                {% if user.is_authenticated %}
                 <a href="{% url 'career:home' %}" style="color:white;font-weight:700;font-size:0.78rem;white-space:nowrap;text-decoration:underline;">Check My Eligibility →</a>
+                {% else %}
+                <a href="{% url 'clusterpoints:calculator' %}" style="color:white;font-weight:700;font-size:0.78rem;white-space:nowrap;text-decoration:underline;">Calculate My Points Free →</a>
+                {% endif %}
                 <button onclick="dismissDeadlineBar()" style="background:none;border:none;color:rgba(255,255,255,0.7);font-size:1.1rem;padding:0;cursor:pointer;line-height:1;" aria-label="Dismiss">×</button>
             </div>
         </div>
@@ -943,6 +949,83 @@ if ('serviceWorker' in navigator) {
 }
 </script>
 
+{% if SENTRY_DSN %}
+{# Sentry Browser SDK — tracing + session replay bundle #}
+<script
+  src="https://browser.sentry-cdn.com/8.45.1/bundle.tracing.replay.min.js"
+  crossorigin="anonymous"
+></script>
+<script>
+Sentry.init({
+  dsn: '{{ SENTRY_DSN }}',
+  release: '{{ SENTRY_RELEASE }}',
+  environment: '{{ SENTRY_ENVIRONMENT }}',
+
+  integrations: [
+    Sentry.browserTracingIntegration(),
+    Sentry.replayIntegration({
+      maskAllText: true,    // privacy: all text is masked in session replays
+      blockAllMedia: true,  // privacy: images/video blocked in replays
+    }),
+  ],
+
+  // Performance: trace 10 % of page loads — matches backend sample rate
+  tracesSampleRate: 0.1,
+  // Replay: record 5 % of all sessions; 100 % of sessions that hit an error
+  replaysSessionSampleRate: 0.05,
+  replaysOnErrorSampleRate: 1.0,
+});
+
+// Associate replays and errors with the logged-in user (ID only — no email)
+{% if user.is_authenticated %}
+Sentry.setUser({ id: '{{ user.pk }}' });
+{% endif %}
+</script>
+{% endif %}
+
+{% if POSTHOG_API_KEY %}
+<script>
+!function(t,e){var o,n,p,r;e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement("script")).type="text/javascript",p.crossOrigin="anonymous",p.async=!0,p.src=s.api_host.replace(".i.posthog.com","-assets.i.posthog.com")+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.toString(1)+" (stub)"},o="init capture register register_once register_for_session unregister unregister_for_session getFeatureFlag getFeatureFlagPayload isFeatureEnabled reloadFeatureFlags updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures on onFeatureFlags onSessionId getSurveys getActiveMatchingSurveys renderSurvey canRenderSurvey identify setPersonProperties group resetGroups setPersonPropertiesForFlags resetPersonPropertiesForFlags setGroupPropertiesForFlags resetGroupPropertiesForFlags reset get_distinct_id getGroups get_session_id get_session_replay_url alias set_config startSessionRecording stopSessionRecording sessionRecordingStarted captureException loadToolbar get_property getSessionProperty createPersonProfile opt_in_capturing opt_out_capturing has_opted_in_capturing has_opted_out_capturing clear_opt_in_out_capturing debug".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);
+posthog.init('{{ POSTHOG_API_KEY }}', {
+  api_host: '{{ POSTHOG_HOST }}',
+  capture_pageview: true,
+  capture_pageleave: true,
+  autocapture: true,
+  persistence: 'localStorage+cookie',
+});
+{% if user.is_authenticated %}
+posthog.identify('{{ user.pk }}', {
+  email: '{{ user.email }}',
+  name: '{{ user.full_name|default:"" }}',
+  is_google: {{ user.is_google_user|yesno:"true,false" }},
+  is_verified: {{ user.is_verified|yesno:"true,false" }},
+});
+{% endif %}
+
+// ── Named event system ────────────────────────────────────────────────────────
+// Any element with data-ph-event="event_name" fires a named PostHog event on click.
+// Optional data-ph-props='{"key":"value"}' adds extra properties.
+// Works for guests and logged-in users alike.
+document.addEventListener('click', function (e) {
+  var el = e.target.closest('[data-ph-event]');
+  if (!el) return;
+  var name  = el.getAttribute('data-ph-event');
+  var extra = {};
+  try { extra = JSON.parse(el.getAttribute('data-ph-props') || '{}'); } catch (_) {}
+  posthog.capture(name, Object.assign({
+    is_guest: {{ user.is_authenticated|yesno:"false,true" }},
+    url: window.location.pathname,
+  }, extra));
+}, { passive: true });
+
+// ── Core funnel events ────────────────────────────────────────────────────────
+// Fired from JS where a data attribute isn't practical (e.g. form submits).
+window._ph = function (name, props) {
+  if (typeof posthog !== 'undefined') posthog.capture(name, Object.assign({ is_guest: {{ user.is_authenticated|yesno:"false,true" }} }, props || {}));
+};
+</script>
+{% endif %}
+
 <script>
 /* Portrait orientation lock — stay portrait until device is clearly landscape (≥3:2).
    Lock API works in PWA/standalone and fullscreen; silently ignored in plain browser tabs. */
@@ -974,14 +1057,13 @@ if ('serviceWorker' in navigator) {
 
 <script>
 (function () {
-    // KUCCPS key dates — update these each year
+    // KUCCPS 2026 key dates — update each year
     const DEADLINES = [
-        { label: 'KUCCPS Portal Opens — Build Your Shortlist Now', date: new Date('2026-09-01T00:00:00+03:00'), urgent: false },
-        { label: 'KUCCPS Application Deadline',                     date: new Date('2026-10-15T23:59:00+03:00'), urgent: true  },
-        { label: 'KUCCPS Placement Results',                         date: new Date('2026-11-30T00:00:00+03:00'), urgent: false },
+        { label: 'KUCCPS Portal Opens — Build Your Shortlist Now', date: new Date('2026-07-03T12:00:00+03:00') },
+        { label: 'KUCCPS Application Closes',                      date: new Date('2026-08-21T23:59:00+03:00') },
     ];
 
-    const DISMISS_KEY = 'cn_deadline_dismissed_v2';
+    const DISMISS_KEY = 'cn_deadline_dismissed_v3';
     if (sessionStorage.getItem(DISMISS_KEY)) return;
 
     const now = new Date();
@@ -995,8 +1077,8 @@ if ('serviceWorker' in navigator) {
     const diffMs   = upcoming.date - now;
     const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
 
-    // Show throughout the June–August peak season (≤ 90 days out)
-    if (diffDays > 90) return;
+    // Show from 60 days out through the whole application window
+    if (diffDays > 60) return;
 
     const bar     = document.getElementById('deadlineBar');
     const msg     = document.getElementById('deadlineMsg');

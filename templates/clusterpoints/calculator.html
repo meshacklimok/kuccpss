@@ -247,37 +247,185 @@
 .dl-btn.gray { background: #f8fafc; color: #64748b; border-color: #e2e8f0; }
 .dl-btn.gray:hover { background: #f1f5f9; color: #374151; text-decoration: none; }
 
-/* guest CTA */
-.guest-cta {
-    background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%);
-    border-radius: 14px; padding: 1.1rem 1.5rem; margin-bottom: 1rem;
-    display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;
+/* ── save-bar (guest save prompt, slides up above sticky footer) ── */
+.save-bar {
+    position: fixed; bottom: 0; left: 0; right: 0; z-index: 299;
+    background: linear-gradient(135deg, #065f46, #059669);
+    color: #fff; padding: 0.7rem 1.25rem;
+    display: flex; align-items: center; gap: 0.75rem;
+    box-shadow: 0 -4px 20px rgba(5,150,105,0.3);
+    transform: translateY(200%);
+    transition: transform 0.4s cubic-bezier(0.4,0,0.2,1);
 }
-.guest-cta-text { flex: 1; font-size: 0.88rem; font-weight: 600; color: #fff; }
-.guest-cta-text span { color: rgba(255,255,255,0.75); font-weight: 400; }
-.cta-btn-light { font-size: 0.8rem; font-weight: 700; color: #1e3a8a; background: #fff; border: none; border-radius: 7px; padding: 6px 14px; text-decoration: none; }
-.cta-btn-light:hover { background: #dbeafe; color: #1e3a8a; text-decoration: none; }
-.cta-btn-outline { font-size: 0.8rem; font-weight: 600; color: #fff; background: rgba(255,255,255,0.15); border: 1.5px solid rgba(255,255,255,0.35); border-radius: 7px; padding: 6px 14px; text-decoration: none; }
-.cta-btn-outline:hover { background: rgba(255,255,255,0.25); color: #fff; text-decoration: none; }
+.save-bar.visible { transform: translateY(0); }
+.save-bar.bar-hidden { transform: translateY(200%); }
+.save-bar-text { flex: 1; font-size: 0.84rem; font-weight: 600; min-width: 0; }
+.save-bar-text .subtle { font-weight: 400; opacity: 0.82; font-size: 0.78rem; }
+.save-bar-close {
+    background: none; border: none; color: rgba(255,255,255,0.65);
+    cursor: pointer; padding: 4px 6px; font-size: 1rem; line-height: 1;
+    flex-shrink: 0; border-radius: 4px;
+}
+.save-bar-close:hover { color: #fff; background: rgba(255,255,255,0.12); }
+.save-bar-reg {
+    background: #fff; color: #065f46; border: none; border-radius: 9px;
+    padding: 0.48rem 1.1rem; font-weight: 800; font-size: 0.82rem;
+    text-decoration: none; flex-shrink: 0; white-space: nowrap;
+    transition: all 0.2s; display: inline-block;
+}
+.save-bar-reg:hover { background: #d1fae5; color: #065f46; text-decoration: none; }
+.save-bar-login {
+    font-size: 0.78rem; color: rgba(255,255,255,0.82); text-decoration: none;
+    flex-shrink: 0; white-space: nowrap;
+}
+.save-bar-login:hover { color: #fff; text-decoration: underline; }
+body.dark .save-bar { background: linear-gradient(135deg, #064e3b, #047857); }
 
-/* ── calc loading overlay ── */
+/* ── progressive loading overlay ── */
 #calc-loading {
     display:none; position:fixed; inset:0; z-index:9999;
-    background:linear-gradient(135deg,#1e3a8a 0%,#2563eb 60%,#0891b2 100%);
-    flex-direction:column; align-items:center; justify-content:center; gap:1.5rem;
+    align-items:center; justify-content:center; overflow:hidden;
+    background:linear-gradient(135deg,#0f172a 0%,#1e3a8a 50%,#0c4a6e 100%);
 }
-#calc-loading .cl-spinner {
-    width:64px; height:64px; border:6px solid rgba(255,255,255,0.2);
-    border-top-color:#fff; border-radius:50%;
-    animation:cl-spin 0.85s linear infinite;
+.cl-orb {
+    position:absolute; border-radius:50%; filter:blur(70px); opacity:0.22;
+    animation:cl-float 8s ease-in-out infinite;
+}
+.cl-orb-1 { width:400px; height:400px; background:#3b82f6; top:-150px; left:-100px; }
+.cl-orb-2 { width:300px; height:300px; background:#7c3aed; bottom:-100px; right:-80px; animation-delay:3s; }
+.cl-orb-3 { width:220px; height:220px; background:#0891b2; top:45%; left:60%; animation-delay:5s; }
+@keyframes cl-float {
+    0%,100% { transform:translate(0,0) scale(1); }
+    33% { transform:translate(30px,-20px) scale(1.06); }
+    66% { transform:translate(-20px,15px) scale(0.97); }
+}
+.cl-card {
+    position:relative; z-index:1;
+    display:flex; flex-direction:column; align-items:center; gap:1.2rem;
+    width:min(360px,90vw); padding:2rem 1.75rem;
+    background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.15);
+    border-radius:24px; backdrop-filter:blur(24px); -webkit-backdrop-filter:blur(24px);
+    box-shadow:0 25px 60px rgba(0,0,0,0.5),inset 0 1px 0 rgba(255,255,255,0.1);
+    animation:cl-card-in 0.5s cubic-bezier(0.34,1.56,0.64,1);
+}
+@keyframes cl-card-in {
+    from { opacity:0; transform:scale(0.88) translateY(20px); }
+    to   { opacity:1; transform:scale(1)    translateY(0);    }
+}
+.cl-ring-wrap {
+    position:relative; width:72px; height:72px;
+    display:flex; align-items:center; justify-content:center;
+}
+.cl-ring {
+    position:absolute; inset:0; border-radius:50%;
+    border:2.5px solid rgba(255,255,255,0.15); border-top-color:#60a5fa;
+    animation:cl-spin 1s linear infinite;
+}
+.cl-ring-inner {
+    position:absolute; inset:10px; border-radius:50%;
+    border:2px solid rgba(255,255,255,0.08); border-bottom-color:#a78bfa;
+    animation:cl-spin 1.5s linear infinite reverse;
 }
 @keyframes cl-spin { to { transform:rotate(360deg); } }
-#calc-loading .cl-title { font-size:1.2rem; font-weight:900; color:#fff; }
-#calc-loading .cl-sub { font-size:0.82rem; color:rgba(255,255,255,0.7); }
-#calc-loading .cl-dots span { animation:cl-dot 1.2s infinite; opacity:0; }
-#calc-loading .cl-dots span:nth-child(2) { animation-delay:0.2s; }
-#calc-loading .cl-dots span:nth-child(3) { animation-delay:0.4s; }
-@keyframes cl-dot { 0%,80%,100%{opacity:0} 40%{opacity:1} }
+.cl-ring-icon { font-size:1.6rem; color:#fff; }
+.cl-card-title { font-size:1.05rem; font-weight:800; color:#fff; text-align:center; }
+.cl-prog-row { width:100%; display:flex; align-items:center; gap:0.75rem; }
+.cl-prog-track { flex:1; height:6px; background:rgba(255,255,255,0.12); border-radius:99px; overflow:hidden; }
+.cl-prog-fill {
+    height:100%; width:0%;
+    background:linear-gradient(90deg,#60a5fa 0%,#a78bfa 50%,#34d399 100%);
+    border-radius:99px; box-shadow:0 0 12px rgba(96,165,250,0.6);
+}
+.cl-prog-pct { font-size:0.75rem; font-weight:700; color:rgba(255,255,255,0.75); min-width:32px; text-align:right; }
+.cl-steps { width:100%; display:flex; flex-direction:column; gap:0.4rem; }
+.cl-step {
+    display:flex; align-items:center; gap:0.65rem;
+    padding:0.45rem 0.75rem; border-radius:10px;
+    font-size:0.8rem; font-weight:500; color:rgba(255,255,255,0.28);
+    transition:background 0.35s,color 0.35s;
+}
+.cl-step.active { background:rgba(255,255,255,0.1); color:rgba(255,255,255,0.92); }
+.cl-step.done   { color:rgba(255,255,255,0.5); }
+.cl-step-dot {
+    width:7px; height:7px; border-radius:50%;
+    background:rgba(255,255,255,0.18); flex-shrink:0;
+    transition:background 0.35s,box-shadow 0.35s;
+}
+.cl-step.active .cl-step-dot { background:#60a5fa; box-shadow:0 0 8px rgba(96,165,250,0.9); animation:cl-dot-pulse 1s ease-in-out infinite; }
+.cl-step.done   .cl-step-dot { background:#34d399; box-shadow:none; animation:none; }
+@keyframes cl-dot-pulse { 0%,100%{transform:scale(1);opacity:1} 50%{transform:scale(1.5);opacity:0.55} }
+.cl-step-check {
+    margin-left:auto; font-size:0.85rem; color:#34d399; flex-shrink:0;
+    opacity:0; transform:scale(0.5); transition:opacity 0.3s,transform 0.3s;
+}
+.cl-step.done .cl-step-check { opacity:1; transform:scale(1); }
+
+/* ── payment gate ── */
+#payment-gate {
+    display:none; position:fixed; inset:0; z-index:9998;
+    align-items:center; justify-content:center;
+}
+.pg-backdrop {
+    position:absolute; inset:0; background:rgba(15,23,42,0.82);
+    backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px);
+}
+.pg-card {
+    position:relative; z-index:1; width:min(400px,92vw);
+    padding:2rem 1.75rem; background:#fff; border-radius:24px; text-align:center;
+    box-shadow:0 32px 80px rgba(0,0,0,0.45),0 0 0 1px rgba(0,0,0,0.04);
+    animation:pg-in 0.5s cubic-bezier(0.34,1.56,0.64,1);
+}
+@keyframes pg-in {
+    from { opacity:0; transform:scale(0.75) translateY(40px); }
+    to   { opacity:1; transform:scale(1)    translateY(0);    }
+}
+.pg-lock {
+    width:64px; height:64px; border-radius:50%;
+    background:linear-gradient(135deg,#1e3a8a,#2563eb);
+    display:flex; align-items:center; justify-content:center; margin:0 auto 1.1rem;
+    box-shadow:0 8px 24px rgba(30,58,138,0.4);
+    animation:pg-lock-pop 0.45s cubic-bezier(0.34,1.56,0.64,1) 0.2s both;
+}
+@keyframes pg-lock-pop { from{transform:scale(0) rotate(-30deg)} to{transform:scale(1) rotate(0)} }
+.pg-lock i { font-size:1.4rem; color:#fff; }
+.pg-title { font-size:1.2rem; font-weight:900; color:#1e293b; margin:0 0 0.45rem; }
+.pg-sub { font-size:0.82rem; color:#64748b; margin:0 0 1.2rem; line-height:1.55; }
+.pg-price {
+    display:inline-flex; align-items:baseline; gap:0.3rem;
+    background:linear-gradient(135deg,#f0fdf4,#dcfce7); border:1.5px solid #86efac;
+    border-radius:14px; padding:0.65rem 1.5rem; margin-bottom:1.1rem;
+}
+.pg-currency { font-size:0.88rem; font-weight:700; color:#16a34a; }
+.pg-amount   { font-size:2.2rem; font-weight:900; color:#15803d; line-height:1; }
+.pg-once     { font-size:0.68rem; font-weight:600; color:#22c55e; align-self:center; margin-left:0.2rem; }
+.pg-features {
+    display:grid; grid-template-columns:1fr 1fr; gap:0.4rem 1rem;
+    text-align:left; margin-bottom:1.35rem; padding:0 0.25rem;
+}
+.pg-feat { font-size:0.78rem; color:#374151; display:flex; align-items:center; gap:0.4rem; }
+.pg-feat i { color:#16a34a; font-size:0.8rem; flex-shrink:0; }
+.pg-btn-mpesa {
+    width:100%; background:#00a859; color:#fff; border:none;
+    border-radius:13px; padding:0.88rem 1rem; font-size:0.92rem; font-weight:800;
+    cursor:pointer; display:flex; align-items:center; justify-content:center; gap:0.65rem;
+    margin-bottom:0.65rem; transition:all 0.2s; box-shadow:0 4px 20px rgba(0,168,89,0.4);
+}
+.pg-btn-mpesa:hover { background:#009150; transform:translateY(-1px); box-shadow:0 6px 24px rgba(0,168,89,0.5); }
+.pg-mpesa-badge { background:#fff; color:#00a859; font-size:0.6rem; font-weight:900; letter-spacing:0.05em; padding:2px 7px; border-radius:4px; }
+.pg-btn-card {
+    width:100%; background:#f8fafc; color:#374151; border:1.5px solid #e2e8f0;
+    border-radius:13px; padding:0.78rem 1rem; font-size:0.88rem; font-weight:600;
+    cursor:pointer; display:flex; align-items:center; justify-content:center; gap:0.5rem;
+    margin-bottom:1rem; transition:all 0.2s;
+}
+.pg-btn-card:hover { background:#f1f5f9; border-color:#94a3b8; }
+.pg-secure { font-size:0.72rem; color:#94a3b8; margin:0; display:flex; align-items:center; justify-content:center; gap:0.35rem; }
+body.dark .pg-card     { background:var(--surface); box-shadow:0 32px 80px rgba(0,0,0,0.7); }
+body.dark .pg-title    { color:var(--text); }
+body.dark .pg-sub      { color:var(--text-2); }
+body.dark .pg-btn-card { background:var(--surface-2); border-color:var(--border); color:var(--text-2); }
+body.dark .pg-btn-card:hover { background:var(--surface-3,#1e293b); }
+body.dark .pg-secure   { color:var(--text-3); }
 
 /* cluster results grid (compact summary stays) */
 .cluster-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.55rem; margin-bottom: 1.5rem; }
@@ -299,60 +447,6 @@
 .cluster-card.zero .cluster-pts { color: #cbd5e1; }
 .cluster-max   { font-size: 0.58rem; color: #94a3b8; font-weight: 500; text-align: right; }
 
-/* ── cluster courses accordion ── */
-.cca-panel {
-    background:#fff; border:1.5px solid #e2e8f0; border-radius:14px;
-    margin-bottom:0.6rem; overflow:hidden;
-    box-shadow:0 1px 4px rgba(30,58,138,0.05);
-    transition:border-color 0.2s;
-}
-.cca-panel.open { border-color:#93c5fd; box-shadow:0 2px 12px rgba(37,99,235,0.1); }
-.cca-header {
-    width:100%; background:none; border:none; padding:0.85rem 1.1rem;
-    display:flex; align-items:center; gap:0.7rem;
-    cursor:pointer; text-align:left; -webkit-tap-highlight-color:transparent;
-}
-.cca-num {
-    width:34px; height:34px; border-radius:9px; flex-shrink:0;
-    background:#eff6ff; color:#2563eb; font-size:0.7rem; font-weight:900;
-    display:flex; align-items:center; justify-content:center;
-}
-.cca-name { font-weight:700; font-size:0.82rem; color:#1e293b; flex:1; text-align:left; line-height:1.3; }
-.cca-pts-badge {
-    flex-shrink:0; font-weight:900; font-size:0.82rem; padding:2px 10px;
-    border-radius:20px; border:1.5px solid;
-}
-.cca-pts-high { background:#dcfce7; color:#16a34a; border-color:#86efac; }
-.cca-pts-mid  { background:#dbeafe; color:#2563eb; border-color:#93c5fd; }
-.cca-pts-low  { background:#ffedd5; color:#ea580c; border-color:#fdba74; }
-.cca-chevron { font-size:0.85rem; color:#94a3b8; flex-shrink:0; transition:transform 0.25s; }
-.cca-panel.open .cca-chevron { transform:rotate(180deg); }
-.cca-body { display:none; border-top:1px solid #f1f5f9; padding:0.7rem 1.1rem 0.9rem; }
-.cca-panel.open .cca-body { display:block; }
-.cca-course-row {
-    display:flex; align-items:center; gap:0.6rem;
-    padding:0.5rem 0; border-bottom:1px solid #f8fafc;
-    text-decoration:none; color:inherit;
-}
-.cca-course-row:last-of-type { border-bottom:none; }
-.cca-course-row:hover .cca-course-name-text { color:#2563eb; }
-.cca-dot { width:6px; height:6px; border-radius:50%; background:#cbd5e1; flex-shrink:0; }
-.cca-course-name-text { flex:1; font-size:0.8rem; color:#374151; font-weight:500; line-height:1.35; }
-.cca-course-type { font-size:0.65rem; color:#94a3b8; flex-shrink:0; }
-.cca-footer {
-    display:flex; align-items:center; justify-content:space-between;
-    margin-top:0.65rem; padding-top:0.65rem; border-top:1px solid #f1f5f9;
-}
-.cca-view-all {
-    font-size:0.78rem; font-weight:700; color:#2563eb;
-    text-decoration:none; display:inline-flex; align-items:center; gap:0.3rem;
-}
-.cca-view-all:hover { color:#1d4ed8; text-decoration:underline; }
-.cca-count-pill {
-    font-size:0.68rem; color:#64748b;
-    background:#f8fafc; border:1px solid #e2e8f0;
-    border-radius:20px; padding:2px 9px;
-}
 
 /* prediction */
 .pred-section {
@@ -442,19 +536,6 @@ body.dark .cluster-card      { background: var(--surface); border-color: var(--b
 body.dark .cluster-card:hover { border-color: rgba(37,99,235,0.5); }
 body.dark .cluster-label     { color: #93C5FD; }
 body.dark .cluster-name      { color: var(--text-3); }
-body.dark .cca-panel         { background: var(--surface); border-color: var(--border); box-shadow: none; }
-body.dark .cca-panel.open    { border-color: rgba(37,99,235,0.4); }
-body.dark .cca-num           { background: rgba(37,99,235,0.15); color: #93C5FD; }
-body.dark .cca-name          { color: var(--text); }
-body.dark .cca-body          { border-top-color: var(--border); }
-body.dark .cca-course-row    { border-bottom-color: var(--surface-2); }
-body.dark .cca-course-name-text { color: var(--text-2); }
-body.dark .cca-course-row:hover .cca-course-name-text { color: #93C5FD; }
-body.dark .cca-dot           { background: var(--surface-3); }
-body.dark .cca-course-type   { color: var(--text-3); }
-body.dark .cca-footer        { border-top-color: var(--border); }
-body.dark .cca-count-pill    { background: var(--surface-2); border-color: var(--border); color: var(--text-3); }
-body.dark .cca-view-all      { color: #93C5FD; }
 body.dark .pred-section      { background: var(--surface); border-color: var(--border); }
 body.dark .pred-cluster-badge { background: rgba(37,99,235,0.15); border-color: rgba(37,99,235,0.3); color: #93C5FD; }
 body.dark .pred-table th     { color: var(--text-3); border-bottom-color: var(--border); }
@@ -480,7 +561,6 @@ body.dark .lce-btn-calc:disabled { background: var(--surface-2); color: var(--te
     .score-sep  { width: 100%; height: 1px; }
     .pw-rec-card { flex-direction: column; }
     .dl-bar { flex-direction: column; align-items: flex-start; }
-    .guest-cta { flex-direction: column; }
     .pred-table { display: block; overflow-x: auto; }
     .lce-footer { flex-wrap: wrap; gap: 0.6rem; padding: 0.75rem 1rem 0.75rem; bottom: calc(64px + env(safe-area-inset-bottom, 0px)); }
     .lce-btn-calc { width: 100%; justify-content: center; order: -1; }
@@ -491,11 +571,81 @@ body.dark .lce-btn-calc:disabled { background: var(--surface-2); color: var(--te
 {% endblock %}
 
 {% block content %}
-<!-- Loading overlay (shown while calculating) -->
+<!-- Progressive loading overlay — shown on results page for 5 seconds -->
 <div id="calc-loading">
-    <div class="cl-spinner"></div>
-    <div class="cl-title">Calculating your cluster points<span class="cl-dots"><span>.</span><span>.</span><span>.</span></span></div>
-    <div class="cl-sub">Analysing all 20 KUCCPS clusters</div>
+    <div class="cl-orb cl-orb-1"></div>
+    <div class="cl-orb cl-orb-2"></div>
+    <div class="cl-orb cl-orb-3"></div>
+    <div class="cl-card">
+        <div class="cl-ring-wrap">
+            <div class="cl-ring"></div>
+            <div class="cl-ring-inner"></div>
+            <i class="bi bi-calculator-fill cl-ring-icon"></i>
+        </div>
+        <div class="cl-card-title">Calculating Your Score</div>
+        <div class="cl-prog-row">
+            <div class="cl-prog-track">
+                <div class="cl-prog-fill" id="clProgFill"></div>
+            </div>
+            <span class="cl-prog-pct" id="clProgPct">0%</span>
+        </div>
+        <div class="cl-steps">
+            <div class="cl-step" id="clSt1">
+                <div class="cl-step-dot"></div>
+                <span>Validating your grades</span>
+                <i class="bi bi-check2 cl-step-check"></i>
+            </div>
+            <div class="cl-step" id="clSt2">
+                <div class="cl-step-dot"></div>
+                <span>Computing KCSE aggregate</span>
+                <i class="bi bi-check2 cl-step-check"></i>
+            </div>
+            <div class="cl-step" id="clSt3">
+                <div class="cl-step-dot"></div>
+                <span>Analysing 20 clusters</span>
+                <i class="bi bi-check2 cl-step-check"></i>
+            </div>
+            <div class="cl-step" id="clSt4">
+                <div class="cl-step-dot"></div>
+                <span>Matching eligible courses</span>
+                <i class="bi bi-check2 cl-step-check"></i>
+            </div>
+            <div class="cl-step" id="clSt5">
+                <div class="cl-step-dot"></div>
+                <span>Preparing your results</span>
+                <i class="bi bi-check2 cl-step-check"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Payment gate — shown after loading animation -->
+<div id="payment-gate">
+    <div class="pg-backdrop"></div>
+    <div class="pg-card">
+        <div class="pg-lock"><i class="bi bi-lock-fill"></i></div>
+        <h2 class="pg-title">Your Results Are Ready!</h2>
+        <p class="pg-sub">Unlock your KUCCPS cluster points to discover which universities, KMTCs, and TVETs you qualify for.</p>
+        <div class="pg-price">
+            <span class="pg-currency">KES</span>
+            <span class="pg-amount">50</span>
+            <span class="pg-once">one-time</span>
+        </div>
+        <div class="pg-features">
+            <div class="pg-feat"><i class="bi bi-check-circle-fill"></i>All 20 cluster points</div>
+            <div class="pg-feat"><i class="bi bi-check-circle-fill"></i>Course eligibility</div>
+            <div class="pg-feat"><i class="bi bi-check-circle-fill"></i>2026 cutoff predictions</div>
+            <div class="pg-feat"><i class="bi bi-check-circle-fill"></i>PDF download</div>
+        </div>
+        <button class="pg-btn-mpesa" onclick="handlePayment('mpesa')">
+            <span class="pg-mpesa-badge">M-PESA</span>
+            Pay with M-Pesa — KES 50
+        </button>
+        <button class="pg-btn-card" onclick="handlePayment('card')">
+            <i class="bi bi-credit-card-fill"></i>Pay with Card
+        </button>
+        <p class="pg-secure"><i class="bi bi-shield-check-fill"></i>Secure payment · Instant unlock</p>
+    </div>
 </div>
 
 <!-- ══ sticky step bar ══ -->
@@ -617,6 +767,7 @@ body.dark .lce-btn-calc:disabled { background: var(--surface-2); color: var(--te
 
     <!-- ══ RESULTS ══ -->
     {% if results %}
+    <div id="results-content" style="display:none;">
     <div class="results-divider">
         <div class="results-divider-line"></div>
         <div class="results-divider-label"><i class="bi bi-bar-chart-fill me-1"></i>Your Results</div>
@@ -673,42 +824,6 @@ body.dark .lce-btn-calc:disabled { background: var(--surface-2); color: var(--te
         {% endfor %}
     </div>
 
-    <!-- Cluster courses accordion -->
-    <div class="results-divider">
-        <div class="results-divider-line"></div>
-        <div class="results-divider-label"><i class="bi bi-collection-fill me-1"></i>Courses Per Cluster</div>
-        <div class="results-divider-line"></div>
-    </div>
-    <p style="font-size:0.75rem;color:#94a3b8;text-align:center;margin:-0.5rem 0 1rem;">Top 5 courses shown per cluster · tap to expand</p>
-
-    {% for r in results %}
-    <div class="cca-panel">
-        <button type="button" class="cca-header" onclick="toggleCCA(this)">
-            <div class="cca-num">{{ r.cluster.kuccps_number }}</div>
-            <div class="cca-name">{{ r.cluster.name }}</div>
-            <span class="cca-pts-badge {% if r.cluster_points >= 36 %}cca-pts-high{% elif r.cluster_points >= 24 %}cca-pts-mid{% else %}cca-pts-low{% endif %}">{{ r.cluster_points|floatformat:1 }}</span>
-            <i class="bi bi-chevron-down cca-chevron"></i>
-        </button>
-        <div class="cca-body">
-            {% for course in r.top_courses %}
-            <a href="{{ course.get_absolute_url }}" class="cca-course-row">
-                <div class="cca-dot"></div>
-                <div class="cca-course-name-text">{{ course.name }}</div>
-                <span class="cca-course-type">{{ course.course_type.name }}</span>
-            </a>
-            {% empty %}
-            <p style="font-size:0.78rem;color:#94a3b8;padding:0.4rem 0;margin:0;">No courses linked to this cluster yet.</p>
-            {% endfor %}
-            <div class="cca-footer">
-                <span class="cca-count-pill">{{ r.course_count }} course{{ r.course_count|pluralize }} total</span>
-                <a href="{% url 'clusters:cluster_courses' r.cluster.slug %}" class="cca-view-all">
-                    View all <i class="bi bi-arrow-right"></i>
-                </a>
-            </div>
-        </div>
-    </div>
-    {% endfor %}
-
     {% if pathway_rec %}
     <div class="pw-rec-card">
         <div class="pw-rec-icon"><i class="fas {{ pathway_rec.icon }}"></i></div>
@@ -724,22 +839,47 @@ body.dark .lce-btn-calc:disabled { background: var(--surface-2); color: var(--te
     </div>
     {% endif %}
 
-    {% if is_guest %}
-    <div class="guest-cta">
-        <div class="guest-cta-text"><i class="bi bi-lock-fill me-1"></i>Create a free account to save these results. <span class="d-none d-md-inline">Access eligible courses, PDF export, and calculation history.</span></div>
-        <div style="display:flex;gap:0.5rem;flex-shrink:0;flex-wrap:wrap;">
-            <a href="{% url 'accounts:register' %}" class="cta-btn-light">Register Free</a>
-            <a href="{% url 'accounts:login' %}" class="cta-btn-outline">Login</a>
-        </div>
-    </div>
-    {% endif %}
-
     <div class="dl-bar">
         <span class="dl-label"><i class="bi bi-download me-1"></i>Download</span>
         <a href="{% url 'predictor:quick_pdf' %}" class="dl-btn red"><i class="bi bi-file-earmark-pdf-fill"></i>Quick PDF</a>
         <a href="{% url 'predictor:full_report' %}" class="dl-btn blue"><i class="bi bi-file-earmark-text-fill"></i>Full Report</a>
         <a href="{% url 'predictor:index' %}" class="dl-btn gray"><i class="bi bi-graph-up-arrow"></i>Predictor</a>
+        <a id="wa-share-btn" href="#" target="_blank" rel="noopener"
+           class="dl-btn"
+           style="background:#25d366;color:#fff;border-color:#25d366;"
+           title="Share your results on WhatsApp">
+            <i class="bi bi-whatsapp"></i>Share
+        </a>
     </div>
+
+    {# WhatsApp share data embedded in template so JS can build the message #}
+    <script>
+    (function () {
+        var grade = "{{ mean_grade|escapejs }}";
+        var agg   = "{{ total_points|escapejs }}";
+        var topClusters = [
+            {% for r in results|slice:":3" %}
+            { num: {{ r.cluster.kuccps_number }}, name: "{{ r.cluster.name|escapejs }}", pts: "{{ r.cluster_points|floatformat:1 }}" },
+            {% endfor %}
+        ];
+
+        var clText = topClusters
+            .filter(function(c){ return parseFloat(c.pts) > 0; })
+            .map(function(c){ return "Cl." + c.num + " " + parseFloat(c.pts).toFixed(0) + "pts"; })
+            .join(" · ");
+
+        var msg = "🎓 I calculated my KCSE cluster points on CareerNext!\n";
+        if (grade)  msg += "Grade: " + grade;
+        if (agg)    msg += (grade ? " · " : "") + "Aggregate: " + agg + "/84\n";
+        if (clText) msg += "Top clusters: " + clText + "\n";
+        msg += "\nCalculate yours free → careernext.co.ke";
+
+        var btn = document.getElementById('wa-share-btn');
+        if (btn) {
+            btn.href = "https://wa.me/?text=" + encodeURIComponent(msg);
+        }
+    }());
+    </script>
 
     {% if predicted_groups %}
     <div class="results-divider">
@@ -801,18 +941,34 @@ body.dark .lce-btn-calc:disabled { background: var(--surface-2); color: var(--te
         <div class="chart-title"><i class="bi bi-diagram-3 me-1"></i>Cluster Points Radar</div>
         <canvas id="clusterChart"></canvas>
     </div>
+    </div><!-- /results-content -->
     {% endif %}
 
     <div style="height:6rem;"></div>
 </div>
 </form>
 
+{% if is_guest and results %}
+<div class="save-bar" id="saveBar" role="complementary" aria-label="Save your results">
+    <div class="save-bar-text">
+        <i class="bi bi-floppy-fill me-1"></i> Your results are ready — save them free.
+        <span class="subtle d-none d-sm-inline"> Your grades are stored; registration takes 30 seconds.</span>
+    </div>
+    <a href="{% url 'accounts:register' %}" class="save-bar-reg"
+       data-ph-event="guest_save_bar_register">Register Free</a>
+    <a href="{% url 'accounts:login' %}" class="save-bar-login"
+       data-ph-event="guest_save_bar_login">Login</a>
+    <button class="save-bar-close" id="saveBarClose" aria-label="Dismiss"
+            data-ph-event="guest_save_bar_dismissed"><i class="bi bi-x-lg"></i></button>
+</div>
+{% endif %}
+
 <!-- sticky footer -->
 <div class="lce-footer">
     <div class="lce-footer-info"><div class="lce-footer-title" id="footerNote">Enter <strong>7 subjects</strong> to calculate</div></div>
     <a href="{% url 'home' %}" class="lce-btn-back"><i class="bi bi-arrow-left"></i> Back</a>
     <button type="button" class="lce-btn-calc" id="calcBtn" disabled
-            onclick="document.getElementById('calcForm').submit()">
+            onclick="window._ph&&_ph('calculator_submitted',{is_guest:{% if user.is_authenticated %}false{% else %}true{% endif %}});document.getElementById('calcForm').submit()">
         <i class="bi bi-calculator-fill"></i> Calculate
     </button>
 </div>
@@ -868,23 +1024,110 @@ document.querySelectorAll('select.lce-select').forEach(sel => {
 ['compulsory',1,2,3,4].forEach(id => updateSecCount(id));
 updateGlobal();
 
-// Loading overlay on form submit
-document.getElementById('calcBtn').addEventListener('click', function() {
-    const sel = document.querySelectorAll('select.lce-select.has-value').length;
-    if (sel >= 7) {
-        document.getElementById('calc-loading').style.display = 'flex';
-    }
-});
-
-// Cluster courses accordion
-function toggleCCA(btn) {
-    const panel = btn.closest('.cca-panel');
-    panel.classList.toggle('open');
+// Prevent "Confirm Form Resubmission" dialog on page refresh after POST
+if (window.history.replaceState) {
+    window.history.replaceState(null, null, window.location.href);
 }
 
+// Hide step-bar and footer when scrolling down; show on scroll up
+(function () {
+    var wrap   = document.getElementById('stepBarWrap');
+    var footer = document.querySelector('.lce-footer');
+    var lastY  = 0;
+    var raf    = false;
+    window.addEventListener('scroll', function () {
+        if (raf) return;
+        raf = true;
+        requestAnimationFrame(function () {
+            var y    = window.scrollY;
+            var down = y > lastY && y > 80;
+            if (wrap)   wrap.classList.toggle('bar-hidden', down);
+            if (footer) footer.classList.toggle('bar-hidden', down);
+            var saveBar = document.getElementById('saveBar');
+            if (saveBar) saveBar.classList.toggle('bar-hidden', down);
+            lastY = y;
+            raf = false;
+        });
+    }, { passive: true });
+}());
+
+// ── Progressive 5-second loading animation + payment gate ──
 {% if results %}
-(function() {
-    const ctx = document.getElementById('clusterChart');
+(function () {
+    var DURATION = 5000;
+    var overlay  = document.getElementById('calc-loading');
+    var fill     = document.getElementById('clProgFill');
+    var pctEl    = document.getElementById('clProgPct');
+    var stepIds  = ['clSt1','clSt2','clSt3','clSt4','clSt5'];
+
+    overlay.style.display = 'flex';
+
+    // Activate each step sequentially (1 second apart)
+    stepIds.forEach(function (id, i) {
+        setTimeout(function () { document.getElementById(id).classList.add('active'); }, i * 1000);
+        setTimeout(function () {
+            var el = document.getElementById(id);
+            el.classList.remove('active');
+            el.classList.add('done');
+        }, i * 1000 + 900);
+    });
+
+    // Smooth progress bar via rAF
+    var start = null;
+    function tick(ts) {
+        if (!start) start = ts;
+        var p = Math.min(100, ((ts - start) / DURATION) * 100);
+        if (fill)  fill.style.width = p + '%';
+        if (pctEl) pctEl.textContent = Math.round(p) + '%';
+        if (p < 100) {
+            requestAnimationFrame(tick);
+        } else {
+            overlay.style.transition = 'opacity 0.4s';
+            overlay.style.opacity = '0';
+            setTimeout(function () {
+                overlay.style.display = 'none';
+                showPaymentGate();
+            }, 420);
+        }
+    }
+    requestAnimationFrame(tick);
+})();
+
+function showPaymentGate() {
+    document.getElementById('payment-gate').style.display = 'flex';
+}
+
+function handlePayment(method) {
+    // TODO: wire up real M-Pesa STK Push / card payment before going live
+    var gate = document.getElementById('payment-gate');
+    gate.style.transition = 'opacity 0.3s';
+    gate.style.opacity = '0';
+    setTimeout(function () {
+        gate.style.display = 'none';
+        revealResults();
+    }, 320);
+}
+
+function revealResults() {
+    var content = document.getElementById('results-content');
+    if (!content) return;
+    content.style.opacity = '0';
+    content.style.transform = 'translateY(24px)';
+    content.style.display = 'block';
+    requestAnimationFrame(function () {
+        content.style.transition = 'opacity 0.55s ease, transform 0.55s ease';
+        content.style.opacity = '1';
+        content.style.transform = 'translateY(0)';
+    });
+    setTimeout(function () {
+        content.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        initChart();
+        initSaveBar();
+    }, 200);
+}
+
+function initChart() {
+    var ctx = document.getElementById('clusterChart');
     if (!ctx) return;
     new Chart(ctx, {
         type: 'radar',
@@ -912,40 +1155,30 @@ function toggleCCA(btn) {
             }
         }
     });
-})();
-{% endif %}
-// Prevent "Confirm Form Resubmission" dialog on page refresh after POST
-if (window.history.replaceState) {
-    window.history.replaceState(null, null, window.location.href);
 }
-
-// Hide step-bar and footer when scrolling down; show on scroll up
-(function () {
-    var wrap   = document.getElementById('stepBarWrap');
+// ── Save-bar: slides up above sticky footer for guests with results ──
+function initSaveBar() {
+    var bar = document.getElementById('saveBar');
+    if (!bar) return;
+    if (localStorage.getItem('sbDismissed')) return;
     var footer = document.querySelector('.lce-footer');
-    var lastY  = 0;
-    var raf    = false;
-    window.addEventListener('scroll', function () {
-        if (raf) return;
-        raf = true;
-        requestAnimationFrame(function () {
-            var y    = window.scrollY;
-            var down = y > lastY && y > 80;
-            if (wrap)   wrap.classList.toggle('bar-hidden', down);
-            if (footer) footer.classList.toggle('bar-hidden', down);
-            lastY = y;
-            raf = false;
-        });
-    }, { passive: true });
-}());
-// Auto-scroll to results section when calculation is done
-{% if results %}
-document.addEventListener('DOMContentLoaded', function() {
-    const resultsEl = document.querySelector('.results-divider');
-    if (resultsEl) {
-        setTimeout(() => resultsEl.scrollIntoView({ behavior: 'smooth', block: 'start' }), 350);
+    function positionBar() {
+        if (!footer) return;
+        var fh = footer.offsetHeight;
+        var fb = parseFloat(getComputedStyle(footer).bottom) || 0;
+        bar.style.bottom = (fh + fb) + 'px';
     }
-});
+    positionBar();
+    setTimeout(function () { positionBar(); bar.classList.add('visible'); }, 600);
+    window.addEventListener('resize', positionBar);
+    var closeBtn = document.getElementById('saveBarClose');
+    if (closeBtn) {
+        closeBtn.addEventListener('click', function () {
+            bar.classList.remove('visible');
+            localStorage.setItem('sbDismissed', '1');
+        });
+    }
+}
 {% endif %}
 </script>
 {% endblock %}
