@@ -41,6 +41,7 @@ class Payment(models.Model):
     phone_number = models.CharField(max_length=20, blank=True)
     checkout_id = models.CharField(max_length=120, blank=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="pending")
+    mpesa_code = models.CharField(max_length=20, blank=True, help_text="User-submitted M-Pesa transaction code for manual verification")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

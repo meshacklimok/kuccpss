@@ -109,7 +109,7 @@ def courses_for_institution(request):
             Course.objects
             .filter(institutions__id=institution_id)
             .values("id", "name")
-            .order_by("name")
+            .order_by("name")[:200]
         )
         return JsonResponse({"courses": list(qs)})
     except Exception:
@@ -121,6 +121,14 @@ def courses_for_institution(request):
 @login_required
 def become_mentor(request):
     if hasattr(request.user, "mentor_profile"):
+        profile = request.user.mentor_profile
+        if profile.is_rejected:
+            messages.error(
+                request,
+                "Your mentor application was not approved and you cannot reapply. "
+                "Contact support at support@careernext.co.ke if you believe this is an error.",
+            )
+            return render(request, "mentorship/become_mentor.html", {"rejected": True})
         return redirect("mentorship:dashboard")
 
     if request.method == "POST":
@@ -130,17 +138,35 @@ def become_mentor(request):
             mentor.user = request.user
             mentor.save()
 
-            # Notify admin
+            # Build absolute document URLs for the admin email
+            site_url = "https://www.careernext.co.ke"
+            student_id_url = (
+                request.build_absolute_uri(mentor.student_id_upload.url)
+                if mentor.student_id_upload else "Not uploaded"
+            )
+            portal_url = (
+                request.build_absolute_uri(mentor.portal_screenshot.url)
+                if mentor.portal_screenshot else "Not uploaded"
+            )
+
+            # Notify admin with full application details + document links
             send_mail(
                 subject="New Mentor Application — CareerNext",
                 message=(
-                    f"New mentor application:\n\n"
-                    f"Name : {request.user.full_name or request.user.email}\n"
-                    f"Email: {request.user.email}\n"
-                    f"Course: {mentor.course}\n"
-                    f"Institution: {mentor.institution}\n"
-                    f"Year: {mentor.get_year_of_study_display()}\n\n"
-                    f"Review: https://www.careernext.co.ke/cn-staff/mentorship/mentorprofile/{mentor.pk}/change/"
+                    f"New mentor application received:\n\n"
+                    f"Name            : {request.user.full_name or request.user.email}\n"
+                    f"Email           : {request.user.email}\n"
+                    f"Course          : {mentor.course}\n"
+                    f"Institution     : {mentor.institution}\n"
+                    f"Year of Study   : {mentor.get_year_of_study_display()}\n"
+                    f"University Email: {mentor.university_email or 'Not provided'}\n"
+                    f"WhatsApp        : {mentor.whatsapp}\n\n"
+                    f"Bio:\n{mentor.bio}\n\n"
+                    f"Documents:\n"
+                    f"  Student ID        : {student_id_url}\n"
+                    f"  Portal Screenshot : {portal_url}\n\n"
+                    f"Approve / Reject in admin:\n"
+                    f"  {site_url}/cn-staff/mentorship/mentorprofile/{mentor.pk}/change/"
                 ),
                 from_email=settings.DEFAULT_FROM_EMAIL,
                 recipient_list=[_admin_email()],

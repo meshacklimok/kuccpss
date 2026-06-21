@@ -36,8 +36,7 @@ def save_student_matches(matches: List[StudentCourseMatch]):
     """
     Bulk save all matches to DB
     """
-    for match in matches:
-        match.save()
+    StudentCourseMatch.objects.bulk_create(matches, ignore_conflicts=True)
 
 
 def get_course_from_match(match: StudentCourseMatch):
@@ -71,14 +70,19 @@ def home(request):
         )
         id_save_map = dict(top)
         if id_save_map:
+            from django.db.models import Prefetch
             qs = (Course.objects
                   .filter(pk__in=id_save_map)
-                  .select_related('course_type', 'cluster'))
+                  .select_related('course_type', 'cluster')
+                  .prefetch_related(
+                      Prefetch(
+                          'offerings',
+                          queryset=CourseOffering.objects.select_related('institution').order_by('id'),
+                          to_attr='_first_offerings',
+                      )
+                  ))
             for c in qs:
-                off = (CourseOffering.objects
-                       .filter(course=c)
-                       .select_related('institution')
-                       .first())
+                off = c._first_offerings[0] if c._first_offerings else None
                 trending_courses.append({
                     'name': c.name,
                     'course_type': c.course_type.name if c.course_type else '',
@@ -225,7 +229,11 @@ def filter_matches(request):
     Filters existing StudentCourseMatches based on GET parameters
     """
     pathway = request.session.get('pathway', None)
-    matches = StudentCourseMatch.objects.all()
+    matches = StudentCourseMatch.objects.select_related(
+        'course', 'course__category',
+        'tvet_course', 'tvet_course__category',
+        'kmc_course', 'ttc_course', 'university',
+    )
 
     # Filter by pathway
     if pathway == "Degree":
@@ -355,7 +363,10 @@ import csv
 from django.http import HttpResponse
 
 def export_matches_csv(_request):
-    matches = StudentCourseMatch.objects.all()
+    matches = StudentCourseMatch.objects.select_related(
+        'course', 'tvet_course', 'tvet_course__category',
+        'kmc_course', 'ttc_course', 'university',
+    )
     response = HttpResponse(content_type='text/csv')
     response['Content-Disposition'] = 'attachment; filename="career_matches.csv"'
 
@@ -620,12 +631,12 @@ def _build_ai_db_context(request) -> str:
     # Anonymous users (or snapshot missing) — quick live query
     if not top_matches:
         try:
-            from courses.models import CourseOffering, CourseType
+            from courses.models import CourseOffering
             cluster_points_dict = request.session.get('career_cluster_points', {})
             cfg = _get_career_config()
 
             if pathway == 'Degree':
-                degree_type = CourseType.objects.filter(name__icontains='Degree').first()
+                degree_type = _get_degree_course_type()
                 if degree_type:
                     qs = (CourseOffering.objects
                           .filter(course__course_type=degree_type)
@@ -1079,6 +1090,17 @@ def _chance_from_grade_diff(diff):
     if diff >= -2:
         return 'Borderline', 'warning'
     return 'Unlikely', 'danger'
+
+
+# ── CourseType cache — avoids repeated DB hits for the Degree type ───────────
+_degree_course_type_cache = None
+
+def _get_degree_course_type():
+    global _degree_course_type_cache
+    if _degree_course_type_cache is None:
+        from courses.models import CourseType
+        _degree_course_type_cache = CourseType.objects.filter(name__icontains='Degree').first()
+    return _degree_course_type_cache
 
 
 # ── Career config cache (refreshed every 60 s) ───────────────────────────────
@@ -1934,7 +1956,7 @@ def career_results(request):
 
     if pathway == 'Degree':
         cluster_points_dict = request.session.get('career_cluster_points', {})
-        degree_type = CourseType.objects.filter(name__icontains='Degree').first()
+        degree_type = _get_degree_course_type()
 
         if degree_type:
             qs = (
@@ -2283,7 +2305,7 @@ def _build_career_matches(request):
     Build all career course matches from session data (shared by both PDF views).
     Returns (matches, pathway, cluster_pts_single, mean_grade, cluster_points_dict).
     """
-    from courses.models import CourseOffering, CourseType
+    from courses.models import CourseOffering
     from predictor.services import predict_cutoff as _predict_cutoff, TREND_ICON, TREND_COLOR, TREND_TIP
 
     pathway             = request.session.get('career_pathway', '')
@@ -2307,7 +2329,7 @@ def _build_career_matches(request):
 
     if pathway == 'Degree':
         cluster_points_dict = request.session.get('career_cluster_points', {})
-        degree_type = CourseType.objects.filter(name__icontains='Degree').first()
+        degree_type = _get_degree_course_type()
         if degree_type:
             qs = (
                 CourseOffering.objects

@@ -123,6 +123,7 @@ TEMPLATES = [
                 'accounts.context_processors.unread_notifications',
                 'analytics.context_processors.posthog_keys',
                 'analytics.context_processors.sentry_context',
+                'analytics.context_processors.ga_context',
             ],
         },
     },
@@ -236,6 +237,9 @@ OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
 # PostHog analytics — JS key is public; Python key stays server-side
 POSTHOG_API_KEY = os.environ.get("POSTHOG_API_KEY", "")
 POSTHOG_HOST    = os.environ.get("POSTHOG_HOST", "https://eu.i.posthog.com")
+
+# Google Analytics 4 — set GA_MEASUREMENT_ID env var (e.g. G-XXXXXXXXXX)
+GA_MEASUREMENT_ID = os.environ.get("GA_MEASUREMENT_ID", "")
 
 # Affiliate payout — admin WhatsApp number for payout requests
 AFFILIATE_PAYOUT_PHONE = os.environ.get("AFFILIATE_PAYOUT_PHONE", "254700000000")

@@ -265,6 +265,54 @@ def verify_payment(request, payment_id):
 
 
 @login_required
+@require_POST
+def verify_by_transaction_code(request):
+    """
+    User submits their M-Pesa transaction code (e.g. RCK12345XY).
+    We look it up in the Transaction table — if it exists for this user's
+    payment, money arrived and we grant access. Otherwise reject.
+    Body: { feature, mpesa_code }
+    Returns: { status: 'completed'|'not_found'|'error', message }
+    """
+    try:
+        body = json.loads(request.body)
+    except (ValueError, KeyError):
+        return JsonResponse({"status": "error", "message": "Invalid request."}, status=400)
+
+    mpesa_code = body.get("mpesa_code", "").strip().upper()
+
+    if not mpesa_code:
+        return JsonResponse({"status": "error", "message": "Please enter your M-Pesa transaction code."})
+
+    txn = (
+        Transaction.objects.filter(mpesa_ref__iexact=mpesa_code, payment__user=request.user)
+        .select_related("payment")
+        .first()
+    )
+
+    if txn:
+        payment = txn.payment
+        if payment.status != "completed":
+            payment.status = "completed"
+            payment.save(update_fields=["status", "updated_at"])
+        logger.info("Transaction code verified: user=%s code=%s payment=%s", request.user.email, mpesa_code, payment.pk)
+        return JsonResponse({
+            "status": "completed",
+            "feature": payment.feature,
+            "message": "Payment verified! Unlocking your feature.",
+        })
+
+    logger.info("Transaction code not found in DB: user=%s code=%s", request.user.email, mpesa_code)
+    return JsonResponse({
+        "status": "not_found",
+        "message": (
+            "We could not find a payment matching that transaction code. "
+            "Double-check the code from your M-Pesa SMS, or contact support if you believe this is an error."
+        ),
+    })
+
+
+@login_required
 def pending_payment_for_feature(request):
     """
     Returns the most recent pending payment for a feature, so the frontend can

@@ -1,9 +1,40 @@
 from django.contrib import admin
 from django.conf import settings
 from django.core.mail import send_mail
+from django.http import HttpResponseRedirect
+from django.shortcuts import get_object_or_404
+from django.urls import path, reverse
 from django.utils.html import format_html, mark_safe
 
 from .models import MentorProfile, TimeSlot, MentorshipSession, WithdrawalRequest
+
+SITE_URL = "https://www.careernext.co.ke"
+
+
+def _doc_url(file_field):
+    """Return absolute URL for a file field, or 'Not uploaded'."""
+    if file_field:
+        return SITE_URL + file_field.url
+    return "Not uploaded"
+
+
+def _full_application_text(mentor):
+    """Return a formatted block of all mentor application details for emails."""
+    return (
+        f"Name            : {mentor.display_name}\n"
+        f"Email           : {mentor.user.email}\n"
+        f"Course          : {mentor.course}\n"
+        f"Institution     : {mentor.institution}\n"
+        f"Year of Study   : {mentor.get_year_of_study_display()}\n"
+        f"University Email: {mentor.university_email or 'Not provided'}\n"
+        f"WhatsApp        : {mentor.whatsapp}\n\n"
+        f"Bio:\n{mentor.bio}\n\n"
+        f"Documents:\n"
+        f"  Student ID         : {_doc_url(mentor.student_id_upload)}\n"
+        f"  Portal Screenshot  : {_doc_url(mentor.portal_screenshot)}\n\n"
+        f"Admin review link:\n"
+        f"  {SITE_URL}/cn-staff/mentorship/mentorprofile/{mentor.pk}/change/"
+    )
 
 
 class TimeSlotInline(admin.TabularInline):
@@ -51,15 +82,17 @@ class MentorProfileAdmin(admin.ModelAdmin):
     list_display = [
         "display_name", "course_name", "institution_name", "year_of_study",
         "approval_badge", "is_active", "total_sessions", "avg_rating_display",
-        "wallet_balance", "created_at",
+        "wallet_balance", "created_at", "reject_button",
     ]
-    list_filter = ["is_approved", "is_active", "year_of_study"]
+    list_filter = ["is_approved", "is_active", "is_rejected", "year_of_study"]
     search_fields = ["user__email", "user__full_name", "course__name", "institution__name"]
     readonly_fields = [
         "total_sessions", "average_rating", "wallet_balance", "total_earned",
         "created_at", "updated_at", "student_id_preview", "portal_screenshot_preview",
     ]
     actions = ["approve_selected", "reject_selected", "deactivate_selected"]
+
+    # ── Document previews ─────────────────────────────────────────────────────
 
     def student_id_preview(self, obj):
         if obj.student_id_upload:
@@ -100,7 +133,7 @@ class MentorProfileAdmin(admin.ModelAdmin):
             "description": "Review these before approving. Documents are private.",
         }),
         ("Status", {
-            "fields": ("is_approved", "is_active", "rejection_reason"),
+            "fields": ("is_approved", "is_active", "is_rejected", "rejection_reason"),
         }),
         ("Statistics (read-only)", {
             "fields": ("total_sessions", "average_rating", "wallet_balance", "total_earned"),
@@ -110,6 +143,8 @@ class MentorProfileAdmin(admin.ModelAdmin):
             "classes": ("collapse",),
         }),
     )
+
+    # ── Display helpers ───────────────────────────────────────────────────────
 
     def display_name(self, obj):
         return obj.display_name
@@ -124,6 +159,8 @@ class MentorProfileAdmin(admin.ModelAdmin):
     institution_name.short_description = "Institution"
 
     def approval_badge(self, obj):
+        if obj.is_rejected:
+            return mark_safe('<span style="color:red;font-weight:bold">⛔ Rejected</span>')
         if obj.is_approved:
             return mark_safe('<span style="color:green;font-weight:bold">✓ Approved</span>')
         return mark_safe('<span style="color:orange;font-weight:bold">⏳ Pending</span>')
@@ -133,10 +170,97 @@ class MentorProfileAdmin(admin.ModelAdmin):
         return f"{obj.average_rating:.1f} ★" if obj.total_sessions else "—"
     avg_rating_display.short_description = "Rating"
 
+    def reject_button(self, obj):
+        """Per-row Reject button — only shown for non-rejected, non-approved applicants."""
+        if obj.is_rejected:
+            return mark_safe('<span style="color:#999;font-size:11px">Rejected</span>')
+        url = reverse("admin:mentorship_reject_mentor", args=[obj.pk])
+        return format_html(
+            '<a href="{}" style="background:#dc3545;color:#fff;padding:2px 10px;'
+            'border-radius:3px;text-decoration:none;font-size:12px;font-weight:bold;"'
+            ' onclick="return confirm(\'Reject this mentor application? They will NOT be able to reapply.\');">'
+            '⛔ Reject</a>',
+            url,
+        )
+    reject_button.short_description = "Reject"
+
+    # ── Custom URL: per-record reject ─────────────────────────────────────────
+
+    def get_urls(self):
+        urls = super().get_urls()
+        custom = [
+            path(
+                "<int:pk>/reject/",
+                self.admin_site.admin_view(self._reject_mentor_view),
+                name="mentorship_reject_mentor",
+            ),
+        ]
+        return custom + urls
+
+    def _reject_mentor_view(self, request, pk):
+        mentor = get_object_or_404(MentorProfile, pk=pk)
+
+        mentor.is_rejected = True
+        mentor.is_approved = False
+        mentor.is_active = False
+        mentor.save(update_fields=["is_rejected", "is_approved", "is_active"])
+
+        self._send_rejection_emails(request, mentor)
+
+        self.message_user(
+            request,
+            f"Rejected application for {mentor.display_name}. "
+            f"They cannot reapply. Full details sent to {settings.ADMIN_EMAIL}.",
+        )
+        return HttpResponseRedirect(
+            reverse("admin:mentorship_mentorprofile_change", args=[pk])
+        )
+
+    # ── Shared email helper ───────────────────────────────────────────────────
+
+    def _send_rejection_emails(self, request, mentor):
+        reason_line = (
+            f"\n\nReason provided: {mentor.rejection_reason}"
+            if mentor.rejection_reason else ""
+        )
+
+        # 1. Notify the applicant
+        send_mail(
+            subject="Your CareerNext Mentor Application — Update",
+            message=(
+                f"Hi {mentor.display_name},\n\n"
+                "Thank you for applying to be a CareerNext mentor.\n\n"
+                "After reviewing your application, we're unable to approve it at this time."
+                f"{reason_line}\n\n"
+                "If you believe this is a mistake or have questions, please reply to this email.\n\n"
+                "CareerNext Team"
+            ),
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[mentor.user.email],
+            fail_silently=True,
+        )
+
+        # 2. Notify admin with full application details + document links
+        send_mail(
+            subject=f"Mentor Application Rejected — {mentor.display_name} ({mentor.user.email})",
+            message=(
+                f"You rejected the following mentor application:\n\n"
+                f"{_full_application_text(mentor)}"
+                f"{reason_line}"
+            ),
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[settings.ADMIN_EMAIL],
+            fail_silently=True,
+        )
+
+    # ── Bulk actions ──────────────────────────────────────────────────────────
+
     def approve_selected(self, request, queryset):
         for mentor in queryset.filter(is_approved=False):
             mentor.is_approved = True
-            mentor.save(update_fields=["is_approved"])
+            mentor.is_rejected = False
+            mentor.is_active = True
+            mentor.save(update_fields=["is_approved", "is_rejected", "is_active"])
             send_mail(
                 subject="🎉 You're approved as a CareerNext Mentor!",
                 message=(
@@ -157,9 +281,20 @@ class MentorProfileAdmin(admin.ModelAdmin):
     approve_selected.short_description = "Approve selected mentors and notify"
 
     def reject_selected(self, request, queryset):
-        queryset.update(is_approved=False, is_active=False)
-        self.message_user(request, "Selected mentor applications rejected.")
-    reject_selected.short_description = "Reject selected applications"
+        """Bulk reject — sets is_rejected so applicants cannot reapply."""
+        count = 0
+        for mentor in queryset.filter(is_rejected=False):
+            mentor.is_rejected = True
+            mentor.is_approved = False
+            mentor.is_active = False
+            mentor.save(update_fields=["is_rejected", "is_approved", "is_active"])
+            self._send_rejection_emails(request, mentor)
+            count += 1
+        self.message_user(
+            request,
+            f"Rejected {count} mentor application(s). Applicants notified and cannot reapply.",
+        )
+    reject_selected.short_description = "Reject selected (blocks reapplication + notifies)"
 
     def deactivate_selected(self, request, queryset):
         queryset.update(is_active=False)
@@ -228,7 +363,6 @@ class MentorshipSessionAdmin(admin.ModelAdmin):
         for session in queryset.filter(status__in=["confirmed", "pending_payment"]):
             session.status = "refunded"
             session.save(update_fields=["status"])
-            # Deduct from mentor wallet if already credited
             mentor = session.mentor
             mentor.wallet_balance = max(0, mentor.wallet_balance - session.mentor_payout)
             mentor.total_earned = max(0, mentor.total_earned - session.mentor_payout)
@@ -252,7 +386,6 @@ class WithdrawalRequestAdmin(admin.ModelAdmin):
     def mark_processed(self, request, queryset):
         from django.utils import timezone as tz
         for wr in queryset.filter(status="pending"):
-            # Deduct from wallet
             mentor = wr.mentor
             if mentor.wallet_balance >= wr.amount:
                 mentor.wallet_balance -= wr.amount

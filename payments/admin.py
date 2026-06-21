@@ -31,9 +31,9 @@ mark_failed.short_description = "Mark selected payments as FAILED"
 
 @admin.register(Payment)
 class PaymentAdmin(admin.ModelAdmin):
-    list_display = ("user", "feature", "amount", "phone_number", "status", "checkout_id", "created_at")
+    list_display = ("user", "feature", "amount", "phone_number", "status", "mpesa_code", "checkout_id", "created_at")
     list_filter = ("status", "feature")
-    search_fields = ("user__email", "checkout_id", "phone_number")
+    search_fields = ("user__email", "checkout_id", "phone_number", "mpesa_code")
     readonly_fields = ("created_at", "updated_at")
     list_editable = ("status",)
     actions = [mark_completed, mark_failed]

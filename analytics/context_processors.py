@@ -14,3 +14,9 @@ def sentry_context(request):
         'SENTRY_RELEASE':     getattr(settings, 'SENTRY_RELEASE', '') or '',
         'SENTRY_ENVIRONMENT': getattr(settings, 'SENTRY_ENVIRONMENT', 'development'),
     }
+
+
+def ga_context(request):
+    return {
+        'GA_MEASUREMENT_ID': getattr(settings, 'GA_MEASUREMENT_ID', ''),
+    }

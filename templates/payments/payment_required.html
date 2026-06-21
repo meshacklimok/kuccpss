@@ -116,16 +116,42 @@
           </div>
           <h6 class="fw-bold text-warning">Still Processing…</h6>
           <p class="text-muted small" id="timeout-msg">If you entered your M-Pesa PIN, your payment may have gone through but confirmation is delayed.</p>
-          <button class="btn btn-success btn-sm me-2" onclick="verifyPayment()">
-            <i class="fas fa-search me-1"></i>Verify My Payment
-          </button>
-          <button class="btn btn-outline-secondary btn-sm" onclick="resetForm()">Pay Again</button>
+          <div class="d-flex flex-wrap gap-2 justify-content-center mt-2">
+            <button class="btn btn-success btn-sm" onclick="verifyPayment()">
+              <i class="fas fa-search me-1"></i>Check Payment Status
+            </button>
+            <button class="btn btn-outline-primary btn-sm" onclick="showStep('code')">
+              <i class="fas fa-keyboard me-1"></i>Enter M-Pesa Code
+            </button>
+            <button class="btn btn-outline-secondary btn-sm" onclick="resetForm()">Pay Again</button>
+          </div>
         </div>
 
         <!-- Step 6: Checking -->
         <div id="step-checking" class="text-center d-none">
           <div class="mb-3 spinner-border text-success" style="width:2.5rem;height:2.5rem;"></div>
           <p class="text-muted small">Checking with M-Pesa…</p>
+        </div>
+
+        <!-- Step 7: Enter transaction code -->
+        <div id="step-code" class="d-none">
+          <h6 class="fw-bold mb-1"><i class="fas fa-receipt me-2 text-primary"></i>Verify with M-Pesa Code</h6>
+          <p class="text-muted small mb-3">
+            Check your M-Pesa confirmation SMS for a code like <strong>RCK12345XY</strong> and enter it below.
+          </p>
+          <div class="mb-3">
+            <label class="form-label fw-bold small">M-Pesa Transaction Code</label>
+            <input type="text" id="mpesa-code-input" class="form-control text-uppercase"
+                   placeholder="e.g. RCK12345XY" maxlength="20" autocomplete="off"
+                   oninput="this.value=this.value.toUpperCase()">
+          </div>
+          <div id="code-error" class="alert alert-danger d-none small"></div>
+          <div class="d-flex gap-2">
+            <button class="btn btn-primary flex-fill" onclick="submitMpesaCode()">
+              <i class="fas fa-check me-1"></i>Verify Code
+            </button>
+            <button class="btn btn-outline-secondary" onclick="showStep('timeout')">Back</button>
+          </div>
         </div>
       </div>
 
@@ -259,10 +285,42 @@ function clearIntervals() {
 }
 
 function showStep(step) {
-  ["phone", "waiting", "success", "failed", "timeout", "checking"].forEach(s => {
+  ["phone", "waiting", "success", "failed", "timeout", "checking", "code"].forEach(s => {
     document.getElementById(`step-${s}`)?.classList.add("d-none");
   });
   document.getElementById(`step-${step}`)?.classList.remove("d-none");
+}
+
+async function submitMpesaCode() {
+  const code = document.getElementById("mpesa-code-input").value.trim().toUpperCase();
+  const errEl = document.getElementById("code-error");
+  errEl.classList.add("d-none");
+
+  if (!/^[A-Z0-9]{6,20}$/.test(code)) {
+    errEl.textContent = "Enter a valid M-Pesa transaction code (letters and numbers only).";
+    errEl.classList.remove("d-none");
+    return;
+  }
+
+  try {
+    const res = await fetch("{% url 'payments:verify_by_transaction_code' %}", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-CSRFToken": CSRF_TOKEN },
+      body: JSON.stringify({ feature: FEATURE, mpesa_code: code }),
+    });
+    const data = await res.json();
+
+    if (data.status === "completed") {
+      showStep("success");
+      setTimeout(() => { window.location.href = NEXT_URL || "/accounts/dashboard/"; }, 2000);
+    } else {
+      errEl.textContent = data.message || "Transaction code not found. Please check and try again.";
+      errEl.classList.remove("d-none");
+    }
+  } catch (e) {
+    errEl.textContent = "Network error. Please check your connection and try again.";
+    errEl.classList.remove("d-none");
+  }
 }
 
 function resetForm() {

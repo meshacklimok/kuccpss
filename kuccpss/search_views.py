@@ -104,14 +104,14 @@ def api_search_suggest(request):
         Q(name__icontains=prefix)
         | Q(abbreviation__icontains=q)
         | Q(name__icontains=q)
-    ).values('id', 'name', 'abbreviation', 'slug', 'institution_type__slug', 'location')[:120]
+    ).values('id', 'name', 'abbreviation', 'slug', 'institution_type__slug', 'location')[:60]
 
     inst_candidates = list(inst_qs)
 
     # ── Course candidates ─────────────────────────────────────────────────────
     course_qs = Course.objects.select_related('course_type', 'category').filter(
         Q(name__icontains=prefix) | Q(name__icontains=q)
-    ).values('id', 'name', 'slug', 'course_type__name', 'course_type__slug', 'category__slug')[:300]
+    ).values('id', 'name', 'slug', 'course_type__name', 'course_type__slug', 'category__slug')[:150]
 
     course_candidates = list(course_qs)
 
@@ -120,7 +120,7 @@ def api_search_suggest(request):
         course_candidates = list(
             Course.objects.select_related('course_type', 'category')
             .values('id', 'name', 'slug', 'course_type__name', 'course_type__slug', 'category__slug')
-            [:800]
+            [:300]
         )
 
     # ── Score & deduplicate ───────────────────────────────────────────────────
@@ -144,7 +144,7 @@ def api_search_suggest(request):
 
     # ── Build response ────────────────────────────────────────────────────────
     inst_out = []
-    for _, i in scored_insts[:5]:
+    for _, i in scored_insts[:3]:
         inst_out.append({
             'name': i['name'],
             'abbr': i.get('abbreviation') or '',
@@ -153,7 +153,7 @@ def api_search_suggest(request):
         })
 
     course_out = []
-    for _, c in scored_courses[:8]:
+    for _, c in scored_courses[:5]:
         type_slug = c['course_type__slug'] or ''
         cat_slug  = c.get('category__slug') or ''
         slug      = c['slug']
@@ -169,7 +169,13 @@ def api_search_suggest(request):
         })
 
     total_results = len(inst_out) + len(course_out)
+    more_courses = max(0, len(scored_courses) - len(course_out))
     from analytics.utils import log_search
     log_search(request, q, result_count=total_results)
 
-    return JsonResponse({'courses': course_out, 'institutions': inst_out})
+    return JsonResponse({
+        'courses': course_out,
+        'institutions': inst_out,
+        'more_courses': more_courses,
+        'search_url': f"/courses/?q={q}",
+    })
