@@ -1,30 +1,42 @@
 # career/engine.py
-
 from typing import Dict, List, Tuple
-from .models import StudentCourseMatch, Course, TVETCourse, KMTCourse, TTCCourse
+from .models import (
+    StudentCourseMatch,
+    match_degree_courses,
+    match_diploma_courses,
+    match_tvet_courses,
+    match_kmtc_courses,
+    match_ttc_courses,
+    generate_ai_recommendation,
+)
 
-def career_guidance_engine(kcse_grades: Dict[str, str], pathway: str, tvet_category=None) -> Tuple[List[StudentCourseMatch], dict]:
-    """
-    A dummy career guidance engine.
-    Replace this with your real logic.
-    Returns:
-        matches: List of StudentCourseMatch instances
-        ai: dictionary with AI recommendations or insights
-    """
-    matches: List[StudentCourseMatch] = []
-    ai: dict = {"message": "This is a placeholder AI recommendation."}
 
-    # Example logic: fetch courses based on pathway
+def career_guidance_engine(
+    kcse_grades: Dict[str, str],
+    pathway: str,
+    tvet_category: str = None,
+) -> Tuple[List[StudentCourseMatch], object]:
+    """
+    pathway: "Degree", "Diploma", "KMTC", "TVET", "TTC"
+    kcse_grades: {subject_name: grade_letter}  e.g. {"Mathematics": "A", "Physics": "B+"}
+
+    Degree path uses midpoint-marks cluster points formula (clusterpoints/services._weighted_cp).
+    All other paths use mean grade comparison.
+    """
     if pathway == "Degree":
-        courses = Course.objects.all()[:5]  # top 5 for now
-        for course in courses:
-            match = StudentCourseMatch(course=course, match_score=50, admission_chance="Medium")
-            matches.append(match)
-    elif pathway == "TVET" and tvet_category:
-        courses = TVETCourse.objects.filter(category__name=tvet_category)[:5]
-        for course in courses:
-            match = StudentCourseMatch(tvet_course=course, match_score=50, admission_chance="Medium")
-            matches.append(match)
-    # Add similar logic for KMTC, TTC, etc.
+        matches = match_degree_courses(kcse_grades)
+    elif pathway == "Diploma":
+        matches = match_diploma_courses(kcse_grades)
+    elif pathway == "KMTC":
+        matches = match_kmtc_courses(kcse_grades)
+    elif pathway == "TVET":
+        if not tvet_category:
+            raise ValueError("TVET pathway requires a category (Certificate, Diploma, Artisan)")
+        matches = match_tvet_courses(kcse_grades, tvet_category)
+    elif pathway == "TTC":
+        matches = match_ttc_courses(kcse_grades)
+    else:
+        raise ValueError(f"Invalid pathway: {pathway}")
 
+    ai = generate_ai_recommendation(matches)
     return matches, ai

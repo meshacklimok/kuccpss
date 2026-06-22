@@ -2,15 +2,34 @@
 from math import sqrt
 from types import SimpleNamespace
 from django.db import transaction
-from .models import Cluster, ClusterCalculationResult, UserKCSEResult, SubjectResult, Subject
+from clusters.models import Cluster, Subject
+from .models import ClusterCalculationResult, UserKCSEResult, SubjectResult
 
-# KUCCPS uses raw subject marks internally (not the 1-12 grade points).
-# Scale: grade_points × 7  (A=84, A-=77, B+=70 … E=7)
-# Formula: 48 × sqrt((core_marks / 400) × (aggregate / 84))
-GRADE_PTS_TO_MARKS = {p: p * 7 for p in range(1, 13)}
+# Grade points (1-12) → midpoint raw marks out of 100
+# Based on KCSE grade boundaries: A=80-100 (mid 90), A-=75-79 (mid 77), B+=70-74 (mid 72.5), etc.
+GRADE_MIDPOINT_MARKS = {
+    12: 90.2,   # A
+    11: 77.5,   # A-
+    10: 71.0,   # B+
+    9:  66.0,   # B
+    8:  60.0,   # B-
+    7:  56.0,   # C+
+    6:  50.0,   # C
+    5:  46.0,   # C-
+    4:  40.0,   # D+
+    3:  36.0,   # D
+    2:  31.0,   # D-
+    1:  14.0,   # E
+}
 
 
-def calculate_clusters_anonymous(named_points: dict) -> list:
+def _weighted_cp(core_pts: list[int], aggregate_total: int) -> float:
+    """48 × sqrt((core_midpoint_marks / 400) × (aggregate / 84)), capped at 48."""
+    core_marks = sum(GRADE_MIDPOINT_MARKS.get(p, p * 7.5) for p in core_pts[:4])
+    return round(min(48 * sqrt((core_marks / 400) * (aggregate_total / 84)), 48.0), 3)
+
+
+def calculate_clusters_anonymous(named_points: dict[str, int]) -> list:
     """
     Same algorithm as calculate_all_clusters but runs entirely in memory —
     no DB writes. Accepts {subject_name: points} and returns SimpleNamespace
@@ -23,7 +42,7 @@ def calculate_clusters_anonymous(named_points: dict) -> list:
         agg.append(working.pop('Mathematics'))
     langs = {l: working.pop(l) for l in ['English', 'Kiswahili'] if l in working}
     if langs:
-        best = max(langs, key=langs.get)
+        best = max(langs, key=lambda k: langs[k])
         agg.append(langs[best])
         for l, p in langs.items():
             if l != best:
@@ -40,9 +59,9 @@ def calculate_clusters_anonymous(named_points: dict) -> list:
 
     results = []
     for cluster in clusters:
-        slots = sorted(cluster.subject_groups.all(), key=lambda sg: sg.priority)
+        slots = sorted(cluster.subject_groups.all(), key=lambda sg: sg.priority)  # type: ignore[attr-defined]
         used = set()
-        core = []
+        core: list[int] = []
         any_unfilled = False
 
         for slot in slots:
@@ -68,8 +87,7 @@ def calculate_clusters_anonymous(named_points: dict) -> list:
         if any_unfilled or raw_core == 0 or aggregate_total == 0:
             weighted = 0.0
         else:
-            core_marks = sum(GRADE_PTS_TO_MARKS.get(p, p * 7) for p in core[:4])
-            weighted = round(min(48 * sqrt((core_marks / 400) * (aggregate_total / 84)), 48.0), 3)
+            weighted = _weighted_cp(core[:4], aggregate_total)
 
         results.append(SimpleNamespace(
             cluster=cluster,
@@ -93,7 +111,7 @@ def calculate_all_clusters(kcse_result: UserKCSEResult):
        - Walk slots in priority order (1→4)
        - From each slot's subject list, pick the highest-scoring subject not yet used
        - Never repeat a subject across slots
-    3. cluster_points = 48 × sqrt((core_marks / 400) × (aggregate / 84))
+    3. cluster_points = 48 × sqrt((core_midpoint_marks / 400) × (aggregate / 84))
     """
 
     if not kcse_result.pk:
@@ -143,10 +161,10 @@ def calculate_all_clusters(kcse_result: UserKCSEResult):
 
     with transaction.atomic():
         for cluster in clusters:
-            slots = sorted(cluster.subject_groups.all(), key=lambda sg: sg.priority)
+            slots = sorted(cluster.subject_groups.all(), key=lambda sg: sg.priority)  # type: ignore[attr-defined]
 
             used_names = set()
-            core_points = []
+            core_points: list[int] = []
             subjects_used = []
             any_slot_unfilled = False
 
@@ -179,8 +197,7 @@ def calculate_all_clusters(kcse_result: UserKCSEResult):
             if any_slot_unfilled or raw_core_total == 0 or aggregate_total == 0:
                 weighted = 0.0
             else:
-                core_marks = sum(GRADE_PTS_TO_MARKS.get(p, p * 7) for p in core_points[:4])
-                weighted = round(min(48 * sqrt((core_marks / 400) * (aggregate_total / 84)), 48.0), 3)
+                weighted = _weighted_cp(core_points[:4], aggregate_total)
 
             result, _ = ClusterCalculationResult.objects.update_or_create(
                 user=kcse_result.user,

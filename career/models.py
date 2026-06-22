@@ -388,18 +388,44 @@ MEAN_GRADE_POINTS = {
 # =====================================================
 # 1. Calculate Cluster Points for Degree Courses
 # =====================================================
+def _grades_to_points(kcse_grades: Dict[str, str]) -> Dict[str, int]:
+    return {subj: CLUSTER_GRADE_POINTS[g] for subj, g in kcse_grades.items() if g in CLUSTER_GRADE_POINTS}
+
+
+def _compute_aggregate(named_points: Dict[str, int]) -> int:
+    working = named_points.copy()
+    agg = []
+    if 'Mathematics' in working:
+        agg.append(working.pop('Mathematics'))
+    langs = {l: working.pop(l) for l in ['English', 'Kiswahili'] if l in working}
+    if langs:
+        best = max(langs, key=lambda k: langs[k])
+        agg.append(langs[best])
+        for l, p in langs.items():
+            if l != best:
+                working[l] = p
+    agg += sorted(working.values(), reverse=True)[:5]
+    return sum(agg)
+
+
 def calculate_cluster_points(kcse_grades: Dict[str, str], cluster_subjects: List[str]) -> float:
     """
-    kcse_grades: {'Mathematics': 'A', 'Physics': 'B+' ...}
-    cluster_subjects: ['Mathematics', 'Physics', 'Biology']
-    returns total cluster points
+    Computes cluster points for a given set of cluster subjects using the
+    midpoint-marks formula (same as clusterpoints/services.py _weighted_cp).
+    Picks the best 4 subjects from cluster_subjects that the student has taken.
     """
-    points = 0
-    for subject in cluster_subjects:
-        grade = kcse_grades.get(subject)
-        if grade:
-            points += CLUSTER_GRADE_POINTS.get(grade, 0)
-    return points
+    from clusterpoints.services import _weighted_cp
+    named_points = _grades_to_points(kcse_grades)
+    aggregate = _compute_aggregate(named_points)
+    if aggregate == 0:
+        return 0.0
+    subj_pts = sorted(
+        (named_points[s] for s in cluster_subjects if s in named_points),
+        reverse=True,
+    )[:4]
+    if len(subj_pts) < 4:
+        return 0.0
+    return _weighted_cp(subj_pts, aggregate)
 
 
 # =====================================================
@@ -439,21 +465,25 @@ def predict_admission_chance(student_points: float, cutoff: float) -> str:
 # =====================================================
 def match_degree_courses(kcse_grades: Dict[str, str]) -> List[StudentCourseMatch]:
     matches = []
-    for course in Course.objects.filter(category__name="Degree"):
+    courses = Course.objects.filter(category__name="Degree").prefetch_related(
+        'cluster_subjects', 'cutoffs__university'
+    )
+    for course in courses:
         cluster_subjects = [s.name for s in course.cluster_subjects.all()]
         cluster_points = calculate_cluster_points(kcse_grades, cluster_subjects)
-        cutoffs = course.cutoffs.all()
-        for cutoff in cutoffs:
+        if cluster_points == 0:
+            continue
+        for cutoff in course.cutoffs.all():
+            if not cutoff.cutoff_points:
+                continue
             admission = predict_admission_chance(cluster_points, cutoff.cutoff_points)
-            match_score = cluster_points / cutoff.cutoff_points * 100  # simple AI score
-            match = StudentCourseMatch(
+            match_score = (cluster_points / cutoff.cutoff_points) * 100
+            matches.append(StudentCourseMatch(
                 course=course,
                 university=cutoff.university,
                 admission_chance=admission,
-                match_score=match_score
-            )
-            matches.append(match)
-    # Rank by match_score descending
+                match_score=match_score,
+            ))
     matches.sort(key=lambda x: x.match_score, reverse=True)
     return matches
 
