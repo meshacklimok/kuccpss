@@ -270,6 +270,7 @@ def analytics_dashboard(request):
         'chart_pw_data':   json.dumps([p['n'] for p in pathway_dist]),
         'chart_grade_labels': json.dumps([g['mean_grade'].upper() for g in top_grades]),
         'chart_grade_data':   json.dumps([g['n'] for g in top_grades]),
+        'day_options': [7, 30, 90, 365],
         # External monitoring services
         'posthog_configured': bool(getattr(settings, 'POSTHOG_API_KEY', '')),
         'posthog_app_url':    ('https://eu.posthog.com' if 'eu.' in getattr(settings, 'POSTHOG_HOST', 'eu') else 'https://app.posthog.com'),

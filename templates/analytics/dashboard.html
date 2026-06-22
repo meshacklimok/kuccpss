@@ -208,8 +208,8 @@ body { background: var(--bg); }
     <div class="bi-topbar-right">
       <!-- Date range -->
       <div class="day-pills">
-        {% for d in "7,30,90,365"|split:"," %}
-        <a href="?days={{ d }}" class="day-pill {% if days|stringformat:'s' == d %}active{% endif %}">{{ d }}d</a>
+        {% for d in day_options %}
+        <a href="?days={{ d }}" class="day-pill {% if days == d %}active{% endif %}">{{ d }}d</a>
         {% endfor %}
       </div>
       <a href="{% url 'analytics:export_csv' %}?days={{ days }}" class="btn-export">
