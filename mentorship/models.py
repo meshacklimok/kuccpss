@@ -226,3 +226,27 @@ class MentorshipSession(models.Model):
     @property
     def mentee_display(self):
         return self.mentee.full_name or self.mentee.email.split("@")[0].title()
+
+
+class MentorshipConfig(models.Model):
+    """Singleton — one row (pk=1). Set session price and mentor payout from admin."""
+    session_price = models.PositiveIntegerField(
+        default=100,
+        help_text="Amount (KES) the student pays per session.",
+    )
+    mentor_payout = models.PositiveIntegerField(
+        default=70,
+        help_text="Amount (KES) the mentor earns per completed session. Must be less than session_price.",
+    )
+
+    class Meta:
+        verbose_name = "Mentorship Pricing Config"
+        verbose_name_plural = "Mentorship Pricing Config"
+
+    def __str__(self):
+        return f"Session: KES {self.session_price} | Mentor payout: KES {self.mentor_payout}"
+
+    @classmethod
+    def get(cls):
+        obj, _ = cls.objects.get_or_create(pk=1, defaults={"session_price": 100, "mentor_payout": 70})
+        return obj
