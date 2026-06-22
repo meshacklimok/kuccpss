@@ -1139,7 +1139,10 @@ function submitCalcForm(btn) {
     btn.dataset.submitted = '1';
     // PostHog tracking
     window._ph && _ph('calculator_submitted', {is_guest: {% if user.is_authenticated %}false{% else %}true{% endif %}});
-    // Show loading state
+    // Show full-screen loading overlay immediately — don't wait for server round-trip
+    var overlay = document.getElementById('calc-loading');
+    if (overlay) overlay.style.display = 'flex';
+    // Show loading state on button
     var icon = document.getElementById('calcBtnIcon');
     var txt  = document.getElementById('calcBtnText');
     if (icon) icon.className = 'bi bi-circle-notch spin-icon';
