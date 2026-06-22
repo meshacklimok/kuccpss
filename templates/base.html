@@ -13,12 +13,13 @@
     {% block meta %}
     <meta name="description" content="CareerNext — Kenya's free KCSE cluster points calculator. Find university, KMTC, TVET and TTC courses you qualify for via the KUCCPS placement system.">
     {% endblock %}
-    <meta name="keywords" content="KUCCPS, KCSE cluster points calculator, Kenya university placement, KMTC courses, TVET courses, cluster points, KCSE results 2024 2025">
+    {% block keywords %}<meta name="keywords" content="KUCCPS, KCSE cluster points calculator, Kenya university placement, KMTC courses, TVET courses, cluster points, KCSE results 2024 2025">{% endblock %}
     <meta name="robots" content="index, follow">
     <meta name="author" content="CareerNext">
+    {% block canonical %}{% endblock %}
 
     <!-- Open Graph -->
-    <meta property="og:type" content="website">
+    <meta property="og:type" content="{% block og_type %}website{% endblock %}">
     <meta property="og:site_name" content="CareerNext">
     <meta property="og:url" content="{{ request.build_absolute_uri }}">
     {% block og_meta %}
@@ -33,7 +34,7 @@
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:site" content="@careernext_ke">
     {% block twitter_meta %}
-    <meta name="twitter:title" content="CareerNext — CareerNext — Your next step after KCSE starts here">
+    <meta name="twitter:title" content="CareerNext — Your next step after KCSE starts here">
     <meta name="twitter:description" content="Free KCSE cluster points calculator. Discover courses you qualify for via KUCCPS.">
     {% endblock %}
     <meta name="twitter:image" content="{% static 'images/logo-og.png' %}">
@@ -48,10 +49,65 @@
           id="vapid-public-key">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+    <!-- Resource hints: tell the browser to open TCP connections early -->
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+    <link rel="dns-prefetch" href="https://unpkg.com">
+
+    <!-- Critical CSS: Bootstrap + our stylesheet block paint -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
+
+    <!-- JSON-LD Structured Data -->
+    {% block schema_org %}
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "CareerNext",
+      "url": "https://careernext.co.ke",
+      "description": "Kenya's free KCSE cluster points calculator and KUCCPS course finder. Discover university, KMTC, TVET and TTC courses you qualify for.",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": {
+          "@type": "EntryPoint",
+          "urlTemplate": "https://careernext.co.ke/api/search/?q={search_term_string}"
+        },
+        "query-input": "required name=search_term_string"
+      },
+      "publisher": {
+        "@type": "Organization",
+        "name": "CareerNext",
+        "url": "https://careernext.co.ke",
+        "logo": {
+          "@type": "ImageObject",
+          "url": "https://careernext.co.ke{% static 'img/logo-mark.svg' %}"
+        },
+        "contactPoint": {
+          "@type": "ContactPoint",
+          "contactType": "customer support",
+          "email": "info@careernext.co.ke",
+          "areaServed": "KE",
+          "availableLanguage": ["English", "Swahili"]
+        },
+        "areaServed": {
+          "@type": "Country",
+          "name": "Kenya"
+        },
+        "sameAs": [
+          "https://twitter.com/careernext_ke"
+        ]
+      }
+    }
+    </script>
+    {% endblock %}
+    {% block extra_schema %}{% endblock %}
+
     {% block extra_head %}{% endblock %}
 <style>
 /* ── Navbar search ── */
@@ -501,7 +557,7 @@
 
                 <ul class="navbar-nav align-items-center">
                     <li class="nav-item me-1">
-                        <button id="dark-toggle" title="Toggle dark mode" aria-label="Toggle dark mode">
+                        <button id="dark-toggle" title="Toggle dark mode" aria-label="Toggle dark mode" aria-pressed="false">
                             <i class="fas fa-moon" id="dark-icon"></i>
                         </button>
                     </li>
@@ -519,7 +575,7 @@
                         <a class="nav-link dropdown-toggle d-flex align-items-center gap-2" href="#" data-bs-toggle="dropdown">
                             {% if user.profile_picture %}
                             <img src="{{ user.profile_picture.url }}" width="30" height="30"
-                                 class="rounded-circle border border-white" style="object-fit:cover;" alt="Profile">
+                                 class="rounded-circle border border-white" style="object-fit:cover;" alt="Profile" loading="lazy">
                             {% else %}
                             <div class="rounded-circle bg-white d-flex align-items-center justify-content-center"
                                  style="width:30px;height:30px;font-size:0.8rem;color:var(--primary);font-weight:700;">
@@ -655,6 +711,22 @@
                 </div>
             </div>
             <hr class="border-secondary mt-4">
+
+            <!-- Legal disclaimer + data version -->
+            <div class="text-center mb-3 px-2" style="font-size:0.75rem;color:#94a3b8;line-height:1.6;">
+              <i class="fas fa-info-circle me-1" style="color:#60a5fa;"></i>
+              CareerNext is an independent third-party platform and is <strong>not</strong> affiliated with, endorsed by,
+              or part of the official <a href="https://kuccps.net" target="_blank" rel="noopener noreferrer"
+              class="text-secondary">KUCCPS portal</a>.
+              Information is provided for guidance only — always verify with official KUCCPS sources before applying.
+              <br>
+              <span style="color:#64748b;">
+                Cutoff data: <strong style="color:#93c5fd;">{{ DATA_CYCLE }} cycle</strong> &nbsp;·&nbsp;
+                Last updated: {{ DATA_UPDATED }} &nbsp;·&nbsp;
+                Data version: {{ DATA_VERSION }}
+              </span>
+            </div>
+
             <div class="d-flex flex-wrap justify-content-between align-items-center small gap-2">
                 <span>&copy; {% now "Y" %} CareerNext. All rights reserved.</span>
                 <span class="d-flex gap-3">
@@ -665,6 +737,36 @@
             </div>
         </div>
     </footer>
+
+    <!-- ── GLOBAL ERROR TOAST (shown by JS on HTMX/network failures) ── -->
+    <div id="global-error-toast" role="alert" aria-live="assertive"
+         style="display:none;position:fixed;bottom:80px;left:50%;transform:translateX(-50%);
+                z-index:99999;min-width:300px;max-width:90vw;">
+      <div class="d-flex align-items-start gap-3 p-3 rounded-3 shadow-lg"
+           style="background:#1e293b;border:1.5px solid #ef4444;color:#fff;">
+        <i class="fas fa-exclamation-triangle mt-1" style="color:#f87171;flex-shrink:0;"></i>
+        <div class="flex-grow-1">
+          <div id="global-error-msg" class="fw-semibold" style="font-size:0.88rem;">
+            We couldn't load results. Please try again.
+          </div>
+          <div class="d-flex gap-2 mt-2 flex-wrap" style="font-size:0.8rem;">
+            <button onclick="retryLastHtmx()" class="btn btn-sm"
+                    style="background:#ef4444;color:#fff;padding:3px 12px;">
+              <i class="fas fa-redo me-1"></i>Retry
+            </button>
+            <button onclick="document.getElementById('global-error-toast').style.display='none'"
+                    class="btn btn-sm btn-outline-secondary" style="padding:3px 10px;color:#cbd5e1;border-color:#475569;">
+              Dismiss
+            </button>
+            <a href="{% url 'home' %}" class="btn btn-sm btn-outline-secondary"
+               style="padding:3px 10px;color:#cbd5e1;border-color:#475569;">Home</a>
+          </div>
+        </div>
+        <button onclick="document.getElementById('global-error-toast').style.display='none'"
+                style="background:none;border:none;color:#94a3b8;font-size:1.1rem;cursor:pointer;
+                       flex-shrink:0;line-height:1;padding:0 2px;">&times;</button>
+      </div>
+    </div>
 
     <!-- ── MOBILE BOTTOM NAV ── -->
     {% with p=request.path %}
@@ -751,9 +853,11 @@
         <i class="fas fa-chevron-up"></i>
     </button>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-    <script src="{% static 'js/main.js' %}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" defer></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.slim.min.js" defer></script>
+    <!-- HTMX: replaces content without full page reload (search, filters, save buttons) -->
+    <script src="https://unpkg.com/htmx.org@1.9.12/dist/htmx.min.js" defer></script>
+    <script src="{% static 'js/main.js' %}" defer></script>
     <script>
     /* Auto-dismiss flash messages after 5s */
     (function(){
@@ -832,12 +936,13 @@
 
         // Dark mode
         var icon = document.getElementById('dark-icon');
+        var darkBtn = document.getElementById('dark-toggle');
         function applyDark(on){
             document.body.classList.toggle('dark', on);
             if (icon) icon.className = on ? 'fas fa-sun' : 'fas fa-moon';
+            if (darkBtn) darkBtn.setAttribute('aria-pressed', on ? 'true' : 'false');
         }
         applyDark(localStorage.getItem('kuccpss-dark') === '1');
-        var darkBtn = document.getElementById('dark-toggle');
         if (darkBtn) darkBtn.addEventListener('click', function(){
             var on = !document.body.classList.contains('dark');
             localStorage.setItem('kuccpss-dark', on ? '1' : '0');
@@ -846,6 +951,71 @@
     })();
     </script>
     {% block extra_js %}{% endblock %}
+
+<script>
+/* ── HTMX global error handling ── */
+(function () {
+    var _lastHtmxEl = null, _lastHtmxEvent = null;
+    var toast = document.getElementById('global-error-toast');
+    var msgEl  = document.getElementById('global-error-msg');
+
+    function showToast(msg) {
+        if (msgEl) msgEl.textContent = msg || 'We couldn\'t load results. Please try again.';
+        if (toast) { toast.style.display = 'block'; }
+        // Auto-hide after 8 seconds
+        setTimeout(function () { if (toast) toast.style.display = 'none'; }, 8000);
+    }
+
+    window.retryLastHtmx = function () {
+        if (toast) toast.style.display = 'none';
+        if (_lastHtmxEl && _lastHtmxEvent) {
+            htmx.trigger(_lastHtmxEl, _lastHtmxEvent);
+        } else {
+            window.location.reload();
+        }
+    };
+
+    document.body.addEventListener('htmx:beforeRequest', function (e) {
+        _lastHtmxEl    = e.target;
+        _lastHtmxEvent = 'click';
+    });
+
+    // HTTP error responses (4xx/5xx)
+    document.body.addEventListener('htmx:responseError', function (e) {
+        var status = e.detail && e.detail.xhr && e.detail.xhr.status;
+        var msg = 'We couldn\'t load results. Please try again.';
+        if (status === 429) msg = 'Too many requests — please wait a moment, then try again.';
+        else if (status === 503 || status === 502) msg = 'Service is temporarily unavailable. Please try in a few seconds.';
+        else if (status >= 500) msg = 'A server error occurred. Our team has been notified. Please try again.';
+        showToast(msg);
+    });
+
+    // Network failures (no internet / timeout)
+    document.body.addEventListener('htmx:sendError', function () {
+        showToast('No internet connection. Please check your network and try again.');
+    });
+})();
+</script>
+
+<script>
+/* ── Lazy image blur-up reveal ── */
+(function () {
+    if (!('IntersectionObserver' in window)) return;
+    var obs = new IntersectionObserver(function (entries) {
+        entries.forEach(function (e) {
+            if (e.isIntersecting) {
+                e.target.classList.add('loaded');
+                obs.unobserve(e.target);
+            }
+        });
+    }, { rootMargin: '120px' });
+    document.querySelectorAll('img.lazy-img').forEach(function (img) { obs.observe(img); });
+    /* Re-run after HTMX swaps in new content */
+    document.body.addEventListener('htmx:afterSwap', function () {
+        document.querySelectorAll('img.lazy-img:not(.loaded)').forEach(function (img) { obs.observe(img); });
+    });
+})();
+</script>
 
 <script>
 /* ── Navbar search autocomplete ── */

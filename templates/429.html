@@ -1,0 +1,100 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Too Many Requests — CareerNext</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
+  <style>
+    :root { --primary: #1e3a8a; --accent: #16a34a; --bg: #f0f4ff; }
+    body { font-family: 'Inter', sans-serif; background: var(--bg); color: #1e293b;
+           min-height: 100vh; display: flex; flex-direction: column; }
+    .site-navbar { background: var(--primary); padding: 0.75rem 0; }
+    .brand { font-weight: 800; font-size: 1.3rem; color: #fff;
+             text-decoration: none; letter-spacing: -0.5px; }
+    .brand span { color: #93c5fd; }
+    .hero-num { font-size: 8rem; font-weight: 800; line-height: 1;
+                background: linear-gradient(135deg, #d97706 0%, #ea580c 100%);
+                -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+                background-clip: text; }
+    footer { margin-top: auto; background: var(--primary); color: rgba(255,255,255,0.6);
+             text-align: center; padding: 1.25rem; font-size: 0.85rem; }
+    #countdown { font-weight: 800; font-size: 1.3rem; color: #d97706; }
+  </style>
+</head>
+<body>
+
+  <nav class="site-navbar">
+    <div class="container">
+      <a class="brand" href="/">Career<span>Next</span></a>
+    </div>
+  </nav>
+
+  <div class="container py-5 text-center flex-grow-1 d-flex align-items-center">
+    <div class="row justify-content-center w-100">
+      <div class="col-lg-6">
+
+        <div class="mb-4 hero-num">429</div>
+
+        <h2 class="fw-bold mb-2">Slow Down a Moment</h2>
+        <p class="text-muted mb-2">
+          You've made too many requests in a short time.<br>
+          This protects our servers so every student gets a fast experience.
+        </p>
+        <p class="mb-4">
+          You can try again in <span id="countdown">60</span> seconds.
+        </p>
+
+        <div class="d-flex flex-wrap gap-2 justify-content-center mb-4">
+          <a href="javascript:history.back()" class="btn btn-warning" id="retryBtn" disabled>
+            <i class="fas fa-redo me-2"></i>Try Again
+          </a>
+          <a href="/" class="btn btn-outline-secondary">
+            <i class="fas fa-home me-2"></i>Go Home
+          </a>
+          <a href="/clusterpoints/" class="btn btn-outline-secondary">
+            <i class="fas fa-calculator me-2"></i>Calculator
+          </a>
+        </div>
+
+        <div class="card p-3 text-start" style="background:#fffbeb;border:1px solid #fde68a;">
+          <h6 class="fw-bold mb-2 small text-uppercase text-muted">
+            <i class="fas fa-lightbulb me-1 text-warning"></i>While you wait
+          </h6>
+          <ul class="text-muted small mb-0 ps-3">
+            <li>Review your cluster points on the <a href="/clusterpoints/">calculator</a></li>
+            <li>Browse <a href="/courses/">available courses</a> by type</li>
+            <li>Explore <a href="/institutions/">universities and colleges</a> in Kenya</li>
+            <li>Read our <a href="/resources/">guides on KUCCPS application</a></li>
+          </ul>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    &copy; {% now "Y" %} CareerNext. All rights reserved.
+  </footer>
+
+<script>
+(function () {
+    var t = 60;
+    var el = document.getElementById('countdown');
+    var btn = document.getElementById('retryBtn');
+    var timer = setInterval(function () {
+        t--;
+        if (el) el.textContent = t;
+        if (t <= 0) {
+            clearInterval(timer);
+            if (el) el.textContent = '0';
+            if (btn) { btn.disabled = false; btn.textContent = 'Try Again Now'; }
+        }
+    }, 1000);
+})();
+</script>
+</body>
+</html>

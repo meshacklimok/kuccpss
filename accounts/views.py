@@ -268,8 +268,12 @@ def dashboard_view(request: HttpRequest) -> HttpResponse:
         _live = _IP.objects.filter(start_date__lte=_today, end_date__gte=_today).select_related(
             'institution', 'institution__institution_type'
         ).prefetch_related('institution__offerings__course')
+        from career.models import CareerConfig as _CCfg
+        _cfg = _CCfg.get()
         return render(request, "accounts/dashboard.html", {
             "guest": True,
+            "tawk_enabled": _cfg.tawk_enabled,
+            "mentor_signup_enabled": _cfg.mentor_signup_enabled,
             "eligible_count": 0, "saved_count": 0, "shortlist_count": 0,
             "saved_courses": [], "shortlist_items": [], "notifications": [],
             "cluster_results": [], "latest_result": None, "snapshot": None,
@@ -517,7 +521,12 @@ def dashboard_view(request: HttpRequest) -> HttpResponse:
             'count': _count,
         })
 
+    from career.models import CareerConfig as _CCfg
+    _cfg = _CCfg.get()
     return render(request, "accounts/dashboard.html", {
+        # Platform config
+        "tawk_enabled":           _cfg.tawk_enabled,
+        "mentor_signup_enabled":  _cfg.mentor_signup_enabled,
         # KCSE / clusters
         "latest_result":     latest_result,
         "cluster_results":   cluster_results,
@@ -1302,6 +1311,53 @@ def _send_push_to_all(message: str, url: str = "/") -> int:
     ok = 0
     dead = []
     for sub in PushSubscription.objects.all():
+        try:
+            webpush(
+                subscription_info={
+                    "endpoint": sub.endpoint,
+                    "keys": {"p256dh": sub.p256dh, "auth": sub.auth},
+                },
+                data=payload,
+                vapid_private_key=_s.VAPID_PRIVATE_KEY,
+                vapid_claims={"sub": f"mailto:{_s.VAPID_MAILTO}"},
+            )
+            ok += 1
+        except Exception:
+            dead.append(sub.pk)
+    if dead:
+        PushSubscription.objects.filter(pk__in=dead).delete()
+    return ok
+
+
+def _send_push_to_user(user, title: str, body: str, url: str = "/") -> int:
+    """Send a Web Push to all subscriptions belonging to a specific user. Returns sends count."""
+    import json
+    from django.conf import settings as _s
+    from .models import PushSubscription
+
+    if not _s.VAPID_PRIVATE_KEY or not _s.VAPID_PUBLIC_KEY:
+        return 0
+
+    try:
+        from pywebpush import webpush, WebPushException
+    except ImportError:
+        return 0
+
+    subs = list(PushSubscription.objects.filter(user=user))
+    if not subs:
+        return 0
+
+    payload = json.dumps({
+        "title": title,
+        "body":  body,
+        "icon":  "/static/images/icon-192.png",
+        "badge": "/static/images/icon-192.png",
+        "url":   url,
+    })
+
+    ok = 0
+    dead = []
+    for sub in subs:
         try:
             webpush(
                 subscription_info={

@@ -23,12 +23,12 @@
   --info:            #0891B2;
 
   /* Surfaces */
-  --bg:              #F8FAFC;
-  --surface:         #FFFFFF;
-  --surface-2:       #F1F5F9;
-  --surface-3:       #E2E8F0;
-  --white:           #FFFFFF;
+   --bg:        #F6F8FC;
+  --surface:   #FFFFFF;
+  --surface-2: #F0F4F9;
+  --surface-3: #D9E2EC;
 
+  --white:     #FFFFFF;
   /* Text */
   --text:            #0F172A;
   --text-2:          #475569;
@@ -851,17 +851,17 @@ small, .small { font-size: 0.875rem; }
 
 /* ── 24. DARK MODE ──────────────────────────────────────────── */
 body.dark {
-  --bg:          #080D1A;
-  --surface:     #111827;
-  --surface-2:   #1A2232;
-  --surface-3:   #0D1525;
-  --white:       #111827;
-  --text:        #F1F5F9;
-  --text-2:      #94A3B8;
-  --text-3:      #64748B;
-  --muted:       #94A3B8;
-  --border:      #1E2D4A;
-  --border-soft: #111827;
+  --bg:          #161f30;   /* dark navy — not black */
+  --surface:     #1e2c42;   /* cards clearly above bg */
+  --surface-2:   #253550;   /* slightly elevated surface */
+  --surface-3:   #131b28;   /* subtle recess */
+  --white:       #1e2c42;
+  --text:        #e8edf5;   /* slightly softer than pure white */
+  --text-2:      #9baec4;
+  --text-3:      #6b86a0;   /* raised for WCAG AA compliance */
+  --muted:       #9baec4;
+  --border:      #2e4466;   /* visible, not harsh */
+  --border-soft: #1e2c42;
   --shadow-xs:   0 1px 2px rgba(0,0,0,0.25);
   --shadow-sm:   0 1px 3px rgba(0,0,0,0.3),  0 4px 12px rgba(0,0,0,0.2);
   --shadow-md:   0 4px 8px rgba(0,0,0,0.35), 0 12px 28px rgba(0,0,0,0.25);
@@ -920,14 +920,14 @@ body.dark .table { --bs-table-bg: transparent; color: var(--text); border-color:
 body.dark .table thead { background: var(--surface-2); }
 
 /* Page hero */
-body.dark .page-hero { background: linear-gradient(135deg, #050A14 0%, var(--primary-dark) 100%); }
+body.dark .page-hero { background: linear-gradient(135deg, var(--surface-3) 0%, var(--primary-dark) 100%); }
 
 /* Alerts */
 body.dark .alert         { background: var(--surface); border-color: var(--border); color: var(--text); }
-body.dark .alert-warning { background: #1C1507; border-color: #78350F; color: #FDE68A; }
-body.dark .alert-success { background: #052E16; border-color: #166534; color: #86EFAC; }
-body.dark .alert-danger  { background: #1C0505; border-color: #7F1D1D; color: #FCA5A5; }
-body.dark .alert-info    { background: #0C1A2E; border-color: #1E3A8A; color: #93C5FD; }
+body.dark .alert-warning { background: #231a06; border-color: #78350F; color: #FDE68A; }
+body.dark .alert-success { background: #0d2a18; border-color: #166534; color: #86EFAC; }
+body.dark .alert-danger  { background: #230a0a; border-color: #7F1D1D; color: #FCA5A5; }
+body.dark .alert-info    { background: #102038; border-color: #1E3A8A; color: #93C5FD; }
 
 /* Mobile bottom nav */
 body.dark .mobile-bottom-nav { background: var(--surface); border-top-color: var(--border); }
@@ -998,6 +998,13 @@ body.dark .pwa-ios-arrow-down  { color: var(--text-3); border-top-color: var(--b
   flex-shrink: 0; touch-action: manipulation;
 }
 #dark-toggle:hover { background: rgba(255,255,255,0.14); border-color: rgba(255,255,255,0.5); transform: scale(1.08); }
+#dark-toggle[aria-pressed="true"] { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.4); }
+
+/* Dark mode: stronger focus ring so keyboard users can see where they are */
+body.dark :focus-visible {
+  outline-color: #60a5fa;
+  box-shadow: 0 0 0 3px rgba(96,165,250,0.3);
+}
 
 
 /* ── 26. PRINT ──────────────────────────────────────────────── */
@@ -1012,3 +1019,68 @@ body.dark .pwa-ios-arrow-down  { color: var(--text-3); border-top-color: var(--b
 /* ── 27. HOVER SCALE UTILITY ────────────────────────────────── */
 .hover-scale { transition: transform 0.2s cubic-bezier(0.34,1.56,0.64,1); }
 .hover-scale:hover { transform: scale(1.03); }
+
+
+/* ── 28. HTMX — loading indicator ──────────────────────────── */
+/* The .htmx-indicator is hidden by default; HTMX shows it during any request */
+.htmx-indicator { display: none; }
+.htmx-request .htmx-indicator,
+.htmx-request.htmx-indicator { display: block; }
+
+/* Subtle pulsing overlay on the target element while loading */
+.htmx-request #course-results,
+.htmx-request #inst-results {
+  opacity: 0.55;
+  pointer-events: none;
+  transition: opacity 0.15s;
+}
+
+/* Search input loading state */
+.htmx-request input[hx-get],
+.htmx-request input[data-hx-get] {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='10' fill='none' stroke='%231e3a8a' stroke-width='2.5' stroke-dasharray='31.4' stroke-dashoffset='0'%3E%3CanimateTransform attributeName='transform' type='rotate' from='0 12 12' to='360 12 12' dur='0.8s' repeatCount='indefinite'/%3E%3C/circle%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 16px;
+  padding-right: 36px;
+}
+
+
+/* ── 29. LAZY IMAGE — blur-up reveal ───────────────────────── */
+/* Add class="lazy-img" to <img loading="lazy"> for a smooth reveal */
+img.lazy-img {
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+img.lazy-img.loaded { opacity: 1; }
+
+
+/* ── 30. CARD PERFORMANCE UTILITIES ────────────────────────── */
+/* GPU-accelerate card hover lifts to avoid layout thrashing */
+.card { will-change: transform; }
+
+/* Reduce motion for users who prefer it (accessibility + battery) */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  .htmx-request #course-results,
+  .htmx-request #inst-results { opacity: 1; }
+}
+
+
+/* ── 31. PAGINATION ─────────────────────────────────────────── */
+.pagination .page-link {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #1e3a8a;
+  border-color: #e2e8f0;
+  min-width: 38px;
+  text-align: center;
+  transition: background 0.15s, color 0.15s;
+}
+.pagination .page-link:hover { background: #eff6ff; border-color: #bfdbfe; color: #1e3a8a; }
+.pagination .page-item.active .page-link { background: #1e3a8a; border-color: #1e3a8a; }
+.pagination .page-item.disabled .page-link { color: #94a3b8; }

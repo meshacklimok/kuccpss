@@ -1,17 +1,21 @@
 from datetime import date
 
 from django.contrib.auth.decorators import login_required
+from django.core.paginator import Paginator
 from django.db.models import Avg, Count
 from django.http import JsonResponse
 from django.shortcuts import render, get_object_or_404
+from django.views.decorators.cache import cache_page
 from django.views.decorators.http import require_POST
 from courses.models import Review
 from .models import InstitutionType, Institution, InstitutionPromotion
 
+INSTITUTIONS_PER_PAGE = 24
 
+
+@cache_page(60 * 15)  # 15-minute cache — institution type list rarely changes
 def institution_types_list(request):
     types = InstitutionType.objects.annotate(inst_count=Count('institutions')).order_by('name')
-    # Define a preferred display order and icons/colours
     ORDER = ['Public University', 'Private University', 'KMTC', 'Public TVET', 'Private TVET', 'TTC']
     def sort_key(t):
         try:
@@ -25,6 +29,7 @@ def institution_types_list(request):
 def institution_type_detail(request, type_slug):
     inst_type = get_object_or_404(InstitutionType, slug=type_slug)
     q = request.GET.get('q', '').strip()
+    page_num = request.GET.get('page', 1)
 
     institutions = inst_type.institutions.annotate(
         course_count=Count('offerings')
@@ -47,12 +52,21 @@ def institution_type_detail(request, type_slug):
         ).values_list('institution_id', flat=True)
     )
 
-    # Sort: sponsored first, then alphabetically
+    # Sort: sponsored first, then alphabetically, then paginate
     inst_list = sorted(institutions, key=lambda i: (0 if i.pk in sponsored_ids else 1, i.name))
+    paginator = Paginator(inst_list, INSTITUTIONS_PER_PAGE)
+    page_obj = paginator.get_page(page_num)
 
-    return render(request, 'institutions/institution_type_detail.html', {
+    is_htmx = request.headers.get('HX-Request') == 'true'
+    template = (
+        'institutions/_institution_list_partial.html' if is_htmx
+        else 'institutions/institution_type_detail.html'
+    )
+
+    return render(request, template, {
         'inst_type': inst_type,
-        'institutions': inst_list,
+        'institutions': page_obj,
+        'page_obj': page_obj,
         'sponsored_ids': sponsored_ids,
         'q': q,
     })
@@ -60,19 +74,17 @@ def institution_type_detail(request, type_slug):
 
 def institution_detail(request, type_slug, institution_slug):
     institution = get_object_or_404(
-        Institution,
+        Institution.objects.select_related('institution_type'),
         slug=institution_slug,
         institution_type__slug=type_slug,
     )
 
-    # Courses offered, grouped by course type in the template
     offerings = (
         institution.offerings
         .select_related('course', 'course__course_type', 'course__category')
         .order_by('course__course_type__name', 'course__category__name', 'course__name')
     )
 
-    # Build grouped structure: {course_type_name: {category_name: [offerings]}}
     grouped = {}
     for offering in offerings:
         ct = offering.course.course_type.name

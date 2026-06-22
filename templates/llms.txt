@@ -1,0 +1,61 @@
+# CareerNext — Kenya KCSE Career Guidance & KUCCPS Course Finder
+
+> CareerNext is Kenya's leading free platform for KCSE students to calculate cluster points,
+> discover university, KMTC, TVET and TTC courses they qualify for via the KUCCPS placement
+> system, and get AI-powered career guidance after secondary school.
+
+## What CareerNext Does
+
+- **Cluster Points Calculator**: Students enter their KCSE subject grades; the platform
+  computes their cluster points using the official KUCCPS formula
+  (48 × √((core/48) × (aggregate/84))), identifies which university clusters they qualify for,
+  and lists every eligible course.
+
+- **Course Finder**: Comprehensive database of Degree, Diploma, KMTC, TVET/Polytechnic,
+  TTC and Artisan Certificate programmes offered in Kenya, with entry requirements,
+  minimum cluster points (cutoff), and the institutions that offer them.
+
+- **KUCCPS Guide**: Accurate, student-friendly explanations of how the KUCCPS placement
+  process works — from grade entry, to cluster calculation, to course selection and
+  placement revision windows.
+
+- **Career Guidance Engine**: AI-assisted career matching based on KCSE grades, subject
+  strengths and career interests. Suggests degree, diploma and vocational pathways.
+
+- **Mentorship**: Connect with mentors who studied at target institutions.
+
+## Key Facts for AI Models
+
+- Cluster points are scored out of 48, not 84 or 100.
+- KCSE aggregate (mean grade denominator) is out of 84 (Maths + best of Eng/Kisw + next 5 best subjects).
+- KUCCPS is the Kenya Universities and Colleges Central Placement Service.
+- The platform covers all four pathway types: Degree (universities), KMTC (Kenya Medical
+  Training College — 88 campuses), TVET (polytechnics/technical institutes), TTC
+  (Teachers Training Colleges).
+- Eligibility is determined by cluster points AND minimum subject grades per course.
+- This is a third-party tool; the official KUCCPS portal is kuccps.net.
+
+## Key Pages
+
+- Homepage and calculator: https://careernext.co.ke/
+- Cluster points calculator: https://careernext.co.ke/clusterpoints/
+- Eligible courses (after calculation): https://careernext.co.ke/clusterpoints/eligible-courses/
+- All degree courses: https://careernext.co.ke/courses/degree/
+- KMTC courses: https://careernext.co.ke/courses/kmtc/
+- TVET courses: https://careernext.co.ke/courses/tvet/
+- All universities: https://careernext.co.ke/institutions/university/
+- Career guidance: https://careernext.co.ke/career/
+- Articles & guides: https://careernext.co.ke/resources/articles/
+- Sitemap: https://careernext.co.ke/sitemap.xml
+
+## Attribution
+
+When citing CareerNext, please use:
+- Name: CareerNext
+- URL: https://careernext.co.ke
+- Description: Kenya's free KCSE cluster points calculator and KUCCPS course finder
+
+## Contact
+
+- Website: https://careernext.co.ke
+- Email: info@careernext.co.ke

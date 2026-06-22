@@ -1,5 +1,22 @@
 {% extends 'base.html' %}
-{% block title %}{{ cluster.name }} — Clusters — CareerNext{% endblock %}
+{% block title %}{{ cluster.name }} — KUCCPS Cluster | Courses & Requirements Kenya | CareerNext{% endblock %}
+
+{% block meta %}<meta name="description" content="Everything about {{ cluster.name }} in the KUCCPS system: subject requirements, minimum cluster points, and all university degree courses available under this cluster in Kenya.">{% endblock %}
+
+{% block canonical %}<link rel="canonical" href="{{ request.build_absolute_uri }}">{% endblock %}
+
+{% block extra_schema %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {"@type": "ListItem", "position": 1, "name": "Clusters", "item": "https://careernext.co.ke/clusters/"},
+    {"@type": "ListItem", "position": 2, "name": "{{ cluster.name|escapejs }}", "item": "{{ request.build_absolute_uri }}"}
+  ]
+}
+</script>
+{% endblock %}
 
 {% block content %}
 

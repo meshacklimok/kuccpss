@@ -1,0 +1,447 @@
+{% extends "base.html" %}
+{% block title %}Affiliate Analytics — CareerNext Staff{% endblock %}
+
+{% block content %}
+<style>
+/* ── Design tokens ── */
+:root {
+  --navy:   #1e3a8a; --blue:   #2563eb; --blue-lt: #eff6ff; --blue-bd: #bfdbfe;
+  --green:  #16a34a; --green-lt:#f0fdf4;
+  --amber:  #d97706; --amber-lt:#fffbeb;
+  --red:    #dc2626; --red-lt:  #fef2f2;
+  --purple: #7c3aed; --purple-lt:#f5f3ff;
+  --teal:   #0891b2; --teal-lt: #ecfeff;
+  --text:   #0f172a; --muted:   #64748b; --border:  #e2e8f0;
+  --bg:     #f8fafc; --card:    #ffffff;
+  --shadow: 0 1px 3px rgba(0,0,0,.06), 0 4px 16px rgba(30,58,138,.06);
+  --radius: 14px;
+}
+body { background: var(--bg); }
+
+/* ── Layout ── */
+.bi-wrap { max-width: 1400px; margin: 0 auto; padding: 1.5rem 1rem 5rem; }
+
+/* ── Top bar ── */
+.bi-topbar {
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: .75rem; margin-bottom: 1.5rem;
+}
+.bi-topbar-left h1 { font-size: 1.45rem; font-weight: 800; color: var(--navy); margin: 0; letter-spacing: -.02em; }
+.bi-topbar-left p  { font-size: .78rem; color: var(--muted); margin: .15rem 0 0; }
+.bi-topbar-right   { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; }
+
+/* Day-range pills */
+.day-pills { display: flex; gap: .3rem; }
+.day-pill {
+  padding: .3rem .75rem; border-radius: 20px; font-size: .78rem; font-weight: 600;
+  border: 1.5px solid var(--border); background: var(--card); color: var(--muted);
+  text-decoration: none; transition: all .15s;
+}
+.day-pill:hover { border-color: var(--blue); color: var(--blue); }
+.day-pill.active { background: var(--navy); border-color: var(--navy); color: #fff; }
+
+/* Export + refresh */
+.btn-export {
+  display: flex; align-items: center; gap: .4rem;
+  padding: .35rem 1rem; border-radius: 8px; font-size: .8rem; font-weight: 700;
+  background: var(--green); color: #fff; text-decoration: none; border: none; cursor: pointer;
+  transition: background .15s;
+}
+.btn-export:hover { background: #15803d; color: #fff; }
+.btn-refresh {
+  display: flex; align-items: center; gap: .4rem;
+  padding: .35rem .9rem; border-radius: 8px; font-size: .8rem; font-weight: 700;
+  background: var(--navy); color: #fff; text-decoration: none; border: none; cursor: pointer;
+}
+.btn-refresh:hover { background: var(--blue); color: #fff; }
+
+/* ── Tab nav ── */
+.bi-tabs {
+  display: flex; gap: .15rem; border-bottom: 2px solid var(--border);
+  margin-bottom: 1.5rem; overflow-x: auto; -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.bi-tabs::-webkit-scrollbar { display: none; }
+.bi-tab {
+  display: flex; align-items: center; gap: .4rem;
+  padding: .6rem 1.1rem; border-radius: 8px 8px 0 0;
+  font-size: .82rem; font-weight: 600; color: var(--muted);
+  border: none; background: none; cursor: pointer; white-space: nowrap;
+  border-bottom: 2px solid transparent; margin-bottom: -2px;
+  transition: color .15s;
+}
+.bi-tab:hover { color: var(--navy); }
+.bi-tab.active { color: var(--navy); border-bottom-color: var(--navy); background: var(--blue-lt); }
+.tab-icon { font-size: .9rem; }
+
+/* ── Sections ── */
+.bi-section { display: none; }
+.bi-section.active { display: block; }
+
+/* ── KPI grid ── */
+.kpi-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(175px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+.kpi-card {
+  background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 1.1rem 1.25rem; box-shadow: var(--shadow); border-left: 4px solid transparent;
+  transition: box-shadow .2s;
+}
+.kpi-card:hover { box-shadow: 0 4px 24px rgba(30,58,138,.12); }
+.kpi-card.c-blue   { border-left-color: var(--blue);   }
+.kpi-card.c-green  { border-left-color: var(--green);  }
+.kpi-card.c-amber  { border-left-color: var(--amber);  }
+.kpi-card.c-red    { border-left-color: var(--red);    }
+.kpi-card.c-purple { border-left-color: var(--purple); }
+.kpi-card.c-teal   { border-left-color: var(--teal);   }
+.kpi-label { font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); margin: 0 0 .3rem; }
+.kpi-value { font-size: 1.9rem; font-weight: 800; color: var(--text); margin: 0; line-height: 1; }
+.kpi-card.c-blue   .kpi-value { color: var(--navy);   }
+.kpi-card.c-green  .kpi-value { color: var(--green);  }
+.kpi-card.c-amber  .kpi-value { color: var(--amber);  }
+.kpi-card.c-red    .kpi-value { color: var(--red);    }
+.kpi-card.c-purple .kpi-value { color: var(--purple); }
+.kpi-card.c-teal   .kpi-value { color: var(--teal);   }
+.kpi-meta { display: flex; align-items: center; gap: .35rem; margin-top: .35rem; }
+.kpi-sub  { font-size: .73rem; color: var(--muted); }
+.trend-up   { font-size: .7rem; font-weight: 700; color: var(--green);  background: var(--green-lt);  border-radius: 20px; padding: 1px 6px; }
+.trend-down { font-size: .7rem; font-weight: 700; color: var(--red);    background: var(--red-lt);    border-radius: 20px; padding: 1px 6px; }
+.trend-flat { font-size: .7rem; font-weight: 700; color: var(--muted);  background: #f1f5f9;          border-radius: 20px; padding: 1px 6px; }
+
+/* ── Card + grid helpers ── */
+.card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.25rem 1.4rem; box-shadow: var(--shadow); margin-bottom: 1.25rem; }
+.card-title { font-size: .85rem; font-weight: 700; color: var(--text); margin: 0 0 1rem; display: flex; align-items: center; gap: .5rem; }
+.card-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+.two-col   { display: grid; grid-template-columns: 1fr 1fr;       gap: 1.25rem; }
+.three-col { display: grid; grid-template-columns: 1fr 1fr 1fr;   gap: 1.25rem; }
+.four-col  { display: grid; grid-template-columns: repeat(4,1fr); gap: 1rem; }
+@media(max-width:1100px) { .three-col,.four-col { grid-template-columns:1fr 1fr; } }
+@media(max-width: 700px) { .two-col,.three-col,.four-col { grid-template-columns:1fr; } }
+
+/* ── Section header ── */
+.sec-head { font-size: 1rem; font-weight: 800; color: var(--navy); margin: 1.5rem 0 1rem; display: flex; align-items: center; gap: .5rem; }
+.sec-head::after { content: ''; flex: 1; height: 1px; background: var(--border); margin-left: .5rem; }
+
+/* ── Charts ── */
+.chart-box { position: relative; }
+.chart-box.h220 { height: 220px; }
+.chart-box.h260 { height: 260px; }
+.chart-box.h200 { height: 200px; }
+.chart-box.donut { height: 220px; max-width: 260px; margin: 0 auto; }
+
+/* ── Tables ── */
+.bi-table { width: 100%; border-collapse: collapse; font-size: .83rem; }
+.bi-table th { text-align: left; font-size: .67rem; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); padding: .4rem .5rem; border-bottom: 2px solid var(--border); white-space: nowrap; }
+.bi-table td { padding: .45rem .5rem; border-bottom: 1px solid #f1f5f9; color: var(--text); vertical-align: middle; }
+.bi-table tr:last-child td { border-bottom: none; }
+.bi-table tr:hover td { background: #f8fafc; }
+.rn { font-weight: 700; color: var(--muted); min-width: 1.6rem; display: inline-block; }
+
+/* Progress bar */
+.bar-wrap { height: 5px; border-radius: 3px; background: #f1f5f9; margin-top: 4px; min-width: 60px; }
+.bar-fill { height: 100%; border-radius: 3px; background: var(--navy); }
+.bar-fill.green  { background: var(--green); }
+.bar-fill.purple { background: var(--purple); }
+.bar-fill.amber  { background: var(--amber); }
+
+/* Badges */
+.badge { display: inline-flex; align-items: center; padding: .15rem .55rem; border-radius: 20px; font-size: .7rem; font-weight: 700; white-space: nowrap; }
+.b-blue   { background: var(--blue-lt);   color: var(--blue);   }
+.b-green  { background: var(--green-lt);  color: var(--green);  }
+.b-amber  { background: var(--amber-lt);  color: var(--amber);  }
+.b-red    { background: var(--red-lt);    color: var(--red);    }
+.b-purple { background: var(--purple-lt); color: var(--purple); }
+.b-teal   { background: var(--teal-lt);   color: var(--teal);   }
+.b-gray   { background: #f1f5f9;          color: var(--muted);  }
+
+/* ── Funnel ── */
+.funnel-row { display: flex; align-items: center; gap: .75rem; margin-bottom: .65rem; }
+.funnel-label { min-width: 110px; font-size: .78rem; color: var(--muted); font-weight: 600; text-align: right; }
+.funnel-track { flex: 1; height: 28px; background: #f1f5f9; border-radius: 6px; overflow: hidden; position: relative; }
+.funnel-fill  { height: 100%; border-radius: 6px; background: linear-gradient(90deg, var(--navy), var(--blue)); display: flex; align-items: center; padding: 0 10px; transition: width .6s cubic-bezier(.4,0,.2,1); }
+.funnel-fill span { font-size: .73rem; font-weight: 700; color: #fff; white-space: nowrap; }
+.funnel-n { min-width: 50px; font-size: .83rem; font-weight: 700; color: var(--text); }
+
+/* ── Split bar ── */
+.split-track { height: 8px; border-radius: 4px; background: #f1f5f9; overflow: hidden; margin: .4rem 0; }
+.split-fill  { height: 100%; border-radius: 4px; background: var(--navy); }
+.split-row   { display: flex; justify-content: space-between; font-size: .73rem; color: var(--muted); }
+
+/* ── Activity feed ── */
+.feed-item { display: flex; align-items: flex-start; gap: .75rem; padding: .6rem 0; border-bottom: 1px solid #f1f5f9; }
+.feed-item:last-child { border-bottom: none; }
+.feed-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 5px; }
+.fd-search  { background: var(--blue); }
+.fd-view    { background: var(--purple); }
+.fd-career  { background: var(--green); }
+.fd-event   { background: var(--amber); }
+.feed-label { font-size: .8rem; font-weight: 600; color: var(--text); line-height: 1.3; }
+.feed-sub   { font-size: .72rem; color: var(--muted); }
+.feed-ts    { font-size: .7rem; color: var(--muted); white-space: nowrap; margin-left: auto; }
+
+/* ── Success rate ring ── */
+.rate-ring { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 1.25rem; }
+.rate-val  { font-size: 2.6rem; font-weight: 900; color: var(--green); line-height: 1; }
+.rate-lbl  { font-size: .75rem; color: var(--muted); font-weight: 600; margin-top: .2rem; }
+.rate-sub  { font-size: .73rem; color: var(--muted); margin-top: .5rem; text-align: center; }
+
+/* ── User table specifics ── */
+.user-email { font-weight: 600; color: var(--navy); }
+.user-name  { font-size: .75rem; color: var(--muted); }
+
+/* ── No-data state ── */
+.no-data { color: var(--muted); font-size: .85rem; text-align: center; padding: 2.5rem 1rem; }
+
+/* ── Sort pills ── */
+.sort-pills { display: flex; gap: .4rem; flex-wrap: wrap; margin-bottom: 1.25rem; }
+.sort-pill {
+  padding: .3rem .85rem; border-radius: 20px; font-size: .78rem; font-weight: 600;
+  border: 1.5px solid var(--border); background: var(--card); color: var(--muted);
+  text-decoration: none; transition: all .15s;
+}
+.sort-pill:hover { border-color: var(--teal); color: var(--teal); }
+.sort-pill.active { background: var(--teal); border-color: var(--teal); color: #fff; }
+
+/* ── Responsive ── */
+@media(max-width:640px) {
+  .bi-topbar { flex-direction: column; align-items: flex-start; }
+  .kpi-grid  { grid-template-columns: 1fr 1fr; }
+}
+</style>
+
+<div class="bi-wrap">
+
+  <!-- ── Top bar ── -->
+  <div class="bi-topbar">
+    <div class="bi-topbar-left">
+      <h1>🤝 Affiliate Analytics</h1>
+      <p>All affiliate performance data · Staff only</p>
+    </div>
+    <div class="bi-topbar-right">
+      <a href="{% url 'analytics:dashboard' %}" class="btn-export" style="background:var(--navy);">
+        <i class="fas fa-chart-line"></i> Main Dashboard
+      </a>
+      <a href="{% url 'analytics:mentor_analytics' %}" class="btn-export" style="background:var(--purple);">
+        <i class="fas fa-chalkboard-teacher"></i> Mentors
+      </a>
+    </div>
+  </div>
+
+  <!-- ── Sort pills ── -->
+  <div class="sort-pills">
+    <span style="font-size:.78rem;font-weight:700;color:var(--muted);align-self:center;">Sort by:</span>
+    <a href="?sort=earnings"  class="sort-pill {% if sort == 'earnings' %}active{% endif %}">Earnings</a>
+    <a href="?sort=balance"   class="sort-pill {% if sort == 'balance' %}active{% endif %}">Balance</a>
+    <a href="?sort=referrals" class="sort-pill {% if sort == 'referrals' %}active{% endif %}">Referrals</a>
+    <a href="?sort=rate"      class="sort-pill {% if sort == 'rate' %}active{% endif %}">Rate</a>
+  </div>
+
+  <!-- ── KPI grid ── -->
+  <div class="kpi-grid">
+    <div class="kpi-card c-blue">
+      <p class="kpi-label">Total Affiliates</p>
+      <p class="kpi-value">{{ total_affiliates }}</p>
+      <p class="kpi-sub">all time</p>
+    </div>
+    <div class="kpi-card c-green">
+      <p class="kpi-label">Active</p>
+      <p class="kpi-value">{{ active_affiliates }}</p>
+      <p class="kpi-sub">{{ inactive_affiliates }} inactive</p>
+    </div>
+    <div class="kpi-card c-purple">
+      <p class="kpi-label">Total Commissions</p>
+      <p class="kpi-value">{{ total_commissions }}</p>
+      <p class="kpi-sub">KES {{ total_commission_amount|floatformat:0 }} total</p>
+    </div>
+    <div class="kpi-card c-teal">
+      <p class="kpi-label">Paid Out</p>
+      <p class="kpi-value">{{ paid_commissions }}</p>
+      <p class="kpi-sub">KES {{ total_paid_out|floatformat:0 }}</p>
+    </div>
+    <div class="kpi-card c-amber">
+      <p class="kpi-label">Pending</p>
+      <p class="kpi-value">{{ pending_commissions }}</p>
+      <p class="kpi-sub">awaiting payout</p>
+    </div>
+    <div class="kpi-card c-green">
+      <p class="kpi-label">Total Wallet Balance</p>
+      <p class="kpi-value">{{ total_wallet_balance|floatformat:0 }}</p>
+      <p class="kpi-sub">KES pending across all</p>
+    </div>
+  </div>
+
+  <!-- ── Charts ── -->
+  <div class="two-col">
+    <div class="card">
+      <p class="card-title"><i class="fas fa-chart-bar me-1" style="color:var(--teal)"></i> Monthly Paid Commissions</p>
+      <div class="chart-box h260"><canvas id="monthlyChart"></canvas></div>
+    </div>
+    <div class="card">
+      <p class="card-title"><i class="fas fa-chart-pie me-1" style="color:var(--green)"></i> Active vs Inactive Affiliates</p>
+      <div class="chart-box donut" style="height:260px;max-width:300px;"><canvas id="statusChart"></canvas></div>
+    </div>
+  </div>
+
+  <!-- ── Affiliate Comparison Table ── -->
+  <div class="card">
+    <p class="card-title"><i class="fas fa-table me-1" style="color:var(--navy)"></i> Affiliate Comparison Table</p>
+    {% if affiliates %}
+    <div style="overflow-x:auto;">
+    <table class="bi-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Affiliate</th>
+          <th><a href="?sort=rate" style="color:inherit;text-decoration:none;">Comm. Rate{% if sort == 'rate' %} ↓{% endif %}</a></th>
+          <th><a href="?sort=referrals" style="color:inherit;text-decoration:none;">Referrals{% if sort == 'referrals' %} ↓{% endif %}</a></th>
+          <th>Paid Comms</th>
+          <th><a href="?sort=earnings" style="color:inherit;text-decoration:none;">Total Earned{% if sort == 'earnings' %} ↓{% endif %}</a></th>
+          <th><a href="?sort=balance" style="color:inherit;text-decoration:none;">Wallet Balance{% if sort == 'balance' %} ↓{% endif %}</a></th>
+          <th>Status</th>
+          <th>Joined</th>
+          <th>Flag</th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for item in affiliates %}
+      {% with a=item.profile %}
+      <tr>
+        <td><span class="rn">{{ forloop.counter }}</span></td>
+        <td>
+          <a href="/cn-staff/accounts/affiliateprofile/{{ a.id }}/change/" target="_blank"
+             style="font-weight:600;color:var(--navy);text-decoration:none;">
+            {{ a.user.email }}
+          </a>
+          {% if a.user.full_name %}
+          <div style="font-size:.72rem;color:var(--muted);">{{ a.user.full_name }}</div>
+          {% endif %}
+        </td>
+        <td><span class="badge b-teal">{{ a.commission_rate }}%</span></td>
+        <td><span class="badge b-purple">{{ a.referral_count }}</span></td>
+        <td><span class="badge b-green">{{ a.paid_count }}</span></td>
+        <td style="font-weight:700;color:var(--green);">KES {{ a.total_earned|floatformat:0 }}</td>
+        <td>KES {{ a.wallet_balance|floatformat:0 }}</td>
+        <td>
+          {% if a.is_active %}<span class="badge b-green">Active</span>
+          {% else %}<span class="badge b-gray">Inactive</span>{% endif %}
+        </td>
+        <td style="font-size:.73rem;color:var(--muted);white-space:nowrap;">{{ a.created_at|date:"d M Y" }}</td>
+        <td>
+          {% if item.unserious %}<span class="badge b-amber">&#9888; No referrals</span>{% endif %}
+        </td>
+      </tr>
+      {% endwith %}
+      {% endfor %}
+      </tbody>
+    </table>
+    </div>
+    {% else %}<p class="no-data">No affiliates registered yet.</p>{% endif %}
+  </div>
+
+  <!-- ── Recent Commissions ── -->
+  <div class="card">
+    <p class="card-title"><i class="fas fa-receipt me-1" style="color:var(--teal)"></i> Recent Commissions (last 30)</p>
+    {% if recent_commissions %}
+    <div style="overflow-x:auto;">
+    <table class="bi-table">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Affiliate</th>
+          <th>Referred User</th>
+          <th>Amount (KES)</th>
+          <th>Rate</th>
+          <th>Status</th>
+          <th>Paid Out At</th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for c in recent_commissions %}
+      <tr>
+        <td style="font-size:.73rem;color:var(--muted);white-space:nowrap;">{{ c.created_at|date:"d M Y H:i" }}</td>
+        <td style="font-weight:600;">{{ c.affiliate.user.email }}</td>
+        <td>{{ c.referred_user.email|default:"—" }}</td>
+        <td style="font-weight:700;color:var(--green);">{{ c.amount|floatformat:0 }}</td>
+        <td><span class="badge b-teal">{{ c.rate_snapshot }}%</span></td>
+        <td>
+          {% if c.status == 'paid_out' %}<span class="badge b-green">Paid Out</span>
+          {% else %}<span class="badge b-amber">Pending</span>{% endif %}
+        </td>
+        <td style="font-size:.73rem;color:var(--muted);">
+          {% if c.paid_out_at %}{{ c.paid_out_at|date:"d M Y" }}{% else %}—{% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    </div>
+    {% else %}<p class="no-data">No commissions recorded yet.</p>{% endif %}
+  </div>
+
+</div><!-- /bi-wrap -->
+
+<script>
+(function () {
+  'use strict';
+
+  const monthlyLabels = {{ chart_monthly_labels|safe }};
+  const monthlyCounts = {{ chart_monthly_counts|safe }};
+  const monthlyTotals = {{ chart_monthly_totals|safe }};
+  const statusLabels  = {{ chart_status_labels|safe }};
+  const statusData    = {{ chart_status_data|safe }};
+
+  /* Monthly paid commissions bar chart */
+  const monthlyCtx = document.getElementById('monthlyChart');
+  if (monthlyCtx) {
+    new Chart(monthlyCtx, {
+      type: 'bar',
+      data: {
+        labels: monthlyLabels,
+        datasets: [
+          {
+            label: 'Paid Commissions (count)',
+            data: monthlyCounts,
+            backgroundColor: 'rgba(8,145,178,.75)',
+            borderRadius: 4,
+            yAxisID: 'y',
+          },
+          {
+            label: 'Amount (KES)',
+            data: monthlyTotals,
+            backgroundColor: 'rgba(22,163,74,.55)',
+            borderRadius: 4,
+            yAxisID: 'y1',
+          },
+        ],
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'top', labels: { boxWidth: 10, padding: 12 } },
+          tooltip: { mode: 'index', intersect: false },
+        },
+        scales: {
+          x: { grid: { display: false } },
+          y:  { beginAtZero: true, position: 'left',  grid: { color: '#f1f5f9' }, ticks: { precision: 0 }, title: { display: true, text: 'Count' } },
+          y1: { beginAtZero: true, position: 'right', grid: { drawOnChartArea: false }, ticks: { precision: 0 }, title: { display: true, text: 'KES' } },
+        },
+      },
+    });
+  }
+
+  /* Active vs inactive pie */
+  const statusCtx = document.getElementById('statusChart');
+  if (statusCtx) {
+    new Chart(statusCtx, {
+      type: 'pie',
+      data: {
+        labels: statusLabels,
+        datasets: [{ data: statusData, backgroundColor: ['#16a34a', '#64748b'], borderWidth: 2, borderColor: '#fff', hoverOffset: 8 }],
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, padding: 10 } } },
+      },
+    });
+  }
+}());
+</script>
+{% endblock %}

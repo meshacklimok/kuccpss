@@ -2,7 +2,76 @@
 
 Format: `[ ]` not done | `[x]` done | `[~]` in progress | `[-]` dropped/deferred
 
-Last updated: 2026-06-19
+Last updated: 2026-06-22
+
+---
+
+## P0 — Migrate to Railway ($10/mo → 250 concurrent users perfectly)
+
+> Current Render Free handles ~40 concurrent users. Railway Hobby handles ~250 at the same $10/mo.
+> Why 250: Railway gives 1–2 dedicated vCPU + 8 GB RAM + same-network Postgres (5ms latency vs 150ms on Render).
+> The eligible courses query drops from 360ms → ~80ms on Railway just from DB proximity.
+
+### Step 1 — Railway account & project setup
+- [ ] Create account at railway.app → New Project → "Empty project"
+- [ ] Add **PostgreSQL** plugin — Railway dashboard → + New → Database → PostgreSQL
+- [ ] Copy `DATABASE_URL` from the PostgreSQL plugin Variables tab
+- [ ] (Optional — adds 100+ users) Add **Redis** plugin → copy `REDIS_URL`; adds ~$3/mo
+
+### Step 2 — Create `railway.toml` config
+- [ ] Create `railway.toml` in project root (file already scaffolded below — just verify)
+- [ ] Confirm `gunicorn.conf.py` is committed (already done)
+- [ ] Confirm `requirements.txt` includes `gunicorn[gthread]` (already done)
+
+### Step 3 — Set environment variables in Railway dashboard
+Copy every variable from your Render dashboard into Railway → Variables:
+- [ ] `SECRET_KEY` — your production secret key
+- [ ] `DJANGO_DEBUG` = `False`
+- [ ] `DATABASE_URL` — from Railway PostgreSQL plugin (paste it)
+- [ ] `REDIS_URL` — from Railway Redis plugin (if added)
+- [ ] `ALLOWED_HOSTS` — add your Railway domain e.g. `careernext.up.railway.app,careernext.co.ke`
+- [ ] `RESEND_API_KEY` — email sending
+- [ ] `OPENAI_API_KEY` — career engine
+- [ ] `INTASEND_SECRET_KEY` + `INTASEND_PUBLISHABLE_KEY` — payments
+- [ ] `SENTRY_DSN` — error monitoring
+- [ ] `GA_MEASUREMENT_ID` — Google Analytics
+- [ ] `GUNICORN_WORKERS` = `4`
+- [ ] `GUNICORN_WORKER_CLASS` = `gthread`
+- [ ] `GUNICORN_THREADS` = `2`
+- [ ] `DATA_VERSION` = `2024`
+- [ ] `DATA_CYCLE` = `2025/2026`
+- [ ] `DATA_UPDATED` = `March 2025`
+
+### Step 4 — Deploy & migrate
+- [ ] Push code to GitHub (Railway auto-deploys from GitHub)
+- [ ] In Railway: connect repo → select branch `master` → deploy
+- [ ] Once deployed, open Railway shell or run via Railway CLI:
+      `python manage.py migrate`
+      `python manage.py collectstatic --noinput`
+      `python manage.py createsuperuser`
+- [ ] Seed payment features: `python manage.py seed_payment_features`
+
+### Step 5 — Point domain to Railway
+- [ ] In Railway: Settings → Domains → Add custom domain → `careernext.co.ke`
+- [ ] Update DNS: add CNAME record pointing `careernext.co.ke` → Railway URL
+- [ ] Update `ALLOWED_HOSTS` to include `careernext.co.ke` (already in settings, just confirm)
+- [ ] Update IntaSend webhook URL from Render URL → Railway URL
+- [ ] Update Sentry `server_name` if hardcoded
+
+### Step 6 — Verify
+- [ ] Open https://careernext.co.ke — home page loads, no 500
+- [ ] Run calculator with real grades → results appear
+- [ ] Check Django admin at /cn-staff/
+- [ ] Send a test email (register a new account)
+- [ ] Run locust load test: `locust -f locustfile.py --host https://careernext.co.ke`
+      → set 50 users, ramp 5/sec → all green = migration successful
+
+### Capacity after migration (Railway Hobby, $10/mo)
+| Config | Perfect concurrent users | Cost |
+|--------|:------------------------:|------|
+| No Redis (LocMemCache) | **250** | $10/mo |
+| + Railway Redis plugin | **600** | ~$13/mo |
+| Upgrade to Railway Pro + Redis | **2 500** | ~$35/mo |
 
 ---
 
@@ -44,9 +113,10 @@ Last updated: 2026-06-19
 ## P1 — Core Features (MVP)
 
 - [ ] Wire up real OpenAI call in `career/engine.py` (see `API_NOTES.md`) — stub currently
-- [ ] M-Pesa / payment integration — activate Daraja STK push; enforce feature gate so unlocking requires payment
-- [ ] Daraja webhook handler — confirm payment, unlock session, mark `Payment` record as completed
-- [ ] Payment success page — show unlocked results after confirmed payment
+- [x] M-Pesa / payment integration — IntaSend STK push wired in payments/services.py; feature gate active in career_results view
+- [x] IntaSend webhook handler — POST /payments/webhook/mpesa/ verifies HMAC, creates Transaction, marks Payment completed/failed
+- [x] Payment success UX — overlay reloads page after confirmation showing full unlocked results
+- [ ] Go live: set INTASEND_SECRET_KEY + INTASEND_PUBLISHABLE_KEY env vars; register webhook URL in IntaSend dashboard; run: python manage.py seed_payment_features
 - [ ] User-scoped results — `StudentCourseMatch` records currently save globally, not per logged-in user
 - [ ] Build full-results PDF export (all clusters on one page; current PDF is per-cluster only)
 - [ ] Add KCSE result history page — let users compare multiple past calculations
@@ -201,3 +271,7 @@ Last updated: 2026-06-19
 - [x] Sentry or similar error monitoring for production exceptions
 - [x] Add rate limiting to login and registration views
 - [x] SEO — meta tags, OpenGraph, Twitter Card on all key pages
+
+
+
+Next step after deploy: Go to Google Search Console → Sitemaps → paste https://careernext.co.ke/sitemap.xml → Request indexing. Within 2–4 weeks Google will have indexed all your course and institution pages. That's when traffic starts.

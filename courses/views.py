@@ -1,17 +1,22 @@
 import json
 import logging
 from django.contrib.auth.decorators import login_required
+from django.core.paginator import Paginator
 from django.db.models import Avg, Count
 from django.http import JsonResponse
 from django.shortcuts import render, get_object_or_404, redirect
+from django.views.decorators.cache import cache_page
 from django.views.decorators.http import require_POST
 from .models import CourseType, CourseCategory, Course, Review
 
 log = logging.getLogger(__name__)
 
+COURSES_PER_PAGE = 24
+
 # ------------------------------
 # Course Types List View
 # ------------------------------
+@cache_page(60 * 15)  # 15-minute cache — course type list rarely changes
 def course_types_list(request):
     """
     Display all top-level course types grouped: main types (Degree, KMTC, TTC) + TVET levels.
@@ -65,16 +70,20 @@ def course_type_detail(request, type_slug):
     """
     Display all categories under a course type (if any).
     For types without categories (KMTC, TTC, etc.), directly show courses.
-    Supports ?q= search filtering.
+    Supports ?q= search + pagination. Returns partial on HTMX requests.
     """
     course_type = get_object_or_404(CourseType, slug=type_slug)
     q = request.GET.get('q', '').strip()
+    page_num = request.GET.get('page', 1)
 
     categories = course_type.categories.all()
 
+    page_obj = None
     courses = None
     if not categories.exists() or q:
-        qs = Course.objects.filter(course_type=course_type)
+        qs = Course.objects.filter(course_type=course_type).select_related(
+            'course_type', 'category', 'cluster'
+        )
         if q:
             from django.db.models import Q as _Q
             f = _Q(name__icontains=q)
@@ -82,15 +91,22 @@ def course_type_detail(request, type_slug):
                 if len(tok) >= 3:
                     f |= _Q(name__icontains=tok)
             qs = qs.filter(f)
-        courses = qs.order_by('name')
+        qs = qs.order_by('name')
+        paginator = Paginator(qs, COURSES_PER_PAGE)
+        page_obj = paginator.get_page(page_num)
+        courses = page_obj
+
+    is_htmx = request.headers.get('HX-Request') == 'true'
+    template = 'courses/_course_list_partial.html' if is_htmx else 'courses/course_type_detail.html'
 
     context = {
         'course_type': course_type,
         'categories': categories,
         'courses': courses,
+        'page_obj': page_obj,
         'q': q,
     }
-    return render(request, 'courses/course_type_detail.html', context)
+    return render(request, template, context)
 
 
 # ------------------------------
@@ -100,31 +116,44 @@ def course_category_detail(request, type_slug, category_slug):
     """
     Display all courses under a specific category.
     Falls back to course detail when the slug matches a course rather than a category.
-    Supports ?q= search filtering.
+    Supports ?q= search + pagination. Returns partial on HTMX requests.
     """
     try:
-        category = CourseCategory.objects.get(slug=category_slug, course_type__slug=type_slug)
+        category = CourseCategory.objects.select_related('course_type').get(
+            slug=category_slug, course_type__slug=type_slug
+        )
     except CourseCategory.DoesNotExist:
         return course_detail(request, type_slug, course_slug=category_slug)
 
     q = request.GET.get('q', '').strip()
-    courses = Course.objects.filter(category=category)
+    page_num = request.GET.get('page', 1)
+
+    qs = Course.objects.filter(category=category).select_related(
+        'course_type', 'category', 'cluster'
+    )
     if q:
         from django.db.models import Q as _Q
         f = _Q(name__icontains=q)
         for tok in q.split():
             if len(tok) >= 3:
                 f |= _Q(name__icontains=tok)
-        courses = courses.filter(f)
-    courses = courses.order_by('name')
+        qs = qs.filter(f)
+    qs = qs.order_by('name')
+
+    paginator = Paginator(qs, COURSES_PER_PAGE)
+    page_obj = paginator.get_page(page_num)
+
+    is_htmx = request.headers.get('HX-Request') == 'true'
+    template = 'courses/_course_list_partial.html' if is_htmx else 'courses/course_category_detail.html'
 
     context = {
         'category': category,
         'course_type': category.course_type,
-        'courses': courses,
+        'courses': page_obj,
+        'page_obj': page_obj,
         'q': q,
     }
-    return render(request, 'courses/course_category_detail.html', context)
+    return render(request, template, context)
 
 
 # ------------------------------

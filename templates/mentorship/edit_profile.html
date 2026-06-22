@@ -67,7 +67,7 @@
               <label class="form-label fw-semibold">{{ form.photo.label }}</label>
               {% if mentor.photo %}
                 <div class="mb-2 d-flex align-items-center gap-3">
-                  <img src="{{ mentor.photo.url }}" class="rounded-circle object-fit-cover" width="56" height="56" alt="Current photo">
+                  <img src="{{ mentor.photo.url }}" class="rounded-circle object-fit-cover" width="56" height="56" alt="Current photo" loading="lazy">
                   <span class="text-muted small">Current photo</span>
                 </div>
               {% endif %}

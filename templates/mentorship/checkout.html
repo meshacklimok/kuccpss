@@ -11,7 +11,7 @@
           <div class="d-flex align-items-center gap-3 mb-3">
             {% if session.mentor.photo %}
               <img src="{{ session.mentor.photo.url }}" class="rounded-circle object-fit-cover flex-shrink-0"
-                   width="56" height="56" alt="{{ session.mentor.display_name }}">
+                   width="56" height="56" alt="{{ session.mentor.display_name }}" loading="lazy">
             {% else %}
               <div class="rounded-circle bg-white bg-opacity-25 d-flex align-items-center justify-content-center flex-shrink-0"
                    style="width:56px;height:56px;">
@@ -59,7 +59,7 @@
                 style="letter-spacing: .05em;"
               >
             </div>
-            <div class="form-text">The number that will receive the M-Pesa STK push.</div>
+            <div class="form-text">Enter 9 digits after +254, e.g. 712 345 678 — no leading zero.</div>
           </div>
 
           <button id="pay-btn" class="btn btn-success w-100 rounded-pill fw-semibold py-3" style="font-size:1.05rem;">
@@ -139,10 +139,12 @@
     let phone = phoneIn.value.trim().replace(/\s/g, '');
     if (!phone) { showErr('Please enter your M-Pesa phone number.'); return; }
 
-    // Normalise: 07... → +2547...
-    if (phone.startsWith('07') || phone.startsWith('01')) phone = '+254' + phone.slice(1);
-    else if (phone.startsWith('254')) phone = '+' + phone;
-    else if (!phone.startsWith('+254')) { showErr('Enter a valid Kenyan number, e.g. 0712345678'); return; }
+    // Input field already shows +254 prefix — user should type 7XXXXXXXX or 1XXXXXXXX (9 digits)
+    if (phone.startsWith('0')) phone = phone.slice(1);          // tolerate accidental leading 0
+    if (/^[71]\d{8}$/.test(phone)) phone = '+254' + phone;
+    else if (phone.startsWith('254') && /^254[71]\d{8}$/.test(phone)) phone = '+' + phone;
+    else if (phone.startsWith('+254') && /^\+254[71]\d{8}$/.test(phone)) { /* already good */ }
+    else { showErr('Enter the 9-digit number shown after +254, e.g. 712 345 678'); return; }
 
     payBtn.disabled = true;
     spinner.classList.remove('d-none');

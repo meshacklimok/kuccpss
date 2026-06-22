@@ -13,7 +13,11 @@ def _build_results_from_cluster_map(cluster_map: dict) -> list:
 
     offerings = (
         CourseOffering.objects
-        .filter(cutoff_points__isnull=False, course__cluster__isnull=False)
+        .filter(
+            cutoff_points__isnull=False,
+            course__cluster__isnull=False,
+            course__course_type__name__iexact='Degree',
+        )
         .select_related(
             "course", "course__cluster",
             "course__course_type", "course__category",

@@ -101,8 +101,8 @@
 .dash-card {
   background: #fff;
   border-radius: 14px;
-  border: 1.5px solid #e2e8f0;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+  border: 1.5px solid #c8d3e0;
+  box-shadow: 0 4px 16px rgba(15,23,42,0.10), 0 1px 4px rgba(15,23,42,0.06);
   overflow: hidden;
   margin-bottom: 1.25rem;
 }
@@ -233,7 +233,7 @@
 .cluster-row {
   display: flex; align-items: center; gap: 0.65rem;
   padding: 0.5rem 0.65rem; border-radius: 10px;
-  border: 1.5px solid #e2e8f0; background: #f8fafc;
+  border: 1.5px solid #d1dbe8; background: #f4f7fb;
   text-decoration: none; transition: background 0.15s, border-color 0.15s;
   margin-bottom: 0.5rem;
 }
@@ -242,8 +242,8 @@
 /* ── right sidebar cards ── */
 .sidebar-card {
   background: #fff; border-radius: 14px;
-  border: 1.5px solid #e2e8f0;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  border: 1.5px solid #c8d3e0;
+  box-shadow: 0 4px 16px rgba(15,23,42,0.10), 0 1px 4px rgba(15,23,42,0.06);
   overflow: hidden; margin-bottom: 1.25rem;
 }
 .sidebar-card-header {
@@ -307,6 +307,9 @@
 /* ═══════════════════════════════════════════════
    DARK MODE — dashboard overrides
 ═══════════════════════════════════════════════ */
+
+/* Page background */
+body.dark .dash-content-bg { background: var(--bg) !important; }
 
 /* Notification banner */
 body.dark .notif-banner {
@@ -441,7 +444,7 @@ body.dark .ob-step:hover { background: var(--surface-2); }
     <div class="d-flex align-items-center gap-3 flex-wrap pb-3">
       {% if user.profile_picture %}
       <img src="{{ user.profile_picture.url }}" width="56" height="56"
-           class="rounded-circle flex-shrink-0" style="object-fit:cover;border:2px solid rgba(255,255,255,0.35);" alt="">
+           class="rounded-circle flex-shrink-0" style="object-fit:cover;border:2px solid rgba(255,255,255,0.35);" alt="" loading="lazy">
       {% else %}
       <div class="dash-avatar">
         {{ user.full_name|first|upper|default:user.email|first|upper }}
@@ -458,7 +461,7 @@ body.dark .ob-step:hover { background: var(--surface-2); }
       </div>
 
       <div class="d-flex gap-2 flex-wrap">
-        <a href="{% url 'career:home' %}" class="btn-dash-action btn-dash-white">
+        <a href="{% url 'career:home' %}#pathway-section" class="btn-dash-action btn-dash-white">
           <i class="bi bi-rocket-takeoff-fill"></i>Career Engine
         </a>
         <a href="{% url 'clusterpoints:calculator' %}" class="btn-dash-action btn-dash-ghost">
@@ -510,7 +513,7 @@ body.dark .ob-step:hover { background: var(--surface-2); }
 
 
 {# ════ MAIN CONTENT ════ #}
-<div style="background:var(--bg);min-height:100vh;">
+<div class="dash-content-bg" style="background:#e4eaf3;min-height:100vh;">
 <div class="container py-4">
 <div class="row g-4">
 
@@ -544,7 +547,7 @@ body.dark .ob-step:hover { background: var(--surface-2); }
           <span class="text-muted small ms-2">Done ✓</span></div>
       </div>
       {% else %}
-      <a href="{% url 'career:home' %}" class="ob-step" style="background:#eff6ff;border:1px solid #bfdbfe;">
+      <a href="{% url 'career:home' %}#pathway-section" class="ob-step" style="background:#eff6ff;border:1px solid #bfdbfe;">
         <div class="ob-check-num" style="background:#3b82f6;">1</div>
         <div>
           <span class="fw-700 small text-dark">Run the Career Engine</span>
@@ -684,7 +687,7 @@ body.dark .ob-step:hover { background: var(--surface-2); }
           Use the Career Engine to see courses matched to your grades
         </div>
       </div>
-      <a href="{% url 'career:home' %}" class="btn-header-light">
+      <a href="{% url 'career:home' %}#pathway-section" class="btn-header-light">
         Launch Engine <i class="bi bi-arrow-right"></i>
       </a>
     </div>
@@ -720,7 +723,7 @@ body.dark .ob-step:hover { background: var(--surface-2); }
                 <i class="fas fa-rocket fa-2x mb-2" style="color:#4f46e5;opacity:0.6;"></i>
                 <div class="fw-700 small mb-1">See your real matches</div>
                 <p style="font-size:0.7rem;color:#94a3b8;margin-bottom:8px;">Enter your KCSE grades first</p>
-                <a href="{% url 'career:home' %}" class="btn btn-sm btn-primary">Start Engine</a>
+                <a href="{% url 'career:home' %}#pathway-section" class="btn btn-sm btn-primary">Start Engine</a>
               </div>
             </div>
           </div>
@@ -740,7 +743,7 @@ body.dark .ob-step:hover { background: var(--surface-2); }
   <div class="dash-card">
     <div class="dash-card-header">
       <h6 class="dash-card-title">
-        <i class="fas fa-chart-bar text-primary"></i>Your Cluster Scores
+        <i class="fas fa-chart-bar text-primary"></i>Your Cluster Points
       </h6>
       <a href="{% url 'clusterpoints:calculator' %}" class="btn btn-sm btn-outline-primary"
          style="font-size:0.73rem;border-radius:8px;padding:4px 12px;">
@@ -1002,7 +1005,7 @@ body.dark .ob-step:hover { background: var(--surface-2); }
          onmouseout="this.style.background='#f8fafc';this.style.borderColor='#e2e8f0'">
         {% if inst.logo %}
         <img src="{{ inst.logo.url }}" width="40" height="40"
-             class="rounded-2 flex-shrink-0" style="object-fit:contain;border:1px solid #f1f5f9;" alt="{{ inst.name }}">
+             class="rounded-2 flex-shrink-0" style="object-fit:contain;border:1px solid #f1f5f9;" alt="{{ inst.name }}" loading="lazy">
         {% else %}
         <div class="rounded-2 flex-shrink-0 d-flex align-items-center justify-content-center"
              style="width:40px;height:40px;background:#fef3c7;color:#d97706;">
@@ -1180,7 +1183,7 @@ body.dark .ob-step:hover { background: var(--surface-2); }
            style="background:#f0fdf4;border:1.5px solid #86efac;">
         {% if next_session.mentor.photo %}
         <img src="{{ next_session.mentor.photo.url }}" class="rounded-circle flex-shrink-0"
-             width="38" height="38" style="object-fit:cover;" alt="">
+             width="38" height="38" style="object-fit:cover;" alt="" loading="lazy">
         {% else %}
         <div class="rounded-circle flex-shrink-0 d-flex align-items-center justify-content-center fw-bold text-success"
              style="width:38px;height:38px;background:#dcfce7;">
@@ -1232,7 +1235,7 @@ body.dark .ob-step:hover { background: var(--surface-2); }
         <a href="{% url 'mentorship:dashboard' %}" class="btn btn-outline-secondary btn-sm rounded-pill"
            style="font-size:0.72rem;">Dashboard</a>
       </div>
-      {% else %}
+      {% elif mentor_signup_enabled %}
       <div class="pt-2 border-top">
         <p class="text-muted small mb-2">University student? Earn KES 70 per session.</p>
         <a href="{% url 'mentorship:become_mentor' %}" class="btn btn-outline-success btn-sm w-100"
@@ -1316,7 +1319,7 @@ body.dark .ob-step:hover { background: var(--surface-2); }
          onmouseover="this.style.borderColor='#c4b5fd'" onmouseout="this.style.borderColor='#e9d5ff'">
         {% if inst.logo %}
         <img src="{{ inst.logo.url }}" width="36" height="36"
-             class="rounded-2 flex-shrink-0" style="object-fit:contain;" alt="{{ inst.name }}">
+             class="rounded-2 flex-shrink-0" style="object-fit:contain;" alt="{{ inst.name }}" loading="lazy">
         {% else %}
         <div class="rounded-2 flex-shrink-0 d-flex align-items-center justify-content-center"
              style="width:36px;height:36px;background:#ede9fe;color:#7c3aed;">
@@ -1723,6 +1726,7 @@ rcInit('recoWrapReal');
 rcInit('recoWrapSample');
 
 
+{% if tawk_enabled %}
 /* ── Tawk.to ───────────────────────────────────────────────── */
 var Tawk_API = Tawk_API || {}, Tawk_LoadStart = new Date();
 Tawk_API.customStyle = {
@@ -1747,6 +1751,7 @@ Tawk_API.onLoad = function () {
   s1.setAttribute('crossorigin', '*');
   s0.parentNode.insertBefore(s1, s0);
 })();
+{% endif %}
 
 </script>
 {% endblock %}

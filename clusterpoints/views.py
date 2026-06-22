@@ -109,7 +109,36 @@ def dashboard(request):
 # =====================================================
 def kcse_calculator_view(request):
     from predictor.services import predict_all_for_student
+    from career.models import CareerSubmission, SubmissionLockConfig
+
+    # ── Submission lock gate (authenticated users only) ──────────────────────
+    lock_cfg = SubmissionLockConfig.get_for_feature(CareerSubmission.FEATURE_CALCULATOR)
+    existing_sub = None
+    if request.user.is_authenticated and lock_cfg and lock_cfg.is_enabled:
+        existing_sub = CareerSubmission.objects.filter(
+            user=request.user, feature=CareerSubmission.FEATURE_CALCULATOR
+        ).first()
+        if existing_sub:
+            if existing_sub.status == CareerSubmission.STATUS_PENDING and timezone.now() >= existing_sub.lock_at:
+                existing_sub.status = CareerSubmission.STATUS_LOCKED
+                existing_sub.save(update_fields=['status'])
+            if existing_sub.status == CareerSubmission.STATUS_LOCKED and request.method == 'POST':
+                # Block POST resubmission for locked users — redirect back to GET (shows saved results)
+                return redirect('clusterpoints:calculator')
+
     form = KCSEForm(request.POST or None)
+
+    # Pre-fill form from pending saved grades on GET
+    if request.method == 'GET' and existing_sub and existing_sub.status == CareerSubmission.STATUS_PENDING:
+        subjects_qs = Subject.objects.all()
+        name_to_id = {s.name: s.pk for s in subjects_qs}
+        initial = {
+            f'subject_{name_to_id[name]}': pts
+            for name, pts in existing_sub.grades_json.items()
+            if name in name_to_id
+        }
+        form = KCSEForm(initial=initial)
+
     results = []
     total_points = None
     kcse_result = None
@@ -148,7 +177,26 @@ def kcse_calculator_view(request):
                     kcse_result.recalc_total_points()
                     total_points = kcse_result.total_points
                     results = calculate_all_clusters(kcse_result)
+                # Bust the eligible-courses cache so the new grades take effect immediately
+                from django.core.cache import cache as _cache
+                _cache.delete(f"elig_user_{request.user.pk}_{kcse_result.pk}")
                 messages.success(request, "KCSE results saved and cluster points calculated!")
+
+                # Save/reset the grace-period submission record
+                if lock_cfg and lock_cfg.is_enabled:
+                    from datetime import timedelta
+                    CareerSubmission.objects.update_or_create(
+                        user=request.user,
+                        feature=CareerSubmission.FEATURE_CALCULATOR,
+                        defaults={
+                            'grades_json': named_points,
+                            'status': CareerSubmission.STATUS_PENDING,
+                            'lock_at': timezone.now() + timedelta(minutes=lock_cfg.lock_minutes),
+                        },
+                    )
+                    existing_sub = CareerSubmission.objects.filter(
+                        user=request.user, feature=CareerSubmission.FEATURE_CALCULATOR
+                    ).first()
 
             else:
                 # ── Guest: compute in memory, stash in session ─────────────
@@ -219,7 +267,7 @@ def kcse_calculator_view(request):
         cluster_ids = [r.cluster.id for r in results if r.cluster]
         _all_courses = (
             _Course.objects
-            .filter(cluster_id__in=cluster_ids)
+            .filter(cluster_id__in=cluster_ids, course_type__name__iexact='Degree')
             .select_related('course_type')
             .order_by('cluster_id', 'name')
         )
@@ -236,6 +284,17 @@ def kcse_calculator_view(request):
             _r.top_courses = cluster_courses_map.get(cid, [])
             _r.course_count = cluster_course_counts.get(cid, 0)
 
+    # Grace-period banner data for the template
+    sub_banner = None
+    if existing_sub and existing_sub.status == CareerSubmission.STATUS_PENDING and results:
+        from django.urls import reverse
+        sub_banner = {
+            'seconds_remaining': existing_sub.seconds_remaining(),
+            'lock_at_iso': existing_sub.lock_at.isoformat(),
+            'feature': CareerSubmission.FEATURE_CALCULATOR,
+            'edit_url': reverse('clusterpoints:calculator'),
+        }
+
     return render(request, "clusterpoints/calculator.html", {
         "form": form,
         "results": results,
@@ -250,6 +309,7 @@ def kcse_calculator_view(request):
         "optional_groups": optional_groups,
         "cluster_courses_map": cluster_courses_map,
         "cluster_course_counts": cluster_course_counts,
+        "sub_banner": sub_banner,
     })
 
 
@@ -448,9 +508,12 @@ def export_cluster_pdf(request):
 # ELIGIBLE COURSES VIEW
 # =====================================================
 def eligible_courses_view(request):
+    import logging
     from .eligibility import get_eligible_courses, get_eligible_courses_from_map
     from courses.models import CourseType
+    from django.core.cache import cache
 
+    _log = logging.getLogger(__name__)
     is_guest = not request.user.is_authenticated
 
     if is_guest:
@@ -459,7 +522,21 @@ def eligible_courses_view(request):
         if not cluster_map:
             messages.info(request, "Enter your KCSE results first to see your eligible courses.")
             return redirect("clusterpoints:calculator")
-        all_results = get_eligible_courses_from_map(cluster_map)
+        # Cache guest results by session key for 10 minutes
+        cache_key = f"elig_guest_{request.session.session_key}"
+        all_results = cache.get(cache_key)
+        if all_results is None:
+            try:
+                all_results = get_eligible_courses_from_map(cluster_map)
+                cache.set(cache_key, all_results, 600)
+            except Exception as exc:
+                _log.error("eligible_courses_from_map failed for guest session=%s: %s",
+                           request.session.session_key, exc, exc_info=True)
+                messages.warning(
+                    request,
+                    "We had trouble loading your eligible courses. Please try again in a moment.",
+                )
+                return redirect("clusterpoints:calculator")
         kcse_result = None
         saved_ids = []
     else:
@@ -472,13 +549,28 @@ def eligible_courses_view(request):
             messages.info(request, "Enter your KCSE results first to see your eligible courses.")
             return redirect("clusterpoints:calculator")
 
-        all_results = get_eligible_courses(request.user, kcse_result)
+        # Cache per-user results for 10 minutes (invalidated when calculator reruns)
+        cache_key = f"elig_user_{request.user.pk}_{kcse_result.pk}"
+        all_results = cache.get(cache_key)
+        if all_results is None:
+            try:
+                all_results = get_eligible_courses(request.user, kcse_result)
+                cache.set(cache_key, all_results, 600)
+            except Exception as exc:
+                _log.error("get_eligible_courses failed for user=%s kcse=%s: %s",
+                           request.user.pk, kcse_result.pk, exc, exc_info=True)
+                messages.warning(
+                    request,
+                    "We had trouble loading your eligible courses. Please try again in a moment.",
+                )
+                return redirect("clusterpoints:calculator")
+
         from accounts.models import SavedCourse
         saved_ids = list(
             SavedCourse.objects.filter(user=request.user).values_list('course_id', flat=True)
         )
 
-    # Filtering
+    # Filtering (in-memory on the cached list — fast since list is already loaded)
     status_filter = request.GET.get("status", "")
     type_filter = request.GET.get("type", "")
     query = request.GET.get("q", "")
@@ -489,14 +581,15 @@ def eligible_courses_view(request):
     if type_filter:
         filtered = [r for r in filtered if r["course"].course_type.slug == type_filter]
     if query:
-        filtered = [r for r in filtered if query.lower() in r["course"].name.lower()]
+        q_lower = query.lower()
+        filtered = [r for r in filtered if q_lower in r["course"].name.lower()]
 
     eligible_count = sum(1 for r in all_results if r["status"] == "eligible")
     nearly_count   = sum(1 for r in all_results if r["status"] == "nearly")
     not_elig_count = sum(1 for r in all_results if r["status"] == "not_eligible")
     total_found    = eligible_count + nearly_count
 
-    course_types = CourseType.objects.all()
+    course_types = CourseType.objects.filter(name__iexact='Degree')
 
     from payments.services import has_paid_for_feature, is_feature_enabled, price_for_feature
     _mn = _mean_grade(total_points)

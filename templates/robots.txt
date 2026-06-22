@@ -1,0 +1,18 @@
+User-agent: *
+Allow: /
+Disallow: /cn-staff/
+Disallow: /accounts/password/
+Disallow: /accounts/social/
+Disallow: /api/
+Disallow: /payments/webhook/
+Disallow: /analytics/
+
+# Priority crawl targets
+Allow: /clusterpoints/
+Allow: /courses/
+Allow: /institutions/
+Allow: /clusters/
+Allow: /career/
+Allow: /resources/
+
+Sitemap: https://careernext.co.ke/sitemap.xml

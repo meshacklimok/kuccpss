@@ -1,24 +1,135 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block title %}{{ article.title }} — CareerNext{% endblock %}
+{% block og_type %}article{% endblock %}
+{% block canonical %}<link rel="canonical" href="{{ request.build_absolute_uri }}">{% endblock %}
+{% block keywords %}<meta name="keywords" content="{% for tag in article.get_tags_list %}{{ tag }}{% if not forloop.last %}, {% endif %}{% endfor %}, KUCCPS Kenya, KCSE cluster points, university placement Kenya">{% endblock %}
 
-{% block meta %}<meta name="description" content="{{ article.excerpt|default:article.title }}">{% endblock %}
+{% block meta %}<meta name="description" content="{{ article.excerpt|default:article.title|truncatechars:160 }}">{% endblock %}
+
 {% block og_meta %}
 <meta property="og:title" content="{{ article.title }} — CareerNext">
-<meta property="og:description" content="{{ article.excerpt|default:article.title }}">
-{% if article.thumbnail %}<meta property="og:image" content="{{ request.scheme }}://{{ request.get_host }}{{ article.thumbnail.url }}">{% endif %}
+<meta property="og:description" content="{{ article.excerpt|default:article.title|truncatechars:200 }}">
+{% if article.thumbnail %}
+<meta property="og:image" content="{{ request.scheme }}://{{ request.get_host }}{{ article.thumbnail.url }}">
+{% else %}
+<meta property="og:image" content="{{ request.scheme }}://{{ request.get_host }}{% static 'images/logo-og.png' %}">
+{% endif %}
+<meta property="article:published_time" content="{{ article.created_at|date:'c' }}">
+<meta property="article:modified_time" content="{{ article.updated_at|date:'c' }}">
+{% endblock %}
+
+{% block extra_schema %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "{{ article.title|escapejs }}",
+  "description": "{{ article.excerpt|default:''|escapejs|truncatechars:200 }}",
+  "datePublished": "{{ article.created_at|date:'c' }}",
+  "dateModified": "{{ article.updated_at|date:'c' }}",
+  "author": {
+    "@type": "Person",
+    "name": "{{ article.author|default:'CareerNext Team'|escapejs }}"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "CareerNext",
+    "url": "https://careernext.co.ke",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://careernext.co.ke{% static 'img/logo-mark.svg' %}"
+    }
+  },
+  "url": "{{ request.build_absolute_uri }}",
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "{{ request.build_absolute_uri }}"
+  }{% if article.thumbnail %},
+  "image": {
+    "@type": "ImageObject",
+    "url": "{{ request.scheme }}://{{ request.get_host }}{{ article.thumbnail.url }}"
+  }{% endif %}
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {"@type": "ListItem", "position": 1, "name": "Resources", "item": "https://careernext.co.ke/resources/"},
+    {"@type": "ListItem", "position": 2, "name": "Articles", "item": "https://careernext.co.ke/resources/articles/"},
+    {"@type": "ListItem", "position": 3, "name": "{{ article.title|escapejs }}", "item": "{{ request.build_absolute_uri }}"}
+  ]
+}
+</script>
+{% endblock %}
+{% if article.author %}<meta property="article:author" content="{{ article.author }}">{% endif %}
+{% for tag in article.get_tags_list %}<meta property="article:tag" content="{{ tag }}">{% endfor %}
+{% endblock %}
+
+{% block twitter_meta %}
+<meta name="twitter:title" content="{{ article.title }} — CareerNext">
+<meta name="twitter:description" content="{{ article.excerpt|default:article.title|truncatechars:200 }}">
+{% if article.thumbnail %}
+<meta name="twitter:image" content="{{ request.scheme }}://{{ request.get_host }}{{ article.thumbnail.url }}">
+{% endif %}
 {% endblock %}
 
 {% block extra_head %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "{{ article.title|escapejs }}",
+  "description": "{{ article.excerpt|default:article.title|truncatechars:200|escapejs }}",
+  {% if article.thumbnail %}"image": "{{ request.scheme }}://{{ request.get_host }}{{ article.thumbnail.url }}",{% endif %}
+  "author": {
+    "@type": "Person",
+    "name": "{{ article.author|default:'CareerNext'|escapejs }}"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "CareerNext",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "{{ request.scheme }}://{{ request.get_host }}{% static 'images/logo-og.png' %}"
+    }
+  },
+  "datePublished": "{{ article.created_at|date:'c' }}",
+  "dateModified": "{{ article.updated_at|date:'c' }}",
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "{{ request.build_absolute_uri }}"
+  }
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {"@type": "ListItem", "position": 1, "name": "Home", "item": "{{ request.scheme }}://{{ request.get_host }}/"},
+    {"@type": "ListItem", "position": 2, "name": "News & Articles", "item": "{{ request.scheme }}://{{ request.get_host }}{% url 'resources:article_list' %}"},
+    {"@type": "ListItem", "position": 3, "name": "{{ article.title|escapejs }}", "item": "{{ request.build_absolute_uri }}"}
+  ]
+}
+</script>
 <style>
 /* ── Article typography ───────────────────────────────── */
 .article-body {
-  font-size: 1.05rem;
-  line-height: 1.85;
+  font-size: 1.07rem;
+  line-height: 1.9;
   color: var(--text);
-  white-space: pre-wrap;
 }
-.article-body p { margin-bottom: 1.25rem; }
+.article-body p { margin-bottom: 1.4rem; }
+.article-body h2 { font-size: 1.45rem; font-weight: 800; margin: 2.2rem 0 .8rem; color: var(--text); }
+.article-body h3 { font-size: 1.2rem; font-weight: 700; margin: 1.8rem 0 .6rem; color: var(--text); }
+.article-body ul, .article-body ol { padding-left: 1.6rem; margin-bottom: 1.2rem; }
+.article-body li { margin-bottom: .45rem; }
+.article-body strong, .article-body b { font-weight: 700; }
+.article-body a { color: var(--primary); text-decoration: underline; }
 .lead-quote {
   border-left: 4px solid var(--accent);
   padding: 1rem 1.5rem;
@@ -141,14 +252,14 @@
 
       {% if article.thumbnail %}
       <img src="{{ article.thumbnail.url }}" class="img-fluid rounded-3 mb-4 w-100"
-           style="max-height:420px;object-fit:cover;" alt="{{ article.title }}">
+           style="max-height:420px;object-fit:cover;" alt="{{ article.title }}" loading="lazy">
       {% endif %}
 
       {% if article.excerpt %}
       <blockquote class="lead-quote mb-4">{{ article.excerpt }}</blockquote>
       {% endif %}
 
-      <div class="article-body">{{ article.content }}</div>
+      <div class="article-body">{{ article.content|linebreaks }}</div>
 
       <!-- Share bar -->
       <div class="mt-5 pt-4 border-top">
@@ -188,7 +299,7 @@
         {% for r in related %}
         <a href="{% url 'resources:article_detail' r.slug %}" class="related-card">
           {% if r.thumbnail %}
-          <img src="{{ r.thumbnail.url }}" class="related-thumb" alt="">
+          <img src="{{ r.thumbnail.url }}" class="related-thumb" alt="" loading="lazy">
           {% else %}
           <div class="related-placeholder">
             <i class="fas fa-pen-nib text-white small"></i>

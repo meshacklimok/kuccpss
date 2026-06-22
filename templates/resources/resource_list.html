@@ -92,7 +92,7 @@
         <div class="col-md-6 col-lg-4">
           <div class="card h-100 p-0 overflow-hidden">
             {% if resource.thumbnail %}
-            <img src="{{ resource.thumbnail.url }}" class="card-img-top" style="height:140px;object-fit:cover;" alt="{{ resource.title }}">
+            <img src="{{ resource.thumbnail.url }}" class="card-img-top" style="height:140px;object-fit:cover;" alt="{{ resource.title }}" loading="lazy">
             {% else %}
             <div class="d-flex align-items-center justify-content-center"
                  style="height:140px;background:linear-gradient(135deg,#1e3a8a,#2563eb);">

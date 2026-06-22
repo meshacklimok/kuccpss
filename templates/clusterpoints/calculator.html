@@ -1,8 +1,38 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block title %}KCSE Cluster Points Calculator — CareerNext{% endblock %}
-{% block meta %}<meta name="description" content="Free KCSE cluster points calculator using the official KUCCPS formula. Enter your grades and instantly see your cluster points for all 20 clusters.">{% endblock %}
+{% block title %}KCSE Cluster Points Calculator 2025/2026 — Free KUCCPS Tool | CareerNext{% endblock %}
+{% block meta %}<meta name="description" content="Free KCSE cluster points calculator using the official KUCCPS formula. Enter your 2025 or 2026 grades and instantly see your cluster points, eligible university, KMTC and TVET courses in Kenya.">{% endblock %}
+{% block canonical %}<link rel="canonical" href="https://careernext.co.ke/clusterpoints/">{% endblock %}
+{% block keywords %}<meta name="keywords" content="KCSE cluster points calculator, KUCCPS cluster points 2025, cluster points Kenya, KCSE grades to cluster points, KUCCPS calculator Kenya, university placement Kenya 2025 2026">{% endblock %}
+
+{% block extra_schema %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "KCSE Cluster Points Calculator",
+  "url": "https://careernext.co.ke/clusterpoints/",
+  "description": "Free online tool to calculate KCSE cluster points using the official KUCCPS formula. Enter your subject grades and see which university, KMTC, TVET and TTC courses you qualify for in Kenya.",
+  "applicationCategory": "EducationalApplication",
+  "operatingSystem": "All",
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "KES"
+  },
+  "provider": {
+    "@type": "Organization",
+    "name": "CareerNext",
+    "url": "https://careernext.co.ke"
+  },
+  "areaServed": {
+    "@type": "Country",
+    "name": "Kenya"
+  }
+}
+</script>
+{% endblock %}
 
 {% block extra_head %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -164,6 +194,7 @@
 }
 .lce-btn-calc:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(30,58,138,0.45); }
 .lce-btn-calc:disabled { background: #e2e8f0; color: #94a3b8; box-shadow: none; cursor: not-allowed; transform: none; }
+.spin-icon { animation: cl-spin 0.7s linear infinite; display:inline-block; }
 
 /* ── results section ── */
 .results-divider {
@@ -766,6 +797,69 @@ body.dark .lce-btn-calc:disabled { background: var(--surface-2); color: var(--te
     <!-- ══ RESULTS ══ -->
     {% if results %}
     <div id="results-content" style="display:none;">
+
+    {% if sub_banner %}
+    <!-- Grace-period confirmation banner -->
+    <div id="sub-lock-banner" class="sub-lock-banner mt-3">
+      <div class="d-flex align-items-center flex-wrap gap-3 py-2 px-3">
+        <span style="font-size:1.2rem;color:#facc15;flex-shrink:0;"><i class="bi bi-shield-lock-fill"></i></span>
+        <div class="flex-grow-1" style="font-size:0.87rem;">
+          <strong>Are these your grades?</strong>
+          You have <span id="sub-lock-countdown" style="font-weight:800;color:#facc15;font-size:1rem;">{{ sub_banner.seconds_remaining }}</span>s to review &amp; edit before they are locked to your account.
+        </div>
+        <a href="{{ sub_banner.edit_url }}" class="btn btn-sm btn-outline-warning fw-bold">
+          <i class="bi bi-pencil me-1"></i>Edit Grades
+        </a>
+        <button id="sub-lock-confirm-btn" class="btn btn-sm btn-success fw-bold">
+          <i class="bi bi-check-circle me-1"></i>Confirm &amp; Lock
+        </button>
+      </div>
+      <div style="height:4px;background:rgba(255,255,255,0.2);">
+        <div id="sub-lock-bar" style="height:100%;background:#facc15;width:100%;transition:width 1s linear;"></div>
+      </div>
+    </div>
+    <style>
+    .sub-lock-banner { background:#1e3a8a;color:#fff;border-radius:12px;overflow:hidden;border:2px solid #facc15;margin-bottom:1rem; }
+    </style>
+    <script>
+    (function(){
+      var total      = {{ sub_banner.seconds_remaining }};
+      var feature    = "{{ sub_banner.feature }}";
+      var confirmUrl = "{% url 'career:confirm_submission' %}";
+      var counter    = document.getElementById('sub-lock-countdown');
+      var bar        = document.getElementById('sub-lock-bar');
+      var banner     = document.getElementById('sub-lock-banner');
+      var confirmBtn = document.getElementById('sub-lock-confirm-btn');
+      var remaining  = total;
+      bar.style.width = '100%';
+      var tick = setInterval(function(){
+        remaining--;
+        counter.textContent = remaining;
+        bar.style.width = (remaining / total * 100) + '%';
+        if (remaining <= 0) {
+          clearInterval(tick);
+          counter.textContent = '0';
+          banner.style.borderColor = '#ef4444';
+          confirmBtn.disabled = true;
+          confirmBtn.textContent = 'Locked';
+        }
+      }, 1000);
+      confirmBtn.addEventListener('click', function(){
+        confirmBtn.disabled = true;
+        fetch(confirmUrl, {
+          method: 'POST',
+          headers: {'Content-Type':'application/json','X-CSRFToken':'{{ csrf_token }}'},
+          body: JSON.stringify({feature: feature})
+        }).then(function(r){ return r.json(); }).then(function(){
+          clearInterval(tick);
+          banner.innerHTML = '<div class="py-2 px-3"><i class="bi bi-check-circle-fill text-success me-2"></i><strong>Grades locked.</strong> Contact support if you need to make changes.</div>';
+          banner.style.borderColor = '#16a34a';
+        });
+      });
+    })();
+    </script>
+    {% endif %}
+
     <div class="results-divider">
         <div class="results-divider-line"></div>
         <div class="results-divider-label"><i class="bi bi-bar-chart-fill me-1"></i>Your Results</div>
@@ -806,6 +900,17 @@ body.dark .lce-btn-calc:disabled { background: var(--surface-2); color: var(--te
         <div class="results-divider-label"><i class="bi bi-grid-3x3-gap-fill me-1"></i>All 20 Cluster Points</div>
         <div class="results-divider-line"></div>
     </div>
+
+    <!-- Data version + disclaimer pill -->
+    <div class="d-flex align-items-center justify-content-center gap-2 mb-3 flex-wrap" style="font-size:0.72rem;color:#64748b;">
+        <span class="badge rounded-pill" style="background:#eff6ff;color:#2563eb;border:1px solid #bfdbfe;font-weight:600;">
+            <i class="bi bi-calendar3 me-1"></i>{{ DATA_CYCLE }} cycle
+        </span>
+        <span>Cutoff data: {{ DATA_UPDATED }}</span>
+        <span>·</span>
+        <span>Not official KUCCPS — <a href="https://kuccps.net" target="_blank" rel="noopener noreferrer" style="color:#64748b;">verify at kuccps.net</a></span>
+    </div>
+
     <!-- Compact score summary grid -->
     <div class="cluster-grid">
         {% for r in results %}
@@ -966,8 +1071,9 @@ body.dark .lce-btn-calc:disabled { background: var(--surface-2); color: var(--te
     <div class="lce-footer-info"><div class="lce-footer-title" id="footerNote">Enter <strong>7 subjects</strong> to calculate</div></div>
     <a href="{% url 'home' %}" class="lce-btn-back"><i class="bi bi-arrow-left"></i> Back</a>
     <button type="button" class="lce-btn-calc" id="calcBtn" disabled
-            onclick="window._ph&&_ph('calculator_submitted',{is_guest:{% if user.is_authenticated %}false{% else %}true{% endif %}});document.getElementById('calcForm').submit()">
-        <i class="bi bi-calculator-fill"></i> Calculate
+            onclick="submitCalcForm(this)">
+        <i class="bi bi-calculator-fill" id="calcBtnIcon"></i>
+        <span id="calcBtnText"> Calculate</span>
     </button>
 </div>
 
@@ -1025,6 +1131,30 @@ updateGlobal();
 // Prevent "Confirm Form Resubmission" dialog on page refresh after POST
 if (window.history.replaceState) {
     window.history.replaceState(null, null, window.location.href);
+}
+
+// Double-click prevention: disable button and show spinner on submit
+function submitCalcForm(btn) {
+    if (btn.disabled || btn.dataset.submitted === '1') return;
+    btn.dataset.submitted = '1';
+    // PostHog tracking
+    window._ph && _ph('calculator_submitted', {is_guest: {% if user.is_authenticated %}false{% else %}true{% endif %}});
+    // Show loading state
+    var icon = document.getElementById('calcBtnIcon');
+    var txt  = document.getElementById('calcBtnText');
+    if (icon) icon.className = 'bi bi-circle-notch spin-icon';
+    if (txt)  txt.textContent = ' Calculating…';
+    btn.disabled = true;
+    btn.style.opacity = '0.85';
+    // Guard: re-enable after 15 s in case of unexpected errors
+    setTimeout(function () {
+        btn.dataset.submitted = '0';
+        btn.disabled = false;
+        btn.style.opacity = '';
+        if (icon) icon.className = 'bi bi-calculator-fill';
+        if (txt)  txt.textContent = ' Calculate';
+    }, 15000);
+    document.getElementById('calcForm').submit();
 }
 
 // Hide step-bar and footer when scrolling down; show on scroll up

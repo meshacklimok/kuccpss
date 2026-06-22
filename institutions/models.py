@@ -1,6 +1,7 @@
 from datetime import date
 
 from django.db import models
+from django.urls import reverse
 from django.utils.text import slugify
 
 class InstitutionType(models.Model):
@@ -101,6 +102,12 @@ class Institution(models.Model):
         if self.pdf_file:
             return self.pdf_file.url
         return None
+
+    def get_absolute_url(self):
+        return reverse(
+            "institutions:institution_detail",
+            kwargs={"type_slug": self.institution_type.slug, "institution_slug": self.slug},
+        )
 
 
 class InstitutionPromotion(models.Model):

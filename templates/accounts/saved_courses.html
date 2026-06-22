@@ -24,7 +24,7 @@
           All {{ snapshot.total_matches }} Matches
         </a>
         {% else %}
-        <a href="{% url 'career:home' %}" class="btn btn-light btn-sm fw-600">
+        <a href="{% url 'career:home' %}#pathway-section" class="btn btn-light btn-sm fw-600">
           <i class="fas fa-plus me-1"></i>Find Courses
         </a>
         {% endif %}
@@ -124,7 +124,7 @@
         <i class="fas fa-th-list me-2"></i>All {{ snapshot.total_matches }} Matches
       </a>
       {% else %}
-      <a href="{% url 'career:home' %}" class="btn btn-primary px-4">
+      <a href="{% url 'career:home' %}#pathway-section" class="btn btn-primary px-4">
         <i class="fas fa-rocket me-2"></i>Use Career Engine
       </a>
       <a href="{% url 'clusterpoints:eligible_courses' %}" class="btn btn-outline-success px-4">

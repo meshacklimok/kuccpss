@@ -19,7 +19,7 @@
       <div class="d-flex align-items-center gap-3 mb-4 p-3 bg-light rounded-4">
         {% if mentor.photo %}
           <img src="{{ mentor.photo.url }}" class="rounded-circle object-fit-cover flex-shrink-0"
-               width="56" height="56" alt="{{ mentor.display_name }}">
+               width="56" height="56" alt="{{ mentor.display_name }}" loading="lazy">
         {% else %}
           <div class="rounded-circle bg-primary bg-opacity-10 d-flex align-items-center justify-content-center flex-shrink-0"
                style="width:56px;height:56px;">
@@ -50,16 +50,21 @@
             <!-- Time slot -->
             <div class="mb-4">
               <label class="form-label fw-semibold">Choose a Time Slot <span class="text-danger">*</span></label>
-              <div class="border rounded-3 p-3 bg-light">
+              <div class="border rounded-3 p-2 bg-light">
                 {% for choice in form.slot %}
-                  <div class="form-check py-1">
+                  <div class="form-check py-2 px-3 rounded-3 mb-1
+                               {% if choice.data.selected %}bg-primary bg-opacity-10 border border-primary border-opacity-50{% endif %}">
                     {{ choice.tag }}
-                    <label class="form-check-label small ms-1" for="{{ choice.id_for_label }}">
+                    <label class="form-check-label ms-1 {% if choice.data.selected %}fw-semibold text-primary{% endif %}"
+                           for="{{ choice.id_for_label }}">
                       {{ choice.choice_label }}
+                      {% if choice.data.selected %}
+                        <span class="badge bg-primary ms-2" style="font-size:.7rem;">Your selection</span>
+                      {% endif %}
                     </label>
                   </div>
                 {% empty %}
-                  <div class="alert alert-warning small mb-0">No open slots available for this mentor right now.</div>
+                  <div class="alert alert-warning small mb-0 m-2">No open slots available for this mentor right now.</div>
                 {% endfor %}
               </div>
               {% if form.slot.errors %}

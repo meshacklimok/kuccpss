@@ -152,6 +152,12 @@ class Cluster(TimeStampedModel):
 
         super().save(*args, **kwargs)
 
+    def get_absolute_url(self):
+        return reverse("clusters:cluster_detail", kwargs={"slug": self.slug})
+
+    def __str__(self):
+        return self.name
+
 # ============================================================
 # SUBJECT GROUP MODEL
 # ============================================================

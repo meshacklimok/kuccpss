@@ -218,6 +218,8 @@ body { background: var(--bg); }
       <a href="?days={{ days }}" class="btn-refresh">
         <i class="fas fa-sync-alt"></i> Refresh
       </a>
+      <a href="{% url 'analytics:mentor_analytics' %}" class="btn-export" style="background:var(--purple);">Mentors</a>
+      <a href="{% url 'analytics:affiliate_analytics' %}" class="btn-export" style="background:var(--teal);">Affiliates</a>
     </div>
   </div>
 
@@ -228,7 +230,8 @@ body { background: var(--bg); }
     <button class="bi-tab"        data-tab="content"   role="tab"><span class="tab-icon">🔍</span> Content &amp; Search</button>
     <button class="bi-tab"        data-tab="career"    role="tab"><span class="tab-icon">🎓</span> Career Engine</button>
     <button class="bi-tab"        data-tab="payments"  role="tab"><span class="tab-icon">💳</span> Payments</button>
-    <button class="bi-tab"        data-tab="activity"  role="tab"><span class="tab-icon">📡</span> Live Activity</button>
+    <button class="bi-tab"        data-tab="activity"    role="tab"><span class="tab-icon">📡</span> Live Activity</button>
+    <button class="bi-tab"        data-tab="monitoring"  role="tab"><span class="tab-icon">🔭</span> Monitoring</button>
   </div>
 
   <!-- ════════════════════════════════════════════════════════════════════════ -->
@@ -857,6 +860,149 @@ body { background: var(--bg); }
     </div>
 
   </div><!-- /activity -->
+
+  <!-- ════════════════════════════════════════════════════════════════════════ -->
+  <!-- MONITORING TAB                                                         -->
+  <!-- ════════════════════════════════════════════════════════════════════════ -->
+  <div class="bi-section" id="tab-monitoring">
+
+    <!-- Quick local stats row -->
+    <div class="kpi-grid" style="margin-bottom:1.5rem;">
+      <div class="kpi-card c-blue">
+        <p class="kpi-label">Total Users</p>
+        <p class="kpi-value">{{ total_users|floatformat:"0g" }}</p>
+        <div class="kpi-meta"><span class="kpi-sub">+{{ new_today }} today</span></div>
+      </div>
+      <div class="kpi-card c-green">
+        <p class="kpi-label">Searches ({{ days }}d)</p>
+        <p class="kpi-value">{{ total_searches }}</p>
+        <div class="kpi-meta"><span class="kpi-sub">{{ searches_today }} today</span></div>
+      </div>
+      <div class="kpi-card c-purple">
+        <p class="kpi-label">Page Views ({{ days }}d)</p>
+        <p class="kpi-value">{{ total_views }}</p>
+        <div class="kpi-meta"><span class="kpi-sub">{{ views_today }} today</span></div>
+      </div>
+      <div class="kpi-card c-amber">
+        <p class="kpi-label">Revenue ({{ days }}d)</p>
+        <p class="kpi-value">KES {{ revenue }}</p>
+        <div class="kpi-meta"><span class="kpi-sub">{{ pay_completed }} payments</span></div>
+      </div>
+    </div>
+
+    <div class="three-col" style="align-items:start;">
+
+      <!-- PostHog -->
+      <div class="card">
+        <p class="card-title">
+          <svg width="16" height="16" viewBox="0 0 32 32" fill="none" style="flex-shrink:0"><circle cx="16" cy="16" r="16" fill="#f9bd2b"/><path d="M8 20l8-12 8 12" stroke="#1d0b00" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          PostHog
+          {% if posthog_configured %}
+            <span class="badge b-green" style="margin-left:auto;font-size:.65rem;">Active</span>
+          {% else %}
+            <span class="badge b-gray" style="margin-left:auto;font-size:.65rem;">Not set</span>
+          {% endif %}
+        </p>
+        <p style="font-size:.8rem;color:var(--muted);margin:0 0 1rem;">Product analytics — events, funnels, session recordings, feature flags.</p>
+        {% if not posthog_configured %}
+        <div style="background:var(--amber-lt);border:1px solid #fde68a;border-radius:8px;padding:10px 12px;margin-bottom:1rem;font-size:.78rem;color:#92400e;">
+          Set <code style="background:#fef3c7;padding:1px 5px;border-radius:3px;">POSTHOG_API_KEY</code> in your environment to enable tracking.
+        </div>
+        {% endif %}
+        <div style="display:flex;flex-direction:column;gap:.5rem;">
+          <a href="{{ posthog_app_url }}" target="_blank" style="display:flex;align-items:center;gap:.5rem;padding:.55rem .9rem;border-radius:7px;background:#1e3a8a;color:#fff;text-decoration:none;font-size:.8rem;font-weight:700;">
+            <i class="fas fa-external-link-alt"></i> Open PostHog
+          </a>
+          <a href="{{ posthog_app_url }}/project/events" target="_blank" style="display:flex;align-items:center;gap:.5rem;padding:.5rem .9rem;border-radius:7px;border:1.5px solid var(--border);color:var(--text);text-decoration:none;font-size:.8rem;font-weight:600;">
+            <i class="fas fa-bolt" style="color:var(--blue)"></i> Live Events
+          </a>
+          <a href="{{ posthog_app_url }}/project/insights" target="_blank" style="display:flex;align-items:center;gap:.5rem;padding:.5rem .9rem;border-radius:7px;border:1.5px solid var(--border);color:var(--text);text-decoration:none;font-size:.8rem;font-weight:600;">
+            <i class="fas fa-chart-line" style="color:var(--purple)"></i> Insights &amp; Funnels
+          </a>
+          <a href="{{ posthog_app_url }}/project/persons" target="_blank" style="display:flex;align-items:center;gap:.5rem;padding:.5rem .9rem;border-radius:7px;border:1.5px solid var(--border);color:var(--text);text-decoration:none;font-size:.8rem;font-weight:600;">
+            <i class="fas fa-users" style="color:var(--green)"></i> Users
+          </a>
+          <a href="{{ posthog_app_url }}/project/replay" target="_blank" style="display:flex;align-items:center;gap:.5rem;padding:.5rem .9rem;border-radius:7px;border:1.5px solid var(--border);color:var(--text);text-decoration:none;font-size:.8rem;font-weight:600;">
+            <i class="fas fa-play-circle" style="color:var(--teal)"></i> Session Recordings
+          </a>
+        </div>
+      </div>
+
+      <!-- Sentry -->
+      <div class="card">
+        <p class="card-title">
+          <svg width="16" height="16" viewBox="0 0 200 200" fill="none" style="flex-shrink:0"><circle cx="100" cy="100" r="100" fill="#362d59"/><path d="M113 49l-55 95h26l29-50 29 50h26L113 49z" fill="#fff"/></svg>
+          Sentry
+          {% if sentry_configured %}
+            <span class="badge b-green" style="margin-left:auto;font-size:.65rem;">Active</span>
+          {% else %}
+            <span class="badge b-gray" style="margin-left:auto;font-size:.65rem;">Not set</span>
+          {% endif %}
+        </p>
+        <p style="font-size:.8rem;color:var(--muted);margin:0 0 1rem;">Error monitoring — exceptions, performance traces, session replays, uptime alerts.</p>
+        {% if not sentry_configured %}
+        <div style="background:var(--amber-lt);border:1px solid #fde68a;border-radius:8px;padding:10px 12px;margin-bottom:1rem;font-size:.78rem;color:#92400e;">
+          Set <code style="background:#fef3c7;padding:1px 5px;border-radius:3px;">SENTRY_DSN</code> in your environment to enable error capture.
+        </div>
+        {% endif %}
+        <div style="display:flex;flex-direction:column;gap:.5rem;">
+          <a href="https://sentry.io/issues/" target="_blank" style="display:flex;align-items:center;gap:.5rem;padding:.55rem .9rem;border-radius:7px;background:#362d59;color:#fff;text-decoration:none;font-size:.8rem;font-weight:700;">
+            <i class="fas fa-external-link-alt"></i> Open Sentry
+          </a>
+          <a href="https://sentry.io/issues/" target="_blank" style="display:flex;align-items:center;gap:.5rem;padding:.5rem .9rem;border-radius:7px;border:1.5px solid var(--border);color:var(--text);text-decoration:none;font-size:.8rem;font-weight:600;">
+            <i class="fas fa-bug" style="color:var(--red)"></i> Issues &amp; Errors
+          </a>
+          <a href="https://sentry.io/performance/" target="_blank" style="display:flex;align-items:center;gap:.5rem;padding:.5rem .9rem;border-radius:7px;border:1.5px solid var(--border);color:var(--text);text-decoration:none;font-size:.8rem;font-weight:600;">
+            <i class="fas fa-tachometer-alt" style="color:var(--blue)"></i> Performance
+          </a>
+          <a href="https://sentry.io/replays/" target="_blank" style="display:flex;align-items:center;gap:.5rem;padding:.5rem .9rem;border-radius:7px;border:1.5px solid var(--border);color:var(--text);text-decoration:none;font-size:.8rem;font-weight:600;">
+            <i class="fas fa-video" style="color:var(--purple)"></i> Replays
+          </a>
+          <a href="https://sentry.io/alerts/" target="_blank" style="display:flex;align-items:center;gap:.5rem;padding:.5rem .9rem;border-radius:7px;border:1.5px solid var(--border);color:var(--text);text-decoration:none;font-size:.8rem;font-weight:600;">
+            <i class="fas fa-bell" style="color:var(--amber)"></i> Alerts
+          </a>
+        </div>
+      </div>
+
+      <!-- Google Analytics -->
+      <div class="card">
+        <p class="card-title">
+          <svg width="16" height="16" viewBox="0 0 192 192" fill="none" style="flex-shrink:0"><rect width="192" height="192" rx="40" fill="#f9ab00"/><rect x="28" y="100" width="40" height="64" rx="8" fill="#e37400"/><rect x="76" y="56" width="40" height="108" rx="8" fill="#e37400"/><rect x="124" y="28" width="40" height="136" rx="8" fill="white"/></svg>
+          Google Analytics
+          {% if ga_configured %}
+            <span class="badge b-green" style="margin-left:auto;font-size:.65rem;">{{ ga_measurement_id }}</span>
+          {% else %}
+            <span class="badge b-gray" style="margin-left:auto;font-size:.65rem;">Not set</span>
+          {% endif %}
+        </p>
+        <p style="font-size:.8rem;color:var(--muted);margin:0 0 1rem;">Traffic analytics — sessions, acquisition channels, page views, conversions.</p>
+        {% if not ga_configured %}
+        <div style="background:var(--amber-lt);border:1px solid #fde68a;border-radius:8px;padding:10px 12px;margin-bottom:1rem;font-size:.78rem;color:#92400e;">
+          Set <code style="background:#fef3c7;padding:1px 5px;border-radius:3px;">GA_MEASUREMENT_ID</code> in your environment to enable tracking.
+        </div>
+        {% endif %}
+        <div style="display:flex;flex-direction:column;gap:.5rem;">
+          <a href="https://analytics.google.com/analytics/web/#/p542489994/reports/" target="_blank" style="display:flex;align-items:center;gap:.5rem;padding:.55rem .9rem;border-radius:7px;background:#f9ab00;color:#1a1a1a;text-decoration:none;font-size:.8rem;font-weight:700;">
+            <i class="fas fa-external-link-alt"></i> Open Google Analytics
+          </a>
+          <a href="https://analytics.google.com/analytics/web/#/p542489994/reports/realtime-overview" target="_blank" style="display:flex;align-items:center;gap:.5rem;padding:.5rem .9rem;border-radius:7px;border:1.5px solid var(--border);color:var(--text);text-decoration:none;font-size:.8rem;font-weight:600;">
+            <i class="fas fa-circle" style="color:var(--green);font-size:.55rem"></i> Real-time
+          </a>
+          <a href="https://analytics.google.com/analytics/web/#/p542489994/reports/lifecycle-acquisition-overview" target="_blank" style="display:flex;align-items:center;gap:.5rem;padding:.5rem .9rem;border-radius:7px;border:1.5px solid var(--border);color:var(--text);text-decoration:none;font-size:.8rem;font-weight:600;">
+            <i class="fas fa-funnel-dollar" style="color:var(--blue)"></i> Acquisition
+          </a>
+          <a href="https://analytics.google.com/analytics/web/#/p542489994/reports/lifecycle-engagement-overview" target="_blank" style="display:flex;align-items:center;gap:.5rem;padding:.5rem .9rem;border-radius:7px;border:1.5px solid var(--border);color:var(--text);text-decoration:none;font-size:.8rem;font-weight:600;">
+            <i class="fas fa-mouse-pointer" style="color:var(--purple)"></i> Engagement
+          </a>
+          <a href="https://analytics.google.com/analytics/web/#/p542489994/reports/lifecycle-monetization-overview" target="_blank" style="display:flex;align-items:center;gap:.5rem;padding:.5rem .9rem;border-radius:7px;border:1.5px solid var(--border);color:var(--text);text-decoration:none;font-size:.8rem;font-weight:600;">
+            <i class="fas fa-dollar-sign" style="color:var(--green)"></i> Monetization
+          </a>
+        </div>
+      </div>
+
+    </div>
+
+  </div><!-- /monitoring -->
 
 </div><!-- /bi-wrap -->
 

@@ -103,27 +103,91 @@
         </div>
     </div>
 
-    <!-- Historical Cutoff Trends -->
-    {% if course and course.cutoff_history.all %}
+    <!-- Cutoff Trend Chart -->
+    {% if chart_json %}
     <div class="row mb-5">
         <div class="col-lg-12">
-            <div class="card shadow-sm">
-                <div class="card-body">
-                    <h5 class="fw-bold">Historical Cutoff Trends</h5>
-                    <table class="table table-striped">
-                        <thead>
-                            <tr>
-                                <th>Year</th>
-                                <th>University</th>
-                                <th>Cutoff Points</th>
-                            </tr>
+            <div class="card shadow-sm p-4" id="cutoffTrendCard">
+                <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+                    <h5 class="fw-bold mb-0">
+                        <i class="fas fa-chart-line me-2" style="color:#1e3a8a;"></i>Cutoff Points Trend
+                    </h5>
+                    <div class="d-flex gap-2">
+                        <button class="trend-tab active" data-view="chart">Chart</button>
+                        <button class="trend-tab" data-view="table">Table</button>
+                    </div>
+                </div>
+
+                <!-- Chart view -->
+                <div id="trendChartView">
+                    <div style="position:relative; height:260px;">
+                        <canvas id="cutoffTrendChart"></canvas>
+                    </div>
+                    <p class="text-muted mt-2 mb-0" style="font-size:0.78rem;">
+                        <i class="fas fa-info-circle me-1"></i>
+                        Cluster cut-off points per university. Source: KUCCPS placement data.
+                    </p>
+                </div>
+
+                <!-- Table view (hidden by default) -->
+                <div id="trendTableView" style="display:none;">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>University</th>
+                                    <th>Year</th>
+                                    <th class="text-center">Cutoff Points</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for history in cutoff_history %}
+                                <tr>
+                                    <td class="fw-semibold">{{ history.university.name }}</td>
+                                    <td>{{ history.year }}</td>
+                                    <td class="text-center">
+                                        <span class="badge rounded-pill fw-semibold"
+                                              style="background:{% if history.cutoff_points >= 35 %}#dcfce7;color:#16a34a{% elif history.cutoff_points >= 25 %}#fef9c3;color:#ca8a04{% else %}#fee2e2;color:#dc2626{% endif %};font-size:0.8rem;padding:4px 10px;border:1px solid currentColor;">
+                                            {{ history.cutoff_points }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <p class="text-muted mt-2 mb-0" style="font-size:0.78rem;">
+                        <i class="fas fa-info-circle me-1"></i>
+                        Cluster cut-off points (max 48). Source: KUCCPS placement data.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% elif cutoff_history %}
+    <!-- Single-year data: plain table fallback -->
+    <div class="row mb-5">
+        <div class="col-lg-12">
+            <div class="card shadow-sm p-4">
+                <h5 class="fw-bold mb-3">
+                    <i class="fas fa-chart-bar me-2 text-success"></i>Historical Cutoff Points
+                </h5>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr><th>Year</th><th>University</th><th class="text-center">Cutoff</th></tr>
                         </thead>
                         <tbody>
-                            {% for history in course.cutoff_history.all %}
+                            {% for history in cutoff_history %}
                             <tr>
                                 <td>{{ history.year }}</td>
-                                <td>{{ history.university.name }}</td>
-                                <td>{{ history.cutoff_points }}</td>
+                                <td class="fw-semibold">{{ history.university.name }}</td>
+                                <td class="text-center">
+                                    <span class="badge rounded-pill fw-semibold"
+                                          style="background:#eff6ff;color:#1e3a8a;border:1px solid #bfdbfe;font-size:0.82rem;padding:5px 12px;">
+                                        {{ history.cutoff_points }}
+                                    </span>
+                                </td>
                             </tr>
                             {% endfor %}
                         </tbody>
@@ -204,7 +268,68 @@
 {% endblock %}
 
 {% block extra_js %}
+{% if chart_json %}
+<style>
+.trend-tab {
+    padding: 0.3rem 0.9rem;
+    font-size: 0.8rem; font-weight: 700;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 8px;
+    background: #fff; color: #64748b;
+    cursor: pointer; transition: all 0.18s;
+}
+.trend-tab.active {
+    background: #1e3a8a; color: #fff;
+    border-color: #1e3a8a;
+}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
-    console.log("Course detail page loaded.");
+(function () {
+    var chartData = {{ chart_json|safe }};
+
+    var ctx = document.getElementById('cutoffTrendChart');
+    if (!ctx) return;
+
+    new Chart(ctx, {
+        type: 'line',
+        data: chartData,
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: { mode: 'index', intersect: false },
+            plugins: {
+                legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } },
+                tooltip: {
+                    callbacks: {
+                        label: function (ctx) {
+                            return ctx.dataset.label + ': ' + (ctx.parsed.y !== null ? ctx.parsed.y + ' pts' : '—');
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    min: 0, max: 48,
+                    title: { display: true, text: 'Cluster Points', font: { size: 11 } },
+                    ticks: { font: { size: 11 }, callback: function (v) { return v + ' pts'; } }
+                },
+                x: { ticks: { font: { size: 11 } } }
+            }
+        }
+    });
+
+    // Chart / Table toggle
+    document.querySelectorAll('.trend-tab').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            document.querySelectorAll('.trend-tab').forEach(function (b) { b.classList.remove('active'); });
+            btn.classList.add('active');
+            var view = btn.getAttribute('data-view');
+            document.getElementById('trendChartView').style.display = view === 'chart' ? '' : 'none';
+            document.getElementById('trendTableView').style.display  = view === 'table' ? '' : 'none';
+        });
+    });
+})();
 </script>
+{% endif %}
 {% endblock %}

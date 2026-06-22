@@ -342,7 +342,7 @@
             {% if spotlight %}
                 {% with c=spotlight.course %}
                     {% if spotlight.hero_image %}
-                        <img src="{{ spotlight.hero_image.url }}" alt="{{ c.name }}" class="st-hero">
+                        <img src="{{ spotlight.hero_image.url }}" alt="{{ c.name }}" class="st-hero" loading="lazy">
                     {% else %}
                         <div class="st-hero-placeholder">
                             <i class="fas fa-graduation-cap" style="color:rgba(255,255,255,0.5);position:relative;z-index:1;"></i>
