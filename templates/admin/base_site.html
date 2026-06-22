@@ -1,5 +1,48 @@
 {% extends "admin/base.html" %}
 
+{% block nav-global %}
+<div id="cn-analytics-bar" style="
+  background:#1e3a8a;
+  border-top:1px solid rgba(255,255,255,.12);
+  padding:6px 12px;
+  display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+">
+  <span style="color:rgba(255,255,255,.5);font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-right:4px;">Analytics</span>
+
+  <a href="{% url 'admin:analytics-overview' %}"
+     style="display:inline-flex;align-items:center;gap:5px;padding:4px 12px;border-radius:6px;
+            background:#2563eb;color:#fff;font-size:.75rem;font-weight:700;text-decoration:none;">
+    &#128202; Overview
+  </a>
+
+  <a href="/analytics/" target="_blank"
+     style="display:inline-flex;align-items:center;gap:5px;padding:4px 12px;border-radius:6px;
+            background:rgba(255,255,255,.12);color:#fff;font-size:.75rem;font-weight:600;text-decoration:none;">
+    &#128200; Full Dashboard
+  </a>
+
+  <span style="width:1px;height:16px;background:rgba(255,255,255,.15);margin:0 2px;"></span>
+
+  <a href="https://analytics.google.com/analytics/web/#/p542489994/reports/" target="_blank"
+     style="display:inline-flex;align-items:center;gap:5px;padding:4px 12px;border-radius:6px;
+            background:rgba(249,171,0,.2);color:#fde68a;font-size:.75rem;font-weight:600;text-decoration:none;">
+    &#128202; Google Analytics
+  </a>
+
+  <a href="{% if POSTHOG_API_KEY %}{% if 'eu.' in POSTHOG_HOST %}https://eu.posthog.com{% else %}https://app.posthog.com{% endif %}{% else %}https://eu.posthog.com{% endif %}" target="_blank"
+     style="display:inline-flex;align-items:center;gap:5px;padding:4px 12px;border-radius:6px;
+            background:rgba(249,189,43,.2);color:#fde68a;font-size:.75rem;font-weight:600;text-decoration:none;">
+    &#9654; PostHog
+  </a>
+
+  <a href="https://sentry.io/issues/" target="_blank"
+     style="display:inline-flex;align-items:center;gap:5px;padding:4px 12px;border-radius:6px;
+            background:rgba(54,45,89,.5);color:#c4b5fd;font-size:.75rem;font-weight:600;text-decoration:none;">
+    &#128736; Sentry
+  </a>
+</div>
+{% endblock %}
+
 {% block extrahead %}
 {{ block.super }}
 
