@@ -13,6 +13,14 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 import os
 from pathlib import Path
 
+# Cloudinary reads CLOUDINARY_URL at package import time (before INSTALLED_APPS).
+# If the env var is set but malformed it crashes with ValueError.
+# Unset it here so cloudinary falls back to its safe defaults; our guard below
+# re-applies the correct storage backend only when the URL is valid.
+_raw_cloudinary_url = os.environ.get('CLOUDINARY_URL', '')
+if _raw_cloudinary_url and not _raw_cloudinary_url.startswith('cloudinary://'):
+    os.environ.pop('CLOUDINARY_URL', None)
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
