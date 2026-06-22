@@ -271,6 +271,8 @@ def dashboard_view(request: HttpRequest) -> HttpResponse:
         _live = _IP.objects.filter(start_date__lte=_today, end_date__gte=_today).select_related(
             'institution', 'institution__institution_type'
         ).prefetch_related('institution__offerings__course')
+        from clusters.models import Cluster as _Cluster
+        _all_clusters = list(_Cluster.objects.all().only('name', 'slug', 'number', 'color_code', 'icon'))
         from career.models import CareerConfig as _CCfg
         _cfg = _CCfg.get()
         return render(request, "accounts/dashboard.html", {
@@ -281,6 +283,7 @@ def dashboard_view(request: HttpRequest) -> HttpResponse:
             "saved_courses": [], "shortlist_items": [], "notifications": [],
             "cluster_results": [], "latest_result": None, "snapshot": None,
             "quiz_submission": None, "saved_course_ids": [],
+            "all_clusters": _all_clusters,
             "recommended_careers": CareerProfile.objects.all()[:3],
             "recent_news": Article.objects.filter(is_published=True).order_by('-created_at')[:3],
             "featured_promos": list(_live.filter(tier='featured')[:3]),
@@ -524,6 +527,9 @@ def dashboard_view(request: HttpRequest) -> HttpResponse:
             'count': _count,
         })
 
+    from clusters.models import Cluster
+    all_clusters = list(Cluster.objects.all().only('name', 'slug', 'number', 'color_code', 'icon'))
+
     from career.models import CareerConfig as _CCfg
     _cfg = _CCfg.get()
     return render(request, "accounts/dashboard.html", {
@@ -534,6 +540,7 @@ def dashboard_view(request: HttpRequest) -> HttpResponse:
         "latest_result":     latest_result,
         "cluster_results":   cluster_results,
         "eligible_count":    eligible_count,
+        "all_clusters":      all_clusters,
         # Watchlist
         "saved_count":       saved_count,
         "saved_courses":     saved_courses,

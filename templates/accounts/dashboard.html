@@ -991,6 +991,45 @@ body.dark .ob-step:hover { background: var(--surface-2); }
   {% endif %}{# /not guest My Courses #}
 
 
+  {# ── BROWSE KUCCPS CLUSTERS ── #}
+  {% if all_clusters %}
+  <div class="dash-card">
+    <div class="dash-card-header">
+      <h6 class="dash-card-title">
+        <i class="fas fa-layer-group text-primary"></i>KUCCPS Clusters
+      </h6>
+      <a href="{% url 'clusters:cluster_list' %}" style="font-size:0.75rem;font-weight:700;color:#4f46e5;text-decoration:none;">
+        View all <i class="bi bi-arrow-right ms-1"></i>
+      </a>
+    </div>
+    <div class="dash-card-body">
+      <p class="text-muted mb-3" style="font-size:0.78rem;">Each cluster groups related subjects — your cluster points determine which courses you qualify for.</p>
+      <div class="row g-2">
+        {% for cluster in all_clusters %}
+        <div class="col-6 col-md-4">
+          <a href="{% url 'clusters:cluster_detail' cluster.slug %}"
+             class="d-flex align-items-center gap-2 p-2 rounded-3 text-decoration-none"
+             style="background:#f8fafc;border:1.5px solid #e2e8f0;transition:border-color 0.15s,background 0.15s;"
+             onmouseover="this.style.background='#eff6ff';this.style.borderColor='#93c5fd'"
+             onmouseout="this.style.background='#f8fafc';this.style.borderColor='#e2e8f0'">
+            <div class="rounded-2 d-flex align-items-center justify-content-center flex-shrink-0 fw-800"
+                 style="width:30px;height:30px;font-size:0.72rem;background:#dbeafe;color:#1d4ed8;">
+              {{ cluster.kuccps_number|default:"—" }}
+            </div>
+            <div style="min-width:0;">
+              <div class="fw-700 text-dark" style="font-size:0.74rem;line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                {{ cluster.name|truncatechars:22 }}
+              </div>
+            </div>
+          </a>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+
   {# ── FEATURED INSTITUTIONS ── #}
   {% if featured_promos %}
   <div class="dash-card">
@@ -1164,6 +1203,36 @@ body.dark .ob-step:hover { background: var(--surface-2); }
       </div>
     </div>
   </div>
+
+
+  {# ── INSTITUTIONS ── #}
+  {% if inst_type_links %}
+  <div class="sidebar-card">
+    <div class="sidebar-card-header">
+      <h6 class="sidebar-card-title"><i class="fas fa-university" style="color:#d97706;"></i>Institutions</h6>
+      <a href="{% url 'institutions:institution_types_list' %}" style="font-size:0.73rem;font-weight:700;color:#d97706;text-decoration:none;">
+        Browse all
+      </a>
+    </div>
+    <div class="sidebar-card-body" style="padding:0.5rem 0.75rem;">
+      {% for itype in inst_type_links %}
+      <a href="{{ itype.url }}"
+         class="d-flex align-items-center gap-2 py-2 px-1 rounded-2 text-decoration-none"
+         style="border-bottom:1px solid #f1f5f9;transition:background 0.15s;"
+         onmouseover="this.style.background='#fffbeb'" onmouseout="this.style.background=''">
+        <div class="rounded-2 flex-shrink-0 d-flex align-items-center justify-content-center"
+             style="width:30px;height:30px;background:#fef3c7;color:#d97706;">
+          <i class="{{ itype.icon }}" style="font-size:0.75rem;"></i>
+        </div>
+        <div style="min-width:0;flex:1;">
+          <div class="fw-700 text-dark" style="font-size:0.78rem;">{{ itype.label }}</div>
+        </div>
+        <span class="badge" style="background:#fef3c7;color:#92400e;font-size:0.62rem;border-radius:8px;">{{ itype.count }}</span>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
 
 
   {# ── MENTORSHIP ── #}
