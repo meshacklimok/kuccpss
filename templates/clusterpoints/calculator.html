@@ -659,7 +659,7 @@ body.dark .lce-btn-calc:disabled { background: var(--surface-2); color: var(--te
         <p class="pg-sub">Unlock your KUCCPS cluster points to discover which universities, KMTCs, and TVETs you qualify for.</p>
         <div class="pg-price">
             <span class="pg-currency">KES</span>
-            <span class="pg-amount">50</span>
+            <span class="pg-amount">{{ gate_price }}</span>
             <span class="pg-once">one-time</span>
         </div>
         <div class="pg-features">
@@ -668,9 +668,9 @@ body.dark .lce-btn-calc:disabled { background: var(--surface-2); color: var(--te
             <div class="pg-feat"><i class="bi bi-check-circle-fill"></i>2026 cutoff predictions</div>
             <div class="pg-feat"><i class="bi bi-check-circle-fill"></i>PDF download</div>
         </div>
-        <button class="pg-btn-mpesa" onclick="handlePayment('mpesa')">
+        <button class="pg-btn-mpesa" onclick="handlePayment()">
             <span class="pg-mpesa-badge">M-PESA</span>
-            Pay with M-Pesa — KES 50
+            Pay with M-Pesa — KES {{ gate_price }}
         </button>
        
         <p class="pg-secure"><i class="bi bi-shield-check-fill"></i>Secure payment · Instant unlock</p>
@@ -1183,7 +1183,7 @@ function submitCalcForm(btn) {
 }());
 
 // ── Progressive 5-second loading animation + payment gate ──
-{% if results %}
+{% if results %}{% if is_results_locked %}
 (function () {
     var DURATION = 5000;
     var overlay  = document.getElementById('calc-loading');
@@ -1228,16 +1228,15 @@ function showPaymentGate() {
     document.getElementById('payment-gate').style.display = 'flex';
 }
 
-function handlePayment(method) {
-    // TODO: wire up real M-Pesa STK Push / card payment before going live
-    var gate = document.getElementById('payment-gate');
-    gate.style.transition = 'opacity 0.3s';
-    gate.style.opacity = '0';
-    setTimeout(function () {
-        gate.style.display = 'none';
-        revealResults();
-    }, 320);
+function handlePayment() {
+    var next = encodeURIComponent(window.location.pathname + window.location.search);
+    window.location.href = '/payments/required/?feature={{ gate_feature }}&next=' + next;
 }
+
+{% else %}
+// User has already paid — reveal results immediately on load
+window.addEventListener('DOMContentLoaded', function () { revealResults(); });
+{% endif %}
 
 function revealResults() {
     var content = document.getElementById('results-content');

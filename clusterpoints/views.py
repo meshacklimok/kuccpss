@@ -328,6 +328,16 @@ def kcse_calculator_view(request):
             'edit_url': reverse('clusterpoints:calculator'),
         }
 
+    from payments.services import has_paid_for_feature, is_feature_enabled, price_for_feature
+    _gate_feature = "view_cluster_points"
+    _gate_enabled = is_feature_enabled(_gate_feature)
+    _is_locked = (
+        bool(results)
+        and request.user.is_authenticated
+        and _gate_enabled
+        and not has_paid_for_feature(request.user, _gate_feature)
+    )
+
     return render(request, "clusterpoints/calculator.html", {
         "form": form,
         "results": results,
@@ -343,6 +353,9 @@ def kcse_calculator_view(request):
         "cluster_courses_map": cluster_courses_map,
         "cluster_course_counts": cluster_course_counts,
         "sub_banner": sub_banner,
+        "is_results_locked": _is_locked,
+        "gate_feature": _gate_feature,
+        "gate_price": price_for_feature(_gate_feature),
     })
 
 
