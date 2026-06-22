@@ -336,6 +336,7 @@ if not DEBUG:
 
     # Render terminates TLS at its edge; tell Django the real proto via the header.
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    SECURE_SSL_REDIRECT = True
 
     # HSTS: browsers remember to use HTTPS for 1 year
     SECURE_HSTS_SECONDS = 31536000
