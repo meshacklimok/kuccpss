@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% load widget_tweaks %}
+
+{% block title %}Complete Sign Up — CareerNext{% endblock %}
+
+{% block content %}
+<div class="auth-page">
+  <div class="auth-split">
+
+    <div class="auth-panel-left">
+      <a href="{% url 'home' %}" class="auth-panel-logo text-decoration-none">
+        <span style="font-size:1.25rem;font-weight:900;color:#fff;letter-spacing:-0.5px;">
+          Career<span style="color:#93C5FD;">Next</span>
+        </span>
+      </a>
+      <div>
+        <h2 class="auth-panel-title">Almost there!</h2>
+        <p class="auth-panel-sub">Confirm your details to complete your CareerNext account.</p>
+      </div>
+      <div class="auth-panel-badge">Free forever · No credit card needed</div>
+    </div>
+
+    <div class="auth-panel-right">
+      <div style="text-align:center;margin-bottom:1.5rem;">
+        <h2 style="font-size:1.3rem;font-weight:800;color:#0f172a;margin:0 0 .4rem;">Complete your account</h2>
+        <p style="font-size:.88rem;color:#64748b;margin:0;">Confirm the email address for your CareerNext account.</p>
+      </div>
+
+      <form method="post" action="{% url 'socialaccount_signup' %}">
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+        <div class="alert alert-danger py-2 px-3 mb-3" style="font-size:.82rem;border-radius:8px;">
+          {{ form.non_field_errors|striptags }}
+        </div>
+        {% endif %}
+
+        {% for field in form.visible_fields %}
+        <div class="auth-field">
+          <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+          {{ field|add_class:"form-control" }}
+          {% if field.errors %}
+          <div class="auth-field-error">{{ field.errors|striptags }}</div>
+          {% endif %}
+        </div>
+        {% endfor %}
+
+        <button type="submit" class="btn-auth-primary" style="width:100%;margin-top:1rem;">
+          Create my account <i class="fas fa-arrow-right ms-2"></i>
+        </button>
+      </form>
+
+      <div style="text-align:center;margin-top:1rem;">
+        <a href="{% url 'accounts:login' %}" style="font-size:.83rem;color:#64748b;text-decoration:none;">
+          ← Back to sign in
+        </a>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
