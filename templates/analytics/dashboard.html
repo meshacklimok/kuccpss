@@ -441,7 +441,7 @@ body { background: var(--bg); }
             {% if u.is_verified %}<span class="badge b-green">✓ Verified</span>
             {% else %}<span class="badge b-amber">Pending</span>{% endif %}
           </td>
-          <td style="font-size:.75rem;color:var(--muted);">{{ u.date_joined|date:"d M Y H:i" }}</td>
+          <td style="font-size:.75rem;color:var(--muted);">{{ u.created_at|date:"d M Y H:i" }}</td>
         </tr>
         {% endfor %}
         </tbody>

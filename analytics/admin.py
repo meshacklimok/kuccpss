@@ -18,8 +18,8 @@ def _overview_view(request):
 
     stats = {
         'total_users':    User.objects.count(),
-        'new_today':      User.objects.filter(date_joined__date=today).count(),
-        'new_this_week':  User.objects.filter(date_joined__date__gte=week_ago).count(),
+        'new_today':      User.objects.filter(created_at__date=today).count(),
+        'new_this_week':  User.objects.filter(created_at__date__gte=week_ago).count(),
         'searches_today': SearchLog.objects.filter(created_at__date=today).count(),
         'views_today':    ViewLog.objects.filter(created_at__date=today).count(),
         'revenue_today':  Payment.objects.filter(
