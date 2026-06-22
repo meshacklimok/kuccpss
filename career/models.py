@@ -1,6 +1,6 @@
 from django.db import models
 from django.conf import settings
-from typing import List, Dict
+from typing import List, Dict, Optional
 
 # =====================================================
 # KCSE Subjects and Grades
@@ -43,7 +43,7 @@ class University(models.Model):
 
 def get_default_course_category():
     category, created = CourseCategory.objects.get_or_create(name="Degree")
-    return category.id
+    return category.id  # type: ignore[attr-defined]
 class Course(models.Model):
     name = models.CharField(max_length=150)
     category = models.ForeignKey(
@@ -473,7 +473,7 @@ def match_degree_courses(kcse_grades: Dict[str, str]) -> List[StudentCourseMatch
         cluster_points = calculate_cluster_points(kcse_grades, cluster_subjects)
         if cluster_points == 0:
             continue
-        for cutoff in course.cutoffs.all():
+        for cutoff in course.cutoffs.all():  # type: ignore[attr-defined]
             if not cutoff.cutoff_points:
                 continue
             admission = predict_admission_chance(cluster_points, cutoff.cutoff_points)
@@ -495,7 +495,7 @@ def match_diploma_courses(kcse_grades: Dict[str, str]) -> List[StudentCourseMatc
     mean_grade = calculate_mean_grade(kcse_grades)
     matches = []
     for course in Course.objects.filter(category__name="Diploma"):
-        cutoffs = course.cutoffs.all()
+        cutoffs = course.cutoffs.all()  # type: ignore[attr-defined]
         for cutoff in cutoffs:
             admission = predict_admission_chance(mean_grade, cutoff.cutoff_points)
             match_score = mean_grade / cutoff.cutoff_points * 100
@@ -592,7 +592,7 @@ def generate_ai_recommendation(matches: List[StudentCourseMatch]) -> AIRecommend
 # =====================================================
 # 10. Full Career Guidance Engine
 # =====================================================
-def career_guidance_engine(kcse_grades: Dict[str, str], pathway: str, tvet_category: str = None):
+def career_guidance_engine(kcse_grades: Dict[str, str], pathway: str, tvet_category: Optional[str] = None):
     """
     pathway: "Degree", "Diploma", "KMTC", "TVET", "TTC"
     tvet_category: required if pathway is TVET
@@ -790,7 +790,7 @@ class AIKnowledgeEntry(models.Model):
         verbose_name_plural = 'AI Knowledge Base'
 
     def __str__(self):
-        return f"[{self.get_category_display()}] {self.question[:80]}"
+        return f"[{self.get_category_display()}] {self.question[:80]}"  # type: ignore[attr-defined]
 
     def get_keywords_list(self):
         return [k.strip().lower() for k in self.keywords.split(',') if k.strip()]
@@ -865,7 +865,7 @@ class AICallLog(models.Model):
         verbose_name_plural = 'AI Call Logs'
 
     def __str__(self):
-        who = str(self.user) if self.user_id else f'session:{self.session_key[:8]}'
+        who = str(self.user) if self.user_id else f'session:{self.session_key[:8]}'  # type: ignore[attr-defined]
         return f"{who} — {self.date} — {self.call_count} calls"
 
 
@@ -993,7 +993,7 @@ class SubmissionLockConfig(models.Model):
 
     def __str__(self):
         state = "enabled" if self.is_enabled else "disabled"
-        return f"{self.get_feature_display()} — {self.lock_minutes} min grace ({state})"
+        return f"{self.get_feature_display()} — {self.lock_minutes} min grace ({state})"  # type: ignore[attr-defined]
 
     @classmethod
     def get_for_feature(cls, feature: str):
@@ -1053,7 +1053,7 @@ class CareerSubmission(models.Model):
         verbose_name_plural = "Career Submissions"
 
     def __str__(self):
-        return f"{self.user.email} — {self.get_feature_display()} ({self.status})"
+        return f"{self.user.email} — {self.get_feature_display()} ({self.status})"  # type: ignore[attr-defined]
 
     def seconds_remaining(self):
         from django.utils import timezone

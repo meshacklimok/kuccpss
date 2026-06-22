@@ -67,7 +67,7 @@ class Subject(TimeStampedModel):
         help_text="KUCCPS subject group (I–V)"
     )
 
-    class Meta:
+    class Meta:  # type: ignore[misc]
         ordering = ['group', 'name']
         verbose_name = "Subject"
         verbose_name_plural = "Subjects"
@@ -110,7 +110,7 @@ class Cluster(TimeStampedModel):
         help_text="Cluster number (used for ordering or official identification)"
     )
 
-    class Meta:
+    class Meta:  # type: ignore[misc]
         ordering = ['number', 'name']
         verbose_name = "Cluster"
         verbose_name_plural = "Clusters"
@@ -203,7 +203,7 @@ class SubjectGroup(TimeStampedModel):
         help_text="Lower number = higher priority"
     )
 
-    class Meta:
+    class Meta:  # type: ignore[misc]
         ordering = ['priority', 'name']
         verbose_name = "Subject Group"
         verbose_name_plural = "Subject Groups"

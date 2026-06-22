@@ -1,5 +1,5 @@
 # career/engine.py
-from typing import Dict, List, Tuple
+from typing import Dict, List, Optional, Tuple
 from .models import (
     StudentCourseMatch,
     match_degree_courses,
@@ -14,7 +14,7 @@ from .models import (
 def career_guidance_engine(
     kcse_grades: Dict[str, str],
     pathway: str,
-    tvet_category: str = None,
+    tvet_category: Optional[str] = None,
 ) -> Tuple[List[StudentCourseMatch], object]:
     """
     pathway: "Degree", "Diploma", "KMTC", "TVET", "TTC"
