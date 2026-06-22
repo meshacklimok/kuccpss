@@ -28,7 +28,7 @@ class GradePoint(TimeStampedModel):
     grade = models.CharField(max_length=2, unique=True)
     points = models.PositiveIntegerField()
 
-    class Meta:
+    class Meta:  # type: ignore[misc]
         ordering = ['-points']
 
     def __str__(self):
@@ -58,7 +58,7 @@ class UserKCSEResult(TimeStampedModel):
         editable=False
     )
 
-    class Meta:
+    class Meta:  # type: ignore[misc]
         ordering = ['-created_at']
 
     def recalc_total_points(self):
@@ -69,7 +69,7 @@ class UserKCSEResult(TimeStampedModel):
         3. Next 5 best subjects
         Total max = 84
         """
-        points_dict = {sr.subject.name: sr.points for sr in self.subject_results.all()}
+        points_dict = {sr.subject.name: sr.points for sr in self.subject_results.all()}  # type: ignore[attr-defined]
 
         aggregate_subjects = []
 
@@ -115,7 +115,7 @@ class SubjectResult(TimeStampedModel):
 
     points = models.PositiveIntegerField()
 
-    class Meta:
+    class Meta:  # type: ignore[misc]
         unique_together = ('kcse_result', 'subject')
         ordering = ['subject__name']
 
@@ -164,7 +164,7 @@ class ClusterCalculationResult(TimeStampedModel):
         related_name="used_in_cluster_results"
     )
 
-    class Meta:
+    class Meta:  # type: ignore[misc]
         unique_together = ('user', 'kcse_result', 'cluster')
         ordering = ['cluster__number']
 
