@@ -175,6 +175,18 @@ def kcse_calculator_view(request):
                 }
                 predicted_groups = predict_all_for_student(cluster_scores, top_per_cluster=9999) if cluster_scores else []
 
+    # ── Load existing saved results on GET (e.g. after payment unlock) ──────────
+    if request.method == 'GET' and request.user.is_authenticated and not results:
+        _saved = UserKCSEResult.objects.filter(user=request.user).order_by('-created_at').first()
+        if _saved:
+            kcse_result = _saved
+            total_points = kcse_result.total_points
+            results = list(kcse_result.cluster_results.select_related('cluster').order_by('-cluster_points'))
+            if results:
+                _cs = {r.cluster.number: float(r.cluster_points) for r in results if r.cluster and r.cluster.number}
+                if _cs:
+                    predicted_groups = predict_all_for_student(_cs, top_per_cluster=9999)
+
     if request.method == "POST":
         if form.is_valid():
             points_dict = form.get_points_dict()  # {subject_id: points}

@@ -1,358 +1,642 @@
 {% extends "base.html" %}
-{% block title %}Unlock Premium — CareerNext{% endblock %}
+{% block title %}Unlock Access — CareerNext{% endblock %}
 
 {% block content %}
-<div class="page-hero">
-  <div class="container text-center">
-    <i class="fas fa-lock fa-3x mb-3 opacity-75"></i>
-    <h1>Premium Feature</h1>
-    <p class="mb-0">Unlock full access with a one-time M-Pesa payment.</p>
-  </div>
-</div>
+<style>
+*, *::before, *::after { box-sizing: border-box; }
 
-<div class="container pb-5">
-  <div class="row justify-content-center">
-    <div class="col-lg-7">
+body { background: #060c1a; min-height: 100vh; }
 
-      <!-- Feature card -->
-      <div class="card p-4 mb-4 text-center border-0 shadow-sm">
-        <div class="rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3"
-             style="width:80px;height:80px;background:#fee2e2;">
-          <i class="fas fa-lock fa-2x text-danger"></i>
-        </div>
-        <h4 class="fw-bold mb-2">
-          {% if feature == 'ai_chat_access' %}AI Chat Top-Up
-          {% elif feature == 'premium_career_report' %}Premium Career Report
-          {% elif feature == 'advanced_analysis' %}Advanced Career Analysis
-          {% elif feature == 'view_eligible_courses' %}Full Eligible Courses
-          {% else %}Premium Feature{% endif %}
-        </h4>
-        <p class="text-muted mb-3">
-          {% if feature == 'ai_chat_access' %}
-            One-time payment. Get more AI career guidance messages instantly.
-          {% else %}
-            One-time payment. Lifetime access to this feature.
-          {% endif %}
-        </p>
-        <div class="d-flex gap-4 justify-content-center flex-wrap">
-          <div class="text-center">
-            <div class="fw-bold text-success fs-3">
-              KES {{ price }}
-            </div>
-            <div class="small text-muted">One-time</div>
-          </div>
-          <div class="text-center">
-            {% if feature == 'ai_chat_access' %}
-              <div class="fw-bold text-success fs-4"><i class="fas fa-comments"></i></div>
-              <div class="small text-muted">More messages</div>
-            {% else %}
-              <div class="fw-bold text-success fs-4"><i class="fas fa-infinity"></i></div>
-              <div class="small text-muted">Lifetime access</div>
-            {% endif %}
-          </div>
-          <div class="text-center">
-            <div class="fw-bold text-success fs-4"><i class="fas fa-shield-alt"></i></div>
-            <div class="small text-muted">Secure M-Pesa</div>
-          </div>
-        </div>
-      </div>
+/* ── Animated background ── */
+.pr-bg {
+    position: fixed; inset: 0; z-index: 0;
+    background: linear-gradient(-45deg, #06091a, #0d1630, #10063a, #060d1a);
+    background-size: 400% 400%;
+    animation: prBgShift 20s ease infinite;
+}
+@keyframes prBgShift {
+    0%   { background-position: 0% 50%; }
+    50%  { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+.pr-orb {
+    position: fixed; border-radius: 50%; pointer-events: none; filter: blur(80px);
+}
+.pr-orb-1 { width:500px;height:500px;top:-200px;left:-150px;background:radial-gradient(circle,rgba(79,70,229,0.15),transparent 70%); }
+.pr-orb-2 { width:400px;height:400px;bottom:-150px;right:-100px;background:radial-gradient(circle,rgba(6,182,212,0.12),transparent 70%); }
 
-      <!-- What you get -->
-      <div class="card p-4 mb-4">
-        <h5 class="fw-bold mb-3"><i class="fas fa-star me-2 text-warning"></i>What You Get</h5>
-        {% if feature == 'ai_chat_access' %}
-        <ul class="list-unstyled mb-0">
-          <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>More AI chat messages with CareerNext AI</li>
-          <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Course recommendations based on your cluster points</li>
-          <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Cutoff point comparisons across institutions</li>
-          <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>HELB & HEF funding guidance</li>
-          <li><i class="fas fa-check-circle text-success me-2"></i>Career paths and upgrade route advice</li>
-        </ul>
-        {% else %}
-        <ul class="list-unstyled mb-0">
-          <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>All courses you qualify for across every university & college</li>
-          <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Your cluster points vs cut-off thresholds at a glance</li>
-          <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>AI-powered career recommendations based on your grades</li>
-          <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Download PDF reports of your eligible courses</li>
-          <li><i class="fas fa-check-circle text-success me-2"></i>Priority access to new features</li>
-        </ul>
-        {% endif %}
-      </div>
+/* ── Layout ── */
+.pr-wrap {
+    position: relative; z-index: 10;
+    min-height: calc(100vh - 60px);
+    display: flex; align-items: center; justify-content: center;
+    padding: 2rem 1rem;
+}
+.pr-inner { width: 100%; max-width: 480px; }
 
-      <!-- Payment form -->
-      <div class="card p-4 border-success" id="payment-card">
-        <h5 class="fw-bold mb-1"><i class="fas fa-mobile-alt me-2 text-success"></i>Pay via M-Pesa</h5>
-        <p class="text-muted small mb-3">Enter your Safaricom number — you'll get an STK push prompt on your phone.</p>
+/* ── Top badge ── */
+.pr-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(239,68,68,0.12); border: 1px solid rgba(239,68,68,0.3);
+    color: #fca5a5; border-radius: 20px; padding: 4px 14px;
+    font-size: 0.68rem; font-weight: 800; letter-spacing: 0.09em; text-transform: uppercase;
+    margin-bottom: 1rem;
+}
+.pr-title {
+    font-size: clamp(1.5rem,4vw,2rem); font-weight: 900; color: #fff;
+    margin: 0 0 0.3rem; letter-spacing: -0.02em; line-height: 1.2;
+}
+.pr-title .hl {
+    background: linear-gradient(90deg,#a78bfa,#60a5fa);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+}
+.pr-sub { font-size: 0.85rem; color: rgba(255,255,255,0.4); margin: 0 0 1.5rem; }
 
-        <!-- Step 1: Phone form -->
-        <div id="step-phone">
-          <div class="mb-3">
-            <label class="form-label fw-bold small">M-Pesa Phone Number</label>
-            <div class="input-group">
-              <span class="input-group-text">+254</span>
-              <input type="tel" id="phone-input" class="form-control form-control-lg"
-                     placeholder="712 345 678" maxlength="9" pattern="[0-9]{9}">
-            </div>
-            <div class="form-text">e.g. 0712 345 678 → enter 712345678</div>
-          </div>
-          <div id="pay-error" class="alert alert-danger d-none small"></div>
-          <button id="pay-btn" class="btn btn-gradient-success w-100 py-2 fw-bold">
-            <i class="fas fa-lock-open me-2"></i>
-            Pay KES {{ price }} &amp; Unlock
-          </button>
-        </div>
+/* ── Main card ── */
+.pr-card {
+    background: rgba(13,21,45,0.8);
+    border: 1.5px solid rgba(139,92,246,0.25);
+    border-radius: 20px;
+    backdrop-filter: blur(20px);
+    overflow: hidden;
+    box-shadow: 0 32px 80px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.05);
+}
 
-        <!-- Step 2: Waiting for M-Pesa -->
-        <div id="step-waiting" class="text-center d-none">
-          <div class="mb-3">
-            <div class="spinner-border text-success" style="width:3rem;height:3rem;"></div>
-          </div>
-          <h6 class="fw-bold">Check your phone!</h6>
-          <p class="text-muted small mb-0">An M-Pesa STK push has been sent to your phone.<br>Enter your PIN to complete payment.</p>
-          <p class="text-muted small mt-2">Waiting for confirmation<span id="dots">...</span></p>
-        </div>
+/* ── Feature header ── */
+.pr-feature-header {
+    background: linear-gradient(120deg,rgba(79,70,229,0.3),rgba(124,58,237,0.2));
+    border-bottom: 1px solid rgba(139,92,246,0.2);
+    padding: 1.5rem;
+    display: flex; align-items: center; gap: 1rem;
+}
+.pr-feature-icon {
+    width: 52px; height: 52px; border-radius: 14px; flex-shrink: 0;
+    background: linear-gradient(135deg,#7c3aed,#4f46e5);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.4rem; color: #fff;
+    box-shadow: 0 6px 20px rgba(79,70,229,0.4);
+}
+.pr-feature-name { font-size: 1rem; font-weight: 800; color: #fff; margin: 0 0 0.2rem; }
+.pr-feature-note { font-size: 0.75rem; color: rgba(255,255,255,0.4); margin: 0; }
 
-        <!-- Step 3: Success -->
-        <div id="step-success" class="text-center d-none">
-          <div class="mb-3">
-            <i class="fas fa-check-circle fa-4x text-success"></i>
-          </div>
-          <h5 class="fw-bold text-success">Payment Successful!</h5>
-          <p class="text-muted small">Your feature has been unlocked. Redirecting you now...</p>
-        </div>
+/* ── Body ── */
+.pr-body { padding: 1.5rem; }
 
-        <!-- Step 4: Failed -->
-        <div id="step-failed" class="text-center d-none">
-          <div class="mb-3">
-            <i class="fas fa-times-circle fa-4x text-danger"></i>
-          </div>
-          <h6 class="fw-bold text-danger">Payment Failed</h6>
-          <p class="text-muted small">The M-Pesa payment was not completed.</p>
-          <button class="btn btn-outline-success btn-sm" onclick="resetForm()">Try Again</button>
-        </div>
+/* ── Included list ── */
+.pr-items {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 12px; padding: 1rem; margin-bottom: 1.25rem;
+}
+.pr-items-label {
+    font-size: 0.62rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase;
+    color: rgba(255,255,255,0.28); margin-bottom: 0.75rem;
+}
+.pr-item {
+    display: flex; align-items: flex-start; gap: 0.6rem;
+    margin-bottom: 0.55rem; font-size: 0.82rem; color: rgba(255,255,255,0.75); line-height: 1.45;
+}
+.pr-item:last-child { margin-bottom: 0; }
+.pr-check {
+    width: 18px; height: 18px; border-radius: 50%; flex-shrink: 0; margin-top: 1px;
+    background: linear-gradient(135deg,#10b981,#059669);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.5rem; color: #fff;
+}
 
-        <!-- Step 5: Timeout (webhook delayed) -->
-        <div id="step-timeout" class="text-center d-none">
-          <div class="mb-3">
-            <i class="fas fa-hourglass-half fa-4x text-warning"></i>
-          </div>
-          <h6 class="fw-bold text-warning">Still Processing…</h6>
-          <p class="text-muted small" id="timeout-msg">If you entered your M-Pesa PIN, your payment may have gone through but confirmation is delayed.</p>
-          <div class="d-flex flex-wrap gap-2 justify-content-center mt-2">
-            <button class="btn btn-success btn-sm" onclick="verifyPayment()">
-              <i class="fas fa-search me-1"></i>Check Payment Status
-            </button>
-            <button class="btn btn-outline-primary btn-sm" onclick="showStep('code')">
-              <i class="fas fa-keyboard me-1"></i>Enter M-Pesa Code
-            </button>
-            <button class="btn btn-outline-secondary btn-sm" onclick="resetForm()">Pay Again</button>
-          </div>
-        </div>
+/* ── Price row ── */
+.pr-price-row {
+    display: flex; align-items: center; justify-content: space-between;
+    background: linear-gradient(135deg,rgba(79,70,229,0.2),rgba(124,58,237,0.2));
+    border: 1.5px solid rgba(139,92,246,0.3);
+    border-radius: 12px; padding: 0.85rem 1.1rem; margin-bottom: 1.25rem;
+}
+.pr-price-label { font-size: 0.72rem; color: rgba(255,255,255,0.4); margin: 0 0 0.15rem; }
+.pr-price-val { font-size: 1.8rem; font-weight: 900; color: #fff; line-height: 1; }
+.pr-price-meta { font-size: 0.68rem; color: rgba(255,255,255,0.3); }
+.pr-secure { font-size: 0.72rem; color: rgba(255,255,255,0.35); display:flex; align-items:center; gap:4px; }
 
-        <!-- Step 6: Checking -->
-        <div id="step-checking" class="text-center d-none">
-          <div class="mb-3 spinner-border text-success" style="width:2.5rem;height:2.5rem;"></div>
-          <p class="text-muted small">Checking with M-Pesa…</p>
-        </div>
+/* ── Phone input ── */
+.pr-phone-row {
+    display: flex;
+    border: 1.5px solid rgba(255,255,255,0.12);
+    border-radius: 12px; overflow: hidden;
+    background: rgba(255,255,255,0.05); margin-bottom: 0.75rem;
+    transition: border-color 0.2s;
+}
+.pr-phone-row:focus-within { border-color: rgba(139,92,246,0.55); }
+.pr-prefix {
+    padding: 0.85rem 1rem; font-size: 0.9rem; font-weight: 700;
+    color: rgba(255,255,255,0.45); background: rgba(255,255,255,0.05);
+    border-right: 1px solid rgba(255,255,255,0.07); white-space: nowrap; flex-shrink: 0;
+}
+.pr-phone-inp {
+    flex: 1; background: transparent; border: none; outline: none;
+    color: #fff; font-size: 1rem; font-weight: 600; padding: 0.85rem 1rem; letter-spacing: 0.02em;
+}
+.pr-phone-inp::placeholder { color: rgba(255,255,255,0.2); font-weight: 400; }
 
-        <!-- Step 7: Enter transaction code -->
-        <div id="step-code" class="d-none">
-          <h6 class="fw-bold mb-1"><i class="fas fa-receipt me-2 text-primary"></i>Verify with M-Pesa Code</h6>
-          <p class="text-muted small mb-3">
-            Check your M-Pesa confirmation SMS for a code like <strong>RCK12345XY</strong> and enter it below.
-          </p>
-          <div class="mb-3">
-            <label class="form-label fw-bold small">M-Pesa Transaction Code</label>
-            <input type="text" id="mpesa-code-input" class="form-control text-uppercase"
-                   placeholder="e.g. RCK12345XY" maxlength="20" autocomplete="off"
-                   oninput="this.value=this.value.toUpperCase()">
-          </div>
-          <div id="code-error" class="alert alert-danger d-none small"></div>
-          <div class="d-flex gap-2">
-            <button class="btn btn-primary flex-fill" onclick="submitMpesaCode()">
-              <i class="fas fa-check me-1"></i>Verify Code
-            </button>
-            <button class="btn btn-outline-secondary" onclick="showStep('timeout')">Back</button>
-          </div>
-        </div>
-      </div>
+/* ── Pay button ── */
+.pr-btn {
+    width: 100%;
+    background: linear-gradient(135deg,#7c3aed,#4f46e5);
+    border: none; border-radius: 12px; color: #fff;
+    font-size: 1rem; font-weight: 800; padding: 1rem;
+    cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+    transition: transform 0.2s, box-shadow 0.2s, opacity 0.15s;
+    box-shadow: 0 8px 24px rgba(79,70,229,0.5);
+}
+.pr-btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 12px 32px rgba(79,70,229,0.65); }
+.pr-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
 
-      <div class="text-center mt-3">
-        <a href="javascript:history.back()" class="btn btn-outline-secondary btn-sm">
-          <i class="fas fa-arrow-left me-1"></i>Go Back
-        </a>
-        <a href="{% url 'payments:payment_history' %}" class="btn btn-outline-secondary btn-sm ms-2">
-          <i class="fas fa-receipt me-1"></i>Payment History
-        </a>
-      </div>
+/* ── Error ── */
+.pr-err {
+    background: rgba(239,68,68,0.12); border: 1px solid rgba(239,68,68,0.25);
+    border-radius: 8px; padding: 0.55rem 0.85rem;
+    color: #fca5a5; font-size: 0.77rem; margin-bottom: 0.7rem; display: none;
+}
 
+/* ── State panels ── */
+.pr-state { display: none; }
+.pr-state.pr-active { display: block; }
+
+/* ── Waiting state ── */
+.pr-waiting { text-align: center; padding: 0.5rem 0; }
+.pr-waiting-icon { font-size: 2.5rem; margin-bottom: 0.6rem; }
+.pr-waiting-title { font-size: 1.05rem; font-weight: 800; color: #fff; margin-bottom: 0.3rem; }
+.pr-waiting-sub { font-size: 0.8rem; color: rgba(255,255,255,0.45); line-height: 1.6; }
+
+/* ── 6-second success loading ── */
+.pr-success-wrap { text-align: center; padding: 0.5rem 0; }
+
+/* Progress ring for success loading */
+.pr-ring-outer {
+    position: relative; width: 120px; height: 120px; margin: 0 auto 1rem;
+}
+.pr-ring-svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+.pr-ring-track { fill: none; stroke: rgba(255,255,255,0.06); stroke-width: 7; }
+.pr-ring-fill {
+    fill: none; stroke: url(#prGrad); stroke-width: 8; stroke-linecap: round;
+    stroke-dasharray: 314; stroke-dashoffset: 314;
+    transition: stroke-dashoffset 0.2s linear;
+    filter: drop-shadow(0 0 8px rgba(16,185,129,0.6));
+}
+.pr-ring-fill.done { stroke: url(#prGradDone); filter: drop-shadow(0 0 12px rgba(74,222,128,0.8)); }
+.pr-ring-center {
+    position: absolute; inset: 0; display: flex;
+    flex-direction: column; align-items: center; justify-content: center;
+}
+.pr-ring-pct {
+    font-size: 1.5rem; font-weight: 900; color: #fff; line-height: 1;
+    background: linear-gradient(135deg,#fff 60%,rgba(255,255,255,0.7));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+}
+.pr-ring-done { font-size: 1.5rem; color: #4ade80; display: none; }
+
+.pr-success-title { font-size: 1rem; font-weight: 800; color: #10b981; margin-bottom: 0.85rem; }
+.pr-success-hint { font-size: 0.77rem; color: rgba(255,255,255,0.35); margin-bottom: 1rem; }
+
+/* Checklist items below ring */
+.pr-ticks { text-align: left; margin: 0 0 0.5rem; }
+.pr-tick {
+    display: flex; align-items: center; gap: 0.6rem;
+    padding: 0.4rem 0; border-bottom: 1px solid rgba(255,255,255,0.04);
+    font-size: 0.79rem; color: rgba(255,255,255,0.25);
+    transition: color 0.35s;
+}
+.pr-tick:last-child { border-bottom: none; }
+.pr-tick.ticked { color: rgba(134,239,172,0.85); }
+.pr-tick-box {
+    width: 18px; height: 18px; border-radius: 50%; flex-shrink: 0;
+    background: rgba(255,255,255,0.05); border: 1.5px solid rgba(255,255,255,0.1);
+    display: flex; align-items: center; justify-content: center; font-size: 0.55rem;
+    transition: all 0.35s;
+}
+.pr-tick.ticked .pr-tick-box {
+    background: rgba(16,185,129,0.25); border-color: #10b981; color: #4ade80;
+}
+
+/* ── Failed / timeout states ── */
+.pr-state-center { text-align: center; padding: 0.5rem 0; }
+.pr-state-icon { font-size: 2.2rem; margin-bottom: 0.55rem; }
+.pr-state-title { font-size: 1rem; font-weight: 800; margin-bottom: 0.3rem; }
+.pr-state-sub { font-size: 0.79rem; color: rgba(255,255,255,0.4); line-height: 1.55; margin-bottom: 0.9rem; }
+.pr-btn-sm {
+    background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12);
+    color: rgba(255,255,255,0.7); border-radius: 10px; padding: 0.55rem 1.2rem;
+    font-size: 0.82rem; font-weight: 700; cursor: pointer; transition: background 0.2s;
+    display: inline-flex; align-items: center; gap: 0.4rem;
+}
+.pr-btn-sm:hover { background: rgba(255,255,255,0.12); }
+.pr-btn-verify {
+    background: linear-gradient(135deg,rgba(16,185,129,0.25),rgba(5,150,105,0.25));
+    border-color: rgba(16,185,129,0.4); color: #4ade80;
+}
+
+/* ── Footer links ── */
+.pr-footer { padding: 1rem 1.5rem; border-top: 1px solid rgba(255,255,255,0.05); text-align: center; }
+.pr-footer a { font-size: 0.75rem; color: rgba(255,255,255,0.25); text-decoration: none; transition: color 0.2s; margin: 0 0.6rem; }
+.pr-footer a:hover { color: rgba(255,255,255,0.5); }
+
+/* ── Trust row ── */
+.pr-trust {
+    display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap;
+    margin-top: 1rem;
+}
+.pr-trust-item {
+    display: flex; align-items: center; gap: 5px;
+    font-size: 0.68rem; color: rgba(255,255,255,0.28);
+    background: rgba(255,255,255,0.04); border-radius: 6px; padding: 4px 10px;
+}
+</style>
+
+<div class="pr-bg"></div>
+<div class="pr-orb pr-orb-1"></div>
+<div class="pr-orb pr-orb-2"></div>
+
+<div class="pr-wrap">
+<div class="pr-inner">
+
+    <!-- Heading -->
+    <div style="text-align:center;margin-bottom:1.5rem;">
+        <div class="pr-badge"><i class="fas fa-lock" style="font-size:0.6rem;"></i> Premium Access</div>
+        <h1 class="pr-title">
+            {% if feature == 'view_cluster_points' %}Unlock Your <span class="hl">Cluster Points</span>
+            {% elif feature == 'ai_chat_access' %}Unlock <span class="hl">AI Career Chat</span>
+            {% elif feature == 'view_eligible_courses' %}Unlock <span class="hl">Eligible Courses</span>
+            {% elif feature == 'premium_career_report' %}Unlock <span class="hl">Career Report</span>
+            {% else %}Unlock <span class="hl">Premium Feature</span>{% endif %}
+        </h1>
+        <p class="pr-sub">One-time M-Pesa payment &nbsp;·&nbsp; Lifetime access</p>
     </div>
-  </div>
-</div>
+
+    <!-- Card -->
+    <div class="pr-card">
+
+        <!-- Feature header -->
+        <div class="pr-feature-header">
+            <div class="pr-feature-icon">
+                {% if feature == 'view_cluster_points' %}<i class="fas fa-chart-bar"></i>
+                {% elif feature == 'ai_chat_access' %}<i class="fas fa-comments"></i>
+                {% elif feature == 'view_eligible_courses' %}<i class="fas fa-graduation-cap"></i>
+                {% else %}<i class="fas fa-star"></i>{% endif %}
+            </div>
+            <div>
+                <div class="pr-feature-name">
+                    {% if feature == 'view_cluster_points' %}KUCCPS Cluster Points Results
+                    {% elif feature == 'ai_chat_access' %}AI Career Guidance Chat
+                    {% elif feature == 'view_eligible_courses' %}Full Eligible Courses List
+                    {% elif feature == 'premium_career_report' %}Premium Career Report
+                    {% else %}Premium Feature{% endif %}
+                </div>
+                <div class="pr-feature-note">
+                    {% if feature == 'ai_chat_access' %}More messages added instantly
+                    {% else %}One-time unlock &mdash; never pay again{% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="pr-body">
+
+            <!-- Phone step -->
+            <div class="pr-state pr-active" id="pr-step-phone">
+
+                <!-- Included items -->
+                <div class="pr-items">
+                    <div class="pr-items-label">What you unlock</div>
+                    {% if feature == 'view_cluster_points' %}
+                    <div class="pr-item"><div class="pr-check"><i class="fas fa-check" style="font-size:0.48rem;"></i></div><span>All 20 KUCCPS cluster points calculated from your grades</span></div>
+                    <div class="pr-item"><div class="pr-check"><i class="fas fa-check" style="font-size:0.48rem;"></i></div><span>Your eligibility for each cluster at a glance</span></div>
+                    <div class="pr-item"><div class="pr-check"><i class="fas fa-check" style="font-size:0.48rem;"></i></div><span>Top courses per cluster you can apply for</span></div>
+                    <div class="pr-item"><div class="pr-check"><i class="fas fa-check" style="font-size:0.48rem;"></i></div><span>Downloadable PDF cluster report</span></div>
+                    <div class="pr-item"><div class="pr-check"><i class="fas fa-check" style="font-size:0.48rem;"></i></div><span>Lifetime access — re-check any time</span></div>
+                    {% elif feature == 'ai_chat_access' %}
+                    <div class="pr-item"><div class="pr-check"><i class="fas fa-check" style="font-size:0.48rem;"></i></div><span>More AI career guidance messages</span></div>
+                    <div class="pr-item"><div class="pr-check"><i class="fas fa-check" style="font-size:0.48rem;"></i></div><span>Course & cutoff comparisons from the AI</span></div>
+                    <div class="pr-item"><div class="pr-check"><i class="fas fa-check" style="font-size:0.48rem;"></i></div><span>HELB & HEF funding guidance</span></div>
+                    <div class="pr-item"><div class="pr-check"><i class="fas fa-check" style="font-size:0.48rem;"></i></div><span>Career path and upgrade route advice</span></div>
+                    {% else %}
+                    <div class="pr-item"><div class="pr-check"><i class="fas fa-check" style="font-size:0.48rem;"></i></div><span>Full premium access to this feature</span></div>
+                    <div class="pr-item"><div class="pr-check"><i class="fas fa-check" style="font-size:0.48rem;"></i></div><span>AI-powered recommendations based on your grades</span></div>
+                    <div class="pr-item"><div class="pr-check"><i class="fas fa-check" style="font-size:0.48rem;"></i></div><span>Lifetime access — one payment, forever</span></div>
+                    {% endif %}
+                </div>
+
+                <!-- Price -->
+                <div class="pr-price-row">
+                    <div>
+                        <div class="pr-price-label">One-time payment</div>
+                        <div class="pr-price-val">KES {{ price }}</div>
+                        <div class="pr-price-meta">No subscription, ever</div>
+                    </div>
+                    <div class="pr-secure">
+                        <i class="fas fa-shield-alt" style="color:#10b981;font-size:1.1rem;"></i>
+                        <div>
+                            <div style="font-weight:700;color:rgba(255,255,255,0.6);font-size:0.73rem;">Secure</div>
+                            <div>M-Pesa</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Phone input -->
+                <div class="pr-err" id="pr-err"></div>
+                <div class="pr-phone-row">
+                    <span class="pr-prefix">+254</span>
+                    <input type="tel" id="pr-phone" class="pr-phone-inp"
+                           placeholder="712 345 678" maxlength="9" inputmode="numeric">
+                </div>
+                <button class="pr-btn" id="pr-pay-btn">
+                    <i class="fas fa-lock-open"></i> Pay KES {{ price }} &amp; Unlock
+                </button>
+
+                <!-- Trust badges -->
+                <div class="pr-trust">
+                    <div class="pr-trust-item"><i class="fas fa-shield-alt" style="color:#10b981;"></i> Safe &amp; Secure</div>
+                    <div class="pr-trust-item"><i class="fas fa-redo" style="color:#60a5fa;"></i> Instant Unlock</div>
+                    <div class="pr-trust-item"><i class="fas fa-infinity" style="color:#a78bfa;"></i> Lifetime Access</div>
+                </div>
+            </div>
+
+            <!-- Waiting for M-Pesa -->
+            <div class="pr-state" id="pr-step-waiting">
+                <div class="pr-waiting">
+                    <div class="pr-waiting-icon">📲</div>
+                    <div class="pr-waiting-title">Check Your Phone!</div>
+                    <div class="pr-waiting-sub">
+                        An M-Pesa prompt has been sent to your phone.<br>
+                        Enter your PIN to complete the payment.<br><br>
+                        <span style="color:rgba(255,255,255,0.3);">Waiting for confirmation<span id="pr-dots">.</span></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 6-second success loading -->
+            <div class="pr-state" id="pr-step-success">
+                <div class="pr-success-wrap">
+                    <div class="pr-ring-outer">
+                        <svg class="pr-ring-svg" viewBox="0 0 100 100">
+                            <defs>
+                                <linearGradient id="prGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                                    <stop offset="0%"   stop-color="#10b981"/>
+                                    <stop offset="100%" stop-color="#06b6d4"/>
+                                </linearGradient>
+                                <linearGradient id="prGradDone" x1="0%" y1="0%" x2="100%" y2="0%">
+                                    <stop offset="0%"   stop-color="#22c55e"/>
+                                    <stop offset="100%" stop-color="#4ade80"/>
+                                </linearGradient>
+                            </defs>
+                            <circle class="pr-ring-track" cx="50" cy="50" r="42"/>
+                            <circle class="pr-ring-fill" cx="50" cy="50" r="42" id="pr-ring-el"/>
+                        </svg>
+                        <div class="pr-ring-center">
+                            <div class="pr-ring-done" id="pr-ring-done"><i class="fas fa-check"></i></div>
+                            <div class="pr-ring-pct" id="pr-ring-pct">0%</div>
+                        </div>
+                    </div>
+                    <div class="pr-success-title" id="pr-success-title">Payment Confirmed! Unlocking&hellip;</div>
+                    <div class="pr-success-hint" id="pr-success-hint">Loading your results — please don't close this tab</div>
+                    <div class="pr-ticks" id="pr-ticks"></div>
+                </div>
+            </div>
+
+            <!-- Failed -->
+            <div class="pr-state" id="pr-step-failed">
+                <div class="pr-state-center">
+                    <div class="pr-state-icon">❌</div>
+                    <div class="pr-state-title" style="color:#ef4444;">Payment Not Completed</div>
+                    <div class="pr-state-sub">The M-Pesa PIN was not entered or the payment was cancelled.</div>
+                    <button class="pr-btn-sm" onclick="prReset()"><i class="fas fa-redo"></i> Try Again</button>
+                </div>
+            </div>
+
+            <!-- Timeout -->
+            <div class="pr-state" id="pr-step-timeout">
+                <div class="pr-state-center">
+                    <div class="pr-state-icon">⏳</div>
+                    <div class="pr-state-title" style="color:#f59e0b;">Still Processing…</div>
+                    <div class="pr-state-sub" id="pr-timeout-msg">If you entered your M-Pesa PIN, your payment may have gone through but confirmation is delayed.</div>
+                    <div style="display:flex;gap:0.5rem;flex-wrap:wrap;justify-content:center;">
+                        <button class="pr-btn-sm pr-btn-verify" onclick="prVerify()"><i class="fas fa-search"></i> Verify Payment</button>
+                        <button class="pr-btn-sm" onclick="prReset()"><i class="fas fa-redo"></i> Pay Again</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Checking -->
+            <div class="pr-state" id="pr-step-checking">
+                <div class="pr-state-center">
+                    <div class="pr-state-icon">🔍</div>
+                    <div class="pr-state-title">Checking…</div>
+                    <div class="pr-state-sub">Verifying your payment with M-Pesa.</div>
+                </div>
+            </div>
+
+        </div><!-- /pr-body -->
+
+        <div class="pr-footer">
+            <a href="javascript:history.back()"><i class="fas fa-arrow-left"></i> Go back</a>
+            <a href="{% url 'payments:payment_history' %}"><i class="fas fa-receipt"></i> Payment history</a>
+        </div>
+    </div><!-- /pr-card -->
+
+</div><!-- /pr-inner -->
+</div><!-- /pr-wrap -->
 
 <script>
-const FEATURE = "{{ feature }}";
-const INITIATE_URL = "{% url 'payments:initiate_payment' %}";
-const CSRF_TOKEN = "{{ csrf_token }}";
-const NEXT_URL = "{{ next_url|escapejs }}";
-let pollInterval = null;
-let dotsInterval = null;
-let currentPaymentId = null;
-const MAX_ATTEMPTS = 40;
+(function(){
+var FEATURE  = "{{ feature }}";
+var INITIATE = "{% url 'payments:initiate_payment' %}";
+var CSRF     = "{{ csrf_token }}";
+var NEXT_URL = "{{ next_url|escapejs }}";
+var currentPaymentId = null;
+var poll, dots;
+var MAX_ATTEMPTS = 40;
 
-document.getElementById("pay-btn").addEventListener("click", initiatePayment);
+// Default redirect after payment based on feature
+function defaultNext(){
+    if(FEATURE === 'ai_chat_access') return '/career/chat/';
+    if(FEATURE === 'view_cluster_points') return '/clusterpoints/calculator/';
+    return '/accounts/dashboard/';
+}
 
-// On load: surface a pending payment so user can verify without paying again
-(async function checkPending(){
-  try{
-    const r = await fetch('/payments/pending/?feature='+encodeURIComponent(FEATURE));
-    const d = await r.json();
-    if(d.found){ currentPaymentId = d.payment_id; }
-  }catch(e){}
+document.getElementById('pr-pay-btn').addEventListener('click', prPay);
+
+// Check for pending payment on load
+(async function(){
+    try{
+        var r = await fetch('/payments/pending/?feature='+encodeURIComponent(FEATURE));
+        var d = await r.json();
+        if(d.found) currentPaymentId = d.payment_id;
+    }catch(e){}
 })();
 
-async function initiatePayment() {
-  const rawPhone = document.getElementById("phone-input").value.trim().replace(/\s/g, "");
-  const errEl = document.getElementById("pay-error");
+async function prPay(){
+    var raw = document.getElementById('pr-phone').value.trim().replace(/\s/g,'');
+    var err = document.getElementById('pr-err');
+    if(!/^\d{9}$/.test(raw)){
+        err.textContent = 'Enter a valid 9-digit Safaricom number (e.g. 712345678)';
+        err.style.display = 'block'; return;
+    }
+    err.style.display = 'none';
+    var btn = document.getElementById('pr-pay-btn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm" style="width:.85rem;height:.85rem;border-width:2px;"></span>&nbsp;Sending STK push&hellip;';
 
-  if (!/^\d{9}$/.test(rawPhone)) {
-    errEl.textContent = "Enter a valid 9-digit Safaricom number (e.g. 712345678).";
-    errEl.classList.remove("d-none");
-    return;
-  }
-  errEl.classList.add("d-none");
+    try{
+        var res = await fetch(INITIATE,{
+            method:'POST',
+            headers:{'Content-Type':'application/json','X-CSRFToken':CSRF},
+            body:JSON.stringify({feature:FEATURE,phone:'0'+raw})
+        });
+        var d = await res.json();
+        if(d.success){
+            currentPaymentId = d.payment_id;
+            prState('waiting');
+            prStartPolling(d.payment_id);
+        } else {
+            err.textContent = d.message || 'Something went wrong. Please try again.';
+            err.style.display = 'block';
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-lock-open"></i> Pay KES {{ price }} &amp; Unlock';
+        }
+    }catch(e){
+        err.textContent = 'Network error. Check your connection and try again.';
+        err.style.display = 'block';
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-lock-open"></i> Pay KES {{ price }} &amp; Unlock';
+    }
+}
 
-  document.getElementById("pay-btn").disabled = true;
-  document.getElementById("pay-btn").innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Sending STK push...';
+function prStartPolling(paymentId){
+    var dotsEl = document.getElementById('pr-dots');
+    var attempts = 0;
+    dots = setInterval(function(){
+        if(dotsEl) dotsEl.textContent = dotsEl.textContent.length >= 3 ? '.' : dotsEl.textContent+'.';
+    },500);
+    poll = setInterval(async function(){
+        attempts++;
+        try{
+            var sr = await fetch('/payments/status/'+paymentId+'/');
+            var sd = await sr.json();
+            if(sd.status==='completed'){ prClear(); prShowSuccess(); }
+            else if(sd.status==='failed'){ prClear(); prState('failed'); }
+            else if(attempts >= MAX_ATTEMPTS){ prClear(); prState('timeout'); }
+        }catch(e){
+            if(attempts >= MAX_ATTEMPTS){ prClear(); prState('timeout'); }
+        }
+    },3000);
+}
 
-  try {
-    const res = await fetch(INITIATE_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "X-CSRFToken": CSRF_TOKEN },
-      body: JSON.stringify({ feature: FEATURE, phone: "0" + rawPhone }),
+// ── 6-second loading with ring + ticking checklist ──
+var TICK_ITEMS = [
+    'Payment confirmed with M-Pesa',
+    'Verifying transaction details',
+    'Unlocking your account access',
+    'Loading your results from database',
+    'Preparing your personalised view',
+    'Almost ready — redirecting now',
+];
+var TOTAL_MS = 6000;
+
+function prShowSuccess(){
+    prState('success');
+    var ringEl  = document.getElementById('pr-ring-el');
+    var pctEl   = document.getElementById('pr-ring-pct');
+    var doneEl  = document.getElementById('pr-ring-done');
+    var titleEl = document.getElementById('pr-success-title');
+    var hintEl  = document.getElementById('pr-success-hint');
+    var ticksEl = document.getElementById('pr-ticks');
+    var CIRC    = 2 * Math.PI * 42;
+    ringEl.style.strokeDasharray  = CIRC;
+    ringEl.style.strokeDashoffset = CIRC;
+
+    // Build checklist DOM
+    ticksEl.innerHTML = '';
+    TICK_ITEMS.forEach(function(txt, i){
+        var d = document.createElement('div');
+        d.className = 'pr-tick';
+        d.id = 'pr-tick-'+i;
+        d.innerHTML = '<div class="pr-tick-box" id="pr-tbox-'+i+'"></div><span>'+txt+'</span>';
+        ticksEl.appendChild(d);
     });
-    const data = await res.json();
 
-    if (data.success) {
-      currentPaymentId = data.payment_id;
-      showStep("waiting");
-      startPolling(data.payment_id);
-    } else {
-      errEl.textContent = data.message || "Something went wrong. Please try again.";
-      errEl.classList.remove("d-none");
-      document.getElementById("pay-btn").disabled = false;
-      document.getElementById("pay-btn").innerHTML = '<i class="fas fa-lock-open me-2"></i>Pay & Unlock';
+    var startTime = null;
+    var N = TICK_ITEMS.length;
+    var tickedCount = 0;
+
+    function frame(ts){
+        if(!startTime) startTime = ts;
+        var elapsed = ts - startTime;
+        var pct = Math.min(elapsed / TOTAL_MS, 1);
+
+        // Ring
+        var offset = CIRC - pct * CIRC;
+        ringEl.style.strokeDashoffset = offset;
+        pctEl.textContent = Math.round(pct * 100) + '%';
+
+        // Tick items
+        var shouldTick = Math.floor(pct * N);
+        while(tickedCount < shouldTick && tickedCount < N){
+            var el  = document.getElementById('pr-tick-'+tickedCount);
+            var box = document.getElementById('pr-tbox-'+tickedCount);
+            if(el)  el.classList.add('ticked');
+            if(box) box.innerHTML = '<i class="fas fa-check" style="font-size:0.5rem;color:#4ade80;"></i>';
+            tickedCount++;
+        }
+
+        if(pct < 1){
+            requestAnimationFrame(frame);
+        } else {
+            // Done
+            ringEl.classList.add('done');
+            pctEl.style.display = 'none';
+            doneEl.style.display = 'block';
+            titleEl.textContent = 'All Done! Redirecting…';
+            hintEl.textContent  = '';
+            setTimeout(function(){
+                window.location.href = NEXT_URL || defaultNext();
+            }, 500);
+        }
     }
-  } catch (e) {
-    errEl.textContent = "Network error. Please check your connection and try again.";
-    errEl.classList.remove("d-none");
-    document.getElementById("pay-btn").disabled = false;
-    document.getElementById("pay-btn").innerHTML = '<i class="fas fa-lock-open me-2"></i>Pay & Unlock';
-  }
+    requestAnimationFrame(frame);
 }
 
-function startPolling(paymentId) {
-  let attempts = 0;
-  dotsInterval = setInterval(() => {
-    const el = document.getElementById("dots");
-    if (el) el.textContent = el.textContent.length >= 3 ? "." : el.textContent + ".";
-  }, 500);
-
-  pollInterval = setInterval(async () => {
-    attempts++;
-    try {
-      const res = await fetch(`/payments/status/${paymentId}/`);
-      const data = await res.json();
-      if (data.status === "completed") {
-        clearIntervals();
-        showStep("success");
-        const defaultNext = FEATURE === "ai_chat_access" ? "/career/chat/" : "/accounts/dashboard/";
-        setTimeout(() => { window.location.href = NEXT_URL || defaultNext; }, 2000);
-      } else if (data.status === "failed") {
-        clearIntervals();
-        showStep("failed");
-      } else if (attempts >= MAX_ATTEMPTS) {
-        clearIntervals();
-        showStep("timeout");
-      }
-    } catch (e) {
-      if (attempts >= MAX_ATTEMPTS) { clearIntervals(); showStep("timeout"); }
+window.prVerify = async function(){
+    if(!currentPaymentId){ alert('No payment to verify.'); return; }
+    prState('checking');
+    try{
+        var r = await fetch('/payments/verify/'+currentPaymentId+'/');
+        var d = await r.json();
+        if(d.status==='completed'){
+            prShowSuccess();
+        } else if(d.status==='failed'){
+            prState('failed');
+        } else {
+            document.getElementById('pr-timeout-msg').textContent = d.message || 'Payment still processing. Please wait a few minutes and try again.';
+            prState('timeout');
+        }
+    }catch(e){
+        document.getElementById('pr-timeout-msg').textContent = 'Could not reach the server. Check your internet and try again.';
+        prState('timeout');
     }
-  }, 3000);
-}
+};
 
-async function verifyPayment() {
-  if (!currentPaymentId) { alert("No payment to verify."); return; }
-  showStep("checking");
-  try {
-    const r = await fetch(`/payments/verify/${currentPaymentId}/`);
-    const d = await r.json();
-    if (d.status === "completed") {
-      showStep("success");
-      const defaultNext = FEATURE === "ai_chat_access" ? "/career/chat/" : "/accounts/dashboard/";
-      setTimeout(() => { window.location.href = NEXT_URL || defaultNext; }, 2000);
-    } else if (d.status === "failed") {
-      showStep("failed");
-    } else {
-      document.getElementById("timeout-msg").textContent = d.message || "Payment still processing. Please wait a few minutes then try verifying again.";
-      showStep("timeout");
-    }
-  } catch(e) {
-    document.getElementById("timeout-msg").textContent = "Could not reach the server. Please check your internet and try again.";
-    showStep("timeout");
-  }
-}
-
-function clearIntervals() {
-  if (pollInterval) clearInterval(pollInterval);
-  if (dotsInterval) clearInterval(dotsInterval);
-}
-
-function showStep(step) {
-  ["phone", "waiting", "success", "failed", "timeout", "checking", "code"].forEach(s => {
-    document.getElementById(`step-${s}`)?.classList.add("d-none");
-  });
-  document.getElementById(`step-${step}`)?.classList.remove("d-none");
-}
-
-async function submitMpesaCode() {
-  const code = document.getElementById("mpesa-code-input").value.trim().toUpperCase();
-  const errEl = document.getElementById("code-error");
-  errEl.classList.add("d-none");
-
-  if (!/^[A-Z0-9]{6,20}$/.test(code)) {
-    errEl.textContent = "Enter a valid M-Pesa transaction code (letters and numbers only).";
-    errEl.classList.remove("d-none");
-    return;
-  }
-
-  try {
-    const res = await fetch("{% url 'payments:verify_by_transaction_code' %}", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "X-CSRFToken": CSRF_TOKEN },
-      body: JSON.stringify({ feature: FEATURE, mpesa_code: code }),
+function prState(s){
+    ['phone','waiting','success','failed','timeout','checking'].forEach(function(x){
+        var el = document.getElementById('pr-step-'+x);
+        if(el){ el.classList.remove('pr-active'); }
     });
-    const data = await res.json();
-
-    if (data.status === "completed") {
-      showStep("success");
-      const defaultNext = FEATURE === "ai_chat_access" ? "/career/chat/" : "/accounts/dashboard/";
-      setTimeout(() => { window.location.href = NEXT_URL || defaultNext; }, 2000);
-    } else {
-      errEl.textContent = data.message || "Transaction code not found. Please check and try again.";
-      errEl.classList.remove("d-none");
-    }
-  } catch (e) {
-    errEl.textContent = "Network error. Please check your connection and try again.";
-    errEl.classList.remove("d-none");
-  }
+    var t = document.getElementById('pr-step-'+s);
+    if(t) t.classList.add('pr-active');
 }
-
-function resetForm() {
-  clearIntervals();
-  document.getElementById("pay-btn").disabled = false;
-  document.getElementById("pay-btn").innerHTML = '<i class="fas fa-lock-open me-2"></i>Pay & Unlock';
-  showStep("phone");
-}
+function prClear(){ if(poll) clearInterval(poll); if(dots) clearInterval(dots); }
+window.prReset = function(){
+    prClear();
+    var btn = document.getElementById('pr-pay-btn');
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fas fa-lock-open"></i> Pay KES {{ price }} &amp; Unlock';
+    prState('phone');
+};
+})();
 </script>
 {% endblock %}
