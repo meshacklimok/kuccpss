@@ -239,6 +239,17 @@
 }
 .cluster-row:hover { background: #eff6ff; border-color: #93c5fd; }
 
+/* ── gradient header btn-header-light for sidebar cards ── */
+.sidebar-card .btn-header-light {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 0.72rem; font-weight: 700;
+  padding: 3px 10px; border-radius: 20px;
+  background: rgba(255,255,255,0.15);
+  color: #fff; border: 1px solid rgba(255,255,255,0.25);
+  text-decoration: none; white-space: nowrap; transition: background 0.15s;
+}
+.sidebar-card .btn-header-light:hover { background: rgba(255,255,255,0.25); color: #fff; text-decoration: none; }
+
 /* ── right sidebar cards ── */
 .sidebar-card {
   background: #fff; border-radius: 14px;
@@ -744,12 +755,15 @@ body.dark .ob-step:hover { background: var(--surface-2); }
   {% if latest_result and cluster_results %}
 
   <div class="dash-card">
-    <div class="dash-card-header">
-      <h6 class="dash-card-title">
-        <i class="fas fa-chart-bar text-primary"></i>Your Cluster Points
-      </h6>
-      <a href="{% url 'clusterpoints:calculator' %}" class="btn btn-sm btn-outline-primary"
-         style="font-size:0.73rem;border-radius:8px;padding:4px 12px;">
+    <div class="dash-card-header-gradient"
+         style="background:linear-gradient(120deg,#1e3a8a 0%,#2563eb 100%);">
+      <div>
+        <div class="fw-800" style="font-size:0.9rem;display:flex;align-items:center;gap:7px;">
+          <i class="fas fa-chart-bar" style="color:#93c5fd;"></i>Your Cluster Points
+        </div>
+        <div style="font-size:0.72rem;opacity:0.7;margin-top:2px;">Based on your latest KCSE result</div>
+      </div>
+      <a href="{% url 'clusterpoints:calculator' %}" class="btn-header-light">
         <i class="fas fa-sync me-1"></i>Recalculate
       </a>
     </div>
@@ -885,13 +899,17 @@ body.dark .ob-step:hover { background: var(--surface-2); }
   </div>
   {% else %}
   <div class="dash-card">
-    <div class="dash-card-header">
-      <h6 class="dash-card-title"><i class="fas fa-layer-group" style="color:#4f46e5;"></i>My Courses</h6>
+    <div class="dash-card-header-gradient"
+         style="background:linear-gradient(120deg,#312e81,#4f46e5);">
+      <div>
+        <div class="fw-800" style="font-size:0.9rem;display:flex;align-items:center;gap:7px;">
+          <i class="fas fa-layer-group" style="color:#c7d2fe;"></i>My Courses
+        </div>
+        <div style="font-size:0.72rem;opacity:0.7;margin-top:2px;">Watchlist · Shortlist · Compare</div>
+      </div>
       <div class="d-flex gap-2">
-        <a href="{% url 'accounts:saved_courses' %}" class="btn btn-sm btn-outline-secondary"
-           style="font-size:0.72rem;border-radius:8px;padding:3px 10px;">Watchlist ({{ saved_count }})</a>
-        <a href="{% url 'accounts:shortlist' %}" class="btn btn-sm btn-outline-primary"
-           style="font-size:0.72rem;border-radius:8px;padding:3px 10px;">Compare</a>
+        <a href="{% url 'accounts:saved_courses' %}" class="btn-header-light">Watchlist ({{ saved_count }})</a>
+        <a href="{% url 'accounts:shortlist' %}" class="btn-header-light">Compare</a>
       </div>
     </div>
 
@@ -993,17 +1011,20 @@ body.dark .ob-step:hover { background: var(--surface-2); }
 
   {# ── BROWSE KUCCPS CLUSTERS ── #}
   {% if all_clusters %}
-  <div class="dash-card">
-    <div class="dash-card-header">
-      <h6 class="dash-card-title">
-        <i class="fas fa-layer-group text-primary"></i>KUCCPS Clusters
-      </h6>
-      <a href="{% url 'clusters:cluster_list' %}" style="font-size:0.75rem;font-weight:700;color:#4f46e5;text-decoration:none;">
-        View all <i class="bi bi-arrow-right ms-1"></i>
+  <div class="dash-card reveal">
+    <div class="dash-card-header-gradient"
+         style="background:linear-gradient(120deg,#0f172a 0%,#1e3a8a 100%);">
+      <div>
+        <div class="fw-800" style="font-size:0.9rem;display:flex;align-items:center;gap:7px;">
+          <i class="fas fa-layer-group" style="color:#93c5fd;"></i>KUCCPS Clusters
+        </div>
+        <div style="font-size:0.72rem;opacity:0.7;margin-top:2px;">Each cluster determines which courses you qualify for</div>
+      </div>
+      <a href="{% url 'clusters:cluster_list' %}" class="btn-header-light">
+        View all <i class="bi bi-arrow-right"></i>
       </a>
     </div>
     <div class="dash-card-body">
-      <p class="text-muted mb-3" style="font-size:0.78rem;">Each cluster groups related subjects — your cluster points determine which courses you qualify for.</p>
       <div class="row g-2">
         {% for cluster in all_clusters %}
         <div class="col-6 col-md-4">
@@ -1033,9 +1054,14 @@ body.dark .ob-step:hover { background: var(--surface-2); }
   {# ── FEATURED INSTITUTIONS ── #}
   {% if featured_promos %}
   <div class="dash-card">
-    <div class="dash-card-header">
-      <h6 class="dash-card-title"><i class="fas fa-handshake" style="color:#d97706;"></i>Featured Institutions</h6>
-      <span class="badge" style="background:#fef3c7;color:#92400e;font-size:0.65rem;border-radius:10px;">Sponsored</span>
+    <div class="dash-card-header-gradient"
+         style="background:linear-gradient(120deg,#78350f,#d97706);">
+      <div>
+        <div class="fw-800" style="font-size:0.9rem;display:flex;align-items:center;gap:7px;">
+          <i class="fas fa-handshake" style="color:#fde68a;"></i>Featured Institutions
+        </div>
+      </div>
+      <span class="badge" style="background:rgba(255,255,255,0.2);color:#fff;font-size:0.65rem;border-radius:10px;border:1px solid rgba(255,255,255,0.25);">Sponsored</span>
     </div>
     <div class="dash-card-body d-flex flex-column gap-2">
       {% for promo in featured_promos %}
@@ -1175,8 +1201,11 @@ body.dark .ob-step:hover { background: var(--surface-2); }
 
   {# ── QUICK ACTIONS ── #}
   <div class="sidebar-card">
-    <div class="sidebar-card-header">
-      <h6 class="sidebar-card-title"><i class="fas fa-bolt text-warning"></i>Quick Actions</h6>
+    <div class="sidebar-card-header"
+         style="background:linear-gradient(120deg,#1e3a8a,#2563eb);border:none;">
+      <h6 class="sidebar-card-title" style="color:#fff;">
+        <i class="fas fa-bolt" style="color:#fbbf24;"></i>Quick Actions
+      </h6>
     </div>
     <div class="sidebar-card-body">
       <div class="row g-2">
@@ -1208,9 +1237,12 @@ body.dark .ob-step:hover { background: var(--surface-2); }
   {# ── INSTITUTIONS ── #}
   {% if inst_type_links %}
   <div class="sidebar-card">
-    <div class="sidebar-card-header">
-      <h6 class="sidebar-card-title"><i class="fas fa-university" style="color:#d97706;"></i>Institutions</h6>
-      <a href="{% url 'institutions:institution_types_list' %}" style="font-size:0.73rem;font-weight:700;color:#d97706;text-decoration:none;">
+    <div class="sidebar-card-header"
+         style="background:linear-gradient(120deg,#78350f,#d97706);border:none;">
+      <h6 class="sidebar-card-title" style="color:#fff;">
+        <i class="fas fa-university"></i>Institutions
+      </h6>
+      <a href="{% url 'institutions:institution_types_list' %}" class="btn-header-light">
         Browse all
       </a>
     </div>
@@ -1322,9 +1354,12 @@ body.dark .ob-step:hover { background: var(--surface-2); }
 
   {# ── CAREER IDEAS ── #}
   <div class="sidebar-card">
-    <div class="sidebar-card-header">
-      <h6 class="sidebar-card-title"><i class="fas fa-compass text-primary"></i>Career Ideas</h6>
-      <a href="{% url 'career:career_profiles' %}" class="small" style="color:#4f46e5;text-decoration:none;font-size:0.75rem;font-weight:700;">
+    <div class="sidebar-card-header"
+         style="background:linear-gradient(120deg,#1e1b4b,#4338ca);border:none;">
+      <h6 class="sidebar-card-title" style="color:#fff;">
+        <i class="fas fa-compass" style="color:#a5b4fc;"></i>Career Ideas
+      </h6>
+      <a href="{% url 'career:career_profiles' %}" class="btn-header-light">
         See all
       </a>
     </div>
@@ -1428,8 +1463,11 @@ body.dark .ob-step:hover { background: var(--surface-2); }
 
   {# ── OFFICIAL LINKS ── #}
   <div class="sidebar-card">
-    <div class="sidebar-card-header">
-      <h6 class="sidebar-card-title"><i class="fas fa-link" style="color:#64748b;"></i>Official Links</h6>
+    <div class="sidebar-card-header"
+         style="background:linear-gradient(120deg,#0f172a,#1e293b);border:none;">
+      <h6 class="sidebar-card-title" style="color:#fff;">
+        <i class="fas fa-link" style="color:#94a3b8;"></i>Official Links
+      </h6>
     </div>
     <div style="padding:0.25rem 0;">
       <a href="https://kuccps.ac.ke" target="_blank" rel="noopener" class="ext-link-row">
@@ -1814,6 +1852,20 @@ Tawk_API.onLoad = function () {
     email: '{{ user.email|escapejs }}'
   }, function (error) {});
   {% endif %}
+  /* Hide Tawk completely while user is scrolling — show 2s after they stop */
+  var _tawkTimer = null;
+  var _tawkVisible = true;
+  window.addEventListener('scroll', function () {
+    if (_tawkVisible) {
+      try { Tawk_API.hideWidget(); } catch(e){}
+      _tawkVisible = false;
+    }
+    clearTimeout(_tawkTimer);
+    _tawkTimer = setTimeout(function () {
+      try { Tawk_API.showWidget(); } catch(e){}
+      _tawkVisible = true;
+    }, 2000);
+  }, { passive: true });
 };
 (function () {
   var s1 = document.createElement('script'), s0 = document.getElementsByTagName('script')[0];
