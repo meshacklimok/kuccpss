@@ -1,0 +1,163 @@
+{% load static %}
+{#
+  Guest signup gate overlay — shown instead of paywall when feature requires login.
+  Required context: total_count, gate_items, gate_subtext (optional)
+#}
+<style>
+.sg-overlay {
+    position: fixed; inset: 0; z-index: 9999;
+    background: rgba(5, 5, 20, 0.85);
+    backdrop-filter: blur(10px) saturate(0.6);
+    display: flex; align-items: center; justify-content: center;
+    padding: 1rem;
+    animation: sg-fade 0.35s ease;
+}
+@keyframes sg-fade { from { opacity:0; } to { opacity:1; } }
+
+.sg-card {
+    background: linear-gradient(160deg, #0f172a 0%, #1a1040 60%, #0f172a 100%);
+    border: 1.5px solid rgba(139,92,246,0.3);
+    border-radius: 24px;
+    padding: 2rem 1.75rem 1.5rem;
+    max-width: 430px; width: 100%;
+    max-height: 92vh; overflow-y: auto;
+    box-shadow: 0 40px 100px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.04);
+    animation: sg-up 0.4s cubic-bezier(0.34,1.4,0.64,1);
+    scrollbar-width: none; text-align: center;
+}
+.sg-card::-webkit-scrollbar { display: none; }
+@keyframes sg-up {
+    from { transform: translateY(40px) scale(0.93); opacity:0; }
+    to   { transform: none; opacity:1; }
+}
+
+.sg-icon {
+    width: 68px; height: 68px;
+    background: linear-gradient(135deg, #10b981, #059669);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 1.2rem;
+    font-size: 1.8rem; color: #fff;
+    box-shadow: 0 0 0 10px rgba(16,185,129,0.12), 0 0 0 20px rgba(16,185,129,0.05);
+}
+
+.sg-count {
+    font-size: clamp(1.5rem,5vw,2.1rem);
+    font-weight: 900; line-height: 1.1; margin-bottom: 0.4rem;
+    background: linear-gradient(90deg, #a78bfa 0%, #60a5fa 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+.sg-sub {
+    font-size: 0.83rem; color: rgba(255,255,255,0.45);
+    line-height: 1.55; margin-bottom: 1.4rem;
+}
+
+.sg-box {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 14px; padding: 1rem 1.1rem;
+    margin-bottom: 1.2rem; text-align: left;
+}
+.sg-box-label {
+    font-size: 0.66rem; font-weight: 800;
+    text-transform: uppercase; letter-spacing: 0.09em;
+    color: rgba(255,255,255,0.3); margin-bottom: 0.7rem;
+}
+.sg-item {
+    display: flex; align-items: flex-start; gap: 0.6rem;
+    margin-bottom: 0.55rem; font-size: 0.81rem;
+    color: rgba(255,255,255,0.78); line-height: 1.45;
+}
+.sg-item:last-child { margin-bottom: 0; }
+.sg-dot {
+    width: 17px; height: 17px; flex-shrink: 0; margin-top: 1px;
+    background: linear-gradient(135deg, #10b981, #059669);
+    border-radius: 50%; display: flex; align-items: center;
+    justify-content: center; font-size: 0.55rem; color: #fff;
+}
+
+.sg-free-badge {
+    background: linear-gradient(135deg, rgba(16,185,129,0.2), rgba(5,150,105,0.2));
+    border: 1.5px solid rgba(16,185,129,0.35);
+    border-radius: 14px; padding: 0.9rem;
+    margin-bottom: 1rem;
+}
+.sg-free-label { font-size: 0.68rem; color: rgba(255,255,255,0.35); text-transform:uppercase; letter-spacing:0.06em; margin-bottom:0.2rem; }
+.sg-free-amount { font-size: 1.6rem; font-weight: 900; color: #10b981; line-height:1; margin-bottom:0.15rem; }
+.sg-free-note { font-size: 0.68rem; color: rgba(255,255,255,0.3); }
+
+.sg-btn-signup {
+    display: block; width: 100%;
+    background: linear-gradient(135deg, #10b981, #059669);
+    border: none; border-radius: 12px; color: #fff;
+    font-size: 1rem; font-weight: 800; padding: 0.9rem;
+    cursor: pointer; text-decoration: none;
+    transition: transform 0.2s, box-shadow 0.2s;
+    box-shadow: 0 6px 22px rgba(16,185,129,0.45);
+    margin-bottom: 0.65rem;
+}
+.sg-btn-signup:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(16,185,129,0.55); color:#fff; }
+
+.sg-btn-login {
+    display: block; width: 100%;
+    background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(255,255,255,0.12); border-radius: 12px; color: rgba(255,255,255,0.7);
+    font-size: 0.88rem; font-weight: 600; padding: 0.75rem;
+    cursor: pointer; text-decoration: none;
+    transition: background 0.2s;
+}
+.sg-btn-login:hover { background: rgba(255,255,255,0.12); color:#fff; }
+
+.sg-later {
+    display: block; margin-top: 0.9rem;
+    font-size: 0.75rem; color: rgba(255,255,255,0.22);
+    cursor: pointer; text-decoration: none;
+    transition: color 0.2s;
+}
+.sg-later:hover { color: rgba(255,255,255,0.45); }
+</style>
+
+<div class="sg-overlay" id="sg-overlay">
+  <div class="sg-card">
+
+    <div class="sg-icon"><i class="fas fa-check"></i></div>
+
+    <div class="sg-count">
+      {{ total_count }} Course{{ total_count|pluralize }} Found!
+    </div>
+    <div class="sg-sub">
+      {% if gate_subtext %}{{ gate_subtext }}{% else %}
+        We've scanned every university, KMTC, TVET &amp; TTC in Kenya
+        against your exact grades &mdash; your results are ready.
+      {% endif %}
+    </div>
+
+    <div class="sg-box">
+      <div class="sg-box-label">Create a free account to unlock</div>
+      {% for item in gate_items %}
+      <div class="sg-item">
+        <div class="sg-dot"><i class="fas fa-check" style="font-size:0.5rem;"></i></div>
+        <span>{{ item }}</span>
+      </div>
+      {% endfor %}
+    </div>
+
+    <div class="sg-free-badge">
+      <div class="sg-free-label">Account type</div>
+      <div class="sg-free-amount">100% Free</div>
+      <div class="sg-free-note"><i class="fas fa-shield-alt" style="color:#10b981;margin-right:4px;"></i>No credit card &nbsp;·&nbsp; No subscription, ever</div>
+    </div>
+
+    <a href="{% url 'accounts:register' %}?next=/career/results/" class="sg-btn-signup">
+      <i class="fas fa-user-plus me-2"></i>Create Free Account &rarr;
+    </a>
+    <a href="{% url 'accounts:login' %}?next=/career/results/" class="sg-btn-login">
+      Already have an account? Sign in
+    </a>
+
+    <a class="sg-later" onclick="document.getElementById('sg-overlay').style.display='none';var m=document.getElementById('pw-main-content');if(m)m.style.filter='blur(3px) brightness(0.7)';">
+      Maybe later (results will be blurred)
+    </a>
+  </div>
+</div>

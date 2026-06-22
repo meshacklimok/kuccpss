@@ -818,6 +818,9 @@ def ajax_ai_insight(request):
     Called by the 'AI Insight' button on career_results_v2.html.
     Reads session career data and returns a GPT-4o-mini insight as JSON.
     """
+    if not request.user.is_authenticated:
+        return JsonResponse({"error": "login_required", "login_url": "/accounts/login/?next=/career/results/"}, status=401)
+
     from django.conf import settings as _s
     api_key = getattr(_s, 'OPENAI_API_KEY', '')
     if not api_key:
@@ -940,6 +943,9 @@ def ajax_ai_chat(request):
     3. Also include the student's matched course context.
     Body: { message, history: [{role, content}, ...] }
     """
+    if not request.user.is_authenticated:
+        return JsonResponse({"error": "login_required", "login_url": "/accounts/login/?next=/career/chat/"}, status=401)
+
     import json as _json
     from django.conf import settings as _s
 
@@ -1363,6 +1369,7 @@ def ajax_ai_chat(request):
 # =====================================================
 # 15b. Standalone Chat page
 # =====================================================
+@login_required
 def career_chat(request):
     """Full-page CareerNext AI chat for students."""
     from django.conf import settings as _s
@@ -3009,9 +3016,11 @@ def career_results(request):
 
     # Payment gate — computed after matches so we can show the real count on the overlay
     from payments.services import price_for_feature as _price_for
+    _feature_on = is_feature_enabled('premium_career_report')
+    _guest_locked = is_guest and _feature_on
     _is_locked = (
         not is_guest
-        and is_feature_enabled('premium_career_report')
+        and _feature_on
         and not has_paid_for_feature(request.user, 'premium_career_report')
     )
     _gate_items = [
@@ -3042,6 +3051,7 @@ def career_results(request):
         'edit_url':            _edit_url,
         'clear_url':           reverse('career:clear_session'),
         'guest':               is_guest,
+        'guest_locked':        _guest_locked,
         'is_locked':           _is_locked,
         'gate_feature':        'premium_career_report',
         'gate_price':          _price_for('premium_career_report'),
