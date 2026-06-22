@@ -1473,81 +1473,19 @@ def _chance_from_diff(diff):
 def _compute_cluster_points_for_session(pts_by_name):
     """
     Compute per-cluster points from a {subject_name: points_int} dict.
-    Returns (cluster_points_dict {str(cluster_id): float}, avg_pts float).
-    Falls back to top-4 single value if SubjectGroups are not seeded.
+    Returns (cluster_points_dict {str(kuccps_number): float}, avg_pts float).
+    Delegates entirely to clusterpoints.services.calculate_clusters_anonymous
+    so this view uses the same slot-based midpoint-marks formula as the calculator.
     """
-    from math import sqrt as _sqrt2
-    from clusters.models import Cluster
+    from clusterpoints.services import calculate_clusters_anonymous
 
-    # Aggregate total: Maths + best language + 5 best remaining
-    working = pts_by_name.copy()
-    agg = []
-    if 'Mathematics' in working:
-        agg.append(working.pop('Mathematics'))
-    lang_scores = {lang: working.pop(lang) for lang in ['English', 'Kiswahili'] if lang in working}
-    if lang_scores:
-        best_lang = max(lang_scores, key=lambda k: lang_scores[k])
-        agg.append(lang_scores[best_lang])
-        for lang, pts in lang_scores.items():
-            if lang != best_lang:
-                working[lang] = pts
-    agg += sorted(working.values(), reverse=True)[:5]
-    aggregate_total = sum(agg)
-
-    clusters = (
-        Cluster.objects
-        .filter(subject_groups__isnull=False)
-        .distinct()
-        .prefetch_related('subject_groups__subjects')
-    )
-    cluster_list = list(clusters)
-
-    if not cluster_list:
-        # SubjectGroups not seeded — fall back to top-4 for all clusters
-        all_pts = sorted(pts_by_name.values(), reverse=True)
-        core_total = min(sum(all_pts[:4]), 48)
-        single = round(48 * _sqrt2((core_total / 48) * (aggregate_total / 84)), 2) if aggregate_total and core_total else 0.0
-        all_ids = list(Cluster.objects.values_list('id', flat=True))
-        return {str(cid): single for cid in all_ids}, single
+    results = calculate_clusters_anonymous(pts_by_name)
 
     cluster_points = {}
-    for cluster in cluster_list:
-        slots = cluster.subject_groups.prefetch_related('subjects').order_by('priority')
-        used_names = set()
-        core_pts = []
-        any_unfilled = False
-
-        for slot in slots:
-            if len(core_pts) >= 4:
-                break
-            best_name, best_val = None, -1
-            for subj in slot.subjects.all():
-                if subj.name not in used_names and subj.name in pts_by_name:
-                    v = pts_by_name[subj.name]
-                    if v > best_val:
-                        best_val, best_name = v, subj.name
-            if best_name:
-                core_pts.append(best_val)
-                used_names.add(best_name)
-            else:
-                core_pts.append(0)
-                any_unfilled = True
-
-        while len(core_pts) < 4:
-            core_pts.append(0)
-
-        raw_core = sum(core_pts[:4])
-        if any_unfilled or raw_core == 0 or aggregate_total == 0:
-            weighted = 0.0
-        else:
-            weighted = round(min(48 * _sqrt2((raw_core / 48) * (aggregate_total / 84)), 48.0), 2)
-
-        # Key by KUCCPS group number (1-20) so career_results can look up
-        # by cluster.kuccps_number regardless of whether the course uses a
-        # sub-cluster (5-65) or a master cluster (66-85).
-        knum = cluster.kuccps_number
+    for r in results:
+        knum = r.cluster.kuccps_number
         if knum is not None:
-            cluster_points[str(knum)] = weighted
+            cluster_points[str(knum)] = r.cluster_points
 
     avg = round(sum(cluster_points.values()) / len(cluster_points), 2) if cluster_points else 0.0
     return cluster_points, avg

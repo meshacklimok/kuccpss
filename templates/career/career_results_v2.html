@@ -577,7 +577,10 @@
         <div class="row g-3">
             {% for match in page_obj %}
             <div class="col-12">
-                <div class="result-card">
+                <div class="result-card"
+                     style="cursor:pointer;"
+                     data-href="{% if match.course_url %}{{ match.course_url }}{% elif match.course and match.course.slug %}{% url 'courses:course_detail_no_category' match.course.course_type.slug match.course.slug %}{% endif %}"
+                     onclick="cardClick(event, this)">
                     <div class="chance-stripe" style="background:{{ match.tier_color }};"></div>
                     <div class="ps-2">
 
@@ -1439,18 +1442,26 @@ function nativeShareResult() {
     if (target) target.insertAdjacentElement('afterend', note);
 }());
 
-// Hide filter-bar on scroll down, reveal on scroll up
+// Whole result-card click → navigate to course detail (ignore clicks on buttons/links inside)
+function cardClick(e, card) {
+    if (e.target.closest('a, button, [data-bs-toggle]')) return;
+    var href = card.dataset.href;
+    if (href) window.location.href = href;
+}
+
+// Filter-bar: hides on scroll UP (navigating away), shows on scroll DOWN (browsing results)
 (function () {
     var bar   = document.querySelector('.filter-bar');
-    var lastY = 0;
+    var lastY = window.scrollY;
     var raf   = false;
     window.addEventListener('scroll', function () {
         if (raf) return;
         raf = true;
         requestAnimationFrame(function () {
-            var y    = window.scrollY;
-            var down = y > lastY && y > 100;
-            if (bar) bar.classList.toggle('bar-hidden', down);
+            var y  = window.scrollY;
+            // Hide only when scrolling UP past the hero (y > 150)
+            var up = y < lastY && y > 150;
+            if (bar) bar.classList.toggle('bar-hidden', up);
             lastY = y;
             raf = false;
         });
