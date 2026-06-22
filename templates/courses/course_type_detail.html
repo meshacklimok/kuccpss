@@ -2,24 +2,199 @@
 {% block title %}{{ course_type.name }} Courses — CareerNext{% endblock %}
 
 {% block content %}
-<div class="page-hero">
+<style>
+body { background: #f8fafc; }
+
+/* ── HEADER ── */
+.cpage-header {
+  background: linear-gradient(135deg, #0a0f2c 0%, #1a237e 55%, #0d47a1 100%);
+  padding: 1.5rem 0 2rem;
+  position: relative; overflow: hidden;
+}
+.cpage-header::before {
+  content: '';
+  position: absolute; inset: 0;
+  background-image: radial-gradient(circle at 20% 50%, rgba(255,255,255,0.03) 1px, transparent 1px);
+  background-size: 24px 24px;
+  pointer-events: none;
+}
+.cpage-header::after {
+  content: '';
+  position: absolute;
+  width: 380px; height: 380px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(99,102,241,0.22) 0%, transparent 70%);
+  top: -140px; right: -80px;
+  pointer-events: none;
+}
+
+.cpage-breadcrumb {
+  display: flex; align-items: center; gap: 0.45rem;
+  font-size: 0.78rem; margin-bottom: 1.1rem;
+  position: relative; z-index: 1;
+}
+.cpage-breadcrumb a { color: rgba(255,255,255,0.5); text-decoration: none; transition: color 0.15s; }
+.cpage-breadcrumb a:hover { color: rgba(255,255,255,0.85); }
+.cpage-breadcrumb-sep { color: rgba(255,255,255,0.22); }
+.cpage-breadcrumb-cur { color: rgba(255,255,255,0.85); }
+
+.cpage-hero-row { display: flex; align-items: center; gap: 1rem; position: relative; z-index: 1; }
+.cpage-icon-badge {
+  width: 56px; height: 56px; border-radius: 16px; flex-shrink: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.22) 0%, rgba(255,255,255,0.08) 100%);
+  border: 1px solid rgba(255,255,255,0.18);
+  backdrop-filter: blur(10px);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.45rem; color: #fff;
+}
+.cpage-hero-title {
+  color: #fff; font-size: 1.65rem; font-weight: 900;
+  margin: 0 0 0.2rem; letter-spacing: -0.3px; line-height: 1.15;
+}
+.cpage-hero-sub { color: rgba(255,255,255,0.52); font-size: 0.82rem; margin: 0; }
+
+/* ── STICKY SEARCH STRIP ── */
+.cpage-search-strip {
+  background: #fff;
+  border-bottom: 1px solid #edf0f4;
+  padding: 0.85rem 0;
+  position: sticky; top: 0; z-index: 100;
+  box-shadow: 0 2px 16px rgba(0,0,0,0.06);
+}
+.cpage-search-inner {
+  display: flex; align-items: center;
+  background: #f1f5f9; border-radius: 12px;
+  padding: 0 0.5rem 0 1rem; gap: 0.5rem;
+  border: 1.5px solid transparent;
+  transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+}
+.cpage-search-inner:focus-within {
+  border-color: #2563eb; background: #fff;
+  box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
+}
+.cpage-search-inner > i { color: #94a3b8; font-size: 0.9rem; flex-shrink: 0; }
+.cpage-search-inner input {
+  flex: 1; border: none; background: transparent; outline: none;
+  font-size: 0.92rem; color: #1e293b; padding: 0.72rem 0; min-width: 0;
+}
+.cpage-search-inner input::placeholder { color: #94a3b8; }
+.cpage-search-btn {
+  background: #2563eb; color: #fff; border: none;
+  border-radius: 9px; padding: 0.48rem 1.05rem;
+  font-size: 0.82rem; font-weight: 700; cursor: pointer;
+  transition: background 0.2s; flex-shrink: 0;
+}
+.cpage-search-btn:hover { background: #1d4ed8; }
+
+/* ── BODY ── */
+.cpage-body { padding: 1.5rem 0 4rem; }
+
+.cpage-section-hd {
+  display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;
+}
+.cpage-section-hd h2 { font-size: 0.97rem; font-weight: 800; color: #1e293b; margin: 0; }
+.cpage-section-hd span { font-size: 0.77rem; font-weight: 600; color: #94a3b8; }
+
+/* ── CATEGORY CARDS ── */
+.cpage-cat-grid {
+  display: grid; grid-template-columns: 1fr;
+  gap: 0.7rem; margin-bottom: 2.5rem;
+}
+@media (min-width: 480px) { .cpage-cat-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 720px) { .cpage-cat-grid { grid-template-columns: repeat(3, 1fr); } }
+@media (min-width: 900px) { .cpage-cat-grid { grid-template-columns: repeat(4, 1fr); } }
+
+.cat-card { --c:#2563eb; --cb:#eff6ff; }
+.cat-card:nth-child(7n+1) { --c:#2563eb; --cb:#eff6ff; }
+.cat-card:nth-child(7n+2) { --c:#7c3aed; --cb:#f5f3ff; }
+.cat-card:nth-child(7n+3) { --c:#059669; --cb:#ecfdf5; }
+.cat-card:nth-child(7n+4) { --c:#d97706; --cb:#fffbeb; }
+.cat-card:nth-child(7n+5) { --c:#dc2626; --cb:#fef2f2; }
+.cat-card:nth-child(7n+6) { --c:#0891b2; --cb:#ecfeff; }
+.cat-card:nth-child(7n+0) { --c:#db2777; --cb:#fdf2f8; }
+
+.cat-card {
+  background: #fff; border-radius: 14px;
+  border: 1.5px solid #edf0f4;
+  padding: 0.95rem 0.85rem 0.95rem 1rem;
+  text-decoration: none; color: inherit;
+  display: flex; align-items: center; gap: 0.7rem;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+  transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.2s;
+  position: relative; overflow: hidden;
+}
+.cat-card::before {
+  content: ''; position: absolute;
+  left: 0; top: 0; bottom: 0; width: 3px;
+  background: var(--c);
+  border-radius: 14px 0 0 14px;
+}
+.cat-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 22px rgba(0,0,0,0.09);
+  border-color: var(--c); text-decoration: none; color: inherit;
+}
+.cat-card-icon {
+  width: 36px; height: 36px; border-radius: 9px; flex-shrink: 0;
+  background: var(--cb); color: var(--c);
+  display: flex; align-items: center; justify-content: center; font-size: 0.95rem;
+  transition: transform 0.22s ease;
+}
+.cat-card:hover .cat-card-icon { transform: scale(1.12); }
+.cat-card-name {
+  flex: 1; font-size: 0.83rem; font-weight: 700; color: #1e293b;
+  line-height: 1.3; min-width: 0;
+}
+.cat-card-arrow {
+  color: #cbd5e1; font-size: 0.7rem; flex-shrink: 0;
+  transition: color 0.2s, transform 0.2s;
+}
+.cat-card:hover .cat-card-arrow { color: var(--c); transform: translateX(3px); }
+</style>
+
+<div class="cpage-header">
   <div class="container">
-    <nav aria-label="breadcrumb" class="mb-2">
-      <ol class="breadcrumb mb-0" style="font-size:0.85rem;">
-        <li class="breadcrumb-item"><a href="{% url 'courses:course_types_list' %}" class="text-white-50">Courses</a></li>
-        <li class="breadcrumb-item active text-white">{{ course_type.name }}</li>
-      </ol>
-    </nav>
-    <h1 class="mb-1">
-      <i class="{{ course_type.display_icon }} me-2"></i>{{ course_type.name }}
-    </h1>
-    {% if course_type.description %}
-    <p class="mb-0 opacity-75">{{ course_type.description }}</p>
-    {% endif %}
+    <div class="cpage-breadcrumb">
+      <a href="{% url 'courses:course_types_list' %}">Courses</a>
+      <span class="cpage-breadcrumb-sep">›</span>
+      <span class="cpage-breadcrumb-cur">{{ course_type.name }}</span>
+    </div>
+    <div class="cpage-hero-row">
+      <div class="cpage-icon-badge"><i class="{{ course_type.display_icon }}"></i></div>
+      <div>
+        <h1 class="cpage-hero-title">{{ course_type.name }}</h1>
+        <p class="cpage-hero-sub">
+          {% if course_type.description %}{{ course_type.description }}{% else %}Browse all available programmes{% endif %}
+        </p>
+      </div>
+    </div>
   </div>
 </div>
 
-<div class="container pb-5">
+<div class="cpage-search-strip">
+  <div class="container">
+    <div class="cpage-search-inner">
+      <i class="fas fa-search"></i>
+      <input type="text" name="q" id="course-search" value="{{ q }}"
+             placeholder="Search {{ course_type.name }} courses…"
+             autocomplete="off"
+             hx-get="."
+             hx-target="#course-results"
+             hx-trigger="input changed delay:350ms, search"
+             hx-push-url="true"
+             hx-include="[name='q']">
+      <button class="cpage-search-btn" type="button"
+              hx-get="."
+              hx-target="#course-results"
+              hx-include="[name='q']"
+              hx-push-url="true">Search</button>
+    </div>
+    <div id="htmx-indicator" class="htmx-indicator mt-1">
+      <small class="text-muted"><i class="fas fa-circle-notch fa-spin me-1"></i>Searching…</small>
+    </div>
+  </div>
+</div>
+
+<div class="container cpage-body">
 
   {% if request.user.is_staff %}
   <div class="mb-3">
@@ -29,66 +204,26 @@
   </div>
   {% endif %}
 
-  <!-- Search bar — HTMX live search: updates results without page reload -->
-  <div class="row mb-4">
-    <div class="col-lg-6 col-md-8">
-      <div class="input-group shadow-sm">
-        <input type="text" name="q" id="course-search" value="{{ q }}"
-               class="form-control form-control-lg"
-               placeholder="Search {{ course_type.name }} courses…"
-               autocomplete="off"
-               hx-get="."
-               hx-target="#course-results"
-               hx-trigger="input changed delay:350ms, search"
-               hx-push-url="true"
-               hx-include="[name='q']">
-        <button class="btn btn-primary px-4" type="button"
-                hx-get="."
-                hx-target="#course-results"
-                hx-include="[name='q']"
-                hx-push-url="true">
-          <i class="fas fa-search"></i>
-        </button>
-        {% if q %}
-        <a href="?" class="btn btn-outline-secondary" title="Clear search"
-           hx-get="?"
-           hx-target="#course-results"
-           hx-push-url="true">
-          <i class="fas fa-times"></i>
-        </a>
-        {% endif %}
-      </div>
-      <div id="htmx-indicator" class="htmx-indicator mt-1">
-        <small class="text-muted"><i class="fas fa-circle-notch fa-spin me-1"></i>Searching…</small>
-      </div>
-    </div>
-  </div>
-
-  <!-- Categories (non-searchable, always shown) -->
   {% if categories and not q %}
-  <h5 class="fw-bold mb-3">Browse by Category</h5>
-  <div class="row g-3 mb-4">
+  <div class="cpage-section-hd">
+    <h2>Browse by Category</h2>
+    <span>{{ categories|length }} categories</span>
+  </div>
+  <div class="cpage-cat-grid">
     {% for cat in categories %}
-    <div class="col-6 col-md-4 col-lg-3">
-      <a href="{% url 'courses:course_category_detail' type_slug=course_type.slug category_slug=cat.slug %}" class="text-decoration-none">
-        <div class="card h-100 shadow-sm text-center p-3" style="transition:transform 0.2s,box-shadow 0.2s;">
-          <h6 class="fw-bold mb-1">{{ cat.name }}</h6>
-          {% if cat.description %}
-          <p class="text-muted small mb-0" style="font-size:0.8rem;">{{ cat.description|truncatewords:12 }}</p>
-          {% endif %}
-        </div>
-      </a>
-    </div>
+    <a href="{% url 'courses:course_category_detail' type_slug=course_type.slug category_slug=cat.slug %}" class="cat-card">
+      <div class="cat-card-icon"><i class="fas fa-layer-group"></i></div>
+      <span class="cat-card-name">{{ cat.name }}</span>
+      <i class="fas fa-chevron-right cat-card-arrow"></i>
+    </a>
     {% endfor %}
   </div>
   {% endif %}
 
-  <!-- Results container — HTMX swaps this div on search -->
   <div id="course-results">
     {% if courses %}
       {% include 'courses/_course_list_partial.html' %}
     {% elif categories and not q %}
-      {# categories shown above; no standalone course list needed #}
     {% else %}
       <div class="text-center py-5 text-muted">
         <i class="fas fa-graduation-cap fa-3x mb-3 opacity-40"></i>
@@ -98,8 +233,4 @@
   </div>
 
 </div>
-
-<style>
-.card:hover { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(0,0,0,0.1) !important; }
-</style>
 {% endblock %}
