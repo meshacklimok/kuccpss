@@ -50,7 +50,14 @@ class Course(models.Model):
         CourseCategory,
         on_delete=models.CASCADE,
         related_name="courses",
-        default=get_default_course_category 
+        default=get_default_course_category
+    )
+    cluster = models.ForeignKey(
+        'clusters.Cluster',
+        null=True, blank=True,
+        on_delete=models.SET_NULL,
+        related_name='career_courses',
+        help_text="KUCCPS cluster this course belongs to — used for the slot-based cluster points formula",
     )
     cluster_subjects = models.ManyToManyField('clusters.Subject', blank=True, related_name='career_courses')
     description = models.TextField(blank=True, null=True)
@@ -464,13 +471,28 @@ def predict_admission_chance(student_points: float, cutoff: float) -> str:
 # 4. Match Student to Degree Courses
 # =====================================================
 def match_degree_courses(kcse_grades: Dict[str, str]) -> List[StudentCourseMatch]:
+    from clusterpoints.services import calculate_clusters_anonymous
+
+    named_points = _grades_to_points(kcse_grades)
+
+    # Compute all 20 cluster points once using the correct slot-based formula
+    cluster_results = calculate_clusters_anonymous(named_points)
+    cluster_points_map: Dict[int, float] = {r.cluster.pk: r.cluster_points for r in cluster_results}
+
     matches = []
-    courses = Course.objects.filter(category__name="Degree").prefetch_related(
+    courses = Course.objects.filter(category__name="Degree").select_related('cluster').prefetch_related(
         'cluster_subjects', 'cutoffs__university'
     )
     for course in courses:
-        cluster_subjects = [s.name for s in course.cluster_subjects.all()]
-        cluster_points = calculate_cluster_points(kcse_grades, cluster_subjects)
+        cid: Optional[int] = course.cluster_id  # type: ignore[attr-defined]
+        if cid and cid in cluster_points_map:
+            # Slot-based formula via clusterpoints/services.py
+            cluster_points = cluster_points_map[cid]
+        else:
+            # Fallback: flat best-4 approach for courses not yet assigned a cluster
+            cluster_subjects = [s.name for s in course.cluster_subjects.all()]
+            cluster_points = calculate_cluster_points(kcse_grades, cluster_subjects)
+
         if cluster_points == 0:
             continue
         for cutoff in course.cutoffs.all():  # type: ignore[attr-defined]

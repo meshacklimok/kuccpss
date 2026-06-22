@@ -1068,12 +1068,19 @@ body.dark .lce-btn-calc:disabled { background: var(--surface-2); color: var(--te
 
 <!-- sticky footer -->
 <div class="lce-footer">
-    <div class="lce-footer-info"><div class="lce-footer-title" id="footerNote">Enter <strong>7 subjects</strong> to calculate</div></div>
+    <div class="lce-footer-info">
+        {% if results %}
+        <div class="lce-footer-title" id="footerNote">Change grades above to <strong>recalculate</strong></div>
+        {% else %}
+        <div class="lce-footer-title" id="footerNote">Enter <strong>7 subjects</strong> to calculate</div>
+        {% endif %}
+    </div>
     <a href="{% url 'home' %}" class="lce-btn-back"><i class="bi bi-arrow-left"></i> Back</a>
-    <button type="button" class="lce-btn-calc" id="calcBtn" disabled
+    <button type="button" class="lce-btn-calc" id="calcBtn"
+            {% if not results %}disabled{% endif %}
             onclick="submitCalcForm(this)">
         <i class="bi bi-calculator-fill" id="calcBtnIcon"></i>
-        <span id="calcBtnText"> Calculate</span>
+        <span id="calcBtnText">{% if results %} Recalculate{% else %} Calculate{% endif %}</span>
     </button>
 </div>
 
@@ -1104,6 +1111,7 @@ function updateSecCount(secId) {
     if (cnt) { cnt.textContent = filled + ' entered'; cnt.classList.toggle('visible', filled > 0); }
     if (sec) sec.classList.toggle('has-values', filled > 0);
 }
+var HAS_RESULTS = {% if results %}true{% else %}false{% endif %};
 function updateGlobal() {
     const all   = document.querySelectorAll('select.lce-select.has-value').length;
     const ready = all >= 7;
@@ -1114,12 +1122,18 @@ function updateGlobal() {
     const note  = document.getElementById('footerNote');
     if (sb)   { sb.textContent = all + ' / 7 subjects'; sb.className = 'sb-counter' + (ready ? ' ready' : ''); }
     if (fill) fill.style.width = pct + '%';
-    btn.disabled = !ready;
-    if (ready) {
-        note.innerHTML = '<strong>' + all + ' subjects entered</strong> — ready to calculate!';
+    if (HAS_RESULTS) {
+        // Results already shown — button always enabled for recalculate
+        btn.disabled = false;
+        // Footer note stays as "Change grades to recalculate"
     } else {
-        const need = 7 - all;
-        note.innerHTML = 'Enter <strong>' + need + ' more subject' + (need !== 1 ? 's' : '') + '</strong> to continue';
+        btn.disabled = !ready;
+        if (ready) {
+            note.innerHTML = '<strong>' + all + ' subjects entered</strong> — ready to calculate!';
+        } else {
+            const need = 7 - all;
+            note.innerHTML = 'Enter <strong>' + need + ' more subject' + (need !== 1 ? 's' : '') + '</strong> to continue';
+        }
     }
 }
 document.querySelectorAll('select.lce-select').forEach(sel => {
@@ -1139,9 +1153,37 @@ function submitCalcForm(btn) {
     btn.dataset.submitted = '1';
     // PostHog tracking
     window._ph && _ph('calculator_submitted', {is_guest: {% if user.is_authenticated %}false{% else %}true{% endif %}});
-    // Show full-screen loading overlay immediately — don't wait for server round-trip
+    // Show full-screen loading overlay with animated progress
     var overlay = document.getElementById('calc-loading');
-    if (overlay) overlay.style.display = 'flex';
+    var fill    = document.getElementById('clProgFill');
+    var pctEl   = document.getElementById('clProgPct');
+    var stepIds = ['clSt1','clSt2','clSt3','clSt4','clSt5'];
+    if (overlay) {
+        overlay.style.display = 'flex';
+        overlay.style.opacity = '1';
+        // Activate steps sequentially
+        stepIds.forEach(function(id, i) {
+            setTimeout(function() {
+                var el = document.getElementById(id);
+                if (el) el.classList.add('active');
+            }, i * 900);
+            setTimeout(function() {
+                var el = document.getElementById(id);
+                if (el) { el.classList.remove('active'); el.classList.add('done'); }
+            }, i * 900 + 800);
+        });
+        // Smooth progress bar — stops at 95% (page reload completes the last 5%)
+        var start = null;
+        var DURATION = 4500;
+        function tickProg(ts) {
+            if (!start) start = ts;
+            var p = Math.min(95, ((ts - start) / DURATION) * 95);
+            if (fill)  fill.style.width  = p + '%';
+            if (pctEl) pctEl.textContent = Math.round(p) + '%';
+            if (p < 95) requestAnimationFrame(tickProg);
+        }
+        requestAnimationFrame(tickProg);
+    }
     // Show loading state on button
     var icon = document.getElementById('calcBtnIcon');
     var txt  = document.getElementById('calcBtnText');
@@ -1149,14 +1191,6 @@ function submitCalcForm(btn) {
     if (txt)  txt.textContent = ' Calculating…';
     btn.disabled = true;
     btn.style.opacity = '0.85';
-    // Guard: re-enable after 15 s in case of unexpected errors
-    setTimeout(function () {
-        btn.dataset.submitted = '0';
-        btn.disabled = false;
-        btn.style.opacity = '';
-        if (icon) icon.className = 'bi bi-calculator-fill';
-        if (txt)  txt.textContent = ' Calculate';
-    }, 15000);
     document.getElementById('calcForm').submit();
 }
 

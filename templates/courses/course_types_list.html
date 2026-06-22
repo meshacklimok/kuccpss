@@ -13,74 +13,84 @@
 
 {% block content %}
 <style>
-/* ── page bg ── */
-body { background: #f0f4ff; }
+/* ── base ── */
+body { background: #f5f7ff; }
 
 /* ── hero ── */
 .ct-hero {
-    background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 55%, #7c3aed 100%);
-    padding: 3.5rem 0 5rem;
-    position: relative;
-    overflow: hidden;
+    background: linear-gradient(145deg, #0f172a 0%, #1e3a8a 45%, #312e81 100%);
+    padding: 3rem 0 4rem;
+    position: relative; overflow: hidden;
 }
 .ct-hero::before {
-    content: '';
-    position: absolute; top: -60px; right: -80px;
-    width: 420px; height: 420px;
-    border-radius: 50%;
-    background: rgba(255,255,255,0.04);
-    pointer-events: none;
+    content: ''; position: absolute;
+    width: 600px; height: 600px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(99,102,241,0.18) 0%, transparent 70%);
+    top: -200px; right: -150px; pointer-events: none;
 }
-.ct-hero::after {
-    content: '';
-    position: absolute; bottom: -80px; left: -60px;
-    width: 300px; height: 300px;
-    border-radius: 50%;
-    background: rgba(124,58,237,0.15);
-    pointer-events: none;
-}
-.ct-hero-badge {
+.ct-hero-eyebrow {
     display: inline-flex; align-items: center; gap: 0.4rem;
-    background: rgba(255,255,255,0.15); backdrop-filter: blur(8px);
-    border: 1px solid rgba(255,255,255,0.25);
-    color: #fff; border-radius: 999px;
-    padding: 5px 16px; font-size: 0.78rem; font-weight: 700;
-    margin-bottom: 1rem; letter-spacing: 0.03em;
+    background: rgba(255,255,255,0.12); backdrop-filter: blur(8px);
+    border: 1px solid rgba(255,255,255,0.2);
+    color: rgba(255,255,255,0.9); border-radius: 999px;
+    padding: 5px 16px; font-size: 0.76rem; font-weight: 700;
+    letter-spacing: 0.04em; margin-bottom: 1.1rem;
 }
 .ct-hero h1 {
-    font-size: clamp(1.9rem, 5vw, 2.8rem);
+    font-size: clamp(1.85rem, 5vw, 2.75rem);
     font-weight: 900; color: #fff;
-    line-height: 1.15; letter-spacing: -0.5px;
-    margin-bottom: 0.75rem;
+    line-height: 1.12; letter-spacing: -0.5px;
+    margin-bottom: 0.65rem;
 }
-.ct-hero p {
-    color: rgba(255,255,255,0.8);
-    font-size: clamp(0.92rem, 2vw, 1.05rem);
-    max-width: 500px; margin: 0 auto 2rem;
+.ct-hero-sub {
+    color: rgba(255,255,255,0.7);
+    font-size: 0.97rem; max-width: 440px;
+    margin: 0 auto 1.75rem; line-height: 1.6;
 }
+
+/* search bar */
+.ct-search {
+    max-width: 480px; margin: 0 auto 1.5rem;
+    display: flex; align-items: center; gap: 0;
+    background: rgba(255,255,255,0.95);
+    border-radius: 14px; overflow: hidden;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+}
+.ct-search-icon {
+    padding: 0 0.9rem 0 1.1rem; color: #64748b; font-size: 1rem; flex-shrink: 0;
+}
+.ct-search input {
+    flex: 1; border: none; outline: none; background: transparent;
+    font-size: 0.92rem; font-weight: 500; color: #1e293b;
+    padding: 0.78rem 0; min-width: 0;
+}
+.ct-search input::placeholder { color: #94a3b8; }
+.ct-search-btn {
+    background: #1e3a8a; color: #fff; border: none;
+    padding: 0.78rem 1.3rem; font-weight: 700; font-size: 0.85rem;
+    cursor: pointer; flex-shrink: 0;
+    transition: background 0.2s;
+}
+.ct-search-btn:hover { background: #2563eb; }
+
+/* stat row */
 .ct-stats {
     display: flex; justify-content: center; gap: 2.5rem; flex-wrap: wrap;
-    margin-top: 0.25rem;
 }
 .ct-stat { text-align: center; }
-.ct-stat-num { font-size: 1.75rem; font-weight: 900; color: #fff; line-height: 1; }
-.ct-stat-label { font-size: 0.72rem; color: rgba(255,255,255,0.65); font-weight: 500; margin-top: 2px; text-transform: uppercase; letter-spacing: 0.06em; }
-.ct-stat-div { width: 1px; height: 40px; background: rgba(255,255,255,0.2); align-self: center; }
+.ct-stat-num { font-size: 1.7rem; font-weight: 900; color: #fff; line-height: 1; }
+.ct-stat-label { font-size: 0.7rem; color: rgba(255,255,255,0.6); font-weight: 500; margin-top: 3px; text-transform: uppercase; letter-spacing: 0.07em; }
+.ct-stat-div { width: 1px; height: 36px; background: rgba(255,255,255,0.2); align-self: center; }
 
-/* wave connector */
-.ct-wave {
-    display: block; width: 100%;
-    margin-top: -1px;
-    line-height: 0;
-}
+/* wave */
+.ct-wave { display: block; width: 100%; margin-top: -1px; line-height: 0; }
 
-/* ── main body ── */
-.ct-body { padding: 2.5rem 0 4rem; }
+/* ── body ── */
+.ct-body { padding: 2.5rem 0 5rem; }
 
 /* ── section label ── */
 .ct-section-label {
-    display: flex; align-items: center; gap: 0.75rem;
-    margin-bottom: 1.5rem;
+    display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.5rem;
 }
 .ct-section-label-line { flex: 1; height: 1.5px; background: #e2e8f0; }
 .ct-section-label-text {
@@ -92,189 +102,189 @@ body { background: #f0f4ff; }
 /* ── main pathway cards ── */
 .ct-main-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 1.25rem;
-    margin-bottom: 3rem;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.25rem; margin-bottom: 3rem;
 }
-@media (max-width: 768px) { .ct-main-grid { grid-template-columns: 1fr 1fr; } }
-@media (max-width: 440px)  { .ct-main-grid { grid-template-columns: 1fr; gap: 1rem; } }
+@media (min-width: 640px) { .ct-main-grid { grid-template-columns: repeat(4, 1fr); } }
 
 .ct-main-card {
     position: relative; overflow: hidden;
-    border-radius: 1.25rem;
-    padding: 0;
-    text-decoration: none; color: inherit;
+    border-radius: 1.4rem; text-decoration: none; color: inherit;
     display: flex; flex-direction: column;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-    transition: transform 0.35s cubic-bezier(0.34,1.56,0.64,1),
-                box-shadow 0.28s ease;
+    box-shadow: 0 2px 16px rgba(0,0,0,0.08);
+    transition: transform 0.32s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.25s ease;
     will-change: transform;
+    min-height: 180px;
 }
 .ct-main-card:hover {
-    transform: translateY(-8px) scale(1.02);
-    box-shadow: 0 20px 50px rgba(0,0,0,0.15);
+    transform: translateY(-7px) scale(1.02);
+    box-shadow: 0 18px 45px rgba(0,0,0,0.14);
     text-decoration: none; color: inherit;
 }
-.ct-main-card:active { transform: translateY(-3px) scale(0.98); transition-duration: 0.1s; }
+.ct-main-card:active { transform: translateY(-2px) scale(0.98); transition-duration: 0.08s; }
 
-/* gradient top strip */
-.ct-main-gradient {
-    height: 6px;
-    border-radius: 1.25rem 1.25rem 0 0;
+/* card inner */
+.ct-mc-bg {
+    position: absolute; inset: 0;
+    border-radius: inherit;
 }
-.ct-main-body {
-    background: #fff;
-    border: 1.5px solid #e2e8f0;
-    border-top: none;
-    border-radius: 0 0 1.25rem 1.25rem;
-    padding: 1.5rem 1.4rem 1.3rem;
-    flex: 1;
-    display: flex; flex-direction: column; gap: 0.6rem;
-    position: relative;
+/* decorative circle pattern */
+.ct-mc-bg::after {
+    content: ''; position: absolute;
+    width: 180px; height: 180px; border-radius: 50%;
+    bottom: -60px; right: -40px;
+    background: rgba(255,255,255,0.08);
+    pointer-events: none;
 }
-.ct-main-icon-wrap {
-    width: 56px; height: 56px; border-radius: 14px;
+.ct-mc-inner {
+    position: relative; z-index: 1;
+    padding: 1.5rem 1.35rem 1.25rem;
+    flex: 1; display: flex; flex-direction: column; gap: 0.5rem;
+}
+.ct-mc-icon {
+    width: 48px; height: 48px; border-radius: 13px;
     display: flex; align-items: center; justify-content: center;
-    font-size: 1.55rem; flex-shrink: 0;
-    transition: transform 0.35s cubic-bezier(0.34,1.56,0.64,1);
-    margin-bottom: 0.25rem;
+    font-size: 1.4rem; flex-shrink: 0; margin-bottom: 0.35rem;
+    background: rgba(255,255,255,0.2);
+    transition: transform 0.32s cubic-bezier(0.34,1.56,0.64,1);
 }
-.ct-main-card:hover .ct-main-icon-wrap { transform: scale(1.15) rotate(-5deg); }
+.ct-main-card:hover .ct-mc-icon { transform: scale(1.15) rotate(-6deg); }
 
-.ct-main-title {
-    font-size: 1.1rem; font-weight: 800; color: #1e293b; line-height: 1.2;
+.ct-mc-title { font-size: 1.05rem; font-weight: 900; color: #fff; line-height: 1.2; }
+.ct-mc-desc  { font-size: 0.74rem; color: rgba(255,255,255,0.75); line-height: 1.5; flex: 1; }
+.ct-mc-footer {
+    display: flex; align-items: center; justify-content: space-between; margin-top: 0.5rem;
 }
-.ct-main-desc {
-    font-size: 0.78rem; color: #64748b; line-height: 1.5; flex: 1;
+.ct-mc-count {
+    font-size: 0.67rem; font-weight: 800;
+    background: rgba(255,255,255,0.18); color: #fff;
+    border-radius: 20px; padding: 3px 10px; letter-spacing: 0.03em;
 }
-.ct-main-footer {
-    display: flex; align-items: center; justify-content: space-between;
-    margin-top: 0.5rem;
+.ct-mc-arrow {
+    width: 28px; height: 28px; border-radius: 50%;
+    background: rgba(255,255,255,0.2); color: #fff;
+    display: flex; align-items: center; justify-content: center; font-size: 0.85rem;
+    transition: transform 0.25s ease;
 }
-.ct-main-count {
-    font-size: 0.7rem; font-weight: 700;
-    padding: 3px 10px; border-radius: 20px;
-}
-.ct-main-arrow {
-    width: 32px; height: 32px; border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 0.9rem;
-    transition: transform 0.25s ease, opacity 0.25s ease;
-    opacity: 0.5;
-}
-.ct-main-card:hover .ct-main-arrow { transform: translateX(4px); opacity: 1; }
+.ct-main-card:hover .ct-mc-arrow { transform: translateX(4px); }
 
-/* shimmer */
+/* shimmer sweep */
 .ct-main-card::before {
-    content: '';
-    position: absolute; top: 0; left: -80%;
-    width: 60%; height: 100%;
-    background: linear-gradient(110deg, transparent 35%, rgba(255,255,255,0.4) 50%, transparent 65%);
-    transition: left 0.55s ease;
-    pointer-events: none; z-index: 5;
+    content: ''; position: absolute;
+    top: 0; left: -80%; width: 60%; height: 100%;
+    background: linear-gradient(110deg, transparent 35%, rgba(255,255,255,0.18) 50%, transparent 65%);
+    transition: left 0.55s ease; pointer-events: none; z-index: 2;
 }
 .ct-main-card:hover::before { left: 130%; }
 
-/* ── colour tokens for main cards ── */
-.cc-degree   { --g1:#4f46e5; --g2:#818cf8; --ic-bg:#eef2ff; --ic-cl:#4f46e5; --cnt-bg:#eef2ff; --cnt-cl:#4f46e5; --arr-bg:#eef2ff; --arr-cl:#4f46e5; }
-.cc-kmtc     { --g1:#dc2626; --g2:#f87171; --ic-bg:#fef2f2; --ic-cl:#dc2626; --cnt-bg:#fef2f2; --cnt-cl:#dc2626; --arr-bg:#fef2f2; --arr-cl:#dc2626; }
-.cc-ttc      { --g1:#d97706; --g2:#fbbf24; --ic-bg:#fffbeb; --ic-cl:#d97706; --cnt-bg:#fffbeb; --cnt-cl:#d97706; --arr-bg:#fffbeb; --arr-cl:#d97706; }
-.cc-cert     { --g1:#059669; --g2:#34d399; --ic-bg:#ecfdf5; --ic-cl:#059669; --cnt-bg:#ecfdf5; --cnt-cl:#059669; --arr-bg:#ecfdf5; --arr-cl:#059669; }
+/* colour themes */
+.cc-degree { --g1:#4338ca; --g2:#6366f1; }
+.cc-kmtc   { --g1:#b91c1c; --g2:#ef4444; }
+.cc-ttc    { --g1:#b45309; --g2:#f59e0b; }
+.cc-cert   { --g1:#047857; --g2:#10b981; }
 
-.ct-main-gradient { background: linear-gradient(90deg, var(--g1), var(--g2)); }
-.ct-main-icon-wrap { background: var(--ic-bg); color: var(--ic-cl); }
-.ct-main-count { background: var(--cnt-bg); color: var(--cnt-cl); }
-.ct-main-arrow { background: var(--arr-bg); color: var(--arr-cl); }
+.ct-mc-bg { background: linear-gradient(145deg, var(--g1) 0%, var(--g2) 100%); }
 
-/* ── TVET section ── */
-.ct-tvet-header {
-    background: linear-gradient(135deg, #064e3b 0%, #059669 100%);
-    border-radius: 1.25rem 1.25rem 0 0;
-    padding: 1.5rem 1.75rem;
-    display: flex; align-items: center; gap: 1rem;
-    margin-bottom: 0;
+/* ── TVET grid ── */
+.ct-tvet-wrap {
+    border-radius: 1.25rem; overflow: hidden;
+    border: 1.5px solid #e2e8f0;
+    box-shadow: 0 2px 16px rgba(0,0,0,0.06);
 }
-.ct-tvet-header-icon {
-    width: 52px; height: 52px; border-radius: 14px; flex-shrink: 0;
+.ct-tvet-head {
+    background: linear-gradient(135deg, #064e3b 0%, #059669 100%);
+    padding: 1.35rem 1.6rem;
+    display: flex; align-items: center; gap: 1rem;
+}
+.ct-tvet-head-icon {
+    width: 48px; height: 48px; border-radius: 13px; flex-shrink: 0;
     background: rgba(255,255,255,0.15);
     display: flex; align-items: center; justify-content: center;
-    font-size: 1.4rem; color: #fff;
+    font-size: 1.3rem; color: #fff;
 }
-.ct-tvet-header h2 { font-size: 1.15rem; font-weight: 800; color: #fff; margin: 0 0 0.2rem; }
-.ct-tvet-header p  { font-size: 0.78rem; color: rgba(255,255,255,0.75); margin: 0; }
-
-.ct-tvet-wrapper {
-    background: #fff;
-    border: 1.5px solid #e2e8f0;
-    border-top: none;
-    border-radius: 0 0 1.25rem 1.25rem;
-    overflow: hidden;
-    box-shadow: 0 4px 24px rgba(0,0,0,0.07);
-}
+.ct-tvet-head h2 { font-size: 1.1rem; font-weight: 800; color: #fff; margin: 0 0 0.15rem; }
+.ct-tvet-head p  { font-size: 0.76rem; color: rgba(255,255,255,0.72); margin: 0; }
 
 .ct-tvet-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 0;
+    background: #fff;
+    display: grid; grid-template-columns: 1fr 1fr;
 }
-@media (max-width: 576px) { .ct-tvet-grid { grid-template-columns: 1fr; } }
+@media (max-width: 540px) { .ct-tvet-grid { grid-template-columns: 1fr; } }
 
 .ct-tvet-item {
-    display: flex; align-items: center; gap: 0.9rem;
-    padding: 1rem 1.25rem;
+    display: flex; align-items: center; gap: 0.85rem;
+    padding: 0.95rem 1.25rem;
     text-decoration: none; color: inherit;
     border-right: 1px solid #f1f5f9;
     border-bottom: 1px solid #f1f5f9;
-    transition: background 0.18s ease;
-    position: relative; overflow: hidden;
+    transition: background 0.15s ease;
+    position: relative;
 }
-.ct-tvet-item:nth-child(even)  { border-right: none; }
+.ct-tvet-item:nth-child(even) { border-right: none; }
 .ct-tvet-grid > .ct-tvet-item:nth-last-child(-n+2) { border-bottom: none; }
-@media (max-width: 576px) {
+@media (max-width: 540px) {
     .ct-tvet-item { border-right: none; }
     .ct-tvet-grid > .ct-tvet-item:last-child { border-bottom: none; }
     .ct-tvet-grid > .ct-tvet-item:nth-last-child(2) { border-bottom: 1px solid #f1f5f9; }
 }
-.ct-tvet-item:hover {
-    background: #f0fdf4;
-    text-decoration: none; color: inherit;
+.ct-tvet-item:hover { background: #f0fdf4; text-decoration: none; color: inherit; }
+
+/* left colour stripe */
+.ct-tvet-item::before {
+    content: ''; position: absolute;
+    left: 0; top: 0; bottom: 0; width: 3px;
+    background: var(--stripe, #059669);
+    border-radius: 0 2px 2px 0;
 }
-.ct-tvet-item-icon {
-    width: 40px; height: 40px; border-radius: 10px; flex-shrink: 0;
+.tvet-l6 { --stripe: #4f46e5; }
+.tvet-l5 { --stripe: #0891b2; }
+.tvet-l4 { --stripe: #d97706; }
+.tvet-l3 { --stripe: #059669; }
+
+.ct-tvet-icon {
+    width: 38px; height: 38px; border-radius: 10px; flex-shrink: 0;
     display: flex; align-items: center; justify-content: center;
-    font-size: 1.05rem;
-    background: #ecfdf5; color: #059669;
-    transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
+    font-size: 1rem;
+    transition: transform 0.28s cubic-bezier(0.34,1.56,0.64,1);
 }
-.ct-tvet-item:hover .ct-tvet-item-icon { transform: scale(1.12); }
-.ct-tvet-item-body { flex: 1; min-width: 0; }
-.ct-tvet-item-title {
-    font-size: 0.84rem; font-weight: 700; color: #1e293b; line-height: 1.3;
-}
-.ct-tvet-item-sub {
-    font-size: 0.69rem; color: #94a3b8; font-weight: 500;
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-}
-.ct-tvet-item-count {
+.ct-tvet-item:hover .ct-tvet-icon { transform: scale(1.15); }
+.tvet-l6 .ct-tvet-icon { background: #eef2ff; color: #4f46e5; }
+.tvet-l5 .ct-tvet-icon { background: #ecfeff; color: #0891b2; }
+.tvet-l4 .ct-tvet-icon { background: #fff7ed; color: #d97706; }
+.tvet-l3 .ct-tvet-icon { background: #ecfdf5; color: #059669; }
+
+.ct-tvet-body { flex: 1; min-width: 0; }
+.ct-tvet-name { font-size: 0.84rem; font-weight: 700; color: #1e293b; line-height: 1.3; }
+.ct-tvet-sub  { font-size: 0.67rem; color: #94a3b8; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.ct-tvet-count {
     font-size: 0.65rem; font-weight: 800;
     background: #ecfdf5; color: #059669;
     border-radius: 12px; padding: 2px 8px; flex-shrink: 0;
 }
-.ct-tvet-item-arrow {
-    color: #d1fae5; font-size: 0.85rem; flex-shrink: 0;
-    transition: color 0.2s, transform 0.2s;
-}
-.ct-tvet-item:hover .ct-tvet-item-arrow { color: #059669; transform: translateX(3px); }
+.tvet-l6 .ct-tvet-count { background: #eef2ff; color: #4f46e5; }
+.tvet-l5 .ct-tvet-count { background: #ecfeff; color: #0891b2; }
+.tvet-l4 .ct-tvet-count { background: #fff7ed; color: #d97706; }
+.tvet-l3 .ct-tvet-count { background: #ecfdf5; color: #059669; }
 
-/* ── TVET level badge colours ── */
-.tvet-l6 .ct-tvet-item-icon { background: #eef2ff; color: #4f46e5; }
-.tvet-l6 .ct-tvet-item-count { background: #eef2ff; color: #4f46e5; }
-.tvet-l5 .ct-tvet-item-icon { background: #ecfeff; color: #0891b2; }
-.tvet-l5 .ct-tvet-item-count { background: #ecfeff; color: #0891b2; }
-.tvet-l4 .ct-tvet-item-icon { background: #fff7ed; color: #d97706; }
-.tvet-l4 .ct-tvet-item-count { background: #fff7ed; color: #d97706; }
-.tvet-l3 .ct-tvet-item-icon { background: #ecfdf5; color: #059669; }
-.tvet-l3 .ct-tvet-item-count { background: #ecfdf5; color: #059669; }
+.ct-tvet-arrow { color: #d1fae5; font-size: 0.8rem; flex-shrink: 0; transition: color 0.2s, transform 0.2s; }
+.ct-tvet-item:hover .ct-tvet-arrow { color: #059669; transform: translateX(3px); }
+
+/* ── quick actions ── */
+.ct-actions {
+    margin-top: 2.5rem; display: flex; gap: 0.75rem; flex-wrap: wrap; justify-content: center;
+}
+.ct-action-btn {
+    display: inline-flex; align-items: center; gap: 0.45rem;
+    border-radius: 12px; padding: 0.65rem 1.35rem;
+    font-size: 0.84rem; font-weight: 700; text-decoration: none;
+    transition: all 0.2s; white-space: nowrap;
+}
+.ct-action-btn:hover { transform: translateY(-2px); text-decoration: none; }
+.ct-action-primary { background: #1e3a8a; color: #fff; box-shadow: 0 4px 16px rgba(30,58,138,0.3); }
+.ct-action-primary:hover { background: #2563eb; box-shadow: 0 6px 20px rgba(30,58,138,0.4); color: #fff; }
+.ct-action-success { background: #059669; color: #fff; box-shadow: 0 4px 16px rgba(5,150,105,0.28); }
+.ct-action-success:hover { background: #10b981; box-shadow: 0 6px 20px rgba(5,150,105,0.35); color: #fff; }
 
 /* ── empty state ── */
 .ct-empty {
@@ -282,21 +292,42 @@ body { background: #f0f4ff; }
     background: #fff; border-radius: 1.25rem;
     border: 2px dashed #e2e8f0;
 }
+
+/* ── scroll-reveal ── */
+.sr { opacity: 0; transform: translateY(24px); transition: opacity 0.55s ease, transform 0.55s ease; }
+.sr.visible { opacity: 1; transform: translateY(0); }
+
+/* ── dark mode ── */
+body.dark .ct-tvet-wrap { border-color: var(--border); }
+body.dark .ct-tvet-grid { background: var(--surface); }
+body.dark .ct-tvet-item { border-color: var(--surface-2); }
+body.dark .ct-tvet-item:hover { background: var(--surface-2); }
+body.dark .ct-tvet-name { color: var(--text); }
+body.dark .ct-tvet-sub  { color: var(--text-3); }
+body.dark .ct-section-label-line { background: var(--border); }
+body.dark .ct-section-label-text { color: var(--text-3); }
 </style>
 
 <!-- ══ HERO ══ -->
 <div class="ct-hero">
     <div class="container text-center" style="position:relative;z-index:2;">
-        <div class="ct-hero-badge">
+        <div class="ct-hero-eyebrow">
             <i class="bi bi-mortarboard-fill"></i>All Pathways
         </div>
         <h1>Find Your Course</h1>
-        <p>University degrees, KMTC, TVET programmes and more — explore every pathway available through KUCCPS.</p>
+        <p class="ct-hero-sub">University degrees, KMTC, TVET programmes and more — explore every pathway available through KUCCPS.</p>
+
+        <!-- Quick course search -->
+        <form method="get" action="{% url 'courses:course_type_detail' type_slug='degree' %}" class="ct-search">
+            <span class="ct-search-icon"><i class="bi bi-search"></i></span>
+            <input type="text" name="q" placeholder="Search degree courses…" autocomplete="off">
+            <button class="ct-search-btn" type="submit">Search</button>
+        </form>
 
         {% if total_courses %}
         <div class="ct-stats">
             <div class="ct-stat">
-                <div class="ct-stat-num">{{ total_courses|default:"1,000" }}+</div>
+                <div class="ct-stat-num">{{ total_courses }}+</div>
                 <div class="ct-stat-label">Courses Listed</div>
             </div>
             <div class="ct-stat-div"></div>
@@ -314,9 +345,9 @@ body { background: #f0f4ff; }
     </div>
 </div>
 
-<!-- wave -->
+<!-- wave connector -->
 <svg class="ct-wave" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 48" preserveAspectRatio="none" style="margin-top:-1px;">
-    <path fill="#f0f4ff" d="M0,32 C360,60 1080,0 1440,28 L1440,48 L0,48 Z"/>
+    <path fill="#f5f7ff" d="M0,32 C360,60 1080,0 1440,28 L1440,48 L0,48 Z"/>
 </svg>
 
 <!-- ══ BODY ══ -->
@@ -338,7 +369,7 @@ body { background: #f0f4ff; }
 
     <!-- ── Main Pathways ── -->
     {% if main_types %}
-    <div class="ct-section-label">
+    <div class="ct-section-label sr">
         <div class="ct-section-label-line"></div>
         <div class="ct-section-label-text"><i class="bi bi-stars"></i>Main Pathways</div>
         <div class="ct-section-label-line"></div>
@@ -346,55 +377,37 @@ body { background: #f0f4ff; }
 
     <div class="ct-main-grid">
     {% for type in main_types %}
-    {% with sl=type.slug|lower label=type.display_name|default:type.name desc=type.display_desc|default:"" %}
+    {% with sl=type.slug|lower label=type.display_name|default:type.name %}
     <a href="{% url 'courses:course_type_detail' type_slug=type.slug %}"
-       class="ct-main-card
+       class="ct-main-card sr
            {% if 'degree' in sl %}cc-degree
            {% elif 'kmtc' in sl %}cc-kmtc
            {% elif 'tvet-certificate' in sl %}cc-cert
            {% else %}cc-ttc
-           {% endif %}">
+           {% endif %}"
+       style="animation-delay: {{ forloop.counter0 }}00ms;">
 
-        <div class="ct-main-gradient"></div>
-        <div class="ct-main-body">
-            <div class="ct-main-icon-wrap">
-                {% if 'degree' in sl %}
-                    <i class="bi bi-mortarboard-fill"></i>
-                {% elif 'kmtc' in sl %}
-                    <i class="bi bi-hospital-fill"></i>
-                {% elif 'ttc' in sl and 'tvet' not in sl %}
-                    <i class="bi bi-pencil-fill"></i>
-                {% elif 'tvet-certificate' in sl %}
-                    <i class="bi bi-patch-check-fill"></i>
-                {% else %}
-                    <i class="bi bi-book-fill"></i>
-                {% endif %}
+        <div class="ct-mc-bg"></div>
+        <div class="ct-mc-inner">
+            <div class="ct-mc-icon">
+                {% if 'degree' in sl %}<i class="bi bi-mortarboard-fill"></i>
+                {% elif 'kmtc' in sl %}<i class="bi bi-hospital-fill"></i>
+                {% elif 'ttc' in sl and 'tvet' not in sl %}<i class="bi bi-pencil-fill"></i>
+                {% elif 'tvet-certificate' in sl %}<i class="bi bi-patch-check-fill"></i>
+                {% else %}<i class="bi bi-book-fill"></i>{% endif %}
             </div>
-
-            <div class="ct-main-title">{{ label }}</div>
-            <div class="ct-main-desc">
-                {% if 'degree' in sl %}
-                    University & college degree programmes across all disciplines and clusters.
-                {% elif 'kmtc' in sl %}
-                    Kenya Medical Training College diploma & certificate health programmes.
-                {% elif 'ttc' in sl and 'tvet' not in sl %}
-                    Teacher Training College programmes for primary and early childhood education.
-                {% elif desc %}
-                    {{ desc }}
-                {% elif type.description %}
-                    {{ type.description|truncatewords:12 }}
-                {% else %}
-                    Browse all {{ label }} programmes available through KUCCPS.
-                {% endif %}
+            <div class="ct-mc-title">{{ label }}</div>
+            <div class="ct-mc-desc">
+                {% if 'degree' in sl %}University & college degree programmes across all disciplines.
+                {% elif 'kmtc' in sl %}Kenya Medical Training College health & clinical programmes.
+                {% elif 'ttc' in sl and 'tvet' not in sl %}Teacher Training College programmes for educators.
+                {% elif 'tvet-certificate' in sl %}TVET Certificate programmes at technical colleges.
+                {% elif type.description %}{{ type.description|truncatewords:10 }}
+                {% else %}Browse all {{ label }} programmes via KUCCPS.{% endif %}
             </div>
-
-            <div class="ct-main-footer">
-                {% if type.course_count %}
-                <span class="ct-main-count">{{ type.course_count }} courses</span>
-                {% else %}
-                <span class="ct-main-count">Browse</span>
-                {% endif %}
-                <div class="ct-main-arrow"><i class="bi bi-arrow-right"></i></div>
+            <div class="ct-mc-footer">
+                <span class="ct-mc-count">{% if type.course_count %}{{ type.course_count }} courses{% else %}Browse{% endif %}</span>
+                <div class="ct-mc-arrow"><i class="bi bi-arrow-right"></i></div>
             </div>
         </div>
     </a>
@@ -405,100 +418,90 @@ body { background: #f0f4ff; }
 
     <!-- ── TVET Programmes ── -->
     {% if tvet_types %}
-    <div class="ct-section-label">
+    <div class="ct-section-label sr">
         <div class="ct-section-label-line"></div>
         <div class="ct-section-label-text"><i class="bi bi-gear-wide-connected"></i>Technical &amp; Vocational (TVET)</div>
         <div class="ct-section-label-line"></div>
     </div>
 
-    <div>
-        <div class="ct-tvet-header">
-            <div class="ct-tvet-header-icon"><i class="bi bi-tools"></i></div>
+    <div class="ct-tvet-wrap sr">
+        <div class="ct-tvet-head">
+            <div class="ct-tvet-head-icon"><i class="bi bi-tools"></i></div>
             <div>
                 <h2>TVET Programmes</h2>
-                <p>Technical &amp; Vocational Education — from craft certificates to advanced diplomas</p>
+                <p>Technical &amp; Vocational Education — craft certificates to advanced diplomas</p>
             </div>
         </div>
+        <div class="ct-tvet-grid">
+        {% for type in tvet_types %}
+        {% with sl=type.slug|lower %}
+        <a href="{% url 'courses:course_type_detail' type_slug=type.slug %}"
+           class="ct-tvet-item
+               {% if 'level-6' in sl or 'diploma' in sl %}tvet-l6
+               {% elif 'level-5' in sl or 'certificate' in sl and 'artisan' not in sl and 'craft' not in sl %}tvet-l5
+               {% elif 'level-4' in sl or 'artisan' in sl %}tvet-l4
+               {% else %}tvet-l3{% endif %}">
 
-        <div class="ct-tvet-wrapper">
-            <div class="ct-tvet-grid">
-            {% for type in tvet_types %}
-            {% with sl=type.slug|lower name=type.name %}
-            <a href="{% url 'courses:course_type_detail' type_slug=type.slug %}"
-               class="ct-tvet-item
-                   {% if 'level-6' in sl or 'diploma' in sl %}tvet-l6
-                   {% elif 'level-5' in sl or 'certificate' in sl and 'artisan' not in sl and 'craft' not in sl %}tvet-l5
-                   {% elif 'level-4' in sl or 'artisan' in sl %}tvet-l4
-                   {% else %}tvet-l3
-                   {% endif %}">
-
-                <div class="ct-tvet-item-icon">
-                    {% if 'diploma' in sl %}
-                        <i class="bi bi-award-fill"></i>
-                    {% elif 'artisan' in sl %}
-                        <i class="bi bi-wrench-adjustable-circle-fill"></i>
-                    {% elif 'craft' in sl %}
-                        <i class="bi bi-hammer"></i>
-                    {% elif 'short' in sl %}
-                        <i class="bi bi-clock-history"></i>
-                    {% elif 'trade' in sl %}
-                        <i class="bi bi-clipboard2-check-fill"></i>
-                    {% elif 'proficiency' in sl %}
-                        <i class="bi bi-patch-check-fill"></i>
-                    {% elif 'professional' in sl %}
-                        <i class="bi bi-person-badge-fill"></i>
-                    {% else %}
-                        <i class="bi bi-gear-fill"></i>
-                    {% endif %}
-                </div>
-
-                <div class="ct-tvet-item-body">
-                    <div class="ct-tvet-item-title">{{ name }}</div>
-                    <div class="ct-tvet-item-sub">
-                        {% if 'level-6' in sl or 'diploma' in sl %}Advanced · Level 6
-                        {% elif 'level-5' in sl %}Intermediate · Level 5
-                        {% elif 'level-4' in sl or 'artisan' in sl %}Skilled · Level 4
-                        {% elif 'level-3' in sl or 'craft' in sl %}Foundation · Level 3
-                        {% elif 'short' in sl %}Short-term upskilling
-                        {% elif 'trade' in sl %}Trade certification
-                        {% elif 'proficiency' in sl %}Proficiency assessment
-                        {% elif 'professional' in sl %}Professional qualification
-                        {% else %}Technical qualification
-                        {% endif %}
-                    </div>
-                </div>
-
-                {% if type.course_count %}
-                <span class="ct-tvet-item-count">{{ type.course_count }}</span>
-                {% endif %}
-                <i class="bi bi-chevron-right ct-tvet-item-arrow"></i>
-
-            </a>
-            {% endwith %}
-            {% endfor %}
+            <div class="ct-tvet-icon">
+                {% if 'diploma' in sl %}<i class="bi bi-award-fill"></i>
+                {% elif 'artisan' in sl %}<i class="bi bi-wrench-adjustable-circle-fill"></i>
+                {% elif 'craft' in sl %}<i class="bi bi-hammer"></i>
+                {% elif 'short' in sl %}<i class="bi bi-clock-history"></i>
+                {% elif 'trade' in sl %}<i class="bi bi-clipboard2-check-fill"></i>
+                {% elif 'proficiency' in sl %}<i class="bi bi-patch-check-fill"></i>
+                {% elif 'professional' in sl %}<i class="bi bi-person-badge-fill"></i>
+                {% else %}<i class="bi bi-gear-fill"></i>{% endif %}
             </div>
+            <div class="ct-tvet-body">
+                <div class="ct-tvet-name">{{ type.name }}</div>
+                <div class="ct-tvet-sub">
+                    {% if 'level-6' in sl or 'diploma' in sl %}Advanced · Level 6
+                    {% elif 'level-5' in sl %}Intermediate · Level 5
+                    {% elif 'level-4' in sl or 'artisan' in sl %}Skilled · Level 4
+                    {% elif 'level-3' in sl or 'craft' in sl %}Foundation · Level 3
+                    {% elif 'short' in sl %}Short-term upskilling
+                    {% elif 'trade' in sl %}Trade certification
+                    {% elif 'proficiency' in sl %}Proficiency assessment
+                    {% elif 'professional' in sl %}Professional qualification
+                    {% else %}Technical qualification{% endif %}
+                </div>
+            </div>
+            {% if type.course_count %}<span class="ct-tvet-count">{{ type.course_count }}</span>{% endif %}
+            <i class="bi bi-chevron-right ct-tvet-arrow"></i>
+        </a>
+        {% endwith %}
+        {% endfor %}
         </div>
     </div>
     {% endif %}
 
-    <!-- ── Quick Actions bar ── -->
-    <div style="margin-top:2.5rem;display:flex;gap:0.75rem;flex-wrap:wrap;align-items:center;justify-content:center;">
-        <a href="{% url 'clusterpoints:calculator' %}"
-           style="display:inline-flex;align-items:center;gap:0.45rem;
-                  background:#1e3a8a;color:#fff;border-radius:10px;
-                  padding:0.6rem 1.2rem;font-size:0.83rem;font-weight:700;
-                  text-decoration:none;transition:opacity 0.2s;">
+    <!-- ── Quick Actions ── -->
+    <div class="ct-actions sr">
+        <a href="{% url 'clusterpoints:calculator' %}" class="ct-action-btn ct-action-primary">
             <i class="bi bi-calculator-fill"></i>Calculate My Cluster Points
         </a>
-        <a href="{% url 'clusterpoints:eligible_courses' %}"
-           style="display:inline-flex;align-items:center;gap:0.45rem;
-                  background:#059669;color:#fff;border-radius:10px;
-                  padding:0.6rem 1.2rem;font-size:0.83rem;font-weight:700;
-                  text-decoration:none;transition:opacity 0.2s;">
+        <a href="{% url 'clusterpoints:eligible_courses' %}" class="ct-action-btn ct-action-success">
             <i class="bi bi-check2-circle"></i>View My Eligible Courses
         </a>
     </div>
 
 </div>
 </div>
+
+<script>
+// Scroll-reveal via IntersectionObserver
+(function () {
+    var els = document.querySelectorAll('.sr');
+    if (!('IntersectionObserver' in window)) {
+        els.forEach(function(el) { el.classList.add('visible'); });
+        return;
+    }
+    var io = new IntersectionObserver(function(entries) {
+        entries.forEach(function(e) {
+            if (e.isIntersecting) { e.target.classList.add('visible'); io.unobserve(e.target); }
+        });
+    }, { threshold: 0.1 });
+    els.forEach(function(el) { io.observe(el); });
+}());
+</script>
 {% endblock %}
