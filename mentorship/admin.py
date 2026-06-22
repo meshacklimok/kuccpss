@@ -6,7 +6,7 @@ from django.shortcuts import get_object_or_404
 from django.urls import path, reverse
 from django.utils.html import format_html, mark_safe
 
-from .models import MentorProfile, TimeSlot, MentorshipSession, WithdrawalRequest
+from .models import MentorProfile, TimeSlot, MentorshipSession, WithdrawalRequest, MentorshipConfig
 
 SITE_URL = "https://www.careernext.co.ke"
 
@@ -412,3 +412,22 @@ class WithdrawalRequestAdmin(admin.ModelAdmin):
         queryset.filter(status="pending").update(status="rejected")
         self.message_user(request, "Withdrawals rejected.")
     mark_rejected.short_description = "Reject selected withdrawal requests"
+
+
+@admin.register(MentorshipConfig)
+class MentorshipConfigAdmin(admin.ModelAdmin):
+    fields = ("session_price", "mentor_payout")
+
+    def has_add_permission(self, request):
+        return not MentorshipConfig.objects.exists()
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+    def changelist_view(self, request, extra_context=None):
+        obj, _ = MentorshipConfig.objects.get_or_create(pk=1)
+        from django.http import HttpResponseRedirect
+        from django.urls import reverse
+        return HttpResponseRedirect(
+            reverse("admin:mentorship_mentorshipconfig_change", args=[obj.pk])
+        )
