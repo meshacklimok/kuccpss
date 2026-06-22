@@ -21,12 +21,19 @@
           <i class="fas fa-lock fa-2x text-danger"></i>
         </div>
         <h4 class="fw-bold mb-2">
-          {% if feature == 'premium_career_report' %}Premium Career Report
+          {% if feature == 'ai_chat_access' %}AI Chat Top-Up
+          {% elif feature == 'premium_career_report' %}Premium Career Report
           {% elif feature == 'advanced_analysis' %}Advanced Career Analysis
           {% elif feature == 'view_eligible_courses' %}Full Eligible Courses
           {% else %}Premium Feature{% endif %}
         </h4>
-        <p class="text-muted mb-3">One-time payment. Lifetime access to this feature.</p>
+        <p class="text-muted mb-3">
+          {% if feature == 'ai_chat_access' %}
+            One-time payment. Get more AI career guidance messages instantly.
+          {% else %}
+            One-time payment. Lifetime access to this feature.
+          {% endif %}
+        </p>
         <div class="d-flex gap-4 justify-content-center flex-wrap">
           <div class="text-center">
             <div class="fw-bold text-success fs-3">
@@ -35,8 +42,13 @@
             <div class="small text-muted">One-time</div>
           </div>
           <div class="text-center">
-            <div class="fw-bold text-success fs-4"><i class="fas fa-infinity"></i></div>
-            <div class="small text-muted">Lifetime access</div>
+            {% if feature == 'ai_chat_access' %}
+              <div class="fw-bold text-success fs-4"><i class="fas fa-comments"></i></div>
+              <div class="small text-muted">More messages</div>
+            {% else %}
+              <div class="fw-bold text-success fs-4"><i class="fas fa-infinity"></i></div>
+              <div class="small text-muted">Lifetime access</div>
+            {% endif %}
           </div>
           <div class="text-center">
             <div class="fw-bold text-success fs-4"><i class="fas fa-shield-alt"></i></div>
@@ -48,6 +60,15 @@
       <!-- What you get -->
       <div class="card p-4 mb-4">
         <h5 class="fw-bold mb-3"><i class="fas fa-star me-2 text-warning"></i>What You Get</h5>
+        {% if feature == 'ai_chat_access' %}
+        <ul class="list-unstyled mb-0">
+          <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>More AI chat messages with CareerNext AI</li>
+          <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Course recommendations based on your cluster points</li>
+          <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Cutoff point comparisons across institutions</li>
+          <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>HELB & HEF funding guidance</li>
+          <li><i class="fas fa-check-circle text-success me-2"></i>Career paths and upgrade route advice</li>
+        </ul>
+        {% else %}
         <ul class="list-unstyled mb-0">
           <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>All courses you qualify for across every university & college</li>
           <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Your cluster points vs cut-off thresholds at a glance</li>
@@ -55,6 +76,7 @@
           <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Download PDF reports of your eligible courses</li>
           <li><i class="fas fa-check-circle text-success me-2"></i>Priority access to new features</li>
         </ul>
+        {% endif %}
       </div>
 
       <!-- Payment form -->
@@ -244,7 +266,8 @@ function startPolling(paymentId) {
       if (data.status === "completed") {
         clearIntervals();
         showStep("success");
-        setTimeout(() => { window.location.href = NEXT_URL || "/accounts/dashboard/"; }, 2000);
+        const defaultNext = FEATURE === "ai_chat_access" ? "/career/chat/" : "/accounts/dashboard/";
+        setTimeout(() => { window.location.href = NEXT_URL || defaultNext; }, 2000);
       } else if (data.status === "failed") {
         clearIntervals();
         showStep("failed");
@@ -266,7 +289,8 @@ async function verifyPayment() {
     const d = await r.json();
     if (d.status === "completed") {
       showStep("success");
-      setTimeout(() => { window.location.href = NEXT_URL || "/accounts/dashboard/"; }, 2000);
+      const defaultNext = FEATURE === "ai_chat_access" ? "/career/chat/" : "/accounts/dashboard/";
+      setTimeout(() => { window.location.href = NEXT_URL || defaultNext; }, 2000);
     } else if (d.status === "failed") {
       showStep("failed");
     } else {
@@ -312,7 +336,8 @@ async function submitMpesaCode() {
 
     if (data.status === "completed") {
       showStep("success");
-      setTimeout(() => { window.location.href = NEXT_URL || "/accounts/dashboard/"; }, 2000);
+      const defaultNext = FEATURE === "ai_chat_access" ? "/career/chat/" : "/accounts/dashboard/";
+      setTimeout(() => { window.location.href = NEXT_URL || defaultNext; }, 2000);
     } else {
       errEl.textContent = data.message || "Transaction code not found. Please check and try again.";
       errEl.classList.remove("d-none");
