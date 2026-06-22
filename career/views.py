@@ -33,10 +33,13 @@ def parse_kcse_grades(post_data) -> Dict[str, str]:
     return kcse_grades
 
 
-def save_student_matches(matches: List[StudentCourseMatch]):
+def save_student_matches(matches: List[StudentCourseMatch], user=None):
     """
-    Bulk save all matches to DB
+    Bulk save all matches to DB, stamping the user on each record.
     """
+    if user and getattr(user, 'is_authenticated', False):
+        for m in matches:
+            m.user = user
     StudentCourseMatch.objects.bulk_create(matches, ignore_conflicts=True)
 
 
@@ -148,8 +151,8 @@ def kcse_input(request):
             messages.error(request, f"Unexpected error: {str(e)}")
             return redirect("career:kcse_input")
 
-        # Save matches to DB
-        save_student_matches(matches)
+        # Save matches to DB, binding to the logged-in user if present
+        save_student_matches(matches, user=request.user)
 
         # Store session info for filtering / sorting later
         request.session['kcse_grades'] = kcse_grades
@@ -171,6 +174,7 @@ def kcse_input(request):
 # =====================================================
 # 3. Detailed Course View
 # =====================================================
+@login_required
 def course_detail(request, match_id: int):
     """
     Shows detailed information about a course match
@@ -180,6 +184,10 @@ def course_detail(request, match_id: int):
         match = StudentCourseMatch.objects.get(id=match_id)
     except StudentCourseMatch.DoesNotExist:
         messages.error(request, "Course match not found.")
+        return redirect("career:kcse_input")
+
+    if match.user is not None and match.user != request.user:
+        messages.error(request, "You do not have permission to view this match.")
         return redirect("career:kcse_input")
 
     course_obj = get_course_from_match(match)
@@ -279,11 +287,12 @@ def course_detail(request, match_id: int):
 # =====================================================
 # 4. AI Recommendation History
 # =====================================================
+@login_required
 def ai_recommendations(request):
     """
     Shows historical AI guidance generated in the system
     """
-    ai_list = AIRecommendation.objects.all().order_by("-created_at")
+    ai_list = AIRecommendation.objects.filter(user=request.user).order_by("-created_at")
     paginator = Paginator(ai_list, 10)
     page_number = request.GET.get('page', 1)
     page_obj = paginator.get_page(page_number)
@@ -294,12 +303,13 @@ def ai_recommendations(request):
 # =====================================================
 # 5. Filter Matches by University / Admission Chance
 # =====================================================
+@login_required
 def filter_matches(request):
     """
     Filters existing StudentCourseMatches based on GET parameters
     """
     pathway = request.session.get('pathway', None)
-    matches = StudentCourseMatch.objects.select_related(
+    matches = StudentCourseMatch.objects.filter(user=request.user).select_related(
         'course', 'course__category',
         'tvet_course', 'tvet_course__category',
         'kmc_course', 'ttc_course', 'university',
@@ -432,8 +442,9 @@ def search_courses(request):
 import csv
 from django.http import HttpResponse
 
-def export_matches_csv(_request):
-    matches = StudentCourseMatch.objects.select_related(
+@login_required
+def export_matches_csv(request):
+    matches = StudentCourseMatch.objects.filter(user=request.user).select_related(
         'course', 'tvet_course', 'tvet_course__category',
         'kmc_course', 'ttc_course', 'university',
     )
@@ -858,7 +869,7 @@ def ajax_ai_insight(request):
     except Exception as e:
         import logging as _lg
         _lg.getLogger(__name__).error("AI insight error: %s", e)
-        return JsonResponse({"error": str(e)}, status=500)
+        return JsonResponse({"error": "AI error, please try again."}, status=500)
 
 
 # =====================================================

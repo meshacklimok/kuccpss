@@ -162,6 +162,10 @@ class TTCCourse(models.Model):
 # Student Course Match (AI Engine Output)
 # =====================================================
 class StudentCourseMatch(models.Model):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
+        null=True, blank=True, related_name='course_matches',
+    )
     course = models.ForeignKey(Course, on_delete=models.CASCADE, null=True, blank=True)
     tvet_course = models.ForeignKey(TVETCourse, on_delete=models.CASCADE, null=True, blank=True)
     kmc_course = models.ForeignKey(KMTCourse, on_delete=models.CASCADE, null=True, blank=True)
@@ -181,6 +185,10 @@ class StudentCourseMatch(models.Model):
 # AI Recommendations
 # =====================================================
 class AIRecommendation(models.Model):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
+        null=True, blank=True, related_name='ai_recommendations',
+    )
     advice_text = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
 

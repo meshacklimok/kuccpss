@@ -11,6 +11,7 @@ from django.utils import timezone
 from django.views import View
 from django.views.decorators.http import require_http_methods
 from django.http import HttpRequest, HttpResponse, JsonResponse
+from django.utils.http import url_has_allowed_host_and_scheme
 
 from .decorators import require_recent_auth
 from .forms import UserRegistrationForm, UserLoginForm
@@ -28,7 +29,9 @@ from .models import (
 def get_client_ip(request: HttpRequest) -> str:
     x_forwarded = request.META.get('HTTP_X_FORWARDED_FOR')
     if x_forwarded:
-        return x_forwarded.split(',')[0].strip()
+        # Trust the last IP — Render appends the real client IP at the end,
+        # preventing spoofing via a forged X-Forwarded-For header.
+        return x_forwarded.split(',')[-1].strip()
     return request.META.get('REMOTE_ADDR', '')
 
 
@@ -621,7 +624,12 @@ def change_password_view(request: HttpRequest) -> HttpResponse:
 @require_http_methods(["GET", "POST"])
 def re_auth_view(request: HttpRequest) -> HttpResponse:
     """Ask the user to confirm their password before a sensitive action."""
-    next_url = request.POST.get("next") or request.GET.get("next") or "/accounts/dashboard/"
+    raw_next = request.POST.get("next") or request.GET.get("next") or ""
+    next_url = (
+        raw_next
+        if url_has_allowed_host_and_scheme(raw_next, allowed_hosts={request.get_host()})
+        else "/accounts/dashboard/"
+    )
 
     if request.method == "POST":
         password = request.POST.get("password", "")

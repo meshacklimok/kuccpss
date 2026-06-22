@@ -122,16 +122,17 @@ def mpesa_webhook(request):
     IntaSend posts here when a payment completes or fails.
     Saves a Transaction and updates Payment.status automatically.
     """
-    # Optional: verify HMAC signature if secret is configured
     webhook_secret = getattr(settings, "INTASEND_WEBHOOK_SECRET", "")
-    if webhook_secret:
-        sig = request.headers.get("X-IntaSend-Signature", "")
-        expected = hmac.new(
-            webhook_secret.encode(), request.body, hashlib.sha256
-        ).hexdigest()
-        if not hmac.compare_digest(sig, expected):
-            logger.warning("Webhook signature mismatch")
-            return HttpResponse(status=400)
+    if not webhook_secret:
+        logger.error("INTASEND_WEBHOOK_SECRET is not set — rejecting webhook to prevent spoofed payments")
+        return HttpResponse(status=400)
+    sig = request.headers.get("X-IntaSend-Signature", "")
+    expected = hmac.new(
+        webhook_secret.encode(), request.body, hashlib.sha256
+    ).hexdigest()
+    if not hmac.compare_digest(sig, expected):
+        logger.warning("Webhook signature mismatch")
+        return HttpResponse(status=400)
 
     try:
         payload = json.loads(request.body)
