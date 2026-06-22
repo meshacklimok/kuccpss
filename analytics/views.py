@@ -55,9 +55,9 @@ def analytics_dashboard(request):
 
     # ── User metrics ──────────────────────────────────────────────────────────
     total_users   = User.objects.count()
-    new_users     = User.objects.filter(date_joined__date__gte=ago).count()
-    prev_new      = User.objects.filter(date_joined__date__gte=prev_ago, date_joined__date__lt=ago).count()
-    new_today     = User.objects.filter(date_joined__date=today).count()
+    new_users     = User.objects.filter(created_at__date__gte=ago).count()
+    prev_new      = User.objects.filter(created_at__date__gte=prev_ago, created_at__date__lt=ago).count()
+    new_today     = User.objects.filter(created_at__date=today).count()
     google_users  = User.objects.filter(is_google_user=True).count()
     verified      = User.objects.filter(is_verified=True).count()
     verified_pct  = round(verified / max(total_users, 1) * 100)
@@ -160,8 +160,8 @@ def analytics_dashboard(request):
 
     # ── Recent user sign-ups ──────────────────────────────────────────────────
     recent_users = list(
-        User.objects.order_by('-date_joined')[:20]
-        .values('email', 'full_name', 'is_google_user', 'is_verified', 'date_joined')
+        User.objects.order_by('-created_at')[:20]
+        .values('email', 'full_name', 'is_google_user', 'is_verified', 'created_at')
     )
 
     # ── Activity feed — merged last 60 events ─────────────────────────────────
@@ -184,8 +184,8 @@ def analytics_dashboard(request):
 
     # ── Time-series (charts) ──────────────────────────────────────────────────
     reg_series = _fill_series(
-        User.objects.filter(date_joined__date__gte=ago)
-        .annotate(day=TruncDate('date_joined')).values('day').annotate(n=Count('id')).order_by('day'),
+        User.objects.filter(created_at__date__gte=ago)
+        .annotate(day=TruncDate('created_at')).values('day').annotate(n=Count('id')).order_by('day'),
         labels,
     )
     search_series = _fill_series(
@@ -300,8 +300,8 @@ def export_csv(request):
 
     w.writerow(['=== USER REGISTRATIONS BY DAY ==='])
     w.writerow(['Date', 'New Registrations'])
-    for row in (User.objects.filter(date_joined__date__gte=ago)
-                .annotate(day=TruncDate('date_joined'))
+    for row in (User.objects.filter(created_at__date__gte=ago)
+                .annotate(day=TruncDate('created_at'))
                 .values('day').annotate(n=Count('id')).order_by('day')):
         w.writerow([row['day'], row['n']])
     w.writerow([])
