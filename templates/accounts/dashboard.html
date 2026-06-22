@@ -464,6 +464,12 @@ body.dark .ob-step:hover { background: var(--surface-2); }
         <a href="{% url 'clusterpoints:calculator' %}" class="btn-dash-action btn-dash-ghost">
           <i class="bi bi-calculator-fill"></i>Calculator
         </a>
+        {% if user.is_staff %}
+        <a href="{% url 'analytics:dashboard' %}" class="btn-dash-action"
+           style="background:linear-gradient(120deg,#7c3aed,#4f46e5);color:#fff;border:none;">
+          <i class="fas fa-chart-line"></i>Analytics
+        </a>
+        {% endif %}
       </div>
     </div>
     {% endif %}
