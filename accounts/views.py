@@ -247,11 +247,17 @@ def dashboard_view(request: HttpRequest) -> HttpResponse:
             'kmtc': 'fas fa-heartbeat', 'tvet': 'fas fa-tools',
             'ttc': 'fas fa-chalkboard-teacher', 'specialized': 'fas fa-flask',
         }
+        from django.db.models import Count as _Count
+        _inst_counts = dict(
+            Institution.objects
+            .values('institution_type_id')
+            .annotate(_c=_Count('id'))
+            .values_list('institution_type_id', '_c')
+        )
         inst_type_links = []
         for itype in InstitutionType.objects.all()[:6]:
-            _count = Institution.objects.filter(institution_type=itype).count()
             _icon_key = next((k for k in _INST_ICONS if k in itype.name.lower()), None)
-            inst_type_links.append({'label': itype.name, 'count': _count,
+            inst_type_links.append({'label': itype.name, 'count': _inst_counts.get(itype.pk, 0),
                 'url': reverse('institutions:institution_type_detail', kwargs={'type_slug': itype.slug}),
                 'icon': _INST_ICONS.get(_icon_key, 'fas fa-building')})
         now = tz.now()
@@ -322,48 +328,50 @@ def dashboard_view(request: HttpRequest) -> HttpResponse:
         )
         from courses.models import CourseOffering
         kcn_map = {}
+        cluster_pks_for_user = []
         for r in cluster_results:
             knum = r.cluster.kuccps_number if r.cluster else None
             if knum:
                 kcn_map[knum] = float(r.cluster_points)
-        eligible_set: set = set()
-        for offering in CourseOffering.objects.filter(
-            cutoff_points__isnull=False, course__cluster__isnull=False
-        ).select_related("course__cluster"):
-            if not offering.cutoff_points:
-                continue
-            knum = offering.course.cluster.kuccps_number if offering.course.cluster else None
-            if knum is None:
-                continue
-            user_pts = kcn_map.get(knum, 0.0)
-            cp = offering.cutoff_points
-            cutoff = cp.get("2024") or cp.get(
-                max((k for k in cp if cp[k] is not None), default=None)
-            )
-            if cutoff is not None and user_pts >= float(cutoff):
-                eligible_set.add(offering.course_id)
-        eligible_count = len(eligible_set)
+                cluster_pks_for_user.append(r.cluster.pk)
+        if kcn_map:
+            eligible_set: set = set()
+            for offering in CourseOffering.objects.filter(
+                cutoff_points__isnull=False,
+                course__cluster__pk__in=cluster_pks_for_user,
+            ).select_related("course__cluster"):
+                knum = offering.course.cluster.kuccps_number if offering.course.cluster else None
+                if knum is None:
+                    continue
+                user_pts = kcn_map.get(knum, 0.0)
+                cp = offering.cutoff_points
+                cutoff = cp.get("2024") or cp.get(
+                    max((k for k in cp if cp[k] is not None), default=None)
+                )
+                if cutoff is not None and user_pts >= float(cutoff):
+                    eligible_set.add(offering.course_id)
+            eligible_count = len(eligible_set)
 
     # ── Watchlist ─────────────────────────────────────────────────────────────
-    saved_count   = SavedCourse.objects.filter(user=user).count()
+    # Single query for IDs + count; separate query for display rows (needs select_related)
+    saved_course_ids = list(SavedCourse.objects.filter(user=user).values_list('course_id', flat=True))
+    saved_count = len(saved_course_ids)
     saved_courses = (
         SavedCourse.objects.filter(user=user)
         .select_related('course', 'course__course_type', 'course__cluster')
         .order_by('-saved_at')[:6]
     )
-    saved_course_ids = list(
-        SavedCourse.objects.filter(user=user).values_list('course_id', flat=True)
-    )
 
     # ── Shortlist & notifications ─────────────────────────────────────────────
-    shortlist_items = (
+    shortlist_items = list(
         CourseShortlist.objects.filter(user=user)
         .select_related('course', 'course__course_type', 'course__cluster')
-        [:4]
+        .order_by('rank', '-added_at')
     )
-    shortlist_count = CourseShortlist.objects.filter(user=user).count()
-    notifications = Notification.objects.filter(user=user, is_read=False).order_by("-created_at")[:5]
-    unread_count  = Notification.objects.filter(user=user, is_read=False).count()
+    shortlist_count = len(shortlist_items)
+    all_unread = list(Notification.objects.filter(user=user, is_read=False).order_by("-created_at"))
+    unread_count  = len(all_unread)
+    notifications = all_unread[:5]
 
     # ── Mentorship ────────────────────────────────────────────────────────────
     from mentorship.models import MentorProfile as _MentorProfile, MentorshipSession as _MSession
@@ -434,10 +442,11 @@ def dashboard_view(request: HttpRequest) -> HttpResponse:
                    'Nurs', 'Architect', 'Pharmacy', 'Education', 'Veterinary']:
             _q |= _Q(name__icontains=kw)
 
-        _qs = (
+        _qs = list(
             Course.objects
             .filter(_q, course_type__name='Degree', cluster__isnull=False)
             .select_related('cluster')
+            .prefetch_related('offerings')
             .distinct()[:20]
         )
         _seen = set()
@@ -446,7 +455,7 @@ def dashboard_view(request: HttpRequest) -> HttpResponse:
             if _knum in _seen:
                 continue
             _seen.add(_knum)
-            _off = CourseOffering.objects.filter(course=_c, cutoff_points__isnull=False).first()
+            _off = next((o for o in _c.offerings.all() if o.cutoff_points), None)
             _cutoff = None
             if _off and _off.cutoff_points:
                 _cutoff = (_off.cutoff_points.get('2024') or
@@ -508,6 +517,7 @@ def dashboard_view(request: HttpRequest) -> HttpResponse:
 
     # ── Institutions quick links ──────────────────────────────────────────────
     from django.urls import reverse
+    from django.db.models import Count as _Count
     _INST_ICONS = {
         'public university':   'fas fa-university',
         'private university':  'fas fa-school',
@@ -516,15 +526,21 @@ def dashboard_view(request: HttpRequest) -> HttpResponse:
         'ttc':                 'fas fa-chalkboard-teacher',
         'specialized':         'fas fa-flask',
     }
+    # Batch count in a single query instead of one COUNT per type
+    _inst_counts = dict(
+        Institution.objects
+        .values('institution_type_id')
+        .annotate(_c=_Count('id'))
+        .values_list('institution_type_id', '_c')
+    )
     inst_type_links = []
     for itype in InstitutionType.objects.all()[:6]:
-        _count = Institution.objects.filter(institution_type=itype).count()
         _icon_key = next((k for k in _INST_ICONS if k in itype.name.lower()), None)
         inst_type_links.append({
             'label': itype.name,
             'url':   reverse('institutions:institution_type_detail', kwargs={'type_slug': itype.slug}),
             'icon':  _INST_ICONS.get(_icon_key, 'fas fa-building'),
-            'count': _count,
+            'count': _inst_counts.get(itype.pk, 0),
         })
 
     from clusters.models import Cluster

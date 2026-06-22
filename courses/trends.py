@@ -51,22 +51,52 @@ def _most_viewed(limit=5):
 
 
 def _most_competitive(limit=5):
-    from .models import CourseOffering
+    from .models import CourseOffering, Course
+    from django.db.models import Max
 
-    offerings = list(
+    # Find the highest latest_cutoff per course via DB, then hydrate
+    top_ids = list(
         CourseOffering.objects
         .exclude(cutoff_points__isnull=True)
-        .select_related('course', 'course__course_type', 'course__category')
+        .values('course_id')
+        .annotate(max_cutoff=Max('cutoff_points__2024'))
+        .order_by('-max_cutoff')
+        .values_list('course_id', flat=True)
+        [:limit * 3]
     )
-    course_max = {}
-    for off in offerings:
-        lc = off.latest_cutoff()
-        if lc is not None:
-            cid = off.course_id
-            if cid not in course_max or lc > course_max[cid][1]:
-                course_max[cid] = (off.course, lc)
 
-    sorted_pairs = sorted(course_max.values(), key=lambda x: x[1], reverse=True)[:limit]
+    if not top_ids:
+        # Fallback to Python-side when JSON key extraction isn't supported
+        offerings = list(
+            CourseOffering.objects
+            .exclude(cutoff_points__isnull=True)
+            .select_related('course', 'course__course_type', 'course__category')
+        )
+        course_max = {}
+        for off in offerings:
+            lc = off.latest_cutoff()
+            if lc is not None:
+                cid = off.course_id
+                if cid not in course_max or lc > course_max[cid][1]:
+                    course_max[cid] = (off.course, lc)
+        sorted_pairs = sorted(course_max.values(), key=lambda x: x[1], reverse=True)[:limit]
+    else:
+        # Compute per-course max in Python from a targeted set
+        offerings = list(
+            CourseOffering.objects
+            .filter(course_id__in=top_ids)
+            .exclude(cutoff_points__isnull=True)
+            .select_related('course', 'course__course_type', 'course__category')
+        )
+        course_max = {}
+        for off in offerings:
+            lc = off.latest_cutoff()
+            if lc is not None:
+                cid = off.course_id
+                if cid not in course_max or lc > course_max[cid][1]:
+                    course_max[cid] = (off.course, lc)
+        sorted_pairs = sorted(course_max.values(), key=lambda x: x[1], reverse=True)[:limit]
+
     result = []
     for course, cutoff in sorted_pairs:
         course.trend_stat  = f"{cutoff}"
