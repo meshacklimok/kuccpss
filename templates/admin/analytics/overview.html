@@ -1,0 +1,215 @@
+{% extends "admin/base_site.html" %}
+{% block title %}Analytics Overview | Admin{% endblock %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+  <a href="{% url 'admin:index' %}">Home</a>
+  &rsaquo; Analytics Overview
+</div>
+{% endblock %}
+
+{% block content %}
+<style>
+  .ao-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:12px; margin-bottom:24px; }
+  .ao-card { background:#fff; border:1px solid #e2e8f0; border-radius:8px; padding:16px 18px; }
+  .ao-card .label { font-size:.72rem; font-weight:600; text-transform:uppercase; color:#64748b; letter-spacing:.04em; }
+  .ao-card .value { font-size:1.9rem; font-weight:800; color:#1e3a8a; line-height:1.1; margin-top:4px; }
+  .ao-card .sub   { font-size:.75rem; color:#64748b; margin-top:2px; }
+
+  .ao-panel { background:#fff; border:1px solid #e2e8f0; border-radius:10px; margin-bottom:20px; overflow:hidden; }
+  .ao-panel-head {
+    display:flex; align-items:center; justify-content:space-between;
+    padding:14px 18px; border-bottom:1px solid #e2e8f0;
+    background:#f8fafc;
+  }
+  .ao-panel-head h2 { margin:0; font-size:1rem; font-weight:700; color:#0f172a; display:flex; align-items:center; gap:8px; }
+  .ao-panel-body { padding:18px; }
+
+  .ao-badge { display:inline-flex; align-items:center; gap:5px; font-size:.72rem; font-weight:700;
+    padding:3px 10px; border-radius:20px; }
+  .ao-badge.ok  { background:#dcfce7; color:#15803d; }
+  .ao-badge.off { background:#fef2f2; color:#dc2626; }
+
+  .ao-btn {
+    display:inline-flex; align-items:center; gap:6px;
+    padding:8px 16px; border-radius:7px; font-size:.82rem; font-weight:700;
+    text-decoration:none; transition:opacity .15s;
+  }
+  .ao-btn:hover { opacity:.85; }
+  .ao-btn.primary { background:#1e3a8a; color:#fff; }
+  .ao-btn.outline { background:#fff; color:#1e3a8a; border:1.5px solid #1e3a8a; }
+  .ao-btn.green   { background:#16a34a; color:#fff; }
+
+  .ao-embed { width:100%; height:600px; border:none; border-radius:6px; display:block; }
+
+  .ao-setup {
+    background:#eff6ff; border:1.5px dashed #93c5fd; border-radius:8px;
+    padding:20px 24px; color:#1e40af;
+  }
+  .ao-setup code { background:#dbeafe; border-radius:4px; padding:1px 6px; font-size:.85em; }
+  .ao-setup ol { margin:10px 0 0 18px; }
+  .ao-setup li { margin-bottom:6px; font-size:.88rem; }
+
+  .ao-links { display:flex; gap:10px; flex-wrap:wrap; margin-top:10px; }
+
+  .ao-section-label {
+    font-size:.7rem; font-weight:700; text-transform:uppercase;
+    letter-spacing:.06em; color:#64748b; margin-bottom:8px;
+  }
+
+  .ao-divider { border:none; border-top:1px solid #e2e8f0; margin:16px 0; }
+</style>
+
+<h1 style="font-size:1.4rem;font-weight:800;color:#1e3a8a;margin-bottom:6px;">Analytics Overview</h1>
+<p style="color:#64748b;font-size:.85rem;margin:0 0 20px;">
+  Live stats from local database &amp; links to your external monitoring services.
+  &nbsp;·&nbsp;
+  <a href="/analytics/" target="_blank" style="color:#2563eb;font-weight:600;">Open full dashboard ↗</a>
+</p>
+
+<!-- ── Quick stats ─────────────────────────────────────────────────── -->
+<div class="ao-grid">
+  <div class="ao-card">
+    <div class="label">Total Users</div>
+    <div class="value">{{ stats.total_users }}</div>
+  </div>
+  <div class="ao-card">
+    <div class="label">New Today</div>
+    <div class="value">{{ stats.new_today }}</div>
+    <div class="sub">{{ stats.new_this_week }} this week</div>
+  </div>
+  <div class="ao-card">
+    <div class="label">Searches Today</div>
+    <div class="value">{{ stats.searches_today }}</div>
+  </div>
+  <div class="ao-card">
+    <div class="label">Page Views Today</div>
+    <div class="value">{{ stats.views_today }}</div>
+  </div>
+  <div class="ao-card">
+    <div class="label">Revenue Today</div>
+    <div class="value">KES {{ stats.revenue_today }}</div>
+    <div class="sub">KES {{ stats.revenue_week }} this week</div>
+  </div>
+</div>
+
+<!-- ── PostHog ─────────────────────────────────────────────────────── -->
+<div class="ao-panel">
+  <div class="ao-panel-head">
+    <h2>
+      <svg width="18" height="18" viewBox="0 0 32 32" fill="none"><circle cx="16" cy="16" r="16" fill="#f9bd2b"/><path d="M8 20l8-12 8 12" stroke="#1d0b00" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      PostHog
+    </h2>
+    {% if posthog_configured %}
+      <span class="ao-badge ok">&#10003; Configured</span>
+    {% else %}
+      <span class="ao-badge off">Not configured — set POSTHOG_API_KEY</span>
+    {% endif %}
+  </div>
+  <div class="ao-panel-body">
+    {% if posthog_embed_url %}
+      <div class="ao-section-label">Embedded Dashboard</div>
+      <iframe class="ao-embed" src="{{ posthog_embed_url }}" allowfullscreen></iframe>
+      <hr class="ao-divider">
+    {% else %}
+      <div class="ao-setup">
+        <strong>To embed a PostHog dashboard here:</strong>
+        <ol>
+          <li>Go to <strong>{{ posthog_app_url }}</strong> → Dashboards → open any dashboard</li>
+          <li>Click <strong>Share</strong> &rarr; enable <strong>Public sharing</strong></li>
+          <li>Copy the <em>iframe src</em> URL</li>
+          <li>Set env var: <code>POSTHOG_EMBED_URL=https://eu.posthog.com/embedded/...</code></li>
+          <li>Redeploy — the iframe will appear here</li>
+        </ol>
+      </div>
+      <hr class="ao-divider">
+    {% endif %}
+    <div class="ao-links">
+      <a href="{{ posthog_app_url }}" target="_blank" class="ao-btn primary">Open PostHog ↗</a>
+      <a href="{{ posthog_app_url }}/project/events" target="_blank" class="ao-btn outline">Live Events ↗</a>
+      <a href="{{ posthog_app_url }}/project/persons" target="_blank" class="ao-btn outline">Users ↗</a>
+      <a href="{{ posthog_app_url }}/project/insights" target="_blank" class="ao-btn outline">Insights ↗</a>
+    </div>
+  </div>
+</div>
+
+<!-- ── Sentry ──────────────────────────────────────────────────────── -->
+<div class="ao-panel">
+  <div class="ao-panel-head">
+    <h2>
+      <svg width="18" height="18" viewBox="0 0 200 200" fill="none"><circle cx="100" cy="100" r="100" fill="#362d59"/><path d="M113 49l-55 95h26l29-50 29 50h26L113 49z" fill="#fff"/></svg>
+      Sentry
+    </h2>
+    {% if sentry_configured %}
+      <span class="ao-badge ok">&#10003; Configured</span>
+    {% else %}
+      <span class="ao-badge off">Not configured — set SENTRY_DSN</span>
+    {% endif %}
+  </div>
+  <div class="ao-panel-body">
+    {% if sentry_configured %}
+      <p style="font-size:.85rem;color:#64748b;margin:0 0 12px;">
+        Sentry does not support iframe embedding. Use the buttons below to open your dashboards directly.
+        Your DSN is active — errors from this app are being captured.
+      </p>
+    {% else %}
+      <div class="ao-setup">
+        <strong>To configure Sentry error monitoring:</strong>
+        <ol>
+          <li>Go to <a href="https://sentry.io" target="_blank" style="color:#1e40af;">sentry.io</a> → create a Django project</li>
+          <li>Copy the <strong>DSN</strong> from Project Settings → SDK Setup</li>
+          <li>Set env var: <code>SENTRY_DSN=https://xxx@oXXX.ingest.sentry.io/XXXXXX</code></li>
+          <li>Redeploy — errors will start appearing in Sentry</li>
+        </ol>
+      </div>
+    {% endif %}
+    <div class="ao-links" style="margin-top:{% if sentry_configured %}0{% else %}12px{% endif %}">
+      <a href="https://sentry.io/issues/" target="_blank" class="ao-btn primary">Issues ↗</a>
+      <a href="https://sentry.io/performance/" target="_blank" class="ao-btn outline">Performance ↗</a>
+      <a href="https://sentry.io/replays/" target="_blank" class="ao-btn outline">Replays ↗</a>
+      <a href="https://sentry.io/alerts/" target="_blank" class="ao-btn outline">Alerts ↗</a>
+    </div>
+  </div>
+</div>
+
+<!-- ── Google Analytics ────────────────────────────────────────────── -->
+<div class="ao-panel">
+  <div class="ao-panel-head">
+    <h2>
+      <svg width="18" height="18" viewBox="0 0 192 192" fill="none"><rect width="192" height="192" rx="40" fill="#f9ab00"/><rect x="28" y="100" width="40" height="64" rx="8" fill="#e37400"/><rect x="76" y="56" width="40" height="108" rx="8" fill="#e37400"/><rect x="124" y="28" width="40" height="136" rx="8" fill="white"/></svg>
+      Google Analytics
+    </h2>
+    {% if ga_configured %}
+      <span class="ao-badge ok">&#10003; {{ ga_measurement_id }}</span>
+    {% else %}
+      <span class="ao-badge off">Not configured — set GA_MEASUREMENT_ID</span>
+    {% endif %}
+  </div>
+  <div class="ao-panel-body">
+    <div class="ao-links">
+      <a href="https://analytics.google.com/analytics/web/#/p542489994/reports/" target="_blank" class="ao-btn primary">Open Google Analytics ↗</a>
+      <a href="https://analytics.google.com/analytics/web/#/p542489994/reports/realtime-overview" target="_blank" class="ao-btn outline">Real-time ↗</a>
+      <a href="https://analytics.google.com/analytics/web/#/p542489994/reports/lifecycle-acquisition-overview" target="_blank" class="ao-btn outline">Acquisition ↗</a>
+      {% if ga_measurement_id %}
+        <span style="font-size:.8rem;color:#64748b;align-self:center;">Property: {{ ga_measurement_id }}</span>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<!-- ── Footer links ────────────────────────────────────────────────── -->
+<div style="margin-top:10px;display:flex;gap:12px;flex-wrap:wrap;">
+  <a href="/analytics/" target="_blank" class="ao-btn green">Full Analytics Dashboard ↗</a>
+  <a href="/analytics/export/" class="ao-btn outline">Export CSV</a>
+  <a href="{% url 'admin:analytics_searchlog_changelist' %}" class="ao-btn outline">Search Logs</a>
+  <a href="{% url 'admin:analytics_viewlog_changelist' %}" class="ao-btn outline">View Logs</a>
+</div>
+
+<!-- ── Mentor & Affiliate ──────────────────────────────────────────────────── -->
+<h3 style="font-size:.9rem;font-weight:700;margin:20px 0 10px;color:#0f172a;">People Analytics</h3>
+<div style="display:flex;gap:10px;flex-wrap:wrap;">
+  <a href="/analytics/mentors/" target="_blank" class="ao-btn primary">Mentor Analytics ↗</a>
+  <a href="/analytics/affiliates/" target="_blank" class="ao-btn outline">Affiliate Analytics ↗</a>
+</div>
+
+{% endblock %}

@@ -48,10 +48,8 @@ def article_list(request):
     if tag:
         articles = articles.filter(tags__icontains=tag)
 
-    # Featured article (pinned) — show above grid, not in paginated list
+    # Featured article (pinned) — shown in hero above the grid; also kept in the grid so All shows everything
     featured = articles.filter(featured=True).first()
-    if featured:
-        articles = articles.exclude(pk=featured.pk)
 
     # Collect all unique tags from published articles for the filter cloud
     all_tags = set()

@@ -75,11 +75,21 @@ INSTALLED_APPS = [
     'predictor',
     'analytics',
     'mentorship',
+    'cloudinary',
+    'cloudinary_storage',
+    'django.contrib.sitemaps',
 ]
 
-MEDIA_URL = '/media/'
-import os
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+# ── Media storage ─────────────────────────────────────────────────────────────
+# In production CLOUDINARY_URL is set as an env var (cloudinary://key:secret@cloud).
+# Locally, files are served from MEDIA_ROOT as usual.
+CLOUDINARY_URL = os.environ.get('CLOUDINARY_URL', '')
+if CLOUDINARY_URL:
+    DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+    MEDIA_URL = 'https://res.cloudinary.com/'
+else:
+    MEDIA_URL = '/media/'
+    MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # Email — uses Resend REST API in production (avoids SMTP port blocks on Render free tier),
 # falls back to console backend in dev so you see emails in the terminal
@@ -97,6 +107,10 @@ TIME_ZONE = 'Africa/Nairobi'
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
+    'django.middleware.gzip.GZipMiddleware',
+    'kuccpss.middleware.GracefulErrorMiddleware',
+    'kuccpss.middleware.HeavyEndpointRateLimitMiddleware',
+    'kuccpss.middleware.SlowRequestLogMiddleware',
     'kuccpss.middleware.DisableHttp3Middleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -107,6 +121,13 @@ MIDDLEWARE = [
     'allauth.account.middleware.AccountMiddleware',
     'kuccpss.middleware.ReferralMiddleware',
 ]
+
+# ── Data versioning — update each KUCCPS cycle ───────────────────────────────
+# These constants appear in templates and results pages so students always know
+# which cycle's data they are viewing.
+DATA_VERSION    = os.environ.get('DATA_VERSION', '2024')
+DATA_CYCLE      = os.environ.get('DATA_CYCLE', '2025/2026')
+DATA_UPDATED    = os.environ.get('DATA_UPDATED', 'March 2025')
 
 ROOT_URLCONF = 'kuccpss.urls'
 
@@ -124,6 +145,7 @@ TEMPLATES = [
                 'analytics.context_processors.posthog_keys',
                 'analytics.context_processors.sentry_context',
                 'analytics.context_processors.ga_context',
+                'analytics.context_processors.data_version',
             ],
         },
     },
@@ -143,8 +165,36 @@ DATABASES = {
         'PASSWORD': os.environ.get('DB_PASSWORD', ''),
         'HOST': os.environ.get('DB_HOST', 'localhost'),
         'PORT': os.environ.get('DB_PORT', '5432'),
+        'CONN_MAX_AGE': 60,
+        'OPTIONS': {
+            'connect_timeout': 10,
+        },
     }
 }
+
+# ── Caching ───────────────────────────────────────────────────────────────────
+# Local-memory by default (zero dependencies, works on Render free tier).
+# Automatically upgrades to Redis when REDIS_URL env var is set.
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'careernext-v1',
+        'TIMEOUT': 300,
+        'OPTIONS': {'MAX_ENTRIES': 3000},
+    }
+}
+_REDIS_URL = os.environ.get('REDIS_URL')
+if _REDIS_URL:
+    CACHES['default'] = {
+        'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+        'LOCATION': _REDIS_URL,
+        'TIMEOUT': 300,
+        'OPTIONS': {'max_connections': 20},
+        'KEY_PREFIX': 'cn',
+    }
+
+# Serve sessions from cache first, fall back to DB — avoids a DB hit on every request
+SESSION_ENGINE = 'django.contrib.sessions.backends.cached_db'
 
 
 # IntaSend M-Pesa
@@ -235,8 +285,10 @@ GOOGLE_OAUTH_AVAILABLE = bool(_google_client_id)
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
 
 # PostHog analytics — JS key is public; Python key stays server-side
-POSTHOG_API_KEY = os.environ.get("POSTHOG_API_KEY", "")
-POSTHOG_HOST    = os.environ.get("POSTHOG_HOST", "https://eu.i.posthog.com")
+POSTHOG_API_KEY  = os.environ.get("POSTHOG_API_KEY", "")
+POSTHOG_HOST     = os.environ.get("POSTHOG_HOST", "https://eu.i.posthog.com")
+# Optional: paste the iframe src from PostHog → Dashboard → Share → Embed
+POSTHOG_EMBED_URL = os.environ.get("POSTHOG_EMBED_URL", "")
 
 # Google Analytics 4 — set GA_MEASUREMENT_ID env var (e.g. G-XXXXXXXXXX)
 GA_MEASUREMENT_ID = os.environ.get("GA_MEASUREMENT_ID", "")
@@ -285,25 +337,40 @@ if not DEBUG:
     SESSION_COOKIE_HTTPONLY = True
     CSRF_COOKIE_HTTPONLY = True
 
-# Log Django errors (500s) to stdout so Render captures them
+# Structured logging — ERROR+ always goes to stdout (Render captures it).
+# In DEBUG mode lower to WARNING so slow requests and app warnings are visible.
+_LOG_LEVEL = 'WARNING' if DEBUG else 'ERROR'
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '[{levelname}] {asctime} {name} — {message}',
+            'style': '{',
+        },
+    },
     'handlers': {
         'console': {
             'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
         },
     },
     'loggers': {
         'django': {
             'handlers': ['console'],
-            'level': 'ERROR',
+            'level': _LOG_LEVEL,
         },
         'django.request': {
             'handlers': ['console'],
-            'level': 'ERROR',
+            'level': _LOG_LEVEL,
             'propagate': False,
         },
+        # App-level loggers — WARNING+ always captured
+        'kuccpss': {'handlers': ['console'], 'level': 'WARNING', 'propagate': False},
+        'clusterpoints': {'handlers': ['console'], 'level': 'WARNING', 'propagate': False},
+        'career': {'handlers': ['console'], 'level': 'WARNING', 'propagate': False},
+        'courses': {'handlers': ['console'], 'level': 'WARNING', 'propagate': False},
+        'payments': {'handlers': ['console'], 'level': 'WARNING', 'propagate': False},
     },
 }
 

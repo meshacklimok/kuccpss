@@ -1,0 +1,12 @@
+[build]
+builder = "nixpacks"
+buildCommand = "pip install -r requirements.txt && python manage.py collectstatic --noinput"
+
+[deploy]
+startCommand = "python manage.py migrate --noinput && gunicorn kuccpss.wsgi:application --config gunicorn.conf.py"
+restartPolicyType = "on_failure"
+restartPolicyMaxRetries = 3
+
+[deploy.healthcheck]
+path = "/"
+timeout = 30

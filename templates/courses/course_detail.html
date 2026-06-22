@@ -1,6 +1,54 @@
 {% extends 'base.html' %}
 {% load custom_filters %}
-{% block title %}{{ course.name }} — CareerNext{% endblock %}
+{% block title %}{{ course.name }} | {{ course.course_type.name }} in Kenya — CareerNext{% endblock %}
+
+{% block meta %}
+<meta name="description" content="{{ course.description|default:'Explore '|add:course.name|add:' offered at Kenyan universities and colleges. Check minimum cluster points, subject requirements and institutions via KUCCPS.' |truncatechars:155 }}">
+{% endblock %}
+
+{% block canonical %}<link rel="canonical" href="{{ request.build_absolute_uri }}">{% endblock %}
+
+{% block og_meta %}
+<meta property="og:title" content="{{ course.name }} — {{ course.course_type.name }} in Kenya | CareerNext">
+<meta property="og:description" content="Explore {{ course.name }} offered in Kenya. Minimum cluster points: {{ course.cutoff_points|default:'check eligibility' }}. Find institutions via KUCCPS.">
+{% endblock %}
+
+{% block extra_schema %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Course",
+  "name": "{{ course.name|escapejs }}",
+  "description": "{{ course.description|default:''|escapejs|truncatechars:300 }}",
+  "provider": {
+    "@type": "Organization",
+    "name": "CareerNext",
+    "url": "https://careernext.co.ke"
+  },
+  "educationalLevel": "{{ course.course_type.name|escapejs }}",
+  "inLanguage": "en",
+  "availableChannel": {
+    "@type": "ServiceChannel",
+    "serviceUrl": "{{ request.build_absolute_uri }}"
+  }{% if course.cutoff_points %},
+  "educationalCredentialAwarded": "{{ course.course_type.name|escapejs }}",
+  "coursePrerequisites": "Minimum KUCCPS cluster points: {{ course.cutoff_points }}"{% endif %}
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {"@type": "ListItem", "position": 1, "name": "Courses", "item": "https://careernext.co.ke/courses/"},
+    {"@type": "ListItem", "position": 2, "name": "{{ course.course_type.name|escapejs }}", "item": "https://careernext.co.ke/courses/{{ course.course_type.slug }}/"}{% if course.category %},
+    {"@type": "ListItem", "position": 3, "name": "{{ course.category.name|escapejs }}", "item": "https://careernext.co.ke/courses/{{ course.course_type.slug }}/{{ course.category.slug }}/"},
+    {"@type": "ListItem", "position": 4, "name": "{{ course.name|escapejs }}", "item": "{{ request.build_absolute_uri }}"}{% else %},
+    {"@type": "ListItem", "position": 3, "name": "{{ course.name|escapejs }}", "item": "{{ request.build_absolute_uri }}"}{% endif %}
+  ]
+}
+</script>
+{% endblock %}
 
 {% block extra_head %}
 <style>

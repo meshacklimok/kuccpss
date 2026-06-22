@@ -3,6 +3,7 @@ import json
 from datetime import date, timedelta
 from decimal import Decimal
 
+from django.conf import settings
 from django.contrib.auth.decorators import user_passes_test
 from django.db.models import Avg, Count, Q, Sum
 from django.db.models.functions import TruncDate
@@ -269,6 +270,12 @@ def analytics_dashboard(request):
         'chart_pw_data':   json.dumps([p['n'] for p in pathway_dist]),
         'chart_grade_labels': json.dumps([g['mean_grade'].upper() for g in top_grades]),
         'chart_grade_data':   json.dumps([g['n'] for g in top_grades]),
+        # External monitoring services
+        'posthog_configured': bool(getattr(settings, 'POSTHOG_API_KEY', '')),
+        'posthog_app_url':    ('https://eu.posthog.com' if 'eu.' in getattr(settings, 'POSTHOG_HOST', 'eu') else 'https://app.posthog.com'),
+        'sentry_configured':  bool(getattr(settings, '_SENTRY_DSN', '')),
+        'ga_configured':      bool(getattr(settings, 'GA_MEASUREMENT_ID', '')),
+        'ga_measurement_id':  getattr(settings, 'GA_MEASUREMENT_ID', ''),
     }
     return render(request, 'analytics/dashboard.html', context)
 
@@ -329,6 +336,199 @@ def export_csv(request):
         w.writerow([row['feature'], row['n'], row['total']])
 
     return response
+
+
+@staff_only
+def mentor_analytics(request):
+    from mentorship.models import MentorProfile, MentorshipSession
+    from django.db.models import Max
+
+    sort = request.GET.get('sort', 'earnings')
+    sort_map = {
+        'earnings': '-total_earned',
+        'sessions': '-completed_count',
+        'rating':   '-average_rating',
+        'balance':  '-wallet_balance',
+    }
+    order_by = sort_map.get(sort, '-total_earned')
+
+    # ── KPIs ──────────────────────────────────────────────────────────────────
+    total_mentors       = MentorProfile.objects.count()
+    approved            = MentorProfile.objects.filter(is_approved=True, is_active=True).count()
+    pending             = MentorProfile.objects.filter(is_approved=False, is_rejected=False).count()
+    rejected            = MentorProfile.objects.filter(is_rejected=True).count()
+    inactive            = MentorProfile.objects.filter(is_active=False).count()
+    total_sessions      = MentorshipSession.objects.count()
+    completed_sessions  = MentorshipSession.objects.filter(status='completed').count()
+    pending_sessions    = MentorshipSession.objects.filter(status='confirmed').count()
+    cancelled_sessions  = MentorshipSession.objects.filter(status='cancelled').count()
+    total_revenue       = MentorshipSession.objects.filter(status='completed').aggregate(
+        t=Sum('amount'))['t'] or 0
+    total_mentor_payout = MentorshipSession.objects.filter(status='completed').aggregate(
+        t=Sum('mentor_payout'))['t'] or 0
+    total_wallet_balance = MentorProfile.objects.aggregate(t=Sum('wallet_balance'))['t'] or 0
+
+    # ── Mentor comparison table ───────────────────────────────────────────────
+    now = timezone.now()
+    mentor_qs = (
+        MentorProfile.objects
+        .select_related('user', 'course', 'institution')
+        .annotate(
+            completed_count=Count('sessions', filter=Q(sessions__status='completed')),
+            pending_count=Count('sessions', filter=Q(sessions__status='confirmed')),
+            last_session_date=Max('sessions__created_at'),
+        )
+        .order_by(order_by)
+    )
+    mentors = []
+    for m in mentor_qs:
+        age_days = (now - m.created_at).days
+        unserious = (m.completed_count == 0 and age_days > 14)
+        mentors.append({'profile': m, 'unserious': unserious})
+
+    # ── Recent sessions ───────────────────────────────────────────────────────
+    recent_sessions = list(
+        MentorshipSession.objects
+        .select_related('mentor__user', 'mentee', 'course_interest')
+        .order_by('-created_at')[:30]
+    )
+
+    # ── Monthly chart (last 6 months) ─────────────────────────────────────────
+    from django.db.models.functions import TruncMonth
+    six_months_ago = now - timedelta(days=180)
+    monthly_qs = (
+        MentorshipSession.objects
+        .filter(status='completed', created_at__gte=six_months_ago)
+        .annotate(month=TruncMonth('created_at'))
+        .values('month')
+        .annotate(count=Count('id'), payout=Sum('mentor_payout'))
+        .order_by('month')
+    )
+    monthly_labels  = [row['month'].strftime('%b %Y') for row in monthly_qs]
+    monthly_counts  = [row['count'] for row in monthly_qs]
+    monthly_payouts = [float(row['payout'] or 0) for row in monthly_qs]
+
+    # ── Rating distribution ───────────────────────────────────────────────────
+    rating_dist = {}
+    for star in range(1, 6):
+        rating_dist[star] = MentorshipSession.objects.filter(rating=star).count()
+
+    context = {
+        'sort': sort,
+        # KPIs
+        'total_mentors': total_mentors,
+        'approved': approved,
+        'pending': pending,
+        'rejected': rejected,
+        'inactive': inactive,
+        'total_sessions': total_sessions,
+        'completed_sessions': completed_sessions,
+        'pending_sessions': pending_sessions,
+        'cancelled_sessions': cancelled_sessions,
+        'total_revenue': total_revenue,
+        'total_mentor_payout': total_mentor_payout,
+        'total_wallet_balance': total_wallet_balance,
+        # Tables
+        'mentors': mentors,
+        'recent_sessions': recent_sessions,
+        # Chart JSON
+        'chart_monthly_labels':  json.dumps(monthly_labels),
+        'chart_monthly_counts':  json.dumps(monthly_counts),
+        'chart_monthly_payouts': json.dumps(monthly_payouts),
+        'chart_rating_labels':   json.dumps(['1 Star', '2 Stars', '3 Stars', '4 Stars', '5 Stars']),
+        'chart_rating_data':     json.dumps([rating_dist[s] for s in range(1, 6)]),
+    }
+    return render(request, 'analytics/mentor_analytics.html', context)
+
+
+@staff_only
+def affiliate_analytics(request):
+    from accounts.models import AffiliateProfile, AffiliateCommission
+    from django.db.models.functions import TruncMonth
+
+    sort = request.GET.get('sort', 'earnings')
+    sort_map = {
+        'earnings':  '-total_earned',
+        'balance':   '-wallet_balance',
+        'referrals': '-referral_count',
+        'rate':      '-commission_rate',
+    }
+    order_by = sort_map.get(sort, '-total_earned')
+
+    # ── KPIs ──────────────────────────────────────────────────────────────────
+    total_affiliates     = AffiliateProfile.objects.count()
+    active_affiliates    = AffiliateProfile.objects.filter(is_active=True).count()
+    total_commissions    = AffiliateCommission.objects.count()
+    paid_commissions     = AffiliateCommission.objects.filter(status='paid_out').count()
+    pending_commissions  = AffiliateCommission.objects.filter(status='pending').count()
+    total_commission_amount = AffiliateCommission.objects.aggregate(
+        t=Sum('amount'))['t'] or Decimal('0')
+    total_paid_out       = AffiliateCommission.objects.filter(status='paid_out').aggregate(
+        t=Sum('amount'))['t'] or Decimal('0')
+    total_wallet_balance = AffiliateProfile.objects.aggregate(
+        t=Sum('wallet_balance'))['t'] or Decimal('0')
+
+    # ── Affiliate comparison table ────────────────────────────────────────────
+    now = timezone.now()
+    affiliate_qs = (
+        AffiliateProfile.objects
+        .select_related('user', 'approved_by')
+        .annotate(
+            referral_count=Count('commissions'),
+            paid_count=Count('commissions', filter=Q(commissions__status='paid_out')),
+        )
+        .order_by(order_by)
+    )
+    affiliates = []
+    for a in affiliate_qs:
+        age_days = (now - a.created_at).days
+        unserious = (a.is_active and a.referral_count == 0 and age_days > 30)
+        affiliates.append({'profile': a, 'unserious': unserious})
+
+    # ── Recent commissions ────────────────────────────────────────────────────
+    recent_commissions = list(
+        AffiliateCommission.objects
+        .select_related('affiliate__user', 'referred_user')
+        .order_by('-created_at')[:30]
+    )
+
+    # ── Monthly chart (last 6 months) ─────────────────────────────────────────
+    six_months_ago = now - timedelta(days=180)
+    monthly_qs = (
+        AffiliateCommission.objects
+        .filter(status='paid_out', created_at__gte=six_months_ago)
+        .annotate(month=TruncMonth('created_at'))
+        .values('month')
+        .annotate(count=Count('id'), total=Sum('amount'))
+        .order_by('month')
+    )
+    monthly_labels = [row['month'].strftime('%b %Y') for row in monthly_qs]
+    monthly_counts = [row['count'] for row in monthly_qs]
+    monthly_totals = [float(row['total'] or 0) for row in monthly_qs]
+
+    context = {
+        'sort': sort,
+        # KPIs
+        'total_affiliates': total_affiliates,
+        'active_affiliates': active_affiliates,
+        'inactive_affiliates': total_affiliates - active_affiliates,
+        'total_commissions': total_commissions,
+        'paid_commissions': paid_commissions,
+        'pending_commissions': pending_commissions,
+        'total_commission_amount': total_commission_amount,
+        'total_paid_out': total_paid_out,
+        'total_wallet_balance': total_wallet_balance,
+        # Tables
+        'affiliates': affiliates,
+        'recent_commissions': recent_commissions,
+        # Chart JSON
+        'chart_monthly_labels': json.dumps(monthly_labels),
+        'chart_monthly_counts': json.dumps(monthly_counts),
+        'chart_monthly_totals': json.dumps(monthly_totals),
+        'chart_status_labels':  json.dumps(['Active', 'Inactive']),
+        'chart_status_data':    json.dumps([active_affiliates, total_affiliates - active_affiliates]),
+    }
+    return render(request, 'analytics/affiliate_analytics.html', context)
 
 
 @staff_only

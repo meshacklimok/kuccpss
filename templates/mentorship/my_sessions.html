@@ -37,7 +37,7 @@
               <div class="d-flex align-items-start gap-3 mb-3">
                 {% if session.mentor.photo %}
                   <img src="{{ session.mentor.photo.url }}" class="rounded-circle object-fit-cover flex-shrink-0"
-                       width="50" height="50" alt="{{ session.mentor.display_name }}">
+                       width="50" height="50" alt="{{ session.mentor.display_name }}" loading="lazy">
                 {% else %}
                   <div class="rounded-circle bg-primary bg-opacity-10 d-flex align-items-center justify-content-center flex-shrink-0"
                        style="width:50px;height:50px;">

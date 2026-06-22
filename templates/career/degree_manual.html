@@ -155,17 +155,21 @@
     <!-- header -->
     <div class="dm-head">
         <h2>
-            <i class="bi bi-123 me-2" style="color:#1d4ed8;"></i>
-            {% if from_calculate %}Review Your Cluster Points{% else %}Enter Your Cluster Points{% endif %}
+            <i class="bi bi-{% if from_ocr %}stars{% elif from_calculate %}calculator-fill{% else %}123{% endif %} me-2" style="color:#1d4ed8;"></i>
+            {% if from_ocr %}Confirm Scanned Cluster Points{% elif from_calculate %}Review Your Cluster Points{% else %}Enter Your Cluster Points{% endif %}
         </h2>
         <p>
-            {% if from_calculate %}
+            {% if from_ocr %}
+                Scores scanned from your document — check each value and correct any errors before continuing.
+            {% elif from_calculate %}
                 Pre-filled from your KCSE grades{% if calc_single %} — computed score: <strong style="color:#1d4ed8;">{{ calc_single }} / 48</strong>{% endif %}. Adjust any value if needed.
             {% else %}
                 Enter your points (0 – 48) for each of the 20 KUCCPS university cluster groups.
             {% endif %}
         </p>
-        {% if from_calculate %}
+        {% if from_ocr %}
+        <div class="auto-badge"><i class="bi bi-stars"></i>Scanned automatically — please verify</div>
+        {% elif from_calculate %}
         <div class="auto-badge"><i class="bi bi-calculator-fill"></i>Auto-computed from your grades</div>
         {% endif %}
     </div>
@@ -231,10 +235,29 @@
     <button type="button" class="dm-btn-clear" onclick="clearAll()">
         <i class="bi bi-eraser me-1"></i>Clear
     </button>
-    <button type="submit" form="manualForm" class="dm-btn-submit">
-        <i class="bi bi-search me-1"></i>Find Matching Courses
+    <button type="submit" form="manualForm" class="dm-btn-submit" id="submitBtn">
+        <i class="bi bi-{% if from_ocr %}check-circle me-1{% else %}search me-1{% endif %}"></i>{% if from_ocr %}Confirm &amp; Find Courses{% else %}Find Matching Courses{% endif %}
     </button>
 </div>
+
+<!-- submit loading overlay -->
+<div id="dm-loading" style="display:none;position:fixed;inset:0;z-index:9999;
+    background:linear-gradient(135deg,#0f172a 0%,#1e3a8a 50%,#0c4a6e 100%);
+    align-items:center;justify-content:center;">
+    <div style="display:flex;flex-direction:column;align-items:center;gap:1.2rem;
+        width:min(320px,90vw);padding:2rem 1.75rem;
+        background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.15);
+        border-radius:24px;backdrop-filter:blur(24px);">
+        <div style="position:relative;width:64px;height:64px;display:flex;align-items:center;justify-content:center;">
+            <div style="position:absolute;inset:0;border-radius:50%;border:2.5px solid rgba(255,255,255,0.15);border-top-color:#60a5fa;animation:dm-spin 1s linear infinite;"></div>
+            <div style="position:absolute;inset:10px;border-radius:50%;border:2px solid rgba(255,255,255,0.08);border-bottom-color:#a78bfa;animation:dm-spin 1.5s linear infinite reverse;"></div>
+            <i class="bi bi-search" style="color:#fff;font-size:1.3rem;"></i>
+        </div>
+        <div style="font-size:1rem;font-weight:800;color:#fff;text-align:center;">Finding Your Matches</div>
+        <div style="font-size:0.8rem;color:rgba(255,255,255,0.65);text-align:center;">Searching degree courses for your cluster points…</div>
+    </div>
+</div>
+<style>@keyframes dm-spin { to { transform:rotate(360deg); } }</style>
 
 {% block extra_js %}
 <script>
@@ -279,7 +302,7 @@ function updateCount() {
     if (note) {
         note.innerHTML = entered > 0
             ? '<strong>' + entered + ' cluster' + (entered !== 1 ? 's' : '') + '</strong> entered — ready to search!'
-            : 'Enter at least one cluster score to find matching courses';
+            : 'Enter at least one cluster points value to find matching courses';
     }
 }
 
@@ -292,6 +315,11 @@ function clearAll() {
     });
     updateCount();
 }
+
+document.getElementById('manualForm').addEventListener('submit', function () {
+    var overlay = document.getElementById('dm-loading');
+    if (overlay) { overlay.style.display = 'flex'; }
+});
 </script>
 {% endblock %}
 {% endblock %}

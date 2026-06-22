@@ -1,0 +1,153 @@
+{% extends "admin/base_site.html" %}
+{% load i18n log static %}
+
+{% block extrastyle %}{{ block.super }}
+<link rel="stylesheet" href="{% static "admin/css/dashboard.css" %}">
+<style>
+.cn-analytics-section {
+  margin-bottom: 24px;
+}
+.cn-analytics-section h2 {
+  font-size: 1rem; font-weight: 700; color: #1e3a8a;
+  margin: 0 0 12px; padding: 0;
+  display: flex; align-items: center; gap: 8px;
+}
+.cn-analytics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 10px;
+}
+.cn-analytics-card {
+  display: flex; flex-direction: column; gap: 4px;
+  background: #fff; border: 1.5px solid #e2e8f0; border-radius: 8px;
+  padding: 14px 16px; text-decoration: none;
+  transition: border-color .15s, box-shadow .15s;
+}
+.cn-analytics-card:hover {
+  border-color: #2563eb;
+  box-shadow: 0 2px 8px rgba(37,99,235,.12);
+}
+.cn-analytics-card .cn-card-title {
+  font-size: .85rem; font-weight: 700; color: #0f172a;
+}
+.cn-analytics-card .cn-card-sub {
+  font-size: .72rem; color: #64748b;
+}
+.cn-analytics-card.cn-primary { border-color: #1e3a8a; background: #1e3a8a; }
+.cn-analytics-card.cn-primary .cn-card-title { color: #fff; }
+.cn-analytics-card.cn-primary .cn-card-sub { color: #93c5fd; }
+</style>
+{% endblock %}
+
+{% block coltype %}colMS{% endblock %}
+{% block bodyclass %}{{ block.super }} dashboard{% endblock %}
+{% block breadcrumbs %}{% endblock %}
+
+{% block content %}
+<h1 id="site-name">
+  <a href="{% url 'admin:index' %}">{{ site_header|default:_('Django administration') }}</a>
+</h1>
+
+<!-- ── Analytics & Monitoring ───────────────────────────────────────── -->
+<div class="cn-analytics-section module">
+  <table>
+    <caption style="text-align:left;padding:8px 12px;font-weight:700;color:#1e3a8a;font-size:.95rem;">
+      Analytics &amp; Monitoring
+    </caption>
+    <tbody>
+      <tr>
+        <td colspan="3" style="padding:12px;">
+          <div class="cn-analytics-grid">
+
+            <a href="{% url 'admin:analytics-overview' %}" class="cn-analytics-card cn-primary">
+              <span class="cn-card-title">Analytics Overview</span>
+              <span class="cn-card-sub">Users, searches, revenue + external services</span>
+            </a>
+
+            <a href="/analytics/" target="_blank" class="cn-analytics-card">
+              <span class="cn-card-title">Full Dashboard ↗</span>
+              <span class="cn-card-sub">Charts, funnels, top content, live feed</span>
+            </a>
+
+            <a href="https://analytics.google.com/analytics/web/#/p542489994/reports/" target="_blank" class="cn-analytics-card">
+              <span class="cn-card-title">Google Analytics ↗</span>
+              <span class="cn-card-sub">Traffic, sessions, conversions</span>
+            </a>
+
+            <a href="{% if POSTHOG_API_KEY %}{% if 'eu.' in POSTHOG_HOST %}https://eu.posthog.com{% else %}https://app.posthog.com{% endif %}{% else %}https://eu.posthog.com{% endif %}" target="_blank" class="cn-analytics-card">
+              <span class="cn-card-title">PostHog ↗</span>
+              <span class="cn-card-sub">Events, funnels, user recordings</span>
+            </a>
+
+            <a href="https://sentry.io/issues/" target="_blank" class="cn-analytics-card">
+              <span class="cn-card-title">Sentry ↗</span>
+              <span class="cn-card-sub">Errors, performance, replays</span>
+            </a>
+
+          </div>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ── Standard app list ────────────────────────────────────────────── -->
+{% if app_list %}
+  {% for app in app_list %}
+  <div class="app-{{ app.app_label }} module{% if app.app_label == current_app %} current-app{% endif %}">
+    <table>
+    <caption>
+      <a href="{{ app.app_url }}" class="section"
+         title="{% blocktrans with name=app.name %}Models in the {{ name }} application{% endblocktrans %}">
+        {{ app.name }}
+      </a>
+    </caption>
+    {% for model in app.models %}
+    <tr class="model-{{ model.object_name|lower }}">
+      {% if model.admin_url %}
+      <th scope="row"><a href="{{ model.admin_url }}">{{ model.name }}</a></th>
+      {% else %}
+      <th scope="row">{{ model.name }}</th>
+      {% endif %}
+      {% if model.add_url %}
+      <td><a href="{{ model.add_url }}" class="addlink">{% trans 'Add' %}</a></td>
+      {% else %}<td></td>{% endif %}
+      {% if model.admin_url %}
+      <td><a href="{{ model.admin_url }}" class="changelink">{% trans 'Change' %}</a></td>
+      {% else %}<td></td>{% endif %}
+    </tr>
+    {% endfor %}
+    </table>
+  </div>
+  {% endfor %}
+{% else %}
+  <p>{% trans "You don't have permission to view or edit anything." %}</p>
+{% endif %}
+{% endblock %}
+
+{% block sidebar %}
+<h2>{% trans 'Recent actions' %}</h2>
+<h3>{% trans 'My actions' %}</h3>
+{% get_admin_log 10 as admin_log for_user user %}
+{% if not admin_log %}
+<p>{% trans 'None available' %}</p>
+{% else %}
+<ul class="actionlist">
+{% for entry in admin_log %}
+<li class="{% if entry.is_addition %}addlink{% endif %}{% if entry.is_change %}changelink{% endif %}{% if entry.is_deletion %}deletelink{% endif %}">
+  {% if entry.is_deletion or not entry.get_admin_url %}
+    {{ entry.object_repr }}
+  {% else %}
+    <a href="{{ entry.get_admin_url }}">{{ entry.object_repr }}</a>
+  {% endif %}
+  <br>
+  {% if entry.content_type %}
+    <span class="mini quiet">{% filter capfirst %}{{ entry.content_type }}{% endfilter %}</span>
+  {% else %}
+    <span class="mini quiet">{% trans 'Unknown content' %}</span>
+  {% endif %}
+</li>
+{% endfor %}
+</ul>
+{% endif %}
+{% endblock %}

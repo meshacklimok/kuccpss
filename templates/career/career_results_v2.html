@@ -267,6 +267,86 @@
 <!-- Main content (blurred when locked) -->
 <div id="pw-main-content" {% if is_locked %}class="pw-blurred"{% endif %}>
 
+{% if sub_banner %}
+<!-- Grace-period confirmation banner -->
+<div id="sub-lock-banner" class="sub-lock-banner" style="display:none;">
+  <div class="container d-flex align-items-center flex-wrap gap-3 py-2">
+    <span class="sub-lock-icon"><i class="bi bi-shield-lock-fill"></i></span>
+    <div class="flex-grow-1">
+      <strong>Are these your grades?</strong>
+      You have <span id="sub-lock-countdown" class="sub-lock-time">{{ sub_banner.seconds_remaining }}</span>s to review &amp; edit before they are locked to your account.
+    </div>
+    <a href="{{ sub_banner.edit_url }}" class="btn btn-sm btn-outline-warning fw-bold">
+      <i class="bi bi-pencil me-1"></i>Edit Grades
+    </a>
+    <button id="sub-lock-confirm-btn" class="btn btn-sm btn-success fw-bold">
+      <i class="bi bi-check-circle me-1"></i>Confirm &amp; Lock
+    </button>
+  </div>
+  <div class="sub-lock-progress"><div id="sub-lock-bar" class="sub-lock-progress-fill"></div></div>
+</div>
+
+<style>
+.sub-lock-banner {
+  background: #1e3a8a; color: #fff;
+  border-bottom: 3px solid #facc15;
+  font-size: 0.88rem; position: sticky; top: 56px; z-index: 300;
+}
+.sub-lock-icon { font-size: 1.3rem; color: #facc15; flex-shrink: 0; }
+.sub-lock-time { font-weight: 800; color: #facc15; font-size: 1rem; }
+.sub-lock-progress { height: 4px; background: rgba(255,255,255,0.2); }
+.sub-lock-progress-fill { height: 100%; background: #facc15; transition: width 1s linear; }
+</style>
+
+<script>
+(function(){
+  var total   = {{ sub_banner.seconds_remaining }};
+  var feature = "{{ sub_banner.feature }}";
+  var confirmUrl = "{% url 'career:confirm_submission' %}";
+  var banner  = document.getElementById('sub-lock-banner');
+  var counter = document.getElementById('sub-lock-countdown');
+  var bar     = document.getElementById('sub-lock-bar');
+  var confirmBtn = document.getElementById('sub-lock-confirm-btn');
+  var remaining  = total;
+
+  // Show after 60 seconds
+  var showDelay = Math.max(0, remaining - total) + 60000;
+  if (total <= 60) { showDelay = 0; }
+
+  function showBanner() {
+    banner.style.display = '';
+    bar.style.width = (remaining / total * 100) + '%';
+    var tick = setInterval(function(){
+      remaining--;
+      counter.textContent = remaining;
+      bar.style.width = (remaining / total * 100) + '%';
+      if (remaining <= 0) {
+        clearInterval(tick);
+        counter.textContent = '0';
+        banner.style.borderBottomColor = '#ef4444';
+        confirmBtn.disabled = true;
+        confirmBtn.textContent = 'Locked';
+      }
+    }, 1000);
+  }
+
+  setTimeout(showBanner, showDelay);
+
+  confirmBtn.addEventListener('click', function(){
+    confirmBtn.disabled = true;
+    fetch(confirmUrl, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}'},
+      body: JSON.stringify({feature: feature})
+    }).then(function(r){ return r.json(); }).then(function(){
+      banner.innerHTML = '<div class="container py-2"><i class="bi bi-check-circle-fill text-success me-2"></i><strong>Grades locked.</strong> Contact support if you need to change them.</div>';
+      banner.style.borderBottomColor = '#16a34a';
+    });
+  });
+})();
+</script>
+{% endif %}
+
 <!-- Hero stats bar -->
 <div class="results-hero">
     <div class="container">

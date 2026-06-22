@@ -1,7 +1,62 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block title %}How-To Guides — KUCCPS & KCSE Placement Help{% endblock %}
+{% block title %}How-To Guides — KUCCPS & KCSE Placement Help | CareerNext{% endblock %}
+
+{% block meta %}<meta name="description" content="Step-by-step guides for KCSE students: how KUCCPS cluster points work, how to apply for university, KMTC, TVET and TTC courses in Kenya. Free and accurate.">{% endblock %}
+
+{% block canonical %}<link rel="canonical" href="{{ request.build_absolute_uri }}">{% endblock %}
+
+{% block extra_schema %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "How are KUCCPS cluster points calculated?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "KUCCPS cluster points are calculated using the formula: 48 × √((core subjects score / 48) × (KCSE aggregate / 84)). The aggregate is the sum of Mathematics + best of English or Kiswahili + your next 5 best subjects, maximum 84. Cluster points range from 0 to 48."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What is the minimum KCSE grade for university in Kenya?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "For government-sponsored degree programmes, the minimum KCSE mean grade is C+ (plus). For self-sponsored degree slots some universities accept C (plain). KMTC and TVET programmes may accept C- or lower depending on the course."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How do I apply through KUCCPS?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "After KCSE results are released, log on to kuccps.net using your KCSE index number, select up to 6 course choices across different institutions, and submit your application before the deadline. Placement is done automatically based on your cluster points and course cutoffs."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What courses can I take with a C+ in KCSE?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "A C+ qualifies you for government-sponsored degree programmes. You can apply for nursing, education, agriculture, commerce, arts, social sciences, and many engineering programmes depending on your cluster points and specific subject grades."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What is the difference between KMTC, TVET and university?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "KMTC (Kenya Medical Training College) offers health-related diploma programmes. TVET institutions (polytechnics, technical colleges) offer technical and vocational diplomas and certificates. Universities offer degree programmes. All three are accessible through KUCCPS placement."
+      }
+    }
+  ]
+}
+</script>
+{% endblock %}
 
 {% block content %}
 <style>
@@ -190,7 +245,7 @@ Cluster Points = 48 × √( (core_subjects / 48) × (aggregate / 84) )
                 </div>
                 <div class="info-box mt-2">
                     <i class="fas fa-calculator me-2"></i>
-                    Use our <a href="{% url 'clusterpoints:calculator' %}">free Cluster Points Calculator</a> — enter your grades and get all 61 cluster scores instantly.
+                    Use our <a href="{% url 'clusterpoints:calculator' %}">free Cluster Points Calculator</a> — enter your grades and get all 20 cluster points instantly.
                 </div>
             </div>
 

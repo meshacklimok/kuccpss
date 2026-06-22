@@ -205,10 +205,14 @@ Status legend: ✅ Done | 🚧 In Progress | 📋 Planned | ❌ Blocked | [-] Dr
 | PaymentFeature model | ✅ | Per-feature is_enabled toggle; admin-controllable via `/cn-staff/` |
 | M-Pesa Transaction model | ✅ | mpesa_ref, phone_number, raw_response JSONField |
 | Career results payment gate UI | ✅ | Blurred preview + lock card; "Unlock My Results" CTA |
-| Live M-Pesa integration | 📋 | Stub only — Daraja STK push not yet wired |
-| Daraja webhook handler | 📋 | Confirm payment → unlock session → mark Payment completed |
-| Payment success page | 📋 | Show unlocked results after confirmed payment |
-| Feature gating enforcement | 📋 | Payment records exist but no enforcement in views yet |
+| IntaSend STK push | ✅ | payments/services.py initiate_stk_push(); fires M-Pesa prompt on student's phone |
+| IntaSend webhook handler | ✅ | POST /payments/webhook/mpesa/ — verifies HMAC, creates Transaction, marks Payment completed/failed; handles mentorship + affiliate commissions |
+| Payment status polling | ✅ | Frontend polls /payments/status/ every 3s for up to 2 min |
+| Verify payment fallback | ✅ | /payments/verify/ pulls live state from IntaSend; /payments/verify-code/ accepts M-Pesa SMS code |
+| Payment success UX | ✅ | Overlay auto-reloads page after confirmation — full results shown without paywall |
+| Feature gating enforcement | ✅ | career_results checks is_feature_enabled() + has_paid_for_feature(); gate is live |
+| PaymentFeature DB seeding | ✅ | python manage.py seed_payment_features |
+| Live credentials | 📋 | Set INTASEND_SECRET_KEY + INTASEND_PUBLISHABLE_KEY env vars; register /payments/webhook/mpesa/ in IntaSend dashboard |
 
 ---
 

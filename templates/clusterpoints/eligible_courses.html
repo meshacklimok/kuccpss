@@ -28,7 +28,7 @@
         <a href="{% url 'clusterpoints:calculator' %}" class="btn btn-outline-light btn-sm fw-600">
           <i class="fas fa-sync me-1"></i>Recalculate
         </a>
-        <a href="{% url 'career:home' %}" class="btn btn-light btn-sm fw-600">
+        <a href="{% url 'career:home' %}#pathway-section" class="btn btn-light btn-sm fw-600">
           <i class="fas fa-compass me-1"></i>Career Engine
         </a>
       </div>
@@ -153,6 +153,18 @@
     </div>
   </form>
 
+  <!-- Data version label -->
+  <div class="d-flex align-items-center gap-2 mb-3 flex-wrap" style="font-size:0.73rem;color:#64748b;">
+    <span class="badge rounded-pill" style="background:#eff6ff;color:#2563eb;border:1px solid #bfdbfe;font-weight:600;">
+      <i class="bi bi-calendar3 me-1"></i>{{ DATA_CYCLE }} cycle
+    </span>
+    <span>Cutoff data: {{ DATA_UPDATED }}</span>
+    <span>·</span>
+    <span class="text-secondary">Not official KUCCPS —
+      <a href="https://kuccps.net" target="_blank" rel="noopener noreferrer" class="text-secondary">verify at kuccps.net</a>
+    </span>
+  </div>
+
   <!-- Results -->
   {% if results %}
   <p class="text-muted small mb-3">
@@ -162,9 +174,10 @@
   <div class="d-flex flex-column gap-3">
     {% for item in results %}
     <div class="card eligible-card d-flex flex-row align-items-stretch overflow-hidden p-0"
+         data-href="{% url 'courses:course_detail_no_category' item.course.course_type.slug item.course.slug %}"
          style="border-radius:12px;border:1.5px solid
          {% if item.status == 'eligible' %}#bbf7d0{% elif item.status == 'nearly' %}#fde68a{% else %}#e2e8f0{% endif %};
-         box-shadow:0 1px 4px rgba(0,0,0,0.05);">
+         box-shadow:0 1px 4px rgba(0,0,0,0.05);cursor:pointer;">
 
       <!-- Status stripe -->
       <div class="flex-shrink-0"
@@ -279,20 +292,40 @@
 
   {% else %}
   <div class="text-center py-5">
-    <i class="fas fa-search fa-3x text-muted mb-3 d-block"></i>
     {% if status_filter or type_filter or query %}
-    <h5 class="text-muted">No courses match your filters</h5>
-    <p class="text-muted small mb-3">Try adjusting or
-      <a href="{% url 'clusterpoints:eligible_courses' %}">clear all filters</a>.
-    </p>
-    {% else %}
-    <h5 class="text-muted">No eligible courses found</h5>
+    <i class="fas fa-filter fa-3x text-muted mb-3 d-block"></i>
+    <h5 class="fw-bold">No courses match your filters</h5>
     <p class="text-muted small mb-3">
-      Make sure you've entered your KCSE grades in the cluster calculator.
+      {% if query %}No courses containing "<strong>{{ query }}</strong>".{% endif %}
+      {% if status_filter %}Filtered to <strong>{{ status_filter|title }}</strong> only.{% endif %}
+      Try adjusting your filters or clear them to see all results.
     </p>
-    <a href="{% url 'clusterpoints:calculator' %}" class="btn btn-primary px-4">
-      <i class="fas fa-calculator me-2"></i>Calculate Cluster Points
-    </a>
+    <div class="d-flex gap-2 justify-content-center flex-wrap">
+      <a href="{% url 'clusterpoints:eligible_courses' %}" class="btn btn-outline-primary btn-sm">
+        <i class="fas fa-times me-1"></i>Clear All Filters
+      </a>
+      <a href="{% url 'courses:course_types_list' %}" class="btn btn-outline-secondary btn-sm">
+        <i class="fas fa-graduation-cap me-1"></i>Browse All Courses
+      </a>
+    </div>
+    {% else %}
+    <i class="fas fa-graduation-cap fa-3x text-muted mb-3 d-block"></i>
+    <h5 class="fw-bold">No eligible courses found</h5>
+    <p class="text-muted small mb-3">
+      This can happen if your cluster points are below the minimum cutoff for all listed courses,
+      or if no cluster points have been calculated yet.
+    </p>
+    <div class="d-flex gap-2 justify-content-center flex-wrap">
+      <a href="{% url 'clusterpoints:calculator' %}" class="btn btn-primary btn-sm px-4">
+        <i class="fas fa-calculator me-2"></i>Re-enter KCSE Grades
+      </a>
+      <a href="{% url 'courses:course_types_list' %}" class="btn btn-outline-secondary btn-sm">
+        <i class="fas fa-graduation-cap me-1"></i>Browse All Courses
+      </a>
+      <a href="{% url 'mentorship:directory' %}" class="btn btn-outline-secondary btn-sm">
+        <i class="fas fa-user-tie me-1"></i>Talk to a Mentor
+      </a>
+    </div>
     {% endif %}
   </div>
   {% endif %}
@@ -306,6 +339,11 @@
 const EL_CSRF = (document.cookie.match(/(?:^|;\s*)csrftoken=([^;]+)/) || [])[1] || '';
 
 document.addEventListener('click', function (e) {
+  var card = e.target.closest('.eligible-card');
+  if (card && !e.target.closest('a, button')) {
+    window.location.href = card.dataset.href;
+    return;
+  }
   var btn = e.target.closest('.save-btn');
   if (!btn) return;
   e.preventDefault();

@@ -33,7 +33,7 @@
                             {% if request.user.profile.avatar %}
                                 <img src="{{ request.user.profile.avatar.url }}" 
                                      class="rounded-circle profile-avatar mb-2"
-                                     id="avatarPreview">
+                                     id="avatarPreview" loading="lazy">
                             {% else %}
                                 <img src="https://cdn-icons-png.flaticon.com/512/847/847969.png"
                                      class="rounded-circle profile-avatar mb-2"

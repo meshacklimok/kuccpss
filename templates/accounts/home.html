@@ -182,6 +182,12 @@ body.dark .step-card          { background: var(--surface); border-color: var(--
     <div class="row g-3 mt-4 pt-4" style="border-top:1px solid rgba(255,255,255,0.1);">
       <div class="col-6 col-md-3">
         <div class="hero-stat">
+          <div class="stat-num"><span class="counter" data-target="10000">0</span>+</div>
+          <div class="stat-label">Students Guided to Careers</div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="hero-stat">
           <div class="stat-num"><span class="counter" data-target="1000">0</span>+</div>
           <div class="stat-label">Courses Listed</div>
         </div>
@@ -198,12 +204,7 @@ body.dark .step-card          { background: var(--surface); border-color: var(--
           <div class="stat-label">Career Profiles</div>
         </div>
       </div>
-      <div class="col-6 col-md-3">
-        <div class="hero-stat">
-          <div class="stat-num">47</div>
-          <div class="stat-label">Counties Covered</div>
-        </div>
-      </div>
+      
     </div>
   </div>
 </section>
@@ -441,7 +442,7 @@ body.dark .step-card          { background: var(--surface); border-color: var(--
             <div class="d-flex align-items-center gap-3 mb-3">
               {% if inst.logo %}
               <img src="{{ inst.logo.url }}" width="46" height="46" class="rounded-2 flex-shrink-0"
-                   style="object-fit:contain;border:1px solid var(--border);" alt="{{ inst.name }}">
+                   style="object-fit:contain;border:1px solid var(--border);" alt="{{ inst.name }}" loading="lazy">
               {% else %}
               <div class="rounded-2 flex-shrink-0 d-flex align-items-center justify-content-center"
                    style="width:46px;height:46px;background:#fef3c7;color:#d97706;">
@@ -502,7 +503,7 @@ body.dark .step-card          { background: var(--surface); border-color: var(--
            onmouseout="this.style.boxShadow='';this.style.transform='';this.style.borderColor=''">
           {% if inst.logo %}
           <img src="{{ inst.logo.url }}" width="50" height="50" class="rounded-2 flex-shrink-0"
-               style="object-fit:contain;border:1px solid var(--border);" alt="{{ inst.name }}">
+               style="object-fit:contain;border:1px solid var(--border);" alt="{{ inst.name }}" loading="lazy">
           {% else %}
           <div class="rounded-2 flex-shrink-0 d-flex align-items-center justify-content-center"
                style="width:50px;height:50px;background:#ede9fe;color:var(--purple);">

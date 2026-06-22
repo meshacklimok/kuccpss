@@ -797,7 +797,7 @@ body.dark .t-saves              { color: rgba(255,255,255,0.4); }
 <!-- ════════════════════════════════════
      PATHWAY SELECTION
 ════════════════════════════════════ -->
-<section class="pathway-section" id="pathway-section">
+<section class="pathway-section" id="pathway-section" style="scroll-margin-top:72px;">
   <div class="container">
 
     <div class="text-center mb-5">
@@ -888,6 +888,14 @@ body.dark .t-saves              { color: rgba(255,255,255,0.4); }
 function smoothScrollTo(id) {
   const el = document.getElementById(id);
   if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+/* Re-scroll to hash after layout settles (images/fonts shift the page height) */
+if (window.location.hash) {
+  window.addEventListener('load', function () {
+    const el = document.querySelector(window.location.hash);
+    if (el) setTimeout(() => el.scrollIntoView({ behavior: 'smooth', block: 'start' }), 120);
+  });
 }
 </script>
 

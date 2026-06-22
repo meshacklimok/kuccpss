@@ -27,7 +27,7 @@
               {% if user.profile_picture %}
               <img src="{{ user.profile_picture.url }}"
                    class="rounded-circle border border-4 border-success shadow-sm"
-                   style="width:120px;height:120px;object-fit:cover;" alt="Profile picture">
+                   style="width:120px;height:120px;object-fit:cover;" alt="Profile picture" loading="lazy">
               {% else %}
               <div class="rounded-circle d-flex align-items-center justify-content-center mx-auto border border-4 border-success shadow-sm"
                    style="width:120px;height:120px;background:linear-gradient(135deg,#1e3a8a,#2563eb);">

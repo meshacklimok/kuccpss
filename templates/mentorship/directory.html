@@ -27,15 +27,17 @@
 
         {% if user.is_authenticated %}
           {% if not user.mentor_profile %}
+            {% if mentor_signup_enabled %}
             <a href="{% url 'mentorship:become_mentor' %}" class="btn btn-warning fw-700 rounded-pill px-4 py-2">
               <i class="bi bi-mortarboard me-2"></i>Become a Mentor — Earn KES 70/session
             </a>
+            {% endif %}
           {% else %}
             <a href="{% url 'mentorship:dashboard' %}" class="btn btn-warning fw-700 rounded-pill px-4 py-2">
               <i class="bi bi-speedometer2 me-2"></i>My Mentor Dashboard
             </a>
           {% endif %}
-        {% else %}
+        {% elif mentor_signup_enabled %}
           <a href="{% url 'mentorship:become_mentor' %}" class="btn btn-warning fw-700 rounded-pill px-4 py-2">
             <i class="bi bi-mortarboard me-2"></i>Become a Mentor — Earn KES 70/session
           </a>
@@ -162,7 +164,7 @@
                 {% if mentor.photo %}
                   <img src="{{ mentor.photo.url }}"
                        class="mentor-avatar object-fit-cover flex-shrink-0"
-                       alt="{{ mentor.display_name }}">
+                       alt="{{ mentor.display_name }}" loading="lazy">
                 {% else %}
                   <div class="mentor-avatar-initials flex-shrink-0">
                     {{ mentor.display_name|first|upper }}
@@ -246,8 +248,10 @@
         <a href="{% url 'mentorship:directory' %}" class="btn btn-outline-primary rounded-pill px-4">Clear search</a>
       {% else %}
         <h5 class="fw-700 mb-2">No mentors with open slots right now</h5>
-        <p class="text-muted small mb-4">Check back soon — or be the first mentor in your course!</p>
+        <p class="text-muted small mb-4">Check back soon{% if mentor_signup_enabled %} — or be the first mentor in your course!{% endif %}</p>
+        {% if mentor_signup_enabled %}
         <a href="{% url 'mentorship:become_mentor' %}" class="btn btn-primary rounded-pill px-4 fw-semibold">Become a Mentor</a>
+        {% endif %}
       {% endif %}
     </div>
   {% endif %}

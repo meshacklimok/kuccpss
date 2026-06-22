@@ -4,6 +4,7 @@ from django.urls import reverse
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db.models import Count
+from django.views.decorators.cache import cache_page
 from .models import Cluster, SubjectGroup, Subject
 from .forms import ClusterForm, SubjectGroupForm
 
@@ -38,6 +39,7 @@ def _main_num(cluster):
 # =====================================================
 # 1️⃣ LIST ALL CLUSTERS
 # =====================================================
+@cache_page(60 * 20)  # 20-minute cache — cluster list is static reference data
 def cluster_list(request):
     clusters = (
         Cluster.objects

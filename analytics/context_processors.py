@@ -20,3 +20,12 @@ def ga_context(request):
     return {
         'GA_MEASUREMENT_ID': getattr(settings, 'GA_MEASUREMENT_ID', ''),
     }
+
+
+def data_version(request):
+    """Expose KUCCPS data version/cycle to every template."""
+    return {
+        'DATA_VERSION': getattr(settings, 'DATA_VERSION', '2024'),
+        'DATA_CYCLE':   getattr(settings, 'DATA_CYCLE', '2025/2026'),
+        'DATA_UPDATED': getattr(settings, 'DATA_UPDATED', 'March 2025'),
+    }

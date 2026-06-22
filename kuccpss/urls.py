@@ -18,11 +18,13 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
-from django.http import FileResponse
+from django.http import FileResponse, HttpResponse
 from django.views.generic import TemplateView
+from django.contrib.sitemaps.views import sitemap
 import os
 from accounts.views import dashboard_view, public_home_view, email_lead_capture
 from kuccpss.search_views import api_search_suggest
+from kuccpss.sitemaps import sitemaps
 
 
 def serve_sw(_request):
@@ -30,11 +32,24 @@ def serve_sw(_request):
     return FileResponse(open(sw_path, 'rb'), content_type='application/javascript',
                         headers={'Service-Worker-Allowed': '/'})
 
+def serve_robots(request):
+    from django.template.loader import render_to_string
+    content = render_to_string('robots.txt', request=request)
+    return HttpResponse(content, content_type='text/plain')
+
+def serve_llms(request):
+    from django.template.loader import render_to_string
+    content = render_to_string('llms.txt', request=request)
+    return HttpResponse(content, content_type='text/plain; charset=utf-8')
+
 handler404 = 'django.views.defaults.page_not_found'
 handler500 = 'django.views.defaults.server_error'
 
 urlpatterns = [
     path('sw.js', serve_sw, name='service_worker'),
+    path('robots.txt', serve_robots, name='robots_txt'),
+    path('llms.txt', serve_llms, name='llms_txt'),
+    path('sitemap.xml', sitemap, {'sitemaps': sitemaps}, name='django.contrib.sitemaps.views.sitemap'),
     path('offline/', TemplateView.as_view(template_name='offline.html'), name='offline'),
     path('cn-staff/', admin.site.urls),
     path('accounts/', include('accounts.urls')),

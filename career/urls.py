@@ -63,6 +63,9 @@ urlpatterns = [
     # ── CareerNext AI Chat page ───────────────────────
     path("chat/", views.career_chat, name="career_chat"),
 
+    # ── Submission lock ──────────────────────────────
+    path("submission/confirm/", views.confirm_submission, name="confirm_submission"),
+
     # ── Session management ───────────────────────────
     path("clear/", views.clear_session, name="clear_session"),
 

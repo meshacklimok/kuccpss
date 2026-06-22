@@ -1,11 +1,26 @@
 {% extends "base.html" %}
 {% load custom_filters %}
 
-{% block title %}News & Articles — CareerNext{% endblock %}
+{% block title %}KCSE & KUCCPS Articles | Placement Tips & Career Guides — CareerNext{% endblock %}
 
-{% block meta %}<meta name="description" content="CareerNext news, placement guides, career tips and KCSE updates for Kenyan students.">{% endblock %}
+{% block meta %}<meta name="description" content="Read KCSE cluster points guides, KUCCPS placement tips, university application advice, and career guidance articles for Kenyan students.">{% endblock %}
+{% block canonical %}<link rel="canonical" href="{{ request.scheme }}://{{ request.get_host }}{% url 'resources:article_list' %}">{% endblock %}
 
 {% block extra_head %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "CollectionPage",
+  "name": "KCSE & KUCCPS Articles",
+  "description": "Placement guides, career tips and KCSE updates for Kenyan students",
+  "url": "{{ request.scheme }}://{{ request.get_host }}{% url 'resources:article_list' %}",
+  "publisher": {
+    "@type": "Organization",
+    "name": "CareerNext",
+    "url": "{{ request.scheme }}://{{ request.get_host }}"
+  }
+}
+</script>
 <style>
 /* ── Featured hero card ───────────────────────────────── */
 .news-hero-card {
@@ -160,7 +175,7 @@
   <div class="mb-4">
     <a href="{% url 'resources:article_detail' featured.slug %}" class="news-hero-card d-block">
       {% if featured.thumbnail %}
-      <img src="{{ featured.thumbnail.url }}" class="hero-bg" alt="{{ featured.title }}">
+      <img src="{{ featured.thumbnail.url }}" class="hero-bg" alt="{{ featured.title }}" loading="lazy">
       {% endif %}
       <div class="hero-overlay"></div>
       <div class="hero-body">
@@ -189,7 +204,7 @@
     <div class="col-sm-6 col-lg-4 reveal">
       <a href="{% url 'resources:article_detail' article.slug %}" class="article-card">
         {% if article.thumbnail %}
-        <img src="{{ article.thumbnail.url }}" class="thumb" alt="{{ article.title }}">
+        <img src="{{ article.thumbnail.url }}" class="thumb" alt="{{ article.title }}" loading="lazy">
         {% else %}
         <div class="thumb-placeholder">
           <i class="fas fa-pen-nib fa-2x text-white opacity-50"></i>

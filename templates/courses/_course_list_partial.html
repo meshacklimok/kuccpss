@@ -1,0 +1,57 @@
+{# HTMX partial — returned when HX-Request header is present #}
+{% load static %}
+
+{% if courses %}
+  <p class="text-muted mb-3" id="results-count">
+    {% if q %}
+      <strong>{{ page_obj.paginator.count }}</strong> result{{ page_obj.paginator.count|pluralize }} for "<strong>{{ q }}</strong>"
+    {% else %}
+      <strong>{{ page_obj.paginator.count }}</strong> programme{{ page_obj.paginator.count|pluralize }}
+    {% endif %}
+  </p>
+  <div class="row g-3" id="course-grid">
+    {% for course in courses %}
+    <div class="col-12 col-md-6 col-lg-4">
+      <div class="card h-100 shadow-sm p-3" style="border-radius:0.75rem;transition:transform 0.18s,box-shadow 0.18s;">
+        <div class="d-flex justify-content-between align-items-start mb-1">
+          <h6 class="fw-bold mb-0" style="line-height:1.35;font-size:0.92rem;">
+            {% if course.category %}
+            <a href="{% url 'courses:course_detail' type_slug=course.course_type.slug category_slug=course.category.slug course_slug=course.slug %}"
+               class="text-dark text-decoration-none stretched-link">{{ course.name }}</a>
+            {% else %}
+            <a href="{% url 'courses:course_detail_no_category' type_slug=course.course_type.slug course_slug=course.slug %}"
+               class="text-dark text-decoration-none stretched-link">{{ course.name }}</a>
+            {% endif %}
+          </h6>
+          {% if course.minimum_mean_grade %}
+          <span class="badge ms-2 flex-shrink-0"
+                style="background:#dc2626;color:#fff;font-size:0.7rem;">{{ course.minimum_mean_grade }}</span>
+          {% endif %}
+        </div>
+        {% if course.category %}
+        <small class="text-muted mb-1" style="font-size:0.78rem;">{{ course.category.name }}</small>
+        {% endif %}
+        {% if course.description %}
+        <p class="text-muted small mb-0 mt-1" style="font-size:0.8rem;">{{ course.description|truncatewords:14 }}</p>
+        {% endif %}
+        {% if course.cutoff_points %}
+        <div class="mt-auto pt-2">
+          <span class="badge rounded-pill" style="background:#eff6ff;color:#1e3a8a;border:1px solid #bfdbfe;font-size:0.72rem;">
+            <i class="fas fa-chart-bar me-1"></i>Min {{ course.cutoff_points }} pts
+          </span>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% include 'partials/pagination.html' with page_obj=page_obj q=q %}
+{% else %}
+  <div class="text-center py-5 text-muted" id="course-grid">
+    <i class="fas fa-search fa-3x mb-3 opacity-40"></i>
+    <h5>No courses found{% if q %} for "{{ q }}"{% endif %}</h5>
+    {% if q %}
+    <p class="small">Try a shorter keyword or <a href="?">browse all courses</a>.</p>
+    {% endif %}
+  </div>
+{% endif %}

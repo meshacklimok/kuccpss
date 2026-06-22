@@ -66,6 +66,8 @@ def directory(request):
         mentors__is_approved=True, mentors__is_active=True
     ).distinct().order_by("name")
 
+    from career.models import CareerConfig
+    cfg = CareerConfig.get()
     return render(request, "mentorship/directory.html", {
         "mentors": mentors,
         "query": query,
@@ -74,6 +76,7 @@ def directory(request):
         "filter_rating": min_rating,
         "institutions": institutions,
         "year_choices": MentorProfile.YEAR_CHOICES,
+        "mentor_signup_enabled": cfg.mentor_signup_enabled,
     })
 
 
@@ -120,6 +123,11 @@ def courses_for_institution(request):
 
 @login_required
 def become_mentor(request):
+    from career.models import CareerConfig
+    if not CareerConfig.get().mentor_signup_enabled:
+        messages.info(request, "Mentor applications are currently closed. Check back soon.")
+        return redirect("mentorship:directory")
+
     if hasattr(request.user, "mentor_profile"):
         profile = request.user.mentor_profile
         if profile.is_rejected:
@@ -321,7 +329,10 @@ def book_session(request, mentor_pk):
 
             return redirect("mentorship:checkout", token=session.token)
     else:
-        form = BookingForm(mentor)
+        # Pre-select the slot the user clicked on the mentor profile page
+        preselected_slot_id = request.GET.get("slot")
+        initial = {"slot": preselected_slot_id} if preselected_slot_id else {}
+        form = BookingForm(mentor, initial=initial)
 
     return render(request, "mentorship/book_session.html", {
         "mentor": mentor,
@@ -699,6 +710,24 @@ def _send_booking_confirmation(session: MentorshipSession):
             notif_type="info",
             message=f"New booking from {mentee_name} on {slot_str}. Check your dashboard.",
             link="/mentorship/dashboard/",
+        )
+    except Exception:
+        pass
+
+    # ── Web push notifications ────────────────────────────────────────────────
+    try:
+        from accounts.views import _send_push_to_user
+        _send_push_to_user(
+            session.mentee,
+            title="Session Confirmed!",
+            body=f"Your session with {mentor_name} is booked for {slot_str}. Check your email for details.",
+            url=session.get_absolute_url(),
+        )
+        _send_push_to_user(
+            session.mentor.user,
+            title="New Mentorship Booking!",
+            body=f"{mentee_name} booked a session with you on {slot_str}. KES {session.mentor_payout} earned.",
+            url="/mentorship/dashboard/",
         )
     except Exception:
         pass
