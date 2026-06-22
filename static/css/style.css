@@ -572,7 +572,7 @@ small, .small { font-size: 0.875rem; }
 /* ── 19. AUTH PAGES ─────────────────────────────────────────── */
 .auth-page {
   background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 60%, #7C3AED 100%);
-  min-height: calc(100vh - 64px);
+  min-height: 100svh;
   display: flex; align-items: center; justify-content: center;
   padding: 2rem 1rem;
 }
