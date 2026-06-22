@@ -272,7 +272,7 @@ def dashboard_view(request: HttpRequest) -> HttpResponse:
             'institution', 'institution__institution_type'
         ).prefetch_related('institution__offerings__course')
         from clusters.models import Cluster as _Cluster
-        _all_clusters = list(_Cluster.objects.all().only('name', 'slug', 'number', 'color_code', 'icon'))
+        _all_clusters = list(_Cluster.objects.all().only('name', 'slug', 'number', 'color_code', 'icon')[:4])
         from career.models import CareerConfig as _CCfg
         _cfg = _CCfg.get()
         return render(request, "accounts/dashboard.html", {
@@ -528,7 +528,7 @@ def dashboard_view(request: HttpRequest) -> HttpResponse:
         })
 
     from clusters.models import Cluster
-    all_clusters = list(Cluster.objects.all().only('name', 'slug', 'number', 'color_code', 'icon'))
+    all_clusters = list(Cluster.objects.all().only('name', 'slug', 'number', 'color_code', 'icon')[:4])
 
     from career.models import CareerConfig as _CCfg
     _cfg = _CCfg.get()
