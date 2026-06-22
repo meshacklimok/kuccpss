@@ -31,6 +31,7 @@ class Payment(models.Model):
         ("view_eligible_courses", "View Eligible Courses"),
         ("premium_career_report", "Premium Career Report"),
         ("advanced_analysis", "Advanced Career Analysis"),
+        ("ai_chat_access", "AI Chat Top-Up"),
     ]
 
     user = models.ForeignKey(
@@ -53,6 +54,42 @@ class Payment(models.Model):
 
     def is_active(self):
         return self.status == "completed"
+
+
+class PaymentExemption(models.Model):
+    """
+    Grants a user free access to one or all payment-gated features.
+    Set feature='' (blank) to exempt from every feature at once.
+    Staff users (is_staff=True) are always exempt without needing a record here.
+    """
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='payment_exemptions',
+    )
+    feature = models.CharField(
+        max_length=50,
+        blank=True,
+        help_text="Leave blank to exempt from ALL payment-gated features.",
+        choices=[('', 'All features')] + Payment.FEATURE_CHOICES,  # type: ignore[arg-type]
+    )
+    note = models.TextField(blank=True, help_text="Reason for exemption (internal use only).")
+    granted_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name='granted_exemptions',
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('user', 'feature')
+        verbose_name = "Payment Exemption"
+        verbose_name_plural = "Payment Exemptions"
+
+    def __str__(self):
+        scope = self.get_feature_display() if self.feature else "ALL features"
+        return f"{self.user.email} — exempt from {scope}"
 
 
 class Transaction(models.Model):

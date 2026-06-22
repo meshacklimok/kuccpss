@@ -16,6 +16,21 @@ from .services import initiate_stk_push, price_for_feature, fetch_intasend_statu
 logger = logging.getLogger(__name__)
 
 
+def _grant_ai_credits_if_applicable(payment: "Payment") -> None:
+    """Top up AIChatCredit when an ai_chat_access payment is confirmed."""
+    if payment.feature != "ai_chat_access":
+        return
+    try:
+        from career.models import AIChatCredit, CareerConfig
+        cfg = CareerConfig.get()
+        top_up = getattr(cfg, 'ai_paid_message_limit', 200)
+        credit = AIChatCredit.for_user(payment.user)
+        credit.top_up(top_up)
+        logger.info("AI credit top-up: +%s for %s (payment %s)", top_up, payment.user.email, payment.pk)
+    except Exception as exc:
+        logger.error("AI credit top-up failed for payment %s: %s", payment.pk, exc)
+
+
 @login_required
 def payment_required(request):
     feature = request.GET.get("feature", "")
@@ -58,6 +73,13 @@ def initiate_payment(request):
     amount = price_for_feature(feature)
     if amount == 0:
         return JsonResponse({"success": False, "message": "This feature is free."}, status=400)
+
+    if not getattr(settings, "INTASEND_SECRET_KEY", "") or not getattr(settings, "INTASEND_PUBLISHABLE_KEY", ""):
+        logger.error("IntaSend API keys not configured — INTASEND_SECRET_KEY / INTASEND_PUBLISHABLE_KEY missing")
+        return JsonResponse(
+            {"success": False, "message": "Payment system is not yet configured. Please contact support."},
+            status=503,
+        )
 
     payment = Payment.objects.create(
         user=request.user,
@@ -186,6 +208,10 @@ def mpesa_webhook(request):
 
     payment.save(update_fields=["status", "updated_at"])
 
+    # Grant AI chat credits if applicable
+    if state == "COMPLETE":
+        _grant_ai_credits_if_applicable(payment)
+
     # Award affiliate commission if the paying user was referred by an active affiliate
     if state == "COMPLETE":
         try:
@@ -253,13 +279,22 @@ def verify_payment(request, payment_id):
     if remote_state == "COMPLETE":
         payment.status = "completed"
         payment.save(update_fields=["status", "updated_at"])
+        _grant_ai_credits_if_applicable(payment)
         return JsonResponse({"status": "completed", "feature": payment.feature, "message": "Payment confirmed!"})
     elif remote_state == "FAILED":
         payment.status = "failed"
         payment.save(update_fields=["status", "updated_at"])
         return JsonResponse({"status": "failed", "feature": payment.feature, "message": "Payment failed."})
     elif remote_state is None and not payment.checkout_id:
-        return JsonResponse({"status": payment.status, "feature": payment.feature, "message": "No checkout ID — payment may not have been sent."})
+        return JsonResponse({
+            "status": payment.status,
+            "feature": payment.feature,
+            "message": (
+                "We could not confirm receipt of your M-Pesa prompt. "
+                "If your phone didn't ring, please try paying again. "
+                "If money was deducted, contact support with your M-Pesa SMS."
+            ),
+        })
     else:
         return JsonResponse({"status": "pending", "feature": payment.feature, "message": "Payment is still processing. Please wait a moment."})
 
@@ -295,6 +330,7 @@ def verify_by_transaction_code(request):
         if payment.status != "completed":
             payment.status = "completed"
             payment.save(update_fields=["status", "updated_at"])
+            _grant_ai_credits_if_applicable(payment)
         logger.info("Transaction code verified: user=%s code=%s payment=%s", request.user.email, mpesa_code, payment.pk)
         return JsonResponse({
             "status": "completed",

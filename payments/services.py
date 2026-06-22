@@ -16,7 +16,16 @@ FEATURE_PRICES = {
 
 
 def has_paid_for_feature(user, feature: str) -> bool:
-    from .models import Payment
+    from django.db.models import Q
+    from .models import Payment, PaymentExemption
+    # Staff always bypass every gate
+    if getattr(user, 'is_staff', False):
+        return True
+    # Explicit exemption: matches this specific feature OR a blanket '' exemption
+    if PaymentExemption.objects.filter(
+        Q(user=user, feature=feature) | Q(user=user, feature='')
+    ).exists():
+        return True
     return Payment.objects.filter(user=user, feature=feature, status="completed").exists()
 
 
@@ -58,7 +67,14 @@ def initiate_stk_push(phone_number: str, amount: int, payment_ref: str, email: s
     logger.info("IntaSend response %s: %s", response.status_code, response.text[:500])
     response.raise_for_status()
     data = response.json()
-    return data.get("id") or data.get("invoice", {}).get("id") or ""
+    # IntaSend STK push response nests the ID at invoice.invoice_id
+    invoice = data.get("invoice") or {}
+    return (
+        invoice.get("invoice_id")
+        or invoice.get("id")
+        or data.get("id")
+        or ""
+    )
 
 
 def fetch_intasend_status(checkout_id: str) -> str | None:

@@ -24,6 +24,22 @@
     flex-shrink: 0;
 }
 
+/* ── Credit badge ── */
+.credit-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+.credit-badge.free   { background: #ecfdf5; color: #059669; border: 1px solid #a7f3d0; }
+.credit-badge.paid   { background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; }
+.credit-badge.low    { background: #fff7ed; color: #c2410c; border: 1px solid #fed7aa; }
+.credit-badge.empty  { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
+
 /* ── Starter chips ── */
 .starter-chips {
     display: flex;
@@ -89,6 +105,14 @@
 .bubble ul { margin: 0.4rem 0 0 1.1rem; padding: 0; }
 .bubble li { margin-bottom: 0.2rem; }
 
+/* Paywall bubble */
+.bubble.paywall-bubble {
+    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+    border: 1.5px solid #fbbf24;
+    color: #78350f;
+    border-bottom-left-radius: 4px;
+}
+
 /* Avatar */
 .avatar {
     width: 30px; height: 30px;
@@ -152,22 +176,102 @@
 }
 #sendBtn:hover:not(:disabled) { background: #0e7490; }
 #sendBtn:disabled { background: #94a3b8; cursor: not-allowed; }
-
 .char-hint { font-size: 0.72rem; color: #94a3b8; text-align: right; margin-top: 3px; }
+
+/* ── Paywall Modal ── */
+.paywall-modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(15,23,42,0.55);
+    z-index: 9999;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+}
+.paywall-modal-overlay.open { display: flex; }
+.paywall-modal {
+    background: #fff;
+    border-radius: 18px;
+    width: 100%;
+    max-width: 460px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+    animation: slideUp 0.25s ease;
+}
+@keyframes slideUp {
+    from { opacity:0; transform: translateY(30px); }
+    to   { opacity:1; transform: translateY(0); }
+}
+.pm-header {
+    padding: 1.25rem 1.5rem 0;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+}
+.pm-body { padding: 1rem 1.5rem 1.5rem; }
+.pm-close {
+    background: none; border: none;
+    color: #94a3b8; font-size: 1.2rem;
+    cursor: pointer; padding: 0; flex-shrink: 0;
+    line-height: 1;
+}
+.pm-close:hover { color: #475569; }
+
+/* Payment steps inside modal */
+.pm-step { display: none; }
+.pm-step.active { display: block; }
+
+.pm-features li {
+    padding: 4px 0;
+    font-size: 0.85rem;
+    color: #374151;
+}
 </style>
 
 <div class="chat-wrapper">
 
     <!-- Header -->
-    <div class="chat-header d-flex align-items-center gap-3">
+    <div class="chat-header d-flex align-items-center gap-3 flex-wrap">
         <div class="avatar" style="width:40px;height:40px;background:#e0f2fe;color:#0284c7;font-size:1.1rem;">
             <i class="bi bi-stars"></i>
         </div>
-        <div>
+        <div class="flex-grow-1">
             <div class="fw-bold" style="color:#0f172a;font-size:1rem;">CareerNext AI</div>
             <div class="small text-muted">Career guidance for Kenyan students · Answers from verified database</div>
         </div>
-        <a href="{% url 'career:home' %}" class="btn btn-outline-secondary btn-sm ms-auto" style="border-radius:8px;">
+
+        <!-- Credit counter (logged-in users only) -->
+        {% if credit_info %}
+            {% if credit_info.free_exhausted %}
+                <span class="credit-badge empty" id="creditBadge">
+                    <i class="bi bi-lock-fill"></i> Top up to continue
+                </span>
+            {% elif credit_info.paid_remaining > 0 %}
+                <span class="credit-badge paid" id="creditBadge">
+                    <i class="bi bi-chat-dots-fill"></i>
+                    <span id="paidCount">{{ credit_info.paid_remaining }}</span> paid msgs left
+                </span>
+            {% else %}
+                {% with left=credit_info.free_limit|add:"-1" %}
+                    {% if credit_info.free_used >= left %}
+                        <span class="credit-badge low" id="creditBadge">
+                            <i class="bi bi-exclamation-triangle-fill"></i>
+                            {{ credit_info.free_limit|add:"-"|add:credit_info.free_used }} free msgs left
+                        </span>
+                    {% else %}
+                        <span class="credit-badge free" id="creditBadge">
+                            <i class="bi bi-chat-dots"></i>
+                            {{ credit_info.free_limit }} free msgs
+                        </span>
+                    {% endif %}
+                {% endwith %}
+            {% endif %}
+        {% endif %}
+
+        <a href="{% url 'career:home' %}" class="btn btn-outline-secondary btn-sm" style="border-radius:8px;">
             <i class="bi bi-arrow-left me-1"></i>Back
         </a>
     </div>
@@ -184,11 +288,11 @@
         <span class="starter-chip" onclick="sendStarter(this)">I got C+, what can I study?</span>
         <span class="starter-chip" onclick="sendStarter(this)">What careers suit someone who likes biology?</span>
         <span class="starter-chip" onclick="sendStarter(this)">What is the difference between Degree and Diploma?</span>
-        <span class="starter-chip" onclick="sendStarter(this)">How much does a software engineer earn in Kenya?</span>
         <span class="starter-chip" onclick="sendStarter(this)">What can I study with a D+ in KCSE?</span>
         <span class="starter-chip" onclick="sendStarter(this)">Which careers are in demand in Kenya?</span>
         <span class="starter-chip" onclick="sendStarter(this)">Compare Medicine vs Nursing in Kenya</span>
         <span class="starter-chip" onclick="sendStarter(this)">I don't know what to study, help me choose</span>
+        <span class="starter-chip" onclick="sendStarter(this)">How does HELB funding work?</span>
     </div>
 
     <!-- Messages -->
@@ -196,8 +300,13 @@
         <div class="msg bot">
             <div class="avatar"><i class="bi bi-stars"></i></div>
             <div class="bubble">
-                Hi! I'm <strong>CareerNext AI</strong>. I can help you choose courses and careers based on your KCSE grade, subjects, and interests.<br><br>
-                Ask me anything — like <em>"I got C+, what can I study?"</em> or <em>"What jobs can I get with a nursing diploma?"</em>
+                Hi! I'm <strong>CareerNext AI</strong>. I can help you choose courses and careers based on your KCSE results, cluster points, and interests.<br><br>
+                Ask me anything — like <em>"I got C+, what can I study?"</em> or <em>"Do I qualify for Computer Science?"</em>
+                {% if credit_info and credit_info.free_limit %}
+                <br><br><span style="font-size:0.82rem;color:#64748b;">
+                    <i class="bi bi-info-circle me-1"></i>You have {{ credit_info.free_limit }} free messages. After that, a small top-up unlocks more.
+                </span>
+                {% endif %}
             </div>
         </div>
     </div>
@@ -205,7 +314,7 @@
     <!-- Input bar -->
     <div class="chat-input-bar">
         <div class="chat-input-row">
-            <textarea id="chatInput" placeholder="Ask about courses, careers, grades, salaries…"
+            <textarea id="chatInput" placeholder="Ask about courses, careers, cluster points, HELB…"
                       rows="1" {% if not ai_ready %}disabled{% endif %}></textarea>
             <button id="sendBtn" title="Send" {% if not ai_ready %}disabled{% endif %}>
                 <i class="bi bi-send-fill"></i>
@@ -216,13 +325,218 @@
 
 </div>
 
+<!-- ══════════════════════════════════════════════════ -->
+<!-- PAYWALL MODAL                                      -->
+<!-- ══════════════════════════════════════════════════ -->
+<div class="paywall-modal-overlay" id="paywallOverlay" onclick="handleOverlayClick(event)">
+    <div class="paywall-modal" id="paywallModal">
+
+        <!-- Header -->
+        <div class="pm-header">
+            <div>
+                <div style="font-size:2rem;margin-bottom:4px;">🔓</div>
+                <h5 class="fw-bold mb-1" style="color:#0f172a;">Top Up AI Messages</h5>
+                <p class="small text-muted mb-0">
+                    {% if credit_info %}
+                        You've used all {{ credit_info.free_limit }} free messages.
+                        Top up to get <strong>{{ credit_info.paid_topup }} more messages</strong> for
+                        <strong>KES {{ credit_info.price_kes }}</strong>.
+                    {% else %}
+                        You've used all your free AI messages. Top up to continue chatting.
+                    {% endif %}
+                </p>
+            </div>
+            <button class="pm-close" onclick="closePaywall()" title="Close">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </div>
+
+        <div class="pm-body">
+
+            <!-- What you get -->
+            <ul class="list-unstyled pm-features mb-3 ps-0">
+                <li><i class="bi bi-check-circle-fill text-success me-2"></i>
+                    {% if credit_info %}{{ credit_info.paid_topup }}{% else %}200{% endif %} AI chat messages
+                </li>
+                <li><i class="bi bi-check-circle-fill text-success me-2"></i>Full course & career guidance</li>
+                <li><i class="bi bi-check-circle-fill text-success me-2"></i>Cluster point analysis & cutoff comparisons</li>
+                <li><i class="bi bi-check-circle-fill text-success me-2"></i>Instant access via M-Pesa</li>
+            </ul>
+
+            <div class="d-flex align-items-center gap-3 mb-4 p-3 rounded-3"
+                 style="background:#f0fdf4;border:1.5px solid #86efac;">
+                <div style="font-size:1.8rem;">💚</div>
+                <div>
+                    <div class="fw-bold" style="color:#166534;font-size:1.1rem;">
+                        KES {% if credit_info %}{{ credit_info.price_kes }}{% else %}—{% endif %}
+                    </div>
+                    <div class="small text-muted">
+                        {% if credit_info %}{{ credit_info.paid_topup }}{% else %}200{% endif %} messages · Paid via M-Pesa
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── Step: phone entry ── -->
+            <div class="pm-step active" id="pmStepPhone">
+                <label class="form-label fw-bold small mb-1">Your M-Pesa Number</label>
+                <div class="input-group mb-2">
+                    <span class="input-group-text">+254</span>
+                    <input type="tel" id="pmPhone" class="form-control"
+                           placeholder="712 345 678" maxlength="9" pattern="[0-9]{9}"
+                           oninput="this.value=this.value.replace(/\D/g,'')">
+                </div>
+                <div class="form-text mb-3">Enter your 9-digit number without the leading 0 or +254.</div>
+                <div id="pmPhoneError" class="alert alert-danger d-none small py-2 mb-2"></div>
+                <button class="btn btn-success w-100 fw-bold py-2" onclick="pmInitiatePayment()">
+                    <i class="bi bi-phone-fill me-2"></i>
+                    Pay KES {% if credit_info %}{{ credit_info.price_kes }}{% else %}—{% endif %} via M-Pesa
+                </button>
+                <div class="text-center mt-3">
+                    <button class="btn btn-link btn-sm text-muted" onclick="closePaywall()">
+                        Maybe later
+                    </button>
+                </div>
+            </div>
+
+            <!-- ── Step: waiting for STK ── -->
+            <div class="pm-step" id="pmStepWaiting">
+                <div class="text-center py-2">
+                    <div class="mb-3">
+                        <div class="spinner-border text-success" style="width:3rem;height:3rem;"></div>
+                    </div>
+                    <h6 class="fw-bold">Check your phone!</h6>
+                    <p class="text-muted small mb-0">An M-Pesa STK prompt has been sent to your phone.<br>Enter your PIN to complete payment.</p>
+                    <p class="text-muted small mt-2">Waiting for confirmation<span id="pmDots">...</span></p>
+                </div>
+            </div>
+
+            <!-- ── Step: success ── -->
+            <div class="pm-step" id="pmStepSuccess">
+                <div class="text-center py-2">
+                    <div class="mb-3" style="font-size:3.5rem;">✅</div>
+                    <h5 class="fw-bold text-success">Payment Successful!</h5>
+                    <p class="text-muted small">
+                        Your messages have been topped up. Continue your conversation!
+                    </p>
+                    <button class="btn btn-success mt-1" onclick="closePaywall()">
+                        <i class="bi bi-chat-dots me-2"></i>Continue Chatting
+                    </button>
+                </div>
+            </div>
+
+            <!-- ── Step: failed ── -->
+            <div class="pm-step" id="pmStepFailed">
+                <div class="text-center py-2">
+                    <div class="mb-3" style="font-size:3rem;">❌</div>
+                    <h6 class="fw-bold text-danger">Payment Not Completed</h6>
+                    <p class="text-muted small">The M-Pesa payment was cancelled or failed. No money was deducted.</p>
+                    <div class="d-flex gap-2 justify-content-center flex-wrap mt-2">
+                        <button class="btn btn-success btn-sm" onclick="pmShowStep('phone')">Try Again</button>
+                        <button class="btn btn-outline-secondary btn-sm" onclick="closePaywall()">Cancel</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── Step: timeout ── -->
+            <div class="pm-step" id="pmStepTimeout">
+                <div class="text-center py-2">
+                    <div class="mb-2" style="font-size:2.5rem;">⏳</div>
+                    <h6 class="fw-bold text-warning">Still Processing…</h6>
+                    <p class="text-muted small" id="pmTimeoutMsg">
+                        If you entered your M-Pesa PIN, payment may have gone through but confirmation is delayed.
+                    </p>
+                    <div class="d-flex flex-wrap gap-2 justify-content-center mt-2">
+                        <button class="btn btn-success btn-sm" onclick="pmVerifyStatus()">
+                            <i class="bi bi-arrow-repeat me-1"></i>Check Status
+                        </button>
+                        <button class="btn btn-outline-primary btn-sm" onclick="pmShowStep('code')">
+                            <i class="bi bi-keyboard me-1"></i>Enter M-Pesa Code
+                        </button>
+                        <button class="btn btn-outline-secondary btn-sm" onclick="pmShowStep('phone')">Pay Again</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── Step: checking ── -->
+            <div class="pm-step" id="pmStepChecking">
+                <div class="text-center py-3">
+                    <div class="spinner-border text-success mb-2" style="width:2.5rem;height:2.5rem;"></div>
+                    <p class="text-muted small mb-0">Checking with M-Pesa…</p>
+                </div>
+            </div>
+
+            <!-- ── Step: enter M-Pesa code ── -->
+            <div class="pm-step" id="pmStepCode">
+                <h6 class="fw-bold mb-1"><i class="bi bi-receipt me-2 text-primary"></i>Enter M-Pesa Transaction Code</h6>
+                <p class="text-muted small mb-3">
+                    Find the code in your M-Pesa confirmation SMS, e.g. <strong>RCK12345XY</strong>.
+                </p>
+                <input type="text" id="pmCodeInput" class="form-control text-uppercase mb-2"
+                       placeholder="e.g. RCK12345XY" maxlength="20" autocomplete="off"
+                       oninput="this.value=this.value.toUpperCase()">
+                <div id="pmCodeError" class="alert alert-danger d-none small py-2 mb-2"></div>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-primary flex-fill" onclick="pmSubmitCode()">
+                        <i class="bi bi-check-lg me-1"></i>Verify
+                    </button>
+                    <button class="btn btn-outline-secondary" onclick="pmShowStep('timeout')">Back</button>
+                </div>
+            </div>
+
+        </div><!-- /pm-body -->
+    </div><!-- /paywall-modal -->
+</div><!-- /paywall-modal-overlay -->
+
+
 {% block extra_js %}
 <script>
-const CHAT_URL = "{% url 'career:ajax_ai_chat' %}";
-const CSRF     = "{{ csrf_token }}";
-let history    = [];   // [{role, content}, ...]
+const CHAT_URL     = "{% url 'career:ajax_ai_chat' %}";
+const CSRF         = "{{ csrf_token }}";
+const INITIATE_URL = "{% url 'payments:initiate_payment' %}";
+const VERIFY_URL   = "{% url 'payments:verify_by_transaction_code' %}";
+const AI_FEATURE   = "ai_chat_access";
 
-/* ── Auto-resize textarea ── */
+{% if credit_info %}
+let freeUsed    = {{ credit_info.free_used }};
+let freeLimit   = {{ credit_info.free_limit }};
+let paidLeft    = {{ credit_info.paid_remaining }};
+{% else %}
+let freeUsed    = null;
+let freeLimit   = null;
+let paidLeft    = null;
+{% endif %}
+
+let history         = [];   // [{role, content}, ...]
+let pmPaymentId     = null;
+let pmPollTimer     = null;
+let pmDotsTimer     = null;
+let pmPollAttempts  = 0;
+const PM_MAX_POLLS  = 40;
+
+/* ─── Credit badge ─────────────────────────────────── */
+function updateCreditBadge() {
+    const el = document.getElementById('creditBadge');
+    if (!el || freeLimit === null) return;
+
+    if (paidLeft > 0) {
+        el.className = 'credit-badge paid';
+        el.innerHTML = `<i class="bi bi-chat-dots-fill"></i> <span id="paidCount">${paidLeft}</span> paid msgs left`;
+    } else if (freeUsed >= freeLimit) {
+        el.className = 'credit-badge empty';
+        el.innerHTML = `<i class="bi bi-lock-fill"></i> Top up to continue`;
+    } else {
+        const left = freeLimit - freeUsed;
+        if (left <= 3) {
+            el.className = 'credit-badge low';
+            el.innerHTML = `<i class="bi bi-exclamation-triangle-fill"></i> ${left} free msg${left===1?'':'s'} left`;
+        } else {
+            el.className = 'credit-badge free';
+            el.innerHTML = `<i class="bi bi-chat-dots"></i> ${left} of ${freeLimit} free msgs left`;
+        }
+    }
+}
+
+/* ─── Auto-resize textarea ─────────────────────────── */
 const inp = document.getElementById('chatInput');
 inp.addEventListener('input', () => {
     inp.style.height = 'auto';
@@ -231,37 +545,35 @@ inp.addEventListener('input', () => {
     document.getElementById('charHint').textContent = n > 200 ? `${n}/400` : '';
 });
 
-/* ── Enter to send, Shift+Enter for newline ── */
+/* ─── Enter to send, Shift+Enter for newline ───────── */
 inp.addEventListener('keydown', e => {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
 });
 
-/* ── Starter chips ── */
+/* ─── Starter chips ─────────────────────────────────── */
 function sendStarter(el) {
     inp.value = el.textContent;
     document.getElementById('starterChips').style.display = 'none';
     send();
 }
 
-/* ── Append a message bubble ── */
-function appendMsg(role, html) {
+/* ─── Append a message bubble ───────────────────────── */
+function appendMsg(role, html, extraClass = '') {
     const box   = document.getElementById('chatMessages');
     const isBot = role === 'bot';
     const div   = document.createElement('div');
     div.className = `msg ${role}`;
     div.innerHTML = `
         <div class="avatar"><i class="bi bi-${isBot ? 'stars' : 'person-fill'}"></i></div>
-        <div class="bubble">${html}</div>`;
+        <div class="bubble${extraClass ? ' ' + extraClass : ''}">${html}</div>`;
     box.appendChild(div);
     box.scrollTop = box.scrollHeight;
     return div;
 }
 
-/* ── Simple markdown-ish formatter ── */
+/* ─── Simple markdown formatter ─────────────────────── */
 function fmt(text) {
-    // Bold **word**
     text = text.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-    // Bullet lines starting with • or -
     const lines = text.split('\n');
     let out = '', inList = false;
     for (let line of lines) {
@@ -278,7 +590,7 @@ function fmt(text) {
     return out;
 }
 
-/* ── Send message ── */
+/* ─── Send message ──────────────────────────────────── */
 async function send() {
     const text = inp.value.trim();
     if (!text || text.length > 400) return;
@@ -292,7 +604,6 @@ async function send() {
     const btn = document.getElementById('sendBtn');
     btn.disabled = true;
 
-    // Typing indicator
     const typing = appendMsg('bot',
         '<span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span>');
 
@@ -306,24 +617,219 @@ async function send() {
 
         typing.remove();
 
-        if (data.error) {
-            appendMsg('bot', `<span style="color:#dc2626">${data.error}</span>`);
+        if (data.paywall) {
+            /* ── Paywall hit ── */
+            appendMsg('bot',
+                `<strong>🔒 You've used all your free AI messages.</strong><br>
+                 Top up to continue getting course and career guidance.<br><br>
+                 <button class="btn btn-success btn-sm mt-1" onclick="openPaywall()">
+                     <i class="bi bi-unlock-fill me-1"></i>Top Up Messages
+                 </button>`,
+                'paywall-bubble'
+            );
+            /* Disable input until they top up */
+            btn.disabled = true;
+            inp.disabled = true;
+        } else if (data.error) {
+            appendMsg('bot', `<span style="color:#dc2626"><i class="bi bi-exclamation-circle me-1"></i>${data.error}</span>`);
+            btn.disabled = false;
         } else {
             appendMsg('bot', fmt(data.reply));
             history.push({ role: 'user',      content: text });
             history.push({ role: 'assistant', content: data.reply });
             if (history.length > 16) history = history.slice(-16);
+
+            /* Update credit counters locally */
+            if (freeLimit !== null) {
+                if (paidLeft > 0) { paidLeft--; }
+                else { freeUsed++; }
+                updateCreditBadge();
+
+                /* Warn at 2 free messages left */
+                const left = freeLimit - freeUsed;
+                if (paidLeft === 0 && left === 2) {
+                    appendMsg('bot',
+                        `<i class="bi bi-exclamation-triangle-fill me-1 text-warning"></i>
+                         <strong>Heads up:</strong> You have <strong>2 free messages remaining</strong>.
+                         After that, a small top-up gives you more.`,
+                        ''
+                    );
+                }
+            }
+            btn.disabled = false;
         }
     } catch {
         typing.remove();
-        appendMsg('bot', '<span style="color:#dc2626">Network error — please try again.</span>');
+        appendMsg('bot', '<span style="color:#dc2626"><i class="bi bi-wifi-off me-1"></i>Network error — please try again.</span>');
+        btn.disabled = false;
     }
 
-    btn.disabled = false;
     inp.focus();
 }
 
 document.getElementById('sendBtn').addEventListener('click', send);
+
+
+/* ═══════════════════════════════════════════════════ */
+/* PAYWALL MODAL LOGIC                                 */
+/* ═══════════════════════════════════════════════════ */
+
+function openPaywall() {
+    document.getElementById('paywallOverlay').classList.add('open');
+    pmShowStep('phone');
+}
+
+function closePaywall() {
+    document.getElementById('paywallOverlay').classList.remove('open');
+    pmClearTimers();
+}
+
+function handleOverlayClick(e) {
+    if (e.target === document.getElementById('paywallOverlay')) closePaywall();
+}
+
+function pmShowStep(name) {
+    document.querySelectorAll('.pm-step').forEach(s => s.classList.remove('active'));
+    const el = document.getElementById('pmStep' + name.charAt(0).toUpperCase() + name.slice(1));
+    if (el) el.classList.add('active');
+}
+
+function pmClearTimers() {
+    if (pmPollTimer)  clearInterval(pmPollTimer);
+    if (pmDotsTimer)  clearInterval(pmDotsTimer);
+    pmPollTimer = pmDotsTimer = null;
+    pmPollAttempts = 0;
+}
+
+async function pmInitiatePayment() {
+    const rawPhone = document.getElementById('pmPhone').value.trim().replace(/\s/g,'');
+    const errEl = document.getElementById('pmPhoneError');
+    errEl.classList.add('d-none');
+
+    if (!/^\d{9}$/.test(rawPhone)) {
+        errEl.textContent = 'Enter a valid 9-digit Safaricom number (e.g. 712345678).';
+        errEl.classList.remove('d-none');
+        return;
+    }
+
+    try {
+        const res = await fetch(INITIATE_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF },
+            body: JSON.stringify({ feature: AI_FEATURE, phone: '0' + rawPhone }),
+        });
+        const data = await res.json();
+
+        if (data.success) {
+            pmPaymentId = data.payment_id;
+            pmShowStep('waiting');
+            pmStartPolling(data.payment_id);
+        } else {
+            errEl.textContent = data.message || 'Something went wrong. Please try again.';
+            errEl.classList.remove('d-none');
+        }
+    } catch {
+        errEl.textContent = 'Network error. Please check your connection.';
+        errEl.classList.remove('d-none');
+    }
+}
+
+function pmStartPolling(paymentId) {
+    pmDotsTimer = setInterval(() => {
+        const el = document.getElementById('pmDots');
+        if (el) el.textContent = el.textContent.length >= 3 ? '.' : el.textContent + '.';
+    }, 500);
+
+    pmPollTimer = setInterval(async () => {
+        pmPollAttempts++;
+        try {
+            const res  = await fetch(`/payments/status/${paymentId}/`);
+            const data = await res.json();
+
+            if (data.status === 'completed') {
+                pmClearTimers();
+                pmOnSuccess();
+            } else if (data.status === 'failed') {
+                pmClearTimers();
+                pmShowStep('failed');
+            } else if (pmPollAttempts >= PM_MAX_POLLS) {
+                pmClearTimers();
+                pmShowStep('timeout');
+            }
+        } catch {
+            if (pmPollAttempts >= PM_MAX_POLLS) { pmClearTimers(); pmShowStep('timeout'); }
+        }
+    }, 3000);
+}
+
+async function pmVerifyStatus() {
+    if (!pmPaymentId) { pmShowStep('timeout'); return; }
+    pmShowStep('checking');
+    try {
+        const res  = await fetch(`/payments/verify/${pmPaymentId}/`);
+        const data = await res.json();
+        if (data.status === 'completed') {
+            pmOnSuccess();
+        } else if (data.status === 'failed') {
+            pmShowStep('failed');
+        } else {
+            document.getElementById('pmTimeoutMsg').textContent =
+                data.message || 'Payment still processing. Wait a few minutes then check again.';
+            pmShowStep('timeout');
+        }
+    } catch {
+        document.getElementById('pmTimeoutMsg').textContent =
+            'Could not reach the server. Please check your internet.';
+        pmShowStep('timeout');
+    }
+}
+
+async function pmSubmitCode() {
+    const code  = document.getElementById('pmCodeInput').value.trim().toUpperCase();
+    const errEl = document.getElementById('pmCodeError');
+    errEl.classList.add('d-none');
+
+    if (!/^[A-Z0-9]{6,20}$/.test(code)) {
+        errEl.textContent = 'Enter a valid M-Pesa transaction code.';
+        errEl.classList.remove('d-none');
+        return;
+    }
+    try {
+        const res  = await fetch(VERIFY_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF },
+            body: JSON.stringify({ feature: AI_FEATURE, mpesa_code: code }),
+        });
+        const data = await res.json();
+        if (data.status === 'completed') {
+            pmOnSuccess();
+        } else {
+            errEl.textContent = data.message || 'Transaction code not found. Check your M-Pesa SMS.';
+            errEl.classList.remove('d-none');
+        }
+    } catch {
+        errEl.textContent = 'Network error. Please check your connection.';
+        errEl.classList.remove('d-none');
+    }
+}
+
+function pmOnSuccess() {
+    pmShowStep('success');
+    /* Re-enable the chat input */
+    document.getElementById('chatInput').disabled  = false;
+    document.getElementById('sendBtn').disabled = false;
+    /* Update counters (we don't know the exact top-up without a request, reload will fix badge) */
+    paidLeft = paidLeft + {% if credit_info %}{{ credit_info.paid_topup }}{% else %}200{% endif %};
+    updateCreditBadge();
+    /* Show success message in chat */
+    appendMsg('bot',
+        `<strong>✅ Top-up successful!</strong><br>
+         Your AI messages have been added. Continue asking your questions!`
+    );
+}
+
+/* Initialise badge on load */
+updateCreditBadge();
 </script>
 {% endblock %}
 {% endblock %}

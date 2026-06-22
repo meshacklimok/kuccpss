@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.utils.timezone import now
-from .models import Payment, Transaction, PaymentFeature
+from .models import Payment, Transaction, PaymentFeature, PaymentExemption
 
 
 @admin.register(PaymentFeature)
@@ -45,3 +45,25 @@ class TransactionAdmin(admin.ModelAdmin):
     list_display = ("payment", "mpesa_ref", "amount", "created_at")
     readonly_fields = ("created_at",)
     search_fields = ("mpesa_ref", "payment__user__email")
+
+
+@admin.register(PaymentExemption)
+class PaymentExemptionAdmin(admin.ModelAdmin):
+    list_display = ("user", "feature_display", "note_short", "granted_by", "created_at")
+    list_filter = ("feature",)
+    search_fields = ("user__email", "granted_by__email", "note")
+    readonly_fields = ("granted_by", "created_at")
+    autocomplete_fields = ("user",)
+
+    def save_model(self, request, obj, form, change):
+        if not change:
+            obj.granted_by = request.user
+        super().save_model(request, obj, form, change)
+
+    @admin.display(description="Feature scope")
+    def feature_display(self, obj):
+        return obj.get_feature_display() if obj.feature else "ALL features"
+
+    @admin.display(description="Note")
+    def note_short(self, obj):
+        return obj.note[:60] + "…" if len(obj.note) > 60 else obj.note
