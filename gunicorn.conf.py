@@ -17,7 +17,9 @@ import multiprocessing
 # ── Worker count ──────────────────────────────────────────────────────────────
 # Formula: 2 * CPU + 1 is the classic sync-worker rule.
 # Render Free has 0.1 CPU shared; cap at 2 to avoid OOM.
-_default_workers = min(multiprocessing.cpu_count() * 2 + 1, 4)
+# On Render free/starter (512 MB) cpu_count() reports host CPUs, not container
+# share, so cap hard at 2 to avoid OOM; override via GUNICORN_WORKERS env var.
+_default_workers = min(multiprocessing.cpu_count() + 1, 2)
 workers = int(os.environ.get('GUNICORN_WORKERS', _default_workers))
 
 # ── Worker class ─────────────────────────────────────────────────────────────
