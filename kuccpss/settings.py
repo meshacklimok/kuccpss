@@ -39,7 +39,7 @@ except ImportError:
 SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-fallback-do-not-use-in-production')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ.get('DJANGO_DEBUG', 'True') == 'True'
+DEBUG = os.environ.get('DJANGO_DEBUG', 'False') == 'True'
 
 ALLOWED_HOSTS = [
     'localhost',
@@ -115,7 +115,6 @@ TIME_ZONE = 'Africa/Nairobi'
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
-    'django.middleware.gzip.GZipMiddleware',
     'kuccpss.middleware.GracefulErrorMiddleware',
     'kuccpss.middleware.HeavyEndpointRateLimitMiddleware',
     'kuccpss.middleware.SlowRequestLogMiddleware',
@@ -209,15 +208,24 @@ SESSION_ENGINE = 'django.contrib.sessions.backends.cached_db'
 INTASEND_PUBLISHABLE_KEY = os.environ.get("INTASEND_PUBLISHABLE_KEY", "")
 INTASEND_SECRET_KEY = os.environ.get("INTASEND_SECRET_KEY", "")
 INTASEND_WEBHOOK_SECRET = os.environ.get("INTASEND_WEBHOOK_SECRET", "")
-INTASEND_SANDBOX = os.environ.get("INTASEND_SANDBOX", "true").lower() == "true"
+INTASEND_SANDBOX = os.environ.get("INTASEND_SANDBOX", "false").lower() == "true"
+
+# Prevent browsers from MIME-sniffing responses — applied universally, not just production
+SECURE_CONTENT_TYPE_NOSNIFF = True
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
 
 AUTH_PASSWORD_VALIDATORS = [
     {
+        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+    },
+    {
         'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-        'OPTIONS': {'min_length': 4},
+        'OPTIONS': {'min_length': 8},
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
     },
 ]
 
@@ -263,13 +271,13 @@ AUTHENTICATION_BACKENDS = [
 ACCOUNT_LOGIN_METHODS = {"email"}
 ACCOUNT_SIGNUP_FIELDS = ["email*", "password1*", "password2*"]
 ACCOUNT_USER_MODEL_USERNAME_FIELD = None
-ACCOUNT_EMAIL_VERIFICATION = 'none' if os.environ.get('DJANGO_DEBUG', 'True') != 'True' else 'optional'
+ACCOUNT_EMAIL_VERIFICATION = 'optional' if DEBUG else 'none'
 ACCOUNT_LOGIN_ON_EMAIL_CONFIRMATION = True
 ACCOUNT_LOGIN_ON_PASSWORD_RESET = True
 
 SOCIALACCOUNT_AUTO_SIGNUP = True
 SOCIALACCOUNT_EMAIL_VERIFICATION = 'none'
-SOCIALACCOUNT_LOGIN_ON_GET = True
+SOCIALACCOUNT_LOGIN_ON_GET = False
 SOCIALACCOUNT_EMAIL_AUTHENTICATION = True
 SOCIALACCOUNT_EMAIL_AUTHENTICATION_AUTO_CONNECT = True
 ACCOUNT_ADAPTER = 'accounts.adapters.AccountAdapter'
@@ -337,9 +345,6 @@ if not DEBUG:
     # Cookies must only travel over HTTPS
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
-
-    # Prevent browsers from MIME-sniffing responses
-    SECURE_CONTENT_TYPE_NOSNIFF = True
 
     # Additional cookie hardening
     SESSION_COOKIE_HTTPONLY = True
