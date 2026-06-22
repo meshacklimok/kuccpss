@@ -333,7 +333,7 @@
             try{
                 var sr = await fetch('/payments/status/'+paymentId+'/');
                 var sd = await sr.json();
-                if(sd.status==='completed'){ pwClear(); pwState('success'); setTimeout(function(){ location.reload(); },2000); }
+                if(sd.status==='completed'){ pwClear(); pwState('success'); setTimeout(function(){ location.reload(); },3000); }
                 else if(sd.status==='failed'){ pwClear(); pwState('failed'); }
                 else if(attempts >= MAX_ATTEMPTS){ pwClear(); pwState('timeout'); }
             }catch(e){
@@ -366,7 +366,7 @@
             var d = await r.json();
             if(d.status === 'completed'){
                 pwState('success');
-                setTimeout(function(){ location.reload(); },2000);
+                setTimeout(function(){ location.reload(); },3000);
             } else if(d.status === 'failed'){
                 pwState('failed');
             } else {
