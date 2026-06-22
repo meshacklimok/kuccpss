@@ -1,5 +1,5 @@
-django>=5.2
-django-allauth>=65.0
+django>=5.2,<6.0
+django-allauth>=65.0,<66.0
 django-widget-tweaks>=1.5
 django-import-export>=4.0
 whitenoise>=6.0
