@@ -62,6 +62,16 @@ class MentorProfile(models.Model):
         help_text="Your institutional email, e.g. jm001@students.jkuat.ac.ke. Optional but increases approval chances.",
     )
 
+    # Per-mentor pricing override (leave blank to use global MentorshipConfig)
+    custom_session_price = models.PositiveIntegerField(
+        null=True, blank=True,
+        help_text="Override global session price for this mentor only. Leave blank to use the global default.",
+    )
+    custom_mentor_payout = models.PositiveIntegerField(
+        null=True, blank=True,
+        help_text="Override global mentor payout for this mentor only. Leave blank to use the global default.",
+    )
+
     # Earnings wallet (in KES cents avoided — store as KES integers)
     wallet_balance = models.PositiveIntegerField(default=0)
     total_earned = models.PositiveIntegerField(default=0)
@@ -105,6 +115,16 @@ class MentorProfile(models.Model):
     @property
     def available_slots_count(self):
         return self.slots.filter(is_booked=False, date__gte=timezone.now().date()).count()
+
+    def effective_session_price(self):
+        if self.custom_session_price is not None:
+            return self.custom_session_price
+        return MentorshipConfig.get().session_price
+
+    def effective_mentor_payout(self):
+        if self.custom_mentor_payout is not None:
+            return self.custom_mentor_payout
+        return MentorshipConfig.get().mentor_payout
 
 
 class TimeSlot(models.Model):

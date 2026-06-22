@@ -132,6 +132,10 @@ class MentorProfileAdmin(admin.ModelAdmin):
             ),
             "description": "Review these before approving. Documents are private.",
         }),
+        ("Pricing Override (optional)", {
+            "fields": ("custom_session_price", "custom_mentor_payout"),
+            "description": "Leave blank to use the global Mentorship Pricing Config. Set a value here to override for this mentor only.",
+        }),
         ("Status", {
             "fields": ("is_approved", "is_active", "is_rejected", "rejection_reason"),
         }),

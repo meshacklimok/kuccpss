@@ -15,7 +15,7 @@ from django.views.decorators.http import require_POST
 
 from accounts.decorators import require_recent_auth
 from .forms import AddSlotsForm, BookingForm, CancelSessionForm, MentorRegistrationForm, RatingForm, WithdrawalForm
-from .models import MentorProfile, MentorshipSession, MentorshipConfig, TimeSlot, WithdrawalRequest
+from .models import MentorProfile, MentorshipSession, TimeSlot, WithdrawalRequest
 
 logger = logging.getLogger(__name__)
 
@@ -316,7 +316,6 @@ def book_session(request, mentor_pk):
                 messages.error(request, "That slot was just booked by someone else. Please choose another.")
                 return redirect("mentorship:book_session", mentor_pk=mentor_pk)
 
-            cfg = MentorshipConfig.get()
             session = MentorshipSession.objects.create(
                 mentor=mentor,
                 mentee=request.user,
@@ -324,8 +323,8 @@ def book_session(request, mentor_pk):
                 course_interest=mentor.course,
                 mentee_question=form.cleaned_data["mentee_question"],
                 status="pending_payment",
-                amount=cfg.session_price,
-                mentor_payout=cfg.mentor_payout,
+                amount=mentor.effective_session_price(),
+                mentor_payout=mentor.effective_mentor_payout(),
             )
             slot.is_booked = True
             slot.save(update_fields=["is_booked"])
