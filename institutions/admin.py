@@ -2,6 +2,7 @@ from datetime import date
 
 from django.contrib import admin
 from django.utils.html import format_html
+from django.utils.safestring import mark_safe
 from import_export.admin import ImportExportModelAdmin
 from .models import InstitutionType, Institution, InstitutionPromotion
 from .resources import InstitutionResource, InstitutionTypeResource
@@ -105,10 +106,10 @@ class InstitutionPromotionAdmin(admin.ModelAdmin):
             return '—'
         today = date.today()
         if obj.start_date > today:
-            return format_html('<span style="color:#b45309;font-weight:700;">Scheduled</span>')
+            return mark_safe('<span style="color:#b45309;font-weight:700;">Scheduled</span>')
         if obj.end_date < today:
-            return format_html('<span style="color:#6b7280;">Expired</span>')
-        return format_html('<span style="color:#16a34a;font-weight:700;">&#9679; Live</span>')
+            return mark_safe('<span style="color:#6b7280;">Expired</span>')
+        return mark_safe('<span style="color:#16a34a;font-weight:700;">&#9679; Live</span>')
     live_status_tag.short_description = 'Status'
 
     def days_remaining_tag(self, obj):
@@ -116,7 +117,7 @@ class InstitutionPromotionAdmin(admin.ModelAdmin):
             return '—'
         today = date.today()
         if obj.end_date < today:
-            return format_html('<span style="color:#6b7280;">—</span>')
+            return mark_safe('<span style="color:#6b7280;">—</span>')
         days = (obj.end_date - today).days
         color = '#dc2626' if days <= 7 else '#d97706' if days <= 30 else '#16a34a'
         return format_html('<span style="color:{};font-weight:700;">{} day{}</span>', color, days, 's' if days != 1 else '')
