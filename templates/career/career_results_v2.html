@@ -4,7 +4,8 @@
 {% block title %}{{ pathway }} Course Matches — Career Guidance{% endblock %}
 
 {% block content %}
-{% if is_locked %}{% include "payments/paywall_overlay.html" %}{% endif %}
+{% if guest_locked %}{% include "payments/signup_gate_overlay.html" %}
+{% elif is_locked %}{% include "payments/paywall_overlay.html" %}{% endif %}
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
 
 <style>
@@ -265,7 +266,7 @@
 </style>
 
 <!-- Main content (blurred when locked) -->
-<div id="pw-main-content" {% if is_locked %}class="pw-blurred"{% endif %}>
+<div id="pw-main-content" {% if is_locked or guest_locked %}class="pw-blurred"{% endif %}>
 
 {% if sub_banner %}
 <!-- Grace-period confirmation banner -->
