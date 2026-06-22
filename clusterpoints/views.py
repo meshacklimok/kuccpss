@@ -388,7 +388,7 @@ def export_cluster_pdf(request):
         return redirect("clusterpoints:calculator")
 
     cluster_results = list(
-        kcse_result.cluster_results.select_related('cluster').order_by('cluster__kuccps_number')
+        kcse_result.cluster_results.select_related('cluster').order_by('cluster__number')
     )
 
     response = HttpResponse(content_type='application/pdf')

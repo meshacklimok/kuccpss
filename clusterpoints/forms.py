@@ -61,7 +61,7 @@ class KCSEForm(forms.Form):
 
         for subject in self.subjects:
             is_required = subject.name in REQUIRED_SUBJECT_NAMES
-            self.fields[f'subject_{subject.id}'] = forms.ChoiceField(
+            self.fields[f'subject_{subject.pk}'] = forms.ChoiceField(
                 choices=grade_choices,
                 required=is_required,
                 label=subject.name,
@@ -75,7 +75,7 @@ class KCSEForm(forms.Form):
         for subject in self.subjects:
             if subject.name not in self.compulsory_subjects:
                 g = subject.group or 'Other'
-                groups.setdefault(g, []).append((f'subject_{subject.id}', subject.name))
+                groups.setdefault(g, []).append((f'subject_{subject.pk}', subject.name))
 
         self.grouped_optional_fields = [
             (GROUP_LABELS.get(g, f'Group {g}'), fields)
@@ -83,7 +83,7 @@ class KCSEForm(forms.Form):
         ]
 
     def clean(self):
-        cleaned = super().clean()
+        cleaned = super().clean() or {}
         filled = [v for v in cleaned.values() if v]
         if len(filled) < 7:
             raise forms.ValidationError("Please enter grades for at least 7 subjects.")
