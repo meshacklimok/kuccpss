@@ -75,7 +75,7 @@ def _compute_aggregate(named: dict) -> int:
         agg.append(working.pop('Mathematics'))
     langs = {l: working.pop(l) for l in ['English', 'Kiswahili'] if l in working}
     if langs:
-        best = max(langs, key=langs.get)
+        best = max(langs, key=lambda k: langs[k])
         agg.append(langs[best])
         for l, p in langs.items():
             if l != best:
@@ -96,7 +96,7 @@ def dashboard(request):
     cluster_results = []
 
     if kcse_result:
-        cluster_results = kcse_result.cluster_results.select_related("cluster").order_by("-cluster_points")
+        cluster_results = kcse_result.cluster_results.select_related("cluster").order_by("-cluster_points")  # type: ignore[attr-defined]
 
     return render(request, "clusterpoints/dashboard.html", {
         "kcse_result": kcse_result,
@@ -181,7 +181,7 @@ def kcse_calculator_view(request):
         if _saved:
             kcse_result = _saved
             total_points = kcse_result.total_points
-            results = list(kcse_result.cluster_results.select_related('cluster').order_by('-cluster_points'))
+            results = list(kcse_result.cluster_results.select_related('cluster').order_by('-cluster_points'))  # type: ignore[attr-defined]
             if results:
                 _cs = {r.cluster.number: float(r.cluster_points) for r in results if r.cluster and r.cluster.number}
                 if _cs:
@@ -191,7 +191,7 @@ def kcse_calculator_view(request):
         if form.is_valid():
             points_dict = form.get_points_dict()  # {subject_id: points}
             subject_ids = [int(s) for s in points_dict.keys()]
-            subjects_map = {s.id: s for s in Subject.objects.filter(id__in=subject_ids)}
+            subjects_map = {s.pk: s for s in Subject.objects.filter(id__in=subject_ids)}  # type: ignore[misc]
 
             # Build {name: points} — needed by both paths
             named_points = {
@@ -297,7 +297,7 @@ def kcse_calculator_view(request):
     compulsory_fields = []
     _gmap = {g: [] for g, _ in _GC if g != 'I'}
     for _s in Subject.objects.all().order_by('group', 'name'):
-        _e = (_s, form[f'subject_{_s.id}'], _ICONS.get(_s.name, 'bi-journal'))
+        _e = (_s, form[f'subject_{_s.pk}'], _ICONS.get(_s.name, 'bi-journal'))  # type: ignore[misc]
         if _s.name in _COMP:
             compulsory_fields.append(_e)
         elif _s.group in _gmap:
@@ -317,7 +317,7 @@ def kcse_calculator_view(request):
             .order_by('cluster_id', 'name')
         )
         for _c in _all_courses:
-            cid = _c.cluster_id
+            cid = _c.cluster_id  # type: ignore[attr-defined]
             cluster_course_counts[cid] = cluster_course_counts.get(cid, 0) + 1
             lst = cluster_courses_map.setdefault(cid, [])
             if len(lst) < 5:
@@ -326,8 +326,8 @@ def kcse_calculator_view(request):
         # Attach to each result so the template needs no extra queries
         for _r in results:
             cid = _r.cluster.id if _r.cluster else None
-            _r.top_courses = cluster_courses_map.get(cid, [])
-            _r.course_count = cluster_course_counts.get(cid, 0)
+            _r.top_courses = cluster_courses_map.get(cid, [])  # type: ignore[attr-defined]
+            _r.course_count = cluster_course_counts.get(cid, 0)  # type: ignore[attr-defined]
 
     # Grace-period banner data for the template
     sub_banner = None
@@ -388,13 +388,13 @@ def export_cluster_pdf(request):
         return redirect("clusterpoints:calculator")
 
     cluster_results = list(
-        kcse_result.cluster_results.select_related('cluster').order_by('cluster__number')
+        kcse_result.cluster_results.select_related('cluster').order_by('cluster__number')  # type: ignore[attr-defined]
     )
 
     response = HttpResponse(content_type='application/pdf')
     response['Content-Disposition'] = 'attachment; filename="cluster_points_report.pdf"'
 
-    p = canvas.Canvas(response, pagesize=A4)
+    p = canvas.Canvas(response, pagesize=A4)  # type: ignore[arg-type]
     W, H = A4
 
     # Brand colour palette

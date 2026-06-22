@@ -53,7 +53,7 @@ def cluster_list(request):
         num = _main_num(cluster)
         # Attach extracted sub-cluster code (e.g. "1A") for display
         mc = re.search(r'\((\d+[A-K])\)', cluster.name)
-        cluster.code = mc.group(1) if mc else cluster.name
+        cluster.code = mc.group(1) if mc else cluster.name  # type: ignore[attr-defined]
         if num not in groups:
             groups[num] = {
                 'number': num,
@@ -62,7 +62,7 @@ def cluster_list(request):
                 'total_courses': 0,
             }
         groups[num]['sub_clusters'].append(cluster)
-        groups[num]['total_courses'] += cluster.course_count
+        groups[num]['total_courses'] += cluster.course_count  # type: ignore[attr-defined]
 
     context = {
         'cluster_groups': sorted(groups.values(), key=lambda g: g['number']),
@@ -86,7 +86,7 @@ def _parse_requirements(desc):
 def cluster_detail(request, slug):
     from courses.models import Course
     cluster = get_object_or_404(Cluster, slug=slug)
-    subject_groups = cluster.subject_groups.prefetch_related('subjects').all()
+    subject_groups = cluster.subject_groups.prefetch_related('subjects').all()  # type: ignore[attr-defined]
     courses = (
         Course.objects
         .filter(cluster=cluster)
