@@ -23,10 +23,10 @@
   --info:            #0891B2;
 
   /* Surfaces */
-   --bg:        #F6F8FC;
+  --bg:        #E4EAF3;   /* distinctly off-white so white cards/divs pop */
   --surface:   #FFFFFF;
-  --surface-2: #F0F4F9;
-  --surface-3: #D9E2EC;
+  --surface-2: #EBF0F7;
+  --surface-3: #D1DBE8;
 
   --white:     #FFFFFF;
   /* Text */
@@ -36,12 +36,12 @@
   --muted:           #475569;
 
   /* Borders */
-  --border:          #E2E8F0;
-  --border-soft:     #F1F5F9;
+  --border:          #C8D3E0;   /* more visible against the new --bg */
+  --border-soft:     #DDE4EE;
 
   /* Shadows — layered for natural depth */
-  --shadow-xs:  0 1px 2px rgba(15,23,42,0.04);
-  --shadow-sm:  0 1px 3px rgba(15,23,42,0.06), 0 4px 12px rgba(15,23,42,0.05);
+  --shadow-xs:  0 1px 2px rgba(15,23,42,0.06);
+  --shadow-sm:  0 2px 6px rgba(15,23,42,0.08), 0 4px 14px rgba(15,23,42,0.07);
   --shadow-md:  0 4px 8px rgba(15,23,42,0.07), 0 12px 28px rgba(15,23,42,0.08);
   --shadow-lg:  0 8px 16px rgba(15,23,42,0.08), 0 24px 48px rgba(15,23,42,0.12);
   --shadow-xl:  0 16px 32px rgba(15,23,42,0.10), 0 40px 80px rgba(15,23,42,0.14);
