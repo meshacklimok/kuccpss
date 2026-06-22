@@ -2036,6 +2036,14 @@ def degree_calculate(request):
                     },
                 )
 
+        if not request.user.is_authenticated:
+            # Guest: session is saved; skip degree_options and go straight to loading
+            # after they register/login so they land right on results.
+            request.session['career_cluster_points'] = precomputed
+            request.session.pop('career_precomputed', None)
+            _next = reverse('career:loading_page', kwargs={'pathway': 'degree'})
+            return redirect(reverse('accounts:register') + '?next=' + _next)
+
         return redirect('career:degree_options')
 
     # Build grouped subject data for the redesigned grade-entry UI
@@ -2565,10 +2573,16 @@ def pathway_input(request, pathway):
                 mean_grade = _aggregate_to_mean_grade(aggregate_total)
                 request.session['career_mean_grade'] = mean_grade
                 request.session['career_subject_grades'] = {k.lower(): v for k, v in pts_by_name.items()}
+                _loading_url = reverse('career:loading_page', kwargs={'pathway': pathway.lower()})
+                if not request.user.is_authenticated:
+                    return redirect(reverse('accounts:register') + '?next=' + _loading_url)
                 return redirect('career:loading_page', pathway=pathway.lower())
             # Fall through to re-render with errors
         else:
             request.session['career_mean_grade'] = request.POST.get('mean_grade', '').strip()
+            _loading_url = reverse('career:loading_page', kwargs={'pathway': pathway.lower()})
+            if not request.user.is_authenticated:
+                return redirect(reverse('accounts:register') + '?next=' + _loading_url)
             return redirect('career:loading_page', pathway=pathway.lower())
     else:
         if use_kcse_form and request.GET.get('edit'):

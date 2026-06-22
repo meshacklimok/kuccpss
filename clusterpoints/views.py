@@ -144,6 +144,37 @@ def kcse_calculator_view(request):
     kcse_result = None
     predicted_groups = []
 
+    # ── Restore guest session after sign-up redirect ──────────────────────────
+    if (request.method == 'GET'
+            and request.GET.get('restore')
+            and request.user.is_authenticated):
+        guest_calc = request.session.get('guest_calc')
+        if guest_calc:
+            named_points = guest_calc.get('named_points', {})
+            if named_points:
+                subjects_qs = Subject.objects.all()
+                name_to_id  = {s.name: s.pk for s in subjects_qs}
+                id_to_subj  = {s.pk: s for s in subjects_qs}
+                points_dict = {name_to_id[n]: p for n, p in named_points.items() if n in name_to_id}
+                with transaction.atomic():
+                    UserKCSEResult.objects.filter(user=request.user).delete()
+                    kcse_result = UserKCSEResult.objects.create(user=request.user, created_at=timezone.now())
+                    SubjectResult.objects.bulk_create([
+                        SubjectResult(kcse_result=kcse_result, subject=id_to_subj[sid], points=pts)
+                        for sid, pts in points_dict.items() if sid in id_to_subj
+                    ])
+                    kcse_result.recalc_total_points()
+                    total_points = kcse_result.total_points
+                    results = calculate_all_clusters(kcse_result)
+                request.session.pop('guest_calc', None)
+                request.session.pop('guest_cluster_map', None)
+                messages.success(request, "Your KCSE results have been saved!")
+                cluster_scores = {
+                    r.cluster.number: float(r.cluster_points)
+                    for r in results if r.cluster and r.cluster.number
+                }
+                predicted_groups = predict_all_for_student(cluster_scores, top_per_cluster=9999) if cluster_scores else []
+
     if request.method == "POST":
         if form.is_valid():
             points_dict = form.get_points_dict()  # {subject_id: points}
@@ -199,7 +230,7 @@ def kcse_calculator_view(request):
                     ).first()
 
             else:
-                # ── Guest: compute in memory, stash in session ─────────────
+                # ── Guest: compute in memory, stash in session, then gate ──
                 results = calculate_clusters_anonymous(named_points)
                 total_points = _compute_aggregate(named_points)
                 request.session['guest_calc'] = {
@@ -211,6 +242,8 @@ def kcse_calculator_view(request):
                     for r in results
                     if r.cluster and r.cluster.kuccps_number is not None
                 }
+                from django.urls import reverse as _rev
+                return redirect(_rev('accounts:register') + '?next=/clusterpoints/calculator/?restore=1')
 
             # ── Build cluster scores dict and run predictor ────────────────
             cluster_scores = {
