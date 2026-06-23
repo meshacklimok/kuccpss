@@ -83,6 +83,12 @@ class Course(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    # Set transiently by trends.py — not stored in DB
+    trend_stat:  str
+    trend_label: str
+    trend_icon:  str
+    trend_color: str
+
     class Meta:
         ordering = ['course_type', 'category', 'name']
         indexes = [
@@ -129,6 +135,7 @@ class CourseOffering(models.Model):
     has different cutoff points at different universities.
     """
     course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='offerings')
+    course_id: int
     institution = models.ForeignKey(Institution, on_delete=models.CASCADE, related_name='offerings')
     programme_code = models.CharField(max_length=20, blank=True, help_text='KUCCPS code e.g. 5000K32')
     cutoff_points = models.JSONField(
