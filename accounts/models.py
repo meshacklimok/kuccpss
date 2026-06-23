@@ -476,6 +476,31 @@ class AffiliateCommission(models.Model):
         return f"{self.affiliate.user.email} — KES {self.amount} ({self.status})"
 
 
+class AffiliateWithdrawalRequest(models.Model):
+    """Tracks each payout request made by an affiliate from their dashboard."""
+    STATUS_CHOICES = [
+        ('pending',   'Pending'),
+        ('processed', 'Processed'),
+        ('failed',    'Failed'),
+    ]
+
+    affiliate    = models.ForeignKey(AffiliateProfile, on_delete=models.CASCADE, related_name='withdrawals')
+    amount       = models.DecimalField(max_digits=10, decimal_places=2)
+    mpesa_number = models.CharField(max_length=20)
+    status       = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    admin_note   = models.TextField(blank=True)
+    created_at   = models.DateTimeField(auto_now_add=True)
+    processed_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        verbose_name = "Affiliate Withdrawal"
+        verbose_name_plural = "Affiliate Withdrawals"
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.affiliate.user.email} — KES {self.amount} ({self.status})"
+
+
 # =====================================================
 # EMAIL LEAD (visitor email capture)
 # =====================================================

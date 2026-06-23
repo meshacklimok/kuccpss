@@ -480,7 +480,7 @@
                 <!-- PDF download buttons -->
                 <a href="{% url 'career:pdf_quick' %}"
                    class="btn btn-sm d-flex align-items-center gap-1"
-                   style="background:#1e3a8a;color:#fff;border-radius:8px;font-size:0.78rem;font-weight:600;white-space:nowrap;padding:5px 10px;"
+                   style="background:#dc2626;color:#fff;border-radius:8px;font-size:0.78rem;font-weight:600;white-space:nowrap;padding:5px 10px;"
                    data-bs-toggle="tooltip" title="Download a compact 1–2 page summary PDF">
                     <i class="bi bi-file-earmark-pdf"></i>
                     <span class="d-none d-md-inline">Quick PDF</span>
@@ -571,6 +571,56 @@
   </div>
 </div>
 
+<!-- Sponsored Listings -->
+{% if sponsored_listings %}
+<div class="container pt-3 pb-0">
+  <div class="d-flex align-items-center gap-2 mb-2">
+    <span class="badge" style="background:#f59e0b;color:#fff;font-size:0.7rem;letter-spacing:.05em;">SPONSORED</span>
+    <span class="text-muted" style="font-size:0.78rem;">Featured programmes from our partner institutions</span>
+  </div>
+  <div class="row g-2 mb-2">
+    {% for sp in sponsored_listings %}
+    <div class="col-12">
+      <div class="result-card" style="border:1.5px solid #fbbf24;background:linear-gradient(135deg,#fffbeb 0%,#fff 100%);">
+        <div class="chance-stripe" style="background:#f59e0b;"></div>
+        <div class="ps-2 d-flex align-items-start justify-content-between gap-2 flex-wrap">
+          <div style="min-width:0;flex:1;">
+            <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
+              {% if sp.featured_course %}
+              <span class="course-name">{{ sp.featured_course.name }}</span>
+              {% else %}
+              <span class="course-name">{{ sp.institution.name }}</span>
+              {% endif %}
+              <span class="badge" style="background:#f59e0b;color:#fff;font-size:0.65rem;padding:2px 7px;border-radius:99px;">Sponsored</span>
+            </div>
+            <div class="inst-name">
+              <i class="bi bi-building me-1"></i>{{ sp.institution.name }}
+              {% if sp.institution.location %} &middot; <i class="bi bi-geo-alt me-1"></i>{{ sp.institution.location }}{% endif %}
+            </div>
+            {% if sp.tagline %}<div class="text-muted mt-1" style="font-size:0.8rem;">{{ sp.tagline }}</div>{% endif %}
+          </div>
+          <div class="d-flex flex-column align-items-end gap-1">
+            {% if sp.featured_course %}
+            <a href="{% url 'courses:course_detail_no_category' sp.featured_course.course_type.slug sp.featured_course.slug %}"
+               class="btn btn-sm" style="background:#f59e0b;color:#fff;font-size:0.78rem;">
+              View Course <i class="bi bi-arrow-right ms-1"></i>
+            </a>
+            {% else %}
+            <a href="{{ sp.institution.get_absolute_url }}"
+               class="btn btn-sm" style="background:#f59e0b;color:#fff;font-size:0.78rem;">
+              View Institution <i class="bi bi-arrow-right ms-1"></i>
+            </a>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  <hr class="my-2" style="border-color:#fde68a;">
+</div>
+{% endif %}
+
 <!-- Results -->
 <div class="container py-4">
     {% if page_obj %}
@@ -596,9 +646,7 @@
                                 {% endif %}
                                 <div class="inst-name mt-1">
                                     <i class="bi bi-building me-1"></i>
-                                    {% if match.institution and match.institution.slug %}
-                                    <a href="{% url 'institutions:institution_detail' type_slug=match.institution.institution_type.slug institution_slug=match.institution.slug %}" class="text-inherit text-decoration-none">{{ match.institution.name }}</a>
-                                    {% else %}{{ match.institution.name }}{% endif %}
+                                    {{ match.institution.name }}
                                     {% if pathway != 'Degree' and match.institution.location %}
                                     <span class="text-muted mx-1">·</span>
                                     <i class="bi bi-geo-alt-fill" style="color:#3b82f6;font-size:0.75rem;"></i>
@@ -1442,14 +1490,14 @@ function nativeShareResult() {
     if (target) target.insertAdjacentElement('afterend', note);
 }());
 
-// Whole result-card click → navigate to course detail (ignore clicks on buttons/links inside)
+// Whole result-card click → navigate to course detail (only skip the bookmark save button)
 function cardClick(e, card) {
-    if (e.target.closest('a, button, [data-bs-toggle]')) return;
+    if (e.target.closest('.save-btn')) return;
     var href = card.dataset.href;
     if (href) window.location.href = href;
 }
 
-// Filter-bar: hides on scroll UP (navigating away), shows on scroll DOWN (browsing results)
+// Filter-bar: hides on scroll DOWN (browsing results), shows on scroll UP or near top
 (function () {
     var bar   = document.querySelector('.filter-bar');
     var lastY = window.scrollY;
@@ -1458,10 +1506,9 @@ function cardClick(e, card) {
         if (raf) return;
         raf = true;
         requestAnimationFrame(function () {
-            var y  = window.scrollY;
-            // Hide only when scrolling UP past the hero (y > 150)
-            var up = y < lastY && y > 150;
-            if (bar) bar.classList.toggle('bar-hidden', up);
+            var y    = window.scrollY;
+            var down = y > lastY && y > 150;
+            if (bar) bar.classList.toggle('bar-hidden', down);
             lastY = y;
             raf = false;
         });

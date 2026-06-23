@@ -131,6 +131,31 @@ def send_mentor_payout(phone: str, amount: int, mentor_name: str, ref: str = "")
     return response.json()
 
 
+def send_affiliate_payout(phone: str, amount, affiliate_name: str, ref: str = "") -> dict:
+    """Send M-Pesa B2C payout to an affiliate via Intasend Send Money API."""
+    url = f"{get_base_url()}/send-money/mpesa/"
+    headers = {
+        "Authorization": f"Bearer {settings.INTASEND_SECRET_KEY}",
+        "Content-Type": "application/json",
+    }
+    payload = {
+        "currency": "KES",
+        "transactions": [
+            {
+                "name": affiliate_name,
+                "account": normalise_phone(phone),
+                "amount": int(amount),
+                "narrative": f"CareerNext affiliate payout {ref}".strip(),
+            }
+        ],
+    }
+    logger.info("IntaSend B2C affiliate payout → %s | payload: %s", url, payload)
+    response = requests.post(url, json=payload, headers=headers, timeout=15)
+    logger.info("IntaSend B2C response %s: %s", response.status_code, response.text[:500])
+    response.raise_for_status()
+    return response.json()
+
+
 def price_for_feature(feature: str) -> int:
     try:
         from .models import PaymentFeature

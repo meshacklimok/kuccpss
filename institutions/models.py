@@ -113,17 +113,42 @@ class Institution(models.Model):
 class InstitutionPromotion(models.Model):
     TIER_FEATURED = 'featured'
     TIER_SCHOLARSHIP = 'scholarship'
+    TIER_COURSE_SPOTLIGHT = 'course_spotlight'
     TIER_CHOICES = [
         (TIER_FEATURED, 'Featured Partner'),
         (TIER_SCHOLARSHIP, 'Scholarship Alert'),
+        (TIER_COURSE_SPOTLIGHT, 'Sponsored Course Listing'),
     ]
 
-    institution = models.OneToOneField(
-        Institution, on_delete=models.CASCADE, related_name='promotion'
+    PATHWAY_ALL = 'all'
+    PATHWAY_CHOICES = [
+        ('all',     'All Pathways'),
+        ('Degree',  'Degree (University)'),
+        ('Diploma', 'Diploma'),
+        ('KMTC',    'KMTC'),
+        ('TVET',    'TVET'),
+        ('TTC',     'TTC'),
+    ]
+
+    institution = models.ForeignKey(
+        Institution, on_delete=models.CASCADE, related_name='promotions'
     )
     tier = models.CharField(max_length=20, choices=TIER_CHOICES, default=TIER_FEATURED)
     tagline = models.CharField(max_length=200, blank=True, help_text="Short marketing message shown on the platform")
     banner_image = models.ImageField(upload_to='institution_banners/', blank=True, null=True)
+
+    # For course_spotlight tier — highlight a specific course in career results
+    featured_course = models.ForeignKey(
+        'courses.Course',
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name='sponsorships',
+        help_text="The specific course to spotlight in career results (course_spotlight tier only)",
+    )
+    pathway = models.CharField(
+        max_length=20, choices=PATHWAY_CHOICES, default=PATHWAY_ALL,
+        help_text="Which career pathway to show this sponsored listing in (course_spotlight tier)",
+    )
 
     # Scholarship-specific
     scholarship_title = models.CharField(max_length=200, blank=True)

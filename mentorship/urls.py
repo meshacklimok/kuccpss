@@ -10,6 +10,7 @@ urlpatterns = [
     path("become-mentor/success/", views.become_mentor_success, name="become_mentor_success"),
     path("dashboard/", views.mentor_dashboard, name="dashboard"),
     path("dashboard/slots/add/", views.add_slots, name="add_slots"),
+    path("dashboard/slots/add-week/", views.add_weekly_slots, name="add_weekly_slots"),
     path("dashboard/slots/<int:slot_id>/delete/", views.delete_slot, name="delete_slot"),
     path("mentor/<int:mentor_pk>/", views.mentor_profile, name="mentor_profile"),
     path("mentor/<int:mentor_pk>/book/", views.book_session, name="book_session"),

@@ -9,7 +9,16 @@
   padding: 2rem 0 1.5rem;
 }
 
-/* ── Comparison grid ── */
+/* ── View toggle ── */
+.view-toggle-group { background:#f1f5f9; border-radius:12px; padding:4px; display:inline-flex; gap:2px; }
+.view-toggle-btn {
+  border:none; background:transparent; border-radius:9px; padding:5px 16px;
+  font-size:0.8rem; font-weight:700; color:#64748b; cursor:pointer; transition: all 0.15s;
+  display:flex; align-items:center; gap:6px;
+}
+.view-toggle-btn.active { background:#fff; color:#1d4ed8; box-shadow:0 1px 6px rgba(0,0,0,0.10); }
+
+/* ── Comparison grid (card view) ── */
 .sl-grid {
   display: grid;
   gap: 1rem;
@@ -110,6 +119,109 @@
 /* ── No cluster data notice ── */
 .no-cluster-notice { background:#fef9c3; border:1.5px solid #fde68a; border-radius:10px;
   padding:0.7rem 1rem; font-size:0.82rem; color:#78350f; margin-bottom:1rem; }
+
+/* ── COMPARE TABLE ── */
+.compare-wrap {
+  overflow-x: auto;
+  border-radius: 16px;
+  border: 1.5px solid #e2e8f0;
+  box-shadow: 0 4px 24px rgba(30,58,138,0.07);
+}
+.compare-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 560px;
+}
+.compare-table th,
+.compare-table td {
+  padding: 0.7rem 1rem;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: middle;
+  font-size: 0.83rem;
+}
+.compare-table thead th {
+  background: #0f172a;
+  color: #fff;
+  font-weight: 800;
+  font-size: 0.82rem;
+  border-bottom: none;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+.compare-table thead th:first-child {
+  background: #1e293b;
+  color: #94a3b8;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  width: 120px;
+  min-width: 120px;
+}
+.compare-table tbody tr:last-child td { border-bottom: none; }
+.compare-table tbody tr:hover td { background: #f8fafc; }
+.compare-table .row-label {
+  color: #64748b; font-weight: 700; font-size: 0.72rem;
+  text-transform: uppercase; letter-spacing: 0.04em;
+  white-space: nowrap; background: #f8fafc;
+}
+.compare-table .row-label i { margin-right:5px; }
+
+/* Best/worst value highlights */
+.cell-best { background: #f0fdf4 !important; }
+.cell-worst { background: #fef2f2 !important; }
+.cell-best .cval { color: #15803d; font-weight: 800; }
+.cell-worst .cval { color: #b91c1c; font-weight: 800; }
+
+/* Course header cell */
+.cth-name {
+  font-size: 0.88rem; font-weight: 800; color: #f8fafc; line-height: 1.3;
+  text-decoration: none; display: block; margin-bottom: 4px;
+}
+.cth-name:hover { color: #93c5fd; }
+.cth-rank {
+  display:inline-flex;align-items:center;justify-content:center;
+  width:22px;height:22px;border-radius:50%;
+  background:#3b82f6;color:#fff;font-size:0.68rem;font-weight:900;
+  flex-shrink:0; margin-right:5px;
+}
+
+/* Remove btn inside table */
+.cth-remove {
+  background: rgba(239,68,68,0.15); border: none; border-radius: 6px;
+  color: #fca5a5; font-size: 0.65rem; padding: 2px 7px; cursor: pointer;
+  transition: background 0.15s;
+}
+.cth-remove:hover { background: rgba(239,68,68,0.3); color: #fff; }
+
+/* Rank select inside table */
+.rank-select-sm {
+  border: 1.5px solid rgba(255,255,255,0.15); border-radius:7px; padding:2px 5px;
+  font-size:0.72rem; font-weight:700; color:#93c5fd; background:rgba(255,255,255,0.08);
+  cursor:pointer; outline:none; margin-top:5px; width:100%;
+}
+.rank-select-sm:focus { border-color:#60a5fa; }
+
+/* Cutoff bar */
+.cutoff-bar-wrap { display:flex; align-items:center; gap:6px; }
+.cutoff-bar {
+  flex: 1; height: 7px; border-radius: 4px;
+  background: #e2e8f0; overflow: hidden; min-width: 40px;
+}
+.cutoff-bar-fill { height: 100%; border-radius: 4px; transition: width 0.4s; }
+.bar-high   { background: linear-gradient(90deg,#ef4444,#f97316); }
+.bar-medium { background: linear-gradient(90deg,#f59e0b,#eab308); }
+.bar-low    { background: linear-gradient(90deg,#22c55e,#10b981); }
+
+/* Gap chip */
+.gap-chip {
+  display:inline-block; padding:1px 7px; border-radius:50px;
+  font-size:0.72rem; font-weight:800; line-height:1.6;
+}
+.gap-positive { background:#dcfce7; color:#15803d; }
+.gap-negative { background:#fee2e2; color:#b91c1c; }
+.gap-close    { background:#fef9c3; color:#854d0e; }
 </style>
 
 <!-- ── HERO ── -->
@@ -131,7 +243,17 @@
           {% if items %}<strong class="text-white">{{ items|length }}/5</strong> added.{% endif %}
         </p>
       </div>
-      <div class="ms-auto d-flex gap-2 flex-wrap">
+      <div class="ms-auto d-flex gap-2 flex-wrap align-items-center">
+        {% if items and items|length > 1 %}
+        <div class="view-toggle-group" id="viewToggle">
+          <button class="view-toggle-btn active" id="btnCards" onclick="switchView('cards')">
+            <i class="fas fa-th-large"></i> Cards
+          </button>
+          <button class="view-toggle-btn" id="btnCompare" onclick="switchView('compare')">
+            <i class="fas fa-columns"></i> Compare
+          </button>
+        </div>
+        {% endif %}
         {% if items %}
         <a href="{% url 'accounts:shortlist_pdf' %}" class="btn btn-sm fw-700 rounded-pill px-3"
            style="background:rgba(255,255,255,0.15);color:#fff;border:1.5px solid rgba(255,255,255,0.3);">
@@ -167,231 +289,449 @@
        style="background:#eff6ff;border-left:4px solid #2563eb!important;padding:.75rem 1rem;">
     <i class="fas fa-lightbulb text-primary mt-1"></i>
     <div class="small">
-      <strong>How to use this shortlist:</strong> Set your <strong>Choice #</strong> rank for each course to match the KUCCPS
-      application order (1st = most preferred). Add personal notes. Export a PDF to share with your parents or school counsellor.
+      <strong>How to use this shortlist:</strong> Set your <strong>Choice #</strong> rank to match the KUCCPS
+      application order (1st = most preferred). Switch to <strong>Compare</strong> view for a side-by-side table.
+      Export a PDF to share with your parents or school counsellor.
       Add courses from the <a href="{% url 'courses:course_types_list' %}">course browser</a> or
       <a href="{% url 'clusterpoints:eligible_courses' %}">eligible courses</a> using the <strong>+ Shortlist</strong> button.
     </div>
   </div>
 
-  <!-- Course cards grid -->
-  <div class="sl-grid mb-4">
-  {% for item in items %}
-  {% with course=item.course %}
-  <div class="sl-card" id="sl-card-{{ course.pk }}">
+  <!-- ══════════ CARD VIEW ══════════ -->
+  <div id="viewCards">
+    <div class="sl-grid mb-4">
+    {% for item in items %}
+    {% with course=item.course %}
+    <div class="sl-card" id="sl-card-{{ course.pk }}">
 
-    <!-- Card header -->
-    <div class="sl-card-header">
-      <div class="d-flex align-items-start gap-2 mb-2">
-        <!-- Rank badge / selector -->
-        <div class="flex-shrink-0 pt-1">
-          {% if item.rank %}
-          <div class="rank-badge">{{ item.rank }}</div>
-          {% else %}
-          <div class="rank-badge" style="background:#cbd5e1;">—</div>
-          {% endif %}
+      <!-- Card header -->
+      <div class="sl-card-header">
+        <div class="d-flex align-items-start gap-2 mb-2">
+          <!-- Rank badge -->
+          <div class="flex-shrink-0 pt-1">
+            {% if item.rank %}
+            <div class="rank-badge">{{ item.rank }}</div>
+            {% else %}
+            <div class="rank-badge" style="background:#cbd5e1;">—</div>
+            {% endif %}
+          </div>
+          <div class="flex-grow-1">
+            <a href="{% url 'courses:course_detail_no_category' course.course_type.slug course.slug %}"
+               class="sl-course-name d-block mb-1">{{ course.name }}</a>
+            <div class="d-flex flex-wrap gap-1 align-items-center">
+              <span class="type-pill
+                {% if 'TVET' in course.course_type.name %}tp-tvet
+                {% elif course.course_type.name == 'Degree' %}tp-degree
+                {% elif course.course_type.name == 'Diploma' %}tp-diploma
+                {% elif course.course_type.name == 'KMTC' %}tp-kmtc
+                {% elif course.course_type.name == 'TTC' %}tp-ttc
+                {% else %}tp-default{% endif %}">
+                {{ course.course_type.name }}
+              </span>
+
+              {% if item.eligibility == 'eligible' %}
+              <span class="elig-badge elig-eligible"><i class="fas fa-check-circle"></i>Eligible</span>
+              {% if item.eligibility_gap is not None %}
+              <span style="font-size:1.35rem;font-weight:900;color:#15803d;letter-spacing:-0.02em;line-height:1;">
+                +{{ item.eligibility_gap }}<span style="font-size:0.75rem;font-weight:700;">pts</span>
+              </span>
+              {% endif %}
+              {% elif item.eligibility == 'nearly' %}
+              <span class="elig-badge elig-nearly"><i class="fas fa-exclamation-circle"></i>Nearly</span>
+              {% if item.eligibility_gap is not None %}
+              <span style="font-size:1.35rem;font-weight:900;color:#92400e;letter-spacing:-0.02em;line-height:1;">
+                {{ item.eligibility_gap }}<span style="font-size:0.75rem;font-weight:700;">pts</span>
+              </span>
+              {% endif %}
+              {% elif item.eligibility == 'not_eligible' %}
+              <span class="elig-badge elig-not_eligible"><i class="fas fa-times-circle"></i>Below cutoff</span>
+              {% if item.eligibility_gap is not None %}
+              <span style="font-size:1.35rem;font-weight:900;color:#b91c1c;letter-spacing:-0.02em;line-height:1;">
+                {{ item.eligibility_gap }}<span style="font-size:0.75rem;font-weight:700;">pts</span>
+              </span>
+              {% endif %}
+              {% endif %}
+
+              {% if item.competition == 'high' %}
+              <span class="elig-badge comp-high"><i class="fas fa-fire me-1"></i>High competition</span>
+              {% elif item.competition == 'medium' %}
+              <span class="elig-badge comp-medium"><i class="fas fa-chart-line me-1"></i>Medium</span>
+              {% elif item.competition == 'low' %}
+              <span class="elig-badge comp-low"><i class="fas fa-door-open me-1"></i>Low competition</span>
+              {% endif %}
+            </div>
+          </div>
+          <!-- Remove btn -->
+          <form method="post" action="{% url 'accounts:shortlist_toggle' course.pk %}" class="flex-shrink-0">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill" title="Remove"
+                    style="font-size:0.7rem;padding:2px 8px;" onclick="return confirm('Remove {{ course.name }} from shortlist?')">
+              <i class="fas fa-times"></i>
+            </button>
+          </form>
         </div>
-        <div class="flex-grow-1">
-          <a href="{% url 'courses:course_detail_no_category' course.course_type.slug course.slug %}"
-             class="sl-course-name d-block mb-1">{{ course.name }}</a>
-          <div class="d-flex flex-wrap gap-1 align-items-center">
-            <span class="type-pill
-              {% if 'TVET' in course.course_type.name %}tp-tvet
-              {% elif course.course_type.name == 'Degree' %}tp-degree
-              {% elif course.course_type.name == 'Diploma' %}tp-diploma
-              {% elif course.course_type.name == 'KMTC' %}tp-kmtc
-              {% elif course.course_type.name == 'TTC' %}tp-ttc
-              {% else %}tp-default{% endif %}">
-              {{ course.course_type.name }}
-            </span>
 
-            <!-- Eligibility badge -->
-            {% if item.eligibility == 'eligible' %}
-            <span class="elig-badge elig-eligible">
-              <i class="fas fa-check-circle"></i>Eligible
-            </span>
-            {% if item.eligibility_gap is not None %}
-            <span style="font-size:1.35rem;font-weight:900;color:#15803d;letter-spacing:-0.02em;line-height:1;">
-              +{{ item.eligibility_gap }}<span style="font-size:0.75rem;font-weight:700;">pts</span>
-            </span>
-            {% endif %}
-            {% elif item.eligibility == 'nearly' %}
-            <span class="elig-badge elig-nearly">
-              <i class="fas fa-exclamation-circle"></i>Nearly
-            </span>
-            {% if item.eligibility_gap is not None %}
-            <span style="font-size:1.35rem;font-weight:900;color:#92400e;letter-spacing:-0.02em;line-height:1;">
-              {{ item.eligibility_gap }}<span style="font-size:0.75rem;font-weight:700;">pts</span>
-            </span>
-            {% endif %}
-            {% elif item.eligibility == 'not_eligible' %}
-            <span class="elig-badge elig-not_eligible">
-              <i class="fas fa-times-circle"></i>Below cutoff
-            </span>
-            {% if item.eligibility_gap is not None %}
-            <span style="font-size:1.35rem;font-weight:900;color:#b91c1c;letter-spacing:-0.02em;line-height:1;">
-              {{ item.eligibility_gap }}<span style="font-size:0.75rem;font-weight:700;">pts</span>
-            </span>
-            {% endif %}
-            {% endif %}
-
-            <!-- Competition badge -->
-            {% if item.competition == 'high' %}
-            <span class="elig-badge comp-high"><i class="fas fa-fire me-1"></i>High competition</span>
-            {% elif item.competition == 'medium' %}
-            <span class="elig-badge comp-medium"><i class="fas fa-chart-line me-1"></i>Medium</span>
-            {% elif item.competition == 'low' %}
-            <span class="elig-badge comp-low"><i class="fas fa-door-open me-1"></i>Low competition</span>
-            {% endif %}
-          </div>
-        </div>
-        <!-- Remove btn -->
-        <form method="post" action="{% url 'accounts:shortlist_toggle' course.pk %}" class="flex-shrink-0">
-          {% csrf_token %}
-          <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill" title="Remove"
-                  style="font-size:0.7rem;padding:2px 8px;" onclick="return confirm('Remove {{ course.name }} from shortlist?')">
-            <i class="fas fa-times"></i>
-          </button>
-        </form>
-      </div>
-
-      <!-- KUCCPS Choice ranking -->
-      <div class="d-flex align-items-center gap-2 mt-1">
-        <span class="sl-label" style="min-width:auto;">KUCCPS Choice:</span>
-        <select class="rank-select" data-course="{{ course.pk }}"
-                onchange="setRank({{ course.pk }}, this.value, this)">
-          <option value="">— not ranked —</option>
-          {% for r in rank_choices %}
-          <option value="{{ r }}" {% if item.rank == r %}selected{% endif %}>{{ r }}{% if r == 1 %} (1st choice){% elif r == 2 %} (2nd choice){% elif r == 3 %} (3rd choice){% elif r == 4 %} (4th choice){% endif %}</option>
-          {% endfor %}
-        </select>
-        <span class="rank-saved-{{ course.pk }}" style="font-size:0.72rem;color:#16a34a;display:none;">
-          <i class="fas fa-check"></i> Saved
-        </span>
-      </div>
-    </div>
-
-    <!-- Card body -->
-    <div class="sl-card-body">
-
-      <div class="sl-row">
-        <span class="sl-label"><i class="fas fa-layer-group me-1" style="color:#6366f1;"></i>Cluster</span>
-        <span class="sl-value">
-          {% if course.cluster %}{{ course.cluster.name }}{% else %}<span class="text-muted">—</span>{% endif %}
-        </span>
-      </div>
-
-      <div class="sl-row">
-        <span class="sl-label"><i class="fas fa-star me-1" style="color:#f59e0b;"></i>Min Grade</span>
-        <span class="sl-value">
-          {% if course.minimum_mean_grade %}
-          <span class="badge" style="background:#fef9c3;color:#854d0e;font-weight:700;font-size:0.75rem;">{{ course.minimum_mean_grade }}</span>
-          {% else %}<span class="text-muted small">—</span>{% endif %}
-        </span>
-      </div>
-
-      <div class="sl-row">
-        <span class="sl-label"><i class="fas fa-bullseye me-1 text-danger"></i>Cutoff</span>
-        <span class="sl-value">
-          {% if item.min_cutoff %}
-          <strong style="color:#1d4ed8;">{{ item.min_cutoff }} pts</strong>
-          <span class="text-muted small">(lowest)</span>
-          {% else %}<span class="text-muted small">No data yet</span>{% endif %}
-        </span>
-      </div>
-
-      {% if course.duration %}
-      <div class="sl-row">
-        <span class="sl-label"><i class="fas fa-clock me-1 text-primary"></i>Duration</span>
-        <span class="sl-value">{{ course.duration }}</span>
-      </div>
-      {% endif %}
-
-      <div class="sl-row">
-        <span class="sl-label"><i class="fas fa-building me-1 text-success"></i>Institutions</span>
-        <span class="sl-value">
-          {% with offs=course.offerings.all %}
-          {% if offs %}
-          <div class="fw-700 text-success" style="font-size:0.82rem;">{{ offs|length }} institution{{ offs|length|pluralize }}</div>
-          <div style="font-size:0.72rem;color:#64748b;line-height:1.6;">
-            {% for off in offs|slice:":3" %}<a href="{% url 'institutions:institution_detail' type_slug=off.institution.institution_type.slug institution_slug=off.institution.slug %}" class="text-dark text-decoration-none">{{ off.institution.name }}</a>{% if not forloop.last %}, {% endif %}{% endfor %}
-            {% if offs|length > 3 %} +{{ offs|length|add:"-3" }} more{% endif %}
-          </div>
-          {% else %}<span class="text-muted small">—</span>{% endif %}
-          {% endwith %}
-        </span>
-      </div>
-
-      {% if course.core_subjects.all %}
-      <div class="sl-row">
-        <span class="sl-label"><i class="fas fa-book me-1 text-primary"></i>Key Subjects</span>
-        <span class="sl-value">
-          <div class="d-flex flex-wrap gap-1">
-            {% for subj in course.core_subjects.all|slice:":5" %}
-            <span class="badge rounded-pill" style="background:#f1f5f9;color:#475569;font-size:0.67rem;font-weight:600;">{{ subj.name }}</span>
-            {% endfor %}
-          </div>
-        </span>
-      </div>
-      {% endif %}
-
-      {% if course.career_outcomes %}
-      <div class="sl-row">
-        <span class="sl-label"><i class="fas fa-briefcase me-1" style="color:#0891b2;"></i>Careers</span>
-        <span class="sl-value" style="font-size:0.8rem;color:#0f172a;">{{ course.career_outcomes }}</span>
-      </div>
-      {% endif %}
-
-      {% if course.description %}
-      <div class="sl-row">
-        <span class="sl-label"><i class="fas fa-info-circle me-1 text-muted"></i>About</span>
-        <span class="sl-value" style="font-size:0.79rem;color:#374151;line-height:1.6;">
-          {{ course.description|truncatewords:30 }}
-        </span>
-      </div>
-      {% endif %}
-    </div>
-
-    <!-- Card footer: notes + actions -->
-    <div class="sl-card-footer">
-      <div class="mb-2">
-        <label class="sl-label d-block mb-1"><i class="fas fa-sticky-note me-1" style="color:#f59e0b;"></i>My Notes</label>
-        <textarea class="notes-box" id="notes-{{ course.pk }}"
-                  placeholder="Add your thoughts — campus preference, why this course, family decision…">{{ item.notes }}</textarea>
+        <!-- KUCCPS Choice ranking -->
         <div class="d-flex align-items-center gap-2 mt-1">
-          <button class="notes-save-btn" onclick="saveNotes({{ course.pk }})">
-            <i class="fas fa-save me-1"></i>Save
-          </button>
-          <span class="notes-saved" id="notes-saved-{{ course.pk }}"><i class="fas fa-check"></i> Saved</span>
+          <span class="sl-label" style="min-width:auto;">KUCCPS Choice:</span>
+          <select class="rank-select" data-course="{{ course.pk }}"
+                  onchange="setRank({{ course.pk }}, this.value, this)">
+            <option value="">— not ranked —</option>
+            {% for r in rank_choices %}
+            <option value="{{ r }}" {% if item.rank == r %}selected{% endif %}>{{ r }}{% if r == 1 %} (1st choice){% elif r == 2 %} (2nd choice){% elif r == 3 %} (3rd choice){% elif r == 4 %} (4th choice){% endif %}</option>
+            {% endfor %}
+          </select>
+          <span class="rank-saved-{{ course.pk }}" style="font-size:0.72rem;color:#16a34a;display:none;">
+            <i class="fas fa-check"></i> Saved
+          </span>
         </div>
       </div>
 
-      <div class="d-flex gap-2 mt-2">
-        <a href="{% url 'courses:course_detail_no_category' course.course_type.slug course.slug %}"
-           class="btn btn-sm btn-primary rounded-pill fw-700 flex-grow-1" style="font-size:0.75rem;">
-          <i class="fas fa-eye me-1"></i>Full Details
-        </a>
-        <form method="post" action="{% url 'accounts:toggle_save_course' course.pk %}" class="flex-shrink-0">
-          {% csrf_token %}
-          <button type="submit" class="btn btn-sm btn-outline-warning rounded-pill fw-700" style="font-size:0.75rem;" title="Save to watchlist">
-            <i class="far fa-bookmark"></i>
-          </button>
-        </form>
+      <!-- Card body -->
+      <div class="sl-card-body">
+        <div class="sl-row">
+          <span class="sl-label"><i class="fas fa-layer-group me-1" style="color:#6366f1;"></i>Cluster</span>
+          <span class="sl-value">
+            {% if course.cluster %}{{ course.cluster.name }}{% else %}<span class="text-muted">—</span>{% endif %}
+          </span>
+        </div>
+        <div class="sl-row">
+          <span class="sl-label"><i class="fas fa-star me-1" style="color:#f59e0b;"></i>Min Grade</span>
+          <span class="sl-value">
+            {% if course.minimum_mean_grade %}
+            <span class="badge" style="background:#fef9c3;color:#854d0e;font-weight:700;font-size:0.75rem;">{{ course.minimum_mean_grade }}</span>
+            {% else %}<span class="text-muted small">—</span>{% endif %}
+          </span>
+        </div>
+        <div class="sl-row">
+          <span class="sl-label"><i class="fas fa-bullseye me-1 text-danger"></i>Cutoff</span>
+          <span class="sl-value">
+            {% if item.min_cutoff %}
+            <strong style="color:#1d4ed8;">{{ item.min_cutoff }} pts</strong>
+            <span class="text-muted small">(lowest)</span>
+            {% else %}<span class="text-muted small">No data yet</span>{% endif %}
+          </span>
+        </div>
+        {% if course.duration %}
+        <div class="sl-row">
+          <span class="sl-label"><i class="fas fa-clock me-1 text-primary"></i>Duration</span>
+          <span class="sl-value">{{ course.duration }}</span>
+        </div>
+        {% endif %}
+        <div class="sl-row">
+          <span class="sl-label"><i class="fas fa-building me-1 text-success"></i>Institutions</span>
+          <span class="sl-value">
+            {% with offs=course.offerings.all %}
+            {% if offs %}
+            <div class="fw-700 text-success" style="font-size:0.82rem;">{{ offs|length }} institution{{ offs|length|pluralize }}</div>
+            <div style="font-size:0.72rem;color:#64748b;line-height:1.6;">
+              {% for off in offs|slice:":3" %}<a href="{% url 'institutions:institution_detail' type_slug=off.institution.institution_type.slug institution_slug=off.institution.slug %}" class="text-dark text-decoration-none">{{ off.institution.name }}</a>{% if not forloop.last %}, {% endif %}{% endfor %}
+              {% if offs|length > 3 %} +{{ offs|length|add:"-3" }} more{% endif %}
+            </div>
+            {% else %}<span class="text-muted small">—</span>{% endif %}
+            {% endwith %}
+          </span>
+        </div>
+        {% if course.core_subjects.all %}
+        <div class="sl-row">
+          <span class="sl-label"><i class="fas fa-book me-1 text-primary"></i>Key Subjects</span>
+          <span class="sl-value">
+            <div class="d-flex flex-wrap gap-1">
+              {% for subj in course.core_subjects.all|slice:":5" %}
+              <span class="badge rounded-pill" style="background:#f1f5f9;color:#475569;font-size:0.67rem;font-weight:600;">{{ subj.name }}</span>
+              {% endfor %}
+            </div>
+          </span>
+        </div>
+        {% endif %}
+        {% if course.career_outcomes %}
+        <div class="sl-row">
+          <span class="sl-label"><i class="fas fa-briefcase me-1" style="color:#0891b2;"></i>Careers</span>
+          <span class="sl-value" style="font-size:0.8rem;color:#0f172a;">{{ course.career_outcomes }}</span>
+        </div>
+        {% endif %}
+        {% if course.description %}
+        <div class="sl-row">
+          <span class="sl-label"><i class="fas fa-info-circle me-1 text-muted"></i>About</span>
+          <span class="sl-value" style="font-size:0.79rem;color:#374151;line-height:1.6;">
+            {{ course.description|truncatewords:30 }}
+          </span>
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- Card footer: notes + actions -->
+      <div class="sl-card-footer">
+        <div class="mb-2">
+          <label class="sl-label d-block mb-1"><i class="fas fa-sticky-note me-1" style="color:#f59e0b;"></i>My Notes</label>
+          <textarea class="notes-box" id="notes-{{ course.pk }}"
+                    placeholder="Add your thoughts — campus preference, why this course, family decision…">{{ item.notes }}</textarea>
+          <div class="d-flex align-items-center gap-2 mt-1">
+            <button class="notes-save-btn" onclick="saveNotes({{ course.pk }})">
+              <i class="fas fa-save me-1"></i>Save
+            </button>
+            <span class="notes-saved" id="notes-saved-{{ course.pk }}"><i class="fas fa-check"></i> Saved</span>
+          </div>
+        </div>
+        <div class="d-flex gap-2 mt-2">
+          <a href="{% url 'courses:course_detail_no_category' course.course_type.slug course.slug %}"
+             class="btn btn-sm btn-primary rounded-pill fw-700 flex-grow-1" style="font-size:0.75rem;">
+            <i class="fas fa-eye me-1"></i>Full Details
+          </a>
+          <form method="post" action="{% url 'accounts:toggle_save_course' course.pk %}" class="flex-shrink-0">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-sm btn-outline-warning rounded-pill fw-700" style="font-size:0.75rem;" title="Save to watchlist">
+              <i class="far fa-bookmark"></i>
+            </button>
+          </form>
+        </div>
       </div>
     </div>
-  </div>
-  {% endwith %}
-  {% endfor %}
-  </div>
+    {% endwith %}
+    {% endfor %}
+    </div>
 
-  <!-- Add more CTA -->
-  {% if items|length < 5 %}
-  <div class="text-center py-3">
-    <p class="text-muted small mb-2">You can add up to 5 courses. Currently {{ items|length }}/5.</p>
-    <a href="{% url 'courses:course_types_list' %}" class="btn btn-outline-primary rounded-pill px-4">
-      <i class="fas fa-plus me-1"></i>Add More Courses
-    </a>
-  </div>
+    {% if items|length < 5 %}
+    <div class="text-center py-3">
+      <p class="text-muted small mb-2">You can add up to 5 courses. Currently {{ items|length }}/5.</p>
+      <a href="{% url 'courses:course_types_list' %}" class="btn btn-outline-primary rounded-pill px-4">
+        <i class="fas fa-plus me-1"></i>Add More Courses
+      </a>
+    </div>
+    {% endif %}
+  </div><!-- /viewCards -->
+
+  <!-- ══════════ COMPARE TABLE VIEW ══════════ -->
+  {% if items|length > 1 %}
+  <div id="viewCompare" style="display:none;">
+    <div class="compare-wrap mb-4">
+      <table class="compare-table">
+        <thead>
+          <tr>
+            <th class="row-label" style="color:#94a3b8;font-size:0.7rem;">Attribute</th>
+            {% for item in items %}
+            {% with course=item.course %}
+            <th style="min-width:190px;max-width:260px;">
+              <div class="d-flex align-items-start gap-2">
+                <div style="flex:1;">
+                  {% if item.rank %}<span class="cth-rank">{{ item.rank }}</span>{% endif %}
+                  <a href="{% url 'courses:course_detail_no_category' course.course_type.slug course.slug %}"
+                     class="cth-name">{{ course.name }}</a>
+                  <div style="margin-top:2px;">
+                    <span class="type-pill
+                      {% if 'TVET' in course.course_type.name %}tp-tvet
+                      {% elif course.course_type.name == 'Degree' %}tp-degree
+                      {% elif course.course_type.name == 'Diploma' %}tp-diploma
+                      {% elif course.course_type.name == 'KMTC' %}tp-kmtc
+                      {% elif course.course_type.name == 'TTC' %}tp-ttc
+                      {% else %}tp-default{% endif %}">
+                      {{ course.course_type.name }}
+                    </span>
+                  </div>
+                  <select class="rank-select-sm mt-1" onchange="setRank({{ course.pk }}, this.value, this)">
+                    <option value="">— not ranked —</option>
+                    {% for r in rank_choices %}
+                    <option value="{{ r }}" {% if item.rank == r %}selected{% endif %}>Choice {{ r }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+                <form method="post" action="{% url 'accounts:shortlist_toggle' course.pk %}" style="flex-shrink:0;">
+                  {% csrf_token %}
+                  <button type="submit" class="cth-remove" title="Remove" onclick="return confirm('Remove {{ course.name }}?')">
+                    <i class="fas fa-times"></i>
+                  </button>
+                </form>
+              </div>
+            </th>
+            {% endwith %}
+            {% endfor %}
+          </tr>
+        </thead>
+        <tbody>
+
+          <!-- ELIGIBILITY ROW -->
+          <tr>
+            <td class="row-label"><i class="fas fa-circle-check text-success"></i>Eligibility</td>
+            {% for item in items %}
+            <td>
+              {% if item.eligibility == 'eligible' %}
+              <span class="elig-badge elig-eligible"><i class="fas fa-check-circle"></i>Eligible</span>
+              {% if item.eligibility_gap is not None %}
+              <span class="gap-chip gap-positive ms-1">+{{ item.eligibility_gap }} pts</span>
+              {% endif %}
+              {% elif item.eligibility == 'nearly' %}
+              <span class="elig-badge elig-nearly"><i class="fas fa-exclamation-circle"></i>Nearly</span>
+              {% if item.eligibility_gap is not None %}
+              <span class="gap-chip gap-close ms-1">{{ item.eligibility_gap }} pts</span>
+              {% endif %}
+              {% elif item.eligibility == 'not_eligible' %}
+              <span class="elig-badge elig-not_eligible"><i class="fas fa-times-circle"></i>Below cutoff</span>
+              {% if item.eligibility_gap is not None %}
+              <span class="gap-chip gap-negative ms-1">{{ item.eligibility_gap }} pts</span>
+              {% endif %}
+              {% else %}
+              <span class="text-muted small">—</span>
+              {% endif %}
+            </td>
+            {% endfor %}
+          </tr>
+
+          <!-- CUTOFF ROW -->
+          <tr>
+            <td class="row-label"><i class="fas fa-bullseye text-danger"></i>Cutoff (lowest)</td>
+            {% for item in items %}
+            <td class="{% if item.min_cutoff == cutoff_min %}cell-best{% elif item.min_cutoff == cutoff_max %}cell-worst{% endif %}">
+              {% if item.min_cutoff %}
+              <div class="cutoff-bar-wrap">
+                <span class="cval fw-800" style="font-size:0.92rem;color:#1d4ed8;min-width:36px;">{{ item.min_cutoff }}</span>
+                <div class="cutoff-bar">
+                  <div class="cutoff-bar-fill {% if item.competition == 'high' %}bar-high{% elif item.competition == 'medium' %}bar-medium{% else %}bar-low{% endif %}"
+                       style="width:{{ item.min_cutoff|floatformat:0 }}%;"></div>
+                </div>
+                <span style="font-size:0.7rem;color:#64748b;">/ 48</span>
+              </div>
+              {% if item.competition == 'high' %}
+              <span class="elig-badge comp-high mt-1"><i class="fas fa-fire me-1"></i>High</span>
+              {% elif item.competition == 'medium' %}
+              <span class="elig-badge comp-medium mt-1"><i class="fas fa-chart-line me-1"></i>Medium</span>
+              {% elif item.competition == 'low' %}
+              <span class="elig-badge comp-low mt-1"><i class="fas fa-door-open me-1"></i>Low</span>
+              {% endif %}
+              {% else %}
+              <span class="text-muted small">No data</span>
+              {% endif %}
+            </td>
+            {% endfor %}
+          </tr>
+
+          <!-- CLUSTER ROW -->
+          <tr>
+            <td class="row-label"><i class="fas fa-layer-group" style="color:#6366f1;"></i> Cluster</td>
+            {% for item in items %}
+            <td>
+              {% if item.course.cluster %}
+              <span style="font-size:0.83rem;color:#1e293b;">{{ item.course.cluster.name }}</span>
+              {% else %}<span class="text-muted small">—</span>{% endif %}
+            </td>
+            {% endfor %}
+          </tr>
+
+          <!-- MIN GRADE ROW -->
+          <tr>
+            <td class="row-label"><i class="fas fa-star" style="color:#f59e0b;"></i> Min Grade</td>
+            {% for item in items %}
+            <td>
+              {% if item.course.minimum_mean_grade %}
+              <span class="badge" style="background:#fef9c3;color:#854d0e;font-weight:700;font-size:0.78rem;">{{ item.course.minimum_mean_grade }}</span>
+              {% else %}<span class="text-muted small">—</span>{% endif %}
+            </td>
+            {% endfor %}
+          </tr>
+
+          <!-- DURATION ROW -->
+          <tr>
+            <td class="row-label"><i class="fas fa-clock text-primary"></i> Duration</td>
+            {% for item in items %}
+            <td>
+              {% if item.course.duration %}
+              <span style="font-size:0.83rem;">{{ item.course.duration }}</span>
+              {% else %}<span class="text-muted small">—</span>{% endif %}
+            </td>
+            {% endfor %}
+          </tr>
+
+          <!-- INSTITUTIONS ROW -->
+          <tr>
+            <td class="row-label"><i class="fas fa-building text-success"></i> Institutions</td>
+            {% for item in items %}
+            {% with offs=item.course.offerings.all %}
+            <td>
+              {% if offs %}
+              <div class="fw-700 text-success mb-1" style="font-size:0.82rem;">{{ offs|length }} offering{{ offs|length|pluralize }}</div>
+              <div style="font-size:0.72rem;color:#64748b;line-height:1.7;">
+                {% for off in offs|slice:":3" %}<a href="{% url 'institutions:institution_detail' type_slug=off.institution.institution_type.slug institution_slug=off.institution.slug %}" class="text-dark text-decoration-none d-block">{{ off.institution.name }}</a>{% endfor %}
+                {% if offs|length > 3 %}<span class="text-muted">+{{ offs|length|add:"-3" }} more</span>{% endif %}
+              </div>
+              {% else %}<span class="text-muted small">—</span>{% endif %}
+            </td>
+            {% endwith %}
+            {% endfor %}
+          </tr>
+
+          <!-- KEY SUBJECTS ROW -->
+          <tr>
+            <td class="row-label"><i class="fas fa-book text-primary"></i> Key Subjects</td>
+            {% for item in items %}
+            <td>
+              {% if item.course.core_subjects.all %}
+              <div class="d-flex flex-wrap gap-1">
+                {% for subj in item.course.core_subjects.all|slice:":4" %}
+                <span class="badge rounded-pill" style="background:#f1f5f9;color:#475569;font-size:0.67rem;font-weight:600;">{{ subj.name }}</span>
+                {% endfor %}
+              </div>
+              {% else %}<span class="text-muted small">—</span>{% endif %}
+            </td>
+            {% endfor %}
+          </tr>
+
+          <!-- CAREER OUTCOMES ROW -->
+          <tr>
+            <td class="row-label"><i class="fas fa-briefcase" style="color:#0891b2;"></i> Careers</td>
+            {% for item in items %}
+            <td style="font-size:0.79rem;color:#374151;line-height:1.5;">
+              {% if item.course.career_outcomes %}
+              {{ item.course.career_outcomes|truncatewords:20 }}
+              {% else %}<span class="text-muted small">—</span>{% endif %}
+            </td>
+            {% endfor %}
+          </tr>
+
+          <!-- NOTES ROW -->
+          <tr>
+            <td class="row-label"><i class="fas fa-sticky-note" style="color:#f59e0b;"></i> My Notes</td>
+            {% for item in items %}
+            {% with course=item.course %}
+            <td>
+              <textarea class="notes-box" id="cmp-notes-{{ course.pk }}"
+                        placeholder="Add notes…" style="min-height:48px;font-size:0.75rem;">{{ item.notes }}</textarea>
+              <div class="d-flex align-items-center gap-2 mt-1">
+                <button class="notes-save-btn" onclick="saveNotes({{ course.pk }}, 'cmp-notes-{{ course.pk }}')">
+                  <i class="fas fa-save me-1"></i>Save
+                </button>
+                <span class="notes-saved" id="cmp-notes-saved-{{ course.pk }}"><i class="fas fa-check"></i></span>
+              </div>
+            </td>
+            {% endwith %}
+            {% endfor %}
+          </tr>
+
+          <!-- ACTIONS ROW -->
+          <tr>
+            <td class="row-label"></td>
+            {% for item in items %}
+            {% with course=item.course %}
+            <td>
+              <a href="{% url 'courses:course_detail_no_category' course.course_type.slug course.slug %}"
+                 class="btn btn-sm btn-primary rounded-pill fw-700 w-100" style="font-size:0.74rem;">
+                <i class="fas fa-eye me-1"></i>Full Details
+              </a>
+            </td>
+            {% endwith %}
+            {% endfor %}
+          </tr>
+
+        </tbody>
+      </table>
+    </div>
+
+    {% if items|length < 5 %}
+    <div class="text-center py-2">
+      <a href="{% url 'courses:course_types_list' %}" class="btn btn-outline-primary rounded-pill px-4">
+        <i class="fas fa-plus me-1"></i>Add More Courses ({{ items|length }}/5)
+      </a>
+    </div>
+    {% endif %}
+  </div><!-- /viewCompare -->
   {% endif %}
 
 {% else %}
@@ -427,8 +767,9 @@ function getCookie(name) {
   return v ? v[2] : null;
 }
 
-function saveNotes(courseId) {
-  const text = document.getElementById('notes-' + courseId).value;
+function saveNotes(courseId, inputId) {
+  const elId = inputId || ('notes-' + courseId);
+  const text = document.getElementById(elId).value;
   const fd = new FormData();
   fd.append('notes', text);
   fd.append('csrfmiddlewaretoken', getCookie('csrftoken'));
@@ -436,9 +777,12 @@ function saveNotes(courseId) {
     method: 'POST', body: fd
   }).then(r => r.json()).then(data => {
     if (data.ok) {
-      const el = document.getElementById('notes-saved-' + courseId);
-      el.style.display = 'inline';
-      setTimeout(() => { el.style.display = 'none'; }, 2000);
+      const savedId = inputId ? 'cmp-notes-saved-' + courseId : 'notes-saved-' + courseId;
+      const el = document.getElementById(savedId);
+      if (el) { el.style.display = 'inline'; setTimeout(() => { el.style.display = 'none'; }, 2000); }
+      // Sync twin textarea
+      const twin = document.getElementById(inputId ? 'notes-' + courseId : 'cmp-notes-' + courseId);
+      if (twin) twin.value = text;
     }
   });
 }
@@ -451,13 +795,49 @@ function setRank(courseId, rankVal, selectEl) {
     method: 'POST', body: fd
   }).then(r => r.json()).then(data => {
     if (data.ok) {
-      const badge = selectEl.closest('.sl-card-header').querySelector('.rank-badge');
-      if (badge) badge.textContent = data.rank || '—';
+      // Update all rank badges and twin selects for this course
+      document.querySelectorAll(`#sl-card-${courseId} .rank-badge`).forEach(b => {
+        b.textContent = data.rank || '—';
+        b.style.background = data.rank ? '#1d4ed8' : '#cbd5e1';
+      });
+      // Sync all selects for this course
+      document.querySelectorAll(`[onchange*="setRank(${courseId}"]`).forEach(s => {
+        s.value = data.rank || '';
+      });
+      // Flash saved on the card rank area
       const saved = document.querySelector('.rank-saved-' + courseId);
       if (saved) { saved.style.display = 'inline'; setTimeout(() => { saved.style.display = 'none'; }, 1500); }
     }
   });
 }
+
+function switchView(view) {
+  const cards = document.getElementById('viewCards');
+  const compare = document.getElementById('viewCompare');
+  const btnCards = document.getElementById('btnCards');
+  const btnCompare = document.getElementById('btnCompare');
+  if (view === 'compare') {
+    cards.style.display = 'none';
+    compare.style.display = 'block';
+    btnCards.classList.remove('active');
+    btnCompare.classList.add('active');
+    localStorage.setItem('slView', 'compare');
+  } else {
+    cards.style.display = 'block';
+    if (compare) compare.style.display = 'none';
+    btnCards.classList.add('active');
+    if (btnCompare) btnCompare.classList.remove('active');
+    localStorage.setItem('slView', 'cards');
+  }
+}
+
+// Restore last view
+(function() {
+  const saved = localStorage.getItem('slView');
+  if (saved === 'compare' && document.getElementById('viewCompare')) {
+    switchView('compare');
+  }
+})();
 
 // WhatsApp share
 document.getElementById('waShareBtn') && document.getElementById('waShareBtn').addEventListener('click', function() {

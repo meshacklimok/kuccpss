@@ -14,7 +14,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 
 from accounts.decorators import require_recent_auth
-from .forms import AddSlotsForm, BookingForm, CancelSessionForm, MentorRegistrationForm, RatingForm, WithdrawalForm
+from .forms import AddSlotsForm, AddWeekSlotsForm, BookingForm, CancelSessionForm, MentorRegistrationForm, RatingForm, WithdrawalForm
 from .models import MentorProfile, MentorshipSession, TimeSlot, WithdrawalRequest
 
 logger = logging.getLogger(__name__)
@@ -223,6 +223,7 @@ def mentor_dashboard(request):
         "past": past,
         "future_slots": future_slots,
         "slot_form": AddSlotsForm(),
+        "week_slot_form": AddWeekSlotsForm(),
         "withdrawal_form": WithdrawalForm(mentor.wallet_balance),
         "withdrawals": withdrawals,
     })
@@ -250,6 +251,41 @@ def add_slots(request):
         messages.success(request, f"{created} slot(s) added for {date.strftime('%d %b %Y')}.")
     else:
         messages.error(request, "Please fix the errors below.")
+
+    return redirect("mentorship:dashboard")
+
+
+@login_required
+@require_POST
+def add_weekly_slots(request):
+    """Create availability slots across multiple days in a single week."""
+    from datetime import timedelta
+    mentor = get_object_or_404(MentorProfile, user=request.user)
+    form = AddWeekSlotsForm(request.POST)
+
+    if form.is_valid():
+        monday = form.cleaned_data["week_start"]
+        weekdays = [int(d) for d in form.cleaned_data["weekdays"]]
+        times = form.cleaned_data["times"]
+        created = 0
+        today = timezone.now().date()
+        for day_offset in weekdays:
+            slot_date = monday + timedelta(days=day_offset)
+            if slot_date < today:
+                continue
+            for ts in times:
+                h, m = map(int, ts.split(":"))
+                _, new = TimeSlot.objects.get_or_create(
+                    mentor=mentor,
+                    date=slot_date,
+                    start_time=dt_time(h, m),
+                )
+                if new:
+                    created += 1
+        week_label = monday.strftime("%d %b") + " – " + (monday + timedelta(days=6)).strftime("%d %b %Y")
+        messages.success(request, f"{created} slot(s) added for the week of {week_label}.")
+    else:
+        messages.error(request, "Please fix the errors in the weekly slot form.")
 
     return redirect("mentorship:dashboard")
 
@@ -641,12 +677,15 @@ def _send_booking_confirmation(session: MentorshipSession):
         f"When      : {slot_str} (15 minutes)\n"
         f"WhatsApp  : {session.mentor.whatsapp}\n"
         f"────────────────────────\n\n"
+        f"HOW TO CONNECT:\n"
+        f"Coordinate with your mentor via WhatsApp to agree on how you'll meet.\n"
+        f"Options you can use: Google Meet, WhatsApp Video, or phone call — your choice.\n\n"
         f"Add to Google Calendar:\n{gcal_link}\n\n"
         f"Or open the attached .ics file to add it to any calendar (Google, Outlook, Apple).\n"
         f"You'll get reminders 1 hour and 15 minutes before the session.\n\n"
         f"NEXT STEPS:\n"
         f"1. Save {mentor_name}'s number: {session.mentor.whatsapp}\n"
-        f"2. Send them a WhatsApp message before the session to confirm.\n"
+        f"2. Send them a WhatsApp message to confirm how you'll connect.\n"
         f"3. Be on time — it's only 15 minutes.\n\n"
         f"Your discussion topic:\n"
         f"\"{session.mentee_question}\"\n\n"
@@ -676,12 +715,15 @@ def _send_booking_confirmation(session: MentorshipSession):
         f"When      : {slot_str} (15 minutes)\n"
         f"You earn  : KES {session.mentor_payout}\n"
         f"────────────────────────\n\n"
+        f"HOW TO CONNECT:\n"
+        f"Reach out to the student via WhatsApp to agree on how you'll meet.\n"
+        f"You can use Google Meet, WhatsApp Video, or a phone call — coordinate with them.\n\n"
         f"Add to Google Calendar:\n{gcal_link}\n\n"
         f"Or open the attached .ics file — you'll get reminders 1 hour and 15 minutes before.\n\n"
         f"What they want to discuss:\n"
         f"\"{session.mentee_question}\"\n\n"
         f"NEXT STEPS:\n"
-        f"1. Expect a WhatsApp message from the student.\n"
+        f"1. Expect a WhatsApp message from {mentee_name} — agree on the call method.\n"
         f"2. Be prepared at the scheduled time.\n"
         f"3. After the session, mark it complete: {base}/mentorship/dashboard/\n\n"
         f"CareerNext Team"
@@ -704,13 +746,13 @@ def _send_booking_confirmation(session: MentorshipSession):
         Notification.objects.create(
             user=session.mentee,
             notif_type="success",
-            message=f"Session confirmed with {mentor_name} on {slot_str}. WhatsApp: {session.mentor.whatsapp}",
+            message=f"Session confirmed with {mentor_name} on {slot_str}. Check your email for details.",
             link=session.get_absolute_url(),
         )
         Notification.objects.create(
             user=session.mentor.user,
             notif_type="info",
-            message=f"New booking from {mentee_name} on {slot_str}. Check your dashboard.",
+            message=f"New booking from {mentee_name} on {slot_str}. Check your email for details.",
             link="/mentorship/dashboard/",
         )
     except Exception:
@@ -867,35 +909,52 @@ def request_withdrawal(request):
     mentor = get_object_or_404(MentorProfile, user=request.user, is_approved=True)
     form = WithdrawalForm(mentor.wallet_balance, request.POST)
 
-    if form.is_valid():
-        amount = form.cleaned_data["amount"]
-        mpesa  = form.cleaned_data["mpesa_number"]
-
-        # Check no pending withdrawal already
-        if WithdrawalRequest.objects.filter(mentor=mentor, status="pending").exists():
-            messages.error(request, "You already have a pending withdrawal request. Please wait for it to be processed.")
-            return redirect("mentorship:dashboard")
-
-        WithdrawalRequest.objects.create(mentor=mentor, amount=amount, mpesa_number=mpesa)
-
-        # Notify admin
-        send_mail(
-            subject=f"Mentor Withdrawal Request — KES {amount}",
-            message=(
-                f"Mentor: {mentor.display_name} ({mentor.user.email})\n"
-                f"Amount: KES {amount}\n"
-                f"M-Pesa: {mpesa}\n"
-                f"Wallet balance: KES {mentor.wallet_balance}\n\n"
-                f"Approve in admin: https://www.careernext.co.ke/cn-staff/mentorship/withdrawalrequest/"
-            ),
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[_admin_email()],
-            fail_silently=True,
-        )
-
-        messages.success(request, f"Withdrawal request for KES {amount} submitted. We'll send it to {mpesa} within 24 hours.")
-    else:
+    if not form.is_valid():
         for err in form.errors.values():
             messages.error(request, err.as_text())
+        return redirect("mentorship:dashboard")
+
+    amount = form.cleaned_data["amount"]
+    mpesa  = form.cleaned_data["mpesa_number"]
+
+    if WithdrawalRequest.objects.filter(mentor=mentor, status="pending").exists():
+        messages.error(request, "You already have a pending withdrawal. Please wait for it to complete.")
+        return redirect("mentorship:dashboard")
+
+    wr = WithdrawalRequest.objects.create(mentor=mentor, amount=amount, mpesa_number=mpesa, status="pending")
+    try:
+        from payments.services import send_mentor_payout
+        send_mentor_payout(
+            phone=mpesa,
+            amount=amount,
+            mentor_name=mentor.display_name,
+            ref=str(mentor.pk)[:8],
+        )
+        wr.status = "processed"
+        wr.processed_at = timezone.now()
+        wr.save(update_fields=["status", "processed_at"])
+
+        mentor.wallet_balance -= amount
+        mentor.save(update_fields=["wallet_balance"])
+
+        send_mail(
+            subject="CareerNext — Your earnings have been sent!",
+            message=(
+                f"Hi {mentor.display_name},\n\n"
+                f"Your CareerNext earnings of KES {amount} have been sent to {mpesa} via M-Pesa.\n\n"
+                "Great work! Keep up the mentoring.\n\nCareerNext Team"
+            ),
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[mentor.user.email],
+            fail_silently=True,
+        )
+        messages.success(request, f"KES {amount} has been sent to {mpesa} via M-Pesa!")
+
+    except Exception as exc:
+        wr.status = "failed"
+        wr.admin_note = str(exc)[:500]
+        wr.save(update_fields=["status", "admin_note"])
+        logger.error("Mentor payout failed for %s: %s", mentor.pk, exc)
+        messages.error(request, "Payout failed — please try again or contact support.")
 
     return redirect("mentorship:dashboard")

@@ -2984,6 +2984,23 @@ def career_results(request):
         "Share your results with family via WhatsApp in one tap",
     ]
 
+    # Sponsored course listings — shown at top of results
+    from institutions.models import InstitutionPromotion as _IP
+    from datetime import date as _date
+    _today = _date.today()
+    _sponsored_qs = (
+        _IP.objects
+        .filter(
+            tier=_IP.TIER_COURSE_SPOTLIGHT,
+            start_date__lte=_today,
+            end_date__gte=_today,
+        )
+        .filter(models.Q(pathway='all') | models.Q(pathway=pathway))
+        .select_related('institution', 'institution__institution_type', 'featured_course', 'featured_course__cluster')
+        .order_by('?')[:4]
+    )
+    sponsored_listings = list(_sponsored_qs)
+
     return render(request, 'career/career_results_v2.html', {
         'page_obj':            page_obj,
         'pathway':             pathway,
@@ -3010,6 +3027,7 @@ def career_results(request):
         'gate_items':          _gate_items,
         'gate_subtext':        f"We've scanned every university, KMTC, TVET & TTC in Kenya against your exact grades — {len(matches)} courses are waiting for you.",
         'sub_banner':          _sub_banner,
+        'sponsored_listings':  sponsored_listings,
     })
 
 

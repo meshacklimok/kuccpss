@@ -226,6 +226,9 @@ class MentorshipSession(models.Model):
         db_index=True,
     )
 
+    # Video call link (auto-generated Jitsi room on booking)
+    meet_link = models.URLField(blank=True, help_text="Google Meet or Jitsi video call link for this session")
+
     # Post-session feedback
     rating = models.PositiveSmallIntegerField(null=True, blank=True)
     review = models.TextField(blank=True, max_length=500)
