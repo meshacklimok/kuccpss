@@ -858,8 +858,8 @@
             <i class="fas fa-tachometer-alt" aria-hidden="true"></i>Dashboard
         </a>
         {% else %}
-        <a href="{% url 'accounts:login' %}" class="{% if '/accounts/login' in p %}active{% endif %}"
-           aria-label="Dashboard" {% if '/accounts/login' in p %}aria-current="page"{% endif %}>
+        <a href="{% url 'accounts:dashboard' %}" class="{% if '/accounts/dashboard' in p %}active{% endif %}"
+           aria-label="Dashboard" {% if '/accounts/dashboard' in p %}aria-current="page"{% endif %}>
             <i class="fas fa-tachometer-alt" aria-hidden="true"></i>Dashboard
         </a>
         {% endif %}
