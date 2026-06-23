@@ -1238,7 +1238,7 @@ body.dark .ob-step:hover { background: var(--surface-2); }
 
 
   {# ── TRENDING COURSES ── #}
-  {% if trending_offered or spotlight %}
+  {% if trending_viewed or spotlight %}
   <div class="sidebar-card reveal">
     <div class="sidebar-card-header"
          style="background:linear-gradient(120deg,#0f172a 0%,#1e1b4b 100%);border:none;">
@@ -1272,7 +1272,7 @@ body.dark .ob-step:hover { background: var(--surface-2); }
         <i class="fas fa-chevron-right" style="color:#d97706;font-size:0.6rem;flex-shrink:0;"></i>
       </a>
       {% endif %}
-      {% for c in trending_offered %}
+      {% for c in trending_viewed %}
       <a href="{{ c.get_absolute_url }}"
          class="d-flex align-items-center gap-2 py-2 px-3 text-decoration-none"
          style="border-bottom:1px solid #f1f5f9;transition:background 0.15s;"
@@ -1290,7 +1290,7 @@ body.dark .ob-step:hover { background: var(--surface-2); }
             {{ c.name|truncatechars:28 }}
           </div>
           <div class="text-muted" style="font-size:0.67rem;">
-            <i class="fas fa-university me-1" style="font-size:0.55rem;"></i>{{ c.trend_stat }} institutions
+            <i class="fas fa-eye me-1" style="font-size:0.55rem;"></i>{{ c.trend_stat }} {{ c.trend_label }}
           </div>
         </div>
         <i class="fas fa-chevron-right text-muted flex-shrink-0" style="font-size:0.6rem;"></i>

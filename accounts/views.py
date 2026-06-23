@@ -307,7 +307,7 @@ def dashboard_view(request: HttpRequest) -> HttpResponse:
             "timeline_phase": timeline_phase, "timeline_days": timeline_days,
             "timeline_label": timeline_label, "timeline_date": timeline_date,
             "inst_type_links": inst_type_links,
-            "trending_offered": _trends.get('trending_offered', []),
+            "trending_viewed": _trends.get('trending_viewed', []),
             "spotlight": _trends.get('spotlight'),
         })
 
@@ -598,7 +598,7 @@ def dashboard_view(request: HttpRequest) -> HttpResponse:
         # Affiliate
         "affiliate_profile":  affiliate_profile,
         # Trending
-        "trending_offered":   trends_ctx.get('trending_offered', []),
+        "trending_viewed":    trends_ctx.get('trending_viewed', []),
         "spotlight":          trends_ctx.get('spotlight'),
     })
 

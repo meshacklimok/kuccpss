@@ -16,7 +16,7 @@ def _most_viewed(limit=5):
     from analytics.models import ViewLog
     from .models import Course
 
-    week_ago = timezone.now() - timedelta(days=7)
+    week_ago = timezone.now() - timedelta(days=14)
     rows = list(
         ViewLog.objects
         .filter(content_type='course', created_at__gte=week_ago)
@@ -91,7 +91,7 @@ def _most_offered(limit=5):
         .select_related('course_type', 'category')[:limit]
     )
     for c in courses:
-        c.trend_stat  = str(c.offering_count)
+        c.trend_stat  = str(c.offering_count)  # type: ignore[attr-defined]
         c.trend_label = "institutions"
         c.trend_icon  = "fa-university"
         c.trend_color = "#059669"
@@ -112,8 +112,8 @@ def _top_rated(limit=5):
         .select_related('course_type', 'category')[:limit]
     )
     for c in courses:
-        c.trend_stat  = f"{round(c.avg_rating, 1)}★"
-        c.trend_label = f"{c.review_count} review{'s' if c.review_count != 1 else ''}"
+        c.trend_stat  = f"{round(c.avg_rating, 1)}★"  # type: ignore[attr-defined]
+        c.trend_label = f"{c.review_count} review{'s' if c.review_count != 1 else ''}"  # type: ignore[attr-defined]
         c.trend_icon  = "fa-star"
         c.trend_color = "#d97706"
     return courses
