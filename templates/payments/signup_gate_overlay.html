@@ -134,7 +134,7 @@
     </div>
 
     <div class="sg-box">
-      <div class="sg-box-label">Create a free account to unlock</div>
+      <div class="sg-box-label">Create an account to unlock</div>
       {% for item in gate_items %}
       <div class="sg-item">
         <div class="sg-dot"><i class="fas fa-check" style="font-size:0.5rem;"></i></div>
@@ -145,12 +145,12 @@
 
     <div class="sg-free-badge">
       <div class="sg-free-label">Account type</div>
-      <div class="sg-free-amount">100% Free</div>
+      <div class="sg-free-amount">Quick Start</div>
       <div class="sg-free-note"><i class="fas fa-shield-alt" style="color:#10b981;margin-right:4px;"></i>No credit card &nbsp;·&nbsp; No subscription, ever</div>
     </div>
 
     <a href="{% url 'accounts:register' %}?next=/career/results/" class="sg-btn-signup">
-      <i class="fas fa-user-plus me-2"></i>Create Free Account &rarr;
+      <i class="fas fa-user-plus me-2"></i>Create Account &rarr;
     </a>
     <a href="{% url 'accounts:login' %}?next=/career/results/" class="sg-btn-login">
       Already have an account? Sign in

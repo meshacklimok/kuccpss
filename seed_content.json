@@ -1224,7 +1224,7 @@
   "pk": 1,
   "fields": {
     "question": "What is CareerNext?",
-    "answer": "CareerNext is a free online platform that helps Kenyan KCSE graduates calculate their cluster points, discover which university, KMTC, TVET, and TTC courses they qualify for, and explore career options — all using the official KUCCPS formula and placement criteria.",
+    "answer": "CareerNext is a fully accessible online platform that helps Kenyan KCSE graduates calculate their cluster points, discover which university, KMTC, TVET, and TTC courses they qualify for, and explore career options — all using the official KUCCPS formula and placement criteria.",
     "category": "general",
     "order": 1,
     "is_active": true,
@@ -1236,7 +1236,7 @@
   "pk": 2,
   "fields": {
     "question": "Is CareerNext the same as KUCCPS?",
-    "answer": "No. KUCCPS (Kenya Universities and Colleges Central Placement Service) is the official government body that places students into institutions. You apply at kuccps.ac.ke.\n\nCareerNext (this website) is an independent, free tool to help you prepare for that application — by calculating your points and finding your eligible courses before the portal opens. We are not affiliated with the government.",
+    "answer": "No. KUCCPS (Kenya Universities and Colleges Central Placement Service) is the official government body that places students into institutions. You apply at kuccps.ac.ke.\n\nCareerNext (this website) is an independent tool to help you prepare for that application — by calculating your points and finding your eligible courses before the portal opens. We are not affiliated with the government.",
     "category": "general",
     "order": 2,
     "is_active": true,
@@ -1247,8 +1247,8 @@
   "model": "resources.faqitem",
   "pk": 3,
   "fields": {
-    "question": "Is CareerNext free to use?",
-    "answer": "Yes — completely free. Every feature including the cluster points calculator, eligible courses list, career engine, course shortlist, and PDF exports is free for all students. There are no hidden charges or premium tiers.",
+    "question": "How does CareerNext's pricing work?",
+    "answer": "Core tools — including the cluster points calculator, eligible courses list, course shortlist, and PDF exports — are fully accessible to all students. Some premium features, such as extended AI career chat credits and select resources, require a small one-time top-up. There is no subscription and no hidden charges.",
     "category": "general",
     "order": 3,
     "is_active": true,
@@ -1260,7 +1260,7 @@
   "pk": 4,
   "fields": {
     "question": "Do I need to create an account?",
-    "answer": "The cluster points calculator and basic course browsing are available without an account. However, creating a free account unlocks: saving your grades between sessions, bookmarking courses to a watchlist, building a shortlist, tracking your applications, and getting personalised career engine recommendations.",
+    "answer": "The cluster points calculator and basic course browsing are available without an account. However, creating an account unlocks: saving your grades between sessions, bookmarking courses to a watchlist, building a shortlist, tracking your applications, and getting personalised career engine recommendations.",
     "category": "general",
     "order": 4,
     "is_active": true,
@@ -1512,7 +1512,7 @@
   "pk": 25,
   "fields": {
     "question": "How do I report an error in course data or cutoff points?",
-    "answer": "If you spot incorrect course information, outdated cutoff points, or a missing institution, please email us at info@careernext.co.ke with details. We update the database regularly and appreciate corrections from students and educators.",
+    "answer": "If you spot incorrect course information, outdated cutoff points, or a missing institution, please email us at hello@careernext.co.ke with details. We update the database regularly and appreciate corrections from students and educators.",
     "category": "account",
     "order": 25,
     "is_active": true,

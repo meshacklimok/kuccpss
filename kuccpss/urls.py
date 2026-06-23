@@ -28,9 +28,17 @@ from kuccpss.sitemaps import sitemaps
 
 
 def serve_sw(_request):
-    sw_path = os.path.join(settings.STATIC_ROOT or os.path.join(settings.BASE_DIR, 'static'), 'js', 'sw.js')
-    return FileResponse(open(sw_path, 'rb'), content_type='application/javascript',
-                        headers={'Service-Worker-Allowed': '/'})
+    candidates = []
+    if settings.STATIC_ROOT:
+        candidates.append(os.path.join(settings.STATIC_ROOT, 'js', 'sw.js'))
+    for d in getattr(settings, 'STATICFILES_DIRS', []):
+        candidates.append(os.path.join(d, 'js', 'sw.js'))
+    for sw_path in candidates:
+        if os.path.exists(sw_path):
+            return FileResponse(open(sw_path, 'rb'), content_type='application/javascript',
+                                headers={'Service-Worker-Allowed': '/'})
+    from django.http import Http404
+    raise Http404('sw.js not found')
 
 def serve_robots(request):
     from django.template.loader import render_to_string

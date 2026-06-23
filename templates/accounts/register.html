@@ -42,14 +42,14 @@
       </ul>
 
       <div class="auth-panel-badge">
-        100% Free to join &nbsp;·&nbsp; No spam, ever
+        Quick to join &nbsp;·&nbsp; No spam, ever
       </div>
     </div>
 
     <!-- Right form panel -->
     <div class="auth-panel-right">
       <h2>Create your account</h2>
-      <p class="auth-panel-sub-text">Free forever — no credit card required</p>
+      <p class="auth-panel-sub-text">No credit card required</p>
 
       {% if GOOGLE_OAUTH_AVAILABLE %}
       <a href="/accounts/google/login/?process=signup{% if request.GET.next %}&next={{ request.GET.next|urlencode }}{% endif %}"
@@ -131,7 +131,7 @@
         </div>
 
         <button type="submit" class="btn-auth-submit" id="register-submit">
-          <i class="fas fa-user-plus me-2"></i>Create Free Account
+          <i class="fas fa-user-plus me-2"></i>Create Account
         </button>
       </form>
 
