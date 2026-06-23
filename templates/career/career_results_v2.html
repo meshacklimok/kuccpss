@@ -23,14 +23,17 @@
     background: #fff;
     border-bottom: 1px solid #e2e8f0;
     padding: 0.9rem 0;
-    position: sticky;
+    position: fixed;
     top: 56px;
+    left: 0;
+    right: 0;
     z-index: 100;
     box-shadow: 0 2px 8px rgba(0,0,0,0.06);
     transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
     will-change: transform;
 }
-.filter-bar.bar-hidden { transform: translateY(calc(-100% - 56px)); }
+.filter-bar.bar-hidden { transform: translateY(-100%); }
+#filter-bar-spacer { height: 0; }
 
 .chance-badge {
     display: inline-block;
@@ -421,6 +424,7 @@
 {% endif %}
 
 <!-- Filter bar -->
+<div id="filter-bar-spacer"></div>
 <div class="filter-bar">
     <div class="container">
         <div class="d-flex align-items-center gap-2 flex-wrap">
@@ -1497,9 +1501,18 @@ function cardClick(e, card) {
     if (href) window.location.href = href;
 }
 
-// Filter-bar: hides on scroll DOWN (browsing results), shows on scroll UP or near top
+// Filter-bar: hides on scroll DOWN, shows on scroll UP or near top
 (function () {
-    var bar   = document.querySelector('.filter-bar');
+    var bar    = document.querySelector('.filter-bar');
+    var spacer = document.getElementById('filter-bar-spacer');
+    if (!bar) return;
+
+    function syncSpacer() {
+        if (spacer) spacer.style.height = bar.offsetHeight + 'px';
+    }
+    syncSpacer();
+    window.addEventListener('resize', syncSpacer, { passive: true });
+
     var lastY = window.scrollY;
     var raf   = false;
     window.addEventListener('scroll', function () {
@@ -1507,8 +1520,8 @@ function cardClick(e, card) {
         raf = true;
         requestAnimationFrame(function () {
             var y    = window.scrollY;
-            var down = y > lastY && y > 150;
-            if (bar) bar.classList.toggle('bar-hidden', down);
+            var down = y > lastY && y > 120;
+            bar.classList.toggle('bar-hidden', down);
             lastY = y;
             raf = false;
         });
