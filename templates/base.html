@@ -205,40 +205,9 @@
     .nav-search-dropdown { position: fixed; top: auto; left: 1rem; right: 1rem; width: auto; }
 }
 
-/* Hide content in landscape on mobile, show rotate prompt */
-@media screen and (orientation: landscape) and (max-height: 600px) {
-    #rotate-overlay { display: flex !important; }
-    body > *:not(#rotate-overlay) { visibility: hidden; }
-}
-#rotate-overlay {
-    display: none;
-    position: fixed;
-    inset: 0;
-    z-index: 99999;
-    background: var(--bg-primary, #0f172a);
-    color: var(--text-primary, #f1f5f9);
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 1rem;
-    text-align: center;
-    padding: 2rem;
-}
-#rotate-overlay svg { width: 64px; height: 64px; animation: rotate-hint 1.5s ease-in-out infinite alternate; }
-@keyframes rotate-hint { from { transform: rotate(0deg); } to { transform: rotate(-90deg); } }
-#rotate-overlay p { font-size: 1.1rem; font-weight: 500; margin: 0; }
 </style>
 </head>
 <body>
-
-<!-- Portrait-only overlay (shown in landscape on mobile) -->
-<div id="rotate-overlay" aria-live="polite">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-        <rect x="5" y="2" width="14" height="20" rx="2"/>
-        <path d="M12 18h.01"/>
-    </svg>
-    <p>Please rotate your phone to portrait mode</p>
-</div>
 
 <!-- Skip to main content (keyboard accessibility) -->
 <a class="skip-link" href="#main-content">Skip to main content</a>
@@ -660,82 +629,178 @@
 
     <!-- ── FOOTER ── -->
     <footer class="site-footer">
-        <div class="container">
-            <div class="row g-4">
-                <div class="col-md-4">
-                    <div class="footer-brand mb-2">KUCCP<span>SS</span></div>
-                    <p class="small mb-3">From KCSE to your dream career. Kenya's smartest guide to the right university course.</p>
-                    <div class="d-flex gap-3">
-                        <a href="#" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
-                        <a href="#" aria-label="Twitter/X"><i class="fab fa-x-twitter"></i></a>
-                        <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
-                    </div>
-                </div>
-                <div class="col-6 col-md-2">
-                    <p class="fw-semibold text-white mb-2 small text-uppercase">Platform</p>
-                    <ul class="list-unstyled small">
-                        <li class="mb-1"><a href="{% url 'clusterpoints:calculator' %}">Cluster Calculator</a></li>
-                        <li class="mb-1"><a href="{% url 'courses:course_types_list' %}">Courses</a></li>
-                        <li class="mb-1"><a href="{% url 'career:career_profiles' %}">Careers</a></li>
-                        <li class="mb-1"><a href="{% url 'institutions:institution_types_list' %}">Institutions</a></li>
-                        <li class="mb-1"><a href="{% url 'mentorship:directory' %}">Mentorship</a></li>
-                    </ul>
-                </div>
-                <div class="col-6 col-md-2">
-                    <p class="fw-semibold text-white mb-2 small text-uppercase">Resources</p>
-                    <ul class="list-unstyled small">
-                        <li class="mb-1"><a href="{% url 'resources:resource_list' %}">Guides &amp; PDFs</a></li>
-                        <li class="mb-1"><a href="{% url 'resources:article_list' %}">Articles</a></li>
-                        <li class="mb-1"><a href="{% url 'resources:kuccps_calendar' %}">KUCCPS Calendar</a></li>
-                        <li class="mb-1"><a href="{% url 'career:quiz' %}">Career Quiz</a></li>
-                        <li class="mb-1"><a href="{% url 'accounts:terms' %}">Terms &amp; Conditions</a></li>
-                        <li class="mb-1"><a href="{% url 'accounts:privacy' %}">Privacy Policy</a></li>
-                        <li class="mb-1"><a href="{% url 'accounts:faq' %}">FAQ</a></li>
-                        <li class="mb-1"><a href="{% url 'accounts:about' %}">About Us</a></li>
-                    </ul>
-                </div>
-                <div class="col-md-4">
-                    <p class="fw-semibold text-white mb-2 small text-uppercase">Account</p>
-                    {% if user.is_authenticated %}
-                    <ul class="list-unstyled small">
-                        <li class="mb-1"><a href="{% url 'accounts:dashboard' %}">Dashboard</a></li>
-                        <li class="mb-1"><a href="{% url 'accounts:profile' %}">My Profile</a></li>
-                        <li class="mb-1"><a href="{% url 'accounts:saved_courses' %}">Saved Courses</a></li>
-                        <li class="mb-1"><a href="{% url 'accounts:shortlist' %}">My Shortlist</a></li>
-                    </ul>
-                    {% else %}
-                    <p class="small mb-3">Create a free account to track your courses and applications.</p>
-                    <a href="{% url 'accounts:register' %}" class="btn btn-gradient-success btn-sm me-2">Register Free</a>
-                    <a href="{% url 'accounts:login' %}" class="btn btn-outline-light btn-sm">Login</a>
-                    {% endif %}
-                </div>
-            </div>
-            <hr class="border-secondary mt-4">
+      <div class="container">
 
-            <!-- Legal disclaimer + data version -->
-            <div class="text-center mb-3 px-2" style="font-size:0.75rem;color:#94a3b8;line-height:1.6;">
-              <i class="fas fa-info-circle me-1" style="color:#60a5fa;"></i>
-              CareerNext is an independent third-party platform and is <strong>not</strong> affiliated with, endorsed by,
-              or part of the official <a href="https://kuccps.net" target="_blank" rel="noopener noreferrer"
-              class="text-secondary">KUCCPS portal</a>.
-              Information is provided for guidance only — always verify with official KUCCPS sources before applying.
-              <br>
-              <span style="color:#64748b;">
-                Cutoff data: <strong style="color:#93c5fd;">{{ DATA_CYCLE }} cycle</strong> &nbsp;·&nbsp;
-                Last updated: {{ DATA_UPDATED }} &nbsp;·&nbsp;
-                Data version: {{ DATA_VERSION }}
-              </span>
-            </div>
-
-            <div class="d-flex flex-wrap justify-content-between align-items-center small gap-2">
-                <span>&copy; {% now "Y" %} CareerNext. All rights reserved.</span>
-                <span class="d-flex gap-3">
-                    <a href="{% url 'accounts:privacy' %}" class="text-secondary text-decoration-none">Privacy Policy</a>
-                    <a href="{% url 'accounts:terms' %}" class="text-secondary text-decoration-none">Terms</a>
-                    <span>Built for Kenyan students <i class="fas fa-heart text-danger"></i></span>
-                </span>
-            </div>
+        <!-- ── MOBILE: brand row (logo + socials side-by-side) ── -->
+        <!-- ── DESKTOP: brand is first column in the row below  ── -->
+        <div class="footer-brand-row d-md-none">
+          <div>
+            <div class="footer-brand">CareerNext</div>
+            <p class="mb-0" style="font-size:0.75rem;opacity:0.55;margin-top:2px;">Kenya's KUCCPS guide</p>
+          </div>
+          <div class="footer-socials">
+            <a href="#" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+            <a href="#" aria-label="Twitter/X"><i class="fab fa-x-twitter"></i></a>
+            <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+          </div>
         </div>
+
+        <!-- ── MOBILE: 2×2 link grid ── -->
+        <div class="footer-link-grid d-md-none">
+
+          <!-- Platform -->
+          <div>
+            <span class="footer-col-title">Platform</span>
+            <ul class="footer-links">
+              <li><a href="{% url 'clusterpoints:calculator' %}">Cluster Calculator</a></li>
+              <li><a href="{% url 'courses:course_types_list' %}">Courses</a></li>
+              <li><a href="{% url 'career:career_profiles' %}">Careers</a></li>
+              <li><a href="{% url 'institutions:institution_types_list' %}">Institutions</a></li>
+              <li><a href="{% url 'mentorship:directory' %}">Mentorship</a></li>
+            </ul>
+          </div>
+
+          <!-- Resources -->
+          <div>
+            <span class="footer-col-title">Resources</span>
+            <ul class="footer-links">
+              <li><a href="{% url 'resources:resource_list' %}">Guides &amp; PDFs</a></li>
+              <li><a href="{% url 'resources:article_list' %}">Articles</a></li>
+              <li><a href="{% url 'resources:kuccps_calendar' %}">KUCCPS Calendar</a></li>
+              <li><a href="{% url 'career:quiz' %}">Career Quiz</a></li>
+              <li><a href="{% url 'accounts:faq' %}">FAQ</a></li>
+            </ul>
+          </div>
+
+          <!-- Account -->
+          <div>
+            <span class="footer-col-title">Account</span>
+            {% if user.is_authenticated %}
+            <ul class="footer-links">
+              <li><a href="{% url 'accounts:dashboard' %}">Dashboard</a></li>
+              <li><a href="{% url 'accounts:profile' %}">My Profile</a></li>
+              <li><a href="{% url 'accounts:saved_courses' %}">Saved Courses</a></li>
+              <li><a href="{% url 'accounts:shortlist' %}">My Shortlist</a></li>
+            </ul>
+            {% else %}
+            <ul class="footer-links">
+              <li><a href="{% url 'accounts:register' %}">Register Free</a></li>
+              <li><a href="{% url 'accounts:login' %}">Login</a></li>
+            </ul>
+            {% endif %}
+          </div>
+
+          <!-- Legal -->
+          <div>
+            <span class="footer-col-title">Legal</span>
+            <ul class="footer-links">
+              <li><a href="{% url 'accounts:about' %}">About Us</a></li>
+              <li><a href="{% url 'accounts:privacy' %}">Privacy Policy</a></li>
+              <li><a href="{% url 'accounts:terms' %}">Terms &amp; Conditions</a></li>
+            </ul>
+          </div>
+
+        </div><!-- /footer-link-grid mobile -->
+
+        <!-- ── DESKTOP: full 5-column row ── -->
+        <div class="row g-4 d-none d-md-flex">
+
+          <!-- Brand -->
+          <div class="col-md-3">
+            <div class="footer-brand mb-2">CareerNext</div>
+            <p class="small mb-3" style="opacity:0.6;line-height:1.5;">
+              From KCSE to your dream career.<br>
+              Kenya's free guide to KUCCPS placement.
+            </p>
+            <div class="footer-socials">
+              <a href="#" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+              <a href="#" aria-label="Twitter/X"><i class="fab fa-x-twitter"></i></a>
+              <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+            </div>
+          </div>
+
+          <!-- Platform -->
+          <div class="col-md-2">
+            <span class="footer-col-title">Platform</span>
+            <ul class="footer-links">
+              <li><a href="{% url 'clusterpoints:calculator' %}">Cluster Calculator</a></li>
+              <li><a href="{% url 'courses:course_types_list' %}">Courses</a></li>
+              <li><a href="{% url 'career:career_profiles' %}">Careers</a></li>
+              <li><a href="{% url 'institutions:institution_types_list' %}">Institutions</a></li>
+              <li><a href="{% url 'mentorship:directory' %}">Mentorship</a></li>
+            </ul>
+          </div>
+
+          <!-- Resources -->
+          <div class="col-md-2">
+            <span class="footer-col-title">Resources</span>
+            <ul class="footer-links">
+              <li><a href="{% url 'resources:resource_list' %}">Guides &amp; PDFs</a></li>
+              <li><a href="{% url 'resources:article_list' %}">Articles</a></li>
+              <li><a href="{% url 'resources:kuccps_calendar' %}">KUCCPS Calendar</a></li>
+              <li><a href="{% url 'career:quiz' %}">Career Quiz</a></li>
+              <li><a href="{% url 'accounts:faq' %}">FAQ</a></li>
+            </ul>
+          </div>
+
+          <!-- Legal -->
+          <div class="col-md-2">
+            <span class="footer-col-title">Legal &amp; Info</span>
+            <ul class="footer-links">
+              <li><a href="{% url 'accounts:about' %}">About Us</a></li>
+              <li><a href="{% url 'accounts:privacy' %}">Privacy Policy</a></li>
+              <li><a href="{% url 'accounts:terms' %}">Terms &amp; Conditions</a></li>
+            </ul>
+          </div>
+
+          <!-- Account -->
+          <div class="col-md-3">
+            <span class="footer-col-title">Account</span>
+            {% if user.is_authenticated %}
+            <ul class="footer-links">
+              <li><a href="{% url 'accounts:dashboard' %}">Dashboard</a></li>
+              <li><a href="{% url 'accounts:profile' %}">My Profile</a></li>
+              <li><a href="{% url 'accounts:saved_courses' %}">Saved Courses</a></li>
+              <li><a href="{% url 'accounts:shortlist' %}">My Shortlist</a></li>
+            </ul>
+            {% else %}
+            <div class="footer-auth-cta">
+              <p class="small mb-2" style="opacity:0.7;">Track courses and build your shortlist.</p>
+              <a href="{% url 'accounts:register' %}" class="btn btn-gradient-success btn-sm me-1">Register Free</a>
+              <a href="{% url 'accounts:login' %}" class="btn btn-outline-light btn-sm">Login</a>
+            </div>
+            {% endif %}
+          </div>
+
+        </div><!-- /desktop row -->
+
+        <hr style="border-color:rgba(255,255,255,0.08);margin:1.5rem 0 1rem;">
+
+        <!-- Disclaimer -->
+        <p class="footer-disclaimer mb-2">
+          <i class="fas fa-info-circle me-1" style="color:#60a5fa;"></i>
+          CareerNext is independent and <strong>not</strong> affiliated with the official
+          <a href="https://kuccps.net" target="_blank" rel="noopener noreferrer">KUCCPS portal</a>.
+          Always verify placement decisions at kuccps.ac.ke.
+          <span class="footer-data-version">
+            &nbsp;·&nbsp; Cutoff data: <strong style="color:#93c5fd;">{{ DATA_CYCLE }} cycle</strong>
+            &nbsp;·&nbsp; Updated: {{ DATA_UPDATED }}
+            &nbsp;·&nbsp; v{{ DATA_VERSION }}
+          </span>
+        </p>
+
+        <!-- Bottom bar -->
+        <div class="footer-bottom">
+          <span>&copy; {% now "Y" %} CareerNext. All rights reserved.</span>
+          <span class="d-flex gap-3 flex-wrap justify-content-center">
+            <a href="{% url 'accounts:privacy' %}">Privacy</a>
+            <a href="{% url 'accounts:terms' %}">Terms</a>
+            <a href="{% url 'accounts:about' %}">About</a>
+            <span>Built for Kenyan students <i class="fas fa-heart" style="color:#f87171;"></i></span>
+          </span>
+        </div>
+
+      </div>
     </footer>
 
     <!-- ── GLOBAL ERROR TOAST (shown by JS on HTMX/network failures) ── -->

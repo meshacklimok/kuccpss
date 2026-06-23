@@ -23,6 +23,17 @@
             Based on your entered KCSE grades.
           {% endif %}
         </p>
+        {% if active_pathway %}
+        <div class="mt-2">
+          <span class="badge rounded-pill" style="background:rgba(255,255,255,0.2);font-size:0.78rem;font-weight:600;">
+            <i class="fas fa-route me-1"></i>{{ active_pathway }} Pathway
+          </span>
+          {% if not is_degree_pathway %}
+          <a href="{% url 'career:home' %}#pathway-section" class="ms-2 text-white opacity-75 small"
+             style="text-decoration:underline dotted;">Switch pathway</a>
+          {% endif %}
+        </div>
+        {% endif %}
       </div>
       <div class="ms-auto d-flex gap-2 flex-wrap">
         <a href="{% url 'clusterpoints:calculator' %}" class="btn btn-outline-light btn-sm fw-600">
@@ -224,9 +235,9 @@
           <div class="text-end flex-shrink-0 d-none d-sm-block" style="min-width:90px;">
             <div class="fw-800 {% if item.status == 'eligible' %}text-success{% elif item.status == 'nearly' %}text-warning{% else %}text-muted{% endif %}"
                  style="font-size:1rem;">
-              {{ item.user_points }} pts
+              {% if item.is_grade %}{{ item.user_points }}{% else %}{{ item.user_points }} pts{% endif %}
             </div>
-            <div class="text-muted" style="font-size:0.72rem;">cutoff {{ item.cutoff }}</div>
+            <div class="text-muted" style="font-size:0.72rem;">min {% if item.is_grade %}grade{% else %}cutoff{% endif %} {{ item.cutoff }}</div>
             {% if item.gap >= 0 %}
             <div class="fw-900 text-success" style="font-size:1.15rem;letter-spacing:-0.01em;">
               <i class="fas fa-arrow-up" style="font-size:0.85rem;"></i> +{{ item.gap }}
@@ -242,7 +253,7 @@
         <!-- Points (mobile) -->
         <div class="d-flex d-sm-none gap-3 mt-2 align-items-center">
           <span class="fw-700 {% if item.status == 'eligible' %}text-success{% elif item.status == 'nearly' %}text-warning{% else %}text-muted{% endif %}" style="font-size:0.85rem;">
-            {{ item.user_points }} / {{ item.cutoff }} pts
+            {% if item.is_grade %}{{ item.user_points }} / min {{ item.cutoff }}{% else %}{{ item.user_points }} / {{ item.cutoff }} pts{% endif %}
           </span>
           {% if item.gap >= 0 %}
           <span class="fw-900 text-success" style="font-size:1rem;"><i class="fas fa-arrow-up" style="font-size:0.8rem;"></i> +{{ item.gap }}</span>

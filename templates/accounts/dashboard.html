@@ -489,19 +489,19 @@ body.dark .ob-step:hover { background: var(--surface-2); }
 
   {# stat strip #}
   <div class="dash-stat-strip" style="position:relative;z-index:1;">
-    <a href="{% url 'clusterpoints:eligible_courses' %}" class="stat-chip">
+    <a href="{% url 'clusterpoints:eligible_courses' %}" class="stat-chip" {% if guest %}data-guest-gate="1"{% endif %}>
       <span class="stat-chip-num" style="color:#4ade80;">{{ eligible_count|default:"0" }}</span>
       <span class="stat-chip-label">Eligible</span>
     </a>
-    <a href="{% url 'accounts:saved_courses' %}" class="stat-chip">
+    <a href="{% url 'accounts:saved_courses' %}" class="stat-chip" {% if guest %}data-guest-gate="1"{% endif %}>
       <span class="stat-chip-num" style="color:#fbbf24;">{{ saved_count|default:"0" }}</span>
       <span class="stat-chip-label">Watchlist</span>
     </a>
-    <a href="{% url 'accounts:shortlist' %}" class="stat-chip">
+    <a href="{% url 'accounts:shortlist' %}" class="stat-chip" {% if guest %}data-guest-gate="1"{% endif %}>
       <span class="stat-chip-num" style="color:#818cf8;">{{ shortlist_count|default:"0" }}</span>
       <span class="stat-chip-label">Shortlisted</span>
     </a>
-    <a href="{% url 'career:career_results' %}" class="stat-chip">
+    <a href="{% url 'career:career_results' %}" class="stat-chip" {% if guest %}data-guest-gate="1"{% endif %}>
       <span class="stat-chip-num" style="color:#38bdf8;">{{ snapshot.total_matches|default:"—" }}</span>
       <span class="stat-chip-label">Matches</span>
     </a>
@@ -540,7 +540,7 @@ body.dark .ob-step:hover { background: var(--surface-2); }
   {% if not guest %}
   {% with has_results=snapshot has_shortlist=shortlist_count has_county=user.county %}
   {% if not has_results or not has_county or not has_shortlist %}
-  <div class="dash-card" id="onboardCard">
+  <div class="dash-card reveal" id="onboardCard">
     <div class="dash-card-header">
       <h6 class="dash-card-title">
         <i class="bi bi-rocket-takeoff-fill text-primary"></i>
@@ -613,7 +613,7 @@ body.dark .ob-step:hover { background: var(--surface-2); }
 
 
   {# ── RECOMMENDED FOR YOU ── #}
-  <div class="dash-card">
+  <div class="dash-card reveal">
     {% if snapshot and snapshot.top_matches_json %}
     {# — real data — #}
     <div class="dash-card-header-gradient"
@@ -701,7 +701,7 @@ body.dark .ob-step:hover { background: var(--surface-2); }
           Use the Career Engine to see courses matched to your grades
         </div>
       </div>
-      <a href="{% url 'career:home' %}#pathway-section" class="btn-header-light">
+      <a href="{% url 'career:home' %}#pathway-section" class="btn-header-light" {% if guest %}data-guest-gate="1"{% endif %}>
         Launch Engine <i class="bi bi-arrow-right"></i>
       </a>
     </div>
@@ -737,7 +737,7 @@ body.dark .ob-step:hover { background: var(--surface-2); }
                 <i class="fas fa-rocket fa-2x mb-2" style="color:#4f46e5;opacity:0.6;"></i>
                 <div class="fw-700 small mb-1">See your real matches</div>
                 <p style="font-size:0.7rem;color:#94a3b8;margin-bottom:8px;">Enter your KCSE grades first</p>
-                <a href="{% url 'career:home' %}#pathway-section" class="btn btn-sm btn-primary">Start Engine</a>
+                <a href="{% url 'career:home' %}#pathway-section" class="btn btn-sm btn-primary" {% if guest %}data-guest-gate="1"{% endif %}>Start Engine</a>
               </div>
             </div>
           </div>
@@ -754,7 +754,7 @@ body.dark .ob-step:hover { background: var(--surface-2); }
   {# ── YOUR CLUSTER SCORES ── #}
   {% if latest_result and cluster_results %}
 
-  <div class="dash-card">
+  <div class="dash-card reveal">
     <div class="dash-card-header-gradient"
          style="background:linear-gradient(120deg,#1e3a8a 0%,#2563eb 100%);">
       <div>
@@ -859,12 +859,12 @@ body.dark .ob-step:hover { background: var(--surface-2); }
 
   {% else %}
   {# empty state — no KCSE results #}
-  <div class="dash-card">
+  <div class="dash-card reveal">
     <div class="empty-state">
       <i class="fas fa-calculator"></i>
       <h6 class="fw-800 mb-1">No KCSE Results Yet</h6>
       <p class="small text-muted mb-3">Enter your grades to calculate cluster points and see eligible courses.</p>
-      <a href="{% url 'clusterpoints:calculator' %}" class="btn btn-primary px-5" style="border-radius:10px;">
+      <a href="{% url 'clusterpoints:calculator' %}" class="btn btn-primary px-5" style="border-radius:10px;" {% if guest %}data-guest-gate="1"{% endif %}>
         <i class="fas fa-calculator me-2"></i>Start Calculator
       </a>
     </div>
@@ -874,7 +874,7 @@ body.dark .ob-step:hover { background: var(--surface-2); }
 
   {# ── MY COURSES (tabbed: Watchlist | Shortlist) ── #}
   {% if guest %}
-  <div class="dash-card">
+  <div class="dash-card reveal">
     <div class="dash-card-header-gradient" style="background:linear-gradient(120deg,#1e3a8a 0%,#4f46e5 100%);">
       <div>
         <div class="fw-800" style="font-size:0.9rem;display:flex;align-items:center;gap:7px;">
@@ -898,7 +898,7 @@ body.dark .ob-step:hover { background: var(--surface-2); }
     </div>
   </div>
   {% else %}
-  <div class="dash-card">
+  <div class="dash-card reveal">
     <div class="dash-card-header-gradient"
          style="background:linear-gradient(120deg,#312e81,#4f46e5);">
       <div>
@@ -1053,7 +1053,7 @@ body.dark .ob-step:hover { background: var(--surface-2); }
 
   {# ── FEATURED INSTITUTIONS ── #}
   {% if featured_promos %}
-  <div class="dash-card">
+  <div class="dash-card reveal">
     <div class="dash-card-header-gradient"
          style="background:linear-gradient(120deg,#78350f,#d97706);">
       <div>
@@ -1099,7 +1099,7 @@ body.dark .ob-step:hover { background: var(--surface-2); }
 
   {# ── LATEST NEWS ── #}
   {% if recent_news %}
-  <div class="dash-card">
+  <div class="dash-card reveal">
     <div class="dash-card-header-gradient"
          style="background:linear-gradient(120deg,#0f172a 0%,#1e3a8a 100%);">
       <div class="fw-800" style="font-size:0.9rem;display:flex;align-items:center;gap:7px;">
@@ -1146,7 +1146,7 @@ body.dark .ob-step:hover { background: var(--surface-2); }
 
 
   {# ── KUCCPS TIMELINE ── #}
-  <div class="sidebar-card" style="overflow:hidden;">
+  <div class="sidebar-card reveal" style="overflow:hidden;">
     <div class="p-4 {% if timeline_phase != 'closed' %}text-white{% endif %}"
          style="{% if timeline_phase == 'before_open' %}background:linear-gradient(135deg,#1e3a8a,#4f46e5);
                 {% elif timeline_phase == 'open' %}background:linear-gradient(135deg,#065f46,#16a34a);
@@ -1186,7 +1186,7 @@ body.dark .ob-step:hover { background: var(--surface-2); }
         </div>
       </div>
       {% if timeline_phase == 'before_open' %}
-      <a href="{% url 'career:home' %}" class="btn btn-light btn-sm w-100 mt-3 fw-700" style="border-radius:10px;font-size:0.8rem;">
+      <a href="{% url 'career:home' %}" class="btn btn-light btn-sm w-100 mt-3 fw-700" style="border-radius:10px;font-size:0.8rem;" {% if guest %}data-guest-gate="1"{% endif %}>
         <i class="fas fa-rocket me-1"></i>Prepare Now
       </a>
       {% elif timeline_phase == 'open' %}
@@ -1200,7 +1200,7 @@ body.dark .ob-step:hover { background: var(--surface-2); }
 
 
   {# ── QUICK ACTIONS ── #}
-  <div class="sidebar-card">
+  <div class="sidebar-card reveal">
     <div class="sidebar-card-header"
          style="background:linear-gradient(120deg,#1e3a8a,#2563eb);border:none;">
       <h6 class="sidebar-card-title" style="color:#fff;">
@@ -1210,18 +1210,21 @@ body.dark .ob-step:hover { background: var(--surface-2); }
     <div class="sidebar-card-body">
       <div class="row g-2">
         <div class="col-6">
-          <a href="{% url 'clusterpoints:calculator' %}" class="qa-btn">
+          <a href="{% url 'clusterpoints:calculator' %}" class="qa-btn" {% if guest %}data-guest-gate="1"{% endif %}>
             <i class="fas fa-calculator text-primary"></i>Calculator
+            {% if guest %}<i class="fas fa-lock ms-1" style="font-size:0.6rem;color:#cbd5e1;"></i>{% endif %}
           </a>
         </div>
         <div class="col-6">
-          <a href="{% url 'clusterpoints:eligible_courses' %}" class="qa-btn">
+          <a href="{% url 'clusterpoints:eligible_courses' %}" class="qa-btn" {% if guest %}data-guest-gate="1"{% endif %}>
             <i class="fas fa-check-circle text-success"></i>Eligible
+            {% if guest %}<i class="fas fa-lock ms-1" style="font-size:0.6rem;color:#cbd5e1;"></i>{% endif %}
           </a>
         </div>
         <div class="col-6">
-          <a href="{% url 'career:quiz' %}" class="qa-btn">
+          <a href="{% url 'career:quiz' %}" class="qa-btn" {% if guest %}data-guest-gate="1"{% endif %}>
             <i class="fas fa-clipboard-list text-warning"></i>Career Quiz
+            {% if guest %}<i class="fas fa-lock ms-1" style="font-size:0.6rem;color:#cbd5e1;"></i>{% endif %}
           </a>
         </div>
         <div class="col-6">
@@ -1234,9 +1237,79 @@ body.dark .ob-step:hover { background: var(--surface-2); }
   </div>
 
 
+  {# ── TRENDING COURSES ── #}
+  {% if trending_offered or spotlight %}
+  <div class="sidebar-card reveal">
+    <div class="sidebar-card-header"
+         style="background:linear-gradient(120deg,#0f172a 0%,#1e1b4b 100%);border:none;">
+      <h6 class="sidebar-card-title" style="color:#fff;">
+        <i class="fas fa-fire" style="color:#f97316;"></i>Trending Now
+        <span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#22c55e;
+                     box-shadow:0 0 0 0 rgba(34,197,94,0.5);animation:dotPulse 2s infinite;margin-left:4px;"></span>
+      </h6>
+      <a href="{% url 'accounts:home' %}#spotlight-trends" class="btn-header-light">
+        See all
+      </a>
+    </div>
+    <div style="padding:0.25rem 0;">
+      {% if spotlight %}
+      <a href="{{ spotlight.course.get_absolute_url }}"
+         class="d-flex align-items-center gap-2 py-2 px-3 text-decoration-none"
+         style="border-bottom:1px solid #f1f5f9;transition:background 0.15s;background:#fef9c3;"
+         onmouseover="this.style.background='#fef3c7'" onmouseout="this.style.background='#fef9c3'">
+        <div class="rounded-2 flex-shrink-0 d-flex align-items-center justify-content-center"
+             style="width:30px;height:30px;background:linear-gradient(135deg,#f59e0b,#ef4444);color:#fff;font-size:0.6rem;font-weight:800;text-align:center;line-height:1.1;">
+          <i class="fas fa-star" style="font-size:0.75rem;"></i>
+        </div>
+        <div style="min-width:0;flex:1;">
+          <div class="fw-700 text-dark" style="font-size:0.78rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+            {{ spotlight.course.name|truncatechars:30 }}
+          </div>
+          <div style="font-size:0.65rem;font-weight:700;color:#d97706;text-transform:uppercase;letter-spacing:0.05em;">
+            Course of the Week
+          </div>
+        </div>
+        <i class="fas fa-chevron-right" style="color:#d97706;font-size:0.6rem;flex-shrink:0;"></i>
+      </a>
+      {% endif %}
+      {% for c in trending_offered %}
+      <a href="{{ c.get_absolute_url }}"
+         class="d-flex align-items-center gap-2 py-2 px-3 text-decoration-none"
+         style="border-bottom:1px solid #f1f5f9;transition:background 0.15s;"
+         onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background=''">
+        <div class="rounded-2 flex-shrink-0 d-flex align-items-center justify-content-center fw-800"
+             style="width:30px;height:30px;font-size:0.68rem;
+                    {% if forloop.counter == 1 %}background:linear-gradient(135deg,#f59e0b,#fbbf24);color:#78350f;
+                    {% elif forloop.counter == 2 %}background:rgba(148,163,184,0.2);color:#64748b;border:1px solid #cbd5e1;
+                    {% elif forloop.counter == 3 %}background:rgba(180,83,9,0.1);color:#d97706;border:1px solid rgba(180,83,9,0.2);
+                    {% else %}background:#f1f5f9;color:#94a3b8;{% endif %}">
+          {{ forloop.counter }}
+        </div>
+        <div style="min-width:0;flex:1;">
+          <div class="fw-700 text-dark" style="font-size:0.78rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+            {{ c.name|truncatechars:28 }}
+          </div>
+          <div class="text-muted" style="font-size:0.67rem;">
+            <i class="fas fa-university me-1" style="font-size:0.55rem;"></i>{{ c.trend_stat }} institutions
+          </div>
+        </div>
+        <i class="fas fa-chevron-right text-muted flex-shrink-0" style="font-size:0.6rem;"></i>
+      </a>
+      {% endfor %}
+    </div>
+    <a href="{% url 'courses:course_types_list' %}"
+       style="display:block;text-align:center;padding:0.7rem;font-size:0.73rem;font-weight:700;
+              color:#64748b;text-decoration:none;border-top:1px solid #f1f5f9;transition:background 0.15s;"
+       onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background=''">
+      Browse all courses <i class="fas fa-arrow-right ms-1"></i>
+    </a>
+  </div>
+  {% endif %}
+
+
   {# ── INSTITUTIONS ── #}
   {% if inst_type_links %}
-  <div class="sidebar-card">
+  <div class="sidebar-card reveal">
     <div class="sidebar-card-header"
          style="background:linear-gradient(120deg,#78350f,#d97706);border:none;">
       <h6 class="sidebar-card-title" style="color:#fff;">
@@ -1268,7 +1341,7 @@ body.dark .ob-step:hover { background: var(--surface-2); }
 
 
   {# ── MENTORSHIP ── #}
-  <div class="sidebar-card">
+  <div class="sidebar-card reveal">
     <div class="sidebar-card-header"
          style="background:linear-gradient(120deg,#064e3b,#059669);border:none;">
       <h6 class="sidebar-card-title" style="color:#fff;">
@@ -1277,7 +1350,7 @@ body.dark .ob-step:hover { background: var(--surface-2); }
         <span class="badge ms-1" style="background:rgba(255,255,255,0.2);font-size:0.62rem;">Booked</span>
         {% endif %}
       </h6>
-      <a href="{% url 'mentorship:directory' %}" class="btn-header-light">
+      <a href="{% url 'mentorship:directory' %}" class="btn-header-light" {% if guest %}data-guest-gate="1"{% endif %}>
         Find Mentor <i class="bi bi-arrow-right"></i>
       </a>
     </div>
@@ -1343,7 +1416,7 @@ body.dark .ob-step:hover { background: var(--surface-2); }
       <div class="pt-2 border-top">
         <p class="text-muted small mb-2">University student? Earn KES 70 per session.</p>
         <a href="{% url 'mentorship:become_mentor' %}" class="btn btn-outline-success btn-sm w-100"
-           style="border-radius:8px;font-size:0.78rem;">
+           style="border-radius:8px;font-size:0.78rem;" {% if guest %}data-guest-gate="1"{% endif %}>
           <i class="bi bi-mortarboard me-1"></i>Become a Mentor
         </a>
       </div>
@@ -1353,7 +1426,7 @@ body.dark .ob-step:hover { background: var(--surface-2); }
 
 
   {# ── CAREER IDEAS ── #}
-  <div class="sidebar-card">
+  <div class="sidebar-card reveal">
     <div class="sidebar-card-header"
          style="background:linear-gradient(120deg,#1e1b4b,#4338ca);border:none;">
       <h6 class="sidebar-card-title" style="color:#fff;">
@@ -1376,13 +1449,13 @@ body.dark .ob-step:hover { background: var(--surface-2); }
       </div>
       {% else %}
       <a href="{% url 'career:quiz' %}" class="d-flex align-items-center gap-2 p-2 rounded-2 mb-2 text-decoration-none"
-         style="background:#fef9c3;border:1.5px solid #fde68a;">
+         style="background:#fef9c3;border:1.5px solid #fde68a;" {% if guest %}data-guest-gate="1"{% endif %}>
         <i class="fas fa-lightbulb text-warning flex-shrink-0" style="font-size:0.85rem;"></i>
         <div>
           <div class="fw-700 small" style="color:#92400e;">Discover your ideal career</div>
           <div class="text-muted" style="font-size:0.7rem;">3 minutes · personalised results</div>
         </div>
-        <i class="bi bi-chevron-right ms-auto" style="color:#d97706;font-size:0.8rem;"></i>
+        {% if guest %}<i class="fas fa-lock ms-auto" style="color:#d97706;font-size:0.75rem;"></i>{% else %}<i class="bi bi-chevron-right ms-auto" style="color:#d97706;font-size:0.8rem;"></i>{% endif %}
       </a>
       {% endif %}
       {% for career in recommended_careers %}
@@ -1412,7 +1485,7 @@ body.dark .ob-step:hover { background: var(--surface-2); }
 
   {# ── SCHOLARSHIP ALERTS ── #}
   {% if scholarship_alerts %}
-  <div class="sidebar-card">
+  <div class="sidebar-card reveal">
     <div class="sidebar-card-header">
       <h6 class="sidebar-card-title"><i class="fas fa-award" style="color:#7c3aed;"></i>Scholarships</h6>
       <span class="badge" style="background:#ede9fe;color:#6d28d9;font-size:0.65rem;border-radius:10px;">Sponsored</span>
@@ -1462,7 +1535,7 @@ body.dark .ob-step:hover { background: var(--surface-2); }
 
 
   {# ── OFFICIAL LINKS ── #}
-  <div class="sidebar-card">
+  <div class="sidebar-card reveal">
     <div class="sidebar-card-header"
          style="background:linear-gradient(120deg,#0f172a,#1e293b);border:none;">
       <h6 class="sidebar-card-title" style="color:#fff;">
@@ -1530,7 +1603,7 @@ body.dark .ob-step:hover { background: var(--surface-2); }
 
 
   {# ── WHATSAPP COMMUNITY ── #}
-  <div class="sidebar-card" style="background:linear-gradient(135deg,#dcfce7,#d1fae5);border:1.5px solid #86efac !important;">
+  <div class="sidebar-card reveal" style="background:linear-gradient(135deg,#dcfce7,#d1fae5);border:1.5px solid #86efac !important;">
     <div class="sidebar-card-body">
       <div class="d-flex align-items-center gap-2 mb-2">
         <i class="bi bi-whatsapp" style="color:#16a34a;font-size:1.2rem;"></i>
@@ -1572,6 +1645,39 @@ body.dark .ob-step:hover { background: var(--surface-2); }
 </div>{# /row #}
 </div>{# /container #}
 </div>{# /bg wrapper #}
+
+{% if guest %}
+{# ── GUEST GATE MODAL ── #}
+<div class="modal fade" id="guestGateModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" style="max-width:360px;">
+    <div class="modal-content border-0 shadow-lg" style="border-radius:18px;overflow:hidden;">
+      <div class="p-4 text-center" style="background:linear-gradient(135deg,#0c1f5e 0%,#1e3a8a 60%,#4f46e5 100%);">
+        <div class="d-flex align-items-center justify-content-center mb-3"
+             style="width:54px;height:54px;border-radius:50%;background:rgba(255,255,255,0.12);border:2px solid rgba(255,255,255,0.2);margin:0 auto;">
+          <i class="fas fa-lock" style="font-size:1.3rem;color:rgba(255,255,255,0.8);"></i>
+        </div>
+        <h5 class="fw-800 mb-1" style="color:#fff;font-size:1.05rem;">Sign In Required</h5>
+        <p style="color:rgba(255,255,255,0.7);font-size:0.82rem;margin-bottom:0;">
+          Create a free account to unlock this feature and save your progress.
+        </p>
+      </div>
+      <div class="p-4">
+        <a href="{% url 'accounts:register' %}"
+           class="btn btn-primary w-100 fw-700 mb-2" style="border-radius:10px;font-size:0.88rem;">
+          <i class="fas fa-user-plus me-1"></i>Create Free Account
+        </a>
+        <a href="{% url 'accounts:login' %}"
+           class="btn btn-outline-secondary w-100 fw-700" style="border-radius:10px;font-size:0.88rem;">
+          Sign In
+        </a>
+        <p class="text-muted text-center mb-0 mt-3" style="font-size:0.74rem;">
+          100% free · No credit card required
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
 
 {% endblock %}
 
@@ -1673,7 +1779,15 @@ function toggleSave(courseId, btn) {
 
 document.addEventListener('click', function (e) {
   const recoBtn = e.target.closest('.save-btn-dash');
-  if (recoBtn) { e.preventDefault(); toggleSave(recoBtn.dataset.courseId, recoBtn); return; }
+  if (recoBtn) {
+    e.preventDefault();
+    {% if guest %}
+    new bootstrap.Modal(document.getElementById('guestGateModal'), { backdrop: true }).show();
+    {% else %}
+    toggleSave(recoBtn.dataset.courseId, recoBtn);
+    {% endif %}
+    return;
+  }
 
   const unsaveBtn = e.target.closest('.unsave-btn');
   if (unsaveBtn) {
@@ -1834,6 +1948,19 @@ window.addEventListener('resize', function () {
 
 rcInit('recoWrapReal');
 rcInit('recoWrapSample');
+
+
+{% if guest %}
+/* ── Guest gate — intercept gated links and show sign-in modal ── */
+document.addEventListener('click', function (e) {
+  var el = e.target.closest('[data-guest-gate]');
+  if (!el) return;
+  e.preventDefault();
+  e.stopPropagation();
+  var modal = new bootstrap.Modal(document.getElementById('guestGateModal'), { backdrop: true });
+  modal.show();
+});
+{% endif %}
 
 
 {% if tawk_enabled %}

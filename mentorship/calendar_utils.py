@@ -37,11 +37,12 @@ def google_calendar_url(session):
 
     title = f"CareerNext Mentorship — {mentor_name}"
     details = (
-        f"15-minute WhatsApp mentorship call.\n\n"
-        f"Mentor: {mentor_name}\n"
+        f"15-minute mentorship session.\n\n"
+        f"Mentor : {mentor_name}\n"
         f"Student: {mentee_name}\n"
-        f"Topic: {session.mentee_question}\n\n"
-        f"WhatsApp the mentor at: {session.mentor.whatsapp}\n"
+        f"Topic  : {session.mentee_question}\n\n"
+        f"Coordinate with your mentor via WhatsApp ({session.mentor.whatsapp}) "
+        f"to agree on how you'll connect (Google Meet, WhatsApp Video, or call).\n\n"
         f"Session details: https://www.careernext.co.ke/mentorship/session/{session.token}/"
     )
 
@@ -50,7 +51,7 @@ def google_calendar_url(session):
         f"&text={quote(title)}"
         f"&dates={_fmt(start_utc)}/{_fmt(end_utc)}"
         f"&details={quote(details)}"
-        f"&location={quote('WhatsApp Call')}"
+        f"&location={quote('Coordinate via WhatsApp')}"
     )
     return f"https://calendar.google.com/calendar/render?{params}"
 
@@ -69,9 +70,10 @@ def generate_ics(session):
 
     summary = f"CareerNext Mentorship — {mentor_name}"
     description = (
-        f"15-minute WhatsApp mentorship call.\\n"
+        f"15-minute mentorship session.\\n"
         f"Mentor: {mentor_name} | WhatsApp: {session.mentor.whatsapp}\\n"
         f"Topic: {session.mentee_question}\\n"
+        f"Coordinate via WhatsApp to agree on how you'll connect (Google Meet, WhatsApp Video, or call).\\n"
         f"Session link: https://www.careernext.co.ke/mentorship/session/{session.token}/"
     )
 
@@ -88,7 +90,7 @@ def generate_ics(session):
         f"DTEND:{_fmt(end_utc)}\r\n"
         f"SUMMARY:{summary}\r\n"
         f"DESCRIPTION:{description}\r\n"
-        "LOCATION:WhatsApp Call\r\n"
+        "LOCATION:Coordinate via WhatsApp\r\n"
         "STATUS:CONFIRMED\r\n"
         # 1-hour reminder
         "BEGIN:VALARM\r\n"

@@ -1,164 +1,585 @@
 {% extends "base.html" %}
-{% load static %}
-
 {% block title %}Terms &amp; Conditions — CareerNext{% endblock %}
 
+{% block meta %}
+<meta name="description" content="CareerNext Terms and Conditions — the rules governing use of Kenya's free KUCCPS cluster points calculator and career guidance platform.">
+{% endblock %}
+
 {% block content %}
-<div class="container py-5" style="max-width:860px;">
+<style>
+.fw-900 { font-weight: 900 !important; }
+.fw-800 { font-weight: 800 !important; }
 
-    <!-- Header -->
-    <div class="mb-5">
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb small">
-                <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
-                <li class="breadcrumb-item active">Terms &amp; Conditions</li>
-            </ol>
-        </nav>
-        <h1 class="fw-bold mb-1" style="font-size:2rem;">Terms &amp; Conditions</h1>
-        <p class="text-muted small">Last updated: June 2025 &nbsp;&bull;&nbsp; Version 1.0</p>
+/* Hero */
+.tc-hero {
+  background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 60%, #312e81 100%);
+  color: #fff; padding: 3.5rem 0 2.5rem; position: relative; overflow: hidden;
+}
+.tc-hero::before {
+  content: ''; position: absolute; inset: 0;
+  background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+}
+.tc-hero h1 { font-size: clamp(1.7rem, 3.5vw, 2.5rem); font-weight: 900; }
+
+/* Body layout */
+.tc-body { max-width: 840px; margin: 0 auto; padding: 3rem 1rem 4rem; }
+
+/* TOC */
+.tc-toc {
+  background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 14px;
+  padding: 1.3rem 1.6rem; margin-bottom: 2.5rem;
+}
+.tc-toc-title { font-size: 0.75rem; font-weight: 800; text-transform: uppercase;
+  letter-spacing: 0.09em; color: #64748b; margin-bottom: 0.8rem; }
+.tc-toc ol { margin: 0; padding-left: 1.2rem; column-count: 2; column-gap: 1.5rem; }
+.tc-toc li { font-size: 0.84rem; margin-bottom: 0.3rem; break-inside: avoid; }
+.tc-toc a { color: #1d4ed8; text-decoration: none; }
+.tc-toc a:hover { text-decoration: underline; }
+@media (max-width: 480px) { .tc-toc ol { column-count: 1; } }
+
+/* Sections */
+.tc-section { margin-bottom: 2.5rem; scroll-margin-top: 80px; }
+.tc-section h2 {
+  font-size: 1.1rem; font-weight: 800; color: #1e293b;
+  border-left: 4px solid #4f46e5; padding-left: 0.75rem;
+  margin-bottom: 1rem;
+}
+.tc-section h3 { font-size: 0.95rem; font-weight: 700; color: #334155; margin: 1.2rem 0 0.5rem; }
+.tc-section p, .tc-section li { font-size: 0.9rem; color: #475569; line-height: 1.75; }
+.tc-section ul, .tc-section ol { padding-left: 1.4rem; margin-bottom: 0.75rem; }
+.tc-section li { margin-bottom: 0.3rem; }
+.tc-section strong { color: #1e293b; }
+.tc-section a { color: #1d4ed8; }
+
+/* Highlight boxes */
+.tc-note {
+  border-radius: 10px; padding: 1rem 1.2rem; font-size: 0.875rem;
+  line-height: 1.65; margin: 1rem 0;
+}
+.tc-note-blue   { background: #eff6ff; border: 1.5px solid #bfdbfe; color: #1e40af; }
+.tc-note-amber  { background: #fffbeb; border: 1.5px solid #fde68a; color: #92400e; }
+.tc-note-green  { background: #f0fdf4; border: 1.5px solid #bbf7d0; color: #14532d; }
+.tc-note-red    { background: #fef2f2; border: 1.5px solid #fecaca; color: #991b1b; }
+
+/* Table */
+.tc-table { width: 100%; border-collapse: collapse; font-size: 0.84rem; margin: 0.75rem 0 1rem; }
+.tc-table th { background: #f1f5f9; color: #334155; font-weight: 700; padding: 0.6rem 0.85rem;
+  text-align: left; border: 1px solid #e2e8f0; }
+.tc-table td { padding: 0.55rem 0.85rem; border: 1px solid #e2e8f0; color: #475569; vertical-align: top; }
+.tc-table tr:nth-child(even) td { background: #f8fafc; }
+
+.tc-updated { font-size: 0.76rem; color: #94a3b8; }
+</style>
+
+<!-- HERO -->
+<section class="tc-hero">
+  <div class="container position-relative">
+    <div class="d-flex align-items-center gap-2 mb-2 opacity-70"
+         style="font-size:0.72rem;text-transform:uppercase;letter-spacing:0.09em;font-weight:700;">
+      <i class="fas fa-file-contract"></i> Legal
     </div>
+    <h1 class="mb-2">Terms &amp; Conditions</h1>
+    <p class="tc-updated mb-0">
+      Last updated: <strong style="color:#a5b4fc;">23 June 2026</strong>
+      &nbsp;·&nbsp; Version 2.0
+      &nbsp;·&nbsp; Effective immediately
+    </p>
+  </div>
+</section>
 
-    <div class="card border-0 shadow-sm rounded-4 p-4 p-md-5">
+<div class="container">
+<div class="tc-body">
 
-        <p class="lead mb-4">Welcome to <strong>CareerNext</strong> — Kenya's career guidance and university placement platform. By accessing or using this website, you agree to be bound by these Terms and Conditions. Please read them carefully.</p>
+  <!-- Plain-English Summary -->
+  <div class="tc-note tc-note-blue mb-4">
+    <i class="fas fa-info-circle me-2"></i>
+    <strong>Summary (plain English):</strong> CareerNext is a free guidance tool for Kenyan KCSE students.
+    You may use it freely for personal education planning. You may not copy, scrape, or misuse the platform.
+    We are not the official KUCCPS portal. Placement decisions are made by KUCCPS and institutions — not by us.
+    Full details below.
+  </div>
 
-        <!-- TOC -->
-        <div class="bg-light rounded-3 p-3 mb-5" style="border-left:4px solid var(--primary,#2563eb);">
-            <p class="fw-semibold small mb-2 text-uppercase" style="letter-spacing:.05em;">Contents</p>
-            <ol class="mb-0 small ps-3">
-                <li><a href="#acceptance" class="text-decoration-none">Acceptance of Terms</a></li>
-                <li><a href="#services" class="text-decoration-none">Description of Services</a></li>
-                <li><a href="#eligibility" class="text-decoration-none">Eligibility</a></li>
-                <li><a href="#accounts" class="text-decoration-none">User Accounts</a></li>
-                <li><a href="#accuracy" class="text-decoration-none">Accuracy of Information</a></li>
-                <li><a href="#payments" class="text-decoration-none">Payments &amp; Refunds</a></li>
-                <li><a href="#ip" class="text-decoration-none">Intellectual Property</a></li>
-                <li><a href="#privacy" class="text-decoration-none">Privacy</a></li>
-                <li><a href="#prohibited" class="text-decoration-none">Prohibited Conduct</a></li>
-                <li><a href="#liability" class="text-decoration-none">Limitation of Liability</a></li>
-                <li><a href="#changes" class="text-decoration-none">Changes to Terms</a></li>
-                <li><a href="#contact" class="text-decoration-none">Contact Us</a></li>
-            </ol>
-        </div>
+  <!-- TABLE OF CONTENTS -->
+  <div class="tc-toc">
+    <div class="tc-toc-title">Contents</div>
+    <ol>
+      <li><a href="#acceptance">Acceptance of Terms</a></li>
+      <li><a href="#who-we-are">Who We Are</a></li>
+      <li><a href="#services">Services Provided</a></li>
+      <li><a href="#eligibility">Eligibility</a></li>
+      <li><a href="#accounts">User Accounts</a></li>
+      <li><a href="#accuracy">Accuracy of Information</a></li>
+      <li><a href="#payments">Payments &amp; Refunds</a></li>
+      <li><a href="#mentorship">Mentorship Programme</a></li>
+      <li><a href="#ai">AI-Powered Features</a></li>
+      <li><a href="#ip">Intellectual Property</a></li>
+      <li><a href="#privacy-link">Privacy &amp; Data</a></li>
+      <li><a href="#prohibited">Prohibited Conduct</a></li>
+      <li><a href="#liability">Limitation of Liability</a></li>
+      <li><a href="#indemnification">Indemnification</a></li>
+      <li><a href="#termination">Account Termination</a></li>
+      <li><a href="#governing-law">Governing Law</a></li>
+      <li><a href="#changes">Changes to These Terms</a></li>
+      <li><a href="#contact">Contact Us</a></li>
+    </ol>
+  </div>
 
-        <!-- 1 -->
-        <section id="acceptance" class="mb-5">
-            <h2 class="h5 fw-bold mb-3 pb-2" style="border-bottom:2px solid #f1f5f9;">1. Acceptance of Terms</h2>
-            <p>By visiting, registering for, or using any feature of CareerNext ("the Platform", "we", "us"), you confirm that you have read, understood, and agree to these Terms and Conditions and our Privacy Policy. If you do not agree, you must stop using the Platform immediately.</p>
-        </section>
+  <!-- 1 -->
+  <div class="tc-section" id="acceptance">
+    <h2>1. Acceptance of Terms</h2>
+    <p>
+      By accessing, registering on, or using any feature of CareerNext (the <strong>"Platform"</strong>),
+      you confirm that you have read, understood, and agree to be bound by these Terms and Conditions
+      and our <a href="{% url 'accounts:privacy' %}">Privacy Policy</a>. Together, these documents form
+      the complete legal agreement between you and CareerNext.
+    </p>
+    <p>
+      If you do not agree with any part of these Terms, you must stop using the Platform immediately.
+      Your continued use after any update to these Terms constitutes acceptance of the revised version.
+    </p>
+  </div>
 
-        <!-- 2 -->
-        <section id="services" class="mb-5">
-            <h2 class="h5 fw-bold mb-3 pb-2" style="border-bottom:2px solid #f1f5f9;">2. Description of Services</h2>
-            <p>CareerNext provides tools to help Kenyan KCSE students:</p>
-            <ul>
-                <li>Calculate cluster points using the official KUCCPS formula</li>
-                <li>Discover university, KMTC, TVET, and TTC courses they may qualify for</li>
-                <li>Access career profiles, guidance articles, and placement information</li>
-                <li>Receive AI-assisted career recommendations (premium feature)</li>
-            </ul>
-            <p class="mb-0">The Platform is intended as a <strong>guidance tool only</strong> and does not guarantee admission to any institution. Actual placement decisions are made solely by KUCCPS and the relevant institutions.</p>
-        </section>
-
-        <!-- 3 -->
-        <section id="eligibility" class="mb-5">
-            <h2 class="h5 fw-bold mb-3 pb-2" style="border-bottom:2px solid #f1f5f9;">3. Eligibility</h2>
-            <p>You may use the Platform if you:</p>
-            <ul>
-                <li>Are at least 13 years old (users under 18 should use the Platform with parental/guardian awareness)</li>
-                <li>Provide accurate information during registration</li>
-                <li>Have not been previously suspended or banned from the Platform</li>
-            </ul>
-        </section>
-
-        <!-- 4 -->
-        <section id="accounts" class="mb-5">
-            <h2 class="h5 fw-bold mb-3 pb-2" style="border-bottom:2px solid #f1f5f9;">4. User Accounts</h2>
-            <p>When you register, you are responsible for:</p>
-            <ul>
-                <li>Keeping your login credentials confidential</li>
-                <li>All activity that occurs under your account</li>
-                <li>Notifying us immediately of any unauthorised use of your account</li>
-            </ul>
-            <p class="mb-0">We reserve the right to suspend or terminate accounts that violate these Terms.</p>
-        </section>
-
-        <!-- 5 -->
-        <section id="accuracy" class="mb-5">
-            <h2 class="h5 fw-bold mb-3 pb-2" style="border-bottom:2px solid #f1f5f9;">5. Accuracy of Information</h2>
-            <p>While we strive to keep course information, cutoff points, and cluster data up to date, CareerNext does not warrant the completeness, accuracy, or timeliness of any information on the Platform. Cutoff points change every academic year. Always verify important details directly with <a href="https://www.kuccps.ac.ke" target="_blank" rel="noopener">KUCCPS</a> or the relevant institution before making any decisions.</p>
-        </section>
-
-        <!-- 6 -->
-        <section id="payments" class="mb-5">
-            <h2 class="h5 fw-bold mb-3 pb-2" style="border-bottom:2px solid #f1f5f9;">6. Payments &amp; Refunds</h2>
-            <p>Some features of the Platform (such as unlocking full career results) require payment via M-Pesa. By making a payment, you agree that:</p>
-            <ul>
-                <li>Fees are stated in Kenyan Shillings (KES) and are inclusive of applicable taxes</li>
-                <li>Payments are processed securely via Safaricom Daraja M-Pesa</li>
-                <li>Refunds are issued only where a payment was processed but the feature could not be delivered due to a technical error on our side; change of mind does not qualify</li>
-                <li>To request a refund, contact us within 7 days of the transaction</li>
-            </ul>
-        </section>
-
-        <!-- 7 -->
-        <section id="ip" class="mb-5">
-            <h2 class="h5 fw-bold mb-3 pb-2" style="border-bottom:2px solid #f1f5f9;">7. Intellectual Property</h2>
-            <p>All content on the Platform — including but not limited to text, graphics, logos, templates, and code — is owned by CareerNext or its licensors and is protected by Kenyan and international copyright law. You may not reproduce, distribute, or create derivative works without our express written permission.</p>
-            <p class="mb-0">The KUCCPS cluster points formula is based on the official KUCCPS algorithm and is used here purely for educational purposes.</p>
-        </section>
-
-        <!-- 8 -->
-        <section id="privacy" class="mb-5">
-            <h2 class="h5 fw-bold mb-3 pb-2" style="border-bottom:2px solid #f1f5f9;">8. Privacy</h2>
-            <p>We collect only the information necessary to provide our services (name, email address, KCSE grade data entered by you). We do not sell your personal data to third parties. Grade data entered into the calculator is stored only to provide your results and improve the service. For details, please contact us at the address below.</p>
-        </section>
-
-        <!-- 9 -->
-        <section id="prohibited" class="mb-5">
-            <h2 class="h5 fw-bold mb-3 pb-2" style="border-bottom:2px solid #f1f5f9;">9. Prohibited Conduct</h2>
-            <p>You agree not to:</p>
-            <ul>
-                <li>Use the Platform for any unlawful purpose</li>
-                <li>Attempt to gain unauthorised access to any part of the Platform or its servers</li>
-                <li>Scrape, copy, or redistribute Platform content in bulk without permission</li>
-                <li>Submit false or misleading information</li>
-                <li>Use automated bots, scripts, or crawlers without prior written consent</li>
-                <li>Harass, abuse, or harm other users</li>
-            </ul>
-        </section>
-
-        <!-- 10 -->
-        <section id="liability" class="mb-5">
-            <h2 class="h5 fw-bold mb-3 pb-2" style="border-bottom:2px solid #f1f5f9;">10. Limitation of Liability</h2>
-            <p>To the fullest extent permitted by Kenyan law, CareerNext and its team shall not be liable for any direct, indirect, incidental, or consequential loss arising from:</p>
-            <ul>
-                <li>Reliance on course or cutoff information displayed on the Platform</li>
-                <li>Failure to gain admission to any institution</li>
-                <li>Interruption, errors, or unavailability of the Platform</li>
-            </ul>
-            <p class="mb-0">The Platform is provided "as is" without warranties of any kind.</p>
-        </section>
-
-        <!-- 11 -->
-        <section id="changes" class="mb-5">
-            <h2 class="h5 fw-bold mb-3 pb-2" style="border-bottom:2px solid #f1f5f9;">11. Changes to Terms</h2>
-            <p>We may revise these Terms at any time. The "Last updated" date at the top will reflect the most recent version. Continued use of the Platform after changes are published constitutes acceptance of the revised Terms. We will notify registered users of material changes via email where possible.</p>
-        </section>
-
-        <!-- 12 -->
-        <section id="contact" class="mb-4">
-            <h2 class="h5 fw-bold mb-3 pb-2" style="border-bottom:2px solid #f1f5f9;">12. Contact Us</h2>
-            <p class="mb-2">If you have questions about these Terms, please reach out:</p>
-            <ul class="list-unstyled">
-                <li><i class="fas fa-envelope me-2 text-primary"></i><a href="mailto:limomeshk@gmail.com">limomeshk@gmail.com</a></li>
-                <li class="mt-1"><i class="fas fa-globe me-2 text-primary"></i>kuccpss.ke</li>
-            </ul>
-        </section>
-
-        <hr>
-        <p class="small text-muted text-center mb-0">&copy; {% now "Y" %} CareerNext. These Terms are governed by the laws of the Republic of Kenya.</p>
+  <!-- 2 -->
+  <div class="tc-section" id="who-we-are">
+    <h2>2. Who We Are</h2>
+    <p>
+      CareerNext (<strong>"we", "us", "our"</strong>) is an independent digital platform operated by
+      an independent Kenyan developer team and accessible at <strong>kuccpss.co.ke</strong> and related
+      domains. We provide free tools to help Kenyan KCSE graduates navigate the KUCCPS higher education
+      placement process.
+    </p>
+    <div class="tc-note tc-note-amber">
+      <i class="fas fa-exclamation-triangle me-2"></i>
+      <strong>Important:</strong> CareerNext is <strong>not</strong> affiliated with, endorsed by, or
+      operated by the Kenya Universities and Colleges Central Placement Service (KUCCPS), the Kenya
+      National Examinations Council (KNEC), or any Kenyan government body. The official KUCCPS portal
+      is at <a href="https://kuccps.ac.ke" target="_blank" rel="noopener">kuccps.ac.ke</a>.
     </div>
+  </div>
 
+  <!-- 3 -->
+  <div class="tc-section" id="services">
+    <h2>3. Services Provided</h2>
+    <p>CareerNext provides the following services, primarily free of charge:</p>
+    <table class="tc-table">
+      <thead>
+        <tr><th>Service</th><th>Description</th><th>Cost</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Cluster points calculator</td>
+          <td>Calculates your KUCCPS cluster points using the official weighted formula</td>
+          <td>Free</td>
+        </tr>
+        <tr>
+          <td>Course discovery</td>
+          <td>Browse all university, KMTC, TVET, and TTC courses you may qualify for</td>
+          <td>Free</td>
+        </tr>
+        <tr>
+          <td>Course shortlist</td>
+          <td>Save and compare up to 20 courses</td>
+          <td>Free (requires account)</td>
+        </tr>
+        <tr>
+          <td>Career profiles &amp; quiz</td>
+          <td>Explore career paths and get an interest-based match</td>
+          <td>Free</td>
+        </tr>
+        <tr>
+          <td>AI Career Engine</td>
+          <td>AI-powered course and career recommendations based on your grades and preferences</td>
+          <td>Free / Paid credits</td>
+        </tr>
+        <tr>
+          <td>Result slip OCR reader</td>
+          <td>Automatically reads KCSE grades from an uploaded result slip photo</td>
+          <td>Free (limited uses)</td>
+        </tr>
+        <tr>
+          <td>Mentorship programme</td>
+          <td>Connect with mentors for career and course guidance sessions</td>
+          <td>Session fee applies (see §8)</td>
+        </tr>
+        <tr>
+          <td>PDF cluster report</td>
+          <td>Download a personalised PDF of your cluster points and eligible courses</td>
+          <td>Free</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>
+      All services are provided as a <strong>guidance and preparation tool only</strong>.
+      CareerNext does not guarantee admission to any institution. Actual placement decisions
+      are made solely by KUCCPS and the relevant institutions.
+    </p>
+  </div>
+
+  <!-- 4 -->
+  <div class="tc-section" id="eligibility">
+    <h2>4. Eligibility</h2>
+    <p>You may use the Platform if you:</p>
+    <ul>
+      <li>Are at least <strong>13 years old</strong>. Users aged 13–17 should use the Platform with
+          a parent or guardian's awareness.</li>
+      <li>Provide <strong>accurate information</strong> during registration.</li>
+      <li>Have not previously been suspended or permanently banned from the Platform.</li>
+      <li>Are using the Platform for legitimate personal education planning purposes —
+          not for commercial data harvesting, resale, or competing services.</li>
+    </ul>
+    <p>
+      We reserve the right to refuse access to any user at our sole discretion.
+    </p>
+  </div>
+
+  <!-- 5 -->
+  <div class="tc-section" id="accounts">
+    <h2>5. User Accounts</h2>
+    <h3>5.1 Registration</h3>
+    <p>
+      You may register using an email address and password, or via Google OAuth. You must provide
+      accurate registration details. Using a false identity or another person's email address
+      is strictly prohibited.
+    </p>
+    <h3>5.2 Account Security</h3>
+    <p>You are responsible for:</p>
+    <ul>
+      <li>Keeping your login credentials confidential</li>
+      <li>All activity that occurs under your account</li>
+      <li>Notifying us immediately at <a href="mailto:info@careernext.co.ke">info@careernext.co.ke</a>
+          if you suspect unauthorised access</li>
+    </ul>
+    <h3>5.3 One Account per Person</h3>
+    <p>
+      Each person may hold one active account. Creating duplicate accounts to circumvent
+      usage limits or restrictions is prohibited.
+    </p>
+    <h3>5.4 Account Deletion</h3>
+    <p>
+      You may request deletion of your account at any time by emailing us. We will
+      process deletion within 30 days and confirm when complete. See our
+      <a href="{% url 'accounts:privacy' %}">Privacy Policy</a> for data retention details.
+    </p>
+  </div>
+
+  <!-- 6 -->
+  <div class="tc-section" id="accuracy">
+    <h2>6. Accuracy of Information</h2>
+    <p>
+      We make every reasonable effort to keep course data, cutoff points, cluster weights, and
+      institutional information accurate and current. Our data sources are described in the
+      <a href="{% url 'accounts:about' %}#data-sources">About page data sources section</a>.
+    </p>
+    <div class="tc-note tc-note-amber">
+      <i class="fas fa-exclamation-triangle me-2"></i>
+      <strong>Important disclaimer:</strong> Cutoff points change every academic year and
+      CareerNext <strong>does not warrant</strong> the completeness, accuracy, or timeliness of any
+      information on the Platform. Always verify course requirements, cutoff points, and
+      placement decisions directly with
+      <a href="https://kuccps.ac.ke" target="_blank" rel="noopener">KUCCPS</a> or the
+      relevant institution before making any application decisions.
+    </div>
+    <p>
+      If you spot an error in our data, please report it via the feedback form or email us —
+      we take corrections seriously and typically apply verified fixes within 48 hours.
+    </p>
+  </div>
+
+  <!-- 7 -->
+  <div class="tc-section" id="payments">
+    <h2>7. Payments &amp; Refunds</h2>
+    <h3>7.1 Payment Methods</h3>
+    <p>
+      Where a service requires payment, fees are stated in Kenyan Shillings (KES) and processed
+      securely via the <strong>Safaricom Daraja M-Pesa STK Push</strong> API.
+      We do not store M-Pesa PINs or card details.
+    </p>
+    <h3>7.2 Refund Policy</h3>
+    <p>Refunds are issued in the following circumstances only:</p>
+    <ul>
+      <li>A payment was debited from your M-Pesa but the paid feature was not unlocked due to a
+          technical error on our side (e.g. server error, timeout with no credit applied)</li>
+      <li>A duplicate payment was charged for the same feature in the same session</li>
+    </ul>
+    <p>
+      <strong>Refunds are not issued for:</strong> change of mind, dissatisfaction with
+      AI-generated recommendations, or feature use that has already been delivered.
+    </p>
+    <h3>7.3 How to Request a Refund</h3>
+    <p>
+      Email <a href="mailto:info@careernext.co.ke">info@careernext.co.ke</a> within
+      <strong>7 days</strong> of the transaction, including your M-Pesa transaction code (Mpesa code)
+      and the email address on your account. Refunds are processed to the originating M-Pesa number
+      within 5–7 business days of approval.
+    </p>
+  </div>
+
+  <!-- 8 -->
+  <div class="tc-section" id="mentorship">
+    <h2>8. Mentorship Programme</h2>
+    <h3>8.1 Nature of the Service</h3>
+    <p>
+      CareerNext operates a mentorship marketplace that connects students with mentors
+      for career and course guidance sessions. CareerNext acts as a <strong>platform facilitator</strong>
+      only — it is not a party to the mentorship relationship itself.
+    </p>
+    <h3>8.2 Mentor Conduct</h3>
+    <p>
+      Mentors on the platform are independent individuals. CareerNext screens mentors but
+      does not guarantee the quality, accuracy, or outcomes of any mentorship session.
+      Mentors may not solicit payments outside of the CareerNext platform.
+    </p>
+    <h3>8.3 Student Conduct</h3>
+    <p>
+      Students must attend or cancel scheduled sessions with reasonable notice (minimum 24 hours
+      before the session start time). No-shows without notice may result in the session fee being
+      forfeited and the account flagged.
+    </p>
+    <h3>8.4 Fees</h3>
+    <p>
+      Mentorship session fees are set by individual mentors and displayed before booking.
+      CareerNext retains a platform fee from each transaction. Refunds for mentorship sessions
+      follow the same policy as §7.2 above — technical errors only; delivered sessions are
+      non-refundable.
+    </p>
+    <h3>8.5 Disclaimer</h3>
+    <p>
+      Advice given in mentorship sessions is personal guidance and does not constitute official
+      KUCCPS or institutional admission advice. Always confirm placement decisions on the official
+      KUCCPS portal.
+    </p>
+  </div>
+
+  <!-- 9 -->
+  <div class="tc-section" id="ai">
+    <h2>9. AI-Powered Features</h2>
+    <h3>9.1 Career Engine</h3>
+    <p>
+      The Career Engine uses the OpenAI API to generate course and career recommendations based
+      on your KCSE grades and stated preferences. Recommendations are
+      <strong>generated by AI and are not guaranteed to be accurate or complete</strong>.
+      They should be treated as one input into your decision-making, not a definitive guide.
+    </p>
+    <h3>9.2 OCR Result Slip Reader</h3>
+    <p>
+      Uploading a photo of your KCSE result slip sends that image to the OpenAI GPT-4o Vision API
+      for text extraction. The image is <strong>not stored</strong> on CareerNext servers after
+      processing. By using this feature, you consent to this transfer.
+    </p>
+    <h3>9.3 No Liability for AI Output</h3>
+    <p>
+      CareerNext accepts no liability for decisions made on the basis of AI-generated content.
+      AI recommendations may reflect biases or contain inaccuracies inherent to the underlying model.
+    </p>
+  </div>
+
+  <!-- 10 -->
+  <div class="tc-section" id="ip">
+    <h2>10. Intellectual Property</h2>
+    <p>
+      All content on the Platform — including but not limited to text, graphics, logos, data
+      structures, HTML/CSS templates, and software code — is owned by CareerNext or its licensors
+      and is protected under Kenyan and international copyright law.
+    </p>
+    <p>You may:</p>
+    <ul>
+      <li>View and use the Platform for personal, non-commercial education planning</li>
+      <li>Share links to individual pages on the Platform</li>
+    </ul>
+    <p>You may not:</p>
+    <ul>
+      <li>Copy, reproduce, or redistribute Platform content in bulk without written permission</li>
+      <li>Use Platform data to build a competing service</li>
+      <li>Remove or obscure any copyright or attribution notices</li>
+      <li>Frame or mirror the Platform on another website</li>
+    </ul>
+    <p>
+      The KUCCPS cluster points formula is based on the official KUCCPS algorithm, used here
+      for educational purposes only. It is not our proprietary invention.
+    </p>
+  </div>
+
+  <!-- 11 -->
+  <div class="tc-section" id="privacy-link">
+    <h2>11. Privacy &amp; Data Protection</h2>
+    <p>
+      Your use of CareerNext is subject to our full
+      <a href="{% url 'accounts:privacy' %}">Privacy Policy</a>, which is incorporated into
+      these Terms by reference. Key points:
+    </p>
+    <ul>
+      <li>We collect only the data necessary to provide the services you use</li>
+      <li>We do not sell your personal data to third parties</li>
+      <li>KCSE grade data is used solely to calculate cluster points and generate recommendations</li>
+      <li>You may request deletion of your data at any time</li>
+      <li>We are subject to Kenya's <strong>Data Protection Act, 2019</strong> and the
+          oversight of the Office of the Data Protection Commissioner (ODPC)</li>
+    </ul>
+  </div>
+
+  <!-- 12 -->
+  <div class="tc-section" id="prohibited">
+    <h2>12. Prohibited Conduct</h2>
+    <p>You agree not to:</p>
+    <ul>
+      <li>Use the Platform for any unlawful purpose under Kenyan or international law</li>
+      <li>Attempt to gain unauthorised access to any part of the Platform, its servers, or databases</li>
+      <li>Scrape, harvest, or systematically extract course data, institution data, or any other
+          content in bulk without prior written consent</li>
+      <li>Use automated bots, crawlers, or scripts to access the Platform without written consent</li>
+      <li>Submit false, misleading, or fraudulent information (including fake KCSE grades)</li>
+      <li>Impersonate another person, student, or CareerNext staff member</li>
+      <li>Transmit malware, viruses, or harmful code</li>
+      <li>Attempt to reverse-engineer, decompile, or extract the Platform's source code</li>
+      <li>Circumvent any rate limiting, access controls, or payment requirements</li>
+      <li>Harass, abuse, or intimidate other users or mentors on the platform</li>
+      <li>Post or transmit content that is defamatory, obscene, or discriminatory</li>
+    </ul>
+    <p>
+      Violations may result in immediate account suspension and, where applicable, reporting
+      to the relevant Kenyan authorities.
+    </p>
+  </div>
+
+  <!-- 13 -->
+  <div class="tc-section" id="liability">
+    <h2>13. Limitation of Liability</h2>
+    <p>
+      To the fullest extent permitted by Kenyan law, CareerNext, its operators, developers,
+      and contributors shall not be liable for any direct, indirect, incidental, special,
+      consequential, or punitive loss arising from:
+    </p>
+    <ul>
+      <li>Reliance on course information, cutoff points, or cluster data displayed on the Platform</li>
+      <li>Failure to gain admission to any institution following use of the Platform</li>
+      <li>AI Career Engine recommendations that prove inaccurate or inappropriate</li>
+      <li>Interruption, errors, bugs, or unavailability of the Platform</li>
+      <li>Loss of data due to technical failure</li>
+      <li>Conduct of third-party services integrated into the Platform (Google, OpenAI, Tawk.to)</li>
+      <li>Actions or advice of mentors accessed through the mentorship programme</li>
+    </ul>
+    <p>
+      The Platform is provided <strong>"as is"</strong> and <strong>"as available"</strong>
+      without any warranties of merchantability, fitness for a particular purpose, or
+      non-infringement.
+    </p>
+    <p>
+      Where liability cannot be fully excluded under Kenyan law, our total aggregate liability
+      to you shall not exceed the amount you paid to CareerNext in the 12 months preceding the
+      event giving rise to the claim — or KES 500 if you have not made any payment.
+    </p>
+  </div>
+
+  <!-- 14 -->
+  <div class="tc-section" id="indemnification">
+    <h2>14. Indemnification</h2>
+    <p>
+      You agree to indemnify and hold harmless CareerNext and its team from any claims, damages,
+      losses, or expenses (including legal fees) arising from:
+    </p>
+    <ul>
+      <li>Your violation of these Terms</li>
+      <li>Your violation of any third party's rights</li>
+      <li>Your use or misuse of the Platform</li>
+      <li>Any content you submit or transmit through the Platform</li>
+    </ul>
+  </div>
+
+  <!-- 15 -->
+  <div class="tc-section" id="termination">
+    <h2>15. Account Termination</h2>
+    <p>
+      CareerNext reserves the right to suspend or permanently terminate your account with or
+      without notice if you:
+    </p>
+    <ul>
+      <li>Violate any provision of these Terms</li>
+      <li>Engage in prohibited conduct (see §12)</li>
+      <li>Abuse the platform, other users, or mentors</li>
+      <li>Attempt to circumvent payment or access controls</li>
+    </ul>
+    <p>
+      Upon termination, your access to the Platform and all associated data will be revoked.
+      You may request data deletion following termination per our Privacy Policy.
+    </p>
+    <p>
+      You may also terminate your account at any time by contacting us — we will process
+      the request within 30 days.
+    </p>
+  </div>
+
+  <!-- 16 -->
+  <div class="tc-section" id="governing-law">
+    <h2>16. Governing Law &amp; Disputes</h2>
+    <p>
+      These Terms are governed by and construed in accordance with the laws of the
+      <strong>Republic of Kenya</strong>. Any dispute arising from these Terms or use of
+      the Platform shall be subject to the exclusive jurisdiction of the courts of Kenya.
+    </p>
+    <p>
+      Before initiating legal proceedings, you agree to first attempt to resolve any dispute
+      informally by contacting us at <a href="mailto:info@careernext.co.ke">info@careernext.co.ke</a>.
+      We will make every reasonable effort to resolve disputes amicably within 30 days.
+    </p>
+  </div>
+
+  <!-- 17 -->
+  <div class="tc-section" id="changes">
+    <h2>17. Changes to These Terms</h2>
+    <p>
+      We may revise these Terms at any time by updating this page. The "Last updated" date
+      at the top reflects the most recent revision.
+    </p>
+    <p>
+      For <strong>material changes</strong> (changes that significantly affect your rights or
+      obligations), we will notify registered users via email or an in-app notification at least
+      7 days before the changes take effect.
+    </p>
+    <p>
+      Your continued use of the Platform after changes are published constitutes your
+      acceptance of the revised Terms. If you do not agree with revised Terms,
+      you must stop using the Platform and may request account deletion.
+    </p>
+  </div>
+
+  <!-- 18 -->
+  <div class="tc-section" id="contact">
+    <h2>18. Contact Us</h2>
+    <p>For any questions about these Terms, to report a violation, or to exercise your rights:</p>
+    <div class="tc-note tc-note-green">
+      <div class="mb-1">
+        <i class="fas fa-envelope me-2" style="color:#16a34a;"></i>
+        <strong>Email:</strong>
+        <a href="mailto:info@careernext.co.ke" style="color:#15803d;">info@careernext.co.ke</a>
+      </div>
+      <div class="mb-1">
+        <i class="fas fa-globe me-2" style="color:#16a34a;"></i>
+        <strong>Website:</strong> kuccpss.co.ke
+      </div>
+      <div>
+        <i class="fas fa-map-marker-alt me-2" style="color:#16a34a;"></i>
+        <strong>Jurisdiction:</strong> Republic of Kenya
+      </div>
+    </div>
+    <p class="mt-3 small text-muted">
+      Complaints about data handling may also be lodged with the
+      <strong>Office of the Data Protection Commissioner (ODPC)</strong> at
+      <a href="https://www.odpc.go.ke" target="_blank" rel="noopener">odpc.go.ke</a>.
+    </p>
+  </div>
+
+  <hr style="border-color:#e2e8f0;margin:2rem 0 1.5rem;">
+  <div class="d-flex flex-wrap gap-3 justify-content-between align-items-center">
+    <span class="tc-updated">
+      CareerNext Terms &amp; Conditions · Version 2.0 · Last updated 23 June 2026
+      · Governed by the laws of the Republic of Kenya
+    </span>
+    <div class="d-flex gap-2 flex-wrap">
+      <a href="{% url 'accounts:privacy' %}" class="btn btn-sm btn-outline-primary">Privacy Policy</a>
+      <a href="{% url 'accounts:about' %}" class="btn btn-sm btn-outline-secondary">About Us</a>
+    </div>
+  </div>
+
+</div>
 </div>
 {% endblock %}

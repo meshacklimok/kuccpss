@@ -138,6 +138,17 @@ class BookingForm(forms.Form):
         ).order_by("date", "start_time")
 
 
+WEEKDAY_OPTIONS = [
+    (0, "Monday"),
+    (1, "Tuesday"),
+    (2, "Wednesday"),
+    (3, "Thursday"),
+    (4, "Friday"),
+    (5, "Saturday"),
+    (6, "Sunday"),
+]
+
+
 class AddSlotsForm(forms.Form):
     date = forms.DateField(
         widget=forms.DateInput(attrs={"type": "date", "class": "form-control"}),
@@ -154,6 +165,37 @@ class AddSlotsForm(forms.Form):
         if date < timezone.now().date():
             raise forms.ValidationError("Please choose a future date.")
         return date
+
+
+class AddWeekSlotsForm(forms.Form):
+    week_start = forms.DateField(
+        widget=forms.DateInput(attrs={"type": "date", "class": "form-control"}),
+        label="Week starting (any day — we'll build Mon–Sun from here)",
+        help_text="Pick any date in the week you want to open.",
+    )
+    weekdays = forms.MultipleChoiceField(
+        choices=WEEKDAY_OPTIONS,
+        widget=forms.CheckboxSelectMultiple,
+        label="Days available this week",
+    )
+    times = forms.MultipleChoiceField(
+        choices=TIME_OPTIONS,
+        widget=forms.CheckboxSelectMultiple,
+        label="Times available each selected day",
+    )
+
+    def clean_week_start(self):
+        from datetime import timedelta
+        d = self.cleaned_data["week_start"]
+        # Snap to Monday of whichever week the user picked
+        monday = d - timedelta(days=d.weekday())
+        if monday < timezone.now().date():
+            # If that Monday is in the past, use next Monday
+            today = timezone.now().date()
+            monday = today - timedelta(days=today.weekday())
+            if monday < today:
+                monday += timedelta(weeks=1)
+        return monday
 
 
 class RatingForm(forms.Form):

@@ -567,68 +567,104 @@ def export_cluster_pdf(request):
 # =====================================================
 def eligible_courses_view(request):
     import logging
-    from .eligibility import get_eligible_courses, get_eligible_courses_from_map
+    from .eligibility import (
+        get_eligible_courses, get_eligible_courses_from_map,
+        get_eligible_courses_by_mean_grade, COURSE_TYPE_MAP,
+    )
     from courses.models import CourseType
     from django.core.cache import cache
 
     _log = logging.getLogger(__name__)
     is_guest = not request.user.is_authenticated
 
-    if is_guest:
-        cluster_map = request.session.get('guest_cluster_map')
-        total_points = request.session.get('guest_calc', {}).get('total_points')
-        if not cluster_map:
+    # Determine which pathway to show — prefer career engine session, default to Degree
+    career_pathway = request.session.get('career_pathway', 'Degree')
+    is_degree = (career_pathway == 'Degree')
+
+    if is_degree:
+        # ── Degree path: cluster-point-based eligibility ──────────────────────
+        if is_guest:
+            cluster_map = request.session.get('guest_cluster_map')
+            total_points = request.session.get('guest_calc', {}).get('total_points')
+            if not cluster_map:
+                messages.info(request, "Enter your KCSE results first to see your eligible courses.")
+                return redirect("clusterpoints:calculator")
+            cache_key = f"elig_guest_{request.session.session_key}"
+            all_results = cache.get(cache_key)
+            if all_results is None:
+                try:
+                    all_results = get_eligible_courses_from_map(cluster_map)
+                    cache.set(cache_key, all_results, 600)
+                except Exception as exc:
+                    _log.error("eligible_courses_from_map failed for guest session=%s: %s",
+                               request.session.session_key, exc, exc_info=True)
+                    messages.warning(request, "We had trouble loading your eligible courses. Please try again in a moment.")
+                    return redirect("clusterpoints:calculator")
+            kcse_result = None
+            saved_ids = []
+        else:
+            kcse_result = UserKCSEResult.objects.filter(user=request.user).order_by("-created_at").first()
+            total_points = kcse_result.total_points if kcse_result else None
+            if not kcse_result:
+                messages.info(request, "Enter your KCSE results first to see your eligible courses.")
+                return redirect("clusterpoints:calculator")
+            cache_key = f"elig_user_{request.user.pk}_{kcse_result.pk}"
+            all_results = cache.get(cache_key)
+            if all_results is None:
+                try:
+                    all_results = get_eligible_courses(request.user, kcse_result)
+                    cache.set(cache_key, all_results, 600)
+                except Exception as exc:
+                    _log.error("get_eligible_courses failed for user=%s kcse=%s: %s",
+                               request.user.pk, kcse_result.pk, exc, exc_info=True)
+                    messages.warning(request, "We had trouble loading your eligible courses. Please try again in a moment.")
+                    return redirect("clusterpoints:calculator")
+            from accounts.models import SavedCourse
+            saved_ids = list(SavedCourse.objects.filter(user=request.user).values_list('course_id', flat=True))
+
+        course_types = CourseType.objects.filter(name__iexact='Degree')
+
+    else:
+        # ── Non-degree path: mean-grade-based eligibility ─────────────────────
+        mean_grade = request.session.get('career_mean_grade', '')
+
+        # Fall back to computing from cluster calculator total_points
+        if not mean_grade:
+            if is_guest:
+                _tp = request.session.get('guest_calc', {}).get('total_points')
+            else:
+                _kcse = UserKCSEResult.objects.filter(user=request.user).order_by("-created_at").first()
+                _tp = _kcse.total_points if _kcse else None
+            mean_grade = _mean_grade(_tp) if _tp else ''
+
+        if not mean_grade:
             messages.info(request, "Enter your KCSE results first to see your eligible courses.")
             return redirect("clusterpoints:calculator")
-        # Cache guest results by session key for 10 minutes
-        cache_key = f"elig_guest_{request.session.session_key}"
-        all_results = cache.get(cache_key)
-        if all_results is None:
-            try:
-                all_results = get_eligible_courses_from_map(cluster_map)
-                cache.set(cache_key, all_results, 600)
-            except Exception as exc:
-                _log.error("eligible_courses_from_map failed for guest session=%s: %s",
-                           request.session.session_key, exc, exc_info=True)
-                messages.warning(
-                    request,
-                    "We had trouble loading your eligible courses. Please try again in a moment.",
-                )
-                return redirect("clusterpoints:calculator")
-        kcse_result = None
-        saved_ids = []
-    else:
-        kcse_result = UserKCSEResult.objects.filter(
-            user=request.user
-        ).order_by("-created_at").first()
+
+        kcse_result = None if is_guest else UserKCSEResult.objects.filter(user=request.user).order_by("-created_at").first()
         total_points = kcse_result.total_points if kcse_result else None
 
-        if not kcse_result:
-            messages.info(request, "Enter your KCSE results first to see your eligible courses.")
-            return redirect("clusterpoints:calculator")
-
-        # Cache per-user results for 10 minutes (invalidated when calculator reruns)
-        cache_key = f"elig_user_{request.user.pk}_{kcse_result.pk}"
+        cache_key = f"elig_nd_{career_pathway}_{mean_grade}_{'g' if is_guest else request.user.pk}"
         all_results = cache.get(cache_key)
         if all_results is None:
             try:
-                all_results = get_eligible_courses(request.user, kcse_result)
+                all_results = get_eligible_courses_by_mean_grade(career_pathway, mean_grade)
                 cache.set(cache_key, all_results, 600)
             except Exception as exc:
-                _log.error("get_eligible_courses failed for user=%s kcse=%s: %s",
-                           request.user.pk, kcse_result.pk, exc, exc_info=True)
-                messages.warning(
-                    request,
-                    "We had trouble loading your eligible courses. Please try again in a moment.",
-                )
+                _log.error("get_eligible_courses_by_mean_grade failed pathway=%s grade=%s: %s",
+                           career_pathway, mean_grade, exc, exc_info=True)
+                messages.warning(request, "We had trouble loading your eligible courses. Please try again in a moment.")
                 return redirect("clusterpoints:calculator")
 
-        from accounts.models import SavedCourse
-        saved_ids = list(
-            SavedCourse.objects.filter(user=request.user).values_list('course_id', flat=True)
-        )
+        saved_ids = []
+        if not is_guest:
+            from accounts.models import SavedCourse
+            saved_ids = list(SavedCourse.objects.filter(user=request.user).values_list('course_id', flat=True))
 
-    # Filtering (in-memory on the cached list — fast since list is already loaded)
+        type_names = COURSE_TYPE_MAP.get(career_pathway, [])
+        course_types = CourseType.objects.filter(name__in=type_names) if type_names else CourseType.objects.none()
+
+    # Filtering (in-memory on the cached list)
     status_filter = request.GET.get("status", "")
     type_filter = request.GET.get("type", "")
     query = request.GET.get("q", "")
@@ -646,8 +682,6 @@ def eligible_courses_view(request):
     nearly_count   = sum(1 for r in all_results if r["status"] == "nearly")
     not_elig_count = sum(1 for r in all_results if r["status"] == "not_eligible")
     total_found    = eligible_count + nearly_count
-
-    course_types = CourseType.objects.filter(name__iexact='Degree')
 
     from payments.services import has_paid_for_feature, is_feature_enabled, price_for_feature
     _mn = _mean_grade(total_points)
@@ -685,6 +719,8 @@ def eligible_courses_view(request):
         "gate_price": price_for_feature("view_eligible_courses"),
         "gate_items": _gate_items,
         "gate_subtext": f"Based on your KCSE score of {total_points} pts ({_mn}) — here's what you qualify for.",
+        "active_pathway": career_pathway,
+        "is_degree_pathway": is_degree,
     })
 
 

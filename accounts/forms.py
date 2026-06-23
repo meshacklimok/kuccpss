@@ -219,6 +219,40 @@ class UserAdminCreationForm(forms.ModelForm):
 # ADMIN USER CHANGE FORM
 # =====================================================
 
+class AffiliateWithdrawalForm(forms.Form):
+    amount = forms.IntegerField(
+        min_value=500,
+        label="Amount to withdraw (KES)",
+        widget=forms.NumberInput(attrs={"class": "form-control", "placeholder": "Min KES 500"}),
+    )
+    mpesa_number = forms.CharField(
+        max_length=20,
+        label="M-Pesa number",
+        widget=forms.TextInput(attrs={"class": "form-control", "placeholder": "e.g. 0712 345 678"}),
+    )
+
+    def __init__(self, max_amount, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.max_amount = int(max_amount)
+        self.fields["amount"].widget.attrs["max"] = self.max_amount
+
+    def clean_amount(self):
+        amount = self.cleaned_data["amount"]
+        if amount > self.max_amount:
+            raise forms.ValidationError(f"You only have KES {self.max_amount} in your wallet.")
+        return amount
+
+    def clean_mpesa_number(self):
+        number = self.cleaned_data["mpesa_number"].strip().replace(" ", "")
+        if number.startswith("07") or number.startswith("01"):
+            number = "+254" + number[1:]
+        elif number.startswith("254"):
+            number = "+" + number
+        if not number.startswith("+254") or len(number) != 13:
+            raise forms.ValidationError("Enter a valid Kenyan M-Pesa number, e.g. 0712 345 678")
+        return number
+
+
 class UserAdminChangeForm(forms.ModelForm):
     password = ReadOnlyPasswordHashField(
         label=_("Password"),

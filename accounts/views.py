@@ -279,6 +279,8 @@ def dashboard_view(request: HttpRequest) -> HttpResponse:
         ).prefetch_related('institution__offerings__course')
         from clusters.models import Cluster as _Cluster
         _all_clusters = list(_Cluster.objects.all().only('name', 'slug', 'number', 'color_code', 'icon')[:4])
+        from courses.trends import get_trends_context as _get_trends
+        _trends = _get_trends()
         from career.models import CareerConfig as _CCfg
         _cfg = _CCfg.get()
         return render(request, "accounts/dashboard.html", {
@@ -305,6 +307,8 @@ def dashboard_view(request: HttpRequest) -> HttpResponse:
             "timeline_phase": timeline_phase, "timeline_days": timeline_days,
             "timeline_label": timeline_label, "timeline_date": timeline_date,
             "inst_type_links": inst_type_links,
+            "trending_offered": _trends.get('trending_offered', []),
+            "spotlight": _trends.get('spotlight'),
         })
 
     user = request.user
@@ -546,6 +550,9 @@ def dashboard_view(request: HttpRequest) -> HttpResponse:
     from clusters.models import Cluster
     all_clusters = list(Cluster.objects.all().only('name', 'slug', 'number', 'color_code', 'icon')[:4])
 
+    from courses.trends import get_trends_context
+    trends_ctx = get_trends_context()
+
     from career.models import CareerConfig as _CCfg
     _cfg = _CCfg.get()
     return render(request, "accounts/dashboard.html", {
@@ -590,6 +597,9 @@ def dashboard_view(request: HttpRequest) -> HttpResponse:
         "scholarship_alerts": scholarship_alerts,
         # Affiliate
         "affiliate_profile":  affiliate_profile,
+        # Trending
+        "trending_offered":   trends_ctx.get('trending_offered', []),
+        "spotlight":          trends_ctx.get('spotlight'),
     })
 
 
@@ -788,7 +798,95 @@ def affiliate_dashboard(request):
         'paid_out_amount':  paid_out_amount,
         'can_request_payout': affiliate.wallet_balance >= 500,
         'payout_phone':     payout_phone,
+        'withdrawal_form':  _build_affiliate_withdrawal_form(affiliate),
+        'withdrawals':      affiliate.withdrawals.all()[:5],
     })
+
+
+def _build_affiliate_withdrawal_form(affiliate, data=None):
+    from accounts.forms import AffiliateWithdrawalForm
+    return AffiliateWithdrawalForm(int(affiliate.wallet_balance), data)
+
+
+@login_required
+@require_recent_auth
+def request_affiliate_payout(request):
+    import logging
+    from django.conf import settings as django_settings
+    from accounts.models import AffiliateProfile, AffiliateWithdrawalRequest, AffiliateCommission
+    from accounts.forms import AffiliateWithdrawalForm
+    from django.http import Http404
+
+    if request.method != 'POST':
+        return redirect('accounts:affiliate_dashboard')
+
+    try:
+        affiliate = request.user.affiliate_profile
+    except AffiliateProfile.DoesNotExist:
+        raise Http404
+    if not affiliate.is_active:
+        raise Http404
+
+    form = AffiliateWithdrawalForm(int(affiliate.wallet_balance), request.POST)
+    if not form.is_valid():
+        for err in form.errors.values():
+            messages.error(request, err.as_text())
+        return redirect('accounts:affiliate_dashboard')
+
+    amount = form.cleaned_data['amount']
+    mpesa  = form.cleaned_data['mpesa_number']
+
+    if affiliate.wallet_balance < 500:
+        messages.error(request, "Minimum payout is KES 500.")
+        return redirect('accounts:affiliate_dashboard')
+
+    if affiliate.withdrawals.filter(status='pending').exists():
+        messages.error(request, "You already have a pending withdrawal. Please wait for it to complete.")
+        return redirect('accounts:affiliate_dashboard')
+
+    wr = AffiliateWithdrawalRequest.objects.create(
+        affiliate=affiliate, amount=amount, mpesa_number=mpesa, status='pending'
+    )
+    try:
+        from payments.services import send_affiliate_payout
+        send_affiliate_payout(
+            phone=mpesa,
+            amount=amount,
+            affiliate_name=request.user.full_name or request.user.email,
+            ref=str(affiliate.pk)[:8],
+        )
+        wr.status = 'processed'
+        wr.processed_at = timezone.now()
+        wr.save(update_fields=['status', 'processed_at'])
+
+        affiliate.wallet_balance -= amount
+        affiliate.save(update_fields=['wallet_balance'])
+
+        AffiliateCommission.objects.filter(affiliate=affiliate, status='pending').update(
+            status='paid_out', paid_out_at=timezone.now()
+        )
+
+        send_mail(
+            subject="CareerNext — Your affiliate payout has been sent!",
+            message=(
+                f"Hi {request.user.full_name or 'there'},\n\n"
+                f"Your affiliate earnings of KES {amount} have been sent to {mpesa} via M-Pesa.\n\n"
+                "Thank you for referring students to CareerNext!\n\nCareerNext Team"
+            ),
+            from_email=django_settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[request.user.email],
+            fail_silently=True,
+        )
+        messages.success(request, f"KES {amount} has been sent to {mpesa} via M-Pesa!")
+
+    except Exception as exc:
+        wr.status = 'failed'
+        wr.admin_note = str(exc)[:500]
+        wr.save(update_fields=['status', 'admin_note'])
+        logging.getLogger(__name__).error("Affiliate payout failed for %s: %s", affiliate.pk, exc)
+        messages.error(request, "Payout failed — please try again or contact support.")
+
+    return redirect('accounts:affiliate_dashboard')
 
 
 def email_lead_capture(request):
@@ -831,6 +929,12 @@ def email_lead_capture(request):
 
 
 def public_home_view(request):
+    if request.user.is_authenticated:
+        visits = request.session.get('home_visit_count', 0) + 1
+        request.session['home_visit_count'] = visits
+        if visits > 4:
+            return redirect('accounts:dashboard')
+
     from resources.models import SuccessStory
     from institutions.models import InstitutionPromotion
     from courses.trends import get_trends_context
@@ -1056,11 +1160,17 @@ def shortlist_view(request: HttpRequest) -> HttpResponse:
 
     used_ranks = {item.rank for item in items if item.rank}
 
+    cutoffs = [item.min_cutoff for item in items if item.min_cutoff is not None]
+    cutoff_min = min(cutoffs) if cutoffs else None
+    cutoff_max = max(cutoffs) if cutoffs else None
+
     return render(request, 'accounts/shortlist.html', {
         'items': items,
         'has_cluster_data': bool(cluster_map),
         'rank_choices': RANK_CHOICES,
         'used_ranks': list(used_ranks),
+        'cutoff_min': cutoff_min,
+        'cutoff_max': cutoff_max,
     })
 
 

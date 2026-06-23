@@ -71,17 +71,40 @@
   <div class="card mb-4 border-0 shadow-sm p-4"
        style="background:{% if can_request_payout %}#f0fdf4{% else %}#f8fafc{% endif %};">
     <h6 class="fw-bold mb-2">
-      <i class="bi bi-cash-coin me-1 text-success"></i>Request Payout
+      <i class="bi bi-cash-coin me-1 text-success"></i>Withdraw Earnings
     </h6>
     {% if can_request_payout %}
-      <p class="text-muted small mb-2">
+      <p class="text-muted small mb-3">
         Your wallet has <strong class="text-success">KES {{ affiliate.wallet_balance|floatformat:0 }}</strong>
-        available. Send a WhatsApp message to your admin to request an M-Pesa transfer.
+        available. Enter your M-Pesa number and amount to withdraw instantly.
       </p>
-      <a href="https://wa.me/{{ payout_phone }}?text=Hi%2C%20I%27d%20like%20to%20request%20my%20affiliate%20payout%20of%20KES%20{{ affiliate.wallet_balance|floatformat:0 }}%20to%20my%20M-Pesa."
-         target="_blank" rel="noopener" class="btn btn-success btn-sm">
-        <i class="bi bi-whatsapp me-1"></i>Request Payout via WhatsApp
-      </a>
+      <form method="post" action="{% url 'accounts:affiliate_withdraw' %}">
+        {% csrf_token %}
+        <div class="row g-2 align-items-end">
+          <div class="col-12 col-md-4">
+            <label class="form-label small fw-semibold mb-1">Amount (KES)</label>
+            {{ withdrawal_form.amount }}
+            {% if withdrawal_form.amount.errors %}
+              <div class="text-danger small mt-1">{{ withdrawal_form.amount.errors.0 }}</div>
+            {% endif %}
+          </div>
+          <div class="col-12 col-md-5">
+            <label class="form-label small fw-semibold mb-1">M-Pesa Number</label>
+            {{ withdrawal_form.mpesa_number }}
+            {% if withdrawal_form.mpesa_number.errors %}
+              <div class="text-danger small mt-1">{{ withdrawal_form.mpesa_number.errors.0 }}</div>
+            {% endif %}
+          </div>
+          <div class="col-12 col-md-3">
+            <button type="submit" class="btn btn-success w-100">
+              <i class="bi bi-send me-1"></i>Withdraw
+            </button>
+          </div>
+        </div>
+        <p class="text-muted small mt-2 mb-0">
+          <i class="bi bi-info-circle me-1"></i>Funds are sent instantly to your M-Pesa number.
+        </p>
+      </form>
     {% else %}
       <p class="text-muted small mb-0">
         Minimum payout is <strong>KES 500</strong>. Your current wallet balance is
@@ -89,10 +112,8 @@
         Keep referring to reach the threshold!
       </p>
       <div class="progress mt-2" style="height:6px;">
-        {% with pct=affiliate.wallet_balance|floatformat:0 %}
         <div class="progress-bar bg-success"
              style="width:{% widthratio affiliate.wallet_balance 500 100 %}%;max-width:100%;"></div>
-        {% endwith %}
       </div>
       <div class="d-flex justify-content-between small text-muted mt-1">
         <span>KES {{ affiliate.wallet_balance|floatformat:0 }}</span>
@@ -100,6 +121,45 @@
       </div>
     {% endif %}
   </div>
+
+  <!-- Withdrawal history -->
+  {% if withdrawals %}
+  <div class="card border-0 shadow-sm p-4 mb-4">
+    <h6 class="fw-bold mb-3">
+      <i class="bi bi-clock-history me-1 text-secondary"></i>Withdrawal History
+    </h6>
+    <div class="table-responsive">
+      <table class="table table-sm align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>Date</th>
+            <th>Amount</th>
+            <th>M-Pesa</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for w in withdrawals %}
+          <tr>
+            <td class="small text-muted">{{ w.created_at|date:"d M Y H:i" }}</td>
+            <td class="fw-bold text-success small">KES {{ w.amount|floatformat:0 }}</td>
+            <td class="small text-muted">{{ w.mpesa_number }}</td>
+            <td>
+              {% if w.status == 'processed' %}
+                <span class="badge bg-success">Sent</span>
+              {% elif w.status == 'failed' %}
+                <span class="badge bg-danger">Failed</span>
+              {% else %}
+                <span class="badge bg-warning text-dark">Pending</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% endif %}
 
   <!-- Referrals table -->
   <div class="card border-0 shadow-sm p-4 mb-4">

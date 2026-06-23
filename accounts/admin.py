@@ -14,6 +14,7 @@ from .models import (
     PushSubscription,
     AffiliateProfile,
     AffiliateCommission,
+    AffiliateWithdrawalRequest,
 )
 from .forms import UserAdminCreationForm, UserAdminChangeForm
 
@@ -252,3 +253,11 @@ class AffiliateCommissionAdmin(admin.ModelAdmin):
             updated += 1
         self.message_user(request, f"Marked {updated} commission(s) as paid out and deducted from wallet.")
     mark_paid_out.short_description = "Mark selected as paid out (deducts from wallet)"
+
+
+@admin.register(AffiliateWithdrawalRequest)
+class AffiliateWithdrawalRequestAdmin(admin.ModelAdmin):
+    list_display  = ('affiliate', 'amount', 'mpesa_number', 'status', 'created_at', 'processed_at')
+    list_filter   = ('status',)
+    search_fields = ('affiliate__user__email', 'mpesa_number')
+    readonly_fields = ('affiliate', 'amount', 'mpesa_number', 'created_at', 'processed_at')

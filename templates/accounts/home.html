@@ -179,7 +179,7 @@ body.dark .step-card          { background: var(--surface); border-color: var(--
     </div>
 
     <!-- Stats row -->
-    <div class="row g-3 mt-4 pt-4" style="border-top:1px solid rgba(255,255,255,0.1);">
+    <div class="row g-3 mt-4 pt-4 reveal" style="border-top:1px solid rgba(255,255,255,0.1);">
       <div class="col-6 col-md-3">
         <div class="hero-stat">
           <div class="stat-num"><span class="counter" data-target="10000">0</span>+</div>
@@ -245,7 +245,7 @@ body.dark .step-card          { background: var(--surface); border-color: var(--
       <p class="section-sub">From your KCSE grades to your ideal career path</p>
     </div>
     <div class="row g-4 justify-content-center">
-      <div class="col-md-4 reveal">
+      <div class="col-md-4 reveal reveal-d1">
         <div class="step-card card-accent-blue">
           <div class="step-number" style="background:rgba(37,99,235,0.1);color:var(--primary);">1</div>
           <div class="feature-icon feature-icon-blue mx-auto mb-3" style="width:56px;height:56px;font-size:1.4rem;">
@@ -255,7 +255,7 @@ body.dark .step-card          { background: var(--surface); border-color: var(--
           <p class="small mb-0">Enter your KCSE grades and get your cluster points calculated instantly using the official KUCCPS formula.</p>
         </div>
       </div>
-      <div class="col-md-4 reveal">
+      <div class="col-md-4 reveal reveal-d2">
         <div class="step-card card-accent-green">
           <div class="step-number" style="background:rgba(22,163,74,0.1);color:var(--accent);">2</div>
           <div class="feature-icon feature-icon-green mx-auto mb-3" style="width:56px;height:56px;font-size:1.4rem;">
@@ -265,7 +265,7 @@ body.dark .step-card          { background: var(--surface); border-color: var(--
           <p class="small mb-0">Browse Degree, Diploma, KMTC, TVET and TTC courses you qualify for based on your cluster points.</p>
         </div>
       </div>
-      <div class="col-md-4 reveal">
+      <div class="col-md-4 reveal reveal-d3">
         <div class="step-card card-accent-purple">
           <div class="step-number" style="background:rgba(124,58,237,0.1);color:var(--purple);">3</div>
           <div class="feature-icon feature-icon-purple mx-auto mb-3" style="width:56px;height:56px;font-size:1.4rem;">
@@ -572,21 +572,5 @@ body.dark .step-card          { background: var(--surface); border-color: var(--
 </section>
 {% endif %}
 
-<script>
-(function(){
-  var els = document.querySelectorAll('.reveal');
-  if (!els.length) return;
-  if ('IntersectionObserver' in window) {
-    var io = new IntersectionObserver(function(entries){
-      entries.forEach(function(e){
-        if (e.isIntersecting) { e.target.classList.add('visible'); io.unobserve(e.target); }
-      });
-    }, { threshold: 0.08 });
-    els.forEach(function(el){ io.observe(el); });
-  } else {
-    els.forEach(function(el){ el.classList.add('visible'); });
-  }
-})();
-</script>
 
 {% endblock %}

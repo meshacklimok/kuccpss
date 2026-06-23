@@ -67,11 +67,11 @@ class InstitutionAdmin(ImportExportModelAdmin):
 @admin.register(InstitutionPromotion)
 class InstitutionPromotionAdmin(admin.ModelAdmin):
     list_display = (
-        'institution', 'tier', 'start_date', 'end_date',
+        'institution', 'tier', 'pathway', 'featured_course', 'start_date', 'end_date',
         'live_status_tag', 'days_remaining_tag', 'contact_name',
     )
-    list_filter = ('tier',)
-    search_fields = ('institution__name', 'contact_name', 'contact_email')
+    list_filter = ('tier', 'pathway')
+    search_fields = ('institution__name', 'contact_name', 'contact_email', 'featured_course__name')
     autocomplete_fields = ('institution',)
     readonly_fields = ('created_at', 'updated_at', 'live_status_tag', 'days_remaining_tag')
     date_hierarchy = 'end_date'
@@ -79,6 +79,11 @@ class InstitutionPromotionAdmin(admin.ModelAdmin):
     fieldsets = (
         ('Partnership', {
             'fields': ('institution', 'tier', 'tagline', 'banner_image'),
+        }),
+        ('Sponsored Course Listing', {
+            'classes': ('collapse',),
+            'description': 'Fill in for "Sponsored Course Listing" tier only — highlights a specific course in career results.',
+            'fields': ('featured_course', 'pathway'),
         }),
         ('Scholarship Details', {
             'classes': ('collapse',),

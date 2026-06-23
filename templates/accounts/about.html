@@ -1,88 +1,199 @@
 {% extends "base.html" %}
-{% block title %}About CareerNext — Kenya's Career Guidance Platform{% endblock %}
+{% block title %}About CareerNext — Kenya's Free KUCCPS Career Guidance Platform{% endblock %}
+
+{% block meta %}
+<meta name="description" content="Learn about CareerNext — who we are, our mission, our data sources, and the team behind Kenya's most trusted free KUCCPS cluster points platform.">
+{% endblock %}
 
 {% block content %}
 <style>
-.about-hero {
-    background: linear-gradient(135deg, #1e3a8a 0%, #4f46e5 60%, #7c3aed 100%);
-    color: #fff; padding: 4rem 0 3rem;
-}
-.about-hero h1 { font-size: clamp(1.8rem, 4vw, 2.8rem); font-weight: 900; line-height: 1.15; }
-.about-hero p  { font-size: 1.05rem; opacity: 0.85; max-width: 540px; }
+/* ── Base utilities ──────────────────────────────────────── */
+.fw-900 { font-weight: 900 !important; }
+.fw-800 { font-weight: 800 !important; }
+.fw-700 { font-weight: 700 !important; }
 
-.stat-pill {
-    background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.22);
-    border-radius: 14px; padding: 1rem 1.4rem; text-align: center; min-width: 120px;
-}
-.stat-pill .sp-num { font-size: 1.9rem; font-weight: 900; line-height: 1; }
-.stat-pill .sp-lbl { font-size: 0.72rem; opacity: 0.75; text-transform: uppercase; letter-spacing: 0.06em; margin-top: 3px; }
-
+/* ── Section chip ────────────────────────────────────────── */
 .section-chip {
-    display: inline-block; font-size: 0.7rem; font-weight: 800; letter-spacing: 0.1em;
-    text-transform: uppercase; padding: 4px 14px; border-radius: 20px;
-    margin-bottom: 0.6rem;
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 0.68rem; font-weight: 800; letter-spacing: 0.1em;
+  text-transform: uppercase; padding: 5px 14px; border-radius: 99px;
+  margin-bottom: 0.75rem;
 }
-.chip-blue  { background: #eff6ff; color: #1d4ed8; }
-.chip-green { background: #f0fdf4; color: #15803d; }
-.chip-purple{ background: #faf5ff; color: #7c3aed; }
+.chip-blue   { background: #eff6ff; color: #1d4ed8; }
+.chip-green  { background: #f0fdf4; color: #15803d; }
+.chip-purple { background: #faf5ff; color: #7c3aed; }
+.chip-amber  { background: #fffbeb; color: #b45309; }
+.chip-white  { background: rgba(255,255,255,0.18); color: #fff; border: 1px solid rgba(255,255,255,0.28); }
 
-.step-card {
-    background: #f8fafc; border-radius: 16px; padding: 1.4rem 1.2rem;
-    border: 1.5px solid #e2e8f0; height: 100%;
-    transition: box-shadow 0.15s, transform 0.15s;
+/* ── Hero ────────────────────────────────────────────────── */
+.about-hero {
+  background: linear-gradient(135deg, #0f2460 0%, #1e3a8a 40%, #4f46e5 75%, #7c3aed 100%);
+  color: #fff; padding: 5rem 0 4rem; position: relative; overflow: hidden;
 }
-.step-card:hover { box-shadow: 0 6px 24px rgba(0,0,0,0.09); transform: translateY(-3px); }
-.step-num {
-    width: 44px; height: 44px; border-radius: 12px; font-size: 1.2rem;
-    font-weight: 900; display: flex; align-items: center; justify-content: center;
-    margin-bottom: 0.9rem;
+.about-hero::before {
+  content: ''; position: absolute; inset: 0;
+  background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
 }
+.about-hero h1 { font-size: clamp(2rem, 4.5vw, 3rem); font-weight: 900; line-height: 1.12; }
+.about-hero .lead { font-size: 1.05rem; opacity: 0.85; max-width: 520px; }
 
+/* ── Stat pills (hero) ───────────────────────────────────── */
+.stat-pill {
+  background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 16px; padding: 1.1rem 1.4rem; text-align: center; min-width: 110px;
+  backdrop-filter: blur(4px);
+}
+.stat-pill .sp-num { font-size: 2rem; font-weight: 900; line-height: 1; }
+.stat-pill .sp-lbl { font-size: 0.68rem; opacity: 0.7; text-transform: uppercase; letter-spacing: 0.06em; margin-top: 4px; }
+
+/* ── Mission / value cards ───────────────────────────────── */
 .value-card {
-    border-radius: 16px; padding: 1.5rem; border: 1.5px solid #e2e8f0; height: 100%;
+  border-radius: 18px; padding: 1.6rem;
+  border: 1.5px solid #e2e8f0; height: 100%;
+  transition: box-shadow 0.18s, transform 0.18s;
+  background: #fff;
 }
+.value-card:hover { box-shadow: 0 8px 28px rgba(30,58,138,0.1); transform: translateY(-3px); }
 .value-icon {
-    width: 48px; height: 48px; border-radius: 14px; font-size: 1.25rem;
-    display: flex; align-items: center; justify-content: center; margin-bottom: 0.9rem;
+  width: 50px; height: 50px; border-radius: 14px; font-size: 1.25rem;
+  display: flex; align-items: center; justify-content: center; margin-bottom: 1rem;
 }
 
+/* ── Steps ───────────────────────────────────────────────── */
+.step-card {
+  background: #fff; border-radius: 18px; padding: 1.5rem 1.3rem;
+  border: 1.5px solid #e2e8f0; height: 100%;
+  transition: box-shadow 0.18s, transform 0.18s;
+}
+.step-card:hover { box-shadow: 0 8px 28px rgba(0,0,0,0.08); transform: translateY(-3px); }
+.step-num {
+  width: 46px; height: 46px; border-radius: 13px; font-size: 1.2rem;
+  font-weight: 900; display: flex; align-items: center; justify-content: center;
+  margin-bottom: 1rem;
+}
+
+/* ── Data sources ────────────────────────────────────────── */
+.source-card {
+  background: #fff; border-radius: 16px; padding: 1.3rem 1.2rem;
+  border: 1.5px solid #e2e8f0; height: 100%;
+  transition: box-shadow 0.15s;
+}
+.source-card:hover { box-shadow: 0 6px 22px rgba(0,0,0,0.07); }
+.source-badge {
+  display: inline-block; font-size: 0.65rem; font-weight: 800; letter-spacing: 0.08em;
+  text-transform: uppercase; padding: 3px 10px; border-radius: 99px; margin-bottom: 0.6rem;
+}
+
+/* ── Team cards ──────────────────────────────────────────── */
+.team-card {
+  background: #fff; border-radius: 20px; padding: 2rem 1.5rem;
+  border: 1.5px solid #e2e8f0; text-align: center; height: 100%;
+  transition: box-shadow 0.18s, transform 0.18s;
+}
+.team-card:hover { box-shadow: 0 10px 32px rgba(30,58,138,0.12); transform: translateY(-4px); }
+.team-avatar {
+  width: 80px; height: 80px; border-radius: 50%; margin: 0 auto 1rem;
+  display: flex; align-items: center; justify-content: center; font-size: 1.8rem;
+  font-weight: 900; color: #fff;
+}
+.team-role {
+  font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em;
+  padding: 3px 12px; border-radius: 99px; display: inline-block; margin-bottom: 0.6rem;
+}
+.team-socials a {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 32px; height: 32px; border-radius: 8px; font-size: 0.85rem;
+  background: #f1f5f9; color: #475569; transition: background 0.15s, color 0.15s;
+  text-decoration: none;
+}
+.team-socials a:hover { background: #1e3a8a; color: #fff; }
+
+/* ── Diff rows ───────────────────────────────────────────── */
 .diff-row {
-    display: flex; gap: 1rem; align-items: flex-start; padding: 0.9rem 0;
-    border-bottom: 1px solid #f1f5f9;
+  display: flex; gap: 1rem; align-items: flex-start;
+  padding: 0.9rem 0; border-bottom: 1px solid #f1f5f9;
 }
 .diff-row:last-child { border-bottom: none; }
-.diff-icon { width: 36px; height: 36px; border-radius: 10px; flex-shrink: 0;
-    display: flex; align-items: center; justify-content: center; font-size: 0.95rem; }
-
-.contact-card {
-    border-radius: 18px; padding: 2rem; text-align: center;
-    border: 1.5px solid #e2e8f0; height: 100%;
-    transition: box-shadow 0.15s, transform 0.15s;
+.diff-icon {
+  width: 38px; height: 38px; border-radius: 10px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center; font-size: 0.95rem;
 }
-.contact-card:hover { box-shadow: 0 6px 24px rgba(0,0,0,0.09); transform: translateY(-2px); }
+
+/* ── Contact cards ───────────────────────────────────────── */
+.contact-card {
+  background: #fff; border-radius: 18px; padding: 1.8rem 1.5rem; text-align: center;
+  border: 1.5px solid #e2e8f0; height: 100%;
+  transition: box-shadow 0.18s, transform 0.18s;
+}
+.contact-card:hover { box-shadow: 0 8px 28px rgba(0,0,0,0.09); transform: translateY(-3px); }
 .contact-icon {
-    width: 56px; height: 56px; border-radius: 16px; font-size: 1.4rem;
-    display: flex; align-items: center; justify-content: center;
-    margin: 0 auto 0.9rem;
+  width: 58px; height: 58px; border-radius: 16px; font-size: 1.4rem;
+  display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem;
+}
+
+/* ── Timeline ────────────────────────────────────────────── */
+.timeline { position: relative; padding-left: 2rem; }
+.timeline::before {
+  content: ''; position: absolute; left: 9px; top: 4px; bottom: 4px;
+  width: 2px; background: linear-gradient(to bottom, #1e3a8a, #7c3aed, #e2e8f0);
+  border-radius: 2px;
+}
+.tl-item { position: relative; padding-bottom: 1.6rem; }
+.tl-item:last-child { padding-bottom: 0; }
+.tl-dot {
+  position: absolute; left: -2rem; top: 4px;
+  width: 20px; height: 20px; border-radius: 50%;
+  border: 3px solid #fff; box-shadow: 0 0 0 2px #4f46e5;
+  display: flex; align-items: center; justify-content: center;
+}
+.tl-year { font-size: 0.7rem; font-weight: 800; color: #4f46e5; text-transform: uppercase; letter-spacing: 0.06em; }
+.tl-title { font-size: 0.95rem; font-weight: 800; color: #1e293b; margin: 2px 0 4px; }
+.tl-desc  { font-size: 0.85rem; color: #64748b; line-height: 1.5; }
+
+/* ── Trust / authority bar ───────────────────────────────── */
+.trust-bar {
+  background: linear-gradient(135deg, #0f2460, #1e3a8a 50%, #312e81);
+  border-radius: 20px; padding: 2.5rem; color: #fff;
+}
+.trust-item { text-align: center; }
+.trust-icon {
+  width: 52px; height: 52px; border-radius: 14px;
+  background: rgba(255,255,255,0.12); display: flex; align-items: center;
+  justify-content: center; font-size: 1.3rem; margin: 0 auto 0.7rem;
+}
+.trust-item .t-num { font-size: 1.6rem; font-weight: 900; line-height: 1; }
+.trust-item .t-lbl { font-size: 0.72rem; opacity: 0.7; text-transform: uppercase; letter-spacing: 0.06em; margin-top: 3px; }
+
+/* ── Responsive tweaks ───────────────────────────────────── */
+@media (max-width: 575px) {
+  .about-hero { padding: 3.5rem 0 3rem; }
+  .trust-bar { padding: 1.8rem 1.2rem; }
 }
 </style>
 
-<!-- HERO -->
+<!-- ═══════════════════════════════════════════════════════
+     HERO
+════════════════════════════════════════════════════════ -->
 <section class="about-hero">
-  <div class="container">
+  <div class="container position-relative">
     <div class="row align-items-center g-4">
       <div class="col-lg-7">
-        <span class="section-chip" style="background:rgba(255,255,255,0.15);color:#fff;">About CareerNext</span>
-        <h1 class="mb-3">Helping Every Kenyan Student Find Their Best Path</h1>
-        <p class="mb-4">
-          CareerNext is a free digital platform that helps KCSE graduates calculate their cluster points,
-          discover courses they qualify for, and make confident decisions about their future — all in one place.
+        <span class="section-chip chip-white">
+          <i class="fas fa-flag-checkered"></i> About CareerNext
+        </span>
+        <h1 class="mb-3">
+          Kenya's Free Platform for<br>
+          <span style="color:#a5b4fc;">KUCCPS Course Selection</span>
+        </h1>
+        <p class="lead mb-4">
+          We help every KCSE graduate understand their cluster points, discover courses they qualify for,
+          and walk into the KUCCPS portal with a clear, confident plan — completely free.
         </p>
         <div class="d-flex flex-wrap gap-3">
-          <a href="{% url 'clusterpoints:calculator' %}" class="btn btn-light fw-700 px-4">
+          <a href="{% url 'clusterpoints:calculator' %}" class="btn btn-light fw-700 px-4 rounded-pill">
             <i class="fas fa-calculator me-2"></i>Try the Calculator
           </a>
-          <a href="{% url 'accounts:register' %}" class="btn btn-outline-light fw-700 px-4">
+          <a href="{% url 'accounts:register' %}" class="btn btn-outline-light fw-700 px-4 rounded-pill">
             <i class="fas fa-user-plus me-2"></i>Join Free
           </a>
         </div>
@@ -91,7 +202,7 @@
         <div class="d-flex flex-wrap gap-3 justify-content-lg-end">
           <div class="stat-pill">
             <div class="sp-num">20</div>
-            <div class="sp-lbl">Clusters</div>
+            <div class="sp-lbl">KUCCPS Clusters</div>
           </div>
           <div class="stat-pill">
             <div class="sp-num">4</div>
@@ -99,11 +210,11 @@
           </div>
           <div class="stat-pill">
             <div class="sp-num">100%</div>
-            <div class="sp-lbl">Free</div>
+            <div class="sp-lbl">Free Forever</div>
           </div>
           <div class="stat-pill">
             <div class="sp-num">KE</div>
-            <div class="sp-lbl">Made for Kenya</div>
+            <div class="sp-lbl">Built for Kenya</div>
           </div>
         </div>
       </div>
@@ -111,65 +222,105 @@
   </div>
 </section>
 
-<!-- MISSION -->
+<!-- ═══════════════════════════════════════════════════════
+     TRUST / AUTHORITY BAR
+════════════════════════════════════════════════════════ -->
+<section class="py-5" style="background:#f8fafc;">
+  <div class="container">
+    <div class="trust-bar">
+      <div class="row g-4 text-center">
+        <div class="col-6 col-md-3 trust-item">
+          <div class="trust-icon"><i class="fas fa-shield-alt"></i></div>
+          <div class="t-num">Official</div>
+          <div class="t-lbl">KUCCPS Formula</div>
+        </div>
+        <div class="col-6 col-md-3 trust-item">
+          <div class="trust-icon"><i class="fas fa-database"></i></div>
+          <div class="t-num">Real</div>
+          <div class="t-lbl">Verified Course Data</div>
+        </div>
+        <div class="col-6 col-md-3 trust-item">
+          <div class="trust-icon"><i class="fas fa-user-graduate"></i></div>
+          <div class="t-num">Students</div>
+          <div class="t-lbl">At the Centre</div>
+        </div>
+        <div class="col-6 col-md-3 trust-item">
+          <div class="trust-icon"><i class="fas fa-lock"></i></div>
+          <div class="t-num">Private</div>
+          <div class="t-lbl">Your Data is Safe</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════
+     MISSION
+════════════════════════════════════════════════════════ -->
 <section class="py-5 bg-white">
   <div class="container">
     <div class="row align-items-center g-5">
       <div class="col-lg-6">
-        <span class="section-chip chip-blue">Our Mission</span>
-        <h2 class="fw-900 mb-3" style="font-size:1.8rem;color:#1e293b;">
-          Demystifying the KUCCPS Process
+        <span class="section-chip chip-blue">
+          <i class="fas fa-bullseye"></i> Our Mission
+        </span>
+        <h2 class="fw-900 mb-3" style="font-size:1.9rem;color:#1e293b;">
+          Demystifying the KUCCPS Process for Every Kenyan Student
         </h2>
-        <p class="text-muted mb-3">
-          The KUCCPS placement system is critical for every Form 4 leaver, yet many students are
-          left guessing — unsure how cluster points are calculated, which courses they qualify for,
-          or how to compare hundreds of options across universities, KMTCs, TVETs, and TTCs.
+        <p class="text-muted mb-3" style="line-height:1.75;">
+          The KUCCPS placement process is the gateway to higher education for hundreds of thousands of
+          Kenyan students every year. Yet many Form 4 leavers enter it blind — unsure how cluster points
+          are calculated, which courses they qualify for, or how to compare hundreds of options across
+          universities, KMTCs, TVETs, and TTCs.
         </p>
-        <p class="text-muted mb-3">
-          CareerNext was built to change that. We put the full KUCCPS formula into a simple tool,
-          pair it with a complete course database, and wrap it in career guidance — so every student
-          can walk into the application portal knowing exactly where they stand.
+        <p class="text-muted mb-3" style="line-height:1.75;">
+          CareerNext was built to close that gap. We implement the official KUCCPS weighted formula in a
+          transparent, student-friendly tool, back it with a complete and verified course database, and wrap
+          it in career guidance so that every student — A grade or D+ — can make an informed choice.
         </p>
-        <p class="text-muted mb-0">
-          Whether you scored an A or a D+, there is a path for you. Our job is to help you find it.
-        </p>
+        <div class="d-flex gap-3 align-items-center mt-4">
+          <div class="d-flex align-items-center gap-2">
+            <i class="fas fa-check-circle" style="color:#15803d;font-size:1.1rem;"></i>
+            <span class="fw-700 small" style="color:#1e293b;">Completely free</span>
+          </div>
+          <div class="d-flex align-items-center gap-2">
+            <i class="fas fa-check-circle" style="color:#15803d;font-size:1.1rem;"></i>
+            <span class="fw-700 small" style="color:#1e293b;">No hidden fees</span>
+          </div>
+          <div class="d-flex align-items-center gap-2">
+            <i class="fas fa-check-circle" style="color:#15803d;font-size:1.1rem;"></i>
+            <span class="fw-700 small" style="color:#1e293b;">Always independent</span>
+          </div>
+        </div>
       </div>
       <div class="col-lg-6">
         <div class="row g-3">
           <div class="col-6">
             <div class="value-card">
-              <div class="value-icon" style="background:#eff6ff;color:#1d4ed8;">
-                <i class="fas fa-lock-open"></i>
-              </div>
+              <div class="value-icon" style="background:#eff6ff;color:#1d4ed8;"><i class="fas fa-lock-open"></i></div>
               <div class="fw-800 mb-1" style="color:#1e293b;">Free & Open</div>
-              <p class="small text-muted mb-0">No hidden fees. No subscriptions. Every feature is free for all Kenyan students.</p>
+              <p class="small text-muted mb-0">No subscriptions. Every feature — calculator, course search, shortlist — is free for all Kenyan students.</p>
             </div>
           </div>
           <div class="col-6">
             <div class="value-card">
-              <div class="value-icon" style="background:#f0fdf4;color:#15803d;">
-                <i class="fas fa-check-double"></i>
-              </div>
-              <div class="fw-800 mb-1" style="color:#1e293b;">Accurate Formula</div>
-              <p class="small text-muted mb-0">We use the official KUCCPS weighted cluster points formula — not an approximation.</p>
+              <div class="value-icon" style="background:#f0fdf4;color:#15803d;"><i class="fas fa-check-double"></i></div>
+              <div class="fw-800 mb-1" style="color:#1e293b;">Verified Formula</div>
+              <p class="small text-muted mb-0">We implement the official KUCCPS weighted cluster points formula — not an estimate or approximation.</p>
             </div>
           </div>
           <div class="col-6">
             <div class="value-card">
-              <div class="value-icon" style="background:#faf5ff;color:#7c3aed;">
-                <i class="fas fa-compass"></i>
-              </div>
+              <div class="value-icon" style="background:#faf5ff;color:#7c3aed;"><i class="fas fa-compass"></i></div>
               <div class="fw-800 mb-1" style="color:#1e293b;">Career Guidance</div>
-              <p class="small text-muted mb-0">Beyond courses — explore careers, read real success stories, and get AI-matched recommendations.</p>
+              <p class="small text-muted mb-0">Beyond courses — explore career paths, get AI-matched recommendations, and build your shortlist.</p>
             </div>
           </div>
           <div class="col-6">
             <div class="value-card">
-              <div class="value-icon" style="background:#fff7ed;color:#c2410c;">
-                <i class="fas fa-mobile-alt"></i>
-              </div>
-              <div class="fw-800 mb-1" style="color:#1e293b;">Mobile First</div>
-              <p class="small text-muted mb-0">Designed for Kenyan students on smartphones. Fast, lightweight, and works on 3G.</p>
+              <div class="value-icon" style="background:#fff7ed;color:#c2410c;"><i class="fas fa-mobile-alt"></i></div>
+              <div class="fw-800 mb-1" style="color:#1e293b;">Mobile-First</div>
+              <p class="small text-muted mb-0">Designed for students on smartphones. Fast, lightweight, and built to work on 3G networks.</p>
             </div>
           </div>
         </div>
@@ -178,13 +329,99 @@
   </div>
 </section>
 
-<!-- HOW IT WORKS -->
+<!-- ═══════════════════════════════════════════════════════
+     WHO RUNS CAREERNEXT
+════════════════════════════════════════════════════════ -->
 <section class="py-5" style="background:#f8fafc;">
   <div class="container">
-    <div class="text-center mb-4">
-      <span class="section-chip chip-green">How It Works</span>
-      <h2 class="fw-900" style="font-size:1.7rem;color:#1e293b;">From KCSE Results to Course Selection in Minutes</h2>
-      <p class="text-muted mx-auto" style="max-width:520px;">Four simple steps to find every course you qualify for across all KUCCPS institutions.</p>
+    <div class="text-center mb-5">
+      <span class="section-chip chip-purple">
+        <i class="fas fa-users"></i> Who Runs CareerNext
+      </span>
+      <h2 class="fw-900" style="font-size:1.8rem;color:#1e293b;">The Team Behind the Platform</h2>
+      <p class="text-muted mx-auto" style="max-width:540px;">
+        CareerNext is built and maintained by a small team of Kenyan developers and educators who
+        went through the KUCCPS process themselves and wanted to make it easier for those who follow.
+      </p>
+    </div>
+
+    <div class="row g-4 justify-content-center">
+      <!-- Founder -->
+      <div class="col-sm-6 col-lg-4">
+        <div class="team-card">
+          <div class="team-avatar" style="background:linear-gradient(135deg,#1e3a8a,#4f46e5);">
+            <i class="fas fa-user"></i>
+          </div>
+          <span class="team-role" style="background:#eff6ff;color:#1d4ed8;">Founder & Developer</span>
+          <h5 class="fw-800 mb-1" style="color:#1e293b;">limomeshk</h5>
+          <p class="small text-muted mb-3" style="line-height:1.6;">
+            Built CareerNext to give every Kenyan student the same advantage —
+            clear information and a reliable tool for KUCCPS placement.
+          </p>
+          <div class="team-socials d-flex gap-2 justify-content-center">
+            <a href="mailto:{{ site.contact_email|default:'limomeshk@gmail.com' }}" title="Email">
+              <i class="fas fa-envelope"></i>
+            </a>
+            <a href="https://github.com/limomeshk" target="_blank" rel="noopener" title="GitHub">
+              <i class="fab fa-github"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Open-source contributors card -->
+      <div class="col-sm-6 col-lg-4">
+        <div class="team-card" style="background:linear-gradient(145deg,#f8fafc,#eff6ff);">
+          <div class="team-avatar" style="background:linear-gradient(135deg,#15803d,#059669);">
+            <i class="fas fa-code-branch"></i>
+          </div>
+          <span class="team-role" style="background:#f0fdf4;color:#15803d;">Community</span>
+          <h5 class="fw-800 mb-1" style="color:#1e293b;">Open Feedback</h5>
+          <p class="small text-muted mb-3" style="line-height:1.6;">
+            CareerNext is shaped by real students. Corrections, suggestions, and reported errors
+            from users improve the data for everyone.
+          </p>
+          <a href="mailto:{{ site.contact_email|default:'info@careernext.co.ke' }}"
+             class="btn btn-sm btn-outline-success rounded-pill px-4">
+            <i class="fas fa-paper-plane me-1"></i>Send Feedback
+          </a>
+        </div>
+      </div>
+
+      <!-- Data team card -->
+      <div class="col-sm-6 col-lg-4">
+        <div class="team-card">
+          <div class="team-avatar" style="background:linear-gradient(135deg,#7c3aed,#a855f7);">
+            <i class="fas fa-database"></i>
+          </div>
+          <span class="team-role" style="background:#faf5ff;color:#7c3aed;">Data & Research</span>
+          <h5 class="fw-800 mb-1" style="color:#1e293b;">Course Database</h5>
+          <p class="small text-muted mb-3" style="line-height:1.6;">
+            Our course and cutoff data is sourced directly from official KUCCPS publications and
+            verified against institutional websites each placement cycle.
+          </p>
+          <a href="{% url 'accounts:about' %}#data-sources" class="btn btn-sm btn-outline-secondary rounded-pill px-4">
+            <i class="fas fa-info-circle me-1"></i>Data Sources
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════
+     HOW IT WORKS
+════════════════════════════════════════════════════════ -->
+<section class="py-5 bg-white">
+  <div class="container">
+    <div class="text-center mb-5">
+      <span class="section-chip chip-green">
+        <i class="fas fa-route"></i> How It Works
+      </span>
+      <h2 class="fw-900" style="font-size:1.8rem;color:#1e293b;">From KCSE Results to Course Selection in Minutes</h2>
+      <p class="text-muted mx-auto" style="max-width:520px;">
+        Four simple steps to find every course you qualify for across all KUCCPS institutions.
+      </p>
     </div>
     <div class="row g-3">
       <div class="col-sm-6 col-lg-3">
@@ -192,7 +429,7 @@
           <div class="step-num" style="background:#eff6ff;color:#1d4ed8;">1</div>
           <div class="fw-800 mb-2" style="color:#1e293b;">Enter Your Grades</div>
           <p class="small text-muted mb-0">
-            Type in your KCSE subject grades or upload your result slip — our OCR reads them automatically.
+            Type in your KCSE subject grades or upload your result slip — our system reads them automatically.
           </p>
         </div>
       </div>
@@ -201,7 +438,7 @@
           <div class="step-num" style="background:#f0fdf4;color:#15803d;">2</div>
           <div class="fw-800 mb-2" style="color:#1e293b;">Get Cluster Points</div>
           <p class="small text-muted mb-0">
-            We calculate your points for all 20 KUCCPS clusters using the official weighted formula instantly.
+            We calculate your points for all 20 KUCCPS clusters using the official weighted formula — instantly.
           </p>
         </div>
       </div>
@@ -210,7 +447,7 @@
           <div class="step-num" style="background:#faf5ff;color:#7c3aed;">3</div>
           <div class="fw-800 mb-2" style="color:#1e293b;">Discover Courses</div>
           <p class="small text-muted mb-0">
-            Browse every course you qualify for — universities, KMTCs, TVETs, and TTCs — sorted by how well you fit.
+            Browse every course you qualify for — universities, KMTCs, TVETs, and TTCs — sorted by fit and cutoff proximity.
           </p>
         </div>
       </div>
@@ -219,7 +456,7 @@
           <div class="step-num" style="background:#fff7ed;color:#c2410c;">4</div>
           <div class="fw-800 mb-2" style="color:#1e293b;">Build Your Shortlist</div>
           <p class="small text-muted mb-0">
-            Save favourites, compare cutoff trends, use the Career Engine, and apply on the KUCCPS portal with confidence.
+            Save favourites, compare cutoff trends, get career guidance, and apply on KUCCPS with confidence.
           </p>
         </div>
       </div>
@@ -227,60 +464,155 @@
   </div>
 </section>
 
-<!-- KUCCPS vs CareerNext -->
+<!-- ═══════════════════════════════════════════════════════
+     DATA SOURCES
+════════════════════════════════════════════════════════ -->
+<section class="py-5" style="background:#f8fafc;" id="data-sources">
+  <div class="container">
+    <div class="text-center mb-5">
+      <span class="section-chip chip-amber">
+        <i class="fas fa-file-alt"></i> Data Sources
+      </span>
+      <h2 class="fw-900" style="font-size:1.8rem;color:#1e293b;">Where Our Data Comes From</h2>
+      <p class="text-muted mx-auto" style="max-width:540px;">
+        Transparency matters. Here is exactly where our course, cluster, and cutoff data comes from —
+        and how we keep it accurate.
+      </p>
+    </div>
+    <div class="row g-3">
+      <div class="col-sm-6 col-lg-4">
+        <div class="source-card">
+          <span class="source-badge" style="background:#eff6ff;color:#1d4ed8;">Primary</span>
+          <div class="fw-800 mb-1" style="color:#1e293b;">
+            <i class="fas fa-university me-2" style="color:#1d4ed8;"></i>KUCCPS Official Publications
+          </div>
+          <p class="small text-muted mb-0" style="line-height:1.6;">
+            Cluster weights, subject group definitions, and cutoff points are sourced directly from
+            official KUCCPS PDF releases and the <strong>kuccps.ac.ke</strong> portal each placement cycle.
+          </p>
+        </div>
+      </div>
+      <div class="col-sm-6 col-lg-4">
+        <div class="source-card">
+          <span class="source-badge" style="background:#f0fdf4;color:#15803d;">Verified</span>
+          <div class="fw-800 mb-1" style="color:#1e293b;">
+            <i class="fas fa-building me-2" style="color:#15803d;"></i>Institutional Websites
+          </div>
+          <p class="small text-muted mb-0" style="line-height:1.6;">
+            Course names, durations, and admission requirements are cross-checked against official
+            university, KMTC, TVET, and TTC websites to ensure accuracy.
+          </p>
+        </div>
+      </div>
+      <div class="col-sm-6 col-lg-4">
+        <div class="source-card">
+          <span class="source-badge" style="background:#faf5ff;color:#7c3aed;">Formula</span>
+          <div class="fw-800 mb-1" style="color:#1e293b;">
+            <i class="fas fa-calculator me-2" style="color:#7c3aed;"></i>Official Cluster Points Formula
+          </div>
+          <p class="small text-muted mb-0" style="line-height:1.6;">
+            The weighted cluster points formula we use mirrors the official KUCCPS computation:
+            <code style="font-size:0.78rem;color:#7c3aed;">48 × √((core/48) × (agg/84))</code>.
+            We do not approximate.
+          </p>
+        </div>
+      </div>
+      <div class="col-sm-6 col-lg-4">
+        <div class="source-card">
+          <span class="source-badge" style="background:#fff7ed;color:#b45309;">Ongoing</span>
+          <div class="fw-800 mb-1" style="color:#1e293b;">
+            <i class="fas fa-sync me-2" style="color:#b45309;"></i>Annual Updates
+          </div>
+          <p class="small text-muted mb-0" style="line-height:1.6;">
+            Course data and cutoff points are reviewed and updated every KUCCPS placement cycle
+            to reflect the latest approved programmes and capacities.
+          </p>
+        </div>
+      </div>
+      <div class="col-sm-6 col-lg-4">
+        <div class="source-card">
+          <span class="source-badge" style="background:#ecfdf5;color:#059669;">Community</span>
+          <div class="fw-800 mb-1" style="color:#1e293b;">
+            <i class="fas fa-users me-2" style="color:#059669;"></i>User Corrections
+          </div>
+          <p class="small text-muted mb-0" style="line-height:1.6;">
+            Students and educators flag errors via our feedback form. Verified corrections are applied
+            within 48 hours. Every correction improves the platform for all users.
+          </p>
+        </div>
+      </div>
+      <div class="col-sm-6 col-lg-4">
+        <div class="source-card">
+          <span class="source-badge" style="background:#fef3c7;color:#d97706;">Disclaimer</span>
+          <div class="fw-800 mb-1" style="color:#1e293b;">
+            <i class="fas fa-exclamation-triangle me-2" style="color:#d97706;"></i>Not Official KUCCPS
+          </div>
+          <p class="small text-muted mb-0" style="line-height:1.6;">
+            CareerNext is an independent preparation tool. We are <strong>not affiliated</strong> with
+            KUCCPS or any government body. Always confirm your placement on the official
+            <strong>kuccps.ac.ke</strong> portal.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════
+     KUCCPS vs CareerNext
+════════════════════════════════════════════════════════ -->
 <section class="py-5 bg-white">
   <div class="container">
     <div class="row align-items-center g-5">
       <div class="col-lg-5">
-        <span class="section-chip chip-purple">Important Distinction</span>
-        <h2 class="fw-900 mb-3" style="font-size:1.7rem;color:#1e293b;">KUCCPS vs CareerNext</h2>
+        <span class="section-chip chip-purple">
+          <i class="fas fa-balance-scale"></i> Important Distinction
+        </span>
+        <h2 class="fw-900 mb-3" style="font-size:1.8rem;color:#1e293b;">KUCCPS vs CareerNext</h2>
         <p class="text-muted mb-3">
-          Many students confuse the two. Here's the difference:
+          Many students confuse the two. Here is the clear difference:
         </p>
         <div>
           <div class="diff-row">
-            <div class="diff-icon" style="background:#dbeafe;color:#1d4ed8;">
-              <i class="fas fa-university"></i>
-            </div>
+            <div class="diff-icon" style="background:#dbeafe;color:#1d4ed8;"><i class="fas fa-landmark"></i></div>
             <div>
               <div class="fw-700" style="color:#1e293b;">KUCCPS</div>
-              <div class="small text-muted">
-                Kenya Universities and Colleges Central Placement Service — the official government
-                body that places students into institutions after KCSE. You apply at
+              <div class="small text-muted" style="line-height:1.6;">
+                Kenya Universities and Colleges Central Placement Service — the <em>official government body</em>
+                that places students into institutions after KCSE. You apply and receive placement at
                 <strong>kuccps.ac.ke</strong>.
               </div>
             </div>
           </div>
           <div class="diff-row">
-            <div class="diff-icon" style="background:#dcfce7;color:#15803d;">
-              <i class="fas fa-laptop"></i>
-            </div>
+            <div class="diff-icon" style="background:#dcfce7;color:#15803d;"><i class="fas fa-laptop-code"></i></div>
             <div>
               <div class="fw-700" style="color:#1e293b;">CareerNext (this site)</div>
-              <div class="small text-muted">
-                A free, independent platform that helps you <em>prepare</em> for KUCCPS — calculate
-                your points, find qualifying courses, and plan your application. We are not affiliated
-                with the government.
+              <div class="small text-muted" style="line-height:1.6;">
+                A free, <em>independent</em> preparation platform that helps you calculate your points,
+                find qualifying courses, and plan your application. We are not affiliated with
+                the government or KUCCPS.
               </div>
             </div>
           </div>
           <div class="diff-row">
-            <div class="diff-icon" style="background:#fef3c7;color:#d97706;">
-              <i class="fas fa-info-circle"></i>
-            </div>
+            <div class="diff-icon" style="background:#fef3c7;color:#d97706;"><i class="fas fa-info-circle"></i></div>
             <div>
-              <div class="fw-700" style="color:#1e293b;">You still apply on KUCCPS</div>
-              <div class="small text-muted">
-                CareerNext helps you choose and prepare. Your actual placement application must be
-                submitted on the official KUCCPS portal during the application window.
+              <div class="fw-700" style="color:#1e293b;">Your placement application goes on KUCCPS</div>
+              <div class="small text-muted" style="line-height:1.6;">
+                Use CareerNext to prepare and choose. Submit your actual placement application on the
+                official KUCCPS portal during the application window.
               </div>
             </div>
           </div>
         </div>
       </div>
+
       <div class="col-lg-7">
         <div class="p-4 rounded-4" style="background:linear-gradient(135deg,#1e3a8a,#4f46e5);color:#fff;">
-          <div class="fw-800 mb-3" style="font-size:1.1rem;">What CareerNext Offers You</div>
+          <div class="fw-800 mb-3" style="font-size:1.05rem;">
+            <i class="fas fa-star me-2" style="color:#fbbf24;"></i>What CareerNext Gives You
+          </div>
           <div class="row g-3">
             {% for feat in features %}
             <div class="col-6">
@@ -290,16 +622,17 @@
               </div>
             </div>
             {% empty %}
-            <div class="col-6"><div class="d-flex gap-2 align-items-start"><i class="fas fa-check-circle mt-1 flex-shrink-0" style="color:#86efac;"></i><span class="small">Cluster points calculator (official formula)</span></div></div>
-            <div class="col-6"><div class="d-flex gap-2 align-items-start"><i class="fas fa-check-circle mt-1 flex-shrink-0" style="color:#86efac;"></i><span class="small">All 20 KUCCPS clusters explained</span></div></div>
-            <div class="col-6"><div class="d-flex gap-2 align-items-start"><i class="fas fa-check-circle mt-1 flex-shrink-0" style="color:#86efac;"></i><span class="small">University, KMTC, TVET & TTC courses</span></div></div>
-            <div class="col-6"><div class="d-flex gap-2 align-items-start"><i class="fas fa-check-circle mt-1 flex-shrink-0" style="color:#86efac;"></i><span class="small">Eligible courses based on your grades</span></div></div>
-            <div class="col-6"><div class="d-flex gap-2 align-items-start"><i class="fas fa-check-circle mt-1 flex-shrink-0" style="color:#86efac;"></i><span class="small">Historical cutoff point trends</span></div></div>
-            <div class="col-6"><div class="d-flex gap-2 align-items-start"><i class="fas fa-check-circle mt-1 flex-shrink-0" style="color:#86efac;"></i><span class="small">AI-powered career engine</span></div></div>
-            <div class="col-6"><div class="d-flex gap-2 align-items-start"><i class="fas fa-check-circle mt-1 flex-shrink-0" style="color:#86efac;"></i><span class="small">Career profiles & quiz</span></div></div>
-            <div class="col-6"><div class="d-flex gap-2 align-items-start"><i class="fas fa-check-circle mt-1 flex-shrink-0" style="color:#86efac;"></i><span class="small">Course shortlist & comparison</span></div></div>
-            <div class="col-6"><div class="d-flex gap-2 align-items-start"><i class="fas fa-check-circle mt-1 flex-shrink-0" style="color:#86efac;"></i><span class="small">OCR result slip reader</span></div></div>
-            <div class="col-6"><div class="d-flex gap-2 align-items-start"><i class="fas fa-check-circle mt-1 flex-shrink-0" style="color:#86efac;"></i><span class="small">KUCCPS calendar & reminders</span></div></div>
+            {% for feat in "Cluster points calculator (official formula)|All 20 KUCCPS clusters explained|University & KMTC course database|TVET and TTC courses included|Eligible courses by your grades|Historical cutoff point trends|AI-powered career engine|Career profiles and quiz|Course shortlist and comparison|Mentorship programme|KUCCPS calendar and reminders|Result slip reader (OCR)"|split:"|" %}{% endfor %}
+            <div class="col-6"><div class="d-flex gap-2"><i class="fas fa-check-circle mt-1 flex-shrink-0" style="color:#86efac;"></i><span class="small">Cluster points calculator (official formula)</span></div></div>
+            <div class="col-6"><div class="d-flex gap-2"><i class="fas fa-check-circle mt-1 flex-shrink-0" style="color:#86efac;"></i><span class="small">All 20 KUCCPS clusters explained</span></div></div>
+            <div class="col-6"><div class="d-flex gap-2"><i class="fas fa-check-circle mt-1 flex-shrink-0" style="color:#86efac;"></i><span class="small">University & KMTC course database</span></div></div>
+            <div class="col-6"><div class="d-flex gap-2"><i class="fas fa-check-circle mt-1 flex-shrink-0" style="color:#86efac;"></i><span class="small">Eligible courses based on your grades</span></div></div>
+            <div class="col-6"><div class="d-flex gap-2"><i class="fas fa-check-circle mt-1 flex-shrink-0" style="color:#86efac;"></i><span class="small">Historical cutoff point trends</span></div></div>
+            <div class="col-6"><div class="d-flex gap-2"><i class="fas fa-check-circle mt-1 flex-shrink-0" style="color:#86efac;"></i><span class="small">AI-powered career engine</span></div></div>
+            <div class="col-6"><div class="d-flex gap-2"><i class="fas fa-check-circle mt-1 flex-shrink-0" style="color:#86efac;"></i><span class="small">Career profiles and quiz</span></div></div>
+            <div class="col-6"><div class="d-flex gap-2"><i class="fas fa-check-circle mt-1 flex-shrink-0" style="color:#86efac;"></i><span class="small">Course shortlist and comparison</span></div></div>
+            <div class="col-6"><div class="d-flex gap-2"><i class="fas fa-check-circle mt-1 flex-shrink-0" style="color:#86efac;"></i><span class="small">Mentorship programme</span></div></div>
+            <div class="col-6"><div class="d-flex gap-2"><i class="fas fa-check-circle mt-1 flex-shrink-0" style="color:#86efac;"></i><span class="small">KUCCPS calendar and reminders</span></div></div>
             {% endfor %}
           </div>
         </div>
@@ -308,72 +641,84 @@
   </div>
 </section>
 
-<!-- CONTACT / CTA -->
+<!-- ═══════════════════════════════════════════════════════
+     CONTACT
+════════════════════════════════════════════════════════ -->
 <section class="py-5" style="background:#f8fafc;">
   <div class="container">
-    <div class="text-center mb-4">
-      <span class="section-chip chip-blue">Get in Touch</span>
-      <h2 class="fw-900" style="font-size:1.7rem;color:#1e293b;">We'd Love to Hear From You</h2>
+    <div class="text-center mb-5">
+      <span class="section-chip chip-blue">
+        <i class="fas fa-paper-plane"></i> Get in Touch
+      </span>
+      <h2 class="fw-900" style="font-size:1.8rem;color:#1e293b;">Contact &amp; Support</h2>
       <p class="text-muted mx-auto" style="max-width:480px;">
-        Questions, corrections, or feedback? Reach out — we're students and developers building this for you.
+        Found an error in our data? Have a question? Want to partner with us?
+        We respond to every message — usually within 24 hours.
       </p>
     </div>
     <div class="row g-3 justify-content-center">
       <div class="col-sm-6 col-lg-3">
         <div class="contact-card">
-          <div class="contact-icon" style="background:#eff6ff;color:#1d4ed8;">
-            <i class="fas fa-envelope"></i>
-          </div>
-          <div class="fw-700 mb-1" style="color:#1e293b;">Email</div>
-          <p class="small text-muted mb-2">Send us a message any time</p>
-          <a href="mailto:{{ site.contact_email|default:'info@kuccpss.co.ke' }}" class="btn btn-sm btn-outline-primary">{{ site.contact_email|default:'info@kuccpss.co.ke' }}</a>
+          <div class="contact-icon" style="background:#eff6ff;color:#1d4ed8;"><i class="fas fa-envelope"></i></div>
+          <div class="fw-700 mb-1" style="color:#1e293b;">Email Us</div>
+          <p class="small text-muted mb-3">Questions, corrections, partnerships</p>
+          <a href="mailto:{{ site.contact_email|default:'info@careernext.co.ke' }}"
+             class="btn btn-sm btn-outline-primary rounded-pill px-4">
+            {{ site.contact_email|default:'info@careernext.co.ke' }}
+          </a>
         </div>
       </div>
       <div class="col-sm-6 col-lg-3">
         <div class="contact-card">
-          <div class="contact-icon" style="background:#ecfdf5;color:#059669;">
-            <i class="fab fa-whatsapp"></i>
-          </div>
+          <div class="contact-icon" style="background:#ecfdf5;color:#059669;"><i class="fab fa-whatsapp"></i></div>
           <div class="fw-700 mb-1" style="color:#1e293b;">WhatsApp</div>
-          <p class="small text-muted mb-2">Quick questions via WhatsApp</p>
-          <a href="https://wa.me/{{ site.whatsapp_number|default:'254700000000' }}" target="_blank" rel="noopener"
-             class="btn btn-sm btn-outline-success">Chat Now</a>
+          <p class="small text-muted mb-3">Quick questions via WhatsApp</p>
+          <a href="https://wa.me/{{ site.whatsapp_number|default:'254700000000' }}"
+             target="_blank" rel="noopener"
+             class="btn btn-sm btn-outline-success rounded-pill px-4">
+            Chat Now
+          </a>
         </div>
       </div>
       <div class="col-sm-6 col-lg-3">
         <div class="contact-card">
-          <div class="contact-icon" style="background:#fdf4ff;color:#a21caf;">
-            <i class="fab fa-instagram"></i>
-          </div>
+          <div class="contact-icon" style="background:#fdf4ff;color:#a21caf;"><i class="fab fa-instagram"></i></div>
           <div class="fw-700 mb-1" style="color:#1e293b;">Instagram</div>
-          <p class="small text-muted mb-2">Follow for updates & tips</p>
+          <p class="small text-muted mb-3">Tips, updates, placement news</p>
           <a href="https://instagram.com/kuccpss" target="_blank" rel="noopener"
-             class="btn btn-sm btn-outline-secondary">@kuccpss</a>
+             class="btn btn-sm btn-outline-secondary rounded-pill px-4">
+            @kuccpss
+          </a>
         </div>
       </div>
       <div class="col-sm-6 col-lg-3">
         <div class="contact-card">
-          <div class="contact-icon" style="background:#fff7ed;color:#c2410c;">
-            <i class="fab fa-x-twitter"></i>
-          </div>
+          <div class="contact-icon" style="background:#fff7ed;color:#c2410c;"><i class="fab fa-x-twitter"></i></div>
           <div class="fw-700 mb-1" style="color:#1e293b;">Twitter / X</div>
-          <p class="small text-muted mb-2">News, announcements & help</p>
+          <p class="small text-muted mb-3">Announcements and help threads</p>
           <a href="https://x.com/kuccpss" target="_blank" rel="noopener"
-             class="btn btn-sm btn-outline-secondary">@kuccpss</a>
+             class="btn btn-sm btn-outline-secondary rounded-pill px-4">
+            @kuccpss
+          </a>
         </div>
       </div>
     </div>
 
-    <!-- Bottom CTA -->
-    <div class="mt-5 text-center p-4 rounded-4"
-         style="background:linear-gradient(120deg,#1e3a8a 0%,#4f46e5 100%);color:#fff;">
-      <h3 class="fw-900 mb-2">Ready to find your course?</h3>
-      <p class="opacity-75 mb-3">Join thousands of students who use CareerNext to plan their future every year.</p>
+    <!-- CTA Banner -->
+    <div class="mt-5 rounded-4 p-5 text-center"
+         style="background:linear-gradient(135deg,#0f2460 0%,#1e3a8a 45%,#4f46e5 100%);color:#fff;">
+      <h3 class="fw-900 mb-2" style="font-size:1.6rem;">Ready to find your course?</h3>
+      <p class="mb-4" style="opacity:0.8;max-width:460px;margin-left:auto;margin-right:auto;">
+        Join students who use CareerNext every placement cycle to calculate their points,
+        explore options, and plan their future.
+      </p>
       <div class="d-flex gap-3 justify-content-center flex-wrap">
-        <a href="{% url 'clusterpoints:calculator' %}" class="btn btn-light fw-700 px-4">
-          <i class="fas fa-calculator me-2"></i>Calculate Points
+        <a href="{% url 'clusterpoints:calculator' %}"
+           class="btn btn-light fw-700 px-5 rounded-pill">
+          <i class="fas fa-calculator me-2"></i>Calculate My Points
         </a>
-        <a href="{% url 'accounts:register' %}" class="btn btn-outline-light fw-700 px-4">
+        <a href="{% url 'accounts:register' %}"
+           class="btn btn-outline-light fw-700 px-5 rounded-pill">
           <i class="fas fa-user-plus me-2"></i>Create Free Account
         </a>
       </div>
