@@ -85,7 +85,7 @@ class RegisterView(View):
                         f"If you did not create a CareerNext account, ignore this email.\n\n"
                         f"— The CareerNext Team"
                     ),
-                    from_email=None,
+                    from_email=django_settings.DEFAULT_FROM_EMAIL,
                     recipient_list=[user.email],
                     fail_silently=True,
                 )

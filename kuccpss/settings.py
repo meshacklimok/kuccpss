@@ -108,7 +108,7 @@ else:
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'CareerNext <noreply@careernext.co.ke>')
-ADMIN_EMAIL = os.environ.get('ADMIN_EMAIL', 'limomeshk@gmail.com')
+ADMIN_EMAIL = os.environ.get('ADMIN_EMAIL', 'support@careernext.co.ke')
 
 TIME_ZONE = 'Africa/Nairobi'
 
@@ -320,7 +320,7 @@ _vapid_priv_b64   = os.environ.get("VAPID_PRIVATE_KEY", "")
 if _vapid_priv_b64:
     _vapid_priv_b64 += "=" * (-len(_vapid_priv_b64) % 4)
 VAPID_PRIVATE_KEY = _b64.b64decode(_vapid_priv_b64).decode() if _vapid_priv_b64 else ""
-VAPID_MAILTO      = os.environ.get("VAPID_MAILTO", "info@careernext.co.ke")
+VAPID_MAILTO      = os.environ.get("VAPID_MAILTO", "support@careernext.co.ke")
 
 # Render / production database — overrides individual DB_* vars if set
 _DATABASE_URL = os.environ.get('DATABASE_URL')

@@ -88,7 +88,7 @@ FAQ_DATA = [
      "The 'Recommended For You' section on your dashboard shows real results only after you've run the Career Engine at least once. Visit the Career Guidance Engine, enter your grades and preferences, and click Proceed. Your dashboard will then display your personalised matches."),
 
     ("account", "How do I report an error in course data or cutoff points?",
-     "If you spot incorrect course information, outdated cutoff points, or a missing institution, please email us at info@careernext.co.ke with details. We update the database regularly and appreciate corrections from students and educators."),
+     "If you spot incorrect course information, outdated cutoff points, or a missing institution, please email us at hello@careernext.co.ke with details. We update the database regularly and appreciate corrections from students and educators."),
 ]
 
 
@@ -146,7 +146,7 @@ STORIES_DATA = [
 
 SETTINGS_DATA = [
     # Contact
-    ("contact_email",    "Contact Email",          "info@careernext.co.ke", "email",    "contact"),
+    ("contact_email",    "Contact Email",          "hello@careernext.co.ke", "email",    "contact"),
     ("whatsapp_number",  "WhatsApp Number",         "254700000000",          "phone",    "contact"),
     ("instagram_handle", "Instagram Handle",        "careernext_ke",         "text",     "social"),
     ("twitter_handle",   "Twitter / X Handle",      "careernext_ke",         "text",     "social"),
