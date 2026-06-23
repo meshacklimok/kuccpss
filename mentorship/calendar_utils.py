@@ -4,7 +4,7 @@ for mentorship session reminders.
 
 No external libraries needed — iCal format is plain text.
 """
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone as dt_tz
 from urllib.parse import quote
 
 from django.utils import timezone
@@ -16,7 +16,7 @@ def _slot_utc_datetimes(session):
     naive = datetime.combine(slot.date, slot.start_time)
     # Localise to Africa/Nairobi then convert to UTC
     local_dt = timezone.make_aware(naive)          # uses Django's TIME_ZONE setting
-    start_utc = timezone.localtime(local_dt, timezone=timezone.utc)
+    start_utc = timezone.localtime(local_dt, timezone=dt_tz.utc)
     end_utc = start_utc + timedelta(minutes=15)
     return start_utc, end_utc
 
@@ -63,7 +63,7 @@ def generate_ics(session):
     Compatible with Google Calendar, Outlook, and Apple Calendar.
     """
     start_utc, end_utc = _slot_utc_datetimes(session)
-    now_utc = timezone.now().astimezone(timezone.utc)
+    now_utc = timezone.now().astimezone(dt_tz.utc)
     mentor_name = session.mentor.display_name
     mentee_name = session.mentee_display
     uid = f"{session.token}@careernext.co.ke"

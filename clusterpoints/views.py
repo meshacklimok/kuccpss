@@ -173,7 +173,7 @@ def kcse_calculator_view(request):
                     r.cluster.number: float(r.cluster_points)
                     for r in results if r.cluster and r.cluster.number
                 }
-                predicted_groups = predict_all_for_student(cluster_scores, top_per_cluster=9999) if cluster_scores else []
+                predicted_groups = predict_all_for_student(cluster_scores, top_per_cluster=5) if cluster_scores else []
 
     # ── Load existing saved results on GET (e.g. after payment unlock) ──────────
     if request.method == 'GET' and request.user.is_authenticated and not results:
@@ -185,7 +185,7 @@ def kcse_calculator_view(request):
             if results:
                 _cs = {r.cluster.number: float(r.cluster_points) for r in results if r.cluster and r.cluster.number}
                 if _cs:
-                    predicted_groups = predict_all_for_student(_cs, top_per_cluster=9999)
+                    predicted_groups = predict_all_for_student(_cs, top_per_cluster=5)
 
     if request.method == "POST":
         if form.is_valid():
@@ -264,7 +264,7 @@ def kcse_calculator_view(request):
                 if r.cluster and r.cluster.number
             }
             if cluster_scores:
-                predicted_groups = predict_all_for_student(cluster_scores, top_per_cluster=9999)
+                predicted_groups = predict_all_for_student(cluster_scores, top_per_cluster=5)
 
         else:
             messages.error(request, "Please correct the errors below.")
