@@ -71,7 +71,7 @@
       "@type": "WebSite",
       "name": "CareerNext",
       "url": "https://careernext.co.ke",
-      "description": "Kenya's free KCSE cluster points calculator and KUCCPS course finder. Discover university, KMTC, TVET and TTC courses you qualify for.",
+      "description": "Kenya's open access KCSE cluster points calculator and KUCCPS course finder. Discover university, KMTC, TVET and TTC courses you qualify for.",
       "potentialAction": {
         "@type": "SearchAction",
         "target": {
@@ -501,6 +501,10 @@
                                 <i class="fas fa-book-open me-2" style="color:#7e22ce;"></i>How-To Guides
                             </a></li>
                             <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item fw-semibold" href="https://students.kuccps.net/login/" target="_blank" rel="noopener noreferrer">
+                                <i class="fas fa-external-link-alt me-2 text-primary"></i>Apply on KUCCPS Portal
+                            </a></li>
+                            <li><hr class="dropdown-divider"></li>
                             <li><a class="dropdown-item" href="{% url 'accounts:about' %}">
                                 <i class="fas fa-info-circle me-2 text-secondary"></i>About Us
                             </a></li>
@@ -614,8 +618,10 @@
             <div class="d-flex align-items-center gap-3">
                 {% if user.is_authenticated %}
                 <a href="{% url 'career:home' %}" style="color:white;font-weight:700;font-size:0.78rem;white-space:nowrap;text-decoration:underline;">Check My Eligibility →</a>
+                <a href="https://students.kuccps.net/login/" target="_blank" rel="noopener noreferrer" style="color:#fde68a;font-weight:700;font-size:0.78rem;white-space:nowrap;text-decoration:underline;">Apply on KUCCPS →</a>
                 {% else %}
-                <a href="{% url 'clusterpoints:calculator' %}" style="color:white;font-weight:700;font-size:0.78rem;white-space:nowrap;text-decoration:underline;">Calculate My Points Free →</a>
+                <a href="{% url 'clusterpoints:calculator' %}" style="color:white;font-weight:700;font-size:0.78rem;white-space:nowrap;text-decoration:underline;">Calculate My Points Now →</a>
+                <a href="https://students.kuccps.net/login/" target="_blank" rel="noopener noreferrer" style="color:#fde68a;font-weight:700;font-size:0.78rem;white-space:nowrap;text-decoration:underline;">Apply on KUCCPS →</a>
                 {% endif %}
                 <button onclick="dismissDeadlineBar()" style="background:none;border:none;color:rgba(255,255,255,0.7);font-size:1.1rem;padding:0;cursor:pointer;line-height:1;" aria-label="Dismiss">×</button>
             </div>
@@ -669,6 +675,7 @@
               <li><a href="{% url 'resources:kuccps_calendar' %}">KUCCPS Calendar</a></li>
               <li><a href="{% url 'career:quiz' %}">Career Quiz</a></li>
               <li><a href="{% url 'accounts:faq' %}">FAQ</a></li>
+              <li><a href="https://students.kuccps.net/login/" target="_blank" rel="noopener noreferrer">Apply at KUCCPS <i class="fas fa-external-link-alt" style="font-size:0.65rem;opacity:0.7;"></i></a></li>
             </ul>
           </div>
 
@@ -684,7 +691,7 @@
             </ul>
             {% else %}
             <ul class="footer-links">
-              <li><a href="{% url 'accounts:register' %}">Register Free</a></li>
+              <li><a href="{% url 'accounts:register' %}">Register Now</a></li>
               <li><a href="{% url 'accounts:login' %}">Login</a></li>
             </ul>
             {% endif %}
@@ -710,7 +717,7 @@
             <div class="footer-brand mb-2">CareerNext</div>
             <p class="small mb-3" style="opacity:0.6;line-height:1.5;">
               From KCSE to your dream career.<br>
-              Kenya's free guide to KUCCPS placement.
+              Kenya's guide to KUCCPS placement.
             </p>
             <div class="footer-socials">
               <a href="#" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
@@ -740,6 +747,7 @@
               <li><a href="{% url 'resources:kuccps_calendar' %}">KUCCPS Calendar</a></li>
               <li><a href="{% url 'career:quiz' %}">Career Quiz</a></li>
               <li><a href="{% url 'accounts:faq' %}">FAQ</a></li>
+              <li><a href="https://students.kuccps.net/login/" target="_blank" rel="noopener noreferrer">Apply at KUCCPS <i class="fas fa-external-link-alt" style="font-size:0.65rem;opacity:0.7;"></i></a></li>
             </ul>
           </div>
 
@@ -766,7 +774,7 @@
             {% else %}
             <div class="footer-auth-cta">
               <p class="small mb-2" style="opacity:0.7;">Track courses and build your shortlist.</p>
-              <a href="{% url 'accounts:register' %}" class="btn btn-gradient-success btn-sm me-1">Register Free</a>
+              <a href="{% url 'accounts:register' %}" class="btn btn-gradient-success btn-sm me-1">Register Now</a>
               <a href="{% url 'accounts:login' %}" class="btn btn-outline-light btn-sm">Login</a>
             </div>
             {% endif %}
@@ -780,8 +788,8 @@
         <p class="footer-disclaimer mb-2">
           <i class="fas fa-info-circle me-1" style="color:#60a5fa;"></i>
           CareerNext is independent and <strong>not</strong> affiliated with the official
-          <a href="https://kuccps.net" target="_blank" rel="noopener noreferrer">KUCCPS portal</a>.
-          Always verify placement decisions at kuccps.ac.ke.
+          <a href="https://students.kuccps.net/login/" target="_blank" rel="noopener noreferrer">KUCCPS student portal</a>.
+          Always submit your actual application at students.kuccps.net.
           <span class="footer-data-version">
             &nbsp;·&nbsp; Cutoff data: <strong style="color:#93c5fd;">{{ DATA_CYCLE }} cycle</strong>
             &nbsp;·&nbsp; Updated: {{ DATA_UPDATED }}

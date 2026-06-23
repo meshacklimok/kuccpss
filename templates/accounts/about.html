@@ -1,8 +1,8 @@
 {% extends "base.html" %}
-{% block title %}About CareerNext — Kenya's Free KUCCPS Career Guidance Platform{% endblock %}
+{% block title %}About CareerNext — Kenya's Open Access KUCCPS Career Guidance Platform{% endblock %}
 
 {% block meta %}
-<meta name="description" content="Learn about CareerNext — who we are, our mission, our data sources, and the team behind Kenya's most trusted free KUCCPS cluster points platform.">
+<meta name="description" content="Learn about CareerNext — who we are, our mission, our data sources, and the team behind Kenya's most trusted KUCCPS cluster points platform.">
 {% endblock %}
 
 {% block content %}
@@ -182,19 +182,19 @@
           <i class="fas fa-flag-checkered"></i> About CareerNext
         </span>
         <h1 class="mb-3">
-          Kenya's Free Platform for<br>
+          Kenya's Open Access Platform for<br>
           <span style="color:#a5b4fc;">KUCCPS Course Selection</span>
         </h1>
         <p class="lead mb-4">
           We help every KCSE graduate understand their cluster points, discover courses they qualify for,
-          and walk into the KUCCPS portal with a clear, confident plan — completely free.
+          and walk into the KUCCPS portal with a clear, confident plan.
         </p>
         <div class="d-flex flex-wrap gap-3">
           <a href="{% url 'clusterpoints:calculator' %}" class="btn btn-light fw-700 px-4 rounded-pill">
             <i class="fas fa-calculator me-2"></i>Try the Calculator
           </a>
           <a href="{% url 'accounts:register' %}" class="btn btn-outline-light fw-700 px-4 rounded-pill">
-            <i class="fas fa-user-plus me-2"></i>Join Free
+            <i class="fas fa-user-plus me-2"></i>Join Now
           </a>
         </div>
       </div>
@@ -210,7 +210,7 @@
           </div>
           <div class="stat-pill">
             <div class="sp-num">100%</div>
-            <div class="sp-lbl">Free Forever</div>
+            <div class="sp-lbl">Fully Accessible</div>
           </div>
           <div class="stat-pill">
             <div class="sp-num">KE</div>
@@ -232,7 +232,7 @@
         <div class="col-6 col-md-3 trust-item">
           <div class="trust-icon"><i class="fas fa-shield-alt"></i></div>
           <div class="t-num">Official</div>
-          <div class="t-lbl">KUCCPS Formula</div>
+          <div class="t-lbl">Student Resource</div>
         </div>
         <div class="col-6 col-md-3 trust-item">
           <div class="trust-icon"><i class="fas fa-database"></i></div>
@@ -281,7 +281,7 @@
         <div class="d-flex gap-3 align-items-center mt-4">
           <div class="d-flex align-items-center gap-2">
             <i class="fas fa-check-circle" style="color:#15803d;font-size:1.1rem;"></i>
-            <span class="fw-700 small" style="color:#1e293b;">Completely free</span>
+            <span class="fw-700 small" style="color:#1e293b;">Time saving</span>
           </div>
           <div class="d-flex align-items-center gap-2">
             <i class="fas fa-check-circle" style="color:#15803d;font-size:1.1rem;"></i>
@@ -298,9 +298,10 @@
           <div class="col-6">
             <div class="value-card">
               <div class="value-icon" style="background:#eff6ff;color:#1d4ed8;"><i class="fas fa-lock-open"></i></div>
-              <div class="fw-800 mb-1" style="color:#1e293b;">Free & Open</div>
-              <p class="small text-muted mb-0">No subscriptions. Every feature — calculator, course search, shortlist — is free for all Kenyan students.</p>
-            </div>
+              <div class="fw-800 mb-1" style="color:#1e293b;">Efficient</div>
+<p class="small text-muted mb-0">
+  Built for efficiency — CareerNext integrates the calculator, course search, and shortlist tools into a single seamless experience for Kenyan students.
+</p>            </div>
           </div>
           <div class="col-6">
             <div class="value-card">
@@ -352,23 +353,55 @@
           <div class="team-avatar" style="background:linear-gradient(135deg,#1e3a8a,#4f46e5);">
             <i class="fas fa-user"></i>
           </div>
-          <span class="team-role" style="background:#eff6ff;color:#1d4ed8;">Founder & Developer</span>
-          <h5 class="fw-800 mb-1" style="color:#1e293b;">limomeshk</h5>
-          <p class="small text-muted mb-3" style="line-height:1.6;">
-            Built CareerNext to give every Kenyan student the same advantage —
-            clear information and a reliable tool for KUCCPS placement.
-          </p>
+          <span class="team-role" style="background:#eff6ff;color:#1d4ed8;">Technical Lead</span>
+          <h5 class="fw-800 mb-1" style="color:#1e293b;">Meshack Limo</h5>
+  <p class="small text-muted mb-3" style="line-height:1.6;">
+  Built CareerNext to provide Kenyan students with a reliable, data-driven platform for KUCCPS placement.
+  Focused on system design, product development, operations and strategy, and ensuring accurate course matching.
+</p>
           <div class="team-socials d-flex gap-2 justify-content-center">
             <a href="mailto:{{ site.contact_email|default:'hello@careernext.co.ke' }}" title="Email">
               <i class="fas fa-envelope"></i>
+               <a href="https://wa.me/254748578190" target="_blank" rel="noopener" title="WhatsApp">
+        <i class="fab fa-whatsapp"></i>
+      </a>
             </a>
-            <a href="https://github.com/limomeshk" target="_blank" rel="noopener" title="GitHub">
+            <a href="https://github.com/meshacklimok" target="_blank" rel="noopener" title="GitHub">
               <i class="fab fa-github"></i>
             </a>
           </div>
         </div>
       </div>
+<div class="col-sm-6 col-lg-4">
+  <div class="team-card">
+    <div class="team-avatar" style="background:linear-gradient(135deg,#475569,#1e293b);">
+      <i class="fas fa-user-tie"></i>
+    </div>
 
+    <span class="team-role" style="background:#f1f5f9;color:#334155;">
+      Operations Lead
+    </span>
+
+    <h5 class="fw-800 mb-1" style="color:#1e293b;">
+      Francis Oduor
+    </h5>
+
+   <p class="small text-muted mb-3" style="line-height:1.6;">
+  Oversees platform operations and user experience flow, with insight into educational pathways, admissions processes, and career guidance.
+  Ensures students receive clear, structured, and accessible information throughout their decision-making journey.
+</p>
+
+    <div class="team-socials d-flex gap-2 justify-content-center">
+      <a href="mailto:{{ site.contact_email|default:'hello@careernext.co.ke' }}" title="Email">
+        <i class="fas fa-envelope"></i>
+      </a>
+
+      <a href="https://wa.me/254119166284" target="_blank" rel="noopener" title="WhatsApp">
+        <i class="fab fa-whatsapp"></i>
+      </a>
+    </div>
+  </div>
+</div>
       <!-- Open-source contributors card -->
       <div class="col-sm-6 col-lg-4">
         <div class="team-card" style="background:linear-gradient(145deg,#f8fafc,#eff6ff);">
@@ -589,7 +622,7 @@
             <div>
               <div class="fw-700" style="color:#1e293b;">CareerNext (this site)</div>
               <div class="small text-muted" style="line-height:1.6;">
-                A free, <em>independent</em> preparation platform that helps you calculate your points,
+                A fully accessible, <em>independent</em> preparation platform that helps you calculate your points,
                 find qualifying courses, and plan your application. We are not affiliated with
                 the government or KUCCPS.
               </div>
@@ -622,7 +655,7 @@
               </div>
             </div>
             {% empty %}
-            <div class="col-6"><div class="d-flex gap-2"><i class="fas fa-check-circle mt-1 flex-shrink-0" style="color:#86efac;"></i><span class="small">Cluster points calculator (official formula)</span></div></div>
+            <div class="col-6"><div class="d-flex gap-2"><i class="fas fa-check-circle mt-1 flex-shrink-0" style="color:#86efac;"></i><span class="small">Cluster points calculator </span></div></div>
             <div class="col-6"><div class="d-flex gap-2"><i class="fas fa-check-circle mt-1 flex-shrink-0" style="color:#86efac;"></i><span class="small">All 20 KUCCPS clusters explained</span></div></div>
             <div class="col-6"><div class="d-flex gap-2"><i class="fas fa-check-circle mt-1 flex-shrink-0" style="color:#86efac;"></i><span class="small">University & KMTC course database</span></div></div>
             <div class="col-6"><div class="d-flex gap-2"><i class="fas fa-check-circle mt-1 flex-shrink-0" style="color:#86efac;"></i><span class="small">Eligible courses based on your grades</span></div></div>
@@ -672,14 +705,14 @@
           <div class="contact-icon" style="background:#ecfdf5;color:#059669;"><i class="fab fa-whatsapp"></i></div>
           <div class="fw-700 mb-1" style="color:#1e293b;">WhatsApp</div>
           <p class="small text-muted mb-3">Quick questions via WhatsApp</p>
-          <a href="https://wa.me/{{ site.whatsapp_number|default:'254700000000' }}"
+          <a href="https://wa.me/{{ site.whatsapp_number|default:'254768326532' }}"
              target="_blank" rel="noopener"
              class="btn btn-sm btn-outline-success rounded-pill px-4">
             Chat Now
           </a>
         </div>
       </div>
-      <div class="col-sm-6 col-lg-3">
+      {% comment %} <div class="col-sm-6 col-lg-3">
         <div class="contact-card">
           <div class="contact-icon" style="background:#fdf4ff;color:#a21caf;"><i class="fab fa-instagram"></i></div>
           <div class="fw-700 mb-1" style="color:#1e293b;">Instagram</div>
@@ -701,7 +734,7 @@
           </a>
         </div>
       </div>
-    </div>
+    </div> {% endcomment %}
 
     <!-- CTA Banner -->
     <div class="mt-5 rounded-4 p-5 text-center"
@@ -718,7 +751,7 @@
         </a>
         <a href="{% url 'accounts:register' %}"
            class="btn btn-outline-light fw-700 px-5 rounded-pill">
-          <i class="fas fa-user-plus me-2"></i>Create Free Account
+          <i class="fas fa-user-plus me-2"></i>Create Account
         </a>
       </div>
     </div>

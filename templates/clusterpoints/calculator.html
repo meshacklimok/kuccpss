@@ -1054,11 +1054,11 @@ body.dark .lce-btn-calc:disabled { background: var(--surface-2); color: var(--te
 {% if is_guest and results %}
 <div class="save-bar" id="saveBar" role="complementary" aria-label="Save your results">
     <div class="save-bar-text">
-        <i class="bi bi-floppy-fill me-1"></i> Your results are ready — save them free.
+        <i class="bi bi-floppy-fill me-1"></i> Your results are ready — save them now.
         <span class="subtle d-none d-sm-inline"> Your grades are stored; registration takes 30 seconds.</span>
     </div>
     <a href="{% url 'accounts:register' %}" class="save-bar-reg"
-       data-ph-event="guest_save_bar_register">Register Free</a>
+       data-ph-event="guest_save_bar_register">Register Now</a>
     <a href="{% url 'accounts:login' %}" class="save-bar-login"
        data-ph-event="guest_save_bar_login">Login</a>
     <button class="save-bar-close" id="saveBarClose" aria-label="Dismiss"

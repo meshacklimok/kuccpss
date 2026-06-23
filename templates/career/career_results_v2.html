@@ -410,12 +410,12 @@
   <div class="container d-flex align-items-center justify-content-between flex-wrap gap-2">
     <div style="font-size:0.84rem;">
       <i class="fas fa-lock me-1" style="color:#1d4ed8;"></i>
-      <strong style="color:#1e3a8a;">Free account unlocks:</strong>
+      <strong style="color:#1e3a8a;">Your account unlocks:</strong>
       <span style="color:#3b82f6;"> save courses · share results · AI career chat · personal dashboard</span>
     </div>
     <div class="d-flex gap-2 flex-shrink-0">
       <a href="{% url 'accounts:register' %}?next=/career/results/" class="btn btn-primary btn-sm fw-bold px-3">
-        <i class="fas fa-user-plus me-1"></i>Create Free Account
+        <i class="fas fa-user-plus me-1"></i>Create Account
       </a>
       <a href="{% url 'accounts:login' %}?next=/career/results/" class="btn btn-outline-primary btn-sm px-3">Sign In</a>
     </div>
@@ -877,7 +877,7 @@
       <div class="col-md-7">
         <div style="font-size:1.6rem;margin-bottom:0.3rem;">👥</div>
         <h5 class="fw-bold mb-1">Know someone else sitting KCSE this year?</h5>
-        <p class="text-muted small mb-0">Share CareerNext with your classmates — it's free, instant, and shows every university and TVET course they qualify for. Most students don't know about it.</p>
+        <p class="text-muted small mb-0">Share CareerNext with your classmates — instant, and shows every university and TVET course they qualify for. Most students don't know about it.</p>
       </div>
       <div class="col-md-5">
         <div class="d-flex gap-2 flex-wrap justify-content-md-end">
@@ -1220,7 +1220,7 @@ document.body.insertAdjacentHTML('beforeend', `
 {% if guest %}
 <!-- Guest: AI nudge button linking to register -->
 <a href="{% url 'accounts:register' %}?next=/career/results/"
-   title="Create a free account to chat with the AI Career Advisor"
+   title="Create an account to chat with the AI Career Advisor"
    style="position:fixed;bottom:28px;right:28px;z-index:1052;
           width:56px;height:56px;border-radius:50%;
           background:linear-gradient(135deg,#4f46e5,#7c3aed);
