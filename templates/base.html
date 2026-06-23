@@ -91,7 +91,7 @@
         "contactPoint": {
           "@type": "ContactPoint",
           "contactType": "customer support",
-          "email": "info@careernext.co.ke",
+          "email": "support@careernext.co.ke",
           "areaServed": "KE",
           "availableLanguage": ["English", "Swahili"]
         },
@@ -858,9 +858,9 @@
             <i class="fas fa-tachometer-alt" aria-hidden="true"></i>Dashboard
         </a>
         {% else %}
-        <a href="{% url 'institutions:institution_types_list' %}" class="{% if '/institutions/' in p %}active{% endif %}"
-           aria-label="Institutions" {% if '/institutions/' in p %}aria-current="page"{% endif %}>
-            <i class="fas fa-university" aria-hidden="true"></i>More
+        <a href="{% url 'accounts:login' %}" class="{% if '/accounts/login' in p %}active{% endif %}"
+           aria-label="Dashboard" {% if '/accounts/login' in p %}aria-current="page"{% endif %}>
+            <i class="fas fa-tachometer-alt" aria-hidden="true"></i>Dashboard
         </a>
         {% endif %}
     </nav>
