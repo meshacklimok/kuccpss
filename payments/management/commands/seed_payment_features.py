@@ -26,6 +26,12 @@ FEATURES = [
         "price": 149,
         "is_enabled": False,
     },
+    {
+        "feature": "ai_chat_access",
+        "label": "AI Chat Top-Up (200 messages)",
+        "price": 50,
+        "is_enabled": True,
+    },
 ]
 
 

@@ -5,6 +5,9 @@ pip install -r requirements.txt
 python manage.py collectstatic --no-input
 python manage.py migrate
 
+# Seed payment feature prices (idempotent — skips existing rows)
+python manage.py seed_payment_features
+
 # Load initial data (clusters, institutions, courses) — skip on error if already loaded
 python manage.py loaddata data.json \
   --exclude=admin \

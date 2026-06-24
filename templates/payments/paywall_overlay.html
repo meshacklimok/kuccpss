@@ -307,6 +307,13 @@
             if(d.success){
                 currentPaymentId = d.payment_id;
                 pwStartPolling(d.payment_id);
+            } else if(res.status === 400 && d.message && d.message.indexOf('already unlocked') !== -1){
+                // Feature is already paid — just show the results
+                location.reload();
+            } else if(res.status === 409 && d.payment_id){
+                // A recent payment is already in progress — resume polling it
+                currentPaymentId = d.payment_id;
+                pwStartPolling(d.payment_id);
             } else {
                 err.textContent = d.message || 'Something went wrong. Please try again.';
                 err.style.display = 'block';

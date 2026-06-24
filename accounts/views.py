@@ -6,7 +6,7 @@ from django.contrib import messages
 from django.contrib.auth import login, logout, authenticate, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
 from django.core.cache import cache
-from django.core.mail import send_mail
+from kuccpss.email_utils import send_branded_email
 from django.utils import timezone
 from django.views import View
 from django.views.decorators.http import require_http_methods
@@ -74,20 +74,21 @@ class RegisterView(View):
             EmailVerificationToken.objects.create(user=user, token=token)
             verify_url = request.build_absolute_uri(f"/accounts/verify-email/{token}/")
             try:
-                send_mail(
-                    subject="Welcome to CareerNext!",
-                    message=(
-                        f"Hi {user.full_name or user.email},\n\n"
-                        f"Your account is ready. You're already logged in!\n\n"
-                        f"To keep your account secure, please confirm your email address:\n\n"
-                        f"{verify_url}\n\n"
-                        f"This link expires in 24 hours.\n\n"
-                        f"If you did not create a CareerNext account, ignore this email.\n\n"
-                        f"— The CareerNext Team"
-                    ),
-                    from_email=django_settings.DEFAULT_FROM_EMAIL,
-                    recipient_list=[user.email],
-                    fail_silently=True,
+                send_branded_email(
+                    to=user.email,
+                    subject="Welcome to CareerNext — Verify Your Email",
+                    heading="Welcome to CareerNext!",
+                    banner_label="✓ Account Created",
+                    banner_color="green",
+                    greeting=f"Hi {user.full_name or user.email},",
+                    body_lines=[
+                        "Your account is ready and you're already logged in!",
+                        "To keep your account secure, please confirm your email address by clicking the button below. This link expires in 24 hours.",
+                    ],
+                    cta_url=verify_url,
+                    cta_label="Verify My Email →",
+                    note="If you didn't create a CareerNext account, you can safely ignore this email.",
+                    user_email=user.email,
                 )
             except Exception:
                 pass
@@ -868,16 +869,21 @@ def request_affiliate_payout(request):
             status='paid_out', paid_out_at=timezone.now()
         )
 
-        send_mail(
-            subject="CareerNext — Your affiliate payout has been sent!",
-            message=(
-                f"Hi {request.user.full_name or 'there'},\n\n"
-                f"Your affiliate earnings of KES {amount} have been sent to {mpesa} via M-Pesa.\n\n"
-                "Thank you for referring students to CareerNext!\n\nCareerNext Team"
-            ),
-            from_email=django_settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[request.user.email],
-            fail_silently=True,
+        send_branded_email(
+            to=request.user.email,
+            subject="CareerNext — Your Affiliate Payout Has Been Sent",
+            heading="Payout Sent!",
+            banner_label="✓ M-Pesa Sent",
+            banner_color="green",
+            greeting=f"Hi {request.user.full_name or 'there'},",
+            body_lines=["Your affiliate earnings have been sent to your M-Pesa number. Thank you for referring students to CareerNext!"],
+            table_rows=[
+                {"label": "Amount", "value": f"KES {amount}", "highlight": True},
+                {"label": "M-Pesa Number", "value": mpesa},
+            ],
+            cta_url="https://careernext.co.ke/accounts/affiliate-dashboard/",
+            cta_label="View Affiliate Dashboard →",
+            user_email=request.user.email,
         )
         messages.success(request, f"KES {amount} has been sent to {mpesa} via M-Pesa!")
 

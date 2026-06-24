@@ -9,9 +9,9 @@ Run via cron / Render scheduled job:
 from datetime import timedelta
 
 from django.conf import settings
-from django.core.mail import send_mail
 from django.core.management.base import BaseCommand
 from django.utils import timezone
+from kuccpss.email_utils import send_branded_email
 
 
 class Command(BaseCommand):
@@ -46,34 +46,46 @@ class Command(BaseCommand):
             mentee_name = session.mentee_display
 
             # Mentee reminder
-            send_mail(
-                subject=f"⏰ Reminder: Your session with {mentor_name} is in ~1 hour",
-                message=(
-                    f"Hi {mentee_name},\n\n"
-                    f"Your 15-minute mentorship call with {mentor_name} starts at {slot_str}.\n\n"
-                    f"WhatsApp {mentor_name} now to confirm: {session.mentor.whatsapp}\n\n"
-                    f"Your topic: \"{session.mentee_question}\"\n\n"
-                    f"CareerNext Team"
-                ),
-                from_email=settings.DEFAULT_FROM_EMAIL,
-                recipient_list=[session.mentee.email],
-                fail_silently=True,
+            send_branded_email(
+                to=session.mentee.email,
+                subject=f"Reminder: Your session with {mentor_name} starts in ~1 hour",
+                heading="Your Session Starts Soon!",
+                banner_label="⏰ 1-Hour Reminder",
+                banner_color="amber",
+                greeting=f"Hi {mentee_name},",
+                body_lines=[
+                    f"Your 15-minute mentorship call with {mentor_name} is starting in about 1 hour.",
+                    f"WhatsApp {mentor_name} now to confirm how you'll connect: {session.mentor.whatsapp}",
+                ],
+                table_rows=[
+                    {"label": "Mentor",    "value": mentor_name},
+                    {"label": "Starts at", "value": slot_str},
+                    {"label": "Topic",     "value": f'"{session.mentee_question}"'},
+                ],
+                note="Be on time — it's only 15 minutes. Good luck!",
+                user_email=session.mentee.email,
             )
             # Mentor reminder
-            send_mail(
-                subject=f"⏰ Reminder: Session with {mentee_name} in ~1 hour",
-                message=(
-                    f"Hi {mentor_name},\n\n"
-                    f"Your mentorship session with {mentee_name} starts at {slot_str}.\n\n"
-                    f"They should WhatsApp you shortly to confirm.\n\n"
-                    f"Their topic: \"{session.mentee_question}\"\n\n"
-                    f"After the session, mark it complete:\n"
-                    f"https://www.careernext.co.ke/mentorship/dashboard/\n\n"
-                    f"CareerNext Team"
-                ),
-                from_email=settings.DEFAULT_FROM_EMAIL,
-                recipient_list=[session.mentor.user.email],
-                fail_silently=True,
+            send_branded_email(
+                to=session.mentor.user.email,
+                subject=f"Reminder: Session with {mentee_name} starts in ~1 hour",
+                heading="Session Starting Soon!",
+                banner_label="⏰ 1-Hour Reminder",
+                banner_color="amber",
+                greeting=f"Hi {mentor_name},",
+                body_lines=[
+                    f"Your mentorship session with {mentee_name} starts in about 1 hour.",
+                    "They should WhatsApp you shortly to confirm how you'll connect.",
+                ],
+                table_rows=[
+                    {"label": "Student",   "value": mentee_name},
+                    {"label": "Starts at", "value": slot_str},
+                    {"label": "Topic",     "value": f'"{session.mentee_question}"'},
+                ],
+                cta_url="https://www.careernext.co.ke/mentorship/dashboard/",
+                cta_label="Go to Dashboard →",
+                note="After the session, remember to mark it as complete from your dashboard.",
+                user_email=session.mentor.user.email,
             )
             sent += 1
 
