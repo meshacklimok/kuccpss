@@ -24,30 +24,35 @@ python manage.py shell              # Django shell
 ## App Layout
 | App | Purpose |
 |---|---|
-| `accounts` | Custom User model, email/Google auth, session tracking |
+| `accounts` | Custom User model, email/Google auth, affiliate system, shortlist |
 | `clusters` | KCSE subject clusters and subject groups |
 | `clusterpoints` | KCSE grade entry, cluster points calculator, PDF export |
-| `institutions` | Universities, KMTCs, TVETs, TTCs directory |
-| `courses` | Courses linked to institutions, clusters, cutoff points |
-| `career` | Career guidance engine, course matching, AI recommendations |
+| `institutions` | Universities, KMTCs, TVETs, TTCs directory; promotions/spotlights |
+| `courses` | Courses linked to institutions, clusters, cutoff points; reviews |
+| `career` | Career guidance engine, AI chat (CareerNext AI), career profiles, quiz |
+| `mentorship` | Mentor directory, booking, session management, withdrawals |
+| `payments` | M-Pesa STK push, feature gating, exemptions |
+| `analytics` | Search/view/download logs, event tracking, career engine logs |
+| `predictor` | Cutoff trend prediction |
+| `resources` | Articles, PDFs, FAQs, success stories, site settings |
 
 ## Critical Rules — Read Before Changing Anything
 
 ### 1. Cluster Points Formula
-**Never change** the weighted formula in [clusterpoints/services.py](clusterpoints/services.py) and [clusterpoints/models.py](clusterpoints/models.py):
+**Never change** the weighted formula in [clusterpoints/services.py](clusterpoints/services.py):
 ```
-cluster_points = 48 × sqrt( (core_subjects/48) × (aggregate_total/84) )
+cluster_points = 48 × sqrt( (core_midpoint_marks / 400) × (aggregate_total / 84) )
 ```
-This mirrors the official KUCCPS formula. It is not a custom implementation.
+Where `core_midpoint_marks` is the sum of midpoint raw marks for the best 4 cluster subjects, using `GRADE_MIDPOINT_MARKS` (A=90.2, A-=77.5, B+=71.0, B=66.0, B-=60.0, C+=56.0, C=50.0, C-=46.0, D+=40.0, D=36.0, D-=31.0, E=14.0), capped at 48. This reflects the KUCCPS midpoint-marks approach — do not revert to the old `(core_pts/48)` fraction formula.
 
 ### 2. Aggregate Total Calculation
-The KCSE aggregate (max 84) is always: Mathematics + best(English, Kiswahili) + next 5 best subjects. Do not change the selection order.
+The KCSE aggregate (max 84) is always: Mathematics + best(English, Kiswahili) + next 5 best subjects. Do not change the selection order. The non-best language returns to the subject pool (not discarded) before picking the top 5.
 
 ### 3. Custom User Model
 Auth uses `accounts.User` (UUID primary key, email-based login). Never switch to Django's default `auth.User`. All foreign keys to users must use `settings.AUTH_USER_MODEL`.
 
-### 4. OpenAI Integration
-`OPENAI_API_KEY` in settings is a placeholder. `career/engine.py` is currently a stub. See [API_NOTES.md](API_NOTES.md) before touching the career engine.
+### 4. Career Engine
+`career/engine.py` now dispatches to real pathway functions (`match_degree_courses`, etc.) — it is no longer a stub. AI chat (CareerNext AI) uses `OPENAI_API_KEY` or `ANTHROPIC_API_KEY`. See [API_NOTES.md](API_NOTES.md) before touching the engine.
 
 ### 5. Two Separate Course Systems
 - `career/models.py` — older course models used by the career engine (Course, TVETCourse, KMTCourse, TTCCourse)

@@ -143,7 +143,7 @@ def kcse_input(request):
             return redirect("career:kcse_input")
 
         try:
-            matches, ai = career_guidance_engine(kcse_grades, pathway, tvet_category)
+            matches, ai = career_guidance_engine(kcse_grades, pathway, tvet_category, user=request.user if request.user.is_authenticated else None)
         except ValueError as e:
             messages.error(request, str(e))
             return redirect("career:kcse_input")
@@ -2597,9 +2597,27 @@ def pathway_input(request, pathway):
 # F. LOADING PAGE — animated processing stages
 # ─────────────────────────────────────────────
 def loading_page(request, pathway):
+    pathway_label = request.session.get('career_pathway', '')
+    if not pathway_label:
+        messages.info(request, "Your session expired. Please start the Career Engine again.")
+        return redirect('career:home')
+
+    pathway_lower = pathway.lower()
+    if pathway_lower == 'degree':
+        _has_score = bool(
+            request.session.get('career_cluster_pts_single') or
+            request.session.get('career_cluster_points') or
+            request.session.get('career_precomputed')
+        )
+    else:
+        _has_score = bool(request.session.get('career_mean_grade'))
+    if not _has_score:
+        messages.info(request, "Your session expired. Please re-enter your grades.")
+        return redirect('career:home')
+
     results_url = reverse('career:career_results')
     return render(request, 'career/loading.html', {
-        'pathway': pathway.lower(),
+        'pathway': pathway_lower,
         'results_url': results_url,
     })
 

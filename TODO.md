@@ -2,7 +2,7 @@
 
 Format: `[ ]` not done | `[x]` done | `[~]` in progress | `[-]` dropped/deferred
 
-Last updated: 2026-06-22
+Last updated: 2026-06-25
 
 ---
 
@@ -84,7 +84,7 @@ Copy every variable from your Render dashboard into Railway → Variables:
 - [x] Set `ALLOWED_HOSTS` — configured for localhost + `.onrender.com` + `careernext.co.ke`; set `DJANGO_DEBUG=False` in production env
 - [x] Rotate `SECRET_KEY` — now loaded from `SECRET_KEY` env var; raises `RuntimeError` if insecure default used in production
 - [x] Remove hardcoded `OPENAI_API_KEY` placeholder from settings — already reads from `OPENAI_API_KEY` env var
-- [ ] Session expiry graceful handling — if career engine session expires mid-flow user sees a blank results page; needs a redirect to re-enter grades with a friendly message
+- [x] Session expiry graceful handling — `career_results` guards (pathway + score check) redirect to `career:home` with flash message; `loading_page` now also short-circuits immediately instead of running 6s animation before redirecting
 - [x] Set `MEDIA_ROOT` and `MEDIA_URL` in settings so uploaded logos/PDFs are served
 - [x] Fix `TIME_ZONE` double-definition — consistently `Africa/Nairobi`
 - [x] Fix Unicode en-dash garbled characters in cluster descriptions
@@ -106,18 +106,20 @@ Copy every variable from your Render dashboard into Railway → Variables:
 - [x] `degree_upload` redirect — cluster points docs → `loading_page` directly; KCSE slips → `degree_calculate` for review/correction
 - [ ] `degree_manual` — limit cluster list to the ~20 clusters that have actual degree `CourseOffering` records (shows all 61 now)
 - [ ] `degree_paste` — paste view + URL + template not yet built
+- [x] Switch cluster points to midpoint-marks formula — `GRADE_MIDPOINT_MARKS` dict in services.py; shared `_weighted_cp()` helper used by both calculators
+- [x] Career engine dispatch — `career/engine.py` now calls real pathway functions (`match_degree_courses`, etc.); no longer a stub
 - [x] **Document Scanner (OCR)** — supports JPG/PNG/PDF; dual-mode prompt detects KCSE grade slips vs KUCCPS cluster points docs; subject alias resolution; JSON extraction with code-fence stripping and regex fallback
 
 ---
 
 ## P1 — Core Features (MVP)
 
-- [ ] Wire up real OpenAI call in `career/engine.py` (see `API_NOTES.md`) — stub currently
+- [x] Wire up real career engine dispatch — `career/engine.py` now dispatches to real pathway functions; AI chat (CareerNext AI) wired separately
 - [x] M-Pesa / payment integration — IntaSend STK push wired in payments/services.py; feature gate active in career_results view
 - [x] IntaSend webhook handler — POST /payments/webhook/mpesa/ verifies HMAC, creates Transaction, marks Payment completed/failed
 - [x] Payment success UX — overlay reloads page after confirmation showing full unlocked results
 - [ ] Go live: set INTASEND_SECRET_KEY + INTASEND_PUBLISHABLE_KEY env vars; register webhook URL in IntaSend dashboard; run: python manage.py seed_payment_features
-- [ ] User-scoped results — `StudentCourseMatch` records currently save globally, not per logged-in user
+- [x] User-scoped results — StudentCourseMatch + AIRecommendation now have FK to User (migration 0018 applied)
 - [ ] Build full-results PDF export (all clusters on one page; current PDF is per-cluster only)
 - [ ] Add KCSE result history page — let users compare multiple past calculations
 - [ ] HELB loan eligibility tagging — mark government-sponsored course types as HELB-eligible; link to HELB portal; major decision factor for families
@@ -141,7 +143,15 @@ Copy every variable from your Render dashboard into Railway → Variables:
 - [ ] Populate `CareerProfile` data — models exist; no real Kenyan career data loaded
 - [ ] Course offering count on cluster result cards — "X courses available in this cluster" so students know which clusters open more doors
 - [x] Search autocomplete — live course/institution suggestions as the user types; client-side filter against existing `?q=` endpoint, no new view needed
-- [ ] Recently viewed courses — track last 5 course detail visits per user; show on dashboard quick-access strip; needs `ViewLog` model
+- [x] Recently viewed courses — ViewLog model exists in analytics; most-viewed courses shown in dashboard Trending Now section
+- [x] Mentorship full flow — directory, booking, M-Pesa payment, rating, mentor dashboard, withdrawals all built
+- [x] Affiliate system — AffiliateProfile, AffiliateCommission, AffiliateWithdrawalRequest models + dashboard + commission on webhook
+- [x] CareerNext AI chat — AIChatCredit model, paywall modal, STK push in-chat, CareerConfig admin controls, rate limiting, knowledge base
+- [x] Cloudinary media storage — activated in production via CLOUDINARY_URL env var; falls back to local in dev
+- [x] Course spotlight — CourseSpotlight model + admin; shown on /courses/spotlight-trends/
+- [x] Institution promotion — InstitutionPromotion model + admin for featured institutions
+- [x] Analytics models — SearchLog, ViewLog, DownloadLog, EventLog, CareerEngineLog all in place
+- [ ] Recently viewed courses (per-user strip) — aggregate ViewLog per user; show last 5 on dashboard quick-access strip
 - [ ] Institution accreditation badge — tag institutions as CUE-accredited / TVETA-registered / MoE-approved; display as a small badge on cards and detail pages
 - [ ] KUCCPS fee structure data — add government tuition fee tier per course type (Govt-sponsored vs Self-Sponsored slot cost); shown on course detail page
 - [x] Admin UI for suspending/unsuspending users
