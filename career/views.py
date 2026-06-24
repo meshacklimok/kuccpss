@@ -86,7 +86,7 @@ def home(request):
                       )
                   ))
             for c in qs:
-                off = c._first_offerings[0] if c._first_offerings else None
+                off = c._first_offerings[0] if c._first_offerings else None  # type: ignore[attr-defined]
                 trending_courses.append({
                     'name': c.name,
                     'course_type': c.course_type.name if c.course_type else '',
@@ -587,7 +587,7 @@ def quiz_view(request):
             option_id = request.POST.get(f"q_{question.pk}")
             if option_id:
                 try:
-                    option = question.options.get(pk=option_id)
+                    option = question.options.get(pk=option_id)  # type: ignore[attr-defined]
                     QuizAnswer.objects.create(
                         submission=submission, question=question, option=option
                     )
@@ -644,7 +644,7 @@ def _generate_quiz_ai_summary(tag_scores: dict, top_career_names: list) -> str:
             max_tokens=120,
             temperature=0.7,
         )
-        return resp.choices[0].message.content.strip()
+        return (resp.choices[0].message.content or "").strip()
     except Exception as _e:
         import logging as _lg
         _lg.getLogger(__name__).error("AI summary error: %s", _e)
@@ -866,7 +866,7 @@ def ajax_ai_insight(request):
             max_tokens=250,
             temperature=0.5,
         )
-        text = resp.choices[0].message.content.strip()
+        text = (resp.choices[0].message.content or "").strip()
         return JsonResponse({"insight": text})
 
     except Exception as e:
@@ -1353,11 +1353,11 @@ def ajax_ai_chat(request):
         client = OpenAI(api_key=api_key)
         resp = client.chat.completions.create(
             model='gpt-4o-mini',
-            messages=messages,
+            messages=messages,  # type: ignore[arg-type]
             max_tokens=400,
             temperature=0.4,
         )
-        reply = resp.choices[0].message.content.strip()
+        reply = (resp.choices[0].message.content or "").strip()
         return JsonResponse({"reply": reply, "kb_used": len(kb_entries)})
 
     except Exception as e:
@@ -1892,7 +1892,7 @@ def degree_calculate(request):
     elif existing_sub and existing_sub.status == CareerSubmission.STATUS_PENDING:
         # Pre-fill from pending saved grades so user can review/edit
         subjects_qs = Subject.objects.all()
-        name_to_id = {s.name: s.id for s in subjects_qs}
+        name_to_id = {s.name: s.id for s in subjects_qs}  # type: ignore[attr-defined]
         initial = {
             f'subject_{name_to_id[name]}': pts
             for name, pts in existing_sub.grades_json.items()
@@ -1911,8 +1911,8 @@ def degree_calculate(request):
 
         # Build name → points dict (keep subjects_map for DB persistence below)
         subjects_qs = Subject.objects.filter(id__in=points_by_id.keys())
-        subjects_map = {s.id: s for s in subjects_qs}
-        pts_by_name = {s.name: points_by_id[s.id] for s in subjects_qs}
+        subjects_map = {s.id: s for s in subjects_qs}  # type: ignore[attr-defined]
+        pts_by_name = {s.name: points_by_id[s.id] for s in subjects_qs}  # type: ignore[attr-defined]
 
         # Persist for subject-requirement filtering in results
         request.session['career_subject_grades'] = {k.lower(): v for k, v in pts_by_name.items()}
@@ -2013,7 +2013,7 @@ def degree_calculate(request):
 
     compulsory_fields, groups_map = [], {g: [] for g, _ in _GC if g != 'I'}
     for subj in Subject.objects.all().order_by('group', 'name'):
-        entry = (subj, form[f'subject_{subj.id}'], _ICONS.get(subj.name, 'bi-journal'))
+        entry = (subj, form[f'subject_{subj.id}'], _ICONS.get(subj.name, 'bi-journal'))  # type: ignore[attr-defined]
         if subj.name in _COMP:
             compulsory_fields.append(entry)
         elif subj.group in groups_map:
@@ -2233,7 +2233,7 @@ Rules:
                 max_tokens=600,
             )
 
-            raw = response.choices[0].message.content.strip()
+            raw = (response.choices[0].message.content or "").strip()
             log.info('OCR cluster points raw response: %s', raw[:400])
             extracted = _extract_json_from_text(raw)
 
@@ -2493,7 +2493,7 @@ def pathway_input(request, pathway):
                 from clusters.models import Subject
                 points_by_id = form.get_points_dict()
                 subjects = Subject.objects.filter(id__in=points_by_id.keys())
-                pts_by_name = {s.name: points_by_id[s.id] for s in subjects}
+                pts_by_name = {s.name: points_by_id[s.id] for s in subjects}  # type: ignore[attr-defined]
 
                 working = pts_by_name.copy()
                 agg = []
@@ -2528,7 +2528,7 @@ def pathway_input(request, pathway):
             from clusters.models import Subject as _EditSubj
             stored = request.session.get('career_subject_grades', {})
             if stored:
-                name_to_id = {s.name.lower(): s.id for s in _EditSubj.objects.all()}
+                name_to_id = {s.name.lower(): s.id for s in _EditSubj.objects.all()}  # type: ignore[attr-defined]
                 initial = {
                     f'subject_{name_to_id[name]}': pts
                     for name, pts in stored.items()
@@ -2571,7 +2571,7 @@ def pathway_input(request, pathway):
         }
         _gmap = {g: [] for g, _ in _GC2 if g != 'I'}
         for _s in _Subj2.objects.all().order_by('group', 'name'):
-            _e = (_s, form[f'subject_{_s.id}'], _ICONS2.get(_s.name, 'bi-journal'))
+            _e = (_s, form[f'subject_{_s.id}'], _ICONS2.get(_s.name, 'bi-journal'))  # type: ignore[attr-defined]
             if _s.name in _COMP2:
                 compulsory_fields.append(_e)
             elif _s.group in _gmap:
@@ -3242,7 +3242,7 @@ def career_results_pdf_quick(request):
     response = HttpResponse(content_type="application/pdf")
     response["Content-Disposition"] = 'attachment; filename="careernext_career_matches.pdf"'
 
-    c = canvas.Canvas(response, pagesize=landscape(A4))
+    c = canvas.Canvas(response, pagesize=landscape(A4))  # type: ignore[arg-type]
     W, H = landscape(A4)
 
     NAVY  = colors.HexColor("#1e3a8a")
@@ -3387,7 +3387,7 @@ def career_results_pdf_quick(request):
             c.drawString(COL['tier'], y, m['tier'][:14])
             c.setFillColor(CHANCE_COLORS.get(m['chance'], colors.grey))
             chance_abbr = {'High Likelihood': 'High Like.', 'Likely': 'Likely',
-                           'Borderline': 'Borderline', 'Unlikely': 'Unlikely'}.get(m['chance'], m['chance'])
+                           'Borderline': 'Borderline', 'Unlikely': 'Unlikely'}.get(m['chance'], m['chance']) or ""
             c.drawString(COL['chance'], y, chance_abbr)
             c.setFont("Helvetica", 7.5)
             c.setFillColor(colors.black)
@@ -3463,7 +3463,7 @@ def career_results_pdf_quick(request):
             c.drawString(COL_ND['category'], y, cat)
             c.setFillColor(CHANCE_COLORS.get(m['chance'], colors.grey))
             c.setFont("Helvetica-Bold", 7.5)
-            chance_abbr = {'High Likelihood': 'High Like.', 'Likely': 'Likely'}.get(m['chance'], m['chance'])
+            chance_abbr = {'High Likelihood': 'High Like.', 'Likely': 'Likely'}.get(m['chance'], m['chance']) or ""
             c.drawString(COL_ND['chance'], y, chance_abbr)
             c.setFont("Helvetica", 7.5)
             c.setFillColor(colors.black)
@@ -3501,7 +3501,7 @@ def career_results_pdf_detailed(request):
     response = HttpResponse(content_type="application/pdf")
     response["Content-Disposition"] = 'attachment; filename="careernext_career_report.pdf"'
 
-    c = canvas.Canvas(response, pagesize=landscape(A4))
+    c = canvas.Canvas(response, pagesize=landscape(A4))  # type: ignore[arg-type]
     W, H = landscape(A4)   # ~29.7 × 21 cm
 
     NAVY  = colors.HexColor("#1e3a8a")
@@ -3756,7 +3756,7 @@ def career_results_pdf_detailed(request):
                 knum = m['cluster'].kuccps_number if m['cluster'] else None
                 c.drawString(COL['cluster'], y, f"C{knum}" if knum else '—')
                 chance_abbr = {'High Likelihood': 'High Like.', 'Likely': 'Likely',
-                               'Borderline': 'Borderline', 'Unlikely': 'Unlikely'}.get(m['chance'], m['chance'])
+                               'Borderline': 'Borderline', 'Unlikely': 'Unlikely'}.get(m['chance'], m['chance']) or ""
                 c.setFillColor(CHANCE_COLORS.get(m['chance'], colors.grey))
                 c.setFont("Helvetica-Bold", 7.5)
                 c.drawString(COL['chance'], y, chance_abbr)
@@ -3839,7 +3839,7 @@ def career_results_pdf_detailed(request):
                 c.drawString(COL_ND['location'], y, location)
                 cat = m['course'].category.name[:14] if m['course'].category else '—'
                 c.drawString(COL_ND['category'], y, cat)
-                chance_abbr = {'High Likelihood': 'High Like.', 'Likely': 'Likely'}.get(m['chance'], m['chance'])
+                chance_abbr = {'High Likelihood': 'High Like.', 'Likely': 'Likely'}.get(m['chance'], m['chance']) or ""
                 c.setFillColor(CHANCE_COLORS.get(m['chance'], colors.grey))
                 c.setFont("Helvetica-Bold", 7.5)
                 c.drawString(COL_ND['chance'], y, chance_abbr)
