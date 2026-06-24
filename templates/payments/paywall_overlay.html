@@ -252,7 +252,19 @@
         </div>
 
         <a class="pw-later" id="pw-later">Maybe later (results will be blurred)</a>
-        <a class="pw-later" id="pw-already-paid" style="margin-top:0.2rem;color:rgba(255,255,255,0.18);">I already paid — verify my payment</a>
+        <a class="pw-later" id="pw-already-paid" style="margin-top:0.2rem;color:rgba(255,255,255,0.28);">I already paid — enter M-Pesa code</a>
+
+        <!-- Code entry shown when "I already paid" is clicked -->
+        <div id="pw-code-section" style="display:none;margin-top:0.9rem;">
+            <div style="display:flex;gap:0.5rem;align-items:center;">
+                <input type="text" id="pw-mpesa-code" placeholder="M-Pesa code (e.g. RCK12345XY)"
+                       style="flex:1;background:rgba(255,255,255,0.07);border:1.5px solid rgba(255,255,255,0.15);border-radius:10px;color:#fff;padding:0.65rem 0.9rem;font-size:0.9rem;outline:none;text-transform:uppercase;border-color:rgba(139,92,246,0.4);">
+                <button id="pw-code-btn" style="background:linear-gradient(135deg,#10b981,#059669);border:none;border-radius:10px;color:#fff;font-weight:700;padding:0.65rem 1rem;font-size:0.85rem;cursor:pointer;white-space:nowrap;">
+                    Verify
+                </button>
+            </div>
+            <p id="pw-code-msg" style="margin:0.5rem 0 0;font-size:0.78rem;color:rgba(255,255,255,0.45);min-height:1.2em;"></p>
+        </div>
     </div>
 </div>
 
@@ -270,20 +282,8 @@
         var main = document.getElementById('pw-main-content');
         if(main) main.style.filter = 'blur(3px) brightness(0.7)';
     });
-    document.getElementById('pw-already-paid').addEventListener('click', pwCheckAlreadyPaid);
-
-    // On load: check for an existing pending payment so the user doesn't pay twice
-    (async function checkPending(){
-        try{
-            var r = await fetch('/payments/pending/?feature='+encodeURIComponent(FEATURE));
-            var d = await r.json();
-            if(d.found){
-                currentPaymentId = d.payment_id;
-                document.getElementById('pw-already-paid').style.color = 'rgba(251,191,36,0.7)';
-                document.getElementById('pw-already-paid').textContent = 'I already paid — verify my payment';
-            }
-        }catch(e){}
-    })();
+    document.getElementById('pw-already-paid').addEventListener('click', pwToggleCodeSection);
+    document.getElementById('pw-code-btn').addEventListener('click', pwSubmitCode);
 
     async function pwPay(){
         var raw = document.getElementById('pw-phone').value.trim().replace(/\s/g,'');
@@ -342,17 +342,37 @@
         },3000);
     }
 
-    async function pwCheckAlreadyPaid(){
-        if(!currentPaymentId){
-            // Try to fetch from server
-            try{
-                var r = await fetch('/payments/pending/?feature='+encodeURIComponent(FEATURE));
-                var d = await r.json();
-                if(!d.found){ alert('No pending payment found for your account. Please pay to unlock.'); return; }
-                currentPaymentId = d.payment_id;
-            }catch(e){ alert('Could not check payment status. Please try again.'); return; }
+    function pwToggleCodeSection(){
+        var sec  = document.getElementById('pw-code-section');
+        var link = document.getElementById('pw-already-paid');
+        var showing = sec.style.display !== 'none';
+        sec.style.display = showing ? 'none' : 'block';
+        link.textContent  = showing ? 'I already paid — enter M-Pesa code' : 'Cancel';
+    }
+
+    async function pwSubmitCode(){
+        var code = (document.getElementById('pw-mpesa-code').value || '').trim().toUpperCase();
+        var msg  = document.getElementById('pw-code-msg');
+        if(!code){ msg.style.color='#fca5a5'; msg.textContent='Please enter your M-Pesa transaction code.'; return; }
+        msg.style.color='rgba(255,255,255,0.45)'; msg.textContent='Checking…';
+        try{
+            var r = await fetch('{% url "payments:verify_by_transaction_code" %}',{
+                method:'POST',
+                headers:{'Content-Type':'application/json','X-CSRFToken':CSRF},
+                body:JSON.stringify({feature:FEATURE, mpesa_code:code})
+            });
+            var d = await r.json();
+            if(d.status==='completed'){
+                msg.style.color='#34d399';
+                msg.textContent='Payment verified! Unlocking your results…';
+                setTimeout(function(){ location.reload(); },2000);
+            } else {
+                msg.style.color='#fca5a5';
+                msg.textContent=d.message||'Code not found. Double-check your M-Pesa SMS.';
+            }
+        }catch(e){
+            msg.style.color='#fca5a5'; msg.textContent='Network error. Please try again.';
         }
-        pwVerifyById(currentPaymentId);
     }
 
     window.pwVerify = function(){
