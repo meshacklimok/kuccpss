@@ -462,7 +462,7 @@ class WithdrawalRequestAdmin(admin.ModelAdmin):
 
 @admin.register(MentorshipConfig)
 class MentorshipConfigAdmin(admin.ModelAdmin):
-    fields = ("session_price", "mentor_payout")
+    fields = ("session_price", "mentor_payout", "mentor_signup_enabled")
 
     def has_add_permission(self, request):
         return not MentorshipConfig.objects.exists()
