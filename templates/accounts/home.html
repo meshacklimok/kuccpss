@@ -441,10 +441,10 @@ body.dark .step-card          { background: var(--surface); border-color: var(--
           <div class="p-4 d-flex flex-column flex-grow-1">
             <div class="d-flex align-items-center gap-3 mb-3">
               {% if inst.logo %}
-              <img src="{{ inst.logo.url }}" width="46" height="46" class="rounded-2 flex-shrink-0"
+              <img src="{{ inst.logo.url }}" width="46" height="46" class="rounded-circle flex-shrink-0"
                    style="object-fit:contain;border:1px solid var(--border);" alt="{{ inst.name }}" loading="lazy">
               {% else %}
-              <div class="rounded-2 flex-shrink-0 d-flex align-items-center justify-content-center"
+              <div class="rounded-circle flex-shrink-0 d-flex align-items-center justify-content-center"
                    style="width:46px;height:46px;background:#fef3c7;color:#d97706;">
                 <i class="fas fa-university"></i>
               </div>
@@ -502,10 +502,10 @@ body.dark .step-card          { background: var(--surface); border-color: var(--
            onmouseover="this.style.boxShadow='0 8px 24px rgba(124,58,237,0.12)';this.style.transform='translateY(-2px)';this.style.borderColor='#e9d5ff'"
            onmouseout="this.style.boxShadow='';this.style.transform='';this.style.borderColor=''">
           {% if inst.logo %}
-          <img src="{{ inst.logo.url }}" width="50" height="50" class="rounded-2 flex-shrink-0"
+          <img src="{{ inst.logo.url }}" width="50" height="50" class="rounded-circle flex-shrink-0"
                style="object-fit:contain;border:1px solid var(--border);" alt="{{ inst.name }}" loading="lazy">
           {% else %}
-          <div class="rounded-2 flex-shrink-0 d-flex align-items-center justify-content-center"
+          <div class="rounded-circle flex-shrink-0 d-flex align-items-center justify-content-center"
                style="width:50px;height:50px;background:#ede9fe;color:var(--purple);">
             <i class="fas fa-university"></i>
           </div>
