@@ -275,3 +275,11 @@ Copy every variable from your Render dashboard into Railway → Variables:
 
 
 Next step after deploy: Go to Google Search Console → Sitemaps → paste https://careernext.co.ke/sitemap.xml → Request indexing. Within 2–4 weeks Google will have indexed all your course and institution pages. That's when traffic starts.
+
+
+
+One requirement for both to work in production
+
+The IntaSend "Send Money / B2C" feature must be activated on your IntaSend account. It's separate from STK push (collecting money) — you have to request it from IntaSend support. If it's not activated, both withdrawal flows will fail with an API error.
+
+To check: log into your IntaSend dashboard → Send Money → if it says "contact us to activate", that's the blocker. Once activated it works automatically.

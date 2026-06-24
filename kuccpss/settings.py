@@ -93,7 +93,14 @@ INSTALLED_APPS = [
 # Locally, files are served from MEDIA_ROOT as usual.
 CLOUDINARY_URL = os.environ.get('CLOUDINARY_URL', '')
 if CLOUDINARY_URL:
-    DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+    STORAGES = {
+        "default": {
+            "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
+        },
+        "staticfiles": {
+            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+        },
+    }
     MEDIA_URL = 'https://res.cloudinary.com/'
 else:
     MEDIA_URL = '/media/'
