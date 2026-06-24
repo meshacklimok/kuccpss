@@ -7,7 +7,7 @@
     </linearGradient>
   </defs>
   <!-- Rounded tile -->
-  <rect x="0" y="0" width="64" height="64" rx="16" fill="url(#cnGrad)"/>
+  <rect x="0" y="0" width="64" height="64" rx="32" fill="url(#cnGrad)"/>
   <!-- Rising career path: from "you now" up to your "next" step -->
   <g stroke="#ffffff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" fill="none">
     <path d="M16 48 Q 30 48 34 34 T 48 16"/>
