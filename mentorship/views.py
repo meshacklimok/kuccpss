@@ -66,9 +66,7 @@ def directory(request):
         mentors__is_approved=True, mentors__is_active=True
     ).distinct().order_by("name")
 
-    from career.models import CareerConfig
-    cfg = CareerConfig.get()
-    global_price = MentorshipConfig.get().session_price
+    cfg = MentorshipConfig.get()
     return render(request, "mentorship/directory.html", {
         "mentors": mentors,
         "query": query,
@@ -78,14 +76,13 @@ def directory(request):
         "institutions": institutions,
         "year_choices": MentorProfile.YEAR_CHOICES,
         "mentor_signup_enabled": cfg.mentor_signup_enabled,
-        "global_session_price": global_price,
+        "global_session_price": cfg.session_price,
     })
 
 
 # ── Public: Mentor Profile ────────────────────────────────────────────────────
 
 def mentor_profile(request, mentor_pk):
-    from career.models import CareerConfig
     mentor = get_object_or_404(MentorProfile, pk=mentor_pk, is_approved=True, is_active=True)
     available_slots = mentor.slots.filter(
         is_booked=False, date__gte=timezone.now().date()
@@ -93,7 +90,6 @@ def mentor_profile(request, mentor_pk):
     reviews = mentor.sessions.filter(
         status="completed", rating__isnull=False
     ).select_related("mentee").order_by("-updated_at")[:6]
-    cfg = CareerConfig.get()
 
     return render(request, "mentorship/mentor_profile.html", {
         "mentor": mentor,
@@ -101,7 +97,7 @@ def mentor_profile(request, mentor_pk):
         "reviews": reviews,
         "star_range": range(1, 6),
         "session_price": mentor.effective_session_price(),
-        "mentor_signup_enabled": cfg.mentor_signup_enabled,
+        "mentor_signup_enabled": MentorshipConfig.get().mentor_signup_enabled,
     })
 
 
@@ -129,8 +125,7 @@ def courses_for_institution(request):
 
 @login_required
 def become_mentor(request):
-    from career.models import CareerConfig
-    if not CareerConfig.get().mentor_signup_enabled:
+    if not MentorshipConfig.get().mentor_signup_enabled:
         messages.info(request, "Mentor applications are currently closed. Check back soon.")
         return redirect("mentorship:directory")
 
@@ -341,7 +336,6 @@ def complete_session(request, token):
 
 @login_required
 def book_session(request, mentor_pk):
-    from career.models import CareerConfig
     mentor = get_object_or_404(MentorProfile, pk=mentor_pk, is_approved=True, is_active=True)
 
     if hasattr(request.user, "mentor_profile") and request.user.mentor_profile.pk == mentor.pk:
@@ -375,12 +369,11 @@ def book_session(request, mentor_pk):
 
             return redirect("mentorship:checkout", token=session.token)
     else:
-        # Pre-select the slot the user clicked on the mentor profile page
         preselected_slot_id = request.GET.get("slot")
         initial = {"slot": preselected_slot_id} if preselected_slot_id else {}
         form = BookingForm(mentor, initial=initial)
 
-    cfg = CareerConfig.get()
+    cfg = MentorshipConfig.get()
     return render(request, "mentorship/book_session.html", {
         "mentor": mentor,
         "form": form,

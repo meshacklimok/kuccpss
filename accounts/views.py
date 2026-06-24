@@ -282,11 +282,12 @@ def dashboard_view(request: HttpRequest) -> HttpResponse:
         from courses.trends import get_trends_context as _get_trends
         _trends = _get_trends()
         from career.models import CareerConfig as _CCfg
+        from mentorship.models import MentorshipConfig as _MCfg
         _cfg = _CCfg.get()
         return render(request, "accounts/dashboard.html", {
             "guest": True,
             "tawk_enabled": _cfg.tawk_enabled,
-            "mentor_signup_enabled": _cfg.mentor_signup_enabled,
+            "mentor_signup_enabled": _MCfg.get().mentor_signup_enabled,
             "eligible_count": 0, "saved_count": 0, "shortlist_count": 0,
             "saved_courses": [], "shortlist_items": [], "notifications": [],
             "cluster_results": [], "latest_result": None, "snapshot": None,
@@ -554,11 +555,12 @@ def dashboard_view(request: HttpRequest) -> HttpResponse:
     trends_ctx = get_trends_context()
 
     from career.models import CareerConfig as _CCfg
+    from mentorship.models import MentorshipConfig as _MCfg
     _cfg = _CCfg.get()
     return render(request, "accounts/dashboard.html", {
         # Platform config
         "tawk_enabled":           _cfg.tawk_enabled,
-        "mentor_signup_enabled":  _cfg.mentor_signup_enabled,
+        "mentor_signup_enabled":  _MCfg.get().mentor_signup_enabled,
         # KCSE / clusters
         "latest_result":     latest_result,
         "cluster_results":   cluster_results,

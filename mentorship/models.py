@@ -268,7 +268,7 @@ class MentorshipSession(models.Model):
 
 
 class MentorshipConfig(models.Model):
-    """Singleton — one row (pk=1). Set session price and mentor payout from admin."""
+    """Singleton — one row (pk=1). All mentorship settings controlled from here."""
     session_price = models.PositiveIntegerField(
         default=100,
         help_text="Amount (KES) the student pays per session.",
@@ -276,6 +276,10 @@ class MentorshipConfig(models.Model):
     mentor_payout = models.PositiveIntegerField(
         default=70,
         help_text="Amount (KES) the mentor earns per completed session. Must be less than session_price.",
+    )
+    mentor_signup_enabled = models.BooleanField(
+        default=True,
+        help_text="Show or hide the 'Become a Mentor' button across the entire site.",
     )
 
     class Meta:
