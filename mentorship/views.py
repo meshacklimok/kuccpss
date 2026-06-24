@@ -5,7 +5,7 @@ from datetime import time as dt_time, datetime
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.core.mail import send_mail, EmailMessage
+from kuccpss.email_utils import send_branded_email
 from django.db.models import Q
 from django.http import JsonResponse, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -159,27 +159,28 @@ def become_mentor(request):
             )
 
             # Notify admin with full application details + document links
-            send_mail(
-                subject="New Mentor Application — CareerNext",
-                message=(
-                    f"New mentor application received:\n\n"
-                    f"Name            : {request.user.full_name or request.user.email}\n"
-                    f"Email           : {request.user.email}\n"
-                    f"Course          : {mentor.course}\n"
-                    f"Institution     : {mentor.institution}\n"
-                    f"Year of Study   : {mentor.get_year_of_study_display()}\n"
-                    f"University Email: {mentor.university_email or 'Not provided'}\n"
-                    f"WhatsApp        : {mentor.whatsapp}\n\n"
-                    f"Bio:\n{mentor.bio}\n\n"
-                    f"Documents:\n"
-                    f"  Student ID        : {student_id_url}\n"
-                    f"  Portal Screenshot : {portal_url}\n\n"
-                    f"Approve / Reject in admin:\n"
-                    f"  {site_url}/cn-staff/mentorship/mentorprofile/{mentor.pk}/change/"
-                ),
-                from_email=settings.DEFAULT_FROM_EMAIL,
-                recipient_list=[_admin_email()],
-                fail_silently=True,
+            send_branded_email(
+                to=_admin_email(),
+                subject=f"New Mentor Application — {request.user.full_name or request.user.email}",
+                heading="New Mentor Application",
+                banner_label="Action Required",
+                banner_color="blue",
+                greeting="Hi Admin,",
+                body_lines=["A new mentor application has been submitted and is awaiting your review."],
+                table_rows=[
+                    {"label": "Name",             "value": request.user.full_name or request.user.email},
+                    {"label": "Email",            "value": request.user.email},
+                    {"label": "Course",           "value": mentor.course},
+                    {"label": "Institution",      "value": mentor.institution},
+                    {"label": "Year of Study",    "value": mentor.get_year_of_study_display()},
+                    {"label": "University Email", "value": mentor.university_email or "Not provided"},
+                    {"label": "WhatsApp",         "value": mentor.whatsapp},
+                    {"label": "Student ID",       "value": student_id_url},
+                    {"label": "Portal Screenshot","value": portal_url},
+                ],
+                cta_url=f"{site_url}/cn-staff/mentorship/mentorprofile/{mentor.pk}/change/",
+                cta_label="Review in Admin →",
+                note=f"Bio: {mentor.bio}",
             )
 
             messages.success(
@@ -313,19 +314,20 @@ def complete_session(request, token):
     session.mentor.refresh_stats()
 
     # Notify mentee to rate
-    send_mail(
-        subject="How was your mentorship session? ⭐",
-        message=(
-            f"Hi {session.mentee_display},\n\n"
-            f"Your 15-minute session with {session.mentor.display_name} is complete!\n\n"
-            f"Please take 30 seconds to rate your experience:\n"
-            f"https://www.careernext.co.ke{session.get_absolute_url()}rate/\n\n"
-            f"Your feedback helps future students choose great mentors.\n\n"
-            f"CareerNext Team"
-        ),
-        from_email=settings.DEFAULT_FROM_EMAIL,
-        recipient_list=[session.mentee.email],
-        fail_silently=True,
+    send_branded_email(
+        to=session.mentee.email,
+        subject=f"How was your session with {session.mentor.display_name}?",
+        heading="Rate Your Session",
+        banner_label="Session Complete",
+        banner_color="blue",
+        greeting=f"Hi {session.mentee_display},",
+        body_lines=[
+            f"Your 15-minute mentorship session with {session.mentor.display_name} is complete!",
+            "Please take 30 seconds to rate your experience — your feedback helps future students choose great mentors.",
+        ],
+        cta_url=f"https://www.careernext.co.ke{session.get_absolute_url()}rate/",
+        cta_label="Rate My Session →",
+        user_email=session.mentee.email,
     )
 
     messages.success(request, "Session marked as complete — great work!")
@@ -501,23 +503,24 @@ def verify_payment_manual(request, token):
     slot_str = session.slot.datetime_display
     mentee_name = session.mentee_display
 
-    send_mail(
+    send_branded_email(
+        to=_admin_email(),
         subject=f"ACTION: Manual Payment Verification — {mentee_name}",
-        message=(
-            f"A mentee submitted an M-Pesa code for manual payment verification.\n\n"
-            f"Mentee     : {mentee_name} ({session.mentee.email})\n"
-            f"Mentor     : {session.mentor.display_name}\n"
-            f"Slot       : {slot_str}\n"
-            f"Amount     : KES {session.amount}\n"
-            f"M-Pesa Code: {mpesa_code}\n\n"
-            f"ACTION: Verify this M-Pesa code in your Safaricom portal.\n"
-            f"If valid, use the 'Confirm manual payment' action in admin:\n"
-            f"https://www.careernext.co.ke/cn-staff/mentorship/mentorshipsession/{session.pk}/change/\n\n"
-            f"Session token: {session.token}"
-        ),
-        from_email=settings.DEFAULT_FROM_EMAIL,
-        recipient_list=[_admin_email()],
-        fail_silently=True,
+        heading="Manual Payment Verification Needed",
+        banner_label="⚠ Action Required",
+        banner_color="amber",
+        greeting="Hi Admin,",
+        body_lines=["A mentee submitted an M-Pesa code for manual payment verification. Please check the Safaricom portal and confirm or reject the payment in admin."],
+        table_rows=[
+            {"label": "Mentee",      "value": f"{mentee_name} ({session.mentee.email})"},
+            {"label": "Mentor",      "value": session.mentor.display_name},
+            {"label": "Slot",        "value": slot_str},
+            {"label": "Amount",      "value": f"KES {session.amount}"},
+            {"label": "M-Pesa Code", "value": mpesa_code, "highlight": True},
+            {"label": "Session Token","value": str(session.token)},
+        ],
+        cta_url=f"https://www.careernext.co.ke/cn-staff/mentorship/mentorshipsession/{session.pk}/change/",
+        cta_label="Verify in Admin →",
     )
     logger.info("Manual payment queued for admin review: session=%s code=%s", session.token, mpesa_code)
 
@@ -676,18 +679,21 @@ def withdraw_application(request):
 
     mentor.delete()  # cascades TimeSlots (all future slots) — no sessions exist yet for pending mentors
 
-    send_mail(
-        subject="Mentor application withdrawn — CareerNext",
-        message=(
-            f"Hi {request.user.full_name},\n\n"
-            "Your mentor application has been withdrawn successfully.\n\n"
-            "If you change your mind, you can re-apply at any time:\n"
-            "https://www.careernext.co.ke/mentorship/become-mentor/\n\n"
-            "CareerNext Team"
-        ),
-        from_email=settings.DEFAULT_FROM_EMAIL,
-        recipient_list=[request.user.email],
-        fail_silently=True,
+    send_branded_email(
+        to=request.user.email,
+        subject="CareerNext — Mentor Application Withdrawn",
+        heading="Application Withdrawn",
+        banner_label="Application Update",
+        banner_color="blue",
+        greeting=f"Hi {request.user.full_name},",
+        body_lines=[
+            "Your mentor application has been successfully withdrawn.",
+            "If you change your mind, you're welcome to re-apply at any time.",
+        ],
+        cta_url="https://www.careernext.co.ke/mentorship/become-mentor/",
+        cta_label="Re-apply as Mentor →",
+        note="If you have questions about this decision, email us at support@careernext.co.ke.",
+        user_email=request.user.email,
     )
 
     messages.success(request, "Your mentor application has been withdrawn. You can re-apply at any time.")
@@ -757,17 +763,21 @@ def _maybe_auto_pay_mentor(mentor):
         mentor.save(update_fields=["wallet_balance"])
         logger.info("Auto-pay KES %s sent to mentor %s (%s)", payout_amount, mentor.display_name, mentor.whatsapp)
 
-        send_mail(
-            subject="CareerNext — Your earnings have been sent!",
-            message=(
-                f"Hi {mentor.display_name},\n\n"
-                f"Your CareerNext earnings of KES {payout_amount} have been automatically "
-                f"sent to {mentor.whatsapp} via M-Pesa.\n\n"
-                f"Great work! Keep up the mentoring.\n\nCareerNext Team"
-            ),
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[mentor.user.email],
-            fail_silently=True,
+        send_branded_email(
+            to=mentor.user.email,
+            subject="CareerNext — Your Earnings Have Been Sent",
+            heading="Your Earnings Are On Their Way!",
+            banner_label="✓ M-Pesa Sent",
+            banner_color="green",
+            greeting=f"Hi {mentor.display_name},",
+            body_lines=["Your CareerNext mentorship earnings have been automatically sent to your M-Pesa number. Great work — keep up the mentoring!"],
+            table_rows=[
+                {"label": "Amount", "value": f"KES {payout_amount}", "highlight": True},
+                {"label": "M-Pesa Number", "value": mentor.whatsapp},
+            ],
+            cta_url="https://www.careernext.co.ke/mentorship/dashboard/",
+            cta_label="View Dashboard →",
+            user_email=mentor.user.email,
         )
     except Exception as exc:
         logger.error("Auto-pay failed for mentor %s: %s", mentor.pk, exc)
@@ -788,79 +798,74 @@ def _send_booking_confirmation(session: MentorshipSession):
     mentee_phone_line = f"Phone     : {session.mentee_phone}\n" if session.mentee_phone else ""
 
     # ── Email to MENTEE ───────────────────────────────────────────────────────
-    mentee_body = (
-        f"Hi {mentee_name},\n\n"
-        f"Your mentorship session is confirmed!\n\n"
-        f"────────────────────────\n"
-        f"Mentor    : {mentor_name}\n"
-        f"Course    : {session.mentor.course}\n"
-        f"When      : {slot_str} (15 minutes)\n"
-        f"WhatsApp  : {session.mentor.whatsapp}\n"
-        f"────────────────────────\n\n"
-        f"HOW TO CONNECT:\n"
-        f"Coordinate with your mentor via WhatsApp to agree on how you'll meet.\n"
-        f"Options you can use: Google Meet, WhatsApp Video, or phone call — your choice.\n\n"
-        f"Add to Google Calendar:\n{gcal_link}\n\n"
-        f"Or open the attached .ics file to add it to any calendar (Google, Outlook, Apple).\n"
-        f"You'll get reminders 1 hour and 15 minutes before the session.\n\n"
-        f"NEXT STEPS:\n"
-        f"1. Save {mentor_name}'s number: {session.mentor.whatsapp}\n"
-        f"2. Send them a WhatsApp message to confirm how you'll connect.\n"
-        f"3. Be on time — it's only 15 minutes.\n\n"
-        f"Your discussion topic:\n"
-        f"\"{session.mentee_question}\"\n\n"
-        f"After your session, please rate your experience:\n"
-        f"{base}{session.get_absolute_url()}rate/\n\n"
-        f"Best of luck!\nCareerNext Team"
-    )
-    mentee_email = EmailMessage(
-        subject=f"Session Confirmed — {slot_str}",
-        body=mentee_body,
-        from_email=settings.DEFAULT_FROM_EMAIL,
-        to=[session.mentee.email],
-    )
-    mentee_email.attach(ics_filename, ics_content, "text/calendar")
+    mentee_rows = [
+        {"label": "Mentor",   "value": mentor_name},
+        {"label": "Course",   "value": session.mentor.course},
+        {"label": "When",     "value": f"{slot_str} (15 min)"},
+        {"label": "WhatsApp", "value": session.mentor.whatsapp},
+    ]
     try:
-        mentee_email.send()
+        send_branded_email(
+            to=session.mentee.email,
+            subject=f"Session Confirmed — {slot_str}",
+            heading="Session Confirmed!",
+            banner_label="✓ Booking Confirmed",
+            banner_color="green",
+            greeting=f"Hi {mentee_name},",
+            body_lines=[
+                "Your mentorship session is booked and confirmed. Here are your session details:",
+            ],
+            table_rows=mentee_rows,
+            cta_url=gcal_link,
+            cta_label="Add to Google Calendar →",
+            note=(
+                f"How to connect: WhatsApp {mentor_name} on {session.mentor.whatsapp} to agree on how you'll meet "
+                f"(WhatsApp Video, Google Meet, or phone call). "
+                f"Your discussion topic: \"{session.mentee_question}\". "
+                f"Be on time — it's only 15 minutes. "
+                f"A calendar invite (.ics) is attached to this email."
+            ),
+            user_email=session.mentee.email,
+            attachments=[(ics_filename, ics_content, "text/calendar")],
+        )
         logger.info("Booking confirmation sent to mentee %s for session %s", session.mentee.email, session.token)
     except Exception as exc:
         logger.error("Failed to send booking confirmation to mentee %s: %s", session.mentee.email, exc)
 
     # ── Email to MENTOR ───────────────────────────────────────────────────────
-    mentor_body = (
-        f"Hi {mentor_name},\n\n"
-        f"You have a new mentorship session booked!\n\n"
-        f"────────────────────────\n"
-        f"Student   : {mentee_name}\n"
-        f"Email     : {session.mentee.email}\n"
-        f"{mentee_phone_line}"
-        f"When      : {slot_str} (15 minutes)\n"
-        f"You earn  : KES {session.mentor_payout}\n"
-        f"────────────────────────\n\n"
-        f"HOW TO CONNECT:\n"
-        f"Reach out to the student via WhatsApp or call them on {session.mentee_phone or 'the number they provided'}.\n"
-        f"You can use Google Meet, WhatsApp Video, or a phone call — coordinate with them.\n\n"
-        f"Add to Google Calendar:\n{gcal_link}\n\n"
-        f"Or open the attached .ics file — you'll get reminders 1 hour and 15 minutes before.\n\n"
-        f"What they want to discuss:\n"
-        f"\"{session.mentee_question}\"\n\n"
-        f"NEXT STEPS:\n"
-        f"1. Contact {mentee_name} — their email: {session.mentee.email}"
-        f"{', phone: ' + session.mentee_phone if session.mentee_phone else ''}.\n"
-        f"2. Agree on the call method (WhatsApp video, Google Meet, or phone).\n"
-        f"3. Be prepared at the scheduled time.\n"
-        f"4. After the session, mark it complete: {base}/mentorship/dashboard/\n\n"
-        f"CareerNext Team"
-    )
-    mentor_email = EmailMessage(
-        subject=f"New Session Booked — {slot_str}",
-        body=mentor_body,
-        from_email=settings.DEFAULT_FROM_EMAIL,
-        to=[session.mentor.user.email],
-    )
-    mentor_email.attach(ics_filename, ics_content, "text/calendar")
+    mentor_rows = [
+        {"label": "Student",  "value": mentee_name},
+        {"label": "Email",    "value": session.mentee.email},
+    ]
+    if session.mentee_phone:
+        mentor_rows.append({"label": "Phone", "value": session.mentee_phone})
+    mentor_rows += [
+        {"label": "When",     "value": f"{slot_str} (15 min)"},
+        {"label": "You earn", "value": f"KES {session.mentor_payout}", "highlight": True},
+    ]
     try:
-        mentor_email.send()
+        send_branded_email(
+            to=session.mentor.user.email,
+            subject=f"New Session Booked — {slot_str}",
+            heading="New Session Booked!",
+            banner_label="New Booking",
+            banner_color="blue",
+            greeting=f"Hi {mentor_name},",
+            body_lines=[
+                "A student has booked a 15-minute session with you. Here are the details:",
+            ],
+            table_rows=mentor_rows,
+            cta_url=gcal_link,
+            cta_label="Add to Google Calendar →",
+            note=(
+                f"What they want to discuss: \"{session.mentee_question}\". "
+                f"Contact {mentee_name} via WhatsApp or email to agree on how you'll connect. "
+                f"After the session, mark it complete from your dashboard. "
+                f"A calendar invite (.ics) is attached."
+            ),
+            user_email=session.mentor.user.email,
+            attachments=[(ics_filename, ics_content, "text/calendar")],
+        )
         logger.info("Booking confirmation sent to mentor %s for session %s", session.mentor.user.email, session.token)
     except Exception as exc:
         logger.error("Failed to send booking confirmation to mentor %s: %s", session.mentor.user.email, exc)
@@ -993,36 +998,55 @@ def _send_cancellation_emails(session, cancelled_by, reason):
         (session.mentee.email, mentee_name),
         (session.mentor.user.email, mentor_name),
     ]:
-        send_mail(
+        is_mentee = recipient_email == session.mentee.email
+        money_note = (
+            "A refund will be processed to the original M-Pesa number within 24 hours."
+            if is_mentee else
+            "The session payout has been reversed from your wallet."
+        )
+        send_branded_email(
+            to=recipient_email,
             subject=f"Session Cancelled — {slot_str}",
-            message=(
-                f"Hi {recipient_name},\n\n"
-                f"The mentorship session on {slot_str} has been cancelled by {actor}.\n\n"
-                f"Reason: {reason}\n\n"
-                f"{'A refund of KES 100 will be processed to the original M-Pesa number within 24 hours.' if recipient_email == session.mentee.email else 'The KES 70 payout for this session has been reversed from your wallet.'}\n\n"
-                f"Book another session: {base}/mentorship/\n\n"
-                f"CareerNext Team"
-            ),
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[recipient_email],
-            fail_silently=True,
+            heading="Session Cancelled",
+            banner_label="✕ Cancelled",
+            banner_color="red",
+            greeting=f"Hi {recipient_name},",
+            body_lines=[
+                f"The mentorship session scheduled for {slot_str} has been cancelled by {actor}.",
+                money_note,
+            ],
+            table_rows=[
+                {"label": "Session date", "value": slot_str},
+                {"label": "Cancelled by", "value": actor},
+                {"label": "Reason",       "value": reason},
+            ],
+            cta_url=f"{base}/mentorship/",
+            cta_label="Browse Mentors →",
+            note="If you have concerns about this cancellation, contact us at support@careernext.co.ke.",
+            user_email=recipient_email,
         )
 
     # Notify admin for manual refund processing
-    send_mail(
-        subject=f"ACTION: Mentorship Refund Needed — {slot_str}",
-        message=(
-            f"Session cancelled by {cancelled_by}.\n\n"
-            f"Mentee: {mentee_name} ({session.mentee.email})\n"
-            f"Mentor: {mentor_name} ({session.mentor.user.email})\n"
-            f"Slot: {slot_str}\n"
-            f"Reason: {reason}\n\n"
-            f"ACTION: Refund KES {session.amount} to the mentee's M-Pesa ({session.phone_used}).\n"
-            f"Session token: {session.token}"
-        ),
-        from_email=settings.DEFAULT_FROM_EMAIL,
-        recipient_list=[_admin_email()],
-        fail_silently=True,
+    send_branded_email(
+        to=_admin_email(),
+        subject=f"ACTION: Refund Needed — {mentee_name} ({slot_str})",
+        heading="Mentorship Refund Required",
+        banner_label="⚠ Action Required",
+        banner_color="red",
+        greeting="Hi Admin,",
+        body_lines=[f"A session was cancelled by the {cancelled_by}. Please process the refund to the mentee's M-Pesa number as soon as possible."],
+        table_rows=[
+            {"label": "Mentee",        "value": f"{mentee_name} ({session.mentee.email})"},
+            {"label": "Mentor",        "value": f"{mentor_name} ({session.mentor.user.email})"},
+            {"label": "Session Date",  "value": slot_str},
+            {"label": "Cancelled By",  "value": cancelled_by},
+            {"label": "Reason",        "value": reason},
+            {"label": "Refund Amount", "value": f"KES {session.amount}", "highlight": True},
+            {"label": "Refund To",     "value": session.phone_used or "Check session record"},
+            {"label": "Session Token", "value": str(session.token)},
+        ],
+        cta_url=f"https://www.careernext.co.ke/cn-staff/mentorship/mentorshipsession/{session.pk}/change/",
+        cta_label="View Session in Admin →",
     )
 
 
@@ -1062,16 +1086,21 @@ def request_withdrawal(request):
         mentor.wallet_balance -= amount
         mentor.save(update_fields=["wallet_balance"])
 
-        send_mail(
-            subject="CareerNext — Your earnings have been sent!",
-            message=(
-                f"Hi {mentor.display_name},\n\n"
-                f"Your CareerNext earnings of KES {amount} have been sent to {mpesa} via M-Pesa.\n\n"
-                "Great work! Keep up the mentoring.\n\nCareerNext Team"
-            ),
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[mentor.user.email],
-            fail_silently=True,
+        send_branded_email(
+            to=mentor.user.email,
+            subject="CareerNext — Your Earnings Have Been Sent",
+            heading="Your Earnings Are On Their Way!",
+            banner_label="✓ M-Pesa Sent",
+            banner_color="green",
+            greeting=f"Hi {mentor.display_name},",
+            body_lines=["Your CareerNext mentorship earnings have been sent to your M-Pesa number. Great work — keep up the mentoring!"],
+            table_rows=[
+                {"label": "Amount",        "value": f"KES {amount}", "highlight": True},
+                {"label": "M-Pesa Number", "value": mpesa},
+            ],
+            cta_url="https://www.careernext.co.ke/mentorship/dashboard/",
+            cta_label="View Dashboard →",
+            user_email=mentor.user.email,
         )
         messages.success(request, f"KES {amount} has been sent to {mpesa} via M-Pesa!")
 

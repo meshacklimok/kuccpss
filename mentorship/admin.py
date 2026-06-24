@@ -1,10 +1,10 @@
 from django.contrib import admin
 from django.conf import settings
-from django.core.mail import send_mail
 from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 from django.urls import path, reverse
 from django.utils.html import format_html, mark_safe
+from kuccpss.email_utils import send_branded_email
 
 from .models import MentorProfile, TimeSlot, MentorshipSession, WithdrawalRequest, MentorshipConfig
 
@@ -229,32 +229,41 @@ class MentorProfileAdmin(admin.ModelAdmin):
         )
 
         # 1. Notify the applicant
-        send_mail(
-            subject="Your CareerNext Mentor Application — Update",
-            message=(
-                f"Hi {mentor.display_name},\n\n"
-                "Thank you for applying to be a CareerNext mentor.\n\n"
-                "After reviewing your application, we're unable to approve it at this time."
-                f"{reason_line}\n\n"
-                "If you believe this is a mistake or have questions, please reply to this email.\n\n"
-                "CareerNext Team"
-            ),
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[mentor.user.email],
-            fail_silently=True,
+        rejection_lines = [
+            "Thank you for applying to be a CareerNext mentor.",
+            "After carefully reviewing your application, we're unable to approve it at this time.",
+        ]
+        if mentor.rejection_reason:
+            rejection_lines.append(f"Reason: {mentor.rejection_reason}")
+        rejection_lines.append("If you believe this is a mistake or have any questions, please reply to this email and we'll be happy to help.")
+        send_branded_email(
+            to=mentor.user.email,
+            subject="CareerNext — Mentor Application Update",
+            heading="Mentor Application Update",
+            banner_label="Application Update",
+            banner_color="amber",
+            greeting=f"Hi {mentor.display_name},",
+            body_lines=rejection_lines,
+            note="You may re-apply in the future once the issues have been resolved.",
+            user_email=mentor.user.email,
         )
 
-        # 2. Notify admin with full application details + document links
-        send_mail(
-            subject=f"Mentor Application Rejected — {mentor.display_name} ({mentor.user.email})",
-            message=(
-                f"You rejected the following mentor application:\n\n"
-                f"{_full_application_text(mentor)}"
-                f"{reason_line}"
-            ),
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[settings.ADMIN_EMAIL],
-            fail_silently=True,
+        # 2. Notify admin with confirmation of the rejection
+        send_branded_email(
+            to=settings.ADMIN_EMAIL,
+            subject=f"Mentor Rejected — {mentor.display_name} ({mentor.user.email})",
+            heading="Mentor Application Rejected",
+            banner_label="Rejection Confirmed",
+            banner_color="red",
+            greeting="Hi Admin,",
+            body_lines=["You rejected the following mentor application. The applicant has been notified."],
+            table_rows=[
+                {"label": "Name",   "value": mentor.display_name},
+                {"label": "Email",  "value": mentor.user.email},
+                {"label": "Reason", "value": mentor.rejection_reason or "No reason provided"},
+            ],
+            cta_url=f"https://www.careernext.co.ke/cn-staff/mentorship/mentorprofile/{mentor.pk}/change/",
+            cta_label="View Application →",
         )
 
     # ── Bulk actions ──────────────────────────────────────────────────────────
@@ -265,21 +274,25 @@ class MentorProfileAdmin(admin.ModelAdmin):
             mentor.is_rejected = False
             mentor.is_active = True
             mentor.save(update_fields=["is_approved", "is_rejected", "is_active"])
-            send_mail(
-                subject="🎉 You're approved as a CareerNext Mentor!",
-                message=(
-                    f"Hi {mentor.display_name},\n\n"
-                    "Great news — your mentor profile has been approved!\n\n"
-                    "Students studying your course can now book a 15-minute session with you.\n"
-                    "Start by adding your availability slots:\n"
-                    "https://www.careernext.co.ke/mentorship/dashboard/\n\n"
-                    "You'll earn KES 70 per session completed.\n\n"
-                    "Welcome to the CareerNext Mentor Community!\n"
-                    "CareerNext Team"
-                ),
-                from_email=settings.DEFAULT_FROM_EMAIL,
-                recipient_list=[mentor.user.email],
-                fail_silently=True,
+            send_branded_email(
+                to=mentor.user.email,
+                subject="CareerNext — You're Approved as a Mentor!",
+                heading="You're Approved!",
+                banner_label="✓ Application Approved",
+                banner_color="green",
+                greeting=f"Hi {mentor.display_name},",
+                body_lines=[
+                    "Great news — your CareerNext mentor profile has been approved!",
+                    "Students studying your course can now book a 15-minute session with you. Start by adding your availability slots from your dashboard.",
+                ],
+                table_rows=[
+                    {"label": "Earnings per session", "value": "KES 70", "highlight": True},
+                    {"label": "Session duration",     "value": "15 minutes"},
+                ],
+                cta_url="https://www.careernext.co.ke/mentorship/dashboard/",
+                cta_label="Set My Availability →",
+                note="Welcome to the CareerNext Mentor Community! If you have any questions, email us at support@careernext.co.ke.",
+                user_email=mentor.user.email,
             )
         self.message_user(request, f"Approved and notified {queryset.count()} mentor(s).")
     approve_selected.short_description = "Approve selected mentors and notify"
@@ -439,17 +452,22 @@ class WithdrawalRequestAdmin(admin.ModelAdmin):
             wr.status = "processed"
             wr.processed_at = tz.now()
             wr.save(update_fields=["status", "processed_at"])
-            send_mail(
-                subject="Withdrawal Processed — CareerNext",
-                message=(
-                    f"Hi {mentor.display_name},\n\n"
-                    f"Your withdrawal of KES {wr.amount} has been sent to {wr.mpesa_number}.\n\n"
-                    f"Remaining wallet balance: KES {mentor.wallet_balance}\n\n"
-                    f"CareerNext Team"
-                ),
-                from_email=settings.DEFAULT_FROM_EMAIL,
-                recipient_list=[mentor.user.email],
-                fail_silently=True,
+            send_branded_email(
+                to=mentor.user.email,
+                subject="CareerNext — Withdrawal Processed",
+                heading="Withdrawal Sent!",
+                banner_label="✓ M-Pesa Sent",
+                banner_color="green",
+                greeting=f"Hi {mentor.display_name},",
+                body_lines=["Your withdrawal request has been processed and the funds have been sent to your M-Pesa number."],
+                table_rows=[
+                    {"label": "Amount sent",       "value": f"KES {wr.amount}", "highlight": True},
+                    {"label": "M-Pesa Number",     "value": wr.mpesa_number},
+                    {"label": "Remaining balance", "value": f"KES {mentor.wallet_balance}"},
+                ],
+                cta_url="https://www.careernext.co.ke/mentorship/dashboard/",
+                cta_label="View Dashboard →",
+                user_email=mentor.user.email,
             )
         self.message_user(request, "Withdrawals marked as processed and mentors notified.")
     mark_processed.short_description = "Mark selected as processed and notify mentor"

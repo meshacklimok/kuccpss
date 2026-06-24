@@ -83,6 +83,9 @@ class Course(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    # Django auto-creates these from the ForeignKey fields — declared for Pylance
+    category_id: int | None
+
     # Set transiently by trends.py — not stored in DB
     trend_stat:  str
     trend_label: str

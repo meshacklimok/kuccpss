@@ -5,8 +5,11 @@ import logging
 
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
+from django.core.mail import EmailMultiAlternatives
 from django.http import JsonResponse, HttpResponse
 from django.shortcuts import render, get_object_or_404
+from django.template.loader import render_to_string
+from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 
@@ -14,6 +17,63 @@ from .models import Payment, Transaction
 from .services import initiate_stk_push, price_for_feature, fetch_intasend_status
 
 logger = logging.getLogger(__name__)
+
+
+def _send_payment_receipt(payment: "Payment") -> None:
+    """Email the user a branded HTML receipt when their payment is confirmed."""
+    try:
+        mpesa_ref = (
+            payment.transactions.order_by("-created_at")
+            .values_list("mpesa_ref", flat=True)
+            .first()
+        ) or ""
+
+        user_name = getattr(payment.user, "full_name", None) or payment.user.email
+        site_url = "https://careernext.co.ke"
+        paid_at = timezone.localtime(payment.updated_at).strftime("%d %b %Y, %I:%M %p")
+
+        ctx = {
+            "user_name": user_name,
+            "user_email": payment.user.email,
+            "feature_label": payment.get_feature_display(),
+            "amount": int(payment.amount),
+            "mpesa_ref": mpesa_ref,
+            "payment_id": payment.pk,
+            "paid_at": paid_at,
+            "site_url": site_url,
+            "year": timezone.now().year,
+        }
+
+        is_topup = payment.feature == "ai_chat_access"
+        ctx["is_topup"] = is_topup
+
+        html_body = render_to_string("emails/payment_receipt.html", ctx)
+        action_phrase = "your AI messages have been topped up" if is_topup else "your feature is now unlocked"
+        plain_body = (
+            f"Hi {user_name},\n\n"
+            f"Your payment of KES {int(payment.amount)} for "
+            f'"{payment.get_feature_display()}" has been received and {action_phrase}.\n\n'
+            f"Feature:        {payment.get_feature_display()}\n"
+            f"Amount:         KES {int(payment.amount)}\n"
+            + (f"M-Pesa Ref:     {mpesa_ref}\n" if mpesa_ref else "")
+            + f"Payment ID:     #{payment.pk}\n"
+            f"Date:           {paid_at}\n\n"
+            f"Visit careernext.co.ke to continue.\n\n"
+            "Questions? Email us at support@careernext.co.ke\n\n"
+            "CareerNext Team"
+        )
+
+        email = EmailMultiAlternatives(
+            subject="CareerNext — Payment Confirmed ✓",
+            body=plain_body,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            to=[payment.user.email],
+        )
+        email.attach_alternative(html_body, "text/html")
+        email.send(fail_silently=True)
+
+    except Exception as exc:
+        logger.error("Receipt email failed for payment %s: %s", payment.pk, exc)
 
 
 def _grant_ai_credits_if_applicable(payment: "Payment") -> None:
@@ -73,6 +133,28 @@ def initiate_payment(request):
     amount = price_for_feature(feature)
     if amount == 0:
         return JsonResponse({"success": False, "message": "This feature is free."}, status=400)
+
+    from payments.services import REPEATABLE_FEATURES
+    from datetime import timedelta
+
+    # One-time features: block if already paid
+    if feature not in REPEATABLE_FEATURES:
+        if Payment.objects.filter(user=request.user, feature=feature, status="completed").exists():
+            return JsonResponse({"success": False, "message": "You have already unlocked this feature."}, status=400)
+
+    # All features: block if a pending payment was initiated within the last 5 minutes
+    recent_pending = Payment.objects.filter(
+        user=request.user,
+        feature=feature,
+        status="pending",
+        created_at__gte=timezone.now() - timedelta(minutes=5),
+    ).order_by("-created_at").first()
+    if recent_pending:
+        return JsonResponse({
+            "success": False,
+            "message": "A payment for this feature is already in progress.",
+            "payment_id": recent_pending.pk,
+        }, status=409)
 
     if not getattr(settings, "INTASEND_SECRET_KEY", "") or not getattr(settings, "INTASEND_PUBLISHABLE_KEY", ""):
         logger.error("IntaSend API keys not configured — INTASEND_SECRET_KEY / INTASEND_PUBLISHABLE_KEY missing")
@@ -212,6 +294,7 @@ def mpesa_webhook(request):
     # Grant AI chat credits if applicable
     if state == "COMPLETE":
         _grant_ai_credits_if_applicable(payment)
+        _send_payment_receipt(payment)
 
     # Award affiliate commission if the paying user was referred by an active affiliate
     if state == "COMPLETE":
@@ -281,6 +364,7 @@ def verify_payment(request, payment_id):
         payment.status = "completed"
         payment.save(update_fields=["status", "updated_at"])
         _grant_ai_credits_if_applicable(payment)
+        _send_payment_receipt(payment)
         return JsonResponse({"status": "completed", "feature": payment.feature, "message": "Payment confirmed!"})
     elif remote_state == "FAILED":
         payment.status = "failed"
@@ -328,10 +412,13 @@ def verify_by_transaction_code(request):
 
     if txn:
         payment = txn.payment
-        if payment.status != "completed":
+        already_completed = payment.status == "completed"
+        if not already_completed:
             payment.status = "completed"
-            payment.save(update_fields=["status", "updated_at"])
+            payment.mpesa_code = mpesa_code
+            payment.save(update_fields=["status", "mpesa_code", "updated_at"])
             _grant_ai_credits_if_applicable(payment)
+            _send_payment_receipt(payment)
         logger.info("Transaction code verified: user=%s code=%s payment=%s", request.user.email, mpesa_code, payment.pk)
         return JsonResponse({
             "status": "completed",

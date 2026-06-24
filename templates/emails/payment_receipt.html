@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>Payment Confirmed — CareerNext</title>
+</head>
+<body style="margin:0;padding:0;background-color:#f1f5f9;font-family:'Segoe UI',Arial,Helvetica,sans-serif;-webkit-font-smoothing:antialiased;">
+
+  <!-- Outer wrapper -->
+  <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#f1f5f9;padding:40px 16px;">
+    <tr>
+      <td align="center">
+
+        <!-- Card -->
+        <table width="600" cellpadding="0" cellspacing="0" border="0"
+               style="max-width:600px;width:100%;background:#ffffff;border-radius:20px;overflow:hidden;box-shadow:0 8px 40px rgba(0,0,0,0.10);">
+
+          <!-- ── HEADER ── -->
+          <tr>
+            <td style="background:linear-gradient(135deg,#0f172a 0%,#1e3a8a 60%,#1e3a8a 100%);padding:36px 40px 32px;text-align:center;">
+
+              <!-- Logo mark (inline SVG works in Gmail/Apple Mail; Outlook shows alt) -->
+              <table cellpadding="0" cellspacing="0" border="0" style="margin:0 auto 12px;">
+                <tr>
+                  <td align="center">
+                    <!--[if !mso]><!-->
+                    <svg width="48" height="48" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg"
+                         style="display:block;border-radius:12px;">
+                      <defs>
+                        <linearGradient id="hg" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
+                          <stop offset="0" stop-color="#2563eb"/>
+                          <stop offset="0.55" stop-color="#1e3a8a"/>
+                          <stop offset="1" stop-color="#16a34a"/>
+                        </linearGradient>
+                      </defs>
+                      <rect width="64" height="64" rx="16" fill="url(#hg)"/>
+                      <g stroke="#ffffff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" fill="none">
+                        <path d="M16 48 Q 30 48 34 34 T 48 16"/>
+                        <path d="M48 26 L48 16 L38 16"/>
+                      </g>
+                      <circle cx="16" cy="48" r="5" fill="#ffffff"/>
+                    </svg>
+                    <!--<![endif]-->
+                    <!--[if mso]><div style="width:48px;height:48px;background:#1e3a8a;border-radius:12px;display:inline-block;"></div><![endif]-->
+                  </td>
+                </tr>
+              </table>
+
+              <!-- Wordmark -->
+              <div style="font-size:26px;font-weight:900;letter-spacing:-0.5px;line-height:1;">
+                <span style="color:#ffffff;">Career</span><span style="color:#4ade80;">Next</span>
+              </div>
+              <div style="color:rgba(255,255,255,0.45);font-size:11px;margin-top:5px;letter-spacing:0.1em;text-transform:uppercase;">
+                Kenya's #1 Course &amp; Career Platform
+              </div>
+            </td>
+          </tr>
+
+          <!-- ── SUCCESS BANNER ── -->
+          <tr>
+            <td style="background:#16a34a;padding:18px 40px;text-align:center;">
+              <span style="color:#ffffff;font-size:18px;font-weight:800;letter-spacing:0.01em;">
+                &#10003;&nbsp; Payment Confirmed
+              </span>
+            </td>
+          </tr>
+
+          <!-- ── BODY ── -->
+          <tr>
+            <td style="background:#ffffff;padding:40px 40px 32px;">
+
+              <p style="margin:0 0 8px;font-size:17px;color:#1e293b;font-weight:700;">
+                Hi {{ user_name }},
+              </p>
+              {% if is_topup %}
+              <p style="margin:0 0 28px;font-size:15px;color:#475569;line-height:1.75;">
+                Thank you for your payment. Your AI chat messages have been topped up
+                and you can continue your career conversations on CareerNext right away.
+              </p>
+              {% else %}
+              <p style="margin:0 0 28px;font-size:15px;color:#475569;line-height:1.75;">
+                Thank you for your payment. Your access has been unlocked and you can
+                continue using CareerNext right away.
+              </p>
+              {% endif %}
+
+              <!-- ── RECEIPT TABLE ── -->
+              <table width="100%" cellpadding="0" cellspacing="0" border="0"
+                     style="background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:14px;overflow:hidden;margin-bottom:32px;">
+
+                <!-- Feature -->
+                <tr>
+                  <td style="padding:16px 22px;border-bottom:1px solid #e2e8f0;">
+                    <table width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
+                      <td style="font-size:11px;color:#94a3b8;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;">Feature Unlocked</td>
+                      <td align="right" style="font-size:14px;color:#1e293b;font-weight:700;">{{ feature_label }}</td>
+                    </tr></table>
+                  </td>
+                </tr>
+
+                <!-- Amount -->
+                <tr>
+                  <td style="padding:16px 22px;border-bottom:1px solid #e2e8f0;">
+                    <table width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
+                      <td style="font-size:11px;color:#94a3b8;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;">Amount Paid</td>
+                      <td align="right" style="font-size:22px;color:#16a34a;font-weight:900;letter-spacing:-0.5px;">KES {{ amount }}</td>
+                    </tr></table>
+                  </td>
+                </tr>
+
+                <!-- M-Pesa reference (only shown if we have it) -->
+                {% if mpesa_ref %}
+                <tr>
+                  <td style="padding:16px 22px;border-bottom:1px solid #e2e8f0;">
+                    <table width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
+                      <td style="font-size:11px;color:#94a3b8;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;">M-Pesa Reference</td>
+                      <td align="right" style="font-size:15px;color:#1e293b;font-weight:800;font-family:'Courier New',Courier,monospace;letter-spacing:0.05em;">{{ mpesa_ref }}</td>
+                    </tr></table>
+                  </td>
+                </tr>
+                {% endif %}
+
+                <!-- Payment ID -->
+                <tr>
+                  <td style="padding:16px 22px;border-bottom:1px solid #e2e8f0;">
+                    <table width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
+                      <td style="font-size:11px;color:#94a3b8;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;">Payment ID</td>
+                      <td align="right" style="font-size:14px;color:#64748b;font-weight:600;">#{{ payment_id }}</td>
+                    </tr></table>
+                  </td>
+                </tr>
+
+                <!-- Date -->
+                <tr>
+                  <td style="padding:16px 22px;">
+                    <table width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
+                      <td style="font-size:11px;color:#94a3b8;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;">Date</td>
+                      <td align="right" style="font-size:14px;color:#64748b;font-weight:600;">{{ paid_at }}</td>
+                    </tr></table>
+                  </td>
+                </tr>
+
+              </table>
+
+              <!-- ── CTA BUTTON ── -->
+              <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:32px;">
+                <tr>
+                  <td align="center">
+                    <a href="{{ site_url }}"
+                       style="display:inline-block;background:#2563eb;color:#ffffff;text-decoration:none;font-size:15px;font-weight:800;padding:15px 40px;border-radius:10px;letter-spacing:0.02em;mso-padding-alt:0;">
+                      <!--[if mso]><i style="letter-spacing:40px;mso-font-width:-100%;mso-text-raise:30pt;">&nbsp;</i><![endif]-->
+                      {% if is_topup %}Continue Chatting &rarr;{% else %}View My Results &rarr;{% endif %}
+                      <!--[if mso]><i style="letter-spacing:40px;mso-font-width:-100%;">&nbsp;</i><![endif]-->
+                    </a>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- Note -->
+              <p style="margin:0;font-size:13px;color:#94a3b8;line-height:1.7;border-top:1px solid #f1f5f9;padding-top:24px;">
+                Keep this email as your proof of payment. If you did not make this payment or have any concerns, please contact us immediately at
+                <a href="mailto:support@careernext.co.ke" style="color:#2563eb;text-decoration:none;font-weight:600;">support@careernext.co.ke</a>.
+              </p>
+
+            </td>
+          </tr>
+
+          <!-- ── FOOTER ── -->
+          <tr>
+            <td style="background:#f8fafc;border-top:1.5px solid #e2e8f0;padding:28px 40px;text-align:center;">
+
+              <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td align="center" style="padding-bottom:14px;">
+                    <span style="font-size:16px;font-weight:900;letter-spacing:-0.3px;">
+                      <span style="color:#1e293b;">Career</span><span style="color:#16a34a;">Next</span>
+                    </span>
+                  </td>
+                </tr>
+                <tr>
+                  <td align="center" style="padding-bottom:6px;">
+                    <span style="font-size:13px;color:#64748b;">
+                      Questions?&nbsp;
+                      <a href="mailto:support@careernext.co.ke" style="color:#2563eb;text-decoration:none;font-weight:600;">support@careernext.co.ke</a>
+                    </span>
+                  </td>
+                </tr>
+                <tr>
+                  <td align="center" style="padding-bottom:16px;">
+                    <a href="{{ site_url }}" style="font-size:13px;color:#2563eb;text-decoration:none;">careernext.co.ke</a>
+                  </td>
+                </tr>
+                <tr>
+                  <td align="center">
+                    <span style="font-size:11px;color:#cbd5e1;line-height:1.7;">
+                      &copy; {{ year }} CareerNext &mdash; Kenya's Course &amp; Career Placement Platform<br>
+                      This receipt was sent to <span style="color:#94a3b8;">{{ user_email }}</span> because a payment was made on your account.
+                    </span>
+                  </td>
+                </tr>
+              </table>
+
+            </td>
+          </tr>
+
+        </table>
+        <!-- /Card -->
+
+      </td>
+    </tr>
+  </table>
+  <!-- /Outer wrapper -->
+
+</body>
+</html>

@@ -12,7 +12,11 @@ FEATURE_PRICES = {
     "view_eligible_courses": 0,
     "premium_career_report": 50,
     "advanced_analysis": 149,
+    "ai_chat_access": 50,
 }
+
+# Features that can be purchased multiple times (top-ups, not one-time unlocks)
+REPEATABLE_FEATURES = {"ai_chat_access"}
 
 
 def has_paid_for_feature(user, feature: str) -> bool:
