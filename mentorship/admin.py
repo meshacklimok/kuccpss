@@ -317,12 +317,37 @@ class TimeSlotAdmin(admin.ModelAdmin):
 class MentorshipSessionAdmin(admin.ModelAdmin):
     list_display = [
         "short_token", "mentee_email", "mentor_name", "slot_display",
-        "status_badge", "amount", "mentor_payout", "payment_ref", "created_at",
+        "status_badge", "amount", "mentor_payout", "payment_ref",
+        "manual_payment_ref", "confirmation_sent", "created_at",
     ]
-    list_filter = ["status"]
-    search_fields = ["mentee__email", "mentor__user__email", "payment_ref", "token"]
-    readonly_fields = ["token", "created_at", "updated_at"]
-    actions = ["mark_completed", "mark_refunded"]
+    list_filter = ["status", "confirmation_sent"]
+    search_fields = ["mentee__email", "mentor__user__email", "payment_ref", "manual_payment_ref", "token"]
+    readonly_fields = ["token", "created_at", "updated_at", "confirmation_sent"]
+    actions = ["mark_completed", "mark_refunded", "confirm_manual_payment"]
+
+    fieldsets = (
+        ("Session", {
+            "fields": ("token", "mentor", "mentee", "slot", "course_interest", "mentee_question"),
+        }),
+        ("Mentee Contact", {
+            "fields": ("mentee_phone",),
+            "description": "Visible to mentor after payment — never shown to students.",
+        }),
+        ("Payment", {
+            "fields": ("amount", "mentor_payout", "status", "payment_ref", "phone_used",
+                       "manual_payment_ref"),
+        }),
+        ("Notifications", {
+            "fields": ("confirmation_sent",),
+        }),
+        ("Feedback", {
+            "fields": ("rating", "review"),
+        }),
+        ("Timestamps", {
+            "fields": ("created_at", "updated_at"),
+            "classes": ("collapse",),
+        }),
+    )
 
     def short_token(self, obj):
         return str(obj.token)[:8] + "…"
@@ -343,6 +368,7 @@ class MentorshipSessionAdmin(admin.ModelAdmin):
     def status_badge(self, obj):
         colours = {
             "pending_payment": "orange",
+            "pending_manual_verification": "purple",
             "confirmed": "blue",
             "completed": "green",
             "cancelled": "red",
@@ -364,7 +390,7 @@ class MentorshipSessionAdmin(admin.ModelAdmin):
     mark_completed.short_description = "Mark selected as completed"
 
     def mark_refunded(self, request, queryset):
-        for session in queryset.filter(status__in=["confirmed", "pending_payment"]):
+        for session in queryset.filter(status__in=["confirmed", "pending_payment", "pending_manual_verification"]):
             session.status = "refunded"
             session.save(update_fields=["status"])
             mentor = session.mentor
@@ -373,6 +399,22 @@ class MentorshipSessionAdmin(admin.ModelAdmin):
             mentor.save(update_fields=["wallet_balance", "total_earned"])
         self.message_user(request, "Sessions marked as refunded.")
     mark_refunded.short_description = "Mark selected as refunded"
+
+    def confirm_manual_payment(self, request, queryset):
+        """
+        Fallback: admin manually confirms sessions where auto-verification couldn't resolve.
+        Credits mentor wallet and sends booking confirmation emails to both parties.
+        """
+        from mentorship.views import _confirm_session_after_payment
+        count = 0
+        for session in queryset.filter(status="pending_manual_verification"):
+            try:
+                _confirm_session_after_payment(session)
+                count += 1
+            except Exception as exc:
+                self.message_user(request, f"Error confirming session {session.token}: {exc}", level="error")
+        self.message_user(request, f"Confirmed {count} session(s) and notified both parties.")
+    confirm_manual_payment.short_description = "Confirm manual payment and notify both parties"
 
 
 @admin.register(WithdrawalRequest)

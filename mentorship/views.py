@@ -15,7 +15,7 @@ from django.views.decorators.http import require_POST
 
 from accounts.decorators import require_recent_auth
 from .forms import AddSlotsForm, AddWeekSlotsForm, BookingForm, CancelSessionForm, MentorRegistrationForm, RatingForm, WithdrawalForm
-from .models import MentorProfile, MentorshipSession, TimeSlot, WithdrawalRequest
+from .models import MentorProfile, MentorshipConfig, MentorshipSession, TimeSlot, WithdrawalRequest
 
 logger = logging.getLogger(__name__)
 
@@ -68,6 +68,7 @@ def directory(request):
 
     from career.models import CareerConfig
     cfg = CareerConfig.get()
+    global_price = MentorshipConfig.get().session_price
     return render(request, "mentorship/directory.html", {
         "mentors": mentors,
         "query": query,
@@ -77,12 +78,14 @@ def directory(request):
         "institutions": institutions,
         "year_choices": MentorProfile.YEAR_CHOICES,
         "mentor_signup_enabled": cfg.mentor_signup_enabled,
+        "global_session_price": global_price,
     })
 
 
 # ── Public: Mentor Profile ────────────────────────────────────────────────────
 
 def mentor_profile(request, mentor_pk):
+    from career.models import CareerConfig
     mentor = get_object_or_404(MentorProfile, pk=mentor_pk, is_approved=True, is_active=True)
     available_slots = mentor.slots.filter(
         is_booked=False, date__gte=timezone.now().date()
@@ -90,12 +93,15 @@ def mentor_profile(request, mentor_pk):
     reviews = mentor.sessions.filter(
         status="completed", rating__isnull=False
     ).select_related("mentee").order_by("-updated_at")[:6]
+    cfg = CareerConfig.get()
 
     return render(request, "mentorship/mentor_profile.html", {
         "mentor": mentor,
         "available_slots": available_slots,
         "reviews": reviews,
         "star_range": range(1, 6),
+        "session_price": mentor.effective_session_price(),
+        "mentor_signup_enabled": cfg.mentor_signup_enabled,
     })
 
 
@@ -335,6 +341,7 @@ def complete_session(request, token):
 
 @login_required
 def book_session(request, mentor_pk):
+    from career.models import CareerConfig
     mentor = get_object_or_404(MentorProfile, pk=mentor_pk, is_approved=True, is_active=True)
 
     if hasattr(request.user, "mentor_profile") and request.user.mentor_profile.pk == mentor.pk:
@@ -358,6 +365,7 @@ def book_session(request, mentor_pk):
                 slot=slot,
                 course_interest=mentor.course,
                 mentee_question=form.cleaned_data["mentee_question"],
+                mentee_phone=form.cleaned_data["mentee_phone"],
                 status="pending_payment",
                 amount=mentor.effective_session_price(),
                 mentor_payout=mentor.effective_mentor_payout(),
@@ -372,20 +380,27 @@ def book_session(request, mentor_pk):
         initial = {"slot": preselected_slot_id} if preselected_slot_id else {}
         form = BookingForm(mentor, initial=initial)
 
+    cfg = CareerConfig.get()
     return render(request, "mentorship/book_session.html", {
         "mentor": mentor,
         "form": form,
+        "session_price": mentor.effective_session_price(),
+        "mentor_signup_enabled": cfg.mentor_signup_enabled,
     })
 
 
 @login_required
 def checkout(request, token):
     session = get_object_or_404(
-        MentorshipSession, token=token, mentee=request.user, status="pending_payment"
+        MentorshipSession, token=token, mentee=request.user,
+        status__in=["pending_payment", "pending_manual_verification"],
     )
+    from resources.models import SiteSetting
+    contact_email = SiteSetting.get("contact_email", default=settings.ADMIN_EMAIL)
     return render(request, "mentorship/checkout.html", {
         "session": session,
         "intasend_public_key": settings.INTASEND_PUBLISHABLE_KEY,
+        "contact_email": contact_email,
     })
 
 
@@ -393,6 +408,19 @@ def checkout(request, token):
 def session_status(request, token):
     """AJAX: Return current session status so the checkout page can poll."""
     session = get_object_or_404(MentorshipSession, token=token, mentee=request.user)
+
+    # Fallback: if webhook delivered confirmation but emails weren't sent, send now
+    if session.status == "confirmed" and not session.confirmation_sent:
+        try:
+            session_full = MentorshipSession.objects.select_related(
+                "mentor", "mentor__user", "mentee", "slot"
+            ).get(pk=session.pk)
+            _send_booking_confirmation(session_full)
+            session_full.confirmation_sent = True
+            session_full.save(update_fields=["confirmation_sent"])
+        except Exception:
+            pass
+
     return JsonResponse({
         "status": session.status,
         "redirect_url": session.get_absolute_url() if session.status == "confirmed" else None,
@@ -434,6 +462,96 @@ def initiate_payment(request, token):
         return JsonResponse({"ok": False, "error": "Payment gateway error. Please try again."}, status=502)
 
 
+@login_required
+@require_POST
+def verify_payment_manual(request, token):
+    """
+    Mentee submits M-Pesa transaction code when STK push fails.
+    First checks IntaSend to see if payment already registered (webhook missed).
+    Auto-confirms if IntaSend says COMPLETE; otherwise queues for admin review.
+    """
+    session = get_object_or_404(
+        MentorshipSession, token=token, mentee=request.user,
+        status__in=["pending_payment", "pending_manual_verification"],
+    )
+    mpesa_code = request.POST.get("mpesa_code", "").strip().upper()
+
+    if not mpesa_code:
+        messages.error(request, "Please enter your M-Pesa transaction code.")
+        return redirect("mentorship:checkout", token=token)
+
+    # Save the code regardless of outcome
+    session.manual_payment_ref = mpesa_code
+    session.save(update_fields=["manual_payment_ref"])
+
+    # ── Step 1: Check IntaSend directly (webhook may have simply not arrived) ──
+    if session.payment_ref:
+        try:
+            from payments.services import fetch_intasend_status
+            state = fetch_intasend_status(session.payment_ref)
+            logger.info("IntaSend status check for session %s: %s", session.token, state)
+            if state == "COMPLETE":
+                _confirm_session_after_payment(session)
+                messages.success(
+                    request,
+                    "Payment verified! Your session is now confirmed. "
+                    "Check your email for the full details and your mentor's WhatsApp number."
+                )
+                return redirect("mentorship:session_detail", token=token)
+        except Exception as exc:
+            logger.warning("IntaSend status check failed for session %s: %s", session.token, exc)
+
+    # ── Step 2: IntaSend didn't confirm — queue for admin review ─────────────
+    session.status = "pending_manual_verification"
+    session.save(update_fields=["status"])
+
+    slot_str = session.slot.datetime_display
+    mentee_name = session.mentee_display
+
+    send_mail(
+        subject=f"ACTION: Manual Payment Verification — {mentee_name}",
+        message=(
+            f"A mentee submitted an M-Pesa code for manual payment verification.\n\n"
+            f"Mentee     : {mentee_name} ({session.mentee.email})\n"
+            f"Mentor     : {session.mentor.display_name}\n"
+            f"Slot       : {slot_str}\n"
+            f"Amount     : KES {session.amount}\n"
+            f"M-Pesa Code: {mpesa_code}\n\n"
+            f"ACTION: Verify this M-Pesa code in your Safaricom portal.\n"
+            f"If valid, use the 'Confirm manual payment' action in admin:\n"
+            f"https://www.careernext.co.ke/cn-staff/mentorship/mentorshipsession/{session.pk}/change/\n\n"
+            f"Session token: {session.token}"
+        ),
+        from_email=settings.DEFAULT_FROM_EMAIL,
+        recipient_list=[_admin_email()],
+        fail_silently=True,
+    )
+    logger.info("Manual payment queued for admin review: session=%s code=%s", session.token, mpesa_code)
+
+    messages.info(
+        request,
+        f"Your M-Pesa code ({mpesa_code}) has been submitted. "
+        "Our team will verify it shortly and you'll receive a confirmation email once approved. "
+        "If this takes too long, please contact us."
+    )
+    return redirect("mentorship:checkout", token=token)
+
+
+def _confirm_session_after_payment(session: MentorshipSession):
+    """Shared logic: mark session confirmed, credit mentor, send emails."""
+    session.status = "confirmed"
+    session.save(update_fields=["status"])
+    mentor = session.mentor
+    mentor.wallet_balance += session.mentor_payout
+    mentor.total_earned += session.mentor_payout
+    mentor.save(update_fields=["wallet_balance", "total_earned"])
+    if not session.confirmation_sent:
+        _send_booking_confirmation(session)
+        session.confirmation_sent = True
+        session.save(update_fields=["confirmation_sent"])
+    _maybe_auto_pay_mentor(mentor)
+
+
 @csrf_exempt
 def payment_webhook(request):
     """IntaSend webhook — called when payment completes or fails."""
@@ -456,23 +574,15 @@ def payment_webhook(request):
                 "mentor", "mentor__user", "mentee", "slot"
             ).get(token=api_ref, status="pending_payment")
 
-            session.status = "confirmed"
             invoice_id = (
                 payload.get("invoice_id")
                 or payload.get("invoice", {}).get("invoice_id", "")
             )
             if invoice_id:
                 session.payment_ref = invoice_id
-            session.save(update_fields=["status", "payment_ref"])
+                session.save(update_fields=["payment_ref"])
 
-            # Credit mentor wallet
-            mentor = session.mentor
-            mentor.wallet_balance += session.mentor_payout
-            mentor.total_earned += session.mentor_payout
-            mentor.save(update_fields=["wallet_balance", "total_earned"])
-
-            _send_booking_confirmation(session)
-            _maybe_auto_pay_mentor(mentor)
+            _confirm_session_after_payment(session)
 
         except MentorshipSession.DoesNotExist:
             pass  # Already processed or unrelated ref
@@ -509,9 +619,25 @@ def session_detail(request, token):
 
 @login_required
 def rate_session(request, token):
-    session = get_object_or_404(
-        MentorshipSession, token=token, mentee=request.user, status="completed"
-    )
+    session = get_object_or_404(MentorshipSession, token=token)
+
+    # Must be the mentee of this session
+    if session.mentee != request.user:
+        messages.error(
+            request,
+            "You don't have permission to rate this session. "
+            "Make sure you're logged in with the account you used to book it."
+        )
+        return redirect("mentorship:my_sessions")
+
+    # Session must be completed before rating
+    if session.status != "completed":
+        messages.info(
+            request,
+            "This session hasn't been marked complete yet. "
+            "Once your mentor marks it complete you'll be able to leave a rating."
+        )
+        return redirect("mentorship:session_detail", token=token)
 
     if session.rating:
         messages.info(request, "You've already rated this session.")
@@ -536,7 +662,6 @@ def rate_session(request, token):
     })
 
 
-@login_required
 @login_required
 @require_POST
 def withdraw_application(request):
@@ -667,6 +792,8 @@ def _send_booking_confirmation(session: MentorshipSession):
     ics_content = generate_ics(session)
     ics_filename = f"session_{session.token}.ics"
 
+    mentee_phone_line = f"Phone     : {session.mentee_phone}\n" if session.mentee_phone else ""
+
     # ── Email to MENTEE ───────────────────────────────────────────────────────
     mentee_body = (
         f"Hi {mentee_name},\n\n"
@@ -702,8 +829,9 @@ def _send_booking_confirmation(session: MentorshipSession):
     mentee_email.attach(ics_filename, ics_content, "text/calendar")
     try:
         mentee_email.send()
-    except Exception:
-        pass
+        logger.info("Booking confirmation sent to mentee %s for session %s", session.mentee.email, session.token)
+    except Exception as exc:
+        logger.error("Failed to send booking confirmation to mentee %s: %s", session.mentee.email, exc)
 
     # ── Email to MENTOR ───────────────────────────────────────────────────────
     mentor_body = (
@@ -712,24 +840,27 @@ def _send_booking_confirmation(session: MentorshipSession):
         f"────────────────────────\n"
         f"Student   : {mentee_name}\n"
         f"Email     : {session.mentee.email}\n"
+        f"{mentee_phone_line}"
         f"When      : {slot_str} (15 minutes)\n"
         f"You earn  : KES {session.mentor_payout}\n"
         f"────────────────────────\n\n"
         f"HOW TO CONNECT:\n"
-        f"Reach out to the student via WhatsApp to agree on how you'll meet.\n"
+        f"Reach out to the student via WhatsApp or call them on {session.mentee_phone or 'the number they provided'}.\n"
         f"You can use Google Meet, WhatsApp Video, or a phone call — coordinate with them.\n\n"
         f"Add to Google Calendar:\n{gcal_link}\n\n"
         f"Or open the attached .ics file — you'll get reminders 1 hour and 15 minutes before.\n\n"
         f"What they want to discuss:\n"
         f"\"{session.mentee_question}\"\n\n"
         f"NEXT STEPS:\n"
-        f"1. Expect a WhatsApp message from {mentee_name} — agree on the call method.\n"
-        f"2. Be prepared at the scheduled time.\n"
-        f"3. After the session, mark it complete: {base}/mentorship/dashboard/\n\n"
+        f"1. Contact {mentee_name} — their email: {session.mentee.email}"
+        f"{', phone: ' + session.mentee_phone if session.mentee_phone else ''}.\n"
+        f"2. Agree on the call method (WhatsApp video, Google Meet, or phone).\n"
+        f"3. Be prepared at the scheduled time.\n"
+        f"4. After the session, mark it complete: {base}/mentorship/dashboard/\n\n"
         f"CareerNext Team"
     )
     mentor_email = EmailMessage(
-        subject=f"New Booking — {slot_str}",
+        subject=f"New Session Booked — {slot_str}",
         body=mentor_body,
         from_email=settings.DEFAULT_FROM_EMAIL,
         to=[session.mentor.user.email],
@@ -737,8 +868,9 @@ def _send_booking_confirmation(session: MentorshipSession):
     mentor_email.attach(ics_filename, ics_content, "text/calendar")
     try:
         mentor_email.send()
-    except Exception:
-        pass
+        logger.info("Booking confirmation sent to mentor %s for session %s", session.mentor.user.email, session.token)
+    except Exception as exc:
+        logger.error("Failed to send booking confirmation to mentor %s: %s", session.mentor.user.email, exc)
 
     # ── In-app notifications ──────────────────────────────────────────────────
     try:

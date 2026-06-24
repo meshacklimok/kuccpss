@@ -128,6 +128,15 @@ class BookingForm(forms.Form):
         label="What do you want to discuss?",
         help_text="Be specific — your mentor will prepare based on this.",
     )
+    mentee_phone = forms.CharField(
+        max_length=20,
+        label="Your Phone Number",
+        help_text="Shared with your mentor after payment so they can reach you.",
+        widget=forms.TextInput(attrs={
+            "class": "form-control",
+            "placeholder": "+254712345678",
+        }),
+    )
 
     def __init__(self, mentor, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -136,6 +145,16 @@ class BookingForm(forms.Form):
             is_booked=False,
             date__gte=timezone.now().date(),
         ).order_by("date", "start_time")
+
+    def clean_mentee_phone(self):
+        number = self.cleaned_data["mentee_phone"].strip().replace(" ", "")
+        if number.startswith("07") or number.startswith("01"):
+            number = "+254" + number[1:]
+        elif number.startswith("254"):
+            number = "+" + number
+        if not number.startswith("+254") or len(number) != 13:
+            raise forms.ValidationError("Enter a valid Kenyan phone number, e.g. +254712345678")
+        return number
 
 
 WEEKDAY_OPTIONS = [

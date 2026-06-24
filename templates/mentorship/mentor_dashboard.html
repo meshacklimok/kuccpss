@@ -44,7 +44,7 @@
           <strong>Application under review</strong>
           <div class="small mt-1 text-muted">
             We are verifying your documents and will notify you at
-            <strong>{{ request.user.email }}</strong> within 24 hours.
+            <strong>{{ request.user.email }}</strong> within 72 hours.
             Your profile will not be visible to students until approved.
           </div>
           <div class="small mt-2">
@@ -90,7 +90,7 @@
     <div class="alert alert-warning rounded-4 mb-4">
       <i class="bi bi-clock me-2"></i>
       <strong>Your profile is under review.</strong>
-      We'll notify you at <strong>{{ request.user.email }}</strong> once approved (within 72 hours).
+      We'll notify you at <strong>{{ request.user.email }}</strong> once approved (within 72 hours). Check your spam/promotions folder.
     </div>
   {% endif %}
 
@@ -113,6 +113,14 @@
                   <div class="text-muted small">
                     <i class="bi bi-calendar3 me-1"></i>{{ session.slot.datetime_display }}
                   </div>
+                  <div class="text-muted small mt-1">
+                    <i class="bi bi-envelope me-1"></i>{{ session.mentee.email }}
+                  </div>
+                  {% if session.mentee_phone %}
+                  <div class="text-muted small mt-1">
+                    <i class="bi bi-phone me-1"></i>{{ session.mentee_phone }}
+                  </div>
+                  {% endif %}
                   <div class="text-muted small mt-1">
                     <i class="bi bi-chat-dots me-1"></i>{{ session.mentee_question|truncatewords:20 }}
                   </div>

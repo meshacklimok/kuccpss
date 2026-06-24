@@ -16,6 +16,7 @@ urlpatterns = [
     path("mentor/<int:mentor_pk>/book/", views.book_session, name="book_session"),
     path("checkout/<uuid:token>/", views.checkout, name="checkout"),
     path("checkout/<uuid:token>/pay/", views.initiate_payment, name="initiate_payment"),
+    path("checkout/<uuid:token>/verify-manual/", views.verify_payment_manual, name="verify_payment_manual"),
     path("webhook/payment/", views.payment_webhook, name="payment_webhook"),
     path("checkout/<uuid:token>/status/", views.session_status, name="session_status"),
     path("dashboard/edit/", views.edit_mentor_profile, name="edit_profile"),

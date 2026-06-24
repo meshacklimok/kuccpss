@@ -36,7 +36,7 @@
       <div class="card border-0 shadow-sm rounded-4">
         <div class="card-body p-4 p-md-5">
           <h4 class="fw-bold mb-1">Book a 15-Minute Session</h4>
-          <p class="text-muted mb-4">KES 100 · Paid via M-Pesa · WhatsApp Call</p>
+          <p class="text-muted mb-4">KES {{ session_price }} · Paid via M-Pesa · WhatsApp Call</p>
 
           {% if messages %}
             {% for msg in messages %}
@@ -84,12 +84,24 @@
               {% endif %}
             </div>
 
+            <!-- Phone number -->
+            <div class="mb-4">
+              <label class="form-label fw-semibold">{{ form.mentee_phone.label }} <span class="text-danger">*</span></label>
+              {{ form.mentee_phone }}
+              {% if form.mentee_phone.help_text %}
+                <div class="form-text">{{ form.mentee_phone.help_text }}</div>
+              {% endif %}
+              {% if form.mentee_phone.errors %}
+                <div class="text-danger small mt-1">{{ form.mentee_phone.errors }}</div>
+              {% endif %}
+            </div>
+
             <!-- Pricing note -->
             <div class="alert alert-light border rounded-3 small mb-4">
               <div class="d-flex align-items-center gap-2">
                 <i class="bi bi-credit-card text-primary fs-5"></i>
                 <div>
-                  <strong>Payment on the next step:</strong> KES 100 via M-Pesa.
+                  <strong>Payment on the next step:</strong> KES {{ session_price }} via M-Pesa.
                   You'll receive the mentor's WhatsApp number by email immediately after payment.
                 </div>
               </div>

@@ -36,40 +36,51 @@
         </div>
 
         <div class="card-body p-4">
-          <h5 class="fw-bold mb-1 text-center">Pay via M-Pesa</h5>
-          <p class="text-muted small text-center mb-4">
-            Enter your M-Pesa number and tap Pay. An STK push will appear on your phone.
-          </p>
-
-          <div id="pay-error" class="alert alert-danger rounded-3 d-none"></div>
-          <div id="pay-success" class="alert alert-success rounded-3 d-none"></div>
-
-          <div class="mb-3">
-            <label class="form-label fw-semibold">M-Pesa Phone Number</label>
-            <div class="input-group">
-              <span class="input-group-text bg-light border-end-0 pe-2">
-                <img src="https://flagcdn.com/16x12/ke.png" alt="KE" class="me-1"> +254
-              </span>
-              <input
-                type="tel"
-                id="phone-input"
-                class="form-control border-start-0 ps-1"
-                placeholder="712 345 678"
-                maxlength="12"
-                style="letter-spacing: .05em;"
-              >
+          {% if session.status == "pending_manual_verification" %}
+            <div class="alert alert-warning rounded-3 text-center mb-3">
+              <i class="bi bi-hourglass-split fs-4 d-block mb-2"></i>
+              <strong>Payment Under Verification</strong>
+              <div class="small mt-1 text-muted">
+                Your M-Pesa code <strong>{{ session.manual_payment_ref }}</strong> has been submitted.
+                We'll confirm your session within a few hours and email you at <strong>{{ session.mentee.email }}</strong>.
+              </div>
             </div>
-            <div class="form-text">Enter 9 digits after +254, e.g. 712 345 678 — no leading zero.</div>
-          </div>
+          {% else %}
+            <h5 class="fw-bold mb-1 text-center">Pay via M-Pesa</h5>
+            <p class="text-muted small text-center mb-4">
+              Enter your M-Pesa number and tap Pay. An STK push will appear on your phone.
+            </p>
 
-          <button id="pay-btn" class="btn btn-success w-100 rounded-pill fw-semibold py-3" style="font-size:1.05rem;">
-            <i class="bi bi-phone me-2"></i>Pay KES {{ session.amount }} via M-Pesa
-          </button>
+            <div id="pay-error" class="alert alert-danger rounded-3 d-none"></div>
+            <div id="pay-success" class="alert alert-success rounded-3 d-none"></div>
 
-          <div id="pay-spinner" class="text-center mt-3 d-none">
-            <div class="spinner-border text-primary" role="status"></div>
-            <div class="text-muted small mt-2">Waiting for your M-Pesa PIN… check your phone.</div>
-          </div>
+            <div class="mb-3">
+              <label class="form-label fw-semibold">M-Pesa Phone Number</label>
+              <div class="input-group">
+                <span class="input-group-text bg-light border-end-0 pe-2">
+                  <img src="https://flagcdn.com/16x12/ke.png" alt="KE" class="me-1"> +254
+                </span>
+                <input
+                  type="tel"
+                  id="phone-input"
+                  class="form-control border-start-0 ps-1"
+                  placeholder="712 345 678"
+                  maxlength="12"
+                  style="letter-spacing: .05em;"
+                >
+              </div>
+              <div class="form-text">Enter 9 digits after +254, e.g. 712 345 678 — no leading zero.</div>
+            </div>
+
+            <button id="pay-btn" class="btn btn-success w-100 rounded-pill fw-semibold py-3" style="font-size:1.05rem;">
+              <i class="bi bi-phone me-2"></i>Pay KES {{ session.amount }} via M-Pesa
+            </button>
+
+            <div id="pay-spinner" class="text-center mt-3 d-none">
+              <div class="spinner-border text-primary" role="status"></div>
+              <div class="text-muted small mt-2">Waiting for your M-Pesa PIN… check your phone.</div>
+            </div>
+          {% endif %}
 
           <hr class="my-4">
 
@@ -78,15 +89,46 @@
               <i class="bi bi-check-circle-fill text-success mt-1"></i>
               <span>Mentor's WhatsApp number sent to your email after payment</span>
             </li>
-            <li class="d-flex align-items-start gap-2 mb-2">
+            <li class="d-flex align-items-start gap-2">
               <i class="bi bi-check-circle-fill text-success mt-1"></i>
               <span>Secure M-Pesa payment via IntaSend</span>
             </li>
-            <li class="d-flex align-items-start gap-2">
-              <i class="bi bi-check-circle-fill text-success mt-1"></i>
-              <span>KES {{ session.mentor_payout }} goes directly to your mentor</span>
-            </li>
           </ul>
+
+          <!-- Manual payment verification (shown after STK failure / already paid) -->
+          <hr class="my-4">
+          <div id="manual-verify-section">
+            <p class="text-muted small mb-2">
+              <i class="bi bi-info-circle me-1"></i>
+              <strong>STK push didn't arrive?</strong> If M-Pesa already deducted the money,
+              enter your transaction code below and we'll verify manually.
+            </p>
+            {% if session.status == "pending_manual_verification" %}
+              <div class="alert alert-warning rounded-3 small">
+                <i class="bi bi-hourglass-split me-2"></i>
+                Your code <strong>{{ session.manual_payment_ref }}</strong> is under review.
+                You'll receive a confirmation email once verified.
+                <br>Still having issues?
+                <a href="mailto:{{ contact_email }}" class="fw-semibold">Contact us</a>.
+              </div>
+            {% else %}
+              <form method="post" action="{% url 'mentorship:verify_payment_manual' session.token %}">
+                {% csrf_token %}
+                <div class="input-group input-group-sm">
+                  <input type="text" name="mpesa_code" class="form-control rounded-start"
+                         placeholder="e.g. QHX12ABC3D" maxlength="20" style="text-transform:uppercase;">
+                  <button type="submit" class="btn btn-outline-secondary rounded-end">
+                    Submit Code
+                  </button>
+                </div>
+                <div class="form-text">
+                  Find the code in your M-Pesa SMS confirmation message.
+                  Persistent issues?
+                  <a href="mailto:{{ contact_email }}">Contact us at {{ contact_email }}</a>.
+                </div>
+              </form>
+            {% endif %}
+          </div>
         </div>
       </div>
 
@@ -111,6 +153,7 @@
 <script>
 (function() {
   const payBtn   = document.getElementById('pay-btn');
+  if (!payBtn) return;  // Already in manual_verification state — no pay button
   const spinner  = document.getElementById('pay-spinner');
   const errBox   = document.getElementById('pay-error');
   const okBox    = document.getElementById('pay-success');
