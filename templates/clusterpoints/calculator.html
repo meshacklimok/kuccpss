@@ -672,8 +672,22 @@ body.dark .lce-btn-calc:disabled { background: var(--surface-2); color: var(--te
             <span class="pg-mpesa-badge">M-PESA</span>
             Pay with M-Pesa — KES {{ gate_price }}
         </button>
-       
+
+        <div id="pg-verify-section" style="display:none;margin-top:0.9rem;">
+            <div style="display:flex;gap:0.5rem;align-items:center;">
+                <input type="text" id="pg-mpesa-code" placeholder="M-Pesa code (e.g. RCK12345XY)"
+                       style="flex:1;background:rgba(255,255,255,0.07);border:1.5px solid rgba(255,255,255,0.15);border-radius:10px;color:#fff;padding:0.65rem 0.9rem;font-size:0.9rem;outline:none;text-transform:uppercase;">
+                <button onclick="pgSubmitCode()" style="background:linear-gradient(135deg,#10b981,#059669);border:none;border-radius:10px;color:#fff;font-weight:700;padding:0.65rem 1rem;font-size:0.85rem;cursor:pointer;white-space:nowrap;">
+                    Verify
+                </button>
+            </div>
+            <p id="pg-verify-msg" style="margin:0.5rem 0 0;font-size:0.78rem;color:rgba(255,255,255,0.45);"></p>
+        </div>
+
         <p class="pg-secure"><i class="bi bi-shield-check-fill"></i>Secure payment · Instant unlock</p>
+        <a id="pg-already-paid" onclick="pgToggleVerify()" style="display:block;text-align:center;margin-top:0.5rem;font-size:0.75rem;color:rgba(255,255,255,0.28);cursor:pointer;text-decoration:none;">
+            I already paid — enter M-Pesa code
+        </a>
     </div>
 </div>
 
@@ -1265,6 +1279,41 @@ function showPaymentGate() {
 function handlePayment() {
     var next = encodeURIComponent(window.location.pathname + window.location.search);
     window.location.href = '/payments/required/?feature={{ gate_feature }}&next=' + next;
+}
+
+function pgToggleVerify() {
+    var sec = document.getElementById('pg-verify-section');
+    var link = document.getElementById('pg-already-paid');
+    var showing = sec.style.display !== 'none';
+    sec.style.display = showing ? 'none' : 'block';
+    link.textContent = showing ? 'I already paid — enter M-Pesa code' : 'Cancel';
+}
+
+async function pgSubmitCode() {
+    var code = (document.getElementById('pg-mpesa-code').value || '').trim().toUpperCase();
+    var msg = document.getElementById('pg-verify-msg');
+    if (!code) { msg.style.color = '#fca5a5'; msg.textContent = 'Please enter your M-Pesa transaction code.'; return; }
+    msg.style.color = 'rgba(255,255,255,0.45)';
+    msg.textContent = 'Checking…';
+    try {
+        var r = await fetch('{% url "payments:verify_by_transaction_code" %}', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
+            body: JSON.stringify({ feature: '{{ gate_feature }}', mpesa_code: code })
+        });
+        var d = await r.json();
+        if (d.status === 'completed') {
+            msg.style.color = '#34d399';
+            msg.textContent = 'Payment verified! Unlocking your results…';
+            setTimeout(function () { location.reload(); }, 2000);
+        } else {
+            msg.style.color = '#fca5a5';
+            msg.textContent = d.message || 'Code not found. Double-check your M-Pesa SMS.';
+        }
+    } catch (e) {
+        msg.style.color = '#fca5a5';
+        msg.textContent = 'Network error. Please try again.';
+    }
 }
 
 {% else %}
