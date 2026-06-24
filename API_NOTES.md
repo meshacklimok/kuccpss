@@ -3,9 +3,15 @@
 ## OpenAI Integration
 
 ### Current State
-`OPENAI_API_KEY` is read from the `OPENAI_API_KEY` environment variable (empty string default — no placeholder in code). The career guidance engine in `career/engine.py` is a stub that returns hardcoded placeholder matches and a dummy AI message.
+`OPENAI_API_KEY` is read from the `OPENAI_API_KEY` environment variable (empty string default — no placeholder in code).
 
-**What IS already live:** The document scanner (`degree_upload` view in `career/views.py`) uses GPT-4o vision. When `OPENAI_API_KEY` is set it accepts JPG/PNG/PDF uploads, detects whether it's a KCSE grade slip or a cluster points document, extracts grades with subject alias resolution, and returns structured JSON. Falls back to manual entry if key is absent.
+**What IS already live:**
+- `career/engine.py` — dispatches to real pathway functions (`match_degree_courses`, `match_diploma_courses`, etc.); no longer returns hardcoded stubs
+- Document scanner (`degree_upload` view in `career/views.py`) — GPT-4o vision; accepts JPG/PNG/PDF; detects KCSE slips vs cluster point docs; extracts grades with subject alias resolution; returns structured JSON. Falls back to manual entry if key is absent.
+- CareerNext AI chat — in-career-engine AI chat with full KUCCPS system prompt, `AIChatCredit` paywall, `AIKnowledgeEntry` knowledge base, per-user rate limiting
+
+**What is still stubbed:**
+- `generate_ai_recommendation()` in `career/engine.py` — returns placeholder text; the full results AI recommendation (not the chat) is not yet live
 
 ### Setup (already done)
 - Key reads from `OPENAI_API_KEY` env var — set this on Render to enable OCR and AI features
@@ -13,7 +19,10 @@
 - `openai` SDK installed
 
 ### Recommended Model
-Use `claude-haiku-4-5-20251001` (via Anthropic, cheapest) or `gpt-4o-mini` (via OpenAI) for short recommendation text. Use `claude-sonnet-4-6` if richer reasoning is needed. See full model IDs in CLAUDE.md.
+- Short recommendation text: `claude-haiku-4-5-20251001` (Anthropic, cheapest) or `gpt-4o-mini` (OpenAI)
+- Richer reasoning / AI chat: `claude-sonnet-4-6`
+- OCR / vision: `gpt-4o` (OpenAI vision; Anthropic models also support vision via `claude-sonnet-4-6`)
+See CLAUDE.md for full model ID list.
 
 ### Planned AI Features
 

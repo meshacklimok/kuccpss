@@ -30,13 +30,14 @@ Status legend: ✅ Done | 🚧 In Progress | 📋 Planned | ❌ Blocked | [-] Dr
 | KCSE grade input form | ✅ | KCSEForm with all subjects |
 | Grade → points conversion | ✅ | GradePoint model, A=12 to E=1 |
 | Aggregate total calculation | ✅ | Math + best lang + 5 best others, max 84; language-pool bug fixed 2026-06-11 |
-| Cluster points calculation | ✅ | Weighted formula, all clusters |
+| Cluster points calculation | ✅ | Midpoint-marks formula: 48×sqrt((core_marks/400)×(agg/84)); capped 48 |
 | Results dashboard (per user) | ✅ | Latest result + all cluster results |
 | PDF export (per cluster) | ✅ | ReportLab, A4 format |
 | Admin analytics | ✅ | Total users, results, clusters calculated |
 | Save/overwrite previous result | ✅ | Deletes old results on new submission |
 | Cutoff trend prediction on results | ✅ | predictor app; trend arrows + band prediction per cluster |
 | Guest/anonymous calculation | ✅ | Works without login; session stashed; CTA prompts registration |
+| Payment gate on calculator | ✅ | STK push redirect; unlocks full results after payment |
 | Compare multiple results | 📋 | History view not yet built |
 | Full results PDF (all clusters) | 📋 | Currently exports one cluster at a time |
 
@@ -66,6 +67,8 @@ Status legend: ✅ Done | 🚧 In Progress | 📋 Planned | ❌ Blocked | [-] Dr
 | Institution type icons & colours | ✅ | `icon`, `color_code`, `bg_color` on InstitutionType; seeded for all 5 types |
 | PDF brochure upload | ✅ | FileField on Institution model |
 | Search institutions | ✅ | `?q=` name filter on institution type detail page |
+| Institution promotion / spotlight | ✅ | InstitutionPromotion model; admin-configurable featured institutions |
+| Circular logos | ✅ | Institution and brand logos rendered as circles |
 | Map / location display | 📋 | Only text location field currently |
 
 ---
@@ -89,6 +92,9 @@ Status legend: ✅ Done | 🚧 In Progress | 📋 Planned | ❌ Blocked | [-] Dr
 | Course search | ✅ | `?q=` name filter on type and category detail pages |
 | PDF upload per course | ✅ | course_pdfs/ upload path |
 | Link degree courses to clusters | ✅ | FK to Cluster (university degree courses) |
+| Course spotlight / trends page | ✅ | CourseSpotlight model; admin-configurable; shown on `/courses/spotlight-trends/` |
+| Course reviews | 🚧 | Review model exists; UI not yet built |
+| Career outcomes + duration fields | ✅ | career_outcomes, duration fields on Course |
 | TVET/TTC cutoff points | 📋 | Not in PDFs — need KUCCPS portal historical data |
 | TVET minimum subject requirements | 📋 | Reference: `TVET_CLUSTER_DOCUMENT_2025.pdf`; not yet linked to Course model |
 | Link TVET/TTC/KMTC courses to clusters | 📋 | `cluster` FK on Course not set for seeded records |
@@ -114,24 +120,41 @@ Status legend: ✅ Done | 🚧 In Progress | 📋 Planned | ❌ Blocked | [-] Dr
 | Pathway selection (Degree/Diploma/KMTC/TVET/TTC) | ✅ | career/home view |
 | KCSE grade input for career matching | ✅ | career/kcse_input view; unified accordion UI |
 | Document Scanner (OCR) | ✅ | GPT-4o vision; supports JPG/PNG/PDF; detects KCSE slips vs cluster point docs |
-| Degree course matching by cluster points | 🚧 | Logic in models.py; engine.py is stub |
-| Diploma/KMTC/TVET/TTC matching by mean grade | 🚧 | Logic exists, engine.py is stub |
+| Degree course matching by cluster points | ✅ | match_degree_courses() dispatched from engine.py |
+| Diploma/KMTC/TVET/TTC matching by mean grade | ✅ | Pathway dispatch functions in engine.py |
 | Admission chance prediction | ✅ | VERY HIGH / HIGH / MEDIUM / LOW |
-| AI recommendation text | 🚧 | Stub only; OpenAI not yet connected |
 | Match results display + filtering | ✅ | Filter by university, admission chance, sort |
 | Paginated results | ✅ | 15 per page |
 | Course detail from match | ✅ | career/course_detail view |
-| AI recommendation history | ✅ | Stored AIRecommendation objects |
+| AI recommendation history | ✅ | Stored AIRecommendation objects; FK to User |
 | CSV export of matches | ✅ | career/export_matches_csv |
 | Payment gate on results | ✅ | Blurred preview cards + lock card until payment |
 | AJAX TVET subject validation | ✅ | ajax_validate_tvet_subjects |
 | AJAX live admission update | ✅ | ajax_update_admission |
-| Career insights (salary, demand) | 📋 | Model exists, no data or UI yet |
-| Real OpenAI integration | 📋 | See API_NOTES.md |
-| Save matches per user (not session) | 📋 | Currently saves globally, not user-scoped |
+| Submission rate limiting | ✅ | SubmissionLockConfig controls cooldown window; CareerSubmission records each run |
+| Shareable results link | ✅ | SharedResult token-based URL; no login required to view shared link |
+| Career insights (salary, demand) | 📋 | JobMarketData model exists; no data loaded yet |
+| Real OpenAI recommendation text | 📋 | See API_NOTES.md; credits system ready |
+| Save matches per user (not session) | 📋 | StudentCourseMatch now has user FK but bulk session save not yet wired |
 | PDF export of career results | 📋 | Download matched courses as PDF from career engine |
 | Course Comparison Tool | 📋 | Compare 2–3 courses side-by-side |
 | Grade simulator | 📋 | "What if I scored B+ instead of C?" re-run |
+
+---
+
+## CareerNext AI Chat
+| Feature | Status | Notes |
+|---|---|---|
+| AI chat interface | ✅ | In-career-engine chat; CareerNext AI branding; full KUCCPS system prompt |
+| AIChatCredit model | ✅ | Lifetime free-tier + paid-tier message tracking per user |
+| Free message limit (admin-configurable) | ✅ | `CareerConfig.ai_free_message_limit`; 0 = never resets without payment |
+| Paid credits via M-Pesa | ✅ | In-chat paywall modal with STK push flow (phone → polling → success/fail/timeout/code-entry) |
+| Credit counter badge | ✅ | Shows remaining credits in chat header; 2-message low-balance warning |
+| PaymentFeature gate for AI chat | ✅ | `ai_chat_access` feature; disabling makes AI free for all |
+| Payment confirmation grants credits | ✅ | Via webhook, verify, and manual code paths |
+| Admin bulk top-up / reset credits | ✅ | AIChatCreditAdmin bulk actions |
+| AIKnowledgeEntry (admin KB) | ✅ | Admin-editable entries injected into system prompt |
+| Rate limiting | ✅ | Per-user daily/per-request limits via AICallLog + CareerConfig |
 
 ---
 
@@ -145,33 +168,57 @@ Status legend: ✅ Done | 🚧 In Progress | 📋 Planned | ❌ Blocked | [-] Dr
 | Career assessment quiz | ✅ | QuizQuestion/QuizOption/QuizSubmission models; tag-based scoring |
 | Quiz results (top matching profiles) | ✅ | quiz_results_view; top 6 profiles by tag score |
 | Populate CareerProfile data | 📋 | Models exist; no real data loaded yet |
-| Populate CareerInsight data | 📋 | Model exists (demand, salary); no data loaded |
+| Populate CareerInsight / JobMarketData | 📋 | Models exist (demand, salary); no data loaded |
 
 ---
 
 ## Mentorship (mentorship app)
 | Feature | Status | Notes |
 |---|---|---|
-| MentorProfile model | ✅ | OneToOne to User; course + institution FK; bio, WhatsApp, wallet, ratings |
+| MentorProfile model | ✅ | OneToOne to User; course + institution FK; bio, WhatsApp, wallet, ratings, per-mentor price override |
 | TimeSlot model | ✅ | Date + start_time; unique per mentor; is_booked flag |
-| MentorshipSession model | ✅ | UUID token; links mentor + mentee + slot; status flow; rating + review |
+| MentorshipSession model | ✅ | UUID token; links mentor + mentee + slot; status flow; rating + review; Google Meet link; mentee_phone |
+| MentorshipConfig singleton | ✅ | Admin-controlled default price, payout rate, mentor_signup_enabled toggle |
+| WithdrawalRequest model | ✅ | Mentor payout withdrawal with M-Pesa phone, amount, status |
 | Mentor approval workflow | ✅ | is_approved flag + rejection_reason; admin-controlled |
-| Mentor payout tracking | ✅ | wallet_balance, total_earned, mentor_payout (70% of session fee) |
-| Mentor directory (public list) | 📋 | Views/templates not yet built |
-| Session booking flow | 📋 | Views/templates not yet built |
-| M-Pesa payment for sessions | 📋 | payment_ref + phone_used fields exist; Daraja not wired |
-| Post-session rating | 📋 | Fields exist; rating form not yet built |
-| Mentor earnings dashboard | 📋 | wallet_balance tracked; no dashboard view yet |
+| Mentor payout tracking | ✅ | wallet_balance, total_earned, mentor_payout (70% or custom rate of session fee) |
+| Mentor directory (public list) | ✅ | `/mentorship/` directory view with mentor cards |
+| Mentor profile page | ✅ | `/mentorship/mentor/<pk>/` with bio, courses, available slots |
+| Session booking flow | ✅ | Book slot → checkout → M-Pesa STK push → confirmation |
+| M-Pesa payment for sessions | ✅ | IntaSend STK push; webhook + manual verify fallback |
+| Payment status polling | ✅ | Frontend polls session_status every 3s |
+| Post-session rating | ✅ | rate_session view + form; rating stored on MentorshipSession |
+| Mentor dashboard | ✅ | Earnings, upcoming sessions, slot management, edit profile |
+| Mentor earnings / withdrawal request | ✅ | request_withdrawal view; WithdrawalRequest created |
+| Google Meet link on sessions | ✅ | meet_link field on MentorshipSession; shown to both parties after confirmation |
+| Add time slots (single + weekly batch) | ✅ | add_slots, add_weekly_slots views |
+| Session cancellation | ✅ | cancel_session; email notifications to both parties |
+| Session completion | ✅ | complete_session; triggers auto mentor payout if balance threshold met |
+| ICS calendar download | ✅ | download_ics returns `.ics` file for slot |
+| My sessions list (mentee) | ✅ | my_sessions view |
+| Mentee phone number captured | ✅ | mentee_phone on session for M-Pesa outreach |
 
 ---
 
-## Saved Items & Applications
+## Affiliate System
+| Feature | Status | Notes |
+|---|---|---|
+| AffiliateProfile model | ✅ | referral_code, commission_rate, total_earned, balance |
+| AffiliateCommission model | ✅ | Per-payment commission; linked to affiliate + payment |
+| AffiliateWithdrawalRequest model | ✅ | Withdrawal from affiliate balance; M-Pesa phone, status |
+| Affiliate dashboard | ✅ | `/accounts/affiliate/` — stats, commissions, withdrawal request form |
+| Commission on payment webhook | ✅ | payments/services.py credits affiliate on successful payment |
+
+---
+
+## Saved Items & Shortlist
 | Feature | Status | Notes |
 |---|---|---|
 | Save/unsave courses | ✅ | SavedCourse model; toggle_save_course AJAX endpoint |
 | Saved courses list page | ✅ | accounts/saved_courses view |
 | Save/unsave career profiles | ✅ | SavedCareer model; toggle_save_career AJAX endpoint |
-| Application tracking (create/edit/delete) | ✅ | ApplicationTracking model; STATUS_CHOICES (draft→accepted/rejected) |
+| Course shortlist | ✅ | CourseShortlist model; notes, deadline, priority; `/accounts/shortlist/` |
+| Application tracking (create/edit/delete) | ✅ | Application model; STATUS_CHOICES (draft→accepted/rejected) |
 | Application list + detail views | ✅ | accounts app; login required |
 
 ---
@@ -191,18 +238,22 @@ Status legend: ✅ Done | 🚧 In Progress | 📋 Planned | ❌ Blocked | [-] Dr
 |---|---|---|
 | Resource categories | ✅ | ResourceCategory model |
 | Resource items (PDF / video / link) | ✅ | Resource model with download_count |
-| Articles (content + tags) | ✅ | Article model with is_published flag |
+| Articles (content + tags) | ✅ | Article model with is_published, is_featured flags |
 | Resources views / templates | ✅ | resource_list, resource_detail, article_list, article_detail; category sidebar; search; tag filter; pagination |
 | KUCCPS Application Calendar | ✅ | Static page at /resources/kuccps-calendar/ — 2025 & 2024 cycles, timeline layout |
 | How-To Guides | ✅ | Static page at /resources/how-to-guides/ — 6 guides |
+| FAQ items | ✅ | FAQItem model; is_published, display_order |
+| Success stories | ✅ | SuccessStory model; 6 curated stories; is_published |
+| Site settings (admin key/value store) | ✅ | SiteSetting model; admin_email seeded via migration |
 
 ---
 
 ## Payments
 | Feature | Status | Notes |
 |---|---|---|
-| Payment model | ✅ | FEATURE_CHOICES: cluster points, eligible courses, premium report, advanced analysis |
-| PaymentFeature model | ✅ | Per-feature is_enabled toggle; admin-controllable via `/cn-staff/` |
+| Payment model | ✅ | FEATURE_CHOICES: cluster points, eligible courses, premium report, advanced analysis, ai_chat_access |
+| PaymentFeature model | ✅ | Per-feature is_enabled toggle + price_kes; admin-controllable via `/cn-staff/` |
+| PaymentExemption model | ✅ | Admin grants free access to a specific feature per user |
 | M-Pesa Transaction model | ✅ | mpesa_ref, phone_number, raw_response JSONField |
 | Career results payment gate UI | ✅ | Blurred preview + lock card; "Unlock My Results" CTA |
 | IntaSend STK push | ✅ | payments/services.py initiate_stk_push(); fires M-Pesa prompt on student's phone |
@@ -212,7 +263,24 @@ Status legend: ✅ Done | 🚧 In Progress | 📋 Planned | ❌ Blocked | [-] Dr
 | Payment success UX | ✅ | Overlay auto-reloads page after confirmation — full results shown without paywall |
 | Feature gating enforcement | ✅ | career_results checks is_feature_enabled() + has_paid_for_feature(); gate is live |
 | PaymentFeature DB seeding | ✅ | python manage.py seed_payment_features |
+| Payment page redesign | ✅ | Polished payment UI with 6s loading animation |
 | Live credentials | 📋 | Set INTASEND_SECRET_KEY + INTASEND_PUBLISHABLE_KEY env vars; register /payments/webhook/mpesa/ in IntaSend dashboard |
+
+---
+
+## Analytics (analytics app)
+| Feature | Status | Notes |
+|---|---|---|
+| SearchLog model | ✅ | Per-search: query, result_count, user, timestamp |
+| ViewLog model | ✅ | Per-page view: content_type, object_id, user, IP, timestamp |
+| DownloadLog model | ✅ | Per-download: resource type, object_id, user |
+| EventLog model | ✅ | Generic named events with JSON properties |
+| CareerEngineLog model | ✅ | Per career engine run: pathway, grades, match count, duration |
+| Analytics admin dashboard | ✅ | `/analytics/` staff-only dashboard; most-viewed courses shown on dashboard trending section |
+| PostHog integration | ✅ | Client-side `POSTHOG_JS_KEY`; context processor injects key |
+| Google Analytics | ✅ | `GA_MEASUREMENT_ID` env var; context processor injects |
+| Sentry error monitoring | ✅ | sentry-sdk[django] 2.x; init guarded by SENTRY_DSN; filters noise; 10% trace sampling |
+| Most-viewed courses on dashboard | ✅ | ViewLog aggregated to show trending courses on `/dashboard/` |
 
 ---
 
@@ -222,7 +290,6 @@ Status legend: ✅ Done | 🚧 In Progress | 📋 Planned | ❌ Blocked | [-] Dr
 | WhatsApp share button | ✅ | On career results filter bar — shows match count in pre-filled message |
 | Student Success Stories | ✅ | 6 curated stories on homepage; tagged by grade/pathway/institution |
 | News Panel | 📋 | Platform updates, KUCCPS announcements on dashboard |
-| Shareable results link | 📋 | Token-based URL so results can be shared without login |
 | Urgency / deadline banner | ✅ | Site-wide red/amber/blue countdown bar June–Aug; auto-hides outside 60-day window; color escalates at 21d/7d; CTA differs for auth vs guest; sessionStorage dismiss |
 
 ---
@@ -246,20 +313,21 @@ Status legend: ✅ Done | 🚧 In Progress | 📋 Planned | ❌ Blocked | [-] Dr
 | Dark mode toggle | ✅ | Moon/sun button in navbar; `body.dark` CSS class; localStorage |
 | Back to top button | ✅ | Fixed floating button; appears after 400px scroll |
 | Static files | ✅ | WhiteNoise; `staticfiles/` collected on deploy |
-| Media files | ✅ | MEDIA_ROOT and MEDIA_URL configured |
-| PostgreSQL database | ✅ | Render managed; 21,601+ objects |
+| Media files | ✅ | Cloudinary in production (`CLOUDINARY_URL` env var); local MEDIA_ROOT in dev |
+| PostgreSQL database | ✅ | Render managed |
 | Credentials in env vars | ✅ | All secrets in Render environment variables; .env for local dev |
 | GitHub repository | ✅ | Private repo under meshacklimok |
-| Deployment config | ✅ | `render.yaml` + `build.sh`; gunicorn WSGI server |
+| Deployment config | ✅ | `render.yaml` + `build.sh` + `railway.toml`; gunicorn WSGI server |
 | Email backend | ✅ | Resend SMTP in production (RESEND_API_KEY env var); console in dev |
-| Rate limiting | ✅ | 5 registrations/IP/hour; 10 login failures/IP/15min |
-| Security headers | ✅ | HSTS (1yr), secure cookies, MIME-sniff protection; production-only block |
+| Rate limiting | ✅ | 5 registrations/IP/hour; 10 login failures/IP/15min; heavy endpoints via middleware |
+| Security headers | ✅ | HSTS (1yr), SECURE_SSL_REDIRECT, secure cookies, MIME-sniff protection; production-only block |
 | Admin URL obfuscated | ✅ | `/cn-staff/` instead of `/admin/` |
 | HTTP/3 disabled | ✅ | DisableHttp3Middleware → `alt-svc: clear` (fixes ERR_FAILED on Kenyan ISPs) |
 | Search autocomplete | ✅ | `/api/search/` endpoint; client-side filtering on course/institution search |
 | Referral tracking | ✅ | ReferralMiddleware captures referral source to User model |
-| SEO meta tags | ✅ | OpenGraph + Twitter Card on key pages |
-| Google Analytics / event tracking | 📋 | Page views, pathway selections, payment funnel |
+| SEO meta tags | ✅ | OpenGraph + Twitter Card on key pages; sitemap.xml; robots.txt; llms.txt |
 | Sentry error monitoring | ✅ | sentry-sdk[django] 2.x; init guarded by SENTRY_DSN env var; filters 404/403/CSRF noise; 10% trace sampling; no PII |
+| Slow request logging | ✅ | SlowRequestLogMiddleware logs requests over threshold to EventLog |
+| Graceful error middleware | ✅ | GracefulErrorMiddleware catches unhandled exceptions, returns friendly response |
 | Unit tests (cluster formula) | 📋 | Formula must never regress |
 | N+1 query audit | 📋 | Eligible courses + career results loops need select_related pass |

@@ -13,12 +13,12 @@ Records *why* major choices were made. Read this before refactoring or "improvin
 
 ---
 
-## 2. Cluster Points Formula Is Fixed
-**Decision:** The weighted formula `48 × sqrt( (core/48) × (aggregate/84) )` must not be changed.
+## 2. Cluster Points Formula Uses Midpoint Marks (Not Grade-Point Fraction)
+**Decision:** The formula is `48 × sqrt( (core_midpoint_marks / 400) × (aggregate/84) )` — not the naive `(core_pts/48)` fraction.
 
-**Why:** This is the official KUCCPS formula used by the Kenyan government. Any deviation would give students incorrect results and potentially mislead their university applications.
+**Why:** KUCCPS computes cluster points from midpoint raw marks per grade band (A=90.2, A-=77.5, B+=71.0, …, E=14.0), not from a simple grade-point fraction. Switched from the old approach in June 2026 after discovering the earlier `(pts×7/400)` formula gave wrong values vs official KUCCPS outputs. `GRADE_MIDPOINT_MARKS` dict in `clusterpoints/services.py` is the single source of truth. The shared `_weighted_cp()` helper is used by both the saved-result and anonymous calculators, and by `career/models.py`.
 
-**Impact:** Do not "optimise", simplify, or adjust the formula without explicit confirmation that KUCCPS has changed it officially.
+**Impact:** Do not change `GRADE_MIDPOINT_MARKS` values or switch back to the grade-point fraction approach. Any KUCCPS formula update must be confirmed officially before code changes.
 
 ---
 
@@ -113,6 +113,24 @@ Records *why* major choices were made. Read this before refactoring or "improvin
 **Why:** Render/Cloudflare advertises HTTP/3 (QUIC) via the `alt-svc` header. Some Kenyan ISPs (Safaricom, Airtel) block UDP traffic, which QUIC requires. Users on these networks get `ERR_FAILED`. Clearing `alt-svc` forces the browser to stay on HTTP/1.1 or HTTP/2.
 
 **Impact:** Slight performance overhead (one header set per response, negligible). Remove this middleware only if Cloudflare is removed from the traffic path or Kenyan ISP UDP blocking is resolved.
+
+---
+
+## 14. Cloudinary for Media Storage in Production
+**Decision:** Cloudinary (`cloudinary-storage` + `cloudinary` packages) handles media file storage in production when `CLOUDINARY_URL` env var is set; falls back to local `MEDIA_ROOT` in dev.
+
+**Why:** Render's filesystem is ephemeral — files written to disk disappear on every deploy. Cloudinary provides persistent, CDN-served media storage with a generous free tier and no code changes required (drop-in Django storage backend).
+
+**Impact:** `CLOUDINARY_URL` must be set in the production environment (format: `cloudinary://api_key:api_secret@cloud_name`). The app guards against a malformed `CLOUDINARY_URL` at startup (strips it if it doesn't start with `cloudinary://`). Do not use `DEFAULT_FILE_STORAGE` pointing to local storage in production.
+
+---
+
+## 15. MentorshipConfig + CareerConfig as Admin Singletons
+**Decision:** Configurable platform settings (session price, payout rate, AI message limits, feature toggles) live in singleton DB models (`MentorshipConfig`, `CareerConfig`) rather than env vars or code constants.
+
+**Why:** These values change frequently as the business operates — pricing experiments, free-tier adjustments, enabling/disabling features mid-season. Redeploying just to change a price or message limit is slow and risky. Admin singletons let the operator change these in real-time via `/cn-staff/`.
+
+**Impact:** Always read price/limits from these models, not from settings.py or hardcoded constants. Both are `get_or_create`-style singletons — call `.load()` or `CareerConfig.get_solo()` to fetch them.
 
 ---
 

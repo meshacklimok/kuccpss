@@ -15,6 +15,7 @@ def career_guidance_engine(
     kcse_grades: Dict[str, str],
     pathway: str,
     tvet_category: Optional[str] = None,
+    user=None,
 ) -> Tuple[List[StudentCourseMatch], object]:
     """
     pathway: "Degree", "Diploma", "KMTC", "TVET", "TTC"
@@ -38,5 +39,5 @@ def career_guidance_engine(
     else:
         raise ValueError(f"Invalid pathway: {pathway}")
 
-    ai = generate_ai_recommendation(matches)
+    ai = generate_ai_recommendation(matches, user=user)
     return matches, ai

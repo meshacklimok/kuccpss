@@ -597,16 +597,66 @@ def match_ttc_courses(kcse_grades: Dict[str, str]) -> List[StudentCourseMatch]:
 # =====================================================
 # 9. Generate AI Recommendation
 # =====================================================
-def generate_ai_recommendation(matches: List[StudentCourseMatch]) -> AIRecommendation:
+def generate_ai_recommendation(matches: List[StudentCourseMatch], user=None) -> AIRecommendation:
+    """
+    Generate a short personalised career recommendation.
+    Makes a real OpenAI call when OPENAI_API_KEY is set; falls back to a
+    formatted plain-text summary so the page is never blank.
+    """
+    import logging
+    _log = logging.getLogger(__name__)
+
     if not matches:
-        text = "No suitable courses found based on the provided KCSE results."
+        text = "No suitable courses were found based on the provided KCSE results. Try a different pathway or re-enter your grades."
+        ai = AIRecommendation(advice_text=text, user=user)
+        ai.save()
+        return ai
+
+    top = matches[:5]
+
+    # Build a compact course summary for the prompt
+    lines = []
+    for m in top:
+        course_obj = m.course or m.tvet_course or m.kmc_course or m.ttc_course
+        name = course_obj.name if course_obj else "Unknown course"
+        uni_obj = m.university
+        uni_name = uni_obj.name if uni_obj else ""
+        lines.append(
+            f"• {name}"
+            + (f" at {uni_name}" if uni_name else "")
+            + f" — Admission Chance: {m.admission_chance}, Match Score: {int(m.match_score)}%"
+        )
+    course_summary = "\n".join(lines)
+
+    api_key = getattr(settings, 'OPENAI_API_KEY', '')
+
+    if api_key:
+        try:
+            from openai import OpenAI
+            prompt = (
+                "You are CareerNext AI — a Kenyan KCSE career guidance assistant. "
+                "A student's top matched courses are:\n"
+                f"{course_summary}\n\n"
+                "Write a warm, encouraging 3–5 sentence personalised guidance message. "
+                "Name their top 2 specific courses. Tell them what their match scores mean. "
+                "Give one actionable next step. Address them as 'you'. No bullet points. Max 100 words."
+            )
+            client = OpenAI(api_key=api_key)
+            resp = client.chat.completions.create(
+                model='gpt-4o-mini',
+                messages=[{'role': 'user', 'content': prompt}],
+                max_tokens=200,
+                temperature=0.6,
+            )
+            text = resp.choices[0].message.content.strip()
+        except Exception as exc:
+            _log.error("generate_ai_recommendation OpenAI error: %s", exc)
+            # Fall back to plain summary
+            text = "Based on your KCSE results, here are your top matched courses:\n" + course_summary
     else:
-        top_courses = matches[:5]
-        text = "Based on your KCSE results, the top recommended courses are:\n"
-        for match in top_courses:
-            course_name = (match.course or match.tvet_course or match.kmc_course or match.ttc_course).name
-            text += f"• {course_name} (Admission Chance: {match.admission_chance}, Score: {int(match.match_score)}%)\n"
-    ai = AIRecommendation(advice_text=text)
+        text = "Based on your KCSE results, here are your top matched courses:\n" + course_summary
+
+    ai = AIRecommendation(advice_text=text, user=user)
     ai.save()
     return ai
 
@@ -614,7 +664,7 @@ def generate_ai_recommendation(matches: List[StudentCourseMatch]) -> AIRecommend
 # =====================================================
 # 10. Full Career Guidance Engine
 # =====================================================
-def career_guidance_engine(kcse_grades: Dict[str, str], pathway: str, tvet_category: Optional[str] = None):
+def career_guidance_engine(kcse_grades: Dict[str, str], pathway: str, tvet_category: Optional[str] = None, user=None):
     """
     pathway: "Degree", "Diploma", "KMTC", "TVET", "TTC"
     tvet_category: required if pathway is TVET
@@ -634,8 +684,8 @@ def career_guidance_engine(kcse_grades: Dict[str, str], pathway: str, tvet_categ
         matches = match_ttc_courses(kcse_grades)
     else:
         raise ValueError("Invalid pathway selected")
-    
-    ai = generate_ai_recommendation(matches)
+
+    ai = generate_ai_recommendation(matches, user=user)
     return matches, ai
 
 

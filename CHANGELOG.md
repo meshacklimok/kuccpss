@@ -7,10 +7,117 @@ Format: `[YYYY-MM-DD]` — description of what changed and why.
 ## [Unreleased]
 
 ### In Progress
-- Career engine OpenAI integration (stub in `career/engine.py`; key via `OPENAI_API_KEY` env var)
-- Mentorship views/templates — models and admin done; booking UI not yet built
 - Cluster requirements data — 3 clusters still have placeholder descriptions: 1A, 2B, 3D (need official KUCCPS PDF)
-- M-Pesa Daraja STK push — IntaSend credentials configured; webhook handler stub only
+- Career engine AI recommendation text — CareerNext AI chat live; `generate_ai_recommendation()` still returns stub text in non-chat flow
+- Mentorship B2C payout disbursement — IntaSend "Send Money" must be activated on account before auto-payouts work
+
+---
+
+## [2026-06-25] — Brand logo circles, payment polish, M-Pesa code verify on calculator paywall
+
+### Changed
+- Brand and institution logos rendered as circles (CSS border-radius update site-wide)
+
+### Added
+- `/payments/verify-code/` M-Pesa SMS code verification added to **calculator paywall** (was previously only on career engine paywall)
+- "I already paid" fallback flow on calculator gate — user can enter M-Pesa confirmation code to unlock without waiting for STK push
+
+### Fixed
+- Email system polishing pass — confirmed Resend SMTP flows for all transactional emails (registration, session booking, cancellation)
+- Cloudinary storage fix for Django 5.2 — guarded against malformed `CLOUDINARY_URL` on startup; `django-cloudinary-storage` activated correctly
+
+---
+
+## [2026-06-24] — Mentorship: price privacy, mentee phone, auto-verify; MentorshipConfig mentor_signup toggle
+
+### Added
+- `mentor_signup_enabled` flag moved from `CareerConfig` to `MentorshipConfig` (migration 0009); admin now controls mentor signups from the mentorship config panel
+- Mentee phone number captured at booking — stored on `MentorshipSession.mentee_phone`; used for M-Pesa outreach
+- Auto payment verify on session status page — polls IntaSend in background; confirms session without manual action
+- Mentor price privacy — session price hidden from mentor directory listing until booking step
+
+### Fixed
+- Mentorship session page 500 error — fixed in commit 93d5630; view now handles missing slot/mentor gracefully
+- Calculator 33s load time — query optimisation; eligible courses view now uses `select_related` / `prefetch_related`
+
+---
+
+## [2026-06-23] — Affiliate system, mentorship Meet links, course spotlight, UI overhaul
+
+### Added — Affiliate system
+- `AffiliateProfile` model — referral_code, commission_rate, balance, total_earned
+- `AffiliateCommission` model — per-payment commission record (FK to affiliate + payment)
+- `AffiliateWithdrawalRequest` model (accounts migration 0012) — withdrawal from affiliate balance
+- `/accounts/affiliate/` dashboard — stats, commissions table, withdrawal request form
+- `payments/services.py` — credits affiliate on successful payment via webhook
+
+### Added — Mentorship Google Meet link
+- `MentorshipSession.meet_link` field (migration 0007) — admin/mentor can set Google Meet URL; shown to both parties after session confirmation
+- `mentorship/calendar_utils.py` — Google Meet link embedded in ICS calendar download
+
+### Added — Course spotlight / trends page
+- `CourseSpotlight` model in `courses/models.py` (migration 0007) — admin-configurable spotlight courses
+- `InstitutionPromotion` model in `institutions/models.py` (migration 0004) — admin-configurable featured institutions with priority and label
+
+### Changed — Major template redesign
+- `base.html` — navigation overhaul; affiliate dashboard link; bottom nav updated
+- `accounts/dashboard.html` — course spotlight section, Trending Now (ViewLog-powered), Clusters + Institutions sections
+- `accounts/shortlist.html` — complete redesign with priority flags and deadline display
+- `accounts/about.html`, `accounts/terms.html`, `accounts/privacy.html` — full redesign
+- `career/career_results_v2.html` — WhatsApp share button improvements
+
+### Fixed
+- `clusterpoints/eligibility.py` — extracted shared eligibility logic; view refactor
+- `institutions/admin.py` — format_html error fixed
+
+---
+
+## [2026-06-22] — Cluster points midpoint-marks formula; CareerNext AI paywall; multi-mentor price; analytics; Railway config; security hardening
+
+### Changed — Cluster points formula
+- `clusterpoints/services.py` — switched from `grade×7/400` to midpoint raw marks per grade band (A=90.2 … E=14.0) divided by 400, capped at 48; extracted shared `_weighted_cp()` helper used by both anonymous and saved-result calculators
+- `career/models.py` — `calculate_cluster_points()` now converts grade letters → points via `KCSEGrade`, computes proper KCSE aggregate, picks best 4 cluster subjects, and calls `_weighted_cp()` — same formula as the cluster calculator
+- `career/engine.py` — replaced dummy stub with real dispatch to `match_degree_courses()` and other pathway functions; no longer returns hardcoded matches
+
+### Added — CareerNext AI paywall + credits system
+- `AIChatCredit` model (career migration 0016) — lifetime free-tier + paid-tier message tracking per user
+- `CareerConfig` fields: `ai_free_message_limit`, `ai_paid_message_limit`, `ai_free_reset_days`
+- `PaymentFeature` seeded for `ai_chat_access` (KES 50 default, editable in admin)
+- In-chat paywall modal — M-Pesa STK push flow (phone → polling → success/fail/timeout/code-entry); no page redirect
+- Credit counter badge in chat header; 2-message low-balance warning
+- `AIChatCreditAdmin` bulk actions: top-up credits, reset counter
+- `AIKnowledgeEntry` model (career migration 0008) — admin-editable KB entries injected into AI system prompt
+- Full CareerNext AI system prompt: 20 clusters, subject requirements, HELB/HEF rules, off-topic refusal, Golden Pre-check
+
+### Added — Per-mentor price override
+- `MentorProfile.custom_price` field — mentor can set their own session price; falls back to `MentorshipConfig.default_price`
+- `MentorProfile.custom_payout_rate` field — admin can set custom payout % per mentor
+
+### Added — Analytics models
+- `SearchLog`, `ViewLog`, `DownloadLog`, `EventLog`, `CareerEngineLog` models in `analytics` app
+- `analytics.context_processors` — injects PostHog key, Sentry context, GA measurement ID, data version
+- Most-viewed courses aggregated from `ViewLog` → shown on dashboard Trending Now section
+
+### Added — Railway migration config
+- `railway.toml` in project root — Railway Hobby deployment config
+- `gunicorn.conf.py` — gunicorn workers/threads config for Railway
+
+### Added — Security hardening
+- `payments/models.py` — `PaymentExemption` model (migration 0006) — admin grants free access per user per feature
+- `SECURE_SSL_REDIRECT = True` in production settings
+- `HeavyEndpointRateLimitMiddleware` — rate-limits `/career/` and `/clusterpoints/` heavy views
+- `SlowRequestLogMiddleware` — logs slow requests to EventLog
+- `GracefulErrorMiddleware` — catches unhandled exceptions, returns friendly response
+
+### Added — Submission controls
+- `SubmissionLockConfig` model (career migration 0014) — controls cooldown window between career engine re-submissions
+- `CareerSubmission` model (career migration 0015) — records each submission per user with method + pathway
+- `SharedResult` model (career migration 0007) — token-based shareable results URL; `/career/shared/<token>/`
+
+### Fixed
+- `courses/trends.py` — homepage 500 fixed: `MAX(jsonb)` not supported in PostgreSQL; compute most-competitive cutoff ranking in Python via `latest_cutoff()` instead of DB-side annotation
+- `accounts/models.py` — `FieldError` fixed: replaced `date_joined` with `created_at` (custom User model uses `created_at`)
+- `Cloudinary` crash on startup — guarded against malformed `CLOUDINARY_URL` (strips env var if it doesn't start with `cloudinary://`)
 
 ---
 
