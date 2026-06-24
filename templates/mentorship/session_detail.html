@@ -65,6 +65,16 @@
               <dd class="col-7 fw-bold text-success small">{{ session.mentor.whatsapp }}</dd>
             {% endif %}
 
+            {# Mentee contact info — visible to mentor only after payment #}
+            {% if user != session.mentee and session.status in "confirmed,completed" %}
+              <dt class="col-5 text-muted small fw-normal">Mentee Email</dt>
+              <dd class="col-7 small">{{ session.mentee.email }}</dd>
+              {% if session.mentee_phone %}
+                <dt class="col-5 text-muted small fw-normal">Mentee Phone</dt>
+                <dd class="col-7 fw-semibold small text-primary">{{ session.mentee_phone }}</dd>
+              {% endif %}
+            {% endif %}
+
             <dt class="col-5 text-muted small fw-normal">Topic</dt>
             <dd class="col-7 small text-muted">{{ session.mentee_question }}</dd>
           </dl>

@@ -66,7 +66,7 @@
               {% else %}
                 <a href="{% url 'mentorship:book_session' mentor.pk %}"
                    class="btn btn-primary w-100 rounded-pill fw-semibold py-3">
-                  <i class="bi bi-calendar-plus me-2"></i>Book a 15-min Call — KES 100
+                  <i class="bi bi-calendar-plus me-2"></i>Book a 15-min Call — KES {{ session_price }}
                 </a>
               {% endif %}
             {% else %}
@@ -105,7 +105,7 @@
           <h5 class="fw-bold mb-3"><i class="bi bi-info-circle text-primary me-2"></i>How a session works</h5>
           <ol class="text-muted mb-0 ps-3" style="line-height: 2.0;">
             <li>Choose an available time slot and describe what you want to discuss.</li>
-            <li>Pay KES 100 via M-Pesa — you'll receive an STK push on your phone.</li>
+            <li>Pay KES {{ session_price }} via M-Pesa — you'll receive an STK push on your phone.</li>
             <li>Get the mentor's WhatsApp number by email instantly after payment.</li>
             <li>WhatsApp the mentor to confirm, then join the 15-minute call.</li>
             <li>Rate your session after — helps future students find the best mentors.</li>
@@ -143,7 +143,7 @@
                 {% else %}
                   <a href="{% url 'mentorship:book_session' mentor.pk %}"
                      class="btn btn-primary rounded-pill fw-semibold px-4">
-                    <i class="bi bi-calendar-plus me-1"></i>Book a Slot — KES 100
+                    <i class="bi bi-calendar-plus me-1"></i>Book a Slot — KES {{ session_price }}
                   </a>
                 {% endif %}
               {% else %}

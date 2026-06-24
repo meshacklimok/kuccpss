@@ -182,11 +182,12 @@ class WithdrawalRequest(models.Model):
 
 class MentorshipSession(models.Model):
     STATUS_CHOICES = [
-        ("pending_payment", "Pending Payment"),
-        ("confirmed",       "Confirmed"),
-        ("completed",       "Completed"),
-        ("cancelled",       "Cancelled"),
-        ("refunded",        "Refunded"),
+        ("pending_payment",           "Pending Payment"),
+        ("pending_manual_verification", "Pending Manual Verification"),
+        ("confirmed",                 "Confirmed"),
+        ("completed",                 "Completed"),
+        ("cancelled",                 "Cancelled"),
+        ("refunded",                  "Refunded"),
     ]
 
     token = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
@@ -213,14 +214,29 @@ class MentorshipSession(models.Model):
     )
     mentee_question = models.TextField(max_length=600)
 
+    # Mentee contact info (shared with mentor after payment)
+    mentee_phone = models.CharField(
+        max_length=20,
+        blank=True,
+        help_text="Mentee's phone number — shared with mentor after payment confirmation.",
+    )
+
     # Payment
     amount = models.PositiveIntegerField(default=100)
     mentor_payout = models.PositiveIntegerField(default=70)
     payment_ref = models.CharField(max_length=200, blank=True)
     phone_used = models.CharField(max_length=20, blank=True)
+    manual_payment_ref = models.CharField(
+        max_length=100,
+        blank=True,
+        help_text="M-Pesa transaction code entered by mentee for manual payment verification.",
+    )
+
+    # Track whether booking confirmation emails have been sent
+    confirmation_sent = models.BooleanField(default=False)
 
     status = models.CharField(
-        max_length=20,
+        max_length=30,
         choices=STATUS_CHOICES,
         default="pending_payment",
         db_index=True,

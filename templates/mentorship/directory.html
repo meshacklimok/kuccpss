@@ -15,7 +15,7 @@
           Talk to Someone Already There
         </h1>
         <p class="mb-4" style="color:rgba(255,255,255,.85);font-size:1.1rem;max-width:520px;margin:0 auto 1.5rem;">
-          15-minute WhatsApp call with a real university or KMTC student. Honest answers, real insights. <strong style="color:#fde68a;">KES 100.</strong>
+          15-minute WhatsApp call with a real university or KMTC student. Honest answers, real insights. <strong style="color:#fde68a;">KES {{ global_session_price }}.</strong>
         </p>
 
         <!-- Trust pills -->
@@ -29,7 +29,7 @@
           {% if not user.mentor_profile %}
             {% if mentor_signup_enabled %}
             <a href="{% url 'mentorship:become_mentor' %}" class="btn btn-warning fw-700 rounded-pill px-4 py-2">
-              <i class="bi bi-mortarboard me-2"></i>Become a Mentor — Earn KES 70/session
+              <i class="bi bi-mortarboard me-2"></i>Become a Mentor
             </a>
             {% endif %}
           {% else %}
@@ -39,7 +39,7 @@
           {% endif %}
         {% elif mentor_signup_enabled %}
           <a href="{% url 'mentorship:become_mentor' %}" class="btn btn-warning fw-700 rounded-pill px-4 py-2">
-            <i class="bi bi-mortarboard me-2"></i>Become a Mentor — Earn KES 70/session
+            <i class="bi bi-mortarboard me-2"></i>Become a Mentor
           </a>
         {% endif %}
       </div>
@@ -63,7 +63,7 @@
       <div class="col-auto hiw-arrow"><i class="bi bi-chevron-right"></i></div>
       <div class="col-auto hiw-step">
         <div class="hiw-num">3</div>
-        <div class="hiw-label">Pay KES 100<br><span>via M-Pesa</span></div>
+        <div class="hiw-label">Pay KES {{ global_session_price }}<br><span>via M-Pesa</span></div>
       </div>
       <div class="col-auto hiw-arrow"><i class="bi bi-chevron-right"></i></div>
       <div class="col-auto hiw-step">
@@ -190,7 +190,7 @@
                 </div>
 
                 <!-- Price pill -->
-                <div class="mentor-price flex-shrink-0">KES 100</div>
+                <div class="mentor-price flex-shrink-0">KES {{ mentor.effective_session_price }}</div>
               </div>
 
               <!-- Course & Institution -->
