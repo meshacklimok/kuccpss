@@ -77,6 +77,10 @@ class CourseCutoff(models.Model):
     cutoff_points = models.FloatField()  # Cluster points for degree, mean grade for diploma/KMTC
     year = models.PositiveIntegerField(default=2026)
 
+    class Meta:
+        unique_together = ('course', 'university', 'year')
+        indexes = [models.Index(fields=['year'])]
+
     def __str__(self):
         return f"{self.course.name} - {self.university.name} ({self.cutoff_points})"
 
@@ -89,6 +93,10 @@ class CourseCutoffHistory(models.Model):
     university = models.ForeignKey(University, on_delete=models.CASCADE, related_name="cutoff_history")
     year = models.PositiveIntegerField()
     cutoff_points = models.FloatField()
+
+    class Meta:
+        unique_together = ('course', 'university', 'year')
+        indexes = [models.Index(fields=['year'])]
 
     def __str__(self):
         return f"{self.course.name} - {self.university.name} ({self.year})"
@@ -183,6 +191,9 @@ class StudentCourseMatch(models.Model):
     recommended_by_ai = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
+    class Meta:
+        indexes = [models.Index(fields=["user", "created_at"])]
+
     def __str__(self):
         target_course = self.course or self.tvet_course or self.kmc_course or self.ttc_course
         return f"{target_course}"
@@ -198,6 +209,9 @@ class AIRecommendation(models.Model):
     )
     advice_text = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        indexes = [models.Index(fields=["user", "created_at"])]
 
     def __str__(self):
         return f"AI Advice ({self.created_at.strftime('%Y-%m-%d')})"
@@ -255,6 +269,10 @@ class CareerProfile(models.Model):
 
     class Meta:
         ordering = ["title"]
+        indexes = [
+            models.Index(fields=["slug"]),
+            models.Index(fields=["demand_level"]),
+        ]
 
     def save(self, *args, **kwargs):
         if not self.slug:
@@ -860,6 +878,7 @@ class AIKnowledgeEntry(models.Model):
         ordering = ['category', 'order', 'id']
         verbose_name        = 'AI Knowledge Entry'
         verbose_name_plural = 'AI Knowledge Base'
+        indexes = [models.Index(fields=["is_active", "category"])]
 
     def __str__(self):
         return f"[{self.get_category_display()}] {self.question[:80]}"  # type: ignore[attr-defined]
@@ -933,6 +952,7 @@ class AICallLog(models.Model):
                 name='unique_session_date_ai_log',
             ),
         ]
+        indexes = [models.Index(fields=["user", "date"])]
         verbose_name = 'AI Call Log'
         verbose_name_plural = 'AI Call Logs'
 
@@ -1019,6 +1039,10 @@ class SharedResult(models.Model):
 
     class Meta:
         ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=["user"]),
+            models.Index(fields=["expires_at"]),
+        ]
 
     def __str__(self):
         return f"Share/{self.token} — {self.pathway} ({self.total_matches} matches)"
@@ -1056,6 +1080,14 @@ class SubmissionLockConfig(models.Model):
             "When ON: users who submitted via the calculator can resubmit once more "
             "using Upload / Paste / Manual (for when real KUCCPS cluster points are released). "
             "The calculator itself stays blocked."
+        ),
+    )
+    lock_on_payment = models.BooleanField(
+        default=True,
+        help_text=(
+            "When ON: grades are locked immediately when the linked payment completes "
+            "(view_cluster_points → cluster_calculator; premium_career_report → degree_career). "
+            "Turn OFF to rely only on the time-based grace period."
         ),
     )
 
@@ -1116,6 +1148,13 @@ class CareerSubmission(models.Model):
     )
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=STATUS_PENDING)
     lock_at = models.DateTimeField(help_text="Submission auto-locks after this time.")
+    unlocked_by_payment = models.ForeignKey(
+        'payments.Payment',
+        null=True, blank=True,
+        on_delete=models.SET_NULL,
+        related_name='locked_submissions',
+        help_text="The payment that locked and unlocked viewing for this grade session.",
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -1123,6 +1162,10 @@ class CareerSubmission(models.Model):
         unique_together = ('user', 'feature')
         verbose_name = "Career Submission"
         verbose_name_plural = "Career Submissions"
+        indexes = [
+            models.Index(fields=["status"]),
+            models.Index(fields=["lock_at"]),
+        ]
 
     def __str__(self):
         return f"{self.user.email} — {self.get_feature_display()} ({self.status})"  # type: ignore[attr-defined]

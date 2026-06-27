@@ -62,13 +62,29 @@ def directory(request):
         slots__date__gte=timezone.now().date(),
     ).distinct()
 
+    from django.core.paginator import Paginator
+    paginator = Paginator(mentors, 18)
+    page_obj = paginator.get_page(request.GET.get("page", 1))
+
     institutions = Institution.objects.filter(
         mentors__is_approved=True, mentors__is_active=True
     ).distinct().order_by("name")
 
     cfg = MentorshipConfig.get()
+    is_htmx = request.headers.get("HX-Request") == "true"
+    if is_htmx:
+        return render(request, "mentorship/_mentor_items_partial.html", {
+            "page_obj": page_obj,
+            "query": query,
+            "filter_institution": institution,
+            "filter_year": year,
+            "filter_rating": min_rating,
+        })
+
     return render(request, "mentorship/directory.html", {
-        "mentors": mentors,
+        "mentors": page_obj,
+        "page_obj": page_obj,
+        "total_count": paginator.count,
         "query": query,
         "filter_institution": institution,
         "filter_year": year,

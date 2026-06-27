@@ -116,7 +116,8 @@ class HeavyEndpointRateLimitMiddleware:
     @staticmethod
     def _get_ip(request):
         xff = request.META.get('HTTP_X_FORWARDED_FOR', '')
-        return xff.split(',')[0].strip() if xff else request.META.get('REMOTE_ADDR', '')
+        # Use the last IP in the chain — set by Render's trusted edge, not the client
+        return xff.split(',')[-1].strip() if xff else request.META.get('REMOTE_ADDR', '')
 
     def __call__(self, request):
         ip = self._get_ip(request)

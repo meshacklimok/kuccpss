@@ -29,6 +29,7 @@ urlpatterns = [
 
     # Course Shortlist / Compare
     path("shortlist/", views.shortlist_view, name="shortlist"),
+    path("comparison/", views.course_comparison_view, name="comparison"),
     path("shortlist/toggle/<int:course_id>/", views.shortlist_toggle, name="shortlist_toggle"),
     path("shortlist/notes/<int:course_id>/", views.shortlist_update_notes, name="shortlist_notes"),
     path("shortlist/rank/<int:course_id>/", views.shortlist_set_rank, name="shortlist_rank"),
@@ -49,6 +50,7 @@ urlpatterns = [
     path("about/", views.about_view, name="about"),
     path("privacy/", views.privacy_view, name="privacy"),
     path("faq/", views.faq_view, name="faq"),
+    path("how-it-works/", views.how_it_works_view, name="how_it_works"),
 
     # Referral system
     path("referral/",                    views.referral_view,            name="referral"),

@@ -58,10 +58,16 @@ def institution_type_detail(request, type_slug):
     page_obj = paginator.get_page(page_num)
 
     is_htmx = request.headers.get('HX-Request') == 'true'
-    template = (
-        'institutions/_institution_list_partial.html' if is_htmx
-        else 'institutions/institution_type_detail.html'
-    )
+    try:
+        page_num_int = int(page_num)
+    except (ValueError, TypeError):
+        page_num_int = 1
+    if is_htmx and page_num_int > 1:
+        template = 'institutions/_institution_items_partial.html'
+    elif is_htmx:
+        template = 'institutions/_institution_list_partial.html'
+    else:
+        template = 'institutions/institution_type_detail.html'
 
     return render(request, template, {
         'inst_type': inst_type,

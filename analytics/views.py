@@ -10,6 +10,8 @@ from django.db.models.functions import TruncDate
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render
 from django.utils import timezone
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_POST
 
 staff_only = user_passes_test(lambda u: u.is_active and u.is_staff, login_url='/accounts/login/')
 
@@ -41,9 +43,32 @@ def _trend(current, previous):
     return {'pct': abs(pct), 'up': pct >= 0, 'neutral': False}
 
 
+@csrf_exempt
+@require_POST
+def pwa_install(request):
+    """Receive a PWA install event from the browser."""
+    from .models import PWAInstallLog
+
+    platform = request.POST.get('platform', 'unknown')
+    if platform not in {'android', 'ios', 'desktop', 'unknown'}:
+        platform = 'unknown'
+
+    ip = request.META.get('HTTP_X_FORWARDED_FOR', '').split(',')[0].strip() or \
+         request.META.get('REMOTE_ADDR')
+
+    PWAInstallLog.objects.create(
+        platform=platform,
+        user=request.user if request.user.is_authenticated else None,
+        session_key=request.session.session_key or '',
+        ip=ip or None,
+        user_agent=request.META.get('HTTP_USER_AGENT', '')[:300],
+    )
+    return JsonResponse({'ok': True})
+
+
 @staff_only
 def analytics_dashboard(request):
-    from .models import CareerEngineLog, DownloadLog, EventLog, SearchLog, ViewLog
+    from .models import CareerEngineLog, DownloadLog, EventLog, PWAInstallLog, SearchLog, ViewLog
     from accounts.models import SavedCourse, User
     from payments.models import Payment
 
@@ -89,6 +114,20 @@ def analytics_dashboard(request):
     total_downloads = DownloadLog.objects.filter(created_at__date__gte=ago).count()
     prev_downloads  = DownloadLog.objects.filter(created_at__date__gte=prev_ago, created_at__date__lt=ago).count()
     trend_downloads = _trend(total_downloads, prev_downloads)
+
+    # ── PWA installs ──────────────────────────────────────────────────────────
+    total_pwa_installs  = PWAInstallLog.objects.count()
+    pwa_installs_period = PWAInstallLog.objects.filter(created_at__date__gte=ago).count()
+    prev_pwa_installs   = PWAInstallLog.objects.filter(created_at__date__gte=prev_ago, created_at__date__lt=ago).count()
+    trend_pwa           = _trend(pwa_installs_period, prev_pwa_installs)
+    pwa_by_platform     = list(
+        PWAInstallLog.objects.values('platform').annotate(n=Count('id')).order_by('-n')
+    )
+    pwa_series = _fill_series(
+        PWAInstallLog.objects.filter(created_at__date__gte=ago)
+        .annotate(day=TruncDate('created_at')).values('day').annotate(n=Count('id')).order_by('day'),
+        labels,
+    )
 
     # ── Saves ────────────────────────────────────────────────────────────────
     total_saves = SavedCourse.objects.count()
@@ -239,6 +278,12 @@ def analytics_dashboard(request):
         # Downloads + saves
         'total_downloads': total_downloads, 'trend_downloads': trend_downloads,
         'total_saves': total_saves,
+        # PWA installs
+        'total_pwa_installs': total_pwa_installs,
+        'pwa_installs_period': pwa_installs_period,
+        'trend_pwa': trend_pwa,
+        'pwa_by_platform': pwa_by_platform,
+        'chart_pwa': json.dumps(pwa_series),
         # Payments
         'pay_initiated': pay_initiated, 'pay_completed': pay_completed,
         'pay_failed': pay_failed, 'pay_pending': pay_pending,

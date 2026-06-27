@@ -168,6 +168,13 @@
 @media (max-width: 575px) {
   .about-hero { padding: 3.5rem 0 3rem; }
   .trust-bar { padding: 1.8rem 1.2rem; }
+  .stat-pill { min-width: 80px; padding: 0.8rem 0.9rem; }
+  .stat-pill .sp-num { font-size: 1.5rem; }
+  .diff-row { gap: 0.65rem; }
+}
+@media (max-width: 400px) {
+  .about-hero h1 { font-size: 1.6rem; }
+  .contact-card { padding: 1.4rem 1.1rem; }
 }
 </style>
 
@@ -295,29 +302,30 @@
       </div>
       <div class="col-lg-6">
         <div class="row g-3">
-          <div class="col-6">
+          <div class="col-12 col-sm-6">
             <div class="value-card">
               <div class="value-icon" style="background:#eff6ff;color:#1d4ed8;"><i class="fas fa-lock-open"></i></div>
               <div class="fw-800 mb-1" style="color:#1e293b;">Efficient</div>
-<p class="small text-muted mb-0">
-  Built for efficiency — CareerNext integrates the calculator, course search, and shortlist tools into a single seamless experience for Kenyan students.
-</p>            </div>
+              <p class="small text-muted mb-0">
+                Built for efficiency — CareerNext integrates the calculator, course search, and shortlist tools into a single seamless experience for Kenyan students.
+              </p>
+            </div>
           </div>
-          <div class="col-6">
+          <div class="col-12 col-sm-6">
             <div class="value-card">
               <div class="value-icon" style="background:#f0fdf4;color:#15803d;"><i class="fas fa-check-double"></i></div>
               <div class="fw-800 mb-1" style="color:#1e293b;">Verified Formula</div>
               <p class="small text-muted mb-0">We implement the official KUCCPS weighted cluster points formula — not an estimate or approximation.</p>
             </div>
           </div>
-          <div class="col-6">
+          <div class="col-12 col-sm-6">
             <div class="value-card">
               <div class="value-icon" style="background:#faf5ff;color:#7c3aed;"><i class="fas fa-compass"></i></div>
               <div class="fw-800 mb-1" style="color:#1e293b;">Career Guidance</div>
               <p class="small text-muted mb-0">Beyond courses — explore career paths, get AI-matched recommendations, and build your shortlist.</p>
             </div>
           </div>
-          <div class="col-6">
+          <div class="col-12 col-sm-6">
             <div class="value-card">
               <div class="value-icon" style="background:#fff7ed;color:#c2410c;"><i class="fas fa-mobile-alt"></i></div>
               <div class="fw-800 mb-1" style="color:#1e293b;">Mobile-First</div>
@@ -341,8 +349,7 @@
       </span>
       <h2 class="fw-900" style="font-size:1.8rem;color:#1e293b;">The Team Behind the Platform</h2>
       <p class="text-muted mx-auto" style="max-width:540px;">
-        CareerNext is built and maintained by a small team of Kenyan developers and educators who
-        went through the KUCCPS process themselves and wanted to make it easier for those who follow.
+      CareerNext is built and maintained to help Kenyan students navigate the KUCCPS process, explore academic opportunities, and make informed career decisions with confidence.
       </p>
     </div>
 
@@ -537,19 +544,17 @@
           </p>
         </div>
       </div>
-      <div class="col-sm-6 col-lg-4">
-        <div class="source-card">
-          <span class="source-badge" style="background:#faf5ff;color:#7c3aed;">Formula</span>
-          <div class="fw-800 mb-1" style="color:#1e293b;">
-            <i class="fas fa-calculator me-2" style="color:#7c3aed;"></i>Official Cluster Points Formula
-          </div>
-          <p class="small text-muted mb-0" style="line-height:1.6;">
-            The weighted cluster points formula we use mirrors the official KUCCPS computation:
-            <code style="font-size:0.78rem;color:#7c3aed;">48 × √((core/48) × (agg/84))</code>.
-            We do not approximate.
-          </p>
-        </div>
-      </div>
+   <div class="col-sm-6 col-lg-4">
+  <div class="source-card">
+    <span class="source-badge" style="background:#faf5ff;color:#7c3aed;">Research</span>
+    <div class="fw-800 mb-1" style="color:#1e293b;">
+      <i class="fas fa-book-open me-2" style="color:#7c3aed;"></i>Education Resources
+    </div>
+    <p class="small text-muted mb-0" style="line-height:1.6;">
+      Information is reviewed using publicly available educational resources, institutional publications, and placement guidelines to help maintain accuracy and consistency across the platform.
+    </p>
+  </div>
+</div>
       <div class="col-sm-6 col-lg-4">
         <div class="source-card">
           <span class="source-badge" style="background:#fff7ed;color:#b45309;">Ongoing</span>

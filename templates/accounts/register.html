@@ -3,7 +3,7 @@
 {% load static %}
 {% load socialaccount %}
 
-{% block title %}Create Free Account | CareerNext — Kenya KUCCPS Course Finder{% endblock %}
+{% block title %}Create Free Account — Kenya KCSE Cluster Points Calculator & KUCCPS Course Finder | CareerNext{% endblock %}
 
 {% block content %}
 <div class="auth-page">
@@ -121,9 +121,9 @@
           {{ form.agreed_terms }}
           <label for="{{ form.agreed_terms.id_for_label }}">
             I agree to the
-            <a href="{% url 'accounts:terms' %}" style="color:var(--accent);font-weight:700;text-decoration:none;" target="_blank">Terms &amp; Conditions</a>
+            <a href="{% url 'accounts:terms' %}" style="color:#4285F4;font-weight:700;text-decoration:none;" target="_blank">Terms &amp; Conditions</a>
             and
-            <a href="{% url 'accounts:privacy' %}" style="color:var(--accent);font-weight:700;text-decoration:none;" target="_blank">Privacy Policy</a>
+            <a href="{% url 'accounts:privacy' %}" style="color:#4285F4;font-weight:700;text-decoration:none;" target="_blank">Privacy Policy</a>
           </label>
           {% if form.agreed_terms.errors %}
           <div class="field-error" style="margin-top:0.25rem;"><i class="fas fa-exclamation-circle"></i>{{ form.agreed_terms.errors|striptags }}</div>

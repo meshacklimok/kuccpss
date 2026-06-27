@@ -1,20 +1,21 @@
 <svg width="200" height="48" viewBox="0 0 200 48" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="CareerNext logo">
   <defs>
     <linearGradient id="markGrad" x1="0" y1="0" x2="48" y2="48" gradientUnits="userSpaceOnUse">
-      <stop offset="0%"   stop-color="#38bdf8"/>
-      <stop offset="100%" stop-color="#4ade80"/>
+      <stop offset="0%"   stop-color="#2563eb"/>
+      <stop offset="55%"  stop-color="#1e3a8a"/>
+      <stop offset="100%" stop-color="#16a34a"/>
     </linearGradient>
   </defs>
 
   <!-- Icon tile -->
-  <rect x="1" y="1" width="46" height="46" rx="23" fill="url(#markGrad)"/>
+  <rect x="1" y="1" width="46" height="46" rx="10" fill="url(#markGrad)"/>
 
   <!-- Rising path arrow -->
-  <g stroke="#0f172a" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round" fill="none">
+  <g stroke="#ffffff" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round" fill="none">
     <path d="M11 37 Q 22 37 25.5 26 T 37 12"/>
     <path d="M37 19 L37 12 L30 12"/>
   </g>
-  <circle cx="11" cy="37" r="4" fill="#0f172a"/>
+  <circle cx="11" cy="37" r="4" fill="#ffffff"/>
 
   <!-- Wordmark -->
   <text x="58" y="33" font-family="Inter,'Segoe UI',Arial,sans-serif" font-size="24" font-weight="800" letter-spacing="-0.6">

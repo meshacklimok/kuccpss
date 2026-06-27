@@ -308,11 +308,157 @@
 .ext-link-row:hover { background: #f8fafc; }
 .ext-link-row + .ext-link-row { border-top: 1px solid #f8fafc; }
 
+/* ── Application Readiness ring ── */
+.readiness-ring-wrap { position: relative; width: 110px; height: 110px; flex-shrink: 0; }
+.readiness-ring-wrap svg { width: 110px; height: 110px; transform: rotate(-90deg); }
+.readiness-ring-inner {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+}
+.readiness-pct-num { font-size: 1.45rem; font-weight: 900; color: #1e293b; line-height: 1; }
+.readiness-pct-label { font-size: 0.55rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #94a3b8; margin-top: 2px; }
+.readiness-step {
+  display: flex; align-items: center; gap: 10px;
+  padding: 5px 0;
+  text-decoration: none; color: inherit;
+  border-radius: 8px;
+  transition: background 0.15s;
+}
+.readiness-step:hover { background: #f8fafc; padding-left: 4px; text-decoration: none; color: inherit; }
+.readiness-icon-done {
+  width: 26px; height: 26px; border-radius: 50%; flex-shrink: 0;
+  background: #dcfce7; color: #16a34a;
+  display: flex; align-items: center; justify-content: center; font-size: 0.68rem;
+}
+.readiness-icon-todo {
+  width: 26px; height: 26px; border-radius: 50%; flex-shrink: 0;
+  background: #f8fafc; border: 1.5px solid #e2e8f0; color: #94a3b8;
+  display: flex; align-items: center; justify-content: center; font-size: 0.62rem;
+}
+
+/* ── Cutoff match card ── */
+.cutoff-row {
+  display: flex; flex-direction: column;
+  padding: 0.75rem;
+  border-radius: 12px;
+  border: 1.5px solid #f1f5f9;
+  background: #f8fafc;
+  transition: border-color 0.15s, background 0.15s;
+  text-decoration: none;
+}
+.cutoff-row:hover { border-color: #c7d2fe; background: #f5f3ff; text-decoration: none; }
+.cutoff-bar-track {
+  position: relative; height: 6px; background: #e2e8f0;
+  border-radius: 3px; margin-top: 6px;
+}
+.cutoff-bar-fill {
+  position: absolute; top: 0; left: 0; height: 100%;
+  border-radius: 3px; transition: width 1s cubic-bezier(0.4,0,0.2,1);
+}
+.cutoff-marker {
+  position: absolute; top: -4px; width: 3px; height: 14px;
+  border-radius: 2px; background: #ef4444;
+}
+.diff-badge {
+  font-size: 0.78rem; font-weight: 900;
+  padding: 2px 8px; border-radius: 20px;
+  flex-shrink: 0;
+}
+.diff-badge.qualify  { background: #dcfce7; color: #15803d; }
+.diff-badge.shortfall { background: #fee2e2; color: #dc2626; }
+
+/* ── Trend sparkline ── */
+.spark-wrap { display: flex; align-items: flex-end; gap: 2px; height: 20px; }
+.spark-bar  { width: 5px; border-radius: 2px 2px 0 0; background: #c7d2fe; transition: height 0.4s ease; }
+
+/* ── Subject requirements card ── */
+.req-course-block {
+  padding: 0.75rem;
+  border-radius: 12px; border: 1.5px solid #f1f5f9;
+  background: #f8fafc; margin-bottom: 0.75rem;
+  transition: border-color 0.15s;
+}
+.req-course-block:hover { border-color: #c7d2fe; }
+.req-course-block:last-child { margin-bottom: 0; }
+.req-pill {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 0.72rem; font-weight: 700;
+  padding: 3px 9px; border-radius: 20px;
+  margin: 2px 2px 2px 0;
+}
+.req-pill.pass { background: #dcfce7; color: #15803d; }
+.req-pill.fail { background: #fee2e2; color: #dc2626; }
+
+/* ── Comparison table ── */
+.cmp-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 0.78rem; }
+.cmp-table th {
+  font-size: 0.63rem; font-weight: 800; text-transform: uppercase;
+  letter-spacing: 0.07em; color: #94a3b8;
+  padding: 0 0.6rem 0.5rem; text-align: left; white-space: nowrap;
+}
+.cmp-table td {
+  padding: 0.6rem; border-top: 1px solid #f1f5f9;
+  color: #1e293b; vertical-align: middle;
+}
+.cmp-table tr:hover td { background: #f8fafc; }
+.cmp-table .cmp-course { font-weight: 700; max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cmp-table .cmp-inst   { color: #64748b; font-size: 0.7rem; }
+
+/* ── AI chat widget ── */
+.ai-chat-widget {
+  display: flex; flex-direction: column;
+  max-height: 420px;
+}
+.ai-chat-msgs {
+  flex: 1; overflow-y: auto; padding: 0.75rem;
+  display: flex; flex-direction: column; gap: 8px;
+  min-height: 120px; max-height: 260px;
+}
+.ai-msg {
+  max-width: 88%; padding: 0.55rem 0.75rem;
+  border-radius: 12px; font-size: 0.8rem; line-height: 1.45;
+  animation: fadeUp 0.2s ease;
+}
+.ai-msg.user { align-self: flex-end; background: #4f46e5; color: #fff; border-radius: 12px 12px 4px 12px; }
+.ai-msg.bot  { align-self: flex-start; background: #f1f5f9; color: #1e293b; border-radius: 12px 12px 12px 4px; }
+.ai-msg.typing { background: #f1f5f9; color: #94a3b8; font-style: italic; }
+.ai-chat-input-row { display: flex; gap: 6px; padding: 0.6rem 0.75rem; border-top: 1.5px solid #f1f5f9; }
+.ai-chat-input {
+  flex: 1; border: 1.5px solid #e2e8f0; border-radius: 10px;
+  padding: 6px 10px; font-size: 0.8rem; outline: none;
+  transition: border-color 0.15s;
+}
+.ai-chat-input:focus { border-color: #6366f1; }
+.ai-chat-send {
+  width: 34px; height: 34px; border-radius: 10px; border: none;
+  background: #4f46e5; color: #fff; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.8rem; flex-shrink: 0;
+  transition: background 0.15s, transform 0.15s;
+}
+.ai-chat-send:hover { background: #4338ca; transform: scale(1.05); }
+.ai-chat-send:disabled { background: #c7d2fe; cursor: not-allowed; transform: none; }
+
+/* dark mode — new widgets */
+body.dark .req-course-block    { background: var(--surface-2); border-color: var(--border); }
+body.dark .req-course-block:hover { border-color: #6366f1; }
+body.dark .cmp-table td        { border-top-color: var(--border); color: var(--text); }
+body.dark .cmp-table tr:hover td { background: var(--surface-2); }
+body.dark .cmp-table .cmp-inst { color: var(--text-2); }
+body.dark .ai-chat-msgs        { scrollbar-color: var(--border) transparent; }
+body.dark .ai-msg.bot          { background: var(--surface-2); color: var(--text); }
+body.dark .ai-chat-input       { background: var(--surface-2); border-color: var(--border); color: var(--text); }
+body.dark .ai-chat-input-row   { border-top-color: var(--border); }
+body.dark .spark-bar           { background: #3730a3; }
+
 /* ── responsive ── */
 @media (max-width: 575px) {
   .metric-tile .mt-num { font-size: 1.25rem; }
   .dash-card-body { padding: 1rem; }
   .sidebar-card-body { padding: 0.85rem; }
+  .readiness-ring-wrap { width: 88px; height: 88px; }
+  .readiness-ring-wrap svg { width: 88px; height: 88px; }
+  .readiness-pct-num { font-size: 1.15rem; }
 }
 
 /* ═══════════════════════════════════════════════
@@ -389,6 +535,19 @@ body.dark .ext-link-row + .ext-link-row { border-top-color: var(--border); }
 
 /* Onboarding step hover */
 body.dark .ob-step:hover { background: var(--surface-2); }
+
+/* Readiness ring */
+body.dark .readiness-pct-num    { color: var(--text); }
+body.dark .readiness-step:hover { background: var(--surface-2); }
+body.dark .readiness-icon-todo  { background: var(--surface-2); border-color: var(--border); color: var(--text-3); }
+
+/* Cutoff match */
+body.dark .cutoff-row            { background: var(--surface-2); border-color: var(--border); }
+body.dark .cutoff-row:hover      { border-color: #6366f1; background: rgba(99,102,241,0.07); }
+body.dark .cutoff-bar-track      { background: #1e293b; }
+
+/* HELB */
+body.dark .helb-criteria-item    { background: rgba(22,163,74,0.12); border-color: rgba(22,163,74,0.25); color: #86efac; }
 
 </style>
 
@@ -536,79 +695,195 @@ body.dark .ob-step:hover { background: var(--surface-2); }
 <div class="col-lg-8">
 
 
-  {# ── ONBOARDING CHECKLIST ── #}
-  {% if not guest %}
-  {% with has_results=snapshot has_shortlist=shortlist_count has_county=user.county %}
-  {% if not has_results or not has_county or not has_shortlist %}
-  <div class="dash-card reveal" id="onboardCard">
-    <div class="dash-card-header">
-      <h6 class="dash-card-title">
-        <i class="bi bi-rocket-takeoff-fill text-primary"></i>
-        Get Started — 3 Steps
-      </h6>
-      <button onclick="dismissOnboard()"
-              class="btn btn-link text-muted p-0" style="font-size:1rem;line-height:1;">
-        <i class="fas fa-times"></i>
-      </button>
+  {# ── APPLICATION READINESS ── #}
+  {% if not guest and readiness_pct < 100 %}
+  <div class="dash-card reveal">
+    <div class="dash-card-header-gradient"
+         style="background:linear-gradient(120deg,#312e81 0%,#4f46e5 60%,#7c3aed 100%);">
+      <div>
+        <div class="fw-800" style="font-size:0.9rem;display:flex;align-items:center;gap:7px;">
+          <i class="fas fa-chart-pie" style="color:#c4b5fd;"></i>Application Readiness
+        </div>
+        <div style="font-size:0.72rem;opacity:0.65;margin-top:2px;">
+          {{ readiness_done }} of {{ readiness_steps|length }} steps complete &nbsp;·&nbsp; {{ readiness_pct }}% ready
+        </div>
+      </div>
+      {% if readiness_pct >= 80 %}
+      <span style="font-size:0.7rem;font-weight:700;padding:3px 10px;border-radius:20px;
+                   background:rgba(74,222,128,0.2);color:#4ade80;border:1px solid rgba(74,222,128,0.3);">
+        Almost there!
+      </span>
+      {% endif %}
     </div>
-    <div class="dash-card-body pb-3">
-      <p class="text-muted mb-3" style="font-size:0.8rem;">Complete these to get the most out of CareerNext.</p>
+    <div class="dash-card-body">
+      <div class="d-flex gap-4 align-items-center flex-wrap">
 
-      {% if has_results %}
-      <div class="ob-step" style="background:#f0fdf4;">
-        <div class="ob-check-done"><i class="bi bi-check-lg"></i></div>
-        <div><span class="fw-700 small">Run the Career Engine</span>
-          <span class="text-muted small ms-2">Done ✓</span></div>
-      </div>
-      {% else %}
-      <a href="{% url 'career:home' %}#pathway-section" class="ob-step" style="background:#eff6ff;border:1px solid #bfdbfe;">
-        <div class="ob-check-num" style="background:#3b82f6;">1</div>
-        <div>
-          <span class="fw-700 small text-dark">Run the Career Engine</span>
-          <div class="text-muted" style="font-size:0.72rem;">Enter your KCSE results to see all courses you qualify for</div>
+        {# ── SVG Progress Ring ── #}
+        <div class="readiness-ring-wrap">
+          <svg viewBox="0 0 36 36">
+            {# track #}
+            <path fill="none" stroke="#e2e8f0" stroke-width="3"
+                  d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+            {# fill — stroke-dasharray animates on load via JS #}
+            <path fill="none" stroke-width="3" stroke-linecap="round"
+                  id="readinessFill"
+                  stroke="{% if readiness_pct >= 80 %}#16a34a{% elif readiness_pct >= 50 %}#4f46e5{% else %}#7c3aed{% endif %}"
+                  stroke-dasharray="0, 100"
+                  d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+          </svg>
+          <div class="readiness-ring-inner">
+            <span class="readiness-pct-num">{{ readiness_pct }}%</span>
+            <span class="readiness-pct-label">Ready</span>
+          </div>
         </div>
-        <i class="bi bi-chevron-right text-primary ms-auto"></i>
-      </a>
-      {% endif %}
 
-      {% if has_county %}
-      <div class="ob-step" style="background:#f0fdf4;">
-        <div class="ob-check-done"><i class="bi bi-check-lg"></i></div>
-        <div><span class="fw-700 small">Complete your profile</span>
-          <span class="text-muted small ms-2">Done ✓</span></div>
-      </div>
-      {% else %}
-      <a href="{% url 'accounts:profile' %}" class="ob-step" style="background:#fefce8;border:1px solid #fde68a;">
-        <div class="ob-check-num" style="background:#f59e0b;">2</div>
-        <div>
-          <span class="fw-700 small text-dark">Complete your profile</span>
-          <div class="text-muted" style="font-size:0.72rem;">Add your county and KCSE year for personalised guidance</div>
+        {# ── Steps list ── #}
+        <div style="flex:1;min-width:180px;">
+          {% for step in readiness_steps %}
+          {% if step.done %}
+          <div class="readiness-step" style="cursor:default;">
+            <div class="readiness-icon-done"><i class="fas fa-check" style="font-size:0.62rem;"></i></div>
+            <div>
+              <div style="font-size:0.8rem;font-weight:600;color:#94a3b8;text-decoration:line-through;">{{ step.label }}</div>
+            </div>
+          </div>
+          {% else %}
+          <a href="{{ step.url }}" class="readiness-step">
+            <div class="readiness-icon-todo"><i class="{{ step.icon }}"></i></div>
+            <div style="min-width:0;flex:1;">
+              <div style="font-size:0.8rem;font-weight:700;color:#1e293b;">{{ step.label }}</div>
+              <div style="font-size:0.68rem;color:#94a3b8;line-height:1.3;">{{ step.desc }}</div>
+            </div>
+            <i class="bi bi-chevron-right ms-auto" style="color:#c7d2fe;font-size:0.78rem;flex-shrink:0;"></i>
+          </a>
+          {% endif %}
+          {% endfor %}
         </div>
-        <i class="bi bi-chevron-right ms-auto" style="color:#d97706;"></i>
-      </a>
-      {% endif %}
 
-      {% if has_shortlist %}
-      <div class="ob-step" style="background:#f0fdf4;">
-        <div class="ob-check-done"><i class="bi bi-check-lg"></i></div>
-        <div><span class="fw-700 small">Shortlist your top courses</span>
-          <span class="text-muted small ms-2">Done ✓</span></div>
       </div>
-      {% else %}
-      <a href="{% url 'accounts:shortlist' %}" class="ob-step" style="background:#fdf4ff;border:1px solid #e9d5ff;">
-        <div class="ob-check-num" style="background:#7c3aed;">3</div>
-        <div>
-          <span class="fw-700 small text-dark">Shortlist your top courses</span>
-          <div class="text-muted" style="font-size:0.72rem;">Save and rank the courses you want to apply for</div>
-        </div>
-        <i class="bi bi-chevron-right ms-auto" style="color:#7c3aed;"></i>
-      </a>
-      {% endif %}
-
     </div>
   </div>
   {% endif %}
-  {% endwith %}
+
+
+  {# ── YOUR CLUSTER SCORES ── #}
+  {% if latest_result and cluster_results %}
+
+  <div class="dash-card reveal">
+    <div class="dash-card-header-gradient"
+         style="background:linear-gradient(120deg,#1e3a8a 0%,#2563eb 100%);">
+      <div>
+        <div class="fw-800" style="font-size:0.9rem;display:flex;align-items:center;gap:7px;">
+          <i class="fas fa-chart-bar" style="color:#93c5fd;"></i>Your Cluster Points
+        </div>
+        <div style="font-size:0.72rem;opacity:0.7;margin-top:2px;">Based on your latest KCSE result</div>
+      </div>
+      <a href="{% url 'clusterpoints:calculator' %}" class="btn-header-light">
+        <i class="fas fa-sync me-1"></i>Recalculate
+      </a>
+    </div>
+    <div class="dash-card-body">
+
+      {# metric tiles #}
+      <div class="metric-row">
+        <div class="metric-tile">
+          <div class="mt-num">{{ latest_result.total_points }}<sub>/84</sub></div>
+          <div class="mt-label">Aggregate</div>
+        </div>
+        {% with top=cluster_results.0 %}
+        <div class="metric-tile">
+          <div class="mt-num" style="{% if top.cluster_points >= 36 %}color:#16a34a;{% elif top.cluster_points >= 24 %}color:#2563eb;{% else %}color:#ea580c;{% endif %}">
+            {{ top.cluster_points|floatformat:1 }}<sub>/48</sub>
+          </div>
+          <div class="mt-label">Top Cluster</div>
+        </div>
+        {% endwith %}
+        <div class="metric-tile" style="background:#f0fdf4;border-color:#bbf7d0;">
+          <a href="{% url 'clusterpoints:eligible_courses' %}" style="text-decoration:none;">
+            <div class="mt-num" style="color:#16a34a;">{{ eligible_count }}</div>
+            <div class="mt-label" style="color:#86efac;">Eligible</div>
+          </a>
+        </div>
+      </div>
+
+      {# bar chart #}
+      <canvas id="clusterChart" height="110" style="margin-bottom:0.75rem;"></canvas>
+      <div class="d-flex gap-3 mb-3 flex-wrap">
+        <span class="d-flex align-items-center gap-1" style="font-size:0.7rem;color:#64748b;">
+          <span style="width:10px;height:10px;border-radius:3px;background:#16a34a;display:inline-block;"></span>Strong (≥36)
+        </span>
+        <span class="d-flex align-items-center gap-1" style="font-size:0.7rem;color:#64748b;">
+          <span style="width:10px;height:10px;border-radius:3px;background:#2563eb;display:inline-block;"></span>Good (24–35)
+        </span>
+        <span class="d-flex align-items-center gap-1" style="font-size:0.7rem;color:#64748b;">
+          <span style="width:10px;height:10px;border-radius:3px;background:#f97316;display:inline-block;"></span>Fair (&lt;24)
+        </span>
+      </div>
+
+      {# cluster grid #}
+      <div style="border-top:1.5px solid #f1f5f9;padding-top:0.9rem;">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <span style="font-size:0.72rem;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.06em;">
+            All Clusters
+          </span>
+          <a href="{% url 'clusters:cluster_list' %}" style="font-size:0.72rem;color:#4f46e5;text-decoration:none;">
+            Browse <i class="bi bi-arrow-right ms-1"></i>
+          </a>
+        </div>
+        <div id="clusterGrid">
+          {% for r in cluster_results %}
+          {% with pts=r.cluster_points %}
+          <a href="{% url 'clusters:cluster_detail' r.cluster.slug %}"
+             class="cluster-row {% if forloop.counter > 3 %}cluster-extra{% endif %}"
+             style="{% if forloop.counter > 3 %}display:none;{% endif %}">
+            <div class="rounded-2 d-flex align-items-center justify-content-center flex-shrink-0 fw-800"
+                 style="width:34px;height:34px;font-size:0.72rem;
+                        {% if pts >= 36 %}background:#dcfce7;color:#16a34a;
+                        {% elif pts >= 24 %}background:#dbeafe;color:#2563eb;
+                        {% else %}background:#ffedd5;color:#ea580c;{% endif %}">
+              {{ r.cluster.kuccps_number }}
+            </div>
+            <div style="min-width:0;flex:1;">
+              <div class="fw-700 text-dark" style="font-size:0.78rem;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                {{ r.cluster.name|truncatechars:32 }}
+              </div>
+              <div style="margin-top:4px;height:4px;border-radius:3px;background:#e2e8f0;">
+                <div style="height:100%;border-radius:3px;width:{% widthratio pts 48 100 %}%;
+                            {% if pts >= 36 %}background:#16a34a;{% elif pts >= 24 %}background:#2563eb;{% else %}background:#ea580c;{% endif %}"></div>
+              </div>
+            </div>
+            <span class="fw-800 flex-shrink-0" style="font-size:0.82rem;
+                   {% if pts >= 36 %}color:#16a34a;{% elif pts >= 24 %}color:#2563eb;{% else %}color:#ea580c;{% endif %}">
+              {{ pts|floatformat:1 }}
+            </span>
+          </a>
+          {% endwith %}
+          {% endfor %}
+        </div>
+        {% if cluster_results|length > 3 %}
+        <button id="clusterToggleBtn" onclick="toggleClusters()"
+                class="btn btn-sm btn-outline-secondary w-100 mt-2"
+                style="font-size:0.73rem;border-radius:8px;">
+          Show all {{ cluster_results|length }} clusters <i class="bi bi-chevron-down ms-1"></i>
+        </button>
+        {% endif %}
+      </div>
+
+    </div>
+  </div>
+
+  {% else %}
+  {# empty state — no KCSE results #}
+  <div class="dash-card reveal">
+    <div class="empty-state">
+      <i class="fas fa-calculator"></i>
+      <h6 class="fw-800 mb-1">No KCSE Results Yet</h6>
+      <p class="small text-muted mb-3">Enter your grades to calculate cluster points and see eligible courses.</p>
+      <a href="{% url 'clusterpoints:calculator' %}" class="btn btn-primary px-5" style="border-radius:10px;" {% if guest %}data-guest-gate="1"{% endif %}>
+        <i class="fas fa-calculator me-2"></i>Start Calculator
+      </a>
+    </div>
+  </div>
   {% endif %}
 
 
@@ -751,122 +1026,35 @@ body.dark .ob-step:hover { background: var(--surface-2); }
   </div>
 
 
-  {# ── YOUR CLUSTER SCORES ── #}
-  {% if latest_result and cluster_results %}
-
-  <div class="dash-card reveal">
-    <div class="dash-card-header-gradient"
-         style="background:linear-gradient(120deg,#1e3a8a 0%,#2563eb 100%);">
-      <div>
-        <div class="fw-800" style="font-size:0.9rem;display:flex;align-items:center;gap:7px;">
-          <i class="fas fa-chart-bar" style="color:#93c5fd;"></i>Your Cluster Points
+  {# ── CAREER QUIZ CTA (only if quiz not yet taken) ── #}
+  {% if not guest and not quiz_submission %}
+  <div class="dash-card reveal" id="quizCtaCard" style="border-color:#fde68a;">
+    <div class="dash-card-body" style="padding:1rem 1.25rem;">
+      <div class="d-flex align-items-center gap-3 flex-wrap">
+        <div class="rounded-3 d-flex align-items-center justify-content-center flex-shrink-0"
+             style="width:48px;height:48px;background:linear-gradient(135deg,#fbbf24,#f59e0b);">
+          <i class="fas fa-lightbulb" style="color:#fff;font-size:1.1rem;"></i>
         </div>
-        <div style="font-size:0.72rem;opacity:0.7;margin-top:2px;">Based on your latest KCSE result</div>
-      </div>
-      <a href="{% url 'clusterpoints:calculator' %}" class="btn-header-light">
-        <i class="fas fa-sync me-1"></i>Recalculate
-      </a>
-    </div>
-    <div class="dash-card-body">
-
-      {# metric tiles #}
-      <div class="metric-row">
-        <div class="metric-tile">
-          <div class="mt-num">{{ latest_result.total_points }}<sub>/84</sub></div>
-          <div class="mt-label">Aggregate</div>
-        </div>
-        {% with top=cluster_results.0 %}
-        <div class="metric-tile">
-          <div class="mt-num" style="{% if top.cluster_points >= 36 %}color:#16a34a;{% elif top.cluster_points >= 24 %}color:#2563eb;{% else %}color:#ea580c;{% endif %}">
-            {{ top.cluster_points|floatformat:1 }}<sub>/48</sub>
+        <div style="flex:1;min-width:0;">
+          <div class="fw-800" style="font-size:0.9rem;color:#1e293b;">
+            Discover your ideal career in 3 minutes
           </div>
-          <div class="mt-label">Top Cluster</div>
+          <div class="text-muted" style="font-size:0.75rem;margin-top:1px;">
+            Take the Career Quiz &mdash; personalised suggestions based on your interests and strengths.
+          </div>
         </div>
-        {% endwith %}
-        <div class="metric-tile" style="background:#f0fdf4;border-color:#bbf7d0;">
-          <a href="{% url 'clusterpoints:eligible_courses' %}" style="text-decoration:none;">
-            <div class="mt-num" style="color:#16a34a;">{{ eligible_count }}</div>
-            <div class="mt-label" style="color:#86efac;">Eligible</div>
+        <div class="d-flex gap-2 flex-shrink-0 flex-wrap">
+          <a href="{% url 'career:quiz' %}" class="btn btn-warning fw-700"
+             style="border-radius:10px;font-size:0.82rem;white-space:nowrap;">
+            <i class="fas fa-play me-1"></i>Take Quiz
           </a>
+          <button onclick="document.getElementById('quizCtaCard').remove()"
+                  class="btn btn-link p-0 text-muted" style="font-size:1rem;line-height:1;"
+                  title="Dismiss">
+            <i class="fas fa-times"></i>
+          </button>
         </div>
       </div>
-
-      {# bar chart #}
-      <canvas id="clusterChart" height="110" style="margin-bottom:0.75rem;"></canvas>
-      <div class="d-flex gap-3 mb-3 flex-wrap">
-        <span class="d-flex align-items-center gap-1" style="font-size:0.7rem;color:#64748b;">
-          <span style="width:10px;height:10px;border-radius:3px;background:#16a34a;display:inline-block;"></span>Strong (≥36)
-        </span>
-        <span class="d-flex align-items-center gap-1" style="font-size:0.7rem;color:#64748b;">
-          <span style="width:10px;height:10px;border-radius:3px;background:#2563eb;display:inline-block;"></span>Good (24–35)
-        </span>
-        <span class="d-flex align-items-center gap-1" style="font-size:0.7rem;color:#64748b;">
-          <span style="width:10px;height:10px;border-radius:3px;background:#f97316;display:inline-block;"></span>Fair (&lt;24)
-        </span>
-      </div>
-
-      {# cluster grid #}
-      <div style="border-top:1.5px solid #f1f5f9;padding-top:0.9rem;">
-        <div class="d-flex justify-content-between align-items-center mb-2">
-          <span style="font-size:0.72rem;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.06em;">
-            All Clusters
-          </span>
-          <a href="{% url 'clusters:cluster_list' %}" style="font-size:0.72rem;color:#4f46e5;text-decoration:none;">
-            Browse <i class="bi bi-arrow-right ms-1"></i>
-          </a>
-        </div>
-        <div id="clusterGrid">
-          {% for r in cluster_results %}
-          {% with pts=r.cluster_points %}
-          <a href="{% url 'clusters:cluster_detail' r.cluster.slug %}"
-             class="cluster-row {% if forloop.counter > 6 %}cluster-extra{% endif %}"
-             style="{% if forloop.counter > 6 %}display:none;{% endif %}">
-            <div class="rounded-2 d-flex align-items-center justify-content-center flex-shrink-0 fw-800"
-                 style="width:34px;height:34px;font-size:0.72rem;
-                        {% if pts >= 36 %}background:#dcfce7;color:#16a34a;
-                        {% elif pts >= 24 %}background:#dbeafe;color:#2563eb;
-                        {% else %}background:#ffedd5;color:#ea580c;{% endif %}">
-              {{ r.cluster.kuccps_number }}
-            </div>
-            <div style="min-width:0;flex:1;">
-              <div class="fw-700 text-dark" style="font-size:0.78rem;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
-                {{ r.cluster.name|truncatechars:32 }}
-              </div>
-              <div style="margin-top:4px;height:4px;border-radius:3px;background:#e2e8f0;">
-                <div style="height:100%;border-radius:3px;width:{% widthratio pts 48 100 %}%;
-                            {% if pts >= 36 %}background:#16a34a;{% elif pts >= 24 %}background:#2563eb;{% else %}background:#ea580c;{% endif %}"></div>
-              </div>
-            </div>
-            <span class="fw-800 flex-shrink-0" style="font-size:0.82rem;
-                   {% if pts >= 36 %}color:#16a34a;{% elif pts >= 24 %}color:#2563eb;{% else %}color:#ea580c;{% endif %}">
-              {{ pts|floatformat:1 }}
-            </span>
-          </a>
-          {% endwith %}
-          {% endfor %}
-        </div>
-        {% if cluster_results|length > 6 %}
-        <button id="clusterToggleBtn" onclick="toggleClusters()"
-                class="btn btn-sm btn-outline-secondary w-100 mt-2"
-                style="font-size:0.73rem;border-radius:8px;">
-          Show all {{ cluster_results|length }} clusters <i class="bi bi-chevron-down ms-1"></i>
-        </button>
-        {% endif %}
-      </div>
-
-    </div>
-  </div>
-
-  {% else %}
-  {# empty state — no KCSE results #}
-  <div class="dash-card reveal">
-    <div class="empty-state">
-      <i class="fas fa-calculator"></i>
-      <h6 class="fw-800 mb-1">No KCSE Results Yet</h6>
-      <p class="small text-muted mb-3">Enter your grades to calculate cluster points and see eligible courses.</p>
-      <a href="{% url 'clusterpoints:calculator' %}" class="btn btn-primary px-5" style="border-radius:10px;" {% if guest %}data-guest-gate="1"{% endif %}>
-        <i class="fas fa-calculator me-2"></i>Start Calculator
-      </a>
     </div>
   </div>
   {% endif %}
@@ -1007,6 +1195,280 @@ body.dark .ob-step:hover { background: var(--surface-2); }
     </div>
   </div>
   {% endif %}{# /not guest My Courses #}
+
+
+  {# ── RECENT ACTIVITY ── #}
+  {% if not guest and activity_feed %}
+  <div class="dash-card reveal">
+    <div class="dash-card-header">
+      <h6 class="dash-card-title">
+        <i class="fas fa-history" style="color:#4f46e5;font-size:0.85rem;"></i>Recent Activity
+      </h6>
+      <span class="text-muted" style="font-size:0.7rem;">Your last actions</span>
+    </div>
+    <div class="dash-card-body" style="padding:0.75rem 1.25rem;">
+      <div class="d-flex flex-column" style="gap:0.1rem;">
+        {% for evt in activity_feed %}
+        <a href="{{ evt.url }}" class="d-flex align-items-center gap-3 py-2 text-decoration-none rounded-2"
+           style="transition:background 0.12s;padding-left:4px;padding-right:4px;"
+           onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background=''">
+          <div class="rounded-2 flex-shrink-0 d-flex align-items-center justify-content-center"
+               style="width:32px;height:32px;background:{{ evt.icon_bg }};color:{{ evt.icon_color }};">
+            <i class="{{ evt.icon }}" style="font-size:0.75rem;"></i>
+          </div>
+          <div style="min-width:0;flex:1;">
+            <div class="fw-600 text-dark" style="font-size:0.81rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+              {{ evt.label }}
+            </div>
+            <div class="text-muted" style="font-size:0.67rem;">{{ evt.ts|timesince }} ago</div>
+          </div>
+          <span style="font-size:0.63rem;font-weight:700;padding:2px 8px;border-radius:10px;
+                       background:{{ evt.icon_bg }};color:{{ evt.icon_color }};white-space:nowrap;flex-shrink:0;">
+            {{ evt.sub }}
+          </span>
+        </a>
+        {% if not forloop.last %}
+        <div style="height:1px;background:#f1f5f9;margin:0 4px;"></div>
+        {% endif %}
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+
+  {# ── CUTOFF MATCH ── #}
+  {% if not guest and cutoff_comparisons %}
+  <div class="dash-card reveal">
+    <div class="dash-card-header-gradient"
+         style="background:linear-gradient(120deg,#1e1b4b 0%,#312e81 50%,#1e3a8a 100%);">
+      <div>
+        <div class="fw-800" style="font-size:0.9rem;display:flex;align-items:center;gap:7px;">
+          <i class="fas fa-crosshairs" style="color:#a5b4fc;"></i>Cutoff Match
+        </div>
+        <div style="font-size:0.72rem;opacity:0.65;margin-top:2px;">
+          Your cluster points vs. shortlisted course cutoffs
+        </div>
+      </div>
+      <a href="{% url 'accounts:shortlist' %}" class="btn-header-light">
+        Shortlist <i class="bi bi-arrow-right"></i>
+      </a>
+    </div>
+    <div class="dash-card-body" style="padding:1rem;">
+      <div class="d-flex flex-column gap-3">
+
+        {# Legend #}
+        <div class="d-flex gap-3 flex-wrap" style="padding-bottom:0.5rem;border-bottom:1px solid #f1f5f9;">
+          <span class="d-flex align-items-center gap-1" style="font-size:0.68rem;color:#64748b;">
+            <span style="display:inline-block;width:12px;height:4px;border-radius:2px;background:#4f46e5;"></span>Your points
+          </span>
+          <span class="d-flex align-items-center gap-1" style="font-size:0.68rem;color:#64748b;">
+            <span style="display:inline-block;width:3px;height:12px;border-radius:2px;background:#ef4444;vertical-align:middle;"></span>Cutoff line
+          </span>
+          <span class="ms-auto d-flex align-items-center gap-2" style="font-size:0.68rem;">
+            <span style="background:#dcfce7;color:#15803d;padding:1px 7px;border-radius:10px;font-weight:700;">+pts</span>Qualifies
+            <span style="background:#fee2e2;color:#dc2626;padding:1px 7px;border-radius:10px;font-weight:700;">-pts</span>Shortfall
+          </span>
+        </div>
+
+        {% for cmp in cutoff_comparisons|slice:":3" %}
+        <a href="{{ cmp.url }}" class="cutoff-row">
+          <div class="d-flex align-items-center gap-2">
+            <div class="rounded-2 flex-shrink-0 d-flex align-items-center justify-content-center fw-800"
+                 style="width:28px;height:28px;font-size:0.68rem;background:#dbeafe;color:#1d4ed8;">
+              {{ cmp.cluster_num }}
+            </div>
+            <div style="min-width:0;flex:1;">
+              <div class="fw-700 text-dark" style="font-size:0.82rem;line-height:1.2;
+                   overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                {{ cmp.name }}
+              </div>
+              <div class="d-flex align-items-center gap-2 mt-1">
+                <span class="text-muted" style="font-size:0.68rem;">{{ cmp.inst }}</span>
+                {% if cmp.trend %}
+                <span class="{{ cmp.trend_color }} d-flex align-items-center gap-1"
+                      style="font-size:0.65rem;font-weight:700;"
+                      title="{{ cmp.trend_tip }}">
+                  <i class="fas {{ cmp.trend_icon }}" style="font-size:0.6rem;"></i>{{ cmp.trend|capfirst }}
+                </span>
+                {% if cmp.predicted %}
+                <span style="font-size:0.63rem;color:#94a3b8;">2026 est: <strong>{{ cmp.predicted }}</strong></span>
+                {% endif %}
+                {% endif %}
+              </div>
+            </div>
+            <div class="d-flex flex-column align-items-end gap-1 flex-shrink-0">
+              <span class="diff-badge {% if cmp.qualifies %}qualify{% else %}shortfall{% endif %}">
+                {% if cmp.qualifies %}+{% endif %}{{ cmp.diff }}pts
+              </span>
+              {# Mini sparkline #}
+              {% if cmp.history %}
+              <div class="spark-wrap" title="Cutoff history">
+                {% for yr, val in cmp.history %}
+                <div class="spark-bar"
+                     data-spark-h="{% widthratio val 48 100 %}"
+                     style="height:0%;"></div>
+                {% endfor %}
+              </div>
+              {% endif %}
+            </div>
+          </div>
+          <div class="cutoff-bar-track" style="margin:8px 0 0 36px;">
+            <div class="cutoff-bar-fill"
+                 data-width="{% widthratio cmp.user_pts 48 100 %}"
+                 style="width:0%;background:{% if cmp.qualifies %}#4f46e5{% else %}#3b82f6{% endif %};"></div>
+            <div class="cutoff-marker"
+                 style="left:{% widthratio cmp.cutoff 48 100 %}%;"></div>
+          </div>
+          <div class="d-flex justify-content-between mt-1" style="margin-left:36px;">
+            <span style="font-size:0.63rem;color:#64748b;">Your pts: <strong>{{ cmp.user_pts }}</strong></span>
+            <span style="font-size:0.63rem;color:#ef4444;">Cutoff: <strong>{{ cmp.cutoff }}</strong>/48</span>
+          </div>
+        </a>
+        {% endfor %}
+
+      </div>
+    </div>
+  </div>
+  {% endif %}{# /cutoff comparisons #}
+
+
+  {# ── SUBJECT REQUIREMENTS CHECKER ── #}
+  {% if not guest and subject_req_checks %}
+  <div class="dash-card reveal">
+    <div class="dash-card-header-gradient"
+         style="background:linear-gradient(120deg,#7c3aed 0%,#4f46e5 100%);">
+      <div>
+        <div class="fw-800" style="font-size:0.9rem;display:flex;align-items:center;gap:7px;">
+          <i class="fas fa-clipboard-check" style="color:#c4b5fd;"></i>Subject Requirements
+        </div>
+        <div style="font-size:0.72rem;opacity:0.65;margin-top:2px;">
+          Do your KCSE subjects meet each course's mandatory requirements?
+        </div>
+      </div>
+      <a href="{% url 'accounts:shortlist' %}" class="btn-header-light">
+        Edit shortlist <i class="bi bi-arrow-right"></i>
+      </a>
+    </div>
+    <div class="dash-card-body">
+      {% for chk in subject_req_checks %}
+      <div class="req-course-block">
+        <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
+          <a href="{{ chk.url }}" class="fw-700 text-dark text-decoration-none"
+             style="font-size:0.83rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;">
+            {{ chk.course_name }}
+          </a>
+          {% if chk.all_pass %}
+          <span style="font-size:0.65rem;font-weight:700;padding:2px 9px;border-radius:20px;
+                       background:#dcfce7;color:#15803d;white-space:nowrap;flex-shrink:0;">
+            <i class="fas fa-check me-1"></i>All met
+          </span>
+          {% else %}
+          <span style="font-size:0.65rem;font-weight:700;padding:2px 9px;border-radius:20px;
+                       background:#fee2e2;color:#dc2626;white-space:nowrap;flex-shrink:0;">
+            <i class="fas fa-exclamation-triangle me-1"></i>Gap found
+          </span>
+          {% endif %}
+        </div>
+        <div class="d-flex flex-wrap">
+          {% for slot in chk.checks %}
+          <span class="req-pill {% if slot.met %}pass{% else %}fail{% endif %}">
+            {% if slot.met %}
+            <i class="fas fa-check" style="font-size:0.6rem;"></i>
+            {% else %}
+            <i class="fas fa-times" style="font-size:0.6rem;"></i>
+            {% endif %}
+            {{ slot.label }} (≥{{ slot.min_grade }})
+          </span>
+          {% endfor %}
+        </div>
+      </div>
+      {% endfor %}
+      <p class="text-muted mb-0" style="font-size:0.72rem;margin-top:0.5rem;">
+        <i class="fas fa-info-circle me-1 text-primary"></i>
+        Based on your entered KCSE grades. Verify with the institution before applying.
+      </p>
+    </div>
+  </div>
+  {% endif %}{# /subject req checks #}
+
+
+  {# ── COURSE COMPARISON TABLE ── #}
+  {% if not guest and shortlist_comparison %}
+  <div class="dash-card reveal">
+    <div class="dash-card-header-gradient"
+         style="background:linear-gradient(120deg,#0f172a 0%,#1e3a8a 60%,#312e81 100%);">
+      <div>
+        <div class="fw-800" style="font-size:0.9rem;display:flex;align-items:center;gap:7px;">
+          <i class="fas fa-table" style="color:#93c5fd;"></i>Course Comparison
+        </div>
+        <div style="font-size:0.72rem;opacity:0.65;margin-top:2px;">
+          Side-by-side view of your shortlisted courses
+        </div>
+      </div>
+      <a href="{% url 'accounts:comparison' %}" class="btn-header-light">
+        Full compare <i class="bi bi-arrow-right"></i>
+      </a>
+    </div>
+    <div style="overflow-x:auto;">
+      <table class="cmp-table" style="min-width:520px;">
+        <thead>
+          <tr>
+            <th style="padding-left:1rem;">Course</th>
+            <th>Type</th>
+            <th>Cluster</th>
+            <th>Cutoff</th>
+            <th>Min Grade</th>
+            <th>Duration</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in shortlist_comparison %}
+          <tr>
+            <td style="padding-left:1rem;min-width:180px;">
+              <a href="{{ row.url }}" class="cmp-course text-decoration-none text-dark">{{ row.name }}</a>
+              <div class="cmp-inst">{{ row.inst }}</div>
+            </td>
+            <td>
+              <span style="font-size:0.68rem;font-weight:700;padding:2px 7px;border-radius:6px;
+                           background:#f1f5f9;color:#475569;white-space:nowrap;">
+                {{ row.type }}
+              </span>
+            </td>
+            <td>
+              <div class="rounded-2 d-inline-flex align-items-center justify-content-center fw-800"
+                   style="width:26px;height:26px;font-size:0.65rem;background:#dbeafe;color:#1d4ed8;">
+                {{ row.cluster }}
+              </div>
+            </td>
+            <td>
+              {% if row.cutoff %}
+              <span class="fw-800" style="font-size:0.82rem;
+                {% if latest_result %}
+                  {% for cmp in cutoff_comparisons %}
+                    {% if cmp.name == row.name %}
+                      {% if cmp.qualifies %}color:#15803d;{% else %}color:#dc2626;{% endif %}
+                    {% endif %}
+                  {% endfor %}
+                {% endif %}
+              ">{{ row.cutoff }}<span class="text-muted fw-400" style="font-size:0.65rem;">/48</span></span>
+              {% else %}
+              <span class="text-muted">—</span>
+              {% endif %}
+            </td>
+            <td>
+              <span class="fw-700" style="font-size:0.78rem;">{{ row.min_grade }}</span>
+            </td>
+            <td>
+              <span class="text-muted" style="font-size:0.75rem;white-space:nowrap;">{{ row.duration }}</span>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% endif %}{# /shortlist_comparison #}
 
 
   {# ── BROWSE KUCCPS CLUSTERS ── #}
@@ -1376,7 +1838,55 @@ body.dark .ob-step:hover { background: var(--surface-2); }
       </div>
       {% endif %}
 
+      {% if suggested_mentors %}
+      <div class="text-muted mb-2" style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;">
+        Mentors for your shortlist
+      </div>
+      {% for mentor in suggested_mentors %}
+      <div class="d-flex align-items-center gap-2 p-2 rounded-3 mb-2"
+           style="background:#f0fdf4;border:1.5px solid #bbf7d0;">
+        {% if mentor.photo %}
+        <img src="{{ mentor.photo.url }}" class="rounded-circle flex-shrink-0"
+             width="36" height="36" style="object-fit:cover;" alt="" loading="lazy">
+        {% else %}
+        <div class="rounded-circle flex-shrink-0 d-flex align-items-center justify-content-center fw-bold"
+             style="width:36px;height:36px;background:#dcfce7;color:#16a34a;font-size:0.9rem;">
+          {{ mentor.user.full_name|first|upper|default:mentor.user.email|first|upper }}
+        </div>
+        {% endif %}
+        <div style="min-width:0;flex:1;">
+          <div class="fw-700 text-dark" style="font-size:0.8rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+            {{ mentor.user.full_name|default:mentor.user.email }}
+          </div>
+          <div class="text-muted" style="font-size:0.67rem;">
+            {{ mentor.course.name|truncatewords:4 }}
+            {% if mentor.average_rating %}
+            &nbsp;·&nbsp;<i class="fas fa-star" style="color:#f59e0b;font-size:0.55rem;"></i>
+            {{ mentor.average_rating|floatformat:1 }}
+            {% endif %}
+          </div>
+        </div>
+        <a href="{% url 'mentorship:directory' %}?q={{ mentor.course.name|urlencode }}"
+           class="btn btn-success btn-sm flex-shrink-0"
+           style="font-size:0.68rem;border-radius:8px;white-space:nowrap;">
+          Book
+        </a>
+      </div>
+      {% endfor %}
       {% if shortlist_items %}
+      <div class="d-flex flex-wrap gap-1 mb-1">
+        {% for item in shortlist_items|slice:":2" %}
+        <a href="{% url 'mentorship:directory' %}?q={{ item.course.name|urlencode }}"
+           class="btn btn-outline-success btn-sm rounded-pill"
+           style="font-size:0.68rem;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+          {{ item.course.name|truncatewords:3 }}
+        </a>
+        {% endfor %}
+        <a href="{% url 'mentorship:directory' %}" class="btn btn-outline-secondary btn-sm rounded-pill"
+           style="font-size:0.68rem;">All mentors</a>
+      </div>
+      {% endif %}
+      {% elif shortlist_items %}
       <div class="text-muted mb-2" style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;">
         Find a mentor for:
       </div>
@@ -1481,6 +1991,91 @@ body.dark .ob-step:hover { background: var(--surface-2); }
       {% endfor %}
     </div>
   </div>
+
+
+  {# ── AI CAREER CHAT WIDGET ── #}
+  {% if not guest and ai_credit_info %}
+  <div class="sidebar-card reveal">
+    <div class="sidebar-card-header"
+         style="background:linear-gradient(120deg,#0f172a 0%,#312e81 60%,#4f46e5 100%);border:none;">
+      <h6 class="sidebar-card-title" style="color:#fff;">
+        <i class="fas fa-robot" style="color:#a5b4fc;"></i>CareerNext AI
+      </h6>
+      {% if not snapshot %}
+        {# Locked — show enticing "100 msgs" teaser #}
+        <span style="font-size:0.63rem;font-weight:700;padding:2px 8px;border-radius:10px;
+                     background:rgba(251,191,36,0.2);color:#fbbf24;border:1px solid rgba(251,191,36,0.3);">
+          100 msgs free
+        </span>
+      {% elif ai_credit_info.has_access %}
+        <span id="aiCreditBadge"
+              style="font-size:0.63rem;font-weight:700;padding:2px 8px;border-radius:10px;
+                     background:rgba(255,255,255,0.15);color:#d1fae5;border:1px solid rgba(255,255,255,0.2);">
+          {% if ai_credit_info.paid_remaining > 0 %}
+            {{ ai_credit_info.paid_remaining }} msgs left
+          {% else %}
+            {{ ai_credit_info.free_remaining }}/{{ ai_credit_info.free_limit }} free
+          {% endif %}
+        </span>
+      {% else %}
+        <a href="{% url 'payments:payment_required' %}?feature=ai_chat_access"
+           style="font-size:0.63rem;font-weight:700;padding:2px 9px;border-radius:10px;
+                  background:#fbbf24;color:#92400e;text-decoration:none;">
+          Top up →
+        </a>
+      {% endif %}
+    </div>
+
+    {% if not snapshot %}
+    {# ── Locked state: user hasn't run the engine yet ── #}
+    <div class="sidebar-card-body text-center" style="padding:1.5rem 1.25rem;">
+      <div style="width:54px;height:54px;border-radius:50%;background:linear-gradient(135deg,#312e81,#4f46e5);
+                  display:flex;align-items:center;justify-content:center;margin:0 auto 0.85rem;">
+        <i class="fas fa-lock" style="color:#c4b5fd;font-size:1.1rem;"></i>
+      </div>
+      <div class="fw-800 mb-1" style="font-size:0.88rem;color:#1e293b;">Unlock CareerNext AI</div>
+      <p class="text-muted small mb-3" style="font-size:0.75rem;line-height:1.5;">
+        Run the <strong>Career Engine</strong> once to unlock your personal AI assistant —
+        get <strong>100 free messages</strong> to ask anything about courses, careers, and KUCCPS.
+      </p>
+      <a href="{% url 'career:home' %}#pathway-section"
+         class="btn btn-primary btn-sm w-100 fw-700" style="border-radius:10px;font-size:0.82rem;">
+        <i class="fas fa-rocket me-1"></i>Run Career Engine to Unlock
+      </a>
+    </div>
+
+    {% elif ai_credit_info.has_access %}
+    {# ── Active chat ── #}
+    <div class="ai-chat-widget">
+      <div class="ai-chat-msgs" id="aiMsgs">
+        <div class="ai-msg bot">
+          Hi {{ user.first_name|default:"there" }}! I can help with course choices, career advice, or KUCCPS questions based on your profile. Ask me anything.
+        </div>
+      </div>
+      <div class="ai-chat-input-row">
+        <input type="text" class="ai-chat-input" id="aiInput"
+               placeholder="Ask CareerNext AI..." maxlength="400"
+               onkeydown="if(event.key==='Enter')sendAiMsg()">
+        <button class="ai-chat-send" id="aiSendBtn" onclick="sendAiMsg()" title="Send">
+          <i class="fas fa-paper-plane"></i>
+        </button>
+      </div>
+    </div>
+
+    {% else %}
+    {# ── Credits exhausted ── #}
+    <div class="sidebar-card-body text-center" style="padding:1.25rem;">
+      <i class="fas fa-robot" style="font-size:1.8rem;color:#e2e8f0;display:block;margin-bottom:0.75rem;"></i>
+      <p class="text-muted small mb-3">You've used your free messages. Top up to keep chatting.</p>
+      <a href="{% url 'payments:payment_required' %}?feature=ai_chat_access"
+         class="btn btn-primary btn-sm w-100 fw-700" style="border-radius:10px;">
+        <i class="fas fa-bolt me-1"></i>Get 200 Messages — KES 50
+      </a>
+    </div>
+    {% endif %}
+
+  </div>
+  {% endif %}{# /ai chat widget #}
 
 
   {# ── SCHOLARSHIP ALERTS ── #}
@@ -1808,18 +2403,138 @@ document.addEventListener('click', function (e) {
 });
 
 
-/* ── Onboarding dismiss ────────────────────────────────────── */
-function dismissOnboard() {
-  const c = document.getElementById('onboardCard');
-  if (c) { c.style.transition = 'opacity 0.25s'; c.style.opacity = '0'; setTimeout(() => c.remove(), 260); }
-  localStorage.setItem('cn_onboard_dismissed', '1');
-}
+/* ── Readiness ring animation ───────────────────────────────── */
 (function () {
-  if (localStorage.getItem('cn_onboard_dismissed')) {
-    const c = document.getElementById('onboardCard');
-    if (c) c.style.display = 'none';
-  }
+  var fill = document.getElementById('readinessFill');
+  if (!fill) return;
+  var target = {{ readiness_pct|default:0 }};
+  var current = 0;
+  var step = target / 40;
+  var timer = setInterval(function () {
+    current = Math.min(current + step, target);
+    fill.setAttribute('stroke-dasharray', current.toFixed(1) + ', 100');
+    if (current >= target) clearInterval(timer);
+  }, 18);
 }());
+
+
+/* ── Cutoff bar fill animation ──────────────────────────────── */
+(function () {
+  var bars = document.querySelectorAll('.cutoff-bar-fill[data-width]');
+  if (!bars.length) return;
+  setTimeout(function () {
+    bars.forEach(function (bar) {
+      bar.style.width = bar.getAttribute('data-width') + '%';
+    });
+  }, 120);
+}());
+
+
+/* ── Sparkline animation ────────────────────────────────────── */
+(function () {
+  setTimeout(function () {
+    document.querySelectorAll('.spark-bar[data-spark-h]').forEach(function (b) {
+      b.style.height = b.getAttribute('data-spark-h') + '%';
+    });
+  }, 200);
+}());
+
+
+/* ── AI Chat widget ─────────────────────────────────────────── */
+{% if not guest and snapshot and ai_credit_info and ai_credit_info.has_access %}{# JS only needed when chat is active #}
+var _aiHistory = [];
+var _aiCsrf    = document.cookie.match(/csrftoken=([^;]+)/);
+var _aiToken   = _aiCsrf ? _aiCsrf[1] : '';
+
+function sendAiMsg() {
+  var input = document.getElementById('aiInput');
+  var btn   = document.getElementById('aiSendBtn');
+  var msgs  = document.getElementById('aiMsgs');
+  if (!input || !msgs) return;
+  var text = input.value.trim();
+  if (!text) return;
+
+  // Add user bubble
+  var uBubble = document.createElement('div');
+  uBubble.className = 'ai-msg user';
+  uBubble.textContent = text;
+  msgs.appendChild(uBubble);
+  msgs.scrollTop = msgs.scrollHeight;
+
+  // Add typing bubble
+  var tBubble = document.createElement('div');
+  tBubble.className = 'ai-msg typing';
+  tBubble.textContent = 'Thinking…';
+  msgs.appendChild(tBubble);
+  msgs.scrollTop = msgs.scrollHeight;
+
+  _aiHistory.push({ role: 'user', content: text });
+  input.value = '';
+  btn.disabled = true;
+
+  fetch('{% url "career:ajax_ai_chat" %}', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': _aiToken },
+    body: JSON.stringify({ message: text, history: _aiHistory })
+  })
+  .then(function (res) {
+    if (res.status === 402) {
+      return res.json().then(function (d) {
+        tBubble.className = 'ai-msg bot';
+        tBubble.innerHTML = '⚠️ ' + (d.error || 'Message limit reached.') +
+          ' <a href="' + (d.payment_url || '#') + '" style="color:#4f46e5;font-weight:700;">Top up →</a>';
+        var badge = document.getElementById('aiCreditBadge');
+        if (badge) badge.textContent = 'Limit reached';
+      });
+    }
+    // Handle streaming or plain JSON
+    var ct = res.headers.get('content-type') || '';
+    if (ct.includes('text/event-stream') || ct.includes('text/plain')) {
+      var reader = res.body.getReader();
+      var decoder = new TextDecoder();
+      var full = '';
+      tBubble.className = 'ai-msg bot';
+      tBubble.textContent = '';
+      function read() {
+        reader.read().then(function (r) {
+          if (r.done) {
+            _aiHistory.push({ role: 'assistant', content: full });
+            btn.disabled = false;
+            return;
+          }
+          var chunk = decoder.decode(r.value, { stream: true });
+          chunk.split('\n').forEach(function (line) {
+            if (line.startsWith('data: ')) {
+              var d = line.slice(6).trim();
+              if (d && d !== '[DONE]') {
+                try { full += JSON.parse(d); } catch(e) { full += d; }
+                tBubble.textContent = full;
+                msgs.scrollTop = msgs.scrollHeight;
+              }
+            }
+          });
+          read();
+        });
+      }
+      read();
+    } else {
+      return res.json().then(function (d) {
+        tBubble.className = 'ai-msg bot';
+        var reply = d.reply || d.response || d.message || 'Done.';
+        tBubble.textContent = reply;
+        _aiHistory.push({ role: 'assistant', content: reply });
+        msgs.scrollTop = msgs.scrollHeight;
+        btn.disabled = false;
+      });
+    }
+  })
+  .catch(function () {
+    tBubble.className = 'ai-msg bot';
+    tBubble.textContent = 'Something went wrong. Please try again.';
+    btn.disabled = false;
+  });
+}
+{% endif %}
 
 
 /* ── Reco carousel ─────────────────────────────────────────── */

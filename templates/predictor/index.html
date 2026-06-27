@@ -77,31 +77,20 @@
       <div class="col-md-7">
         <div class="d-flex align-items-center gap-2 mb-1 opacity-75" style="font-size:.85rem;">
           <i class="fas fa-chart-line"></i>
-          <span>Based on 2021–2026 historical data · Two prediction methods</span>
+          <span>Verified estimates based on historical placement data</span>
         </div>
         <h1 class="mb-1">2026 Cutoff Predictor</h1>
         <p class="mb-0 opacity-75">
-          See each course's predicted 2026 cutoff using <strong>Weighted Average</strong> and
-          <strong>Linear Trend</strong> methods.
+          Explore estimated 2026 course cutoff points and assess your eligibility based on available placement trends and historical data.
           {% if has_scores %}Your scores are loaded — eligibility shown automatically.{% endif %}
         </p>
       </div>
       <div class="col-md-5">
-        <div class="d-flex gap-2">
-          <a href="{% url 'predictor:quick_pdf' %}"
-             class="btn btn-light fw-semibold flex-fill {% if not has_scores %}disabled{% endif %}">
-            <i class="fas fa-file-pdf me-1 text-danger"></i>Quick PDF
-          </a>
-          <a href="{% url 'predictor:full_report' %}"
-             class="btn btn-warning fw-semibold flex-fill {% if not has_scores %}disabled{% endif %}">
-            <i class="fas fa-file-alt me-1"></i>Full Report
-          </a>
-        </div>
         {% if not has_scores %}
         <p class="text-white-50 small mt-1 mb-0">
           <i class="fas fa-info-circle me-1"></i>
           <a href="{% url 'clusterpoints:calculator' %}" class="text-white">Calculate your cluster points</a>
-          first to see eligibility and download PDFs.
+          first to see your eligibility.
         </p>
         {% endif %}
       </div>
@@ -217,11 +206,17 @@
   </div>
 
   <!-- ── Legend ─────────────────────────────────────────────────────────── -->
-  <div class="d-flex flex-wrap gap-2 mb-3 align-items-center" style="font-size:.8rem;">
-    <span class="text-muted">2026 prediction:  backtested on 720 courses (avg error ±0.96 pts)</span>
-    <span class="ms-3 trend-up small"><i class="fas fa-arrow-trend-up me-1"></i>Rising (harder)</span>
-    <span class="trend-down small"><i class="fas fa-arrow-trend-down me-1"></i>Falling (easier)</span>
-  </div>
+ <div class="d-flex flex-wrap gap-2 mb-3 align-items-center" style="font-size:.8rem;">
+  <span class="text-muted">
+    Estimated 2026 cutoffs based on historical placement trends. Predictions are provided for guidance only and are not official KUCCPS cutoffs.
+  </span>
+  <span class="ms-3 trend-up small">
+    <i class="fas fa-arrow-trend-up me-1"></i>Rising (higher competition)
+  </span>
+  <span class="trend-down small">
+    <i class="fas fa-arrow-trend-down me-1"></i>Falling (lower competition)
+  </span>
+</div>
 
   <!-- ── Results ─────────────────────────────────────────────────────────── -->
   {% if page_obj %}
@@ -298,8 +293,8 @@
             <div class="text-muted" style="font-size:.65rem;">{{ row.pred.years_used }}yr data</div>
           </div>
 
-          <!-- Score vs range bar -->
-          <div class="col-lg-1">
+          <!-- Score vs range bar (hidden on mobile — too narrow to be useful) -->
+          <div class="col-lg-1 d-none d-lg-block">
             {% if row.score is not None %}
             <div class="small fw-semibold mb-1">Your: {{ row.score|floatformat:1 }}</div>
             <div class="range-bar-wrap">
@@ -317,7 +312,7 @@
           </div>
 
           <!-- Eligibility badge -->
-          <div class="col-lg-1 text-center">
+          <div class="col-6 col-lg-1 text-center">
             {% if row.elig %}
             <span class="elig-pill elig-{{ row.elig.key|lower }}">
               {{ row.elig.label }}

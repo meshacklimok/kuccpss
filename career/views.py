@@ -510,6 +510,15 @@ def career_profiles_list(request):
     paginator = Paginator(profiles, 24)
     page_obj = paginator.get_page(request.GET.get("page", 1))
 
+    is_htmx = request.headers.get("HX-Request") == "true"
+    if is_htmx:
+        return render(request, "career/_career_profile_items_partial.html", {
+            "page_obj": page_obj,
+            "query": query,
+            "active_demand": demand,
+            "active_sector": sector,
+        })
+
     return render(request, "career/career_profiles.html", {
         "page_obj": page_obj,
         "query": query,
@@ -1821,6 +1830,24 @@ def _restore_degree_session(request, grades_json: dict, method: str = 'calculate
 
 
 @login_required
+def recalculate_view(request):
+    """
+    Reset the career engine submission lock so the user can enter new grades.
+    They will need to pay again (premium_career_report) to see new results.
+    Old session data stays in the session until they submit new grades.
+    """
+    from career.models import CareerSubmission
+    if request.method != 'POST':
+        return redirect('career:degree_calculate')
+    CareerSubmission.objects.filter(
+        user=request.user, feature=CareerSubmission.FEATURE_DEGREE
+    ).delete()
+    from django.contrib import messages as _msg
+    _msg.info(request, "Grade lock removed. Enter your new grades and pay to see your career results.")
+    return redirect('career:degree_calculate')
+
+
+@login_required
 def confirm_submission(request):
     """AJAX endpoint — immediately locks the user's pending submission."""
     import json as _json
@@ -1971,6 +1998,7 @@ def degree_calculate(request):
                         'method': entry_method,
                         'status': CareerSubmission.STATUS_PENDING,
                         'lock_at': timezone.now() + timedelta(minutes=lock_cfg.lock_minutes),
+                        'unlocked_by_payment': None,  # new session requires new payment
                     },
                 )
 
@@ -2354,6 +2382,7 @@ def degree_paste(request):
                             'method': CareerSubmission.METHOD_PASTE,
                             'status': CareerSubmission.STATUS_PENDING,
                             'lock_at': timezone.now() + timedelta(minutes=_lock_cfg.lock_minutes),
+                            'unlocked_by_payment': None,
                         },
                     )
 
@@ -2375,13 +2404,19 @@ def degree_paste(request):
 def degree_manual(request):
     import re as _re
     from clusters.models import Cluster
+    from courses.models import Course
 
-    # Only the ~20 master clusters that have SubjectGroups defined —
-    # these are exactly what the KUCCPS formula uses for degree matching.
+    # Only clusters that have at least one degree course with an actual offering.
+    # Course.cluster is set only for university/degree courses (see courses/models.py).
+    cluster_ids = (
+        Course.objects
+        .filter(cluster__isnull=False, courseoffering__isnull=False)
+        .values_list('cluster_id', flat=True)
+        .distinct()
+    )
     all_clusters = list(
         Cluster.objects
-        .filter(subject_groups__isnull=False)
-        .distinct()
+        .filter(id__in=cluster_ids)
         .order_by('number')
     )
 
@@ -2450,6 +2485,7 @@ def degree_manual(request):
                         'method': CareerSubmission.METHOD_MANUAL,
                         'status': CareerSubmission.STATUS_PENDING,
                         'lock_at': _tz.now() + timedelta(minutes=_lock_cfg.lock_minutes),
+                        'unlocked_by_payment': None,
                     },
                 )
 
@@ -2628,7 +2664,7 @@ def loading_page(request, pathway):
 def career_results(request):
     from courses.models import CourseOffering, CourseType
     from predictor.services import predict_cutoff as _predict_cutoff, TREND_ICON, TREND_COLOR, TREND_TIP
-    from payments.services import has_paid_for_feature, is_feature_enabled
+    from payments.services import has_paid_for_feature, has_paid_for_current_session, is_feature_enabled
 
     is_guest = not request.user.is_authenticated
 
@@ -2991,7 +3027,7 @@ def career_results(request):
     _is_locked = (
         not is_guest
         and _feature_on
-        and not has_paid_for_feature(request.user, 'premium_career_report')
+        and not has_paid_for_current_session(request.user, CareerSubmission.FEATURE_DEGREE, 'premium_career_report')
     )
     _gate_items = [
         "Your full personalised course list — filtered for YOUR exact cluster points",
@@ -3014,7 +3050,7 @@ def career_results(request):
             end_date__gte=_today,
         )
         .filter(models.Q(pathway='all') | models.Q(pathway=pathway))
-        .select_related('institution', 'institution__institution_type', 'featured_course', 'featured_course__cluster')
+        .select_related('institution', 'institution__institution_type', 'featured_course', 'featured_course__cluster', 'featured_course__course_type')
         .order_by('?')[:4]
     )
     sponsored_listings = list(_sponsored_qs)
@@ -3571,7 +3607,7 @@ def career_results_pdf_detailed(request):
         user_label = getattr(request.user, 'full_name', None) or request.user.email
 
     c.setFillColor(LIGHT)
-    c.roundRect(1.5*cm, y - 3.8*cm, W - 3*cm, 3.5*cm, 8, fill=1, stroke=0)
+    c.roundRect(1.5*cm, y - 3.35*cm, W - 3*cm, 3.0*cm, 8, fill=1, stroke=0)
     c.setFillColor(NAVY)
     c.setFont("Helvetica-Bold", 16)
     c.drawString(2.2*cm, y - 1.1*cm, "CareerNext — KCSE Career Placement Report")
@@ -3583,8 +3619,6 @@ def career_results_pdf_detailed(request):
     if pathway == 'Degree':
         score_line = f"Best Cluster Score: {best_pts:.1f} / 48 pts" if best_pts is not None else "—"
         c.drawString(2.2*cm, y - 3.05*cm, score_line)
-        c.drawString(2.2*cm, y - 3.5*cm,
-            "Prediction model: 70% Weighted Moving Average + 30% Naive blend")
     else:
         c.drawString(2.2*cm, y - 3.05*cm, f"Mean Grade Entered:  {mean_grade}")
         c.drawString(2.2*cm, y - 3.5*cm,
@@ -3660,7 +3694,7 @@ def career_results_pdf_detailed(request):
     if pathway == 'Degree':
         c.drawString(2.0*cm, y - 0.75*cm, "CUTOFF = latest known cutoff (2024).   EST 2026 = model prediction.   DIFF = Your score minus the cutoff.")
         c.drawString(2.0*cm, y - 1.1*cm,  "Best Match: score 0–+3 pts above cutoff.  Stretch: within 3 pts below.  Safe/Easy: comfortably above.")
-        c.drawString(2.0*cm, y - 1.45*cm, "Verify all cutoffs on the official KUCCPS portal (kuccps.net) before applying.")
+        c.drawString(2.0*cm, y - 1.45*cm, "Visit our website: careernext.co.ke  |  Always verify cutoffs on kuccps.net before applying.")
     else:
         c.drawString(2.0*cm, y - 0.75*cm, "MIN = minimum mean grade required for the programme.  STATUS = how well your grade meets that requirement.")
         c.drawString(2.0*cm, y - 1.1*cm,  "All programmes listed are ones you qualify for.  Sorted strongest qualification first.")
@@ -3868,35 +3902,40 @@ def share_result_create(request):
     if request.method != 'POST':
         return JsonResponse({'ok': False}, status=405)
 
-    pathway = request.session.get('career_pathway', '')
-    if not pathway:
-        return JsonResponse({'ok': False, 'error': 'No results in session.'}, status=400)
+    try:
+        pathway = request.session.get('career_pathway', '')
+        if not pathway:
+            return JsonResponse({'ok': False, 'error': 'No career results in session. Please run the Career Engine first.'}, status=400)
 
-    cluster_pts_single  = float(request.session.get('career_cluster_pts_single', 0) or 0)
-    cluster_points_json = request.session.get('career_cluster_points', {})
+        cluster_pts_single  = float(request.session.get('career_cluster_pts_single', 0) or 0)
+        cluster_points_json = request.session.get('career_cluster_points', {})
 
-    matches, _, _, _, _, _ = _build_career_matches(request)
-    top_courses = [
-        {
-            'course':       m['course'].name,
-            'institution':  m['institution'].name,
-            'tier':         m.get('tier', ''),
-            'chance':       m.get('chance', ''),
-            'cutoff':       str(m.get('cutoff', '')),
-        }
-        for m in matches[:5]
-    ]
+        matches, _, _, _, _, _ = _build_career_matches(request)
+        top_courses = [
+            {
+                'course':       m['course'].name,
+                'institution':  m['institution'].name,
+                'tier':         m.get('tier', ''),
+                'chance':       m.get('chance', ''),
+                'cutoff':       str(m.get('cutoff', '')),
+            }
+            for m in matches[:5]
+        ]
 
-    sr = SharedResult.objects.create(
-        user=request.user,
-        pathway=pathway,
-        cluster_points_json=cluster_points_json or {},
-        cluster_pts_single=cluster_pts_single,
-        total_matches=len(matches),
-        top_courses_json=top_courses,
-    )
-    share_url = request.build_absolute_uri(sr.get_absolute_url())
-    return JsonResponse({'ok': True, 'url': share_url, 'token': str(sr.token)})
+        sr = SharedResult.objects.create(
+            user=request.user,
+            pathway=pathway,
+            cluster_points_json=cluster_points_json or {},
+            cluster_pts_single=cluster_pts_single,
+            total_matches=len(matches),
+            top_courses_json=top_courses,
+        )
+        share_url = request.build_absolute_uri(sr.get_absolute_url())
+        return JsonResponse({'ok': True, 'url': share_url, 'token': str(sr.token)})
+    except Exception as exc:
+        import logging
+        logging.getLogger(__name__).error('share_result_create error: %s', exc, exc_info=True)
+        return JsonResponse({'ok': False, 'error': 'Failed to create share link. Please try again.'}, status=500)
 
 
 def shared_result_view(request, token):

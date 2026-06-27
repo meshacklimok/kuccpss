@@ -1,23 +1,37 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block title %}{{ sr.user.full_name|default:"A student" }}'s KCSE Career Matches — CareerNext{% endblock %}
+{% block title %}{% if sr.pathway == 'Calculator' %}{{ sr.user.full_name|default:"A student" }}'s KCSE Cluster Points — CareerNext{% else %}{{ sr.user.full_name|default:"A student" }}'s KCSE Career Matches — CareerNext{% endif %}{% endblock %}
 
 {% block meta %}
+{% if sr.pathway == 'Calculator' %}
+<meta name="description" content="{{ sr.user.full_name|default:'A student' }} scored {{ sr.cluster_pts_single|floatformat:1 }}/48 cluster points (Aggregate {{ sr.total_matches }}/84) on CareerNext KCSE Calculator. Calculate yours free.">
+{% else %}
 <meta name="description" content="{{ sr.user.full_name|default:'A student' }} found {{ sr.total_matches }} courses they qualify for via KUCCPS — {{ sr.pathway }} pathway. See their results and check yours free on CareerNext.">
+{% endif %}
 <meta property="og:url" content="{{ share_url }}">
 {% endblock %}
 
 {% block og_meta %}
+{% if sr.pathway == 'Calculator' %}
+<meta property="og:title" content="{{ sr.user.full_name|default:'A student' }}'s KCSE Cluster Points — {{ sr.cluster_pts_single|floatformat:1 }}/48">
+<meta property="og:description" content="Aggregate {{ sr.total_matches }}/84 · Best cluster score {{ sr.cluster_pts_single|floatformat:1 }}/48. Calculate YOUR cluster points free on CareerNext.">
+{% else %}
 <meta property="og:title" content="{{ sr.user.full_name|default:'A student' }} qualifies for {{ sr.total_matches }} courses via KUCCPS">
 <meta property="og:description" content="{% if sr.cluster_pts_single %}{{ sr.cluster_pts_single|floatformat:1 }} cluster points · {% endif %}{{ sr.total_matches }} eligible courses · {{ sr.pathway }} pathway. Check YOUR results free on CareerNext.">
+{% endif %}
 <meta property="og:type" content="article">
 <meta property="og:url" content="{{ share_url }}">
 {% endblock %}
 
 {% block twitter_meta %}
+{% if sr.pathway == 'Calculator' %}
+<meta name="twitter:title" content="{{ sr.user.full_name|default:'A student' }}'s KCSE cluster points: {{ sr.cluster_pts_single|floatformat:1 }}/48 🎓">
+<meta name="twitter:description" content="Aggregate {{ sr.total_matches }}/84. Calculate yours free on CareerNext 👇">
+{% else %}
 <meta name="twitter:title" content="{{ sr.user.full_name|default:'A student' }} qualifies for {{ sr.total_matches }} KCSE courses 🎓">
 <meta name="twitter:description" content="{% if sr.cluster_pts_single %}{{ sr.cluster_pts_single|floatformat:1 }} cluster pts · {% endif %}{{ sr.total_matches }} courses · {{ sr.pathway }}. Check yours free 👇">
+{% endif %}
 {% endblock %}
 
 {% block content %}
@@ -51,15 +65,45 @@
             Shared result &bull; {{ sr.created_at|date:"d M Y" }} &bull; {{ sr.view_count }} view{{ sr.view_count|pluralize }}
         </div>
         <h1 class="fw-bold mb-1" style="font-size:1.8rem;">
-            {% if sr.user %}{{ sr.user.full_name|default:"A student" }}'s{% else %}Shared{% endif %} Career Matches
+            {% if sr.user %}{{ sr.user.full_name|default:"A student" }}'s{% else %}Shared{% endif %}
+            {% if sr.pathway == 'Calculator' %}KCSE Cluster Points{% else %}Career Matches{% endif %}
         </h1>
         <p style="opacity:0.85;margin-bottom:1.5rem;">
-            {{ sr.pathway }} pathway &bull; {{ sr.total_matches }} courses found
-            {% if sr.cluster_pts_single %}&bull; {{ sr.cluster_pts_single|floatformat:1 }} cluster points{% endif %}
+            {% if sr.pathway == 'Calculator' %}
+                KCSE Calculator &bull;
+                {% with sr.top_courses_json|first as first_entry %}
+                  {% if first_entry.mean_grade %}Mean Grade: <strong>{{ first_entry.mean_grade }}</strong> &bull; {% endif %}
+                  {% if first_entry.aggregate %}Aggregate: <strong>{{ first_entry.aggregate }}/84</strong> &bull; {% endif %}
+                {% endwith %}
+                Best cluster score: <strong>{{ sr.cluster_pts_single|floatformat:1 }}/48</strong>
+            {% else %}
+                {{ sr.pathway }} pathway &bull; {{ sr.total_matches }} courses found
+                {% if sr.cluster_pts_single %}&bull; {{ sr.cluster_pts_single|floatformat:1 }} cluster points{% endif %}
+            {% endif %}
         </p>
 
         <!-- Stats row -->
         <div class="d-flex gap-4 flex-wrap">
+            {% if sr.pathway == 'Calculator' %}
+            {% with sr.top_courses_json|first as fe %}
+            {% if fe.mean_grade %}
+            <div>
+                <div style="font-size:2rem;font-weight:800;line-height:1;">{{ fe.mean_grade }}</div>
+                <div style="font-size:0.75rem;opacity:0.7;text-transform:uppercase;letter-spacing:0.06em;">Mean Grade</div>
+            </div>
+            {% endif %}
+            {% if fe.aggregate %}
+            <div>
+                <div style="font-size:2rem;font-weight:800;line-height:1;">{{ fe.aggregate }}<span style="font-size:1rem;opacity:0.6;">/84</span></div>
+                <div style="font-size:0.75rem;opacity:0.7;text-transform:uppercase;letter-spacing:0.06em;">Aggregate</div>
+            </div>
+            {% endif %}
+            {% endwith %}
+            <div>
+                <div style="font-size:2rem;font-weight:800;line-height:1;">{{ sr.cluster_pts_single|floatformat:1 }}<span style="font-size:1rem;opacity:0.6;">/48</span></div>
+                <div style="font-size:0.75rem;opacity:0.7;text-transform:uppercase;letter-spacing:0.06em;">Best Cluster</div>
+            </div>
+            {% else %}
             <div>
                 <div style="font-size:2rem;font-weight:800;line-height:1;">{{ sr.total_matches }}</div>
                 <div style="font-size:0.75rem;opacity:0.7;text-transform:uppercase;letter-spacing:0.06em;">Courses Eligible</div>
@@ -74,6 +118,7 @@
                 <div style="font-size:2rem;font-weight:800;line-height:1;">{{ sr.pathway }}</div>
                 <div style="font-size:0.75rem;opacity:0.7;text-transform:uppercase;letter-spacing:0.06em;">Pathway</div>
             </div>
+            {% endif %}
         </div>
     </div>
 </div>
@@ -81,9 +126,30 @@
 <div class="container py-4">
     <div class="row g-4">
         <div class="col-lg-8">
+            {% if sr.pathway == 'Calculator' %}
+            <!-- Top cluster scores snapshot -->
+            <h5 class="fw-bold mb-3"><i class="bi bi-grid-3x3-gap-fill me-2 text-primary"></i>Top Cluster Scores (Preview)</h5>
+            {% for entry in sr.top_courses_json %}
+            <div class="snap-card">
+                <div class="tier-dot" style="background:#4f46e5;"></div>
+                <div class="flex-1">
+                    <div class="fw-bold" style="font-size:0.92rem;color:#1e293b;">{{ entry.cluster_name }}</div>
+                    <div class="d-flex gap-2 mt-1 flex-wrap align-items-center">
+                        <span style="font-size:0.8rem;font-weight:800;color:#1e3a8a;">{{ entry.score }} / 48 pts</span>
+                        <span style="font-size:0.72rem;padding:2px 8px;border-radius:20px;background:#eff6ff;color:#1d4ed8;font-weight:600;">
+                            Cluster {{ entry.cluster_num }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <p class="text-muted">No cluster score data available for this shared result.</p>
+            {% endfor %}
+            <p class="text-muted small mt-2"><i class="bi bi-info-circle me-1"></i>Showing top 5 clusters. Sign up to calculate all 20 clusters and find matching courses.</p>
+
+            {% else %}
             <!-- Top 5 courses snapshot -->
             <h5 class="fw-bold mb-3"><i class="bi bi-trophy-fill me-2 text-warning"></i>Top Course Matches (Preview)</h5>
-
             {% for course in sr.top_courses_json %}
             <div class="snap-card">
                 {% if course.tier == 'Best Match' %}
@@ -122,9 +188,9 @@
             {% empty %}
             <p class="text-muted">No course preview available for this shared result.</p>
             {% endfor %}
-
             {% if sr.total_matches > 5 %}
             <p class="text-muted small mt-2"><i class="bi bi-info-circle me-1"></i>Showing 5 of {{ sr.total_matches }} matches. Sign up to see the full list.</p>
+            {% endif %}
             {% endif %}
         </div>
 
@@ -132,10 +198,17 @@
         <div class="col-lg-4">
             <div class="cta-box">
                 <div style="font-size:2.5rem;margin-bottom:0.5rem;">🎓</div>
+                {% if sr.pathway == 'Calculator' %}
+                <h5 class="fw-bold mb-2">Calculate YOUR Cluster Points</h5>
+                <p class="text-muted small mb-3">Enter your KCSE grades and instantly get all 20 cluster scores plus every course you qualify for.</p>
+                <a href="{% url 'clusterpoints:calculator' %}" class="btn btn-primary w-100 fw-bold mb-2">Calculate Free</a>
+                <a href="{% url 'accounts:register' %}" class="btn btn-outline-secondary w-100 btn-sm">Create Account</a>
+                {% else %}
                 <h5 class="fw-bold mb-2">Find YOUR courses</h5>
                 <p class="text-muted small mb-3">Enter your own KCSE results and discover all the courses you qualify for — instant and accurate.</p>
                 <a href="{% url 'accounts:register' %}" class="btn btn-primary w-100 fw-bold mb-2">Create Account</a>
                 <a href="{% url 'career:home' %}" class="btn btn-outline-secondary w-100 btn-sm">Try Without Account</a>
+                {% endif %}
             </div>
 
             <!-- Social share this page -->
@@ -150,11 +223,24 @@
                         </button>
                     </div>
                     <div class="d-flex gap-2">
-                        <a href="https://wa.me/?text={{ share_url|urlencode }}" target="_blank" rel="noopener"
+                        {% if sr.pathway == 'Calculator' %}
+                        <a href="{% filter urlencode %}https://wa.me/?text=🎓 Check out my KCSE cluster points on CareerNext!
+
+Best cluster score: {{ sr.cluster_pts_single|floatformat:1 }}/48
+My results: {{ share_url }}
+
+Calculate YOUR cluster points free 👉 careernext.co.ke{% endfilter %}"
+                           target="_blank" rel="noopener"
                            class="btn btn-sm flex-1" style="background:#25d366;color:white;">
                             <i class="bi bi-whatsapp"></i> WhatsApp
                         </a>
-                        <a href="https://twitter.com/intent/tweet?text=Check+out+my+KCSE+career+matches+on+CareerNext!&url={{ share_url|urlencode }}"
+                        {% else %}
+                        <a href="https://wa.me/?text=%F0%9F%8E%93%20Check%20out%20my%20KCSE%20course%20matches%20on%20CareerNext!%0A%0AIt%20found%20every%20university%2C%20KMTC%2C%20TVET%20%26%20TTC%20course%20I%20qualify%20for%20%E2%80%94%20100%25%20free.%0A%0AMy%20results%3A%20{{ share_url|urlencode }}%0A%0AFind%20YOUR%20matches%20at%20www.careernext.co.ke%20%F0%9F%9A%80" target="_blank" rel="noopener"
+                           class="btn btn-sm flex-1" style="background:#25d366;color:white;">
+                            <i class="bi bi-whatsapp"></i> WhatsApp
+                        </a>
+                        {% endif %}
+                        <a href="https://twitter.com/intent/tweet?text={% if sr.pathway == 'Calculator' %}{{ 'My KCSE cluster points: '|urlencode }}{{ sr.cluster_pts_single|floatformat:1 }}{{ '/48 🎓 via @CareerNextKE'|urlencode }}&url={{ share_url|urlencode }}{% else %}Check+out+my+KCSE+career+matches+on+CareerNext!&url={{ share_url|urlencode }}{% endif %}"
                            target="_blank" rel="noopener"
                            class="btn btn-sm flex-1" style="background:#000;color:white;">
                             <i class="bi bi-twitter-x"></i>

@@ -92,7 +92,7 @@ def render_mark(size, full_bleed=True, ss=4):
         img.paste(grad, (0, 0))
     else:
         mask = Image.new("L", (big, big), 0)
-        ImageDraw.Draw(mask).rounded_rectangle([0, 0, big - 1, big - 1], radius=int(big * 0.25), fill=255)
+        ImageDraw.Draw(mask).rounded_rectangle([0, 0, big - 1, big - 1], radius=int(big * 0.14), fill=255)
         img.paste(grad, (0, 0), mask)
 
     f = big / 64.0

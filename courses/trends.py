@@ -1,6 +1,6 @@
 """
 Ranking queries for the Course Spotlight & Trends homepage section.
-Results are cached for 30 minutes — accurate enough, fast enough.
+Results are cached for 10 minutes — stays reasonably fresh without hammering the DB.
 """
 from datetime import timedelta
 
@@ -9,7 +9,7 @@ from django.db.models import Avg, Count
 from django.utils import timezone
 
 CACHE_KEY = 'homepage_trends_v1'
-CACHE_TTL = 1800  # 30 minutes
+CACHE_TTL = 600  # 10 minutes
 
 
 def _most_viewed(limit=5):

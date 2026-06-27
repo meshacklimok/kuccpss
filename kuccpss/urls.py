@@ -16,6 +16,7 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from django.views.generic import RedirectView
 from django.conf import settings
 from django.conf.urls.static import static
 from django.http import FileResponse, HttpResponse
@@ -69,6 +70,7 @@ urlpatterns = [
     path('clusters/', include('clusters.urls', namespace='clusters')),
     path('institutions/', include('institutions.urls', namespace='institutions')),
     path('courses/', include('courses.urls', namespace='courses')),
+    path('career.html', RedirectView.as_view(url='/career/', permanent=True)),
     path('career/', include('career.urls', namespace='career')),
     path('resources/', include('resources.urls', namespace='resources')),
     path('predictor/', include('predictor.urls', namespace='predictor')),

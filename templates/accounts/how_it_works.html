@@ -1,0 +1,1367 @@
+{% extends "base.html" %}
+{% block title %}How CareerNext Works — Full Guide to Every Feature{% endblock %}
+
+{% block meta %}
+<meta name="description" content="A complete guide to every feature on CareerNext — cluster points calculator, career engine, eligible courses, shortlist, mentorship, application tracker, and more.">
+{% endblock %}
+
+{% block content %}
+<style>
+/* ── utilities ─────────────────────────────────────── */
+.fw-900 { font-weight:900!important; }
+.fw-800 { font-weight:800!important; }
+.fw-700 { font-weight:700!important; }
+
+/* ── hero ──────────────────────────────────────────── */
+.hiw-hero {
+  background: linear-gradient(135deg,#0c1f5e 0%,#1e3a8a 50%,#4f46e5 100%);
+  color:#fff; padding:4rem 0 3rem; position:relative; overflow:hidden;
+}
+.hiw-hero::before {
+  content:''; position:absolute; inset:0;
+  background-image:radial-gradient(circle at 1px 1px,rgba(255,255,255,.05) 1px,transparent 0);
+  background-size:28px 28px; pointer-events:none;
+}
+.hiw-hero h1 { font-size:clamp(1.8rem,4vw,2.8rem); font-weight:900; line-height:1.12; }
+
+/* ── layout ────────────────────────────────────────── */
+.hiw-wrap { display:flex; gap:2rem; align-items:flex-start; }
+
+/* ── sticky sidebar ────────────────────────────────── */
+.hiw-sidebar {
+  width:220px; flex-shrink:0;
+  position:sticky; top:76px;
+}
+.hiw-sidebar nav { background:#fff; border:1.5px solid #e2e8f0; border-radius:16px; overflow:hidden; }
+.hiw-nav-head {
+  background:#f8fafc; border-bottom:1px solid #e2e8f0;
+  padding:.75rem 1.1rem; font-size:.72rem; font-weight:800;
+  color:#64748b; text-transform:uppercase; letter-spacing:.09em;
+}
+.hiw-nav-link {
+  display:flex; align-items:center; gap:9px;
+  padding:.62rem 1.1rem; text-decoration:none;
+  font-size:.83rem; font-weight:600; color:#475569;
+  border-left:3px solid transparent;
+  transition:all .15s;
+}
+.hiw-nav-link:hover { background:#f1f5f9; color:#1e3a8a; text-decoration:none; }
+.hiw-nav-link.active { background:#eff6ff; color:#1d4ed8; border-left-color:#2563eb; font-weight:700; }
+.hiw-nav-link .nav-icon {
+  width:26px; height:26px; border-radius:7px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:.75rem; flex-shrink:0;
+}
+
+/* ── main content ──────────────────────────────────── */
+.hiw-main { flex:1; min-width:0; }
+
+/* ── section ───────────────────────────────────────── */
+.hiw-section {
+  background:#fff; border:1.5px solid #e2e8f0;
+  border-radius:20px; padding:2rem 1.75rem;
+  margin-bottom:1.75rem;
+  scroll-margin-top:84px;
+}
+.hiw-section-head {
+  display:flex; align-items:center; gap:1rem;
+  margin-bottom:1.5rem; padding-bottom:1.25rem;
+  border-bottom:1.5px solid #f1f5f9;
+}
+.hiw-section-icon {
+  width:52px; height:52px; border-radius:14px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:1.3rem; flex-shrink:0;
+}
+.hiw-section-head h2 { font-size:1.15rem; font-weight:800; color:#1e293b; margin:0 0 3px; }
+.hiw-section-head p  { font-size:.83rem; color:#64748b; margin:0; line-height:1.5; }
+
+/* ── step cards ────────────────────────────────────── */
+.hiw-steps { display:flex; flex-direction:column; gap:.75rem; }
+.hiw-step {
+  display:flex; gap:1rem; align-items:flex-start;
+  background:#f8fafc; border:1.5px solid #e2e8f0;
+  border-radius:14px; padding:1rem 1.1rem;
+  transition:box-shadow .18s;
+}
+.hiw-step:hover { box-shadow:0 4px 18px rgba(30,58,138,.08); }
+.step-num {
+  width:34px; height:34px; border-radius:10px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:.85rem; font-weight:900; flex-shrink:0; color:#fff;
+}
+.hiw-step-body { flex:1; min-width:0; }
+.hiw-step-body .step-title {
+  font-size:.9rem; font-weight:800; color:#1e293b; margin-bottom:.3rem;
+}
+.hiw-step-body .step-desc {
+  font-size:.84rem; color:#475569; line-height:1.6; margin:0;
+}
+
+/* ── button pills ──────────────────────────────────── */
+.btn-pill {
+  display:inline-flex; align-items:center; gap:5px;
+  background:#eff6ff; border:1.5px solid #bfdbfe;
+  color:#1d4ed8; border-radius:99px;
+  padding:3px 12px; font-size:.76rem; font-weight:700;
+  white-space:nowrap;
+}
+.btn-pill.green  { background:#f0fdf4; border-color:#bbf7d0; color:#15803d; }
+.btn-pill.purple { background:#faf5ff; border-color:#e9d5ff; color:#7c3aed; }
+.btn-pill.amber  { background:#fffbeb; border-color:#fde68a; color:#b45309; }
+.btn-pill.red    { background:#fef2f2; border-color:#fecaca; color:#991b1b; }
+.btn-pill.slate  { background:#f8fafc; border-color:#e2e8f0; color:#475569; }
+
+/* ── tip boxes ─────────────────────────────────────── */
+.hiw-tip {
+  display:flex; gap:.75rem; align-items:flex-start;
+  background:#fffbeb; border:1.5px solid #fde68a;
+  border-radius:12px; padding:.85rem 1rem;
+  font-size:.83rem; color:#78350f; margin-top:1rem; line-height:1.55;
+}
+.hiw-tip.blue { background:#eff6ff; border-color:#bfdbfe; color:#1e3a8a; }
+.hiw-tip.green { background:#f0fdf4; border-color:#bbf7d0; color:#14532d; }
+
+/* ── feature grid ──────────────────────────────────── */
+.feat-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:.75rem; margin-top:1rem; }
+.feat-item {
+  background:#f8fafc; border:1.5px solid #e2e8f0;
+  border-radius:12px; padding:.9rem;
+  font-size:.83rem; color:#475569; line-height:1.5;
+}
+.feat-item strong { color:#1e293b; display:block; margin-bottom:2px; font-size:.88rem; }
+
+/* ── mobile sidebar as scrollable tabs ─────────────── */
+.hiw-mobile-tabs {
+  display:none;
+  overflow-x:auto; gap:.5rem;
+  padding:.75rem 1rem; background:#fff;
+  border-bottom:1px solid #e2e8f0;
+  position:sticky; top:56px; z-index:100;
+  -webkit-overflow-scrolling:touch; scrollbar-width:none;
+}
+.hiw-mobile-tabs::-webkit-scrollbar { display:none; }
+.hiw-tab-pill {
+  flex-shrink:0; padding:6px 14px; border-radius:99px;
+  font-size:.78rem; font-weight:700; border:1.5px solid #e2e8f0;
+  background:#fff; color:#475569; text-decoration:none;
+  white-space:nowrap; transition:all .15s;
+}
+.hiw-tab-pill:hover { border-color:#4f46e5; color:#4f46e5; text-decoration:none; }
+.hiw-tab-pill.active { background:#1e3a8a; border-color:#1e3a8a; color:#fff; }
+
+/* ── divider ───────────────────────────────────────── */
+.hiw-divider {
+  height:1px; background:linear-gradient(90deg,transparent,#e2e8f0,transparent);
+  margin:1.5rem 0;
+}
+
+/* ── responsive ────────────────────────────────────── */
+@media (max-width:900px) {
+  .hiw-sidebar { display:none; }
+  .hiw-mobile-tabs { display:flex; }
+  .hiw-wrap { display:block; }
+  .hiw-section { padding:1.5rem 1.2rem; border-radius:16px; }
+}
+@media (max-width:575px) {
+  .hiw-hero { padding:3rem 0 2.5rem; }
+  .hiw-section { padding:1.25rem 1rem; margin-bottom:1.25rem; }
+  .hiw-section-icon { width:44px; height:44px; font-size:1.1rem; }
+  .feat-grid { grid-template-columns:1fr 1fr; }
+}
+</style>
+
+<!-- ═══════════════════════════════ HERO ══════════════════════════════════ -->
+<section class="hiw-hero">
+  <div class="container position-relative">
+    <span style="display:inline-block;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);
+                 border-radius:20px;padding:4px 16px;font-size:.73rem;font-weight:800;letter-spacing:.08em;
+                 text-transform:uppercase;margin-bottom:.9rem;">
+      Complete User Guide
+    </span>
+    <h1 class="mb-3">How CareerNext Works</h1>
+    <p style="font-size:1.05rem;opacity:.85;max-width:560px;line-height:1.65;margin-bottom:1.5rem;">
+      A step-by-step explanation of every feature, button, and tool on the platform —
+      so you can use CareerNext with full confidence from day one.
+    </p>
+    <div class="d-flex flex-wrap gap-3">
+      <a href="{% url 'clusterpoints:calculator' %}" class="btn btn-light fw-700 rounded-pill px-4">
+        <i class="fas fa-calculator me-2"></i>Start Calculating
+      </a>
+      <a href="{% url 'accounts:faq' %}" class="btn btn-outline-light fw-700 rounded-pill px-4">
+        <i class="fas fa-question-circle me-2"></i>FAQ
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════ MOBILE TABS ═══════════════════════════════ -->
+<div class="hiw-mobile-tabs" id="mobileTabBar">
+  <a href="#section-account"    class="hiw-tab-pill active">Account</a>
+  <a href="#section-calculator" class="hiw-tab-pill">Calculator</a>
+  <a href="#section-eligible"   class="hiw-tab-pill">Eligible Courses</a>
+  <a href="#section-career"     class="hiw-tab-pill">Career Engine</a>
+  <a href="#section-dashboard"  class="hiw-tab-pill">Dashboard</a>
+  <a href="#section-shortlist"  class="hiw-tab-pill">Shortlist</a>
+  <a href="#section-courses"    class="hiw-tab-pill">Browse Courses</a>
+  <a href="#section-predictor"  class="hiw-tab-pill">Predictor</a>
+  <a href="#section-mentorship" class="hiw-tab-pill">Mentorship</a>
+  <a href="#section-tracker"    class="hiw-tab-pill">App Tracker</a>
+  <a href="#section-resources"  class="hiw-tab-pill">Resources</a>
+  <a href="#section-referral"   class="hiw-tab-pill">Referral</a>
+</div>
+
+<!-- ═══════════════════════════ MAIN LAYOUT ══════════════════════════════ -->
+<div class="container py-5">
+  <div class="hiw-wrap">
+
+    <!-- ── SIDEBAR ──────────────────────────────────────── -->
+    <aside class="hiw-sidebar">
+      <nav>
+        <div class="hiw-nav-head">Contents</div>
+
+        <a href="#section-account" class="hiw-nav-link active">
+          <span class="nav-icon" style="background:#eff6ff;color:#1d4ed8;"><i class="fas fa-user-circle"></i></span>
+          Your Account
+        </a>
+        <a href="#section-calculator" class="hiw-nav-link">
+          <span class="nav-icon" style="background:#f0fdf4;color:#15803d;"><i class="fas fa-calculator"></i></span>
+          Calculator
+        </a>
+        <a href="#section-eligible" class="hiw-nav-link">
+          <span class="nav-icon" style="background:#faf5ff;color:#7c3aed;"><i class="fas fa-list-check"></i></span>
+          Eligible Courses
+        </a>
+        <a href="#section-career" class="hiw-nav-link">
+          <span class="nav-icon" style="background:#fff7ed;color:#c2410c;"><i class="fas fa-compass"></i></span>
+          Career Engine
+        </a>
+        <a href="#section-dashboard" class="hiw-nav-link">
+          <span class="nav-icon" style="background:#f0f9ff;color:#0369a1;"><i class="fas fa-gauge-high"></i></span>
+          Dashboard
+        </a>
+        <a href="#section-shortlist" class="hiw-nav-link">
+          <span class="nav-icon" style="background:#fdf4ff;color:#a21caf;"><i class="fas fa-star"></i></span>
+          Shortlist
+        </a>
+        <a href="#section-courses" class="hiw-nav-link">
+          <span class="nav-icon" style="background:#ecfdf5;color:#059669;"><i class="fas fa-book-open"></i></span>
+          Browse Courses
+        </a>
+        <a href="#section-predictor" class="hiw-nav-link">
+          <span class="nav-icon" style="background:#fff1f2;color:#be123c;"><i class="fas fa-chart-line"></i></span>
+          Cutoff Predictor
+        </a>
+        <a href="#section-mentorship" class="hiw-nav-link">
+          <span class="nav-icon" style="background:#fffbeb;color:#b45309;"><i class="fas fa-user-graduate"></i></span>
+          Mentorship
+        </a>
+        <a href="#section-tracker" class="hiw-nav-link">
+          <span class="nav-icon" style="background:#f0f9ff;color:#0284c7;"><i class="fas fa-clipboard-list"></i></span>
+          App Tracker
+        </a>
+        <a href="#section-resources" class="hiw-nav-link">
+          <span class="nav-icon" style="background:#f8fafc;color:#475569;"><i class="fas fa-newspaper"></i></span>
+          Resources
+        </a>
+        <a href="#section-referral" class="hiw-nav-link">
+          <span class="nav-icon" style="background:#ecfdf5;color:#059669;"><i class="fas fa-share-nodes"></i></span>
+          Referral
+        </a>
+      </nav>
+
+      <!-- Quick links -->
+      <div class="mt-3 p-3 rounded-3" style="background:#f8fafc;border:1.5px solid #e2e8f0;font-size:.8rem;">
+        <div class="fw-700 mb-2" style="color:#1e293b;">Still confused?</div>
+        <a href="{% url 'accounts:faq' %}" class="d-block text-primary mb-1"><i class="fas fa-circle-question me-1"></i>Browse the FAQ</a>
+        <a href="mailto:hello@careernext.co.ke" class="d-block text-primary"><i class="fas fa-envelope me-1"></i>Email us</a>
+      </div>
+    </aside>
+
+    <!-- ── MAIN CONTENT ──────────────────────────────────── -->
+    <main class="hiw-main">
+
+      <!-- ════════════════════════════════════════════════════
+           1. YOUR ACCOUNT
+      ════════════════════════════════════════════════════ -->
+      <section class="hiw-section" id="section-account">
+        <div class="hiw-section-head">
+          <div class="hiw-section-icon" style="background:#eff6ff;color:#1d4ed8;">
+            <i class="fas fa-user-circle"></i>
+          </div>
+          <div>
+            <h2>Your Account</h2>
+            <p>Register, sign in, and manage your profile.</p>
+          </div>
+        </div>
+
+        <div class="hiw-steps">
+          <div class="hiw-step">
+            <div class="step-num" style="background:#1d4ed8;">1</div>
+            <div class="hiw-step-body">
+              <div class="step-title">
+                <span class="btn-pill me-1"><i class="fas fa-user-plus"></i> Create Account</span>
+                — Register with your email
+              </div>
+              <p class="step-desc">
+                Click <strong>Create Account</strong> on the homepage or navigation bar. Enter your full name, email address,
+                and a password. You will receive a verification email — click the link inside to activate your account.
+                Registration is free and takes under 60 seconds.
+              </p>
+            </div>
+          </div>
+
+          <div class="hiw-step">
+            <div class="step-num" style="background:#1d4ed8;">2</div>
+            <div class="hiw-step-body">
+              <div class="step-title">
+                <span class="btn-pill me-1"><i class="fab fa-google"></i> Continue with Google</span>
+                — One-tap sign-in
+              </div>
+              <p class="step-desc">
+                On the Login page, click <strong>Continue with Google</strong> to sign in using your Google account.
+                No password to remember — your Google account is linked to CareerNext automatically.
+                Works on any device where you are already signed into Google.
+              </p>
+            </div>
+          </div>
+
+          <div class="hiw-step">
+            <div class="step-num" style="background:#1d4ed8;">3</div>
+            <div class="hiw-step-body">
+              <div class="step-title">
+                <span class="btn-pill me-1"><i class="fas fa-key"></i> Forgot Password</span>
+                — Reset your password
+              </div>
+              <p class="step-desc">
+                On the Login page, click <strong>Forgot password?</strong> and enter your email.
+                A reset link is sent to your inbox. Click it, set a new password, and sign in immediately.
+                Check your spam folder if you don't see the email within 2 minutes.
+              </p>
+            </div>
+          </div>
+
+          <div class="hiw-step">
+            <div class="step-num" style="background:#1d4ed8;">4</div>
+            <div class="hiw-step-body">
+              <div class="step-title">
+                <span class="btn-pill me-1"><i class="fas fa-pen-to-square"></i> Edit Profile</span>
+                — Update your information
+              </div>
+              <p class="step-desc">
+                Go to <strong>My Profile</strong> from the top-right menu. Update your full name, county, KCSE year,
+                and profile photo. This information helps the Career Engine give you more relevant recommendations
+                and is never shared publicly.
+              </p>
+            </div>
+          </div>
+
+          <div class="hiw-step">
+            <div class="step-num" style="background:#1d4ed8;">5</div>
+            <div class="hiw-step-body">
+              <div class="step-title">
+                <span class="btn-pill me-1"><i class="fas fa-bell"></i> Notifications</span>
+                — Stay informed
+              </div>
+              <p class="step-desc">
+                The bell icon in the top navigation shows unread notifications. Click it to see system alerts,
+                updates to your shortlisted courses, mentorship confirmations, and important KUCCPS deadline reminders.
+                Click any notification to go directly to the relevant page. Use <strong>Mark all as read</strong> to clear the badge.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="hiw-tip blue mt-3">
+          <i class="fas fa-info-circle mt-1 flex-shrink-0"></i>
+          <span>You can browse courses and use the calculator without an account. Creating an account lets you save your results, build a shortlist, and get personalised recommendations.</span>
+        </div>
+      </section>
+
+      <!-- ════════════════════════════════════════════════════
+           2. CLUSTER POINTS CALCULATOR
+      ════════════════════════════════════════════════════ -->
+      <section class="hiw-section" id="section-calculator">
+        <div class="hiw-section-head">
+          <div class="hiw-section-icon" style="background:#f0fdf4;color:#15803d;">
+            <i class="fas fa-calculator"></i>
+          </div>
+          <div>
+            <h2>Cluster Points Calculator</h2>
+            <p>Enter your KCSE grades and get your cluster points for all 20 KUCCPS clusters.</p>
+          </div>
+        </div>
+
+        <div class="hiw-steps">
+          <div class="hiw-step">
+            <div class="step-num" style="background:#15803d;">1</div>
+            <div class="hiw-step-body">
+              <div class="step-title">
+                <span class="btn-pill green me-1"><i class="fas fa-keyboard"></i> Enter Grades Manually</span>
+                — Type each subject grade
+              </div>
+              <p class="step-desc">
+                The calculator shows all KCSE subjects grouped into sections (Core, Sciences, Humanities, etc.).
+                For each subject you sat, select your grade from the dropdown — <strong>A, A-, B+, B, B-, C+, C, C-, D+, D, D-, E</strong>.
+                Leave subjects blank if you did not sit them. The form updates your aggregate total in real time.
+              </p>
+            </div>
+          </div>
+
+          <div class="hiw-step">
+            <div class="step-num" style="background:#15803d;">2</div>
+            <div class="hiw-step-body">
+              <div class="step-title">
+                <span class="btn-pill green me-1"><i class="fas fa-camera"></i> Upload Result Slip</span>
+                — OCR auto-fill
+              </div>
+              <p class="step-desc">
+                Click <strong>Upload Result Slip</strong> and take a clear, well-lit photo of your official KNEC result slip.
+                Our AI (powered by GPT-4o Vision) reads the image and fills in all your grades automatically.
+                Review the pre-filled grades for accuracy before calculating — blurry photos may need manual correction.
+              </p>
+            </div>
+          </div>
+
+          <div class="hiw-step">
+            <div class="step-num" style="background:#15803d;">3</div>
+            <div class="hiw-step-body">
+              <div class="step-title">
+                <span class="btn-pill green me-1"><i class="fas fa-bolt"></i> Calculate My Points</span>
+                — Run the formula
+              </div>
+              <p class="step-desc">
+                Click <strong>Calculate My Points</strong> after entering your grades. The system applies the official
+                KUCCPS formula instantly and shows your cluster points for each of the 20 subject clusters (C1–C20),
+                your KCSE aggregate out of 84, and your mean grade.
+                The maximum cluster points score is <strong>48</strong>.
+              </p>
+            </div>
+          </div>
+
+          <div class="hiw-step">
+            <div class="step-num" style="background:#15803d;">4</div>
+            <div class="hiw-step-body">
+              <div class="step-title">
+                <span class="btn-pill green me-1"><i class="fas fa-arrow-right"></i> View Eligible Courses</span>
+                — See what you qualify for
+              </div>
+              <p class="step-desc">
+                After calculating, click <strong>View Eligible Courses</strong> to see every university degree course
+                whose cutoff point is at or below your calculated cluster points. The list updates in real time and shows
+                all matching institutions and programmes across Kenya.
+              </p>
+            </div>
+          </div>
+
+          <div class="hiw-step">
+            <div class="step-num" style="background:#15803d;">5</div>
+            <div class="hiw-step-body">
+              <div class="step-title">
+                <span class="btn-pill green me-1"><i class="fas fa-file-pdf"></i> Export PDF</span>
+                — Download your results
+              </div>
+              <p class="step-desc">
+                Click <strong>Export PDF</strong> (or <strong>Download Report</strong>) on the results page to save a
+                formatted PDF of your cluster points across all 20 clusters. Share it with parents, teachers, or keep
+                it for your records. The PDF includes your aggregate, mean grade, and individual cluster scores.
+              </p>
+            </div>
+          </div>
+
+          <div class="hiw-step">
+            <div class="step-num" style="background:#15803d;">6</div>
+            <div class="hiw-step-body">
+              <div class="step-title">
+                <span class="btn-pill green me-1"><i class="fas fa-save"></i> Save My Results</span>
+                — Persist between sessions
+              </div>
+              <p class="step-desc">
+                Logged-in users see a <strong>Save My Results</strong> option. Saving stores your grades to your account
+                so you don't have to re-enter them next time. Your saved results are used by the Dashboard and Career
+                Engine to show personalised recommendations automatically.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="hiw-tip">
+          <i class="fas fa-lightbulb mt-1 flex-shrink-0"></i>
+          <span><strong>How cluster points are calculated:</strong> The formula is <code>48 × √( (cluster_marks / 48) × (aggregate / 84) )</code>. Your aggregate is Maths + best language (English or Kiswahili) + next 5 best subjects, capped at 84.</span>
+        </div>
+      </section>
+
+      <!-- ════════════════════════════════════════════════════
+           3. ELIGIBLE COURSES
+      ════════════════════════════════════════════════════ -->
+      <section class="hiw-section" id="section-eligible">
+        <div class="hiw-section-head">
+          <div class="hiw-section-icon" style="background:#faf5ff;color:#7c3aed;">
+            <i class="fas fa-list-check"></i>
+          </div>
+          <div>
+            <h2>Eligible Courses</h2>
+            <p>All courses whose cutoff is at or below your cluster points, with filters and actions.</p>
+          </div>
+        </div>
+
+        <div class="hiw-steps">
+          <div class="hiw-step">
+            <div class="step-num" style="background:#7c3aed;">1</div>
+            <div class="hiw-step-body">
+              <div class="step-title">
+                <span class="btn-pill purple me-1"><i class="fas fa-filter"></i> Filter &amp; Search</span>
+                — Narrow down the list
+              </div>
+              <p class="step-desc">
+                Use the filter bar at the top to narrow results by <strong>institution type</strong> (University, KMTC, TVET, TTC),
+                <strong>cluster</strong> (e.g. Cluster 1 – Medicine), or <strong>county</strong>. Type in the search box to
+                find a specific course or institution name. All filters combine — e.g. you can show only Nairobi universities in Cluster 3.
+              </p>
+            </div>
+          </div>
+
+          <div class="hiw-step">
+            <div class="step-num" style="background:#7c3aed;">2</div>
+            <div class="hiw-step-body">
+              <div class="step-title">
+                <span class="btn-pill purple me-1"><i class="fas fa-bookmark"></i> Bookmark</span>
+                — Save to Watchlist
+              </div>
+              <p class="step-desc">
+                Click the <strong>bookmark icon</strong> on any course card to save it to your Watchlist (Saved Courses).
+                A blue bookmark means it's saved; click again to remove it. Access all your bookmarked courses from
+                <strong>My Saved Courses</strong> in your Dashboard or account menu.
+              </p>
+            </div>
+          </div>
+
+          <div class="hiw-step">
+            <div class="step-num" style="background:#7c3aed;">3</div>
+            <div class="hiw-step-body">
+              <div class="step-title">
+                <span class="btn-pill purple me-1"><i class="fas fa-star"></i> Add to Shortlist</span>
+                — Pick your top choices
+              </div>
+              <p class="step-desc">
+                Click <strong>Add to Shortlist</strong> (or the star icon) to move a course to your Shortlist —
+                your curated list of top picks that mirrors the 4-choice KUCCPS application. From the Shortlist page
+                you can rank, annotate, compare, and export your final picks.
+              </p>
+            </div>
+          </div>
+
+          <div class="hiw-step">
+            <div class="step-num" style="background:#7c3aed;">4</div>
+            <div class="hiw-step-body">
+              <div class="step-title">
+                <span class="btn-pill purple me-1"><i class="fas fa-circle-info"></i> View Details</span>
+                — Full course information
+              </div>
+              <p class="step-desc">
+                Click the course name or <strong>View Details</strong> to open the course detail page. Here you'll see
+                the institution name, course duration, cluster requirements, historical cutoff points for 2021–2024,
+                a cutoff trend chart, student reviews, and a link to the institution's website.
+              </p>
+            </div>
+          </div>
+
+          <div class="hiw-step">
+            <div class="step-num" style="background:#7c3aed;">5</div>
+            <div class="hiw-step-body">
+              <div class="step-title">
+                <span class="btn-pill purple me-1"><i class="fas fa-sync"></i> Recalculate</span>
+                — Change your grades
+              </div>
+              <p class="step-desc">
+                Click <strong>Recalculate</strong> at the top of the results page to go back to the calculator and
+                adjust your grades. Useful if you want to explore a different grade scenario (e.g., "What if I got a B+ in Maths?").
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ════════════════════════════════════════════════════
+           4. CAREER GUIDANCE ENGINE
+      ════════════════════════════════════════════════════ -->
+      <section class="hiw-section" id="section-career">
+        <div class="hiw-section-head">
+          <div class="hiw-section-icon" style="background:#fff7ed;color:#c2410c;">
+            <i class="fas fa-compass"></i>
+          </div>
+          <div>
+            <h2>Career Guidance Engine</h2>
+            <p>A personalised engine that matches your grades and interests to the right courses and career paths.</p>
+          </div>
+        </div>
+
+        <div class="hiw-steps">
+          <div class="hiw-step">
+            <div class="step-num" style="background:#c2410c;">1</div>
+            <div class="hiw-step-body">
+              <div class="step-title">
+                <span class="btn-pill amber me-1"><i class="fas fa-route"></i> Choose a Pathway</span>
+                — Degree, KMTC, TVET, or TTC
+              </div>
+              <p class="step-desc">
+                The engine starts by asking which education pathway interests you. Select one:
+                <strong>Degree</strong> (university, cluster-points based),
+                <strong>KMTC</strong> (medical training, grade-based),
+                <strong>TVET</strong> (technical and vocational), or
+                <strong>TTC</strong> (teacher training college).
+                Each pathway uses different admission criteria, so the engine adapts accordingly.
+              </p>
+            </div>
+          </div>
+
+          <div class="hiw-step">
+            <div class="step-num" style="background:#c2410c;">2</div>
+            <div class="hiw-step-body">
+              <div class="step-title">
+                <span class="btn-pill amber me-1"><i class="fas fa-graduation-cap"></i> Enter Your Grades</span>
+                — Or load saved results
+              </div>
+              <p class="step-desc">
+                Enter your KCSE grades on the engine's input form. If you have already calculated your points and
+                saved them, click <strong>Load My Saved Grades</strong> to pre-fill the form automatically. For the
+                Degree pathway, the engine calculates your cluster points in the background.
+              </p>
+            </div>
+          </div>
+
+          <div class="hiw-step">
+            <div class="step-num" style="background:#c2410c;">3</div>
+            <div class="hiw-step-body">
+              <div class="step-title">
+                <span class="btn-pill amber me-1"><i class="fas fa-arrow-right"></i> Proceed</span>
+                — Get your matches
+              </div>
+              <p class="step-desc">
+                Click <strong>Proceed</strong> to run the engine. It matches your grades against every course in its
+                database and returns a personalised list of courses you qualify for, sorted by fit.
+                You'll see degree options, KMTC programmes, TVET courses, or TTC programmes depending on your selected pathway.
+              </p>
+            </div>
+          </div>
+
+          <div class="hiw-step">
+            <div class="step-num" style="background:#c2410c;">4</div>
+            <div class="hiw-step-body">
+              <div class="step-title">
+                <span class="btn-pill amber me-1"><i class="fas fa-robot"></i> AI Recommendation</span>
+                — CareerNext AI chat
+              </div>
+              <p class="step-desc">
+                After viewing your results, click <strong>Ask CareerNext AI</strong> or the AI chat button.
+                This opens the <strong>CareerNext AI</strong> assistant — you can ask it questions like
+                "Which of my eligible courses has the best job prospects?" or "Compare Nursing vs Clinical Medicine."
+                The AI has full context of your grades and eligible courses.
+              </p>
+            </div>
+          </div>
+
+          <div class="hiw-step">
+            <div class="step-num" style="background:#c2410c;">5</div>
+            <div class="hiw-step-body">
+              <div class="step-title">
+                <span class="btn-pill amber me-1"><i class="fas fa-share-alt"></i> Share My Results</span>
+                — Send to a parent or teacher
+              </div>
+              <p class="step-desc">
+                Click <strong>Share Results</strong> to generate a unique shareable link to your career engine results.
+                Anyone with the link can view your course matches and AI recommendation — no login required.
+                Links expire after 7 days for privacy.
+              </p>
+            </div>
+          </div>
+
+          <div class="hiw-step">
+            <div class="step-num" style="background:#c2410c;">6</div>
+            <div class="hiw-step-body">
+              <div class="step-title">
+                <span class="btn-pill amber me-1"><i class="fas fa-address-card"></i> Career Profiles</span>
+                — Explore career paths
+              </div>
+              <p class="step-desc">
+                Browse <strong>Career Profiles</strong> to learn about specific careers — what the job involves day-to-day,
+                which courses lead to it, salary ranges, and growth prospects in Kenya. Tap <strong>Save Career</strong>
+                on any profile to add it to your saved careers for future reference.
+              </p>
+            </div>
+          </div>
+
+          <div class="hiw-step">
+            <div class="step-num" style="background:#c2410c;">7</div>
+            <div class="hiw-step-body">
+              <div class="step-title">
+                <span class="btn-pill amber me-1"><i class="fas fa-clipboard-question"></i> Career Quiz</span>
+                — Discover what suits you
+              </div>
+              <p class="step-desc">
+                Not sure what career to pursue? Click <strong>Take the Career Quiz</strong>. Answer 10–15 questions
+                about your interests, strengths, and preferences. The quiz matches your personality to career profiles
+                and shows the courses that lead there — a great starting point if you have no idea what to study.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ════════════════════════════════════════════════════
+           5. DASHBOARD
+      ════════════════════════════════════════════════════ -->
+      <section class="hiw-section" id="section-dashboard">
+        <div class="hiw-section-head">
+          <div class="hiw-section-icon" style="background:#f0f9ff;color:#0369a1;">
+            <i class="fas fa-gauge-high"></i>
+          </div>
+          <div>
+            <h2>Your Dashboard</h2>
+            <p>Your personal command centre — everything in one place after you log in.</p>
+          </div>
+        </div>
+
+        <div class="feat-grid">
+          <div class="feat-item">
+            <strong><i class="fas fa-chart-bar me-1" style="color:#1d4ed8;"></i>Cluster Points Summary</strong>
+            Shows your saved cluster points across all 20 KUCCPS clusters at a glance. Click any cluster to jump to its eligible courses.
+          </div>
+          <div class="feat-item">
+            <strong><i class="fas fa-stars me-1" style="color:#7c3aed;"></i>Recommended For You</strong>
+            Personalised course matches from the Career Engine. Populated after you run the engine at least once. Click any course to view its details.
+          </div>
+          <div class="feat-item">
+            <strong><i class="fas fa-star me-1" style="color:#b45309;"></i>My Shortlist</strong>
+            A quick view of your top shortlisted courses. Shows how many slots you've used out of 4. Click <strong>Manage Shortlist</strong> to edit.
+          </div>
+          <div class="feat-item">
+            <strong><i class="fas fa-bookmark me-1" style="color:#059669;"></i>Saved Courses</strong>
+            All courses you've bookmarked. Tap to open, or visit <strong>My Saved Courses</strong> in the menu for the full list.
+          </div>
+          <div class="feat-item">
+            <strong><i class="fas fa-clipboard-list me-1" style="color:#0284c7;"></i>Application Tracker</strong>
+            Summary of your KUCCPS application statuses. Click <strong>View All</strong> to update each choice.
+          </div>
+          <div class="feat-item">
+            <strong><i class="fas fa-calculator me-1" style="color:#15803d;"></i>Quick Actions</strong>
+            Shortcut buttons to recalculate your points, open the career engine, view clusters, and browse courses — all without navigating away.
+          </div>
+          <div class="feat-item">
+            <strong><i class="fas fa-bell me-1" style="color:#c2410c;"></i>Notifications Panel</strong>
+            Recent alerts about your shortlist, mentorship bookings, and platform updates. Mark individual notifications as read here.
+          </div>
+          <div class="feat-item">
+            <strong><i class="fas fa-user-graduate me-1" style="color:#b45309;"></i>Mentorship Sessions</strong>
+            Any upcoming or past mentorship sessions you've booked. Click to view session details or contact your mentor.
+          </div>
+        </div>
+      </section>
+
+      <!-- ════════════════════════════════════════════════════
+           6. SHORTLIST & COMPARISON
+      ════════════════════════════════════════════════════ -->
+      <section class="hiw-section" id="section-shortlist">
+        <div class="hiw-section-head">
+          <div class="hiw-section-icon" style="background:#fdf4ff;color:#a21caf;">
+            <i class="fas fa-star"></i>
+          </div>
+          <div>
+            <h2>Shortlist &amp; Course Comparison</h2>
+            <p>Build your final 4-choice list, rank it, annotate it, and compare courses side-by-side.</p>
+          </div>
+        </div>
+
+        <div class="hiw-steps">
+          <div class="hiw-step">
+            <div class="step-num" style="background:#a21caf;">1</div>
+            <div class="hiw-step-body">
+              <div class="step-title">
+                <span class="btn-pill purple me-1"><i class="fas fa-plus"></i> Add to Shortlist</span>
+                — From any course card
+              </div>
+              <p class="step-desc">
+                Click the <strong>star icon</strong> or <strong>Add to Shortlist</strong> button on any course.
+                You can shortlist up to <strong>4 courses</strong> — matching the 4 choices KUCCPS allows.
+                The shortlist is accessible from the Dashboard and the top-right account menu.
+              </p>
+            </div>
+          </div>
+
+          <div class="hiw-step">
+            <div class="step-num" style="background:#a21caf;">2</div>
+            <div class="hiw-step-body">
+              <div class="step-title">
+                <span class="btn-pill purple me-1"><i class="fas fa-arrow-up-1-9"></i> Set Rank</span>
+                — Order your preference
+              </div>
+              <p class="step-desc">
+                On the Shortlist page, each course has a <strong>rank selector</strong> (1st, 2nd, 3rd, 4th choice).
+                Set this to reflect your order of preference. Rank 1 is your top choice — KUCCPS places you into
+                the highest-ranked course you qualify for.
+              </p>
+            </div>
+          </div>
+
+          <div class="hiw-step">
+            <div class="step-num" style="background:#a21caf;">3</div>
+            <div class="hiw-step-body">
+              <div class="step-title">
+                <span class="btn-pill purple me-1"><i class="fas fa-sticky-note"></i> Add Notes</span>
+                — Personal reminders
+              </div>
+              <p class="step-desc">
+                Click <strong>Add Note</strong> on any shortlisted course to write a personal annotation — e.g.,
+                "Mum prefers this," or "Check if UoN needs supplementary subjects." Notes are private and only visible to you.
+              </p>
+            </div>
+          </div>
+
+          <div class="hiw-step">
+            <div class="step-num" style="background:#a21caf;">4</div>
+            <div class="hiw-step-body">
+              <div class="step-title">
+                <span class="btn-pill purple me-1"><i class="fas fa-code-compare"></i> Compare Courses</span>
+                — Side-by-side view
+              </div>
+              <p class="step-desc">
+                Click <strong>Compare All</strong> to open the course comparison table. This shows your shortlisted courses
+                side-by-side with their cutoff points, cluster numbers, institution type, duration, and your margin
+                above or below the cutoff — making it easy to spot the safest and most competitive choices.
+              </p>
+            </div>
+          </div>
+
+          <div class="hiw-step">
+            <div class="step-num" style="background:#a21caf;">5</div>
+            <div class="hiw-step-body">
+              <div class="step-title">
+                <span class="btn-pill purple me-1"><i class="fas fa-file-pdf"></i> Export Shortlist PDF</span>
+                — Print or share
+              </div>
+              <p class="step-desc">
+                Click <strong>Export PDF</strong> on the Shortlist page to download a formatted document showing
+                all your shortlisted courses, their ranks, cutoff points, and your notes. Print it, share it with
+                a parent, or show it to a school counsellor.
+              </p>
+            </div>
+          </div>
+
+          <div class="hiw-step">
+            <div class="step-num" style="background:#a21caf;">6</div>
+            <div class="hiw-step-body">
+              <div class="step-title">
+                <span class="btn-pill red me-1"><i class="fas fa-trash"></i> Remove from Shortlist</span>
+                — Change your mind
+              </div>
+              <p class="step-desc">
+                Click the <strong>remove icon</strong> (trash or × button) on any shortlisted course to take it off.
+                You can add a different course in its place at any time.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="hiw-tip green">
+          <i class="fas fa-check-circle mt-1 flex-shrink-0"></i>
+          <span>KUCCPS allows <strong>4 course choices per pathway</strong>. Use your shortlist to mirror this — rank carefully, with your safest option (lowest cutoff relative to your points) as choice 3 or 4.</span>
+        </div>
+      </section>
+
+      <!-- ════════════════════════════════════════════════════
+           7. BROWSE COURSES & INSTITUTIONS
+      ════════════════════════════════════════════════════ -->
+      <section class="hiw-section" id="section-courses">
+        <div class="hiw-section-head">
+          <div class="hiw-section-icon" style="background:#ecfdf5;color:#059669;">
+            <i class="fas fa-book-open"></i>
+          </div>
+          <div>
+            <h2>Browse Courses &amp; Institutions</h2>
+            <p>Explore the full database of programmes at universities, KMTCs, TVETs, and TTCs.</p>
+          </div>
+        </div>
+
+        <div class="hiw-steps">
+          <div class="hiw-step">
+            <div class="step-num" style="background:#059669;">1</div>
+            <div class="hiw-step-body">
+              <div class="step-title">
+                <span class="btn-pill green me-1"><i class="fas fa-magnifying-glass"></i> Search</span>
+                — Find any course or institution
+              </div>
+              <p class="step-desc">
+                Use the search bar at the top of any browse page or the global search in the navigation.
+                Type a course name (e.g., "Nursing"), an institution name (e.g., "Kenyatta"), or a cluster (e.g., "C1").
+                Results appear as you type — click any result to jump straight to its page.
+              </p>
+            </div>
+          </div>
+
+          <div class="hiw-step">
+            <div class="step-num" style="background:#059669;">2</div>
+            <div class="hiw-step-body">
+              <div class="step-title">
+                <span class="btn-pill green me-1"><i class="fas fa-sliders"></i> Filter by Type / Cluster</span>
+                — Narrow your search
+              </div>
+              <p class="step-desc">
+                Filter courses by <strong>institution type</strong> (University, KMTC, TVET, TTC), <strong>cluster</strong>
+                (C1–C20), <strong>county</strong>, or <strong>ownership</strong> (public / private / chartered).
+                Filters stack — combine them to pinpoint exactly what you're looking for.
+              </p>
+            </div>
+          </div>
+
+          <div class="hiw-step">
+            <div class="step-num" style="background:#059669;">3</div>
+            <div class="hiw-step-body">
+              <div class="step-title">
+                <span class="btn-pill green me-1"><i class="fas fa-building-columns"></i> View Institution</span>
+                — See all courses at that school
+              </div>
+              <p class="step-desc">
+                Click any institution name to open its profile page. You'll see its type, location, accreditation status,
+                website link, and a full list of all courses it offers with their cutoff points. Useful for students
+                who have a preferred institution and want to see what it offers.
+              </p>
+            </div>
+          </div>
+
+          <div class="hiw-step">
+            <div class="step-num" style="background:#059669;">4</div>
+            <div class="hiw-step-body">
+              <div class="step-title">
+                <span class="btn-pill green me-1"><i class="fas fa-star-half-stroke"></i> Leave a Review</span>
+                — Help other students
+              </div>
+              <p class="step-desc">
+                On a course detail page, logged-in users can leave a <strong>star rating and written review</strong>
+                of a course or institution they have experience with. Reviews are visible to all students and help
+                others make informed decisions.
+              </p>
+            </div>
+          </div>
+
+          <div class="hiw-step">
+            <div class="step-num" style="background:#059669;">5</div>
+            <div class="hiw-step-body">
+              <div class="step-title">
+                <span class="btn-pill green me-1"><i class="fas fa-chart-line"></i> Cutoff Trend Chart</span>
+                — See historical data
+              </div>
+              <p class="step-desc">
+                Each course detail page includes a <strong>cutoff trend chart</strong> showing how the cutoff point
+                has changed from 2021 to 2024. A rising trend means the course is becoming more competitive;
+                a falling trend may mean more seats or fewer applicants. Use this when comparing courses to
+                judge how risky or safe each choice is.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ════════════════════════════════════════════════════
+           8. CUTOFF PREDICTOR
+      ════════════════════════════════════════════════════ -->
+      <section class="hiw-section" id="section-predictor">
+        <div class="hiw-section-head">
+          <div class="hiw-section-icon" style="background:#fff1f2;color:#be123c;">
+            <i class="fas fa-chart-line"></i>
+          </div>
+          <div>
+            <h2>Cutoff Predictor</h2>
+            <p>Uses historical trends to estimate what the 2026 cutoff for each course might be.</p>
+          </div>
+        </div>
+
+        <div class="hiw-steps">
+          <div class="hiw-step">
+            <div class="step-num" style="background:#be123c;">1</div>
+            <div class="hiw-step-body">
+              <div class="step-title">
+                <span class="btn-pill red me-1"><i class="fas fa-sliders"></i> Set Your Score</span>
+                — Enter your cluster points
+              </div>
+              <p class="step-desc">
+                At the top of the Predictor page, enter your cluster points (0–48). If you have already calculated
+                your points, they will be pre-filled. The predictor uses this score to show your <strong>eligibility likelihood</strong>
+                for each course — High Likelihood, Likely, Borderline, or Unlikely.
+              </p>
+            </div>
+          </div>
+
+          <div class="hiw-step">
+            <div class="step-num" style="background:#be123c;">2</div>
+            <div class="hiw-step-body">
+              <div class="step-title">
+                <span class="btn-pill red me-1"><i class="fas fa-filter"></i> Filter by Eligibility</span>
+                — See only safe or borderline choices
+              </div>
+              <p class="step-desc">
+                Click the <strong>eligibility filter buttons</strong> — <em>High Likelihood, Likely, Borderline, Unlikely</em> —
+                to show only courses in that band. Use <strong>Likely</strong> for safe choices and <strong>Borderline</strong>
+                to find stretch goals within reach.
+              </p>
+            </div>
+          </div>
+
+          <div class="hiw-step">
+            <div class="step-num" style="background:#be123c;">3</div>
+            <div class="hiw-step-body">
+              <div class="step-title">
+                <span class="btn-pill red me-1"><i class="fas fa-arrow-trend-up"></i> Trend Indicator</span>
+                — Rising, falling, or stable
+              </div>
+              <p class="step-desc">
+                Each course card shows a trend arrow — <span style="color:#dc2626;"><i class="fas fa-arrow-trend-up"></i> Rising</span>
+                (cutoff going up, harder to get in),
+                <span style="color:#16a34a;"><i class="fas fa-arrow-trend-down"></i> Falling</span>
+                (cutoff dropping, easier), or <i class="fas fa-minus"></i> Stable.
+                A rising course means you should factor in extra margin when deciding.
+              </p>
+            </div>
+          </div>
+
+          <div class="hiw-step">
+            <div class="step-num" style="background:#be123c;">4</div>
+            <div class="hiw-step-body">
+              <div class="step-title">
+                <span class="btn-pill red me-1"><i class="fas fa-bar-chart"></i> Range Bar</span>
+                — See where you stand
+              </div>
+              <p class="step-desc">
+                Each course shows a range bar spanning the minimum to maximum cutoff seen historically.
+                An orange tick marks <em>your score</em> on the bar — giving an instant visual of whether
+                you're comfortably above the cutoff, right at the edge, or below it.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="hiw-tip">
+          <i class="fas fa-triangle-exclamation mt-1 flex-shrink-0"></i>
+          <span>Predicted cutoffs are <strong>estimates based on past trends</strong> — not official figures. Actual 2026 cutoffs depend on the number of applicants and available slots. Use this as a guide, not a guarantee.</span>
+        </div>
+      </section>
+
+      <!-- ════════════════════════════════════════════════════
+           9. MENTORSHIP
+      ════════════════════════════════════════════════════ -->
+      <section class="hiw-section" id="section-mentorship">
+        <div class="hiw-section-head">
+          <div class="hiw-section-icon" style="background:#fffbeb;color:#b45309;">
+            <i class="fas fa-user-graduate"></i>
+          </div>
+          <div>
+            <h2>Mentorship</h2>
+            <p>Book a 15-minute WhatsApp call with a real university or KMTC student. Honest answers, real insights.</p>
+          </div>
+        </div>
+
+        <div class="hiw-steps">
+          <div class="hiw-step">
+            <div class="step-num" style="background:#b45309;">1</div>
+            <div class="hiw-step-body">
+              <div class="step-title">
+                <span class="btn-pill amber me-1"><i class="fas fa-magnifying-glass"></i> Find a Mentor</span>
+                — Browse verified students
+              </div>
+              <p class="step-desc">
+                Go to <strong>Mentorship</strong> from the navigation. Browse the directory of verified current students.
+                Filter by institution name, course, or year of study. Each mentor card shows their course,
+                institution, rating, number of sessions done, and a short bio.
+              </p>
+            </div>
+          </div>
+
+          <div class="hiw-step">
+            <div class="step-num" style="background:#b45309;">2</div>
+            <div class="hiw-step-body">
+              <div class="step-title">
+                <span class="btn-pill amber me-1"><i class="fas fa-calendar-check"></i> Book a Session</span>
+                — 15-minute WhatsApp call
+              </div>
+              <p class="step-desc">
+                Click <strong>Book a Session</strong> on any mentor's profile. Pick a date and time from
+                their available slots, write a short message about what you want to discuss (optional),
+                and confirm the booking. You'll be taken to the payment page immediately after.
+              </p>
+            </div>
+          </div>
+
+          <div class="hiw-step">
+            <div class="step-num" style="background:#b45309;">3</div>
+            <div class="hiw-step-body">
+              <div class="step-title">
+                <span class="btn-pill amber me-1"><i class="fas fa-mobile-screen-button"></i> Pay via M-Pesa STK Push</span>
+                — One tap payment
+              </div>
+              <p class="step-desc">
+                Enter your M-Pesa phone number and click <strong>Pay Now</strong>. A payment request is sent directly
+                to your phone — open your M-Pesa app or enter your PIN when prompted. The session is confirmed
+                within seconds once payment is received. No need to share MPesa statements.
+              </p>
+            </div>
+          </div>
+
+          <div class="hiw-step">
+            <div class="step-num" style="background:#b45309;">4</div>
+            <div class="hiw-step-body">
+              <div class="step-title">
+                <span class="btn-pill amber me-1"><i class="fab fa-whatsapp"></i> Join the Session</span>
+                — Call your mentor on WhatsApp
+              </div>
+              <p class="step-desc">
+                After payment, you receive a WhatsApp link to your mentor. Message them to confirm the exact
+                time or call directly at the agreed slot. Sessions are 15 minutes — come with your questions ready.
+                Your mentor's WhatsApp number is shared only after payment.
+              </p>
+            </div>
+          </div>
+
+          <div class="hiw-step">
+            <div class="step-num" style="background:#b45309;">5</div>
+            <div class="hiw-step-body">
+              <div class="step-title">
+                <span class="btn-pill amber me-1"><i class="fas fa-star"></i> Rate Your Session</span>
+                — Help the next student
+              </div>
+              <p class="step-desc">
+                After the session, you'll receive a prompt to <strong>rate your mentor</strong> (1–5 stars) and leave
+                a short review. Ratings help other students choose the right mentor. Honest feedback is appreciated —
+                it also helps mentors improve.
+              </p>
+            </div>
+          </div>
+
+          <div class="hiw-step">
+            <div class="step-num" style="background:#b45309;">6</div>
+            <div class="hiw-step-body">
+              <div class="step-title">
+                <span class="btn-pill amber me-1"><i class="fas fa-chalkboard-user"></i> Become a Mentor</span>
+                — Earn while helping others
+              </div>
+              <p class="step-desc">
+                Are you a current university, KMTC, TVET, or TTC student? Click <strong>Become a Mentor</strong>
+                to apply. Fill in your institution, course, year of study, and a short bio. Once verified by our team,
+                your profile goes live in the directory. You earn a share of each session fee paid to you via M-Pesa.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ════════════════════════════════════════════════════
+           10. APPLICATION TRACKER
+      ════════════════════════════════════════════════════ -->
+      <section class="hiw-section" id="section-tracker">
+        <div class="hiw-section-head">
+          <div class="hiw-section-icon" style="background:#f0f9ff;color:#0284c7;">
+            <i class="fas fa-clipboard-list"></i>
+          </div>
+          <div>
+            <h2>Application Tracker</h2>
+            <p>Track the status of each of your KUCCPS course applications in one place.</p>
+          </div>
+        </div>
+
+        <div class="hiw-steps">
+          <div class="hiw-step">
+            <div class="step-num" style="background:#0284c7;">1</div>
+            <div class="hiw-step-body">
+              <div class="step-title">
+                <span class="btn-pill me-1"><i class="fas fa-plus"></i> Add Application</span>
+                — Record your KUCCPS choice
+              </div>
+              <p class="step-desc">
+                Go to <strong>My Applications</strong> from the account menu or Dashboard. Click <strong>Add Application</strong>
+                and fill in the course name, institution, KUCCPS choice number (1st, 2nd, 3rd, 4th), and current status.
+                You can track up to 4 applications — one per KUCCPS choice.
+              </p>
+            </div>
+          </div>
+
+          <div class="hiw-step">
+            <div class="step-num" style="background:#0284c7;">2</div>
+            <div class="hiw-step-body">
+              <div class="step-title">
+                <span class="btn-pill me-1"><i class="fas fa-pen"></i> Edit Status</span>
+                — Update as placement progresses
+              </div>
+              <p class="step-desc">
+                Click <strong>Edit</strong> on any tracked application to update its status — e.g., change from
+                <em>Submitted</em> to <em>Placed</em> once KUCCPS releases results, or to <em>Inter-institutional Transfer</em>
+                if you requested a change. Keeping this updated helps you stay organised during revision windows.
+              </p>
+            </div>
+          </div>
+
+          <div class="hiw-step">
+            <div class="step-num" style="background:#0284c7;">3</div>
+            <div class="hiw-step-body">
+              <div class="step-title">
+                <span class="btn-pill red me-1"><i class="fas fa-trash"></i> Delete</span>
+                — Remove an entry
+              </div>
+              <p class="step-desc">
+                Click <strong>Delete</strong> to remove a tracked application — for example, if you changed your
+                mind about a choice before submission. Deletion is permanent, so confirm before proceeding.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="hiw-tip blue">
+          <i class="fas fa-info-circle mt-1 flex-shrink-0"></i>
+          <span>The Application Tracker is a <strong>personal planning tool</strong> — it does not interact with KUCCPS. Your actual placement application must be submitted at <a href="https://kuccps.ac.ke" target="_blank" rel="noopener" class="text-primary fw-700">kuccps.ac.ke</a> during the official window.</span>
+        </div>
+      </section>
+
+      <!-- ════════════════════════════════════════════════════
+           11. RESOURCES & ARTICLES
+      ════════════════════════════════════════════════════ -->
+      <section class="hiw-section" id="section-resources">
+        <div class="hiw-section-head">
+          <div class="hiw-section-icon" style="background:#f8fafc;color:#475569;">
+            <i class="fas fa-newspaper"></i>
+          </div>
+          <div>
+            <h2>Resources &amp; Articles</h2>
+            <p>Guides, FAQs, articles, and the KUCCPS application calendar — all in one place.</p>
+          </div>
+        </div>
+
+        <div class="feat-grid">
+          <div class="feat-item">
+            <strong><i class="fas fa-newspaper me-1" style="color:#1d4ed8;"></i>Articles</strong>
+            Read expert guides on KUCCPS, choosing courses, HELB loans, and student life.
+            Click any article title to read the full post. Articles are searchable and categorised.
+          </div>
+          <div class="feat-item">
+            <strong><i class="fas fa-file-pdf me-1" style="color:#be123c;"></i>Downloadable PDFs</strong>
+            Download official KUCCPS cluster subject tables, cutoff point PDFs, and application guides.
+            Click the download button to save to your device.
+          </div>
+          <div class="feat-item">
+            <strong><i class="fas fa-calendar-days me-1" style="color:#059669;"></i>KUCCPS Calendar</strong>
+            Key dates for the current placement cycle — when the portal opens, closes, results release, and revision windows.
+            Save important dates to your phone calendar using the calendar export links.
+          </div>
+          <div class="feat-item">
+            <strong><i class="fas fa-circle-question me-1" style="color:#7c3aed;"></i>FAQ</strong>
+            Frequently asked questions covering cluster points, pathways, the KUCCPS process, and account help.
+            Use the category tabs to jump to the right section quickly.
+          </div>
+          <div class="feat-item">
+            <strong><i class="fas fa-book me-1" style="color:#b45309;"></i>Guides</strong>
+            Step-by-step written guides on how to use specific platform features — like uploading a result slip
+            or building a shortlist. Good starting point for first-time users.
+          </div>
+          <div class="feat-item">
+            <strong><i class="fas fa-trophy me-1" style="color:#c2410c;"></i>Success Stories</strong>
+            Real accounts from students who used CareerNext and were placed in their preferred courses.
+            Submitted by users — click <strong>Share Your Story</strong> to contribute yours.
+          </div>
+        </div>
+      </section>
+
+      <!-- ════════════════════════════════════════════════════
+           12. REFERRAL PROGRAM
+      ════════════════════════════════════════════════════ -->
+      <section class="hiw-section" id="section-referral">
+        <div class="hiw-section-head">
+          <div class="hiw-section-icon" style="background:#ecfdf5;color:#059669;">
+            <i class="fas fa-share-nodes"></i>
+          </div>
+          <div>
+            <h2>Referral Program</h2>
+            <p>Earn commission by referring new users to CareerNext premium features.</p>
+          </div>
+        </div>
+
+        <div class="hiw-steps">
+          <div class="hiw-step">
+            <div class="step-num" style="background:#059669;">1</div>
+            <div class="hiw-step-body">
+              <div class="step-title">
+                <span class="btn-pill green me-1"><i class="fas fa-link"></i> Get Your Referral Link</span>
+                — Unique to your account
+              </div>
+              <p class="step-desc">
+                Go to <strong>Referral</strong> from the account menu. Your unique referral link is shown at the top.
+                Click <strong>Copy Link</strong> to copy it to your clipboard, then share it via WhatsApp, social media,
+                or directly with friends who are KCSE graduates looking for placement guidance.
+              </p>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- ════════════════════════════════════════════════════
+           FINAL CTA
+      ════════════════════════════════════════════════════ -->
+      <div class="rounded-4 p-4 p-md-5 text-center"
+           style="background:linear-gradient(135deg,#0f2460 0%,#1e3a8a 45%,#4f46e5 100%);color:#fff;">
+        <h3 class="fw-900 mb-2" style="font-size:1.5rem;">Ready to find your course?</h3>
+        <p class="mb-4" style="opacity:.8;max-width:440px;margin-left:auto;margin-right:auto;font-size:.95rem;">
+          You now know how every feature works. Start with the calculator — it takes under 2 minutes.
+        </p>
+        <div class="d-flex gap-3 justify-content-center flex-wrap">
+          <a href="{% url 'clusterpoints:calculator' %}"
+             class="btn btn-light fw-700 px-4 rounded-pill">
+            <i class="fas fa-calculator me-2"></i>Calculate My Points
+          </a>
+          <a href="{% url 'accounts:faq' %}"
+             class="btn btn-outline-light fw-700 px-4 rounded-pill">
+            <i class="fas fa-circle-question me-2"></i>Read the FAQ
+          </a>
+          <a href="mailto:hello@careernext.co.ke"
+             class="btn btn-outline-light fw-700 px-4 rounded-pill">
+            <i class="fas fa-envelope me-2"></i>Ask Us Anything
+          </a>
+        </div>
+      </div>
+
+    </main><!-- /.hiw-main -->
+  </div><!-- /.hiw-wrap -->
+</div><!-- /.container -->
+
+<script>
+// ── Sticky sidebar scrollspy ──────────────────────────
+(function () {
+  const sections = document.querySelectorAll('.hiw-section[id]');
+  const navLinks = document.querySelectorAll('.hiw-sidebar .hiw-nav-link');
+  const mobilePills = document.querySelectorAll('.hiw-tab-pill');
+
+  function setActive(id) {
+    navLinks.forEach(function (l) {
+      l.classList.toggle('active', l.getAttribute('href') === '#' + id);
+    });
+    mobilePills.forEach(function (p) {
+      p.classList.toggle('active', p.getAttribute('href') === '#' + id);
+    });
+  }
+
+  var observer = new IntersectionObserver(function (entries) {
+    entries.forEach(function (e) {
+      if (e.isIntersecting) setActive(e.target.id);
+    });
+  }, { rootMargin: '-20% 0px -65% 0px' });
+
+  sections.forEach(function (s) { observer.observe(s); });
+
+  // Smooth scroll for mobile tab pills
+  document.querySelectorAll('.hiw-tab-pill, .hiw-nav-link').forEach(function (a) {
+    a.addEventListener('click', function (e) {
+      var target = document.querySelector(a.getAttribute('href'));
+      if (target) {
+        e.preventDefault();
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    });
+  });
+})();
+</script>
+{% endblock %}

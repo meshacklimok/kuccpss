@@ -29,6 +29,7 @@ class SiteSetting(models.Model):
         ordering = ['group', 'key']
         verbose_name        = 'Site Setting'
         verbose_name_plural = 'Site Settings'
+        indexes = [models.Index(fields=["group"])]
 
     def __str__(self):
         return f"{self.label} ({self.key})"
@@ -65,6 +66,10 @@ class FAQItem(models.Model):
         ordering = ['category', 'order', 'id']
         verbose_name        = 'FAQ Item'
         verbose_name_plural = 'FAQ Items'
+        indexes = [
+            models.Index(fields=["category", "is_active"]),
+            models.Index(fields=["is_active"]),
+        ]
 
     def __str__(self):
         return f"[{self.get_category_display()}] {self.question[:70]}"
@@ -106,6 +111,7 @@ class SuccessStory(models.Model):
         ordering = ['order', 'id']
         verbose_name        = 'Success Story'
         verbose_name_plural = 'Success Stories'
+        indexes = [models.Index(fields=["is_active", "pathway"])]
 
     def save(self, *args, **kwargs):
         if not self.initials:
@@ -161,6 +167,10 @@ class Resource(models.Model):
 
     class Meta:
         ordering = ["-created_at"]
+        indexes = [
+            models.Index(fields=["resource_type", "is_free"]),
+            models.Index(fields=["category"]),
+        ]
 
     def save(self, *args, **kwargs):
         if not self.slug:
@@ -198,6 +208,10 @@ class Article(models.Model):
 
     class Meta:
         ordering = ["-created_at"]
+        indexes = [
+            models.Index(fields=["is_published", "featured"]),
+            models.Index(fields=["is_published"]),
+        ]
 
     def save(self, *args, **kwargs):
         if not self.slug:

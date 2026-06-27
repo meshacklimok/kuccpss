@@ -18,6 +18,14 @@ def resource_list(request):
     paginator = Paginator(resources, 12)
     page_obj = paginator.get_page(request.GET.get("page", 1))
 
+    is_htmx = request.headers.get("HX-Request") == "true"
+    if is_htmx:
+        return render(request, "resources/_resource_items_partial.html", {
+            "page_obj": page_obj,
+            "query": query,
+            "active_category": category_slug,
+        })
+
     return render(request, "resources/resource_list.html", {
         "categories": categories,
         "page_obj": page_obj,
@@ -62,6 +70,14 @@ def article_list(request):
 
     paginator = Paginator(articles, 9)
     page_obj = paginator.get_page(request.GET.get("page", 1))
+
+    is_htmx = request.headers.get("HX-Request") == "true"
+    if is_htmx:
+        return render(request, "resources/_article_items_partial.html", {
+            "page_obj": page_obj,
+            "active_tag": tag,
+            "query": query,
+        })
 
     return render(request, "resources/article_list.html", {
         "page_obj": page_obj,

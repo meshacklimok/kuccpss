@@ -423,9 +423,10 @@
     <nav class="navbar navbar-expand-lg site-navbar sticky-top">
         <div class="container">
 
-            <a class="navbar-brand d-flex align-items-center" href="{% url 'home' %}">
+            <a class="navbar-brand d-flex align-items-center" href="{% if user.is_authenticated %}{% url 'accounts:dashboard' %}{% else %}{% url 'home' %}{% endif %}">
                 <img src="{% static 'img/logo-white.svg' %}" alt="CareerNext" height="38" style="height:38px;width:auto;">
             </a>
+
 
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
                     data-bs-target="#mainNav" aria-controls="mainNav"
@@ -511,6 +512,9 @@
                             <li><a class="dropdown-item" href="{% url 'accounts:faq' %}">
                                 <i class="fas fa-question-circle me-2 text-warning"></i>FAQ
                             </a></li>
+                            <li><a class="dropdown-item" href="{% url 'accounts:how_it_works' %}">
+                                <i class="fas fa-circle-play me-2 text-success"></i>How It Works
+                            </a></li>
                         </ul>
                     </li>
                 </ul>
@@ -561,9 +565,6 @@
                                 <div class="fw-semibold text-dark small">{{ user.full_name|default:"User" }}</div>
                                 <div class="text-muted" style="font-size:0.78rem;">{{ user.email }}</div>
                             </li>
-                            <li><a class="dropdown-item" href="{% url 'accounts:dashboard' %}">
-                                <i class="fas fa-tachometer-alt me-2 text-primary"></i>Dashboard
-                            </a></li>
                             <li><a class="dropdown-item" href="{% url 'accounts:profile' %}">
                                 <i class="fas fa-user me-2 text-muted"></i>Profile
                             </a></li>
@@ -615,12 +616,12 @@
                 <span id="deadlineMsg" style="font-weight:600;"></span>
                 <span id="deadlineCounter" style="background:rgba(255,255,255,0.2);border-radius:6px;padding:2px 10px;font-weight:800;font-size:0.85rem;letter-spacing:0.03em;"></span>
             </div>
-            <div class="d-flex align-items-center gap-3">
+            <div class="d-flex align-items-center gap-2 flex-wrap">
                 {% if user.is_authenticated %}
-                <a href="{% url 'career:home' %}" style="color:white;font-weight:700;font-size:0.78rem;white-space:nowrap;text-decoration:underline;">Check My Eligibility →</a>
+                <a href="{% url 'career:home' %}" style="color:white;font-weight:700;font-size:0.78rem;white-space:nowrap;text-decoration:underline;">Check Eligibility →</a>
                 <a href="https://students.kuccps.net/login/" target="_blank" rel="noopener noreferrer" style="color:#fde68a;font-weight:700;font-size:0.78rem;white-space:nowrap;text-decoration:underline;">Apply on KUCCPS →</a>
                 {% else %}
-                <a href="{% url 'clusterpoints:calculator' %}" style="color:white;font-weight:700;font-size:0.78rem;white-space:nowrap;text-decoration:underline;">Calculate My Points Now →</a>
+                <a href="{% url 'clusterpoints:calculator' %}" style="color:white;font-weight:700;font-size:0.78rem;white-space:nowrap;text-decoration:underline;">Calculate Points →</a>
                 <a href="https://students.kuccps.net/login/" target="_blank" rel="noopener noreferrer" style="color:#fde68a;font-weight:700;font-size:0.78rem;white-space:nowrap;text-decoration:underline;">Apply on KUCCPS →</a>
                 {% endif %}
                 <button onclick="dismissDeadlineBar()" style="background:none;border:none;color:rgba(255,255,255,0.7);font-size:1.1rem;padding:0;cursor:pointer;line-height:1;" aria-label="Dismiss">×</button>
@@ -642,7 +643,7 @@
         <div class="footer-brand-row d-md-none">
           <div>
             <div class="footer-brand">CareerNext</div>
-            <p class="mb-0" style="font-size:0.75rem;opacity:0.55;margin-top:2px;">Kenya's KUCCPS guide</p>
+            <p class="mb-0" style="font-size:0.75rem;opacity:0.55;margin-top:2px;">Find Your Course</p>
           </div>
           <div class="footer-socials">
             <a href="#" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
@@ -675,6 +676,7 @@
               <li><a href="{% url 'resources:kuccps_calendar' %}">KUCCPS Calendar</a></li>
               <li><a href="{% url 'career:quiz' %}">Career Quiz</a></li>
               <li><a href="{% url 'accounts:faq' %}">FAQ</a></li>
+              <li><a href="{% url 'accounts:how_it_works' %}">How It Works</a></li>
               <li><a href="https://students.kuccps.net/login/" target="_blank" rel="noopener noreferrer">Apply at KUCCPS <i class="fas fa-external-link-alt" style="font-size:0.65rem;opacity:0.7;"></i></a></li>
             </ul>
           </div>
@@ -747,6 +749,7 @@
               <li><a href="{% url 'resources:kuccps_calendar' %}">KUCCPS Calendar</a></li>
               <li><a href="{% url 'career:quiz' %}">Career Quiz</a></li>
               <li><a href="{% url 'accounts:faq' %}">FAQ</a></li>
+              <li><a href="{% url 'accounts:how_it_works' %}">How It Works</a></li>
               <li><a href="https://students.kuccps.net/login/" target="_blank" rel="noopener noreferrer">Apply at KUCCPS <i class="fas fa-external-link-alt" style="font-size:0.65rem;opacity:0.7;"></i></a></li>
             </ul>
           </div>
@@ -804,6 +807,7 @@
             <a href="{% url 'accounts:privacy' %}">Privacy</a>
             <a href="{% url 'accounts:terms' %}">Terms</a>
             <a href="{% url 'accounts:about' %}">About</a>
+            <a href="{% url 'accounts:how_it_works' %}">How It Works</a>
             <span>Built for Kenyan students <i class="fas fa-heart" style="color:#f87171;"></i></span>
           </span>
         </div>
@@ -1438,6 +1442,138 @@ window._ph = function (name, props) {
         bar.style.display = 'none';
         sessionStorage.setItem(DISMISS_KEY, '1');
     };
+}());
+</script>
+
+<!-- ── ONBOARDING WALKTHROUGH (first visit only) ── -->
+<div id="onboarding-overlay" role="dialog" aria-modal="true" aria-label="Welcome to CareerNext"
+     style="display:none;position:fixed;inset:0;z-index:100000;align-items:center;justify-content:center;padding:1rem;">
+  <div id="onboarding-backdrop"
+       style="position:absolute;inset:0;background:rgba(15,23,42,0.78);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);"></div>
+  <div id="onboarding-card"
+       style="position:relative;z-index:1;width:min(420px,96vw);background:#fff;border-radius:24px;overflow:hidden;
+              box-shadow:0 32px 80px rgba(0,0,0,0.45),0 0 0 1px rgba(0,0,0,0.05);
+              animation:ob-in 0.45s cubic-bezier(0.34,1.56,0.64,1);">
+
+    <!-- Progress dots -->
+    <div style="display:flex;justify-content:center;gap:6px;padding:1.1rem 1.5rem 0;">
+      <div class="ob-dot ob-dot-0 active"></div>
+      <div class="ob-dot ob-dot-1"></div>
+      <div class="ob-dot ob-dot-2"></div>
+    </div>
+
+    <!-- Step panels -->
+    <div id="ob-steps">
+
+      <div class="ob-step ob-step-0" style="padding:1.25rem 1.75rem 1.75rem;text-align:center;">
+        <div style="width:72px;height:72px;border-radius:20px;background:linear-gradient(135deg,#eff6ff,#dbeafe);
+                    display:flex;align-items:center;justify-content:center;margin:0 auto 1.1rem;font-size:1.8rem;">
+          🎯
+        </div>
+        <div style="font-size:0.72rem;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;color:#2563eb;margin-bottom:0.4rem;">Step 1 of 3</div>
+        <h2 style="font-size:1.2rem;font-weight:900;color:#1e293b;margin:0 0 0.6rem;line-height:1.3;">Calculate your cluster points</h2>
+        <p style="font-size:0.88rem;color:#64748b;line-height:1.6;margin:0;">Enter your KCSE grades once and instantly see your exact points across all 23 KUCCPS clusters — no maths needed.</p>
+      </div>
+
+      <div class="ob-step ob-step-1" style="display:none;padding:1.25rem 1.75rem 1.75rem;text-align:center;">
+        <div style="width:72px;height:72px;border-radius:20px;background:linear-gradient(135deg,#f0fdf4,#dcfce7);
+                    display:flex;align-items:center;justify-content:center;margin:0 auto 1.1rem;font-size:1.8rem;">
+          🎓
+        </div>
+        <div style="font-size:0.72rem;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;color:#16a34a;margin-bottom:0.4rem;">Step 2 of 3</div>
+        <h2 style="font-size:1.2rem;font-weight:900;color:#1e293b;margin:0 0 0.6rem;line-height:1.3;">Discover courses you qualify for</h2>
+        <p style="font-size:0.88rem;color:#64748b;line-height:1.6;margin:0;">Our career engine matches your grades against university, KMTC, TVET and TTC programmes across Kenya — sorted by your chances.</p>
+      </div>
+
+      <div class="ob-step ob-step-2" style="display:none;padding:1.25rem 1.75rem 1.75rem;text-align:center;">
+        <div style="width:72px;height:72px;border-radius:20px;background:linear-gradient(135deg,#fefce8,#fef9c3);
+                    display:flex;align-items:center;justify-content:center;margin:0 auto 1.1rem;font-size:1.8rem;">
+          📋
+        </div>
+        <div style="font-size:0.72rem;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;color:#ca8a04;margin-bottom:0.4rem;">Step 3 of 3</div>
+        <h2 style="font-size:1.2rem;font-weight:900;color:#1e293b;margin:0 0 0.6rem;line-height:1.3;">Save and track your shortlist</h2>
+        <p style="font-size:0.88rem;color:#64748b;line-height:1.6;margin:0;">Shortlist up to 5 courses, add notes, set deadlines and track your applications — all in one place. Free forever.</p>
+      </div>
+
+    </div>
+
+    <!-- Actions -->
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:0 1.75rem 1.5rem;gap:0.75rem;">
+      <button id="ob-skip" onclick="obDismiss()"
+              style="background:none;border:none;color:#94a3b8;font-size:0.82rem;cursor:pointer;padding:0.4rem 0;text-decoration:underline;flex-shrink:0;">
+        Skip
+      </button>
+      <button id="ob-next" onclick="obNext()"
+              style="background:linear-gradient(135deg,#1e3a8a,#2563eb);color:#fff;border:none;
+                     border-radius:12px;padding:0.72rem 1.75rem;font-weight:800;font-size:0.9rem;
+                     cursor:pointer;flex-shrink:0;box-shadow:0 4px 16px rgba(30,58,138,0.35);
+                     transition:transform 0.15s,box-shadow 0.15s;">
+        Next &rarr;
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<style>
+@keyframes ob-in { from { opacity:0; transform:scale(0.88) translateY(20px); } to { opacity:1; transform:scale(1) translateY(0); } }
+.ob-dot { width:8px; height:8px; border-radius:50%; background:#e2e8f0; transition:background 0.25s,transform 0.25s; }
+.ob-dot.active { background:#1e3a8a; transform:scale(1.25); }
+#ob-next:hover { transform:translateY(-1px); box-shadow:0 6px 20px rgba(30,58,138,0.45); }
+</style>
+
+<script>
+(function () {
+    var STORAGE_KEY = 'cn_onboarding_v1';
+    var overlay = document.getElementById('onboarding-overlay');
+    if (!overlay) return;
+
+    // Don't show on login, register, admin, or if already seen
+    var path = window.location.pathname;
+    var skipPaths = ['/login/', '/register/', '/cn-staff/'];
+    var skip = skipPaths.some(function (p) { return path.indexOf(p) !== -1; });
+    if (skip || localStorage.getItem(STORAGE_KEY)) return;
+
+    // Show after a short delay so the page settles
+    setTimeout(function () {
+        overlay.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+    }, 800);
+
+    var step = 0;
+    var totalSteps = 3;
+
+    window.obNext = function () {
+        step++;
+        if (step >= totalSteps) { obDismiss(); return; }
+        // Hide current step panel
+        document.querySelector('.ob-step-' + (step - 1)).style.display = 'none';
+        // Show next
+        document.querySelector('.ob-step-' + step).style.display = '';
+        // Update dots
+        document.querySelectorAll('.ob-dot').forEach(function (d, i) {
+            d.classList.toggle('active', i === step);
+        });
+        // Last step changes button text
+        if (step === totalSteps - 1) {
+            document.getElementById('ob-next').innerHTML = 'Get Started &#10003;';
+            document.getElementById('ob-skip').style.display = 'none';
+        }
+    };
+
+    window.obDismiss = function () {
+        overlay.style.display = 'none';
+        document.body.style.overflow = '';
+        localStorage.setItem(STORAGE_KEY, '1');
+    };
+
+    // Close on backdrop click
+    document.getElementById('onboarding-backdrop').addEventListener('click', obDismiss);
+
+    // Close on Escape
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') obDismiss();
+    });
 }());
 </script>
 

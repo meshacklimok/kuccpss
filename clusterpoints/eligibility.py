@@ -142,7 +142,7 @@ def get_eligible_courses_by_mean_grade(pathway: str, mean_grade: str) -> list:
         CourseOffering.objects
         .filter(course__course_type__name__in=type_names)
         .select_related(
-            'course', 'course__course_type', 'course__category',
+            'course', 'course__course_type', 'course__category', 'course__cluster',
             'institution',
         )
     )

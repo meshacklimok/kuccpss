@@ -87,76 +87,9 @@
       {% endif %}
 
       {% if page_obj %}
-      <div class="row g-3">
-        {% for resource in page_obj %}
-        <div class="col-md-6 col-lg-4">
-          <div class="card h-100 p-0 overflow-hidden">
-            {% if resource.thumbnail %}
-            <img src="{{ resource.thumbnail.url }}" class="card-img-top" style="height:140px;object-fit:cover;" alt="{{ resource.title }}" loading="lazy">
-            {% else %}
-            <div class="d-flex align-items-center justify-content-center"
-                 style="height:140px;background:linear-gradient(135deg,#1e3a8a,#2563eb);">
-              <i class="fas fa-{% if resource.resource_type == 'pdf' %}file-pdf{% elif resource.resource_type == 'video' %}play-circle{% else %}link{% endif %} fa-3x text-white opacity-75"></i>
-            </div>
-            {% endif %}
-            <div class="p-3 d-flex flex-column h-100">
-              <div class="d-flex align-items-start justify-content-between mb-2">
-                <span class="badge {% if resource.resource_type == 'pdf' %}bg-danger{% elif resource.resource_type == 'video' %}bg-primary{% else %}bg-info{% endif %} bg-opacity-10
-                      {% if resource.resource_type == 'pdf' %}text-danger{% elif resource.resource_type == 'video' %}text-primary{% else %}text-info{% endif %} small">
-                  <i class="fas fa-{% if resource.resource_type == 'pdf' %}file-pdf{% elif resource.resource_type == 'video' %}video{% else %}link{% endif %} me-1"></i>
-                  {{ resource.get_resource_type_display }}
-                </span>
-                {% if not resource.is_free %}
-                <span class="badge bg-warning text-dark small"><i class="fas fa-lock me-1"></i>Premium</span>
-                {% endif %}
-              </div>
-              <h6 class="fw-bold mb-1">{{ resource.title }}</h6>
-              {% if resource.description %}
-              <p class="text-muted small mb-3">{{ resource.description|truncatechars:80 }}</p>
-              {% endif %}
-              <div class="mt-auto d-flex align-items-center justify-content-between">
-                <small class="text-muted">
-                  <i class="fas fa-download me-1"></i>{{ resource.download_count }}
-                </small>
-                <a href="{% url 'resources:resource_detail' resource.slug %}"
-                   class="btn btn-sm btn-outline-success">
-                  View <i class="fas fa-arrow-right ms-1"></i>
-                </a>
-              </div>
-            </div>
-          </div>
-        </div>
-        {% endfor %}
+      <div class="row g-3" id="resource-grid">
+        {% include 'resources/_resource_items_partial.html' %}
       </div>
-
-      <!-- Pagination -->
-      {% if page_obj.has_other_pages %}
-      <nav class="mt-4">
-        <ul class="pagination justify-content-center">
-          {% if page_obj.has_previous %}
-          <li class="page-item">
-            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% if active_category %}&category={{ active_category }}{% endif %}">
-              <i class="fas fa-chevron-left"></i>
-            </a>
-          </li>
-          {% endif %}
-          {% for num in page_obj.paginator.page_range %}
-          <li class="page-item {% if num == page_obj.number %}active{% endif %}">
-            <a class="page-link" href="?page={{ num }}{% if query %}&q={{ query }}{% endif %}{% if active_category %}&category={{ active_category }}{% endif %}">
-              {{ num }}
-            </a>
-          </li>
-          {% endfor %}
-          {% if page_obj.has_next %}
-          <li class="page-item">
-            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% if active_category %}&category={{ active_category }}{% endif %}">
-              <i class="fas fa-chevron-right"></i>
-            </a>
-          </li>
-          {% endif %}
-        </ul>
-      </nav>
-      {% endif %}
 
       {% else %}
       <div class="text-center py-5">

@@ -48,6 +48,18 @@ class Payment(models.Model):
 
     class Meta:
         ordering = ["-created_at"]
+        indexes = [
+            models.Index(fields=["user", "feature"]),
+            models.Index(fields=["user", "status"]),
+            models.Index(fields=["status"]),
+        ]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["checkout_id"],
+                condition=models.Q(checkout_id__gt=""),
+                name="unique_nonempty_checkout_id",
+            ),
+        ]
 
     def __str__(self):
         return f"{self.user.email} — {self.feature} ({self.status})"
@@ -104,6 +116,7 @@ class Transaction(models.Model):
 
     class Meta:
         ordering = ["-created_at"]
+        indexes = [models.Index(fields=["mpesa_ref"])]
 
     def __str__(self):
         return f"TXN {self.mpesa_ref or self.pk} — {self.payment.feature}"

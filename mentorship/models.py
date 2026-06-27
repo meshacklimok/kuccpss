@@ -94,6 +94,10 @@ class MentorProfile(models.Model):
 
     class Meta:
         ordering = ["-average_rating", "-total_sessions", "-created_at"]
+        indexes = [
+            models.Index(fields=["is_approved", "is_active"]),
+            models.Index(fields=["average_rating"]),
+        ]
 
     def __str__(self):
         return f"{self.user.full_name or self.user.email} — {self.course}"
@@ -140,6 +144,10 @@ class TimeSlot(models.Model):
     class Meta:
         ordering = ["date", "start_time"]
         unique_together = ["mentor", "date", "start_time"]
+        indexes = [
+            models.Index(fields=["date", "is_booked"]),
+            models.Index(fields=["mentor", "date"]),
+        ]
 
     def __str__(self):
         return f"{self.mentor.display_name} — {self.date} {self.start_time.strftime('%H:%M')}"
@@ -175,6 +183,7 @@ class WithdrawalRequest(models.Model):
 
     class Meta:
         ordering = ["-created_at"]
+        indexes = [models.Index(fields=["mentor", "status"])]
 
     def __str__(self):
         return f"{self.mentor.display_name} — KES {self.amount} ({self.status})"
@@ -254,6 +263,10 @@ class MentorshipSession(models.Model):
 
     class Meta:
         ordering = ["-created_at"]
+        indexes = [
+            models.Index(fields=["mentor", "status"]),
+            models.Index(fields=["mentee", "created_at"]),
+        ]
 
     def __str__(self):
         return f"Session {str(self.token)[:8]} — {self.mentee} × {self.mentor.display_name}"

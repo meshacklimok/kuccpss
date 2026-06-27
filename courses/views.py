@@ -97,7 +97,16 @@ def course_type_detail(request, type_slug):
         courses = page_obj
 
     is_htmx = request.headers.get('HX-Request') == 'true'
-    template = 'courses/_course_list_partial.html' if is_htmx else 'courses/course_type_detail.html'
+    try:
+        page_num_int = int(page_num)
+    except (ValueError, TypeError):
+        page_num_int = 1
+    if is_htmx and page_num_int > 1:
+        template = 'courses/_course_items_partial.html'
+    elif is_htmx:
+        template = 'courses/_course_list_partial.html'
+    else:
+        template = 'courses/course_type_detail.html'
 
     context = {
         'course_type': course_type,
@@ -144,7 +153,16 @@ def course_category_detail(request, type_slug, category_slug):
     page_obj = paginator.get_page(page_num)
 
     is_htmx = request.headers.get('HX-Request') == 'true'
-    template = 'courses/_course_list_partial.html' if is_htmx else 'courses/course_category_detail.html'
+    try:
+        page_num_int = int(page_num)
+    except (ValueError, TypeError):
+        page_num_int = 1
+    if is_htmx and page_num_int > 1:
+        template = 'courses/_course_items_partial.html'
+    elif is_htmx:
+        template = 'courses/_course_list_partial.html'
+    else:
+        template = 'courses/course_category_detail.html'
 
     context = {
         'category': category,

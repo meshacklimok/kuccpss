@@ -49,6 +49,7 @@ class CourseCategory(models.Model):
     class Meta:
         unique_together = ('name', 'course_type')
         ordering = ['name']
+        indexes = [models.Index(fields=["course_type"])]
 
     def save(self, *args, **kwargs):
         if not self.slug:
@@ -97,6 +98,8 @@ class Course(models.Model):
         indexes = [
             models.Index(fields=['name']),
             models.Index(fields=['slug']),
+            models.Index(fields=['course_type']),
+            models.Index(fields=['category']),
         ]
 
     def save(self, *args, **kwargs):
@@ -151,6 +154,7 @@ class CourseOffering(models.Model):
         ordering = ['institution__name']
         verbose_name = "Course Offering"
         verbose_name_plural = "Course Offerings"
+        indexes = [models.Index(fields=["institution"])]
 
     def __str__(self):
         return f"{self.course.name} @ {self.institution.name}"
@@ -177,6 +181,10 @@ class Review(models.Model):
             models.UniqueConstraint(fields=['user', 'course'], condition=models.Q(course__isnull=False), name='unique_course_review'),
             models.UniqueConstraint(fields=['user', 'institution'], condition=models.Q(institution__isnull=False), name='unique_institution_review'),
         ]
+        indexes = [
+            models.Index(fields=["course", "rating"]),
+            models.Index(fields=["institution", "rating"]),
+        ]
 
     def __str__(self):
         target = self.course or self.institution
@@ -198,6 +206,7 @@ class CourseSpotlight(models.Model):
         verbose_name = 'Course Spotlight'
         verbose_name_plural = 'Course Spotlights'
         ordering = ['-start_date']
+        indexes = [models.Index(fields=["start_date", "end_date"])]
 
     def __str__(self):
         return f"{self.course.name} ({self.start_date} → {self.end_date})"
