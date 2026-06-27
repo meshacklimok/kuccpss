@@ -211,12 +211,22 @@ document.addEventListener('DOMContentLoaded', function () {
     setTimeout(function () { banner.hidden = false; }, 4000);
   });
 
+  function trackInstall(platform) {
+    var fd = new FormData();
+    fd.append('platform', platform);
+    fetch('/analytics/pwa-install/', { method: 'POST', body: fd }).catch(function () {});
+  }
+
   if (installBtn) {
     installBtn.addEventListener('click', function () {
       if (!deferredEvt) return;
       deferredEvt.prompt();
       deferredEvt.userChoice.then(function (choice) {
-        if (choice.outcome === 'accepted') dismiss();
+        if (choice.outcome === 'accepted') {
+          dismiss();
+          trackInstall(/iphone|ipad|ipod/i.test(navigator.userAgent) ? 'ios' :
+                       /android/i.test(navigator.userAgent) ? 'android' : 'desktop');
+        }
         deferredEvt = null;
         if (banner) banner.hidden = true;
       });
@@ -236,8 +246,11 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 
-  // Hide banner once the app is installed
-  window.addEventListener('appinstalled', function () { dismiss(); });
+  // Hide banner once the app is installed (fires on Android after actual install)
+  window.addEventListener('appinstalled', function () {
+    dismiss();
+    trackInstall(/android/i.test(navigator.userAgent) ? 'android' : 'desktop');
+  });
 })();
 
 function getCsrf() {

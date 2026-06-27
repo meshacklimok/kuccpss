@@ -50,67 +50,9 @@
     </div>
   </div>
 
-  {% if q %}
-  <p class="text-muted mb-3">
-    {% if courses %}
-      {{ courses|length }} result{{ courses|length|pluralize }} for "<strong>{{ q }}</strong>"
-    {% else %}
-      No courses found for "<strong>{{ q }}</strong>"
-    {% endif %}
-  </p>
-  {% endif %}
-
-  {% if courses %}
-  <div class="row g-3">
-    {% for course in courses %}
-    <div class="col-12 col-md-6 col-lg-4">
-      <div class="card h-100 shadow-sm p-3">
-        <div class="d-flex justify-content-between align-items-start mb-1">
-          <h6 class="fw-bold mb-0" style="line-height:1.35;">{{ course.name }}</h6>
-          {% if course.minimum_mean_grade %}
-          <span class="badge ms-2 flex-shrink-0"
-                style="background:{% if "TVET" in category.course_type.name %}#059669{% else %}#dc2626{% endif %};color:#fff;">
-            {{ course.minimum_mean_grade }}
-          </span>
-          {% endif %}
-        </div>
-        {% if course.description %}
-        <p class="text-muted mb-2" style="font-size:0.82rem;">{{ course.description|truncatewords:20 }}</p>
-        {% endif %}
-        {% if course.subject_requirements and "TVET" in category.course_type.name %}
-        <p class="text-muted mb-2" style="font-size:0.78rem;">
-          <i class="fas fa-list-check me-1" style="color:#059669;"></i>
-          {{ course.subject_requirements|length }} subject requirement{{ course.subject_requirements|length|pluralize }}
-        </p>
-        {% endif %}
-        <div class="mt-auto pt-2 d-flex gap-2 align-items-center">
-          <a href="{% url 'courses:course_detail' type_slug=category.course_type.slug category_slug=category.slug course_slug=course.slug %}"
-             class="btn btn-sm {% if "TVET" in category.course_type.name %}btn-success{% else %}btn-primary{% endif %}">View Details</a>
-          {% if request.user.is_staff %}
-          <a href="{% url 'admin:courses_course_change' course.id %}" class="btn btn-sm btn-outline-secondary">Edit</a>
-          {% endif %}
-        </div>
-      </div>
-    </div>
-    {% endfor %}
+  <div id="course-results">
+    {% include 'courses/_course_list_partial.html' %}
   </div>
-
-  {% else %}
-  <div class="text-center py-5 text-muted">
-    <i class="fas fa-search fa-3x mb-3 opacity-50"></i>
-    {% if q %}
-    <h5>No courses matched your search</h5>
-    <p class="small">Try a different keyword or <a href="?">browse all {{ category.name }} courses</a>.</p>
-    {% else %}
-    <h5>No courses available under this category yet</h5>
-    {% if request.user.is_staff %}
-    <a href="/cn-staff/courses/course/add/" class="btn btn-primary mt-2">
-      <i class="fas fa-plus me-1"></i>Add Course
-    </a>
-    {% endif %}
-    {% endif %}
-  </div>
-  {% endif %}
 
 </div>
 

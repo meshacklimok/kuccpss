@@ -1,0 +1,52 @@
+{% for article in page_obj %}
+<div class="col-sm-6 col-lg-4 reveal">
+  <a href="{% url 'resources:article_detail' article.slug %}" class="article-card">
+    {% if article.thumbnail %}
+    <img src="{{ article.thumbnail.url }}" class="thumb" alt="{{ article.title }}" loading="lazy">
+    {% else %}
+    <div class="thumb-placeholder">
+      <i class="fas fa-pen-nib fa-2x text-white opacity-50"></i>
+    </div>
+    {% endif %}
+    <div class="card-body-inner">
+      {% if article.tags %}
+      <div class="mb-2">
+        {% for tag in article.get_tags_list|slice:":2" %}
+        <span class="tag-pill me-1" style="pointer-events:none;">{{ tag }}</span>
+        {% endfor %}
+      </div>
+      {% endif %}
+      <div class="card-title">{{ article.title }}</div>
+      {% if article.excerpt %}
+      <p class="card-excerpt">{{ article.excerpt|truncatechars:110 }}</p>
+      {% endif %}
+      <div class="card-footer-inner">
+        <div class="read-time">
+          <i class="fas fa-clock"></i>
+          {{ article.reading_time }} min
+        </div>
+        <div class="d-flex align-items-center gap-2">
+          {% if article.author %}
+          <span class="text-muted" style="font-size:.75rem;">{{ article.author }}</span>
+          {% endif %}
+          <span class="text-muted" style="font-size:.75rem;">{{ article.created_at|date:"d M Y" }}</span>
+        </div>
+      </div>
+    </div>
+  </a>
+</div>
+{% endfor %}
+{% if page_obj.has_next %}
+<div id="load-more-sentinel" class="col-12 d-flex justify-content-center py-5"
+     hx-get="?page={{ page_obj.next_page_number }}{% if active_tag %}&tag={{ active_tag }}{% endif %}{% if query %}&q={{ query }}{% endif %}"
+     hx-trigger="intersect once"
+     hx-target="#load-more-sentinel"
+     hx-swap="outerHTML">
+  <div class="d-flex flex-column align-items-center gap-2 text-muted">
+    <div class="spinner-border spinner-border-sm text-primary" role="status">
+      <span class="visually-hidden">Loading…</span>
+    </div>
+    <span class="small">Loading more…</span>
+  </div>
+</div>
+{% endif %}

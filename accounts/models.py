@@ -107,6 +107,7 @@ class User(AbstractBaseUser, PermissionsMixin):
         indexes = [
             models.Index(fields=["email"]),
             models.Index(fields=["is_active", "is_verified"]),
+            models.Index(fields=["deleted_at"]),
         ]
 
     def __str__(self):
@@ -130,6 +131,9 @@ class EmailVerificationToken(models.Model):
     is_used = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
 
+    class Meta:
+        indexes = [models.Index(fields=["expires_at", "is_used"])]
+
     def is_valid(self):
         return not self.is_used and self.expires_at > timezone.now()
 
@@ -145,6 +149,9 @@ class PasswordResetToken(models.Model):
     expires_at = models.DateTimeField(default=default_password_reset_expiry)
     is_used = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        indexes = [models.Index(fields=["expires_at", "is_used"])]
 
     def is_valid(self):
         return not self.is_used and self.expires_at > timezone.now()
@@ -185,6 +192,9 @@ class RememberToken(models.Model):
     user_agent = models.CharField(max_length=255, blank=True, null=True)
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        indexes = [models.Index(fields=["expires_at", "is_active"])]
 
     def is_valid(self):
         return self.is_active and self.expires_at > timezone.now()
@@ -234,6 +244,10 @@ class Application(models.Model):
 
     class Meta:
         ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=["status"]),
+            models.Index(fields=["user", "status"]),
+        ]
 
     def __str__(self):
         return f"{self.course_name} — {self.user.email}"
@@ -369,6 +383,10 @@ class CareerSessionSnapshot(models.Model):
         ordering = ['-computed_at']
         verbose_name = 'Career Session Snapshot'
         verbose_name_plural = 'Career Session Snapshots'
+        indexes = [
+            models.Index(fields=["user", "pathway"]),
+            models.Index(fields=["user", "computed_at"]),
+        ]
 
     def __str__(self):
         return f"{self.user.email} — {self.pathway} ({self.computed_at:%Y-%m-%d})"
@@ -471,6 +489,7 @@ class AffiliateCommission(models.Model):
         verbose_name = "Affiliate Commission"
         verbose_name_plural = "Affiliate Commissions"
         ordering = ['-created_at']
+        indexes = [models.Index(fields=["affiliate", "status"])]
 
     def __str__(self):
         return f"{self.affiliate.user.email} — KES {self.amount} ({self.status})"
@@ -496,6 +515,7 @@ class AffiliateWithdrawalRequest(models.Model):
         verbose_name = "Affiliate Withdrawal"
         verbose_name_plural = "Affiliate Withdrawals"
         ordering = ['-created_at']
+        indexes = [models.Index(fields=["affiliate", "status"])]
 
     def __str__(self):
         return f"{self.affiliate.user.email} — KES {self.amount} ({self.status})"

@@ -10,19 +10,28 @@
 }
 
 /* ── View toggle ── */
-.view-toggle-group { background:#f1f5f9; border-radius:12px; padding:4px; display:inline-flex; gap:2px; }
+.view-toggle-group { background:rgba(255,255,255,0.15); border-radius:14px; padding:4px; display:inline-flex; gap:3px; border:1.5px solid rgba(255,255,255,0.2); }
 .view-toggle-btn {
-  border:none; background:transparent; border-radius:9px; padding:5px 16px;
-  font-size:0.8rem; font-weight:700; color:#64748b; cursor:pointer; transition: all 0.15s;
-  display:flex; align-items:center; gap:6px;
+  border:none; background:transparent; border-radius:10px; padding:8px 20px;
+  font-size:0.85rem; font-weight:800; color:rgba(255,255,255,0.65); cursor:pointer; transition: all 0.2s;
+  display:flex; align-items:center; gap:7px;
 }
-.view-toggle-btn.active { background:#fff; color:#1d4ed8; box-shadow:0 1px 6px rgba(0,0,0,0.10); }
+.view-toggle-btn.active { background:#2563eb; color:#fff; box-shadow:0 2px 10px rgba(37,99,235,0.4); }
 
 /* ── Comparison grid (card view) ── */
 .sl-grid {
   display: grid;
   gap: 1rem;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+}
+@media (max-width: 600px) {
+  .sl-grid { grid-template-columns: 1fr; }
+  .sl-card-header { padding: 1rem; }
+  .sl-card-body { padding: 0.85rem 1rem; }
+  .sl-card-footer { padding: 0.85rem 1rem; }
+  .sl-label { min-width: 80px; font-size: 0.68rem; }
+  .sl-value { font-size: 0.82rem; }
+  .sl-course-name { font-size: 1rem; }
 }
 
 /* ── Course card ── */
@@ -119,6 +128,35 @@
 /* ── No cluster data notice ── */
 .no-cluster-notice { background:#fef9c3; border:1.5px solid #fde68a; border-radius:10px;
   padding:0.7rem 1rem; font-size:0.82rem; color:#78350f; margin-bottom:1rem; }
+
+/* ── Mobile sticky toggle ── */
+.mobile-view-toggle {
+  display: none;
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  z-index: 999;
+  background: #0f172a;
+  padding: 0.75rem 1rem;
+  box-shadow: 0 -4px 20px rgba(0,0,0,0.25);
+  gap: 0.75rem;
+}
+@media (max-width: 767px) {
+  .mobile-view-toggle { display: flex; }
+  body { padding-bottom: 80px; }
+  .view-toggle-group { display: none !important; }
+}
+.mob-toggle-btn {
+  flex: 1; border: 2px solid rgba(255,255,255,0.2); border-radius: 12px;
+  background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.7);
+  font-size: 0.9rem; font-weight: 800; padding: 0.65rem 0.5rem;
+  cursor: pointer; transition: all 0.2s; display: flex; align-items: center;
+  justify-content: center; gap: 8px;
+}
+.mob-toggle-btn.active {
+  background: #2563eb; border-color: #3b82f6; color: #fff;
+  box-shadow: 0 0 16px rgba(37,99,235,0.5);
+}
+.mob-toggle-btn i { font-size: 1rem; }
 
 /* ── COMPARE TABLE ── */
 .compare-wrap {
@@ -244,7 +282,6 @@
         </p>
       </div>
       <div class="ms-auto d-flex gap-2 flex-wrap align-items-center">
-        {% if items and items|length > 1 %}
         <div class="view-toggle-group" id="viewToggle">
           <button class="view-toggle-btn active" id="btnCards" onclick="switchView('cards')">
             <i class="fas fa-th-large"></i> Cards
@@ -253,7 +290,6 @@
             <i class="fas fa-columns"></i> Compare
           </button>
         </div>
-        {% endif %}
         {% if items %}
         <a href="{% url 'accounts:shortlist_pdf' %}" class="btn btn-sm fw-700 rounded-pill px-3"
            style="background:rgba(255,255,255,0.15);color:#fff;border:1.5px solid rgba(255,255,255,0.3);">
@@ -271,10 +307,19 @@
   </div>
 </div>
 
+<!-- Mobile sticky toggle bar -->
+<div class="mobile-view-toggle" id="mobileToggle">
+  <button class="mob-toggle-btn active" id="mobBtnCards" onclick="switchView('cards')">
+    <i class="fas fa-th-large"></i> Cards
+  </button>
+  <button class="mob-toggle-btn" id="mobBtnCompare" onclick="switchView('compare')">
+    <i class="fas fa-columns"></i> Compare Table
+  </button>
+</div>
+
 <div class="container py-4" style="max-width:1200px;">
 
-{% if items %}
-
+  {% if items %}
   <!-- No cluster data notice -->
   {% if not has_cluster_data %}
   <div class="no-cluster-notice mb-3">
@@ -296,9 +341,11 @@
       <a href="{% url 'clusterpoints:eligible_courses' %}">eligible courses</a> using the <strong>+ Shortlist</strong> button.
     </div>
   </div>
+  {% endif %}
 
   <!-- ══════════ CARD VIEW ══════════ -->
   <div id="viewCards">
+  {% if items %}
     <div class="sl-grid mb-4">
     {% for item in items %}
     {% with course=item.course %}
@@ -432,14 +479,22 @@
             {% endwith %}
           </span>
         </div>
-        {% if course.core_subjects.all %}
+        {% if course.core_subjects.all or course.subject_requirements %}
         <div class="sl-row">
           <span class="sl-label"><i class="fas fa-book me-1 text-primary"></i>Key Subjects</span>
           <span class="sl-value">
             <div class="d-flex flex-wrap gap-1">
-              {% for subj in course.core_subjects.all|slice:":5" %}
-              <span class="badge rounded-pill" style="background:#f1f5f9;color:#475569;font-size:0.67rem;font-weight:600;">{{ subj.name }}</span>
-              {% endfor %}
+              {% if course.core_subjects.all %}
+                {% for subj in course.core_subjects.all|slice:":5" %}
+                <span class="badge rounded-pill" style="background:#f1f5f9;color:#475569;font-size:0.67rem;font-weight:600;">{{ subj.name }}</span>
+                {% endfor %}
+              {% elif course.subject_requirements %}
+                {% for req in course.subject_requirements %}
+                <span class="badge rounded-pill" style="background:#eff6ff;color:#1d4ed8;font-size:0.67rem;font-weight:600;">
+                  {{ req.subjects_str }}{% if req.min_grade %} ({{ req.min_grade }}+){% endif %}
+                </span>
+                {% endfor %}
+              {% endif %}
             </div>
           </span>
         </div>
@@ -499,11 +554,36 @@
       </a>
     </div>
     {% endif %}
+
+  {% else %}
+
+  <!-- Empty state (shown in Cards view when shortlist is empty) -->
+  <div class="empty-sl">
+    <div class="empty-icon"><i class="fas fa-list-check"></i></div>
+    <h4 class="fw-800 mb-2">Your shortlist is empty</h4>
+    <p class="text-muted mb-4" style="max-width:420px;margin:0 auto 1.5rem;">
+      Add up to 5 courses to compare side-by-side, set your KUCCPS choice order, add personal notes,
+      and export a PDF. Look for the <strong>+ Shortlist</strong> button on any course page.
+    </p>
+    <div class="d-flex gap-3 justify-content-center flex-wrap">
+      <a href="{% url 'courses:course_types_list' %}" class="btn btn-primary rounded-pill px-4 fw-700">
+        <i class="fas fa-graduation-cap me-2"></i>Browse Courses
+      </a>
+      <a href="{% url 'clusterpoints:eligible_courses' %}" class="btn btn-outline-success rounded-pill px-4 fw-700">
+        <i class="fas fa-check-circle me-2"></i>My Eligible Courses
+      </a>
+      <a href="{% url 'career:home' %}#pathway-section" class="btn btn-outline-primary rounded-pill px-4 fw-700">
+        <i class="fas fa-compass me-2"></i>Career Engine
+      </a>
+    </div>
+  </div>
+
+  {% endif %}
   </div><!-- /viewCards -->
 
   <!-- ══════════ COMPARE TABLE VIEW ══════════ -->
-  {% if items|length > 1 %}
   <div id="viewCompare" style="display:none;">
+  {% if items|length > 1 %}
     <div class="compare-wrap mb-4">
       <table class="compare-table">
         <thead>
@@ -669,6 +749,14 @@
                 <span class="badge rounded-pill" style="background:#f1f5f9;color:#475569;font-size:0.67rem;font-weight:600;">{{ subj.name }}</span>
                 {% endfor %}
               </div>
+              {% elif item.course.subject_requirements %}
+              <div class="d-flex flex-wrap gap-1">
+                {% for req in item.course.subject_requirements %}
+                <span class="badge rounded-pill" style="background:#eff6ff;color:#1d4ed8;font-size:0.67rem;font-weight:600;">
+                  {{ req.subjects_str }}{% if req.min_grade %} ({{ req.min_grade }}+){% endif %}
+                </span>
+                {% endfor %}
+              </div>
               {% else %}<span class="text-muted small">—</span>{% endif %}
             </td>
             {% endfor %}
@@ -731,33 +819,29 @@
       </a>
     </div>
     {% endif %}
-  </div><!-- /viewCompare -->
-  {% endif %}
 
-{% else %}
+  {% else %}
 
-<!-- Empty state -->
-<div class="empty-sl">
-  <div class="empty-icon"><i class="fas fa-list-check"></i></div>
-  <h4 class="fw-800 mb-2">Your shortlist is empty</h4>
-  <p class="text-muted mb-4" style="max-width:420px;margin:0 auto 1.5rem;">
-    Add up to 5 courses to compare side-by-side, set your KUCCPS choice order, add personal notes,
-    and export a PDF. Look for the <strong>+ Shortlist</strong> button on any course page.
-  </p>
-  <div class="d-flex gap-3 justify-content-center flex-wrap">
-    <a href="{% url 'courses:course_types_list' %}" class="btn btn-primary rounded-pill px-4 fw-700">
-      <i class="fas fa-graduation-cap me-2"></i>Browse Courses
-    </a>
-    <a href="{% url 'clusterpoints:eligible_courses' %}" class="btn btn-outline-success rounded-pill px-4 fw-700">
-      <i class="fas fa-check-circle me-2"></i>My Eligible Courses
-    </a>
-    <a href="{% url 'career:home' %}#pathway-section" class="btn btn-outline-primary rounded-pill px-4 fw-700">
-      <i class="fas fa-compass me-2"></i>Career Engine
-    </a>
+  <!-- Prompt shown in Compare view when fewer than 2 courses saved -->
+  <div class="empty-sl">
+    <div class="empty-icon"><i class="fas fa-columns"></i></div>
+    <h4 class="fw-800 mb-2">Add at least 2 courses to compare</h4>
+    <p class="text-muted mb-4" style="max-width:420px;margin:0 auto 1.5rem;">
+      Find courses you're interested in and tap <strong>+ Shortlist</strong> to add them here.
+      You need at least 2 courses to use the side-by-side comparison table.
+    </p>
+    <div class="d-flex gap-3 justify-content-center flex-wrap">
+      <a href="{% url 'courses:course_types_list' %}" class="btn btn-primary rounded-pill px-4 fw-700">
+        <i class="fas fa-graduation-cap me-2"></i>Browse Courses
+      </a>
+      <a href="{% url 'clusterpoints:eligible_courses' %}" class="btn btn-outline-success rounded-pill px-4 fw-700">
+        <i class="fas fa-check-circle me-2"></i>My Eligible Courses
+      </a>
+    </div>
   </div>
-</div>
 
-{% endif %}
+  {% endif %}
+  </div><!-- /viewCompare -->
 
 </div>
 
@@ -816,17 +900,24 @@ function switchView(view) {
   const compare = document.getElementById('viewCompare');
   const btnCards = document.getElementById('btnCards');
   const btnCompare = document.getElementById('btnCompare');
+  const mobCards = document.getElementById('mobBtnCards');
+  const mobCompare = document.getElementById('mobBtnCompare');
   if (view === 'compare') {
     cards.style.display = 'none';
     compare.style.display = 'block';
-    btnCards.classList.remove('active');
-    btnCompare.classList.add('active');
+    if (btnCards) btnCards.classList.remove('active');
+    if (btnCompare) btnCompare.classList.add('active');
+    if (mobCards) mobCards.classList.remove('active');
+    if (mobCompare) mobCompare.classList.add('active');
     localStorage.setItem('slView', 'compare');
+    window.scrollTo({top: 0, behavior: 'smooth'});
   } else {
     cards.style.display = 'block';
     if (compare) compare.style.display = 'none';
-    btnCards.classList.add('active');
+    if (btnCards) btnCards.classList.add('active');
     if (btnCompare) btnCompare.classList.remove('active');
+    if (mobCards) mobCards.classList.add('active');
+    if (mobCompare) mobCompare.classList.remove('active');
     localStorage.setItem('slView', 'cards');
   }
 }
@@ -836,15 +927,20 @@ function switchView(view) {
   const saved = localStorage.getItem('slView');
   if (saved === 'compare' && document.getElementById('viewCompare')) {
     switchView('compare');
+  } else {
+    // Ensure mobile active state is set correctly on load
+    const mobCards = document.getElementById('mobBtnCards');
+    if (mobCards) mobCards.classList.add('active');
   }
 })();
 
 // WhatsApp share
 document.getElementById('waShareBtn') && document.getElementById('waShareBtn').addEventListener('click', function() {
   const courses = [{% for item in items %}"{{ item.course.name }}"{% if not forloop.last %},{% endif %}{% endfor %}];
-  let msg = "🎓 My CareerNext Course Shortlist:\n";
+  let msg = "🎓 My KCSE Course Shortlist — CareerNext\n\n";
   courses.forEach((c, i) => { msg += (i+1) + ". " + c + "\n"; });
-  msg += "\nFind your courses free at kuccpss.co.ke";
+  msg += "\nThese are the top courses I saved after checking my KCSE eligibility on CareerNext!";
+  msg += "\n\n👉 Find out what YOU qualify for FREE: www.careernext.co.ke 🚀";
   window.open("https://wa.me/?text=" + encodeURIComponent(msg), "_blank");
 });
 </script>

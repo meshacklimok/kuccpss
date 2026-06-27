@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block title %}KCSE Cluster Points Calculator 2025/2026 — Free KUCCPS Tool | CareerNext{% endblock %}
+{% block title %}KCSE Cluster Points Calculator 2026/2027 — Free KUCCPS Tool | CareerNext{% endblock %}
 {% block meta %}<meta name="description" content="Free KCSE cluster points calculator using the official KUCCPS formula. Enter your 2025 or 2026 grades and instantly see your cluster points, eligible university, KMTC and TVET courses in Kenya.">{% endblock %}
 {% block canonical %}<link rel="canonical" href="https://careernext.co.ke/clusterpoints/">{% endblock %}
 {% block keywords %}<meta name="keywords" content="KCSE cluster points calculator, KUCCPS cluster points 2025, cluster points Kenya, KCSE grades to cluster points, KUCCPS calculator Kenya, university placement Kenya 2025 2026">{% endblock %}
@@ -477,6 +477,14 @@ body.dark .pg-secure   { color:var(--text-3); }
 .cluster-pts   { font-size: 1.15rem; font-weight: 900; color: #16a34a; line-height: 1; text-align: right; }
 .cluster-card.zero .cluster-pts { color: #cbd5e1; }
 .cluster-max   { font-size: 0.58rem; color: #94a3b8; font-weight: 500; text-align: right; }
+.cluster-card[data-bs-toggle="tooltip"] { cursor: help; }
+.cn-tooltip .tooltip-inner {
+    max-width: 260px; font-size: 0.78rem; line-height: 1.5;
+    background: #1e293b; color: #f1f5f9;
+    border-radius: 10px; padding: 0.55rem 0.8rem;
+    text-align: left; box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+}
+.cn-tooltip .tooltip-arrow::before { border-top-color: #1e293b; }
 
 
 /* prediction */
@@ -525,6 +533,33 @@ body.dark .pg-secure   { color:var(--text-3); }
 /* Lift the footer bar above the mobile bottom nav on phones/tablets */
 @media (max-width: 991.98px) {
     .lce-footer { bottom: calc(64px + env(safe-area-inset-bottom, 0px)); }
+}
+
+/* ── 360px viewport fixes ── */
+@media (max-width: 479px) {
+    /* Sticky footer: hide info text so buttons have room */
+    .lce-footer { padding: 0.65rem 0.9rem calc(0.65rem + env(safe-area-inset-bottom, 0px)); gap: 0.5rem; }
+    .lce-footer-info { display: none; }
+    .lce-btn-back { padding: 0.5rem 0.7rem; font-size: 0.78rem; }
+    .lce-btn-calc { padding: 0.62rem 1.1rem; font-size: 0.84rem; }
+
+    /* Save-bar: hide the subtitle line; shrink CTA */
+    .save-bar { padding: 0.55rem 0.9rem; gap: 0.5rem; }
+    .save-bar-text .subtle { display: none; }
+    .save-bar-text { font-size: 0.8rem; }
+    .save-bar-reg { font-size: 0.76rem; padding: 0.38rem 0.75rem; }
+    .save-bar-login { display: none; }
+
+    /* Step bar: hide the long badge label */
+    .step-bar { padding: 0.45rem 0.9rem; gap: 0.5rem; }
+    .sb-badge { display: none; }
+
+    /* Cluster grid: 2 col already, but tighten card padding */
+    .cluster-card { padding: 0.6rem 0.7rem; }
+
+    /* Score card: allow wrap earlier */
+    .score-card { gap: 0.75rem; padding: 1rem; }
+    .score-val { font-size: 1.6rem; }
 }
 
 /* ── Dark mode ── */
@@ -691,6 +726,37 @@ body.dark .lce-btn-calc:disabled { background: var(--surface-2); color: var(--te
     </div>
 </div>
 
+{% if user.is_authenticated and results and not is_results_locked %}
+<!-- Recalculate button — shown when the user has paid and can see their results -->
+<div id="recalculate-bar" style="margin:1.2rem 0 0.5rem;display:flex;justify-content:flex-end;">
+    <button onclick="document.getElementById('recalc-confirm-modal').style.display='flex'"
+            style="background:transparent;border:1.5px solid #94a3b8;border-radius:10px;color:#64748b;font-size:0.78rem;font-weight:600;padding:0.45rem 1rem;cursor:pointer;display:flex;align-items:center;gap:0.4rem;">
+        <i class="bi bi-arrow-counterclockwise"></i> Recalculate for new grades
+    </button>
+</div>
+<!-- Confirmation modal -->
+<div id="recalc-confirm-modal" style="display:none;position:fixed;inset:0;z-index:9998;align-items:center;justify-content:center;background:rgba(0,0,0,0.55);">
+    <div style="background:#fff;border-radius:16px;padding:2rem;max-width:380px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,0.3);text-align:center;">
+        <div style="font-size:2rem;margin-bottom:0.5rem;">🔄</div>
+        <h5 style="font-weight:800;color:#1e293b;margin-bottom:0.5rem;">Recalculate Grades?</h5>
+        <p style="font-size:0.85rem;color:#64748b;margin-bottom:1.5rem;">
+            This will unlock grade entry so you can enter new grades.<br>
+            You will need to <strong>pay again</strong> to see the new results.
+        </p>
+        <form method="post" action="{% url 'clusterpoints:recalculate' %}">
+            {% csrf_token %}
+            <button type="submit" style="background:#1e3a8a;color:#fff;border:none;border-radius:10px;padding:0.7rem 1.8rem;font-weight:700;font-size:0.9rem;cursor:pointer;width:100%;margin-bottom:0.6rem;">
+                Yes, unlock grade entry
+            </button>
+        </form>
+        <button onclick="document.getElementById('recalc-confirm-modal').style.display='none'"
+                style="background:transparent;border:1.5px solid #e2e8f0;border-radius:10px;padding:0.6rem 1.8rem;font-weight:600;font-size:0.85rem;cursor:pointer;color:#64748b;width:100%;">
+            Cancel
+        </button>
+    </div>
+</div>
+{% endif %}
+
 <!-- ══ sticky step bar ══ -->
 <div class="step-bar-wrap" id="stepBarWrap">
 <div class="step-bar">
@@ -717,7 +783,7 @@ body.dark .lce-btn-calc:disabled { background: var(--surface-2); color: var(--te
 
     <div class="lce-head">
         <h2><i class="fas fa-calculator me-2" style="color:#2563eb;"></i>KCSE Cluster Points Calculator</h2>
-        <p>Enter your KCSE subject grades. We'll compute your cluster points for all 20 KUCCPS clusters. Note: these are estimates based on the official KUCCPS formula — verify final results on the KUCCPS portal.</p>
+        <p>Enter your KCSE subject grades. We'll compute your cluster points for all 20 KUCCPS clusters. Note: these are estimates — verify final results on the KUCCPS portal.</p>
     </div>
 
     {% if messages %}{% for message in messages %}
@@ -928,7 +994,8 @@ body.dark .lce-btn-calc:disabled { background: var(--surface-2); color: var(--te
     <!-- Compact score summary grid -->
     <div class="cluster-grid">
         {% for r in results %}
-        <div class="cluster-card {% if r.cluster_points == 0 %}zero{% endif %}">
+        <div class="cluster-card {% if r.cluster_points == 0 %}zero{% endif %}"
+             {% if r.cluster.description %}data-bs-toggle="tooltip" data-bs-placement="top" data-bs-custom-class="cn-tooltip" title="{{ r.cluster.description|striptags|truncatechars:160 }}"{% endif %}>
             <div class="cluster-info">
                 <div class="cluster-label">Cluster {{ r.cluster.kuccps_number }}</div>
                 <div class="cluster-name">{{ r.cluster.name }}</div>
@@ -958,44 +1025,206 @@ body.dark .lce-btn-calc:disabled { background: var(--surface-2); color: var(--te
 
     <div class="dl-bar">
         <span class="dl-label"><i class="bi bi-download me-1"></i>Download</span>
-        <a href="{% url 'predictor:quick_pdf' %}" class="dl-btn red"><i class="bi bi-file-earmark-pdf-fill"></i>Quick PDF</a>
-        <a href="{% url 'predictor:full_report' %}" class="dl-btn blue"><i class="bi bi-file-earmark-text-fill"></i>Full Report</a>
+        <a href="{% url 'clusterpoints:export_cluster_pdf' %}" class="dl-btn red"><i class="bi bi-file-earmark-pdf-fill"></i>Quick PDF</a>
+        {% if user.is_authenticated %}<a href="{% url 'clusterpoints:export_full_results_pdf' %}" class="dl-btn blue"><i class="bi bi-file-earmark-text-fill"></i>Full Report</a>{% endif %}
         <a href="{% url 'predictor:index' %}" class="dl-btn gray"><i class="bi bi-graph-up-arrow"></i>Predictor</a>
         <a id="wa-share-btn" href="#" target="_blank" rel="noopener"
            class="dl-btn"
            style="background:#25d366;color:#fff;border-color:#25d366;"
-           title="Share your results on WhatsApp">
-            <i class="bi bi-whatsapp"></i>Share
+           title="Share on WhatsApp">
+            <i class="bi bi-whatsapp"></i>WhatsApp
         </a>
+        <button onclick="openCalcShareModal()"
+                class="dl-btn"
+                style="background:#4f46e5;color:#fff;border-color:#4f46e5;"
+                title="Share your results with a link">
+            <i class="bi bi-share-fill"></i>Share Link
+        </button>
     </div>
 
-    {# WhatsApp share data embedded in template so JS can build the message #}
+    {# Embed calculator data for JS sharing #}
     <script>
-    (function () {
-        var grade = "{{ mean_grade|escapejs }}";
-        var agg   = "{{ total_points|escapejs }}";
-        var topClusters = [
-            {% for r in results|slice:":3" %}
-            { num: {{ r.cluster.kuccps_number }}, name: "{{ r.cluster.name|escapejs }}", pts: "{{ r.cluster_points|floatformat:1 }}" },
+    var _calcData = {
+        mean_grade: "{{ mean_grade|escapejs }}",
+        aggregate:  {{ total_points|default:0 }},
+        cluster_points: {
+            {% for r in results %}
+            "{{ r.cluster.kuccps_number }}": {{ r.cluster_points|floatformat:1 }},
             {% endfor %}
-        ];
+        },
+        cluster_names: {
+            {% for r in results %}
+            "{{ r.cluster.kuccps_number }}": "{{ r.cluster.name|escapejs }}",
+            {% endfor %}
+        }
+    };
 
-        var clText = topClusters
-            .filter(function(c){ return parseFloat(c.pts) > 0; })
-            .map(function(c){ return "Cl." + c.num + " " + parseFloat(c.pts).toFixed(0) + "pts"; })
-            .join(" · ");
+    (function () {
+        var grade = _calcData.mean_grade;
+        var agg   = _calcData.aggregate;
+        var topClusters = Object.keys(_calcData.cluster_points)
+            .map(function(k){ return {num: k, name: _calcData.cluster_names[k], pts: _calcData.cluster_points[k]}; })
+            .filter(function(c){ return c.pts > 0; })
+            .sort(function(a,b){ return b.pts - a.pts; })
+            .slice(0, 3);
 
-        var msg = "🎓 I calculated my KCSE cluster points on CareerNext!\n";
-        if (grade)  msg += "Grade: " + grade;
-        if (agg)    msg += (grade ? " · " : "") + "Aggregate: " + agg + "/84\n";
-        if (clText) msg += "Top clusters: " + clText + "\n";
-        msg += "\nCalculate yours free → careernext.co.ke";
+        var clLines = topClusters
+            .map(function(c){ return "• " + c.name + " — " + parseFloat(c.pts).toFixed(1) + " / 48 pts"; })
+            .join("\n");
+
+        var msg = "🎓 My KCSE Cluster Points Results\n\n";
+        if (grade) msg += "📊 Mean Grade: " + grade + "\n";
+        if (agg)   msg += "📈 Aggregate: " + agg + " / 84\n";
+        if (clLines) msg += "\n🏆 Top Cluster Scores:\n" + clLines + "\n";
+        msg += "\nI used CareerNext to calculate my cluster points & discover every university, KMTC, TVET & TTC course I qualify for in Kenya — 100% FREE! 🚀";
+        msg += "\n\n👉 Calculate yours free: careernext.co.ke";
 
         var btn = document.getElementById('wa-share-btn');
-        if (btn) {
-            btn.href = "https://wa.me/?text=" + encodeURIComponent(msg);
-        }
+        if (btn) btn.href = "https://wa.me/?text=" + encodeURIComponent(msg);
     }());
+    </script>
+
+    <!-- Share Calculator Results Modal -->
+    <div class="modal fade" id="calcShareModal" tabindex="-1" aria-labelledby="calcShareModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius:16px;border:none;">
+          <div class="modal-header border-0 pb-0">
+            <h5 class="modal-title fw-bold" id="calcShareModalLabel">
+              <i class="bi bi-share-fill me-2 text-primary"></i>Share Your Results
+            </h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body pt-2">
+
+            <!-- Link section — shown after generating -->
+            <div id="calcShareUrlSection" style="display:none;">
+              <p class="text-muted small mb-2">Your shareable link (valid 30 days):</p>
+              <div class="d-flex gap-2 mb-3">
+                <input type="text" id="calcGeneratedUrl" readonly class="form-control form-control-sm fw-semibold"
+                       style="font-size:0.8rem;background:#f8fafc;" onclick="this.select()">
+                <button onclick="copyCalcUrl()" class="btn btn-sm btn-primary px-3" id="calcCopyBtn">
+                  <i class="bi bi-clipboard" id="calcCopyIcon"></i>
+                </button>
+              </div>
+              <div class="d-flex gap-2 flex-wrap mb-3">
+                <a id="calcWaShareBtn" href="#" target="_blank" rel="noopener"
+                   class="btn btn-sm flex-1 fw-bold" style="background:#25d366;color:white;">
+                  <i class="bi bi-whatsapp me-1"></i>WhatsApp
+                </a>
+                <a id="calcTwShareBtn" href="#" target="_blank" rel="noopener"
+                   class="btn btn-sm flex-1 fw-bold" style="background:#000;color:white;">
+                  <i class="bi bi-twitter-x me-1"></i>X / Twitter
+                </a>
+              </div>
+            </div>
+
+            <!-- Generate section — shown first -->
+            <div id="calcGenerateSection">
+              <p class="text-muted small mb-3">
+                Create a shareable snapshot of your cluster points — anyone with the link can view your scores without logging in.
+              </p>
+              {% if user.is_authenticated %}
+              <button onclick="generateCalcShareLink()" id="calcGenerateBtn"
+                      class="btn btn-primary w-100 fw-bold mb-2">
+                <i class="bi bi-link-45deg me-1"></i>Generate Share Link
+              </button>
+              {% else %}
+              <a href="{% url 'accounts:register' %}?next=/clusterpoints/calculator/" class="btn btn-primary w-100 fw-bold mb-2">
+                <i class="bi bi-person-plus me-1"></i>Sign Up to Share
+              </a>
+              {% endif %}
+
+              <hr class="my-3">
+              <p class="text-muted small mb-2 fw-semibold">Or share without a link:</p>
+              <div class="d-flex gap-2 flex-wrap">
+                <a id="calcWaQuickBtn" href="#" target="_blank" rel="noopener"
+                   class="btn btn-sm fw-bold" style="background:#25d366;color:white;">
+                  <i class="bi bi-whatsapp me-1"></i>WhatsApp
+                </a>
+                <a id="calcTwQuickBtn"
+                   href="https://twitter.com/intent/tweet?text={{ '🎓 Just calculated my KCSE cluster points on CareerNext! Mean Grade: '|urlencode }}{{ mean_grade }}{{ ' · Aggregate: '|urlencode }}{{ total_points }}{{ '/84. Find YOUR courses free 👉 careernext.co.ke @CareerNextKE'|urlencode }}"
+                   target="_blank" rel="noopener"
+                   class="btn btn-sm fw-bold" style="background:#000;color:white;">
+                  <i class="bi bi-twitter-x me-1"></i>X / Twitter
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+    var _calcShareUrl = null;
+
+    function openCalcShareModal() {
+        var modal = new bootstrap.Modal(document.getElementById('calcShareModal'));
+
+        // Set the quick-share WhatsApp link
+        var btn = document.getElementById('calcWaQuickBtn');
+        if (btn) btn.href = document.getElementById('wa-share-btn').href;
+
+        modal.show();
+    }
+
+    function generateCalcShareLink() {
+        var btn = document.getElementById('calcGenerateBtn');
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Creating link…';
+
+        fetch("{% url 'clusterpoints:share_calculator_create' %}", {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.cookie.match(/csrftoken=([^;]+)/)?.[1] || '',
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(_calcData),
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (!data.ok) {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="bi bi-link-45deg me-1"></i>Generate Share Link';
+                alert('Could not create link: ' + (data.error || 'Unknown error'));
+                return;
+            }
+            _calcShareUrl = data.url;
+            document.getElementById('calcGeneratedUrl').value = _calcShareUrl;
+
+            var waMsg =
+                '🎓 My KCSE Cluster Points Results\n\n' +
+                '📊 Mean Grade: ' + (_calcData.mean_grade || '—') + '\n' +
+                '📈 Aggregate: ' + (_calcData.aggregate || '—') + ' / 84\n' +
+                '🎯 Best Cluster Score: ' + Math.max.apply(null, Object.values(_calcData.cluster_points)).toFixed(1) + ' / 48\n\n' +
+                '👀 See my full cluster scores:\n' + _calcShareUrl + '\n\n' +
+                '💡 Calculate YOUR cluster points FREE at careernext.co.ke!';
+
+            document.getElementById('calcWaShareBtn').href = 'https://wa.me/?text=' + encodeURIComponent(waMsg);
+            document.getElementById('calcTwShareBtn').href = 'https://twitter.com/intent/tweet?text=' +
+                encodeURIComponent('My KCSE cluster points are in! 🎓 Mean Grade: ' + (_calcData.mean_grade || '') + ' · Agg: ' + (_calcData.aggregate || '') + '/84. See my results: ' + _calcShareUrl + ' @CareerNextKE');
+
+            document.getElementById('calcGenerateSection').style.display = 'none';
+            document.getElementById('calcShareUrlSection').style.display = '';
+        })
+        .catch(function(err) {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="bi bi-link-45deg me-1"></i>Generate Share Link';
+            alert('Could not create share link. Please try again.\n\n' + (err && err.message ? err.message : ''));
+        });
+    }
+
+    function copyCalcUrl() {
+        if (!_calcShareUrl) return;
+        navigator.clipboard.writeText(_calcShareUrl).then(function() {
+            var icon = document.getElementById('calcCopyIcon');
+            icon.className = 'bi bi-check-circle-fill';
+            document.getElementById('calcCopyBtn').className = 'btn btn-sm btn-success px-3';
+            setTimeout(function() {
+                icon.className = 'bi bi-clipboard';
+                document.getElementById('calcCopyBtn').className = 'btn btn-sm btn-primary px-3';
+            }, 2000);
+        });
+    }
     </script>
 
     {% if predicted_groups %}
@@ -1005,7 +1234,7 @@ body.dark .lce-btn-calc:disabled { background: var(--surface-2); color: var(--te
         <div class="results-divider-line"></div>
     </div>
     
-    <p style="font-size:0.75rem;color:#94a3b8;text-align:center;margin-bottom:1rem;">Based on 2021–2025 data ·avg error ±0.96 pts</p>
+    <p style="font-size:0.75rem;color:#94a3b8;text-align:center;margin-bottom:1rem;">Based on 2021–2026 data</p>
     <div class="info-banner">
         <i class="bi bi-exclamation-triangle-fill flex-shrink-0 mt-1" style="color:#d97706;"></i>
         <span>Predictions are estimates only. Verify all cutoffs on the official <strong>KUCCPS portal</strong> before applying.</span>
@@ -1393,6 +1622,14 @@ function initSaveBar() {
     }
 }
 {% endif %}
+
+// ── Cluster card tooltips ──
+(function () {
+    if (typeof bootstrap === 'undefined' || !bootstrap.Tooltip) return;
+    document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function (el) {
+        new bootstrap.Tooltip(el, { trigger: 'hover focus' });
+    });
+}());
 </script>
 {% endblock %}
 {% endblock %}

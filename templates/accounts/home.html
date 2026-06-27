@@ -411,6 +411,77 @@ body.dark .step-card          { background: var(--surface); border-color: var(--
 </script>
 
 
+<!-- ── LATEST ARTICLES ── -->
+{% if recent_articles %}
+<section class="py-5" style="background:var(--bg);border-top:1px solid var(--border);">
+  <div class="container">
+    <div class="d-flex align-items-end justify-content-between mb-4 flex-wrap gap-2 reveal">
+      <div>
+        <span class="section-eyebrow" style="color:var(--primary);background:rgba(37,99,235,0.08);">
+          <i class="fas fa-newspaper me-1"></i>Resources
+        </span>
+        <h2 class="section-header mt-2">Latest Guides &amp; Updates</h2>
+        <p class="section-sub">Tips, news and insights for Kenyan KCSE students</p>
+      </div>
+      <a href="{% url 'resources:article_list' %}" class="btn btn-outline-primary btn-sm rounded-pill px-4"
+         style="font-size:0.82rem;white-space:nowrap;">
+        View all articles <i class="fas fa-arrow-right ms-1"></i>
+      </a>
+    </div>
+    <div class="row g-4">
+      {% for article in recent_articles %}
+      <div class="col-md-4 reveal">
+        <a href="{% url 'resources:article_detail' article.slug %}"
+           class="d-flex flex-column h-100 text-decoration-none rounded-4 overflow-hidden"
+           style="background:var(--surface);border:1.5px solid var(--border);box-shadow:var(--shadow-sm);
+                  transition:box-shadow 0.2s,transform 0.2s,border-color 0.2s;"
+           onmouseover="this.style.boxShadow='0 8px 28px rgba(37,99,235,0.12)';this.style.transform='translateY(-3px)';this.style.borderColor='#bfdbfe'"
+           onmouseout="this.style.boxShadow='';this.style.transform='';this.style.borderColor=''">
+          {% if article.thumbnail %}
+          <img src="{{ article.thumbnail.url }}" alt="{{ article.title }}" loading="lazy"
+               style="width:100%;height:160px;object-fit:cover;">
+          {% else %}
+          <div style="height:100px;background:linear-gradient(135deg,#1e3a8a,#4f46e5);
+                      display:flex;align-items:center;justify-content:center;">
+            <i class="fas fa-file-alt" style="font-size:2rem;color:rgba(255,255,255,0.5);"></i>
+          </div>
+          {% endif %}
+          <div class="p-4 d-flex flex-column flex-grow-1">
+            {% if article.featured %}
+            <span style="font-size:0.66rem;font-weight:700;padding:2px 9px;border-radius:20px;
+                         background:#fef3c7;color:#92400e;margin-bottom:0.5rem;display:inline-block;width:fit-content;">
+              <i class="fas fa-star me-1" style="font-size:0.55rem;"></i>Featured
+            </span>
+            {% endif %}
+            <div class="fw-800 flex-grow-1" style="font-size:0.92rem;line-height:1.4;color:var(--text);
+                 display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">
+              {{ article.title }}
+            </div>
+            {% if article.excerpt %}
+            <p style="font-size:0.78rem;color:var(--text-2);line-height:1.5;margin:0.5rem 0 0;
+                 display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">
+              {{ article.excerpt }}
+            </p>
+            {% endif %}
+            <div class="d-flex align-items-center justify-content-between mt-3 pt-3"
+                 style="border-top:1px solid var(--border);">
+              <span style="font-size:0.7rem;color:var(--text-3);">
+                <i class="fas fa-clock me-1"></i>{{ article.reading_time }} min read
+              </span>
+              <span style="font-size:0.7rem;color:var(--text-3);">
+                {{ article.created_at|date:"d M Y" }}
+              </span>
+            </div>
+          </div>
+        </a>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+
 <!-- ── PARTNER INSTITUTIONS ── -->
 {% if featured_promos or scholarship_alerts %}
 <section class="py-5" style="background:var(--bg);border-top:1px solid var(--border);">
@@ -563,7 +634,7 @@ body.dark .step-card          { background: var(--surface); border-color: var(--
         <a href="{% url 'accounts:register' %}" class="btn btn-light fw-bold px-5">
           <i class="fas fa-user-plus me-2 text-primary"></i>Create Account
         </a>
-        <a href="{% url 'clusterpoints:calculator' %}" class="btn btn-outline-light fw-semibold px-4">
+        <a href="{% url 'accounts:dashboard' %}" class="btn btn-outline-light fw-semibold px-4">
           Try Without Account
         </a>
       </div>

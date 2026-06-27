@@ -12,7 +12,11 @@ class SearchLog(models.Model):
 
     class Meta:
         ordering = ['-created_at']
-        indexes  = [models.Index(fields=['query']), models.Index(fields=['created_at'])]
+        indexes  = [
+            models.Index(fields=['query']),
+            models.Index(fields=['created_at']),
+            models.Index(fields=['session_key']),
+        ]
 
     def __str__(self):
         return f'"{self.query}" ({self.result_count} results)'
@@ -88,6 +92,29 @@ class EventLog(models.Model):
 
     def __str__(self):
         return f'{self.name} — {self.created_at:%Y-%m-%d %H:%M}'
+
+
+class PWAInstallLog(models.Model):
+    PLATFORM_CHOICES = [
+        ('android', 'Android / Chrome'),
+        ('ios',     'iOS Safari'),
+        ('desktop', 'Desktop'),
+        ('unknown', 'Unknown'),
+    ]
+    platform    = models.CharField(max_length=10, choices=PLATFORM_CHOICES, default='unknown', db_index=True)
+    user        = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True,
+                                    on_delete=models.SET_NULL, related_name='+')
+    session_key = models.CharField(max_length=40, blank=True)
+    ip          = models.GenericIPAddressField(null=True, blank=True)
+    user_agent  = models.CharField(max_length=300, blank=True)
+    created_at  = models.DateTimeField(auto_now_add=True, db_index=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        indexes  = [models.Index(fields=['platform', 'created_at'])]
+
+    def __str__(self):
+        return f'PWA install — {self.platform} — {self.created_at:%Y-%m-%d}'
 
 
 class CareerEngineLog(models.Model):

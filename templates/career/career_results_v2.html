@@ -19,21 +19,24 @@
 .hero-stat .number { font-size: 2rem; font-weight: 800; line-height: 1; }
 .hero-stat .label  { font-size: 0.75rem; opacity: 0.8; text-transform: uppercase; letter-spacing: 0.06em; }
 
+.filter-bar-outer {
+    position: sticky;
+    top: 56px;
+    z-index: 100;
+}
+/* clip wrapper collapses the bar without touching the sticky element's overflow */
+.filter-bar-clip {
+    overflow: hidden;
+    max-height: 400px;
+    transition: max-height 0.3s cubic-bezier(0.4,0,0.2,1);
+}
+.filter-bar-outer.bar-hidden .filter-bar-clip { max-height: 0; }
 .filter-bar {
     background: #fff;
     border-bottom: 1px solid #e2e8f0;
     padding: 0.9rem 0;
-    position: fixed;
-    top: 56px;
-    left: 0;
-    right: 0;
-    z-index: 100;
     box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-    transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
-    will-change: transform;
 }
-.filter-bar.bar-hidden { transform: translateY(-100%); }
-#filter-bar-spacer { height: 0; }
 
 .chance-badge {
     display: inline-block;
@@ -363,6 +366,13 @@
                 <span class="small fw-semibold">{{ pathway }} Results</span>
             </div>
             <div class="d-flex align-items-center gap-2">
+                {% if not is_locked and not guest_locked and user.is_authenticated %}
+                <button onclick="document.getElementById('career-recalc-modal').style.display='flex'"
+                        class="btn btn-sm"
+                        style="background:rgba(255,255,255,0.1);color:#e2e8f0;border:1px solid rgba(255,255,255,0.25);border-radius:8px;font-size:0.78rem;font-weight:600;padding:5px 12px;">
+                    <i class="bi bi-arrow-counterclockwise me-1"></i>Recalculate
+                </button>
+                {% endif %}
                 <a href="{{ edit_url }}"
                    class="btn btn-sm"
                    style="background:rgba(255,255,255,0.15);color:#fff;border:1px solid rgba(255,255,255,0.3);border-radius:8px;font-size:0.78rem;font-weight:600;padding:5px 12px;">
@@ -424,7 +434,8 @@
 {% endif %}
 
 <!-- Filter bar -->
-<div id="filter-bar-spacer"></div>
+<div class="filter-bar-outer">
+<div class="filter-bar-clip">
 <div class="filter-bar">
     <div class="container">
         <div class="d-flex align-items-center gap-2 flex-wrap">
@@ -506,6 +517,8 @@
         </div>
     </div>
 </div>
+</div>
+</div>
 
 <!-- Share Results Modal -->
 <div class="modal fade" id="shareModal" tabindex="-1" aria-labelledby="shareModalLabel" aria-hidden="true">
@@ -558,12 +571,20 @@
           <hr class="my-3">
           <p class="text-muted small mb-2 fw-semibold">Or share without a link:</p>
           <div class="d-flex gap-2 flex-wrap">
-            <a href="https://wa.me/?text=I+found+{{ total_count }}+courses+I+qualify+for+after+KCSE!+Check+yours+free+at+careernext.co.ke+%E2%80%94+Kenya%27s+%231+career+guidance+platform."
+            <a href="https://wa.me/?text={% filter urlencode %}🎓 Just checked my KCSE matches on CareerNext!
+
+📚 Pathway: {{ pathway }}{% if pathway == 'Degree' %}
+🎯 My Cluster Points: {{ cluster_pts_single|floatformat:1 }}{% else %}
+📊 My Mean Grade: {{ mean_grade }}{% endif %}
+✅ {{ total_count }} courses matched (University, KMTC, TVET & TTC)
+
+You should check yours too — it's 100% free and instant!
+👉 careernext.co.ke — Kenya's #1 KCSE career guide{% endfilter %}"
                target="_blank" rel="noopener"
                class="btn btn-sm fw-bold" style="background:#25d366;color:white;">
               <i class="bi bi-whatsapp me-1"></i>WhatsApp
             </a>
-            <a href="https://twitter.com/intent/tweet?text=I+found+{{ total_count }}+courses+I+qualify+for+after+KCSE!+%F0%9F%8E%93+Check+yours+free+%40CareerNextKE&url=https://careernext.co.ke"
+            <a href="https://twitter.com/intent/tweet?text={{ 'I found '|urlencode }}{{ total_count }}{{ ' KCSE courses I qualify for! 🎓 '|urlencode }}{{ pathway }}{{ ' pathway · '|urlencode }}{{ cluster_pts_single|floatformat:1 }}{{ ' pts. Check yours FREE 👉 careernext.co.ke @CareerNextKE'|urlencode }}"
                target="_blank" rel="noopener"
                class="btn btn-sm fw-bold" style="background:#000;color:white;">
               <i class="bi bi-twitter-x me-1"></i>X / Twitter
@@ -881,7 +902,15 @@
       </div>
       <div class="col-md-5">
         <div class="d-flex gap-2 flex-wrap justify-content-md-end">
-          <a href="https://wa.me/?text={{ 'I found '|urlencode }}{{ total_count }}{{ ' courses I qualify for on CareerNext — it%27s free and shows every university%2C KMTC and TVET you can join. Check it out: https://careernext.co.ke'|urlencode }}"
+          <a href="https://wa.me/?text={% filter urlencode %}🎓 I found {{ total_count }} KCSE courses I qualify for on CareerNext!
+
+📚 Pathway: {{ pathway }}{% if pathway == 'Degree' %}
+🎯 Cluster Points: {{ cluster_pts_single|floatformat:1 }}{% else %}
+📊 Mean Grade: {{ mean_grade }}{% endif %}
+✅ {{ total_count }} matches across University, KMTC, TVET & TTC
+
+You should check what YOU qualify for too! 👇
+careernext.co.ke — Kenya's #1 KCSE career guidance platform (100% free!){% endfilter %}"
              target="_blank" rel="noopener"
              class="btn fw-bold" style="background:#25d366;color:white;border-radius:10px;">
              <i class="bi bi-whatsapp me-1"></i>WhatsApp Classmates
@@ -1416,17 +1445,19 @@ function aipSendText(text) {
 setTimeout(() => { if (!greeted) { greeted = true; aipGreet(); } }, 2000);
 
 // ── Share Results ──────────────────────────────────────────────────────────
-let _shareUrl = null;
+var _shareUrl = null;
 
 function openShareModal() {
-    const modal = new bootstrap.Modal(document.getElementById('shareModal'));
+    var modal = new bootstrap.Modal(document.getElementById('shareModal'));
     modal.show();
 }
 
 function generateShareLink() {
-    const btn = document.getElementById('generateBtn');
+    var btn = document.getElementById('generateBtn');
     btn.disabled = true;
     btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Creating link…';
+
+    var gradeInfo = {% if pathway == 'Degree' %}'🎯 Cluster Points: {{ cluster_pts_single|floatformat:1 }}'{% else %}'📊 Mean Grade: {{ mean_grade }}'{% endif %};
 
     fetch("{% url 'career:share_result_create' %}", {
         method: 'POST',
@@ -1436,8 +1467,8 @@ function generateShareLink() {
         },
         body: JSON.stringify({}),
     })
-    .then(r => r.json())
-    .then(data => {
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
         if (!data.ok) {
             btn.disabled = false;
             btn.innerHTML = '<i class="bi bi-link-45deg me-1"></i>Generate Share Link';
@@ -1446,16 +1477,25 @@ function generateShareLink() {
         }
         _shareUrl = data.url;
         document.getElementById('generatedUrl').value = _shareUrl;
-        document.getElementById('waShareBtn').href = 'https://wa.me/?text=' + encodeURIComponent(
-            'I found {{ total_count }} courses I qualify for on CareerNext 🎓 Check my results: ' + _shareUrl);
+
+        var waMsg =
+            '🎓 My KCSE Results Are In!\n\n' +
+            '📚 Pathway: {{ pathway }}\n' +
+            gradeInfo + '\n' +
+            '✅ {{ total_count }} courses matched (University, KMTC, TVET & TTC)\n\n' +
+            '👀 See my full results:\n' + _shareUrl + '\n\n' +
+            '💡 Find YOUR matches FREE at careernext.co.ke — Kenya\'s #1 KCSE career guide!';
+
+        document.getElementById('waShareBtn').href = 'https://wa.me/?text=' + encodeURIComponent(waMsg);
         document.getElementById('twShareBtn').href = 'https://twitter.com/intent/tweet?text=' +
-            encodeURIComponent('Check out my KCSE career matches on CareerNext! 🎓 ' + _shareUrl);
+            encodeURIComponent('I found {{ total_count }} KCSE courses I qualify for! 🎓 {{ pathway }} · {{ cluster_pts_single|floatformat:1 }} pts. See my results: ' + _shareUrl + ' @CareerNextKE');
         document.getElementById('generateSection').style.display = 'none';
         document.getElementById('shareUrlSection').style.display = '';
     })
-    .catch(() => {
+    .catch(function(err) {
         btn.disabled = false;
         btn.innerHTML = '<i class="bi bi-link-45deg me-1"></i>Generate Share Link';
+        alert('Could not create share link. Please try again.\n\n' + (err && err.message ? err.message : ''));
     });
 }
 
@@ -1501,31 +1541,60 @@ function cardClick(e, card) {
     if (href) window.location.href = href;
 }
 
-// Filter-bar: hides on scroll DOWN, shows on scroll UP or near top
+// Filter-bar: hides on scroll DOWN, shows only after 60px of upward scroll
 (function () {
-    var bar    = document.querySelector('.filter-bar');
-    var spacer = document.getElementById('filter-bar-spacer');
-    if (!bar) return;
+    var outer = document.querySelector('.filter-bar-outer');
+    if (!outer) return;
 
-    function syncSpacer() {
-        if (spacer) spacer.style.height = bar.offsetHeight + 'px';
-    }
-    syncSpacer();
-    window.addEventListener('resize', syncSpacer, { passive: true });
+    var isHidden = false;
+    var lastY    = window.scrollY;
+    var upDist   = 0;
 
-    var lastY = window.scrollY;
-    var raf   = false;
     window.addEventListener('scroll', function () {
-        if (raf) return;
-        raf = true;
-        requestAnimationFrame(function () {
-            var y    = window.scrollY;
-            var down = y > lastY && y > 120;
-            bar.classList.toggle('bar-hidden', down);
-            lastY = y;
-            raf = false;
-        });
+        var y     = window.scrollY;
+        var delta = y - lastY;
+        if (Math.abs(delta) < 4) return;
+
+        if (delta > 0) {
+            upDist = 0;
+            if (y > 80 && !isHidden) {
+                isHidden = true;
+                outer.classList.add('bar-hidden');
+            }
+        } else {
+            upDist += Math.abs(delta);
+            if ((upDist >= 60 || y < 80) && isHidden) {
+                isHidden = false;
+                upDist   = 0;
+                outer.classList.remove('bar-hidden');
+            }
+        }
+        lastY = y;
     }, { passive: true });
 }());
 </script>
+
+{% if not is_locked and not guest_locked and user.is_authenticated %}
+<!-- Recalculate confirmation modal -->
+<div id="career-recalc-modal" style="display:none;position:fixed;inset:0;z-index:9998;align-items:center;justify-content:center;background:rgba(0,0,0,0.55);">
+    <div style="background:#fff;border-radius:16px;padding:2rem;max-width:380px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,0.3);text-align:center;">
+        <div style="font-size:2rem;margin-bottom:0.5rem;">🔄</div>
+        <h5 style="font-weight:800;color:#1e293b;margin-bottom:0.5rem;">Recalculate Grades?</h5>
+        <p style="font-size:0.85rem;color:#64748b;margin-bottom:1.5rem;">
+            This will unlock grade entry so you can enter new grades.<br>
+            You will need to <strong>pay again</strong> to see the new career results.
+        </p>
+        <form method="post" action="{% url 'career:recalculate' %}">
+            {% csrf_token %}
+            <button type="submit" style="background:#1e3a8a;color:#fff;border:none;border-radius:10px;padding:0.7rem 1.8rem;font-weight:700;font-size:0.9rem;cursor:pointer;width:100%;margin-bottom:0.6rem;">
+                Yes, unlock grade entry
+            </button>
+        </form>
+        <button onclick="document.getElementById('career-recalc-modal').style.display='none'"
+                style="background:transparent;border:1.5px solid #e2e8f0;border-radius:10px;padding:0.6rem 1.8rem;font-weight:600;font-size:0.85rem;cursor:pointer;color:#64748b;width:100%;">
+            Cancel
+        </button>
+    </div>
+</div>
+{% endif %}
 {% endblock %}

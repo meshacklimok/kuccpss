@@ -26,6 +26,24 @@ urlpatterns = [
     ),
 
     # ===============================
+    # Full Results PDF (scores + eligible courses)
+    # ===============================
+    path(
+        "export/full/",
+        views.export_full_results_pdf,
+        name="export_full_results_pdf"
+    ),
+
+    # ===============================
+    # Recalculate (reset grade lock)
+    # ===============================
+    path(
+        "recalculate/",
+        views.recalculate_view,
+        name="recalculate"
+    ),
+
+    # ===============================
     # Admin Analytics Dashboard
     # ===============================
     path(
@@ -41,6 +59,15 @@ urlpatterns = [
         "eligible/",
         views.eligible_courses_view,
         name="eligible_courses"
+    ),
+
+    # ===============================
+    # Share Calculator Results
+    # ===============================
+    path(
+        "share/create/",
+        views.share_calculator_create,
+        name="share_calculator_create"
     ),
 
 ]

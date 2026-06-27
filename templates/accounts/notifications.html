@@ -72,7 +72,9 @@
               <span><i class="fas fa-user-shield me-1"></i>By {{ notif.published_by.full_name|default:notif.published_by.email }}</span>
               {% endif %}
               {% if notif.link %}
-              <span class="text-primary"><i class="fas fa-external-link-alt me-1"></i>Has link</span>
+              <a href="{{ notif.link }}" class="text-primary" onclick="event.stopPropagation()">
+                <i class="fas fa-external-link-alt me-1"></i>Open link
+              </a>
               {% endif %}
             </div>
           </div>
@@ -113,33 +115,25 @@ const CSRF = (document.cookie.match(/csrftoken=([^;]+)/) || [])[1] || '';
 
 document.querySelectorAll('.notif-card').forEach(card => {
   card.addEventListener('click', function () {
-    const id   = this.dataset.notifId;
-    const link = this.dataset.link;
-    const isRead = this.dataset.read === 'true';
+    const id = this.dataset.notifId;
+    if (this.dataset.read === 'true') return;
 
-    const markAndNavigate = () => {
-      if (link) window.location.href = link;
-    };
-
-    if (!isRead) {
-      fetch(`/accounts/notifications/${id}/read/`, {
-        method: 'POST',
-        headers: { 'X-CSRFToken': CSRF },
-      })
-      .then(() => {
-        // Visual update
-        this.dataset.read = 'true';
-        this.classList.remove('notif-unread');
-        this.style.borderLeft = '';
-        const dot = this.querySelector('.fa-circle.text-warning');
-        if (dot) { dot.className = 'fas fa-check-circle text-success'; dot.style.fontSize = '1rem'; dot.removeAttribute('title'); dot.title = 'Read'; }
-        const newBadge = this.querySelector('.badge.bg-warning');
-        if (newBadge) newBadge.remove();
-      })
-      .finally(markAndNavigate);
-    } else {
-      markAndNavigate();
-    }
+    fetch(`/accounts/notifications/${id}/read/`, {
+      method: 'POST',
+      headers: { 'X-CSRFToken': CSRF },
+    }).then(() => {
+      this.dataset.read = 'true';
+      this.classList.remove('notif-unread');
+      this.style.borderLeft = '';
+      const dot = this.querySelector('.fa-circle.text-warning');
+      if (dot) {
+        dot.className = 'fas fa-check-circle text-success';
+        dot.style.fontSize = '1rem';
+        dot.title = 'Read';
+      }
+      const newBadge = this.querySelector('.badge.bg-warning');
+      if (newBadge) newBadge.remove();
+    });
   });
 });
 </script>

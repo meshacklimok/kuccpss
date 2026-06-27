@@ -460,11 +460,11 @@
             <i class="fas fa-list-check me-1"></i>
             <span id="shortlistLabel">{% if is_shortlisted %}In Shortlist{% else %}+ Add to Shortlist{% endif %}</span>
           </button>
-          <form method="post" action="{% url 'accounts:toggle_save_course' course.pk %}">
+          <form id="saveCourseForm" method="post" action="{% url 'accounts:toggle_save_course' course.pk %}">
             {% csrf_token %}
-            <button type="submit" class="btn btn-sm rounded-pill fw-700 w-100"
+            <button id="saveCourseBtn" type="submit" class="btn btn-sm rounded-pill fw-700 w-100"
                     style="background:rgba(255,255,255,0.15);color:#fff;border:1.5px solid rgba(255,255,255,0.3);font-size:0.8rem;">
-              <i class="far fa-bookmark me-1"></i>Save Course
+              <i class="far fa-bookmark me-1" id="saveIcon"></i><span id="saveLabel">Save Course</span>
             </button>
           </form>
           <a href="{% url 'accounts:shortlist' %}" class="text-center"
@@ -681,6 +681,42 @@
         label.textContent = '+ Add to Shortlist';
         btn.classList.replace('btn-warning', 'btn-light');
       }
+    })
+    .catch(function(){})
+    .finally(function(){ btn.disabled = false; });
+  });
+})();
+
+// Save Course button — intercept form submit, use fetch
+(function(){
+  var form = document.getElementById('saveCourseForm');
+  if (!form) return;
+  var csrf = (document.cookie.match(/(?:^|;\s*)csrftoken=([^;]+)/) || [])[1] || '';
+  var btn = document.getElementById('saveCourseBtn');
+  var label = document.getElementById('saveLabel');
+  var icon = document.getElementById('saveIcon');
+  form.addEventListener('submit', function(e){
+    e.preventDefault();
+    btn.disabled = true;
+    fetch(form.action, {
+      method: 'POST',
+      headers: { 'X-CSRFToken': csrf },
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(data){
+      if (data.saved) {
+        label.textContent = 'Saved';
+        icon.className = 'fas fa-bookmark me-1';
+      } else {
+        label.textContent = 'Save Course';
+        icon.className = 'far fa-bookmark me-1';
+      }
+      // Show brief toast
+      var toast = document.createElement('div');
+      toast.textContent = data.message;
+      toast.style.cssText = 'position:fixed;bottom:1.5rem;right:1.5rem;background:#1e3a8a;color:#fff;padding:0.6rem 1.2rem;border-radius:0.5rem;font-size:0.85rem;z-index:9999;box-shadow:0 4px 12px rgba(0,0,0,0.25);';
+      document.body.appendChild(toast);
+      setTimeout(function(){ toast.remove(); }, 2500);
     })
     .catch(function(){})
     .finally(function(){ btn.disabled = false; });

@@ -6,7 +6,7 @@ from django.db.models import Count, Sum
 from django.shortcuts import render
 from django.urls import path
 
-from .models import CareerEngineLog, DownloadLog, SearchLog, ViewLog
+from .models import CareerEngineLog, DownloadLog, PWAInstallLog, SearchLog, ViewLog
 
 
 def _overview_view(request):
@@ -84,6 +84,14 @@ class DownloadLogAdmin(admin.ModelAdmin):
     list_display   = ('content_type', 'object_name', 'user', 'created_at')
     list_filter    = ('content_type', 'created_at')
     search_fields  = ('object_name',)
+    readonly_fields = ('created_at',)
+    date_hierarchy = 'created_at'
+
+
+@admin.register(PWAInstallLog)
+class PWAInstallLogAdmin(admin.ModelAdmin):
+    list_display   = ('platform', 'user', 'ip', 'created_at')
+    list_filter    = ('platform', 'created_at')
     readonly_fields = ('created_at',)
     date_hierarchy = 'created_at'
 

@@ -14,7 +14,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 
 from .models import Payment, Transaction
-from .services import initiate_stk_push, price_for_feature, fetch_intasend_status
+from .services import initiate_stk_push, price_for_feature, fetch_intasend_status, lock_submission_on_payment
 
 logger = logging.getLogger(__name__)
 
@@ -93,8 +93,14 @@ def _grant_ai_credits_if_applicable(payment: "Payment") -> None:
 
 @login_required
 def payment_required(request):
+    from django.utils.http import url_has_allowed_host_and_scheme
     feature = request.GET.get("feature", "")
-    next_url = request.GET.get("next", "/accounts/dashboard/")
+    raw_next = request.GET.get("next", "")
+    next_url = (
+        raw_next
+        if url_has_allowed_host_and_scheme(raw_next, allowed_hosts={request.get_host()})
+        else "/accounts/dashboard/"
+    )
     price = price_for_feature(feature)
     return render(request, "payments/payment_required.html", {
         "feature": feature,
@@ -206,14 +212,17 @@ def mpesa_webhook(request):
     """
     webhook_secret = getattr(settings, "INTASEND_WEBHOOK_SECRET", "")
     sig = request.headers.get("X-IntaSend-Signature", "")
-    if webhook_secret and sig:
+    if webhook_secret:
+        if not sig:
+            logger.warning("Webhook received with no signature — rejected")
+            return HttpResponse(status=403)
         expected = hmac.new(
             webhook_secret.encode(), request.body, hashlib.sha256
         ).hexdigest()
-        if not hmac.compare_digest(sig, expected):
-            # IntaSend may send the raw secret directly rather than an HMAC digest
-            if not hmac.compare_digest(sig, webhook_secret):
-                logger.warning("Webhook signature mismatch — sig=%r", sig[:20])
+        sig_valid = hmac.compare_digest(sig, expected) or hmac.compare_digest(sig, webhook_secret)
+        if not sig_valid:
+            logger.warning("Webhook signature mismatch — rejected sig=%r", sig[:20])
+            return HttpResponse(status=403)
     logger.info("M-Pesa webhook received")
 
     try:
@@ -294,6 +303,7 @@ def mpesa_webhook(request):
     # Grant AI chat credits if applicable
     if state == "COMPLETE":
         _grant_ai_credits_if_applicable(payment)
+        lock_submission_on_payment(payment)
         _send_payment_receipt(payment)
 
     # Award affiliate commission if the paying user was referred by an active affiliate
@@ -364,6 +374,7 @@ def verify_payment(request, payment_id):
         payment.status = "completed"
         payment.save(update_fields=["status", "updated_at"])
         _grant_ai_credits_if_applicable(payment)
+        lock_submission_on_payment(payment)
         _send_payment_receipt(payment)
         return JsonResponse({"status": "completed", "feature": payment.feature, "message": "Payment confirmed!"})
     elif remote_state == "FAILED":
@@ -418,6 +429,7 @@ def verify_by_transaction_code(request):
             payment.mpesa_code = mpesa_code
             payment.save(update_fields=["status", "mpesa_code", "updated_at"])
             _grant_ai_credits_if_applicable(payment)
+            lock_submission_on_payment(payment)
             _send_payment_receipt(payment)
         logger.info("Transaction code verified: user=%s code=%s payment=%s", request.user.email, mpesa_code, payment.pk)
         return JsonResponse({

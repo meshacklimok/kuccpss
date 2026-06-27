@@ -9,4 +9,5 @@ urlpatterns = [
     path('live-feed/',   views.live_feed_json,       name='live_feed'),
     path('mentors/',     views.mentor_analytics,     name='mentor_analytics'),
     path('affiliates/',  views.affiliate_analytics,  name='affiliate_analytics'),
+    path('pwa-install/', views.pwa_install,          name='pwa_install'),
 ]

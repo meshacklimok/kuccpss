@@ -555,9 +555,243 @@ def dashboard_view(request: HttpRequest) -> HttpResponse:
     from courses.trends import get_trends_context
     trends_ctx = get_trends_context()
 
+    # ── Application Readiness ─────────────────────────────────────────────────
+    from django.urls import reverse as _rev
+    _readiness_steps = [
+        {'key': 'grades',    'label': 'Enter KCSE grades',     'icon': 'fas fa-calculator',     'done': bool(latest_result),  'url': _rev('clusterpoints:calculator'), 'desc': 'Calculate your cluster points'},
+        {'key': 'profile',   'label': 'Complete your profile',  'icon': 'fas fa-user-check',    'done': bool(user.county),    'url': _rev('accounts:profile'),        'desc': 'Add county & KCSE year'},
+        {'key': 'engine',    'label': 'Run Career Engine',      'icon': 'fas fa-rocket',        'done': bool(snapshot),       'url': _rev('career:home'),             'desc': 'See all matching courses'},
+        {'key': 'shortlist', 'label': 'Shortlist top picks',    'icon': 'fas fa-list-check',    'done': shortlist_count > 0,  'url': _rev('accounts:shortlist'),      'desc': 'Rank your favourite courses'},
+        {'key': 'quiz',      'label': 'Take Career Quiz',       'icon': 'fas fa-clipboard-list','done': bool(quiz_submission),'url': _rev('career:quiz'),             'desc': '3-min quiz for personalised advice'},
+    ]
+    _readiness_done = sum(1 for s in _readiness_steps if s['done'])
+    _readiness_pct  = int(_readiness_done / len(_readiness_steps) * 100)
+
+    # ── Shortlist offering map (built for all users with shortlist items) ────
+    _shared_offering_map: dict = {}
+    if shortlist_items:
+        from courses.models import CourseOffering as _CO
+        for _off in _CO.objects.filter(
+            course_id__in=[i.course_id for i in shortlist_items],
+        ).select_related('institution').order_by('id'):
+            if _off.course_id not in _shared_offering_map:
+                _shared_offering_map[_off.course_id] = _off
+
+    # ── Cutoff comparisons + trends for shortlisted courses ──────────────────
+    cutoff_comparisons: list = []
+    if shortlist_items and cluster_results:
+        _kcn_map = {
+            r.cluster.kuccps_number: float(r.cluster_points)
+            for r in cluster_results if r.cluster
+        }
+        from predictor.services import (
+            predict_cutoff as _predict_cutoff,
+            TREND_ICON as _TICON,
+            TREND_COLOR as _TCOLOR,
+            TREND_TIP as _TTIP,
+        )
+        for _item in shortlist_items[:6]:
+            _c = _item.course
+            if not _c.cluster:
+                continue
+            _user_pts = _kcn_map.get(_c.cluster.kuccps_number)
+            if _user_pts is None:
+                continue
+            _off2 = _shared_offering_map.get(_c.id)
+            _cutoff_history = (_off2.cutoff_points if _off2 else None) or _c.cutoff_points
+            _cutoff = _off2.latest_cutoff() if _off2 else None
+            if _cutoff is None and _c.cutoff_points:
+                _yr = max(
+                    (k for k in _c.cutoff_points if _c.cutoff_points[k] is not None),
+                    default=None,
+                )
+                _cutoff = _c.cutoff_points.get(_yr) if _yr else None
+            if _cutoff is None:
+                continue
+            _diff = round(float(_user_pts) - float(_cutoff), 1)
+            _pred = _predict_cutoff(_cutoff_history)
+            _trend = _pred.get('trend', 'stable') if _pred else 'stable'
+            _predicted = round(_pred['predicted'], 1) if _pred else None
+            _history_pairs = (
+                sorted(
+                    [(k, v) for k, v in _cutoff_history.items() if v is not None],
+                    key=lambda x: x[0],
+                )
+                if _cutoff_history else []
+            )
+            cutoff_comparisons.append({
+                'name':        _c.name,
+                'inst':        _off2.institution.name if _off2 else '—',
+                'cluster_num': _c.cluster.kuccps_number,
+                'user_pts':    round(_user_pts, 1),
+                'cutoff':      float(_cutoff),
+                'diff':        _diff,
+                'qualifies':   _diff >= 0,
+                'url':         _c.get_absolute_url(),
+                'trend':       _trend,
+                'trend_icon':  _TICON.get(_trend, 'fa-minus'),
+                'trend_color': _TCOLOR.get(_trend, 'text-muted'),
+                'trend_tip':   _TTIP.get(_trend, ''),
+                'predicted':   _predicted,
+                'history':     _history_pairs,
+            })
+
+    # ── Subject requirements check ────────────────────────────────────────────
+    subject_req_checks: list = []
+    if shortlist_items and latest_result:
+        _GRADE_PTS = {
+            'A': 12, 'A-': 11, 'B+': 10, 'B': 9, 'B-': 8,
+            'C+': 7, 'C': 6, 'C-': 5, 'D+': 4, 'D': 3, 'D-': 2, 'E': 1,
+        }
+        _SUBJ_MAP = {
+            'ENG': 'English', 'KIS': 'Kiswahili', 'MAT': 'Mathematics',
+            'BIO': 'Biology', 'CHE': 'Chemistry', 'PHY': 'Physics',
+            'GEO': 'Geography', 'HIS': 'History', 'CRE': 'Christian Religious Education',
+            'IRE': 'Islamic Religious Education', 'BST': 'Business Studies',
+            'ECO': 'Economics', 'AGR': 'Agriculture', 'ART': 'Art and Design',
+            'MUS': 'Music', 'HOM': 'Home Science', 'COM': 'Computer Studies',
+            'FRE': 'French', 'GER': 'German', 'ARB': 'Arabic',
+            'ACC': 'Accounting',
+        }
+        _student_pts: dict = {
+            sr.subject.name.strip(): sr.points
+            for sr in latest_result.subject_results.select_related('subject').all()
+        }
+        for _item in shortlist_items[:6]:
+            _c = _item.course
+            _reqs = _c.subject_requirements
+            if not _reqs:
+                continue
+            _checks: list = []
+            _all_pass = True
+            for _req in _reqs:
+                _subjects_str = _req.get('subjects_str', '')
+                _min_grade = _req.get('min_grade', 'E')
+                _min_pts_req = _GRADE_PTS.get(_min_grade, 1)
+                _options = [s.strip() for s in _subjects_str.split('/')]
+                _slot_met = False
+                for _opt in _options:
+                    _full_name = _SUBJ_MAP.get(_opt.upper(), _opt)
+                    _pts_have = _student_pts.get(_full_name)
+                    if _pts_have is not None and _pts_have >= _min_pts_req:
+                        _slot_met = True
+                        break
+                if not _slot_met:
+                    _all_pass = False
+                _checks.append({
+                    'label': _subjects_str,
+                    'min_grade': _min_grade,
+                    'met': _slot_met,
+                })
+            subject_req_checks.append({
+                'course_name': _c.name,
+                'url': _c.get_absolute_url(),
+                'checks': _checks,
+                'all_pass': _all_pass,
+            })
+
+    # ── Shortlist comparison table ────────────────────────────────────────────
+    shortlist_comparison: list = []
+    if shortlist_items:
+        for _item in shortlist_items[:6]:
+            _c = _item.course
+            _off = _shared_offering_map.get(_c.id)
+            _cv = _off.latest_cutoff() if _off else None
+            if _cv is None and _c.cutoff_points:
+                _yr = max(
+                    (k for k in _c.cutoff_points if _c.cutoff_points[k] is not None),
+                    default=None,
+                )
+                _cv = _c.cutoff_points.get(_yr) if _yr else None
+            shortlist_comparison.append({
+                'name':      _c.name,
+                'inst':      _off.institution.name if _off else '—',
+                'type':      _c.course_type.name if _c.course_type else '—',
+                'cluster':   _c.cluster.kuccps_number if _c.cluster else '—',
+                'cutoff':    float(_cv) if _cv is not None else None,
+                'min_grade': _c.minimum_mean_grade or '—',
+                'duration':  _c.duration or '—',
+                'url':       _c.get_absolute_url(),
+            })
+
     from career.models import CareerConfig as _CCfg
     from mentorship.models import MentorshipConfig as _MCfg
     _cfg = _CCfg.get()
+
+    # ── AI chat credit info ───────────────────────────────────────────────────
+    from career.models import AIChatCredit as _AIChatCredit
+    _credit = _AIChatCredit.for_user(user)
+    _free_limit = getattr(_cfg, 'ai_free_message_limit', 20)
+    _free_remaining = max(0, _free_limit - _credit.free_messages_used)
+    _paid_remaining = _credit.paid_messages_remaining
+    ai_credit_info = {
+        'free_remaining':  _free_remaining,
+        'paid_remaining':  _paid_remaining,
+        'total_remaining': _free_remaining + _paid_remaining,
+        'has_access':      (_free_remaining + _paid_remaining) > 0 or user.is_staff,
+        'free_limit':      _free_limit,
+    }
+
+    # ── Activity Feed ─────────────────────────────────────────────────────────
+    _activity_events: list = []
+    for _sc in SavedCourse.objects.filter(user=user).select_related('course').order_by('-saved_at')[:5]:
+        _activity_events.append({
+            'ts': _sc.saved_at,
+            'icon': 'fas fa-bookmark',
+            'icon_bg': '#fef3c7', 'icon_color': '#d97706',
+            'label': f'Saved {_sc.course.name}',
+            'sub': 'Watchlist',
+            'url': _sc.course.get_absolute_url(),
+        })
+    for _sl in CourseShortlist.objects.filter(user=user).select_related('course').order_by('-added_at')[:5]:
+        _activity_events.append({
+            'ts': _sl.added_at,
+            'icon': 'fas fa-list-check',
+            'icon_bg': '#eff6ff', 'icon_color': '#2563eb',
+            'label': f'Shortlisted {_sl.course.name}',
+            'sub': 'Shortlist',
+            'url': _sl.course.get_absolute_url(),
+        })
+    if latest_result:
+        _activity_events.append({
+            'ts': latest_result.created_at,
+            'icon': 'fas fa-calculator',
+            'icon_bg': '#f0fdf4', 'icon_color': '#16a34a',
+            'label': 'Calculated cluster points',
+            'sub': 'KCSE Result',
+            'url': _rev('clusterpoints:calculator'),
+        })
+    if snapshot:
+        _activity_events.append({
+            'ts': snapshot.computed_at,
+            'icon': 'fas fa-rocket',
+            'icon_bg': '#eef2ff', 'icon_color': '#4f46e5',
+            'label': f'Ran Career Engine — {snapshot.pathway}',
+            'sub': 'Career Engine',
+            'url': _rev('career:career_results'),
+        })
+    if quiz_submission:
+        _activity_events.append({
+            'ts': quiz_submission.created_at,
+            'icon': 'fas fa-clipboard-list',
+            'icon_bg': '#fdf4ff', 'icon_color': '#7c3aed',
+            'label': 'Completed career quiz',
+            'sub': 'Quiz',
+            'url': _rev('career:quiz_results'),
+        })
+    activity_feed = sorted(_activity_events, key=lambda x: x['ts'], reverse=True)[:6]
+
+    # ── Suggested Mentors (matched to shortlist) ──────────────────────────────
+    _shortlist_course_ids = [_i.course_id for _i in shortlist_items]
+    suggested_mentors = []
+    if _shortlist_course_ids:
+        suggested_mentors = list(
+            _MentorProfile.objects
+            .filter(is_approved=True, is_active=True, course_id__in=_shortlist_course_ids)
+            .select_related('user', 'course', 'institution')
+            .order_by('-average_rating', '-total_sessions')[:2]
+        )
+
     return render(request, "accounts/dashboard.html", {
         # Platform config
         "tawk_enabled":           _cfg.tawk_enabled,
@@ -603,6 +837,22 @@ def dashboard_view(request: HttpRequest) -> HttpResponse:
         # Trending
         "trending_viewed":    trends_ctx.get('trending_viewed', []),
         "spotlight":          trends_ctx.get('spotlight'),
+        # Readiness
+        "readiness_steps":      _readiness_steps,
+        "readiness_pct":        _readiness_pct,
+        "readiness_done":       _readiness_done,
+        # Cutoff comparisons + trends
+        "cutoff_comparisons":   cutoff_comparisons,
+        # Subject requirements
+        "subject_req_checks":   subject_req_checks,
+        # Comparison table
+        "shortlist_comparison": shortlist_comparison,
+        # AI chat
+        "ai_credit_info":       ai_credit_info,
+        # Activity feed
+        "activity_feed":        activity_feed,
+        # Suggested mentors
+        "suggested_mentors":    suggested_mentors,
     })
 
 
@@ -698,7 +948,11 @@ def referral_view(request):
     conversions = Referral.objects.filter(referrer=request.user, converted=True).select_related('referred_user')
     pending     = Referral.objects.filter(referrer=request.user, converted=False).exclude(id=ref.id)
     ref_url = request.build_absolute_uri(f"/?ref={ref.code}")
-    share_msg = f"I use CareerNext to check KCSE cluster points & find courses I qualify for — it's free! Join via my link: {ref_url}"
+    share_msg = (
+        f"🎓 I use CareerNext to calculate my KCSE cluster points & discover every university, KMTC, TVET and TTC course I qualify for — it's 100% FREE!\n\n"
+        f"It covers all Kenya placements in one place. Try it:\n{ref_url}\n\n"
+        f"👉 Or visit: www.careernext.co.ke"
+    )
     return render(request, 'accounts/referral.html', {
         'ref': ref,
         'ref_url': ref_url,
@@ -706,7 +960,7 @@ def referral_view(request):
         'pending': pending,
         'total_referred': conversions.count(),
         'whatsapp_text': share_msg,
-        'twitter_text': "Check your KCSE cluster points & find courses you qualify for — free! 🎓",
+        'twitter_text': "🎓 Check your KCSE cluster points & find every university, KMTC & TVET course you qualify for — 100% free! www.careernext.co.ke",
         'telegram_text': share_msg,
     })
 
@@ -733,7 +987,14 @@ def affiliate_dashboard(request):
         ref = Referral.objects.create(referrer=request.user, code=_make_referral_code())
 
     ref_url   = request.build_absolute_uri(f"/?ref={ref.code}")
-    share_msg = f"Join CareerNext — Kenya's free KCSE cluster points calculator. Find courses you qualify for: {ref_url}"
+    share_msg = (
+        f"🎓 Join CareerNext — Kenya's #1 KCSE career guidance platform!\n\n"
+        f"✅ Calculate your cluster points instantly\n"
+        f"✅ See every university, KMTC, TVET & TTC course you qualify for\n"
+        f"✅ 100% FREE\n\n"
+        f"Sign up via my link: {ref_url}\n\n"
+        f"👉 Or visit: www.careernext.co.ke"
+    )
 
     # All sign-up conversions via this affiliate's link
     referrals = (
@@ -967,11 +1228,15 @@ def public_home_view(request):
         ("Cluster 12", 52, "#d97706"),
     ]
 
+    from resources.models import Article as _HomeArticle
+    recent_articles = list(_HomeArticle.objects.filter(is_published=True).order_by('-featured', '-created_at')[:3])
+
     ctx = {
         "stories": stories,
         "sample_clusters": sample_clusters,
         "featured_promos":    featured_promos,
         "scholarship_alerts": scholarship_alerts,
+        "recent_articles":    recent_articles,
     }
     ctx.update(get_trends_context())
     return render(request, "accounts/home.html", ctx)
@@ -1008,6 +1273,10 @@ def faq_view(request):
         "faq_groups": faq_groups,
         "has_content": items.exists(),
     })
+
+
+def how_it_works_view(request):
+    return render(request, "accounts/how_it_works.html")
 
 
 # =====================================================
@@ -1545,3 +1814,54 @@ def push_subscribe(request: HttpRequest) -> JsonResponse:
         defaults={"p256dh": p256dh, "auth": auth, "user": user},
     )
     return JsonResponse({"ok": True})
+
+
+# =====================================================
+# FULL COURSE COMPARISON
+# =====================================================
+@login_required
+def course_comparison_view(request: HttpRequest) -> HttpResponse:
+    from .models import CourseShortlist
+    from courses.models import CourseOffering
+
+    items = list(
+        CourseShortlist.objects.filter(user=request.user)
+        .select_related('course', 'course__course_type', 'course__cluster')
+        .order_by('rank', '-added_at')
+    )
+
+    offering_map: dict = {}
+    for off in CourseOffering.objects.filter(
+        course_id__in=[i.course_id for i in items],
+    ).select_related('institution').order_by('id'):
+        if off.course_id not in offering_map:
+            offering_map[off.course_id] = off
+
+    comparison = []
+    for item in items:
+        c = item.course
+        off = offering_map.get(c.id)
+        cv = off.latest_cutoff() if off else None
+        if cv is None and c.cutoff_points:
+            yr = max(
+                (k for k in c.cutoff_points if c.cutoff_points[k] is not None),
+                default=None,
+            )
+            cv = c.cutoff_points.get(yr) if yr else None
+        comparison.append({
+            'name':      c.name,
+            'inst':      off.institution.name if off else '—',
+            'type':      c.course_type.name if c.course_type else '—',
+            'cluster':   c.cluster.kuccps_number if c.cluster else '—',
+            'cutoff':    float(cv) if cv is not None else None,
+            'min_grade': c.minimum_mean_grade or '—',
+            'duration':  c.duration or '—',
+            'url':       c.get_absolute_url(),
+            'notes':     item.notes,
+            'rank':      item.rank,
+        })
+
+    return render(request, 'accounts/comparison.html', {
+        'comparison': comparison,
+        'shortlist_count': len(items),
+    })

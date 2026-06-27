@@ -75,6 +75,7 @@ class Institution(models.Model):
         indexes = [
             models.Index(fields=['name']),
             models.Index(fields=['slug']),
+            models.Index(fields=['institution_type']),
         ]
 
     def save(self, *args, **kwargs):
@@ -174,6 +175,11 @@ class InstitutionPromotion(models.Model):
         verbose_name = 'Institution Promotion'
         verbose_name_plural = 'Institution Promotions'
         ordering = ['end_date']
+        indexes = [
+            models.Index(fields=["start_date", "end_date"]),
+            models.Index(fields=["tier"]),
+            models.Index(fields=["pathway"]),
+        ]
 
     def __str__(self):
         return f"{self.institution.name} — {self.get_tier_display()} ({self.start_date} → {self.end_date})"

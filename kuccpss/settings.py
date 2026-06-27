@@ -86,6 +86,7 @@ INSTALLED_APPS = [
     'cloudinary',
     'cloudinary_storage',
     'django.contrib.sitemaps',
+    'django_q',
 ]
 
 # ── Media storage ─────────────────────────────────────────────────────────────
@@ -186,6 +187,24 @@ DATABASES = {
     }
 }
 
+# ── Task Queue (Django-Q2) ────────────────────────────────────────────────────
+# Uses the Django ORM as the broker by default (zero extra infrastructure).
+# Automatically switches to Redis when REDIS_URL is available.
+Q_CLUSTER = {
+    'name': 'careernext',
+    'workers': 2,
+    'recycle': 500,
+    'timeout': 60,       # seconds before a task is killed
+    'retry': 120,        # seconds before a timed-out task is retried
+    'queue_limit': 50,
+    'bulk': 10,
+    'orm': 'default',    # use Django DB as broker
+}
+_REDIS_URL = os.environ.get('REDIS_URL')
+if _REDIS_URL:
+    Q_CLUSTER['redis'] = _REDIS_URL  # type: ignore[index]
+    del Q_CLUSTER['orm']
+
 # ── Caching ───────────────────────────────────────────────────────────────────
 # Local-memory by default (zero dependencies, works on Render free tier).
 # Automatically upgrades to Redis when REDIS_URL env var is set.
@@ -197,7 +216,6 @@ CACHES = {
         'OPTIONS': {'MAX_ENTRIES': 3000},
     }
 }
-_REDIS_URL = os.environ.get('REDIS_URL')
 if _REDIS_URL:
     CACHES['default'] = {
         'BACKEND': 'django.core.cache.backends.redis.RedisCache',
@@ -225,14 +243,8 @@ SECURE_CONTENT_TYPE_NOSNIFF = True
 
 AUTH_PASSWORD_VALIDATORS = [
     {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
-    },
-    {
         'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-        'OPTIONS': {'min_length': 8},
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+        'OPTIONS': {'min_length': 6},
     },
 ]
 
@@ -278,7 +290,7 @@ AUTHENTICATION_BACKENDS = [
 ACCOUNT_LOGIN_METHODS = {"email"}
 ACCOUNT_SIGNUP_FIELDS = ["email*", "password1*", "password2*"]
 ACCOUNT_USER_MODEL_USERNAME_FIELD = None
-ACCOUNT_EMAIL_VERIFICATION = 'optional' if DEBUG else 'none'
+ACCOUNT_EMAIL_VERIFICATION = 'none' if DEBUG else 'optional'
 ACCOUNT_LOGIN_ON_EMAIL_CONFIRMATION = True
 ACCOUNT_LOGIN_ON_PASSWORD_RESET = True
 
@@ -340,6 +352,10 @@ if not DEBUG:
     # Crash loudly if SECRET_KEY is still the insecure fallback
     if SECRET_KEY.startswith('django-insecure-'):
         raise RuntimeError("SECRET_KEY must be set via environment variable in production.")
+
+    # Webhook forgery is possible if this is missing — refuse to start without it
+    if not INTASEND_WEBHOOK_SECRET:
+        raise RuntimeError("INTASEND_WEBHOOK_SECRET must be set via environment variable in production.")
 
     # Render terminates TLS at its edge; tell Django the real proto via the header.
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')

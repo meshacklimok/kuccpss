@@ -93,7 +93,7 @@ Status legend: ✅ Done | 🚧 In Progress | 📋 Planned | ❌ Blocked | [-] Dr
 | PDF upload per course | ✅ | course_pdfs/ upload path |
 | Link degree courses to clusters | ✅ | FK to Cluster (university degree courses) |
 | Course spotlight / trends page | ✅ | CourseSpotlight model; admin-configurable; shown on `/courses/spotlight-trends/` |
-| Course reviews | 🚧 | Review model exists; UI not yet built |
+| Course reviews | ✅ | Star picker + AJAX submit in `partials/reviews_section.html`; avg rating shown on toggle; `submit_course_review` view + URL wired |
 | Career outcomes + duration fields | ✅ | career_outcomes, duration fields on Course |
 | TVET/TTC cutoff points | 📋 | Not in PDFs — need KUCCPS portal historical data |
 | TVET minimum subject requirements | 📋 | Reference: `TVET_CLUSTER_DOCUMENT_2025.pdf`; not yet linked to Course model |

@@ -145,7 +145,7 @@
     </div>
     <span style="font-size:0.68rem;color:#94a3b8;font-weight:500;">Grades · Cluster Points · Results</span>
     <div class="sb-spacer"></div>
-    <div class="sb-filled-count" id="filledCount">0 / 20 clusters</div>
+    <div class="sb-filled-count" id="filledCount">0 / {{ cluster_groups|length }} clusters</div>
 </div>
 
 <form method="post" id="manualForm">
@@ -164,7 +164,7 @@
             {% elif from_calculate %}
                 Pre-filled from your KCSE grades{% if calc_single %} — computed score: <strong style="color:#1d4ed8;">{{ calc_single }} / 48</strong>{% endif %}. Adjust any value if needed.
             {% else %}
-                Enter your points (0 – 48) for each of the 20 KUCCPS university cluster groups.
+                Enter your points (0 – 48) for each of the {{ cluster_groups|length }} KUCCPS university cluster groups.
             {% endif %}
         </p>
         {% if from_ocr %}

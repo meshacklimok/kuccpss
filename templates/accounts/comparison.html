@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+{% block title %}Course Comparison — KUCCPSS{% endblock %}
+
+{% block content %}
+<style>
+.cmp-hero {
+  background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 60%, #312e81 100%);
+  padding: 2rem 0 1.5rem;
+}
+.cmp-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 0.82rem; }
+.cmp-table thead th {
+  font-size: 0.66rem; font-weight: 800; text-transform: uppercase;
+  letter-spacing: 0.06em; color: #64748b; background: #f8fafc;
+  padding: 0.6rem 0.85rem; border-bottom: 2px solid #e2e8f0;
+  white-space: nowrap;
+}
+.cmp-table tbody tr { transition: background 0.15s; }
+.cmp-table tbody tr:hover { background: #f1f5f9; }
+.cmp-table tbody td {
+  padding: 0.75rem 0.85rem; border-bottom: 1px solid #f1f5f9; vertical-align: middle;
+}
+.cmp-course { font-weight: 700; font-size: 0.85rem; color: #1e293b; }
+.cmp-course:hover { color: #2563eb; }
+.cmp-inst { font-size: 0.71rem; color: #64748b; margin-top: 2px; }
+.cmp-badge {
+  font-size: 0.68rem; font-weight: 700; padding: 2px 8px; border-radius: 6px;
+  background: #f1f5f9; color: #475569; white-space: nowrap; display: inline-block;
+}
+.cmp-cluster-chip {
+  width: 28px; height: 28px; border-radius: 6px; font-size: 0.65rem;
+  background: #dbeafe; color: #1d4ed8; font-weight: 800;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.cmp-rank-chip {
+  width: 22px; height: 22px; border-radius: 50%; font-size: 0.68rem;
+  background: #e0e7ff; color: #4338ca; font-weight: 800;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.cmp-note { font-size: 0.72rem; color: #64748b; font-style: italic; }
+.empty-state { text-align: center; padding: 4rem 2rem; }
+</style>
+
+<div class="cmp-hero">
+  <div class="container">
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+      <div>
+        <h1 class="fw-800 mb-1" style="font-size:1.5rem;color:#fff;">
+          <i class="fas fa-table me-2" style="color:#93c5fd;"></i>Course Comparison
+        </h1>
+        <div style="font-size:0.82rem;color:rgba(255,255,255,0.65);">
+          All {{ shortlist_count }} shortlisted course{{ shortlist_count|pluralize }} side by side
+        </div>
+      </div>
+      <div class="d-flex gap-2">
+        <a href="{% url 'accounts:shortlist' %}" class="btn btn-sm"
+           style="background:rgba(255,255,255,0.15);color:#fff;border:1.5px solid rgba(255,255,255,0.25);border-radius:10px;font-size:0.82rem;font-weight:700;">
+          <i class="fas fa-bookmark me-1"></i>Manage Shortlist
+        </a>
+        <a href="{% url 'accounts:dashboard' %}" class="btn btn-sm"
+           style="background:rgba(255,255,255,0.1);color:rgba(255,255,255,0.75);border:1.5px solid rgba(255,255,255,0.15);border-radius:10px;font-size:0.82rem;font-weight:700;">
+          <i class="fas fa-arrow-left me-1"></i>Dashboard
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="container" style="padding: 2rem 1rem;">
+  {% if comparison %}
+  <div class="card shadow-sm" style="border-radius:14px;border:1.5px solid #e2e8f0;overflow:hidden;">
+    <div style="overflow-x:auto;">
+      <table class="cmp-table">
+        <thead>
+          <tr>
+            <th style="padding-left:1.25rem;min-width:220px;">#&nbsp; Course</th>
+            <th>Institution</th>
+            <th>Type</th>
+            <th>Cluster</th>
+            <th>Cutoff</th>
+            <th>Min Grade</th>
+            <th>Duration</th>
+            <th>Notes</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in comparison %}
+          <tr>
+            <td style="padding-left:1.25rem;">
+              <div class="d-flex align-items-start gap-2">
+                {% if row.rank %}
+                <span class="cmp-rank-chip flex-shrink-0" title="Choice {{ row.rank }}">{{ row.rank }}</span>
+                {% endif %}
+                <div>
+                  <a href="{{ row.url }}" class="cmp-course text-decoration-none">{{ row.name }}</a>
+                </div>
+              </div>
+            </td>
+            <td>
+              <span class="cmp-inst" style="font-size:0.78rem;color:#334155;">{{ row.inst }}</span>
+            </td>
+            <td>
+              <span class="cmp-badge">{{ row.type }}</span>
+            </td>
+            <td>
+              <span class="cmp-cluster-chip">{{ row.cluster }}</span>
+            </td>
+            <td>
+              {% if row.cutoff %}
+              <span class="fw-800" style="font-size:0.85rem;color:#1e293b;">
+                {{ row.cutoff }}<span class="text-muted fw-400" style="font-size:0.65rem;">/48</span>
+              </span>
+              {% else %}
+              <span class="text-muted">—</span>
+              {% endif %}
+            </td>
+            <td>
+              <span class="fw-700" style="font-size:0.8rem;">{{ row.min_grade }}</span>
+            </td>
+            <td>
+              <span class="text-muted" style="font-size:0.77rem;white-space:nowrap;">{{ row.duration }}</span>
+            </td>
+            <td style="max-width:180px;">
+              {% if row.notes %}
+              <span class="cmp-note">{{ row.notes }}</span>
+              {% else %}
+              <span class="text-muted" style="font-size:0.72rem;">—</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <p class="text-muted mt-3" style="font-size:0.75rem;text-align:center;">
+    <i class="fas fa-info-circle me-1"></i>
+    Cutoff points are from the most recent available year. Add courses via
+    <a href="{% url 'courses:course_types_list' %}" class="text-decoration-none">Browse Courses</a>
+    or <a href="{% url 'accounts:shortlist' %}" class="text-decoration-none">your shortlist</a>.
+  </p>
+
+  {% else %}
+  <div class="empty-state">
+    <i class="fas fa-table" style="font-size:3rem;color:#e2e8f0;display:block;margin-bottom:1rem;"></i>
+    <h5 class="fw-800 mb-2" style="color:#1e293b;">No courses shortlisted yet</h5>
+    <p class="text-muted mb-4" style="font-size:0.9rem;">
+      Add courses to your shortlist and they'll appear here for side-by-side comparison.
+    </p>
+    <a href="{% url 'courses:course_types_list' %}" class="btn btn-primary px-4 fw-700" style="border-radius:10px;">
+      <i class="fas fa-search me-1"></i>Browse Courses
+    </a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

@@ -60,6 +60,7 @@ class UserKCSEResult(TimeStampedModel):
 
     class Meta:  # type: ignore[misc]
         ordering = ['-created_at']
+        indexes = [models.Index(fields=["user", "created_at"])]
 
     def recalc_total_points(self):
         """
@@ -167,6 +168,10 @@ class ClusterCalculationResult(TimeStampedModel):
     class Meta:  # type: ignore[misc]
         unique_together = ('user', 'kcse_result', 'cluster')
         ordering = ['cluster__number']
+        indexes = [
+            models.Index(fields=["user", "cluster"]),
+            models.Index(fields=["kcse_result"]),
+        ]
 
     def calculate_cluster_points(self):
         """

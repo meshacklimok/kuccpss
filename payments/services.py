@@ -15,8 +15,16 @@ FEATURE_PRICES = {
     "ai_chat_access": 50,
 }
 
-# Features that can be purchased multiple times (top-ups, not one-time unlocks)
-REPEATABLE_FEATURES = {"ai_chat_access"}
+# Features that can be purchased multiple times
+# view_cluster_points / premium_career_report are repeatable so users can pay
+# again to recalculate for a new grade session.
+REPEATABLE_FEATURES = {"ai_chat_access", "view_cluster_points", "premium_career_report"}
+
+# Maps a payment feature to the CareerSubmission feature it should lock
+PAYMENT_TO_SUBMISSION = {
+    "view_cluster_points": "cluster_calculator",
+    "premium_career_report": "degree_career",
+}
 
 
 def has_paid_for_feature(user, feature: str) -> bool:
@@ -31,6 +39,70 @@ def has_paid_for_feature(user, feature: str) -> bool:
     ).exists():
         return True
     return Payment.objects.filter(user=user, feature=feature, status="completed").exists()
+
+
+def has_paid_for_current_session(user, calc_feature: str, gate_feature: str) -> bool:
+    """
+    Session-aware payment check for repeatable features.
+
+    Returns True (user can view results) when:
+      - user is staff or has a payment exemption
+      - the gate feature is disabled / free
+      - their current CareerSubmission has an unlocked_by_payment set
+      - they have NO CareerSubmission yet (old results from a previous paid session)
+
+    Returns False (show payment overlay) when they have a submission with
+    new grades entered but no payment linked to it yet.
+    """
+    from django.db.models import Q
+    from .models import PaymentExemption
+    if getattr(user, 'is_staff', False):
+        return True
+    if PaymentExemption.objects.filter(
+        Q(user=user, feature=gate_feature) | Q(user=user, feature='')
+    ).exists():
+        return True
+    try:
+        from career.models import CareerSubmission
+        sub = CareerSubmission.objects.get(user=user, feature=calc_feature)
+        return sub.unlocked_by_payment_id is not None
+    except Exception:
+        # No submission = no new unconfirmed calculation — allow viewing old saved results
+        return True
+
+
+def lock_submission_on_payment(payment: "Payment") -> None:
+    """
+    Called after any payment completion for view_cluster_points or premium_career_report.
+
+    - Links the payment to the user's CareerSubmission (unlocked_by_payment).
+    - Immediately locks the submission (status=locked, lock_at=now).
+    - Only acts when SubmissionLockConfig.lock_on_payment is True for the feature.
+    - On a repeat payment (recalculation), the submission was already reset to pending
+      by the recalculate endpoint; this call locks the new session too.
+    """
+    calc_feature = PAYMENT_TO_SUBMISSION.get(payment.feature)
+    if not calc_feature:
+        return
+    try:
+        from career.models import CareerSubmission, SubmissionLockConfig
+        from django.utils import timezone as _tz
+        lock_cfg = SubmissionLockConfig.get_for_feature(calc_feature)
+        if not lock_cfg or not lock_cfg.lock_on_payment:
+            return
+        updated = CareerSubmission.objects.filter(
+            user=payment.user, feature=calc_feature
+        ).update(
+            status=CareerSubmission.STATUS_LOCKED,
+            unlocked_by_payment_id=payment.pk,
+            lock_at=_tz.now(),
+        )
+        logger.info(
+            "lock_submission_on_payment: %s row(s) locked — user=%s feature=%s payment=%s",
+            updated, payment.user_id, calc_feature, payment.pk,
+        )
+    except Exception as exc:
+        logger.warning("lock_submission_on_payment failed for payment %s: %s", payment.pk, exc)
 
 
 def get_base_url():

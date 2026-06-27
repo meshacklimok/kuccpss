@@ -123,8 +123,14 @@ def kcse_calculator_view(request):
                 existing_sub.status = CareerSubmission.STATUS_LOCKED
                 existing_sub.save(update_fields=['status'])
             if existing_sub.status == CareerSubmission.STATUS_LOCKED and request.method == 'POST':
-                # Block POST resubmission for locked users — redirect back to GET (shows saved results)
-                return redirect('clusterpoints:calculator')
+                # Official resubmit bypass: admin flips allow_official_resubmit when KNEC releases
+                # real results — lets a user who estimated via calculator enter real grades once
+                # via Upload/Paste/Manual (the calculator form itself stays blocked).
+                is_official_path = request.POST.get('entry_method') in ('upload', 'paste', 'manual')
+                if is_official_path and lock_cfg.allow_official_resubmit and existing_sub.method == CareerSubmission.METHOD_CALCULATE:
+                    pass  # allow through; will overwrite submission with official data
+                else:
+                    return redirect('clusterpoints:calculator')
 
     form = KCSEForm(request.POST or None)
 
@@ -235,6 +241,7 @@ def kcse_calculator_view(request):
                             'grades_json': named_points,
                             'status': CareerSubmission.STATUS_PENDING,
                             'lock_at': timezone.now() + timedelta(minutes=lock_cfg.lock_minutes),
+                            'unlocked_by_payment': None,  # new session requires new payment
                         },
                     )
                     existing_sub = CareerSubmission.objects.filter(
@@ -340,14 +347,14 @@ def kcse_calculator_view(request):
             'edit_url': reverse('clusterpoints:calculator'),
         }
 
-    from payments.services import has_paid_for_feature, is_feature_enabled, price_for_feature
+    from payments.services import has_paid_for_current_session, is_feature_enabled, price_for_feature
     _gate_feature = "view_cluster_points"
     _gate_enabled = is_feature_enabled(_gate_feature)
     _is_locked = (
         bool(results)
         and request.user.is_authenticated
         and _gate_enabled
-        and not has_paid_for_feature(request.user, _gate_feature)
+        and not has_paid_for_current_session(request.user, CareerSubmission.FEATURE_CALCULATOR, _gate_feature)
     )
 
     return render(request, "clusterpoints/calculator.html", {
@@ -392,7 +399,7 @@ def export_cluster_pdf(request):
     )
 
     response = HttpResponse(content_type='application/pdf')
-    response['Content-Disposition'] = 'attachment; filename="cluster_points_report.pdf"'
+    response['Content-Disposition'] = 'attachment; filename="careernext_cluster_points_quick.pdf"'
 
     p = canvas.Canvas(response, pagesize=A4)  # type: ignore[arg-type]
     W, H = A4
@@ -475,10 +482,12 @@ def export_cluster_pdf(request):
     p.setFillColor(grade_col)
     p.roundRect(W - 4.0*cm, y - 2.35*cm, 2.4*cm, 1.9*cm, 8, fill=1, stroke=0)
     p.setFillColor(WHITE)
-    p.setFont("Helvetica-Bold", 28)
-    p.drawCentredString(W - 2.8*cm, y - 1.5*cm, mg or '—')
-    p.setFont("Helvetica", 7)
-    p.drawCentredString(W - 2.8*cm, y - 2.1*cm, "Mean Grade")
+    p.setFont("Helvetica-Bold", 18)
+    p.drawCentredString(W - 2.8*cm, y - 1.45*cm, mg or '—')
+    p.setFont("Helvetica", 6.5)
+    p.drawCentredString(W - 2.8*cm, y - 1.9*cm, "KCSE Grade")
+    p.setFont("Helvetica", 5.5)
+    p.drawCentredString(W - 2.8*cm, y - 2.2*cm, "visit www.careernext.co.ke")
 
     y -= 3.1*cm
 
@@ -557,6 +566,346 @@ def export_cluster_pdf(request):
         p.setFillColor(WHITE)
         p.setFont("Helvetica-Bold", 8.5)
         p.drawCentredString(x + COL_W - 1.45*cm, cell_y - 0.55*cm, f"{pts:.1f} / 48")
+
+    # ── Disclaimer block ─────────────────────────────────────────────────────
+    # Reserve space at bottom of last page
+    disclaimer_y = 2.2*cm
+    p.setFillColor(rc.HexColor("#f8fafc"))
+    p.roundRect(1.2*cm, disclaimer_y - 0.7*cm, W - 2.4*cm, 0.7*cm, 4, fill=1, stroke=0)
+    p.setStrokeColor(rc.HexColor("#cbd5e1"))
+    p.roundRect(1.2*cm, disclaimer_y - 0.7*cm, W - 2.4*cm, 0.7*cm, 4, fill=0, stroke=1)
+    p.setFillColor(SLATE)
+    p.setFont("Helvetica-Oblique", 6)
+    p.drawCentredString(W / 2, disclaimer_y - 0.28*cm,
+        "Disclaimer: These cluster points are calculated for guidance purposes only. "
+        "Always confirm official cutoffs at kuccps.net before applying.")
+    p.setFont("Helvetica", 6)
+    p.drawCentredString(W / 2, disclaimer_y - 0.54*cm,
+        "Use our engine to discover all courses you qualify for: www.careernext.co.ke")
+
+    p.save()
+    return response
+
+
+# =====================================================
+# FULL RESULTS PDF (cluster scores + eligible courses)
+# =====================================================
+@login_required
+def export_full_results_pdf(request):
+    """
+    Comprehensive PDF: student profile, all cluster scores, eligible degree
+    courses (eligible then nearly-there), and a next-steps action plan.
+    """
+    from reportlab.lib import colors as rc
+    from .eligibility import get_eligible_courses
+
+    kcse_result = UserKCSEResult.objects.filter(
+        user=request.user
+    ).order_by('-created_at').first()
+
+    if not kcse_result:
+        messages.error(request, "No KCSE results found. Please use the calculator first.")
+        return redirect("clusterpoints:calculator")
+
+    cluster_results = list(
+        kcse_result.cluster_results.select_related('cluster').order_by('cluster__number')  # type: ignore[attr-defined]
+    )
+    eligible_list = get_eligible_courses(request.user, kcse_result)
+    eligible = sorted([r for r in eligible_list if r['status'] == 'eligible'],
+                      key=lambda x: x['gap'])          # smallest positive gap first (+0.1 → +40)
+    nearly   = sorted([r for r in eligible_list if r['status'] == 'nearly'],
+                      key=lambda x: x['gap'], reverse=True)  # closest to cutoff first (0 → -50)
+
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = 'attachment; filename="careernext_full_report.pdf"'
+
+    p = canvas.Canvas(response, pagesize=A4)  # type: ignore[arg-type]
+    W, H = A4
+
+    NAVY    = rc.HexColor("#1e3a8a")
+    TEAL    = rc.HexColor("#0e7490")
+    EMERALD = rc.HexColor("#059669")
+    AMBER   = rc.HexColor("#d97706")
+    PURPLE  = rc.HexColor("#7c3aed")
+    SLATE   = rc.HexColor("#475569")
+    LIGHT   = rc.HexColor("#f0f9ff")
+    RED     = rc.HexColor("#dc2626")
+    WHITE   = rc.white
+
+    page_num = [0]
+
+    def new_page():
+        page_num[0] += 1
+        if page_num[0] > 1:
+            p.showPage()
+        p.setFillColor(NAVY)
+        p.rect(0, H - 2.0*cm, W, 2.0*cm, fill=1, stroke=0)
+        p.setFillColor(TEAL)
+        p.rect(0, H - 2.1*cm, W, 0.12*cm, fill=1, stroke=0)
+        p.setFillColor(WHITE)
+        p.setFont("Helvetica-Bold", 13)
+        p.drawString(1.5*cm, H - 1.2*cm, "CareerNext — KCSE Full Results Report")
+        p.setFont("Helvetica-Oblique", 7.5)
+        p.setFillColor(rc.HexColor("#93c5fd"))
+        p.drawString(1.5*cm, H - 1.72*cm, "Your Journey Begins Here")
+        p.setFont("Helvetica", 8)
+        p.setFillColor(rc.HexColor("#bfdbfe"))
+        p.drawRightString(W - 1.5*cm, H - 1.3*cm, f"Page {page_num[0]}  |  careernext.co.ke")
+        p.setFillColor(TEAL)
+        p.rect(0, 1.35*cm, W, 0.08*cm, fill=1, stroke=0)
+        p.setFillColor(NAVY)
+        p.rect(0, 0, W, 1.35*cm, fill=1, stroke=0)
+        p.setFillColor(WHITE)
+        p.setFont("Helvetica-Bold", 7.5)
+        p.drawCentredString(W / 2, 0.82*cm, "careernext.co.ke  —  Your Journey Begins Here")
+        p.setFont("Helvetica", 6.5)
+        p.setFillColor(rc.HexColor("#93c5fd"))
+        p.drawCentredString(W / 2, 0.45*cm,
+            "For guidance only — verify all details on the official KUCCPS portal (kuccps.net) before applying")
+        return H - 2.5*cm
+
+    # ── PAGE 1: Student profile + cluster scores grid ─────────────────────────
+    y = new_page()
+
+    user_name = getattr(request.user, 'full_name', None) or request.user.email
+    mg = _mean_grade(kcse_result.total_points)
+
+    if mg and mg[0] == 'A':
+        grade_col = PURPLE
+    elif mg and mg[0] == 'B':
+        grade_col = EMERALD
+    elif mg and mg[0] == 'C':
+        grade_col = AMBER
+    else:
+        grade_col = RED
+
+    # Student profile card
+    p.setFillColor(LIGHT)
+    p.roundRect(1.2*cm, y - 2.6*cm, W - 2.4*cm, 2.4*cm, 6, fill=1, stroke=0)
+    p.setFillColor(TEAL)
+    p.rect(1.2*cm, y - 2.6*cm, 0.35*cm, 2.4*cm, fill=1, stroke=0)
+    p.setFillColor(NAVY)
+    p.setFont("Helvetica-Bold", 11)
+    p.drawString(1.9*cm, y - 0.65*cm, (user_name or '')[:55])
+    p.setFillColor(SLATE)
+    p.setFont("Helvetica", 9)
+    p.drawString(1.9*cm, y - 1.15*cm, f"Generated: {timezone.now().strftime('%d %B %Y')}")
+    p.drawString(1.9*cm, y - 1.62*cm, f"KCSE Aggregate: {kcse_result.total_points} / 84")
+    p.drawString(1.9*cm, y - 2.08*cm, f"Mean Grade: {mg or '—'}")
+    # Summary counts (right side)
+    p.setFillColor(EMERALD)
+    p.setFont("Helvetica-Bold", 10)
+    p.drawRightString(W - 1.9*cm, y - 0.65*cm, f"{len(eligible)} Eligible Courses")
+    p.setFillColor(AMBER)
+    p.drawRightString(W - 1.9*cm, y - 1.15*cm, f"{len(nearly)} Nearly There")
+    p.setFillColor(SLATE)
+    p.setFont("Helvetica", 8)
+    p.drawRightString(W - 1.9*cm, y - 1.62*cm, "Visit www.careernext.co.ke")
+    # Mean grade badge
+    p.setFillColor(grade_col)
+    p.roundRect(W - 4.2*cm, y - 2.35*cm, 2.0*cm, 1.5*cm, 6, fill=1, stroke=0)
+    p.setFillColor(WHITE)
+    p.setFont("Helvetica-Bold", 15)
+    p.drawCentredString(W - 3.2*cm, y - 1.55*cm, mg or '—')
+    p.setFont("Helvetica", 6)
+    p.drawCentredString(W - 3.2*cm, y - 1.9*cm, "KCSE Grade")
+    p.setFont("Helvetica", 5)
+    p.drawCentredString(W - 3.2*cm, y - 2.18*cm, "careernext.co.ke")
+
+    y -= 3.2*cm
+
+    # Cluster scores heading + legend
+    p.setFillColor(NAVY)
+    p.setFont("Helvetica-Bold", 9.5)
+    p.drawString(1.5*cm, y, "ALL CLUSTER SCORES")
+    p.setFillColor(SLATE)
+    p.setFont("Helvetica", 7.5)
+    p.drawString(1.5*cm, y - 0.4*cm,
+        f"{len(cluster_results)} clusters calculated  |  Maximum per cluster: 48 pts")
+    y -= 0.82*cm
+
+    for lx, lc, lt in [
+        (1.5*cm,  EMERALD, "Strong (36–48 pts)"),
+        (6.0*cm,  NAVY,    "Moderate (24–35 pts)"),
+        (11.2*cm, AMBER,   "Below 24 pts"),
+    ]:
+        p.setFillColor(lc)
+        p.roundRect(lx, y - 0.2*cm, 0.18*cm, 0.18*cm, 2, fill=1, stroke=0)
+        p.setFillColor(SLATE)
+        p.setFont("Helvetica", 7)
+        p.drawString(lx + 0.28*cm, y - 0.12*cm, lt)
+    y -= 0.52*cm
+
+    COL_W  = (W - 3.2*cm) / 2
+    CELL_H = 1.05*cm
+    GAP    = 0.12*cm
+    col_x  = [1.5*cm, 1.5*cm + COL_W + 0.2*cm]
+
+    def _score_col_bg(pts):
+        if pts >= 36:
+            return EMERALD, rc.HexColor("#d1fae5")
+        if pts >= 24:
+            return NAVY, rc.HexColor("#dbeafe")
+        return AMBER, rc.HexColor("#fef3c7")
+
+    row_offset = 0
+    for i, r in enumerate(cluster_results):
+        col = i % 2
+        if col == 0 and i > 0:
+            row_offset += 1
+        if col == 0 and (y - row_offset * (CELL_H + GAP) - CELL_H) < 1.7*cm:
+            y = new_page()
+            row_offset = 0
+        cell_y = y - row_offset * (CELL_H + GAP)
+        x      = col_x[col]
+        pts    = float(r.cluster_points)
+        sc, bg = _score_col_bg(pts)
+
+        p.setFillColor(bg)
+        p.roundRect(x, cell_y - CELL_H, COL_W - 0.1*cm, CELL_H, 4, fill=1, stroke=0)
+        p.setFillColor(sc)
+        p.rect(x, cell_y - CELL_H, 0.22*cm, CELL_H, fill=1, stroke=0)
+        knum  = r.cluster.kuccps_number if r.cluster else '?'
+        cname = (r.cluster.name if r.cluster else 'Unknown')[:30]
+        p.setFillColor(NAVY)
+        p.setFont("Helvetica-Bold", 7.5)
+        p.drawString(x + 0.38*cm, cell_y - 0.32*cm, f"Cluster {knum}")
+        p.setFillColor(SLATE)
+        p.setFont("Helvetica", 6.8)
+        p.drawString(x + 0.38*cm, cell_y - 0.63*cm, cname)
+        p.setFillColor(sc)
+        p.roundRect(x + COL_W - 2.6*cm, cell_y - 0.88*cm, 2.3*cm, 0.72*cm, 4, fill=1, stroke=0)
+        p.setFillColor(WHITE)
+        p.setFont("Helvetica-Bold", 8.5)
+        p.drawCentredString(x + COL_W - 1.45*cm, cell_y - 0.55*cm, f"{pts:.1f} / 48")
+
+    # ── PAGE 2+: Eligible courses ─────────────────────────────────────────────
+    y = new_page()
+
+    p.setFillColor(NAVY)
+    p.setFont("Helvetica-Bold", 10)
+    p.drawString(1.5*cm, y, "ELIGIBLE DEGREE COURSES")
+    p.setFillColor(SLATE)
+    p.setFont("Helvetica", 7.5)
+    p.drawString(1.5*cm, y - 0.4*cm,
+        f"{len(eligible)} eligible  |  {len(nearly)} nearly there (within 5 pts)  |  www.careernext.co.ke")
+    y -= 0.9*cm
+
+    def _draw_course_section(title, accent, courses, section_y):
+        """Draw one section (Eligible or Nearly There) and return updated y."""
+        if not courses:
+            return section_y
+
+        # Section banner
+        p.setFillColor(accent)
+        p.rect(1.5*cm, section_y - 0.55*cm, W - 3.0*cm, 0.55*cm, fill=1, stroke=0)
+        p.setFillColor(WHITE)
+        p.setFont("Helvetica-Bold", 9)
+        p.drawString(1.7*cm, section_y - 0.36*cm,
+            f"{title}  ({len(courses)} courses)")
+        section_y -= 0.82*cm
+
+        # Column headers
+        p.setFillColor(SLATE)
+        p.setFont("Helvetica-Bold", 7)
+        p.drawString(1.7*cm,  section_y, "COURSE NAME")
+        p.drawString(9.5*cm,  section_y, "CLUSTER")
+        p.drawString(13.5*cm, section_y, "CUTOFF")
+        p.drawString(15.5*cm, section_y, "YOUR PTS")
+        p.drawString(17.5*cm, section_y, "GAP")
+        section_y -= 0.1*cm
+        p.setStrokeColor(rc.HexColor("#cbd5e1"))
+        p.line(1.5*cm, section_y, W - 1.5*cm, section_y)
+        section_y -= 0.42*cm
+
+        for item in courses:
+            if section_y < 3.0*cm:
+                section_y = new_page()
+                section_y -= 0.3*cm
+
+            course     = item['course']
+            gap        = item['gap']
+            cluster_lbl = (
+                f"C{course.cluster.kuccps_number} — {course.cluster.name[:16]}"
+                if course.cluster else "—"
+            )
+            insts = item.get('institutions', [])
+            inst_str = ", ".join(i.name[:18] for i in insts[:3])
+            if len(insts) > 3:
+                inst_str += f" +{len(insts) - 3} more"
+
+            p.setFillColor(rc.black)
+            p.setFont("Helvetica", 7.5)
+            p.drawString(1.7*cm,  section_y, course.name[:52])
+            p.drawString(9.5*cm,  section_y, cluster_lbl[:26])
+            p.drawString(13.5*cm, section_y, f"{item['cutoff']:.1f}")
+            p.drawString(15.5*cm, section_y, f"{item['user_points']:.1f}")
+            gap_col = EMERALD if gap >= 0 else AMBER
+            p.setFillColor(gap_col)
+            p.setFont("Helvetica-Bold", 7.5)
+            p.drawString(17.5*cm, section_y, f"{'+'if gap>=0 else ''}{gap:.1f}")
+            p.setFillColor(SLATE)
+            p.setFont("Helvetica", 6.5)
+            p.drawString(1.7*cm, section_y - 0.3*cm, inst_str[:80])
+            section_y -= 0.72*cm
+
+        return section_y - 0.3*cm
+
+    if eligible:
+        y = _draw_course_section("ELIGIBLE — You Qualify", EMERALD, eligible, y)
+
+    if nearly:
+        if y < 4.0*cm:
+            y = new_page()
+        else:
+            y -= 0.4*cm
+        y = _draw_course_section("NEARLY THERE — Within 5 pts of Cutoff", AMBER, nearly, y)
+
+    if not eligible and not nearly:
+        p.setFillColor(SLATE)
+        p.setFont("Helvetica", 9)
+        p.drawString(1.5*cm, y, "No matching degree courses found based on 2024 cutoff data.")
+
+    # ── Next steps ────────────────────────────────────────────────────────────
+    if y < 6.5*cm:
+        y = new_page()
+    else:
+        y -= 0.5*cm
+        p.setFillColor(TEAL)
+        p.rect(1.5*cm, y, W - 3.0*cm, 0.06*cm, fill=1, stroke=0)
+        y -= 0.7*cm
+
+    p.setFillColor(NAVY)
+    p.setFont("Helvetica-Bold", 10)
+    p.drawString(1.5*cm, y, "WHAT TO DO NEXT")
+    y -= 0.6*cm
+
+    steps = [
+        ("1", "Discover all courses you qualify for",
+         "Use our engine at www.careernext.co.ke — explore every course and institution that matches your scores."),
+        ("2", "Save your shortlist",
+         "Log in to careernext.co.ke — save your top courses and track your applications in one place."),
+        ("3", "Apply during the window",
+         "The KUCCPS application window typically opens in May/June. Watch the official portal at kuccps.net."),
+        ("4", "Get mentorship",
+         "Book a session with a university student or professional at www.careernext.co.ke/mentorship/"),
+    ]
+
+    for num, title, desc in steps:
+        if y < 3.0*cm:
+            y = new_page()
+        p.setFillColor(NAVY)
+        p.roundRect(1.5*cm, y - 0.44*cm, 0.44*cm, 0.44*cm, 3, fill=1, stroke=0)
+        p.setFillColor(WHITE)
+        p.setFont("Helvetica-Bold", 9)
+        p.drawCentredString(1.72*cm, y - 0.29*cm, num)
+        p.setFillColor(NAVY)
+        p.setFont("Helvetica-Bold", 8.5)
+        p.drawString(2.2*cm, y - 0.18*cm, title)
+        p.setFillColor(SLATE)
+        p.setFont("Helvetica", 8)
+        p.drawString(2.2*cm, y - 0.42*cm, desc[:88])
+        y -= 0.76*cm
 
     p.save()
     return response
@@ -725,6 +1074,28 @@ def eligible_courses_view(request):
 
 
 # =====================================================
+# RECALCULATE VIEW
+# =====================================================
+@login_required
+def recalculate_view(request):
+    """
+    Reset the submission lock so the user can enter new grades.
+    The payment gate will reappear after they submit new grades —
+    they need to pay again to see the new results.
+    Old grades stay pre-filled in the form so nothing is lost until
+    they deliberately submit new ones.
+    """
+    if request.method != 'POST':
+        return redirect('clusterpoints:calculator')
+    from career.models import CareerSubmission
+    CareerSubmission.objects.filter(
+        user=request.user, feature=CareerSubmission.FEATURE_CALCULATOR
+    ).delete()
+    messages.info(request, "Grade lock removed. Enter your new grades and pay to see results.")
+    return redirect('clusterpoints:calculator')
+
+
+# =====================================================
 # ADMIN ANALYTICS VIEW
 # =====================================================
 @login_required
@@ -745,3 +1116,57 @@ def admin_analytics(request):
         "total_results": total_results,
         "total_clusters_calculated": total_clusters_calculated
     })
+
+
+# =====================================================
+# SHARE CALCULATOR RESULTS
+# =====================================================
+@login_required
+def share_calculator_create(request):
+    """AJAX POST — snapshot calculator results into a SharedResult; return share URL."""
+    from django.http import JsonResponse
+    from career.models import SharedResult
+
+    if request.method != 'POST':
+        return JsonResponse({'ok': False}, status=405)
+
+    try:
+        import json
+        body = json.loads(request.body)
+        mean_grade      = body.get('mean_grade', '')
+        aggregate       = int(body.get('aggregate', 0) or 0)
+        cluster_points  = body.get('cluster_points', {})  # {"kuccps_num": score, ...}
+        cluster_names   = body.get('cluster_names', {})   # {"kuccps_num": "name", ...}
+
+        if not cluster_points:
+            return JsonResponse({'ok': False, 'error': 'No cluster results to share.'}, status=400)
+
+        scores = {k: float(v) for k, v in cluster_points.items() if float(v or 0) > 0}
+        best_score = max(scores.values(), default=0)
+
+        top5 = sorted(scores.items(), key=lambda x: x[1], reverse=True)[:5]
+        top_courses_json = [
+            {
+                'cluster_num':  k,
+                'cluster_name': cluster_names.get(k, f'Cluster {k}'),
+                'score':        str(round(v, 1)),
+                'mean_grade':   mean_grade,
+                'aggregate':    str(aggregate),
+            }
+            for k, v in top5
+        ]
+
+        sr = SharedResult.objects.create(
+            user=request.user,
+            pathway='Calculator',
+            cluster_points_json={k: float(v) for k, v in cluster_points.items()},
+            cluster_pts_single=round(best_score, 1),
+            total_matches=aggregate,
+            top_courses_json=top_courses_json,
+        )
+        share_url = request.build_absolute_uri(sr.get_absolute_url())
+        return JsonResponse({'ok': True, 'url': share_url})
+    except Exception as exc:
+        import logging
+        logging.getLogger(__name__).error('share_calculator_create error: %s', exc, exc_info=True)
+        return JsonResponse({'ok': False, 'error': 'Failed to create share link. Please try again.'}, status=500)

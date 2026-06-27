@@ -1,0 +1,84 @@
+{% for mentor in page_obj %}
+<div class="col-sm-6 col-lg-4">
+  <div class="mentor-card h-100">
+    <div class="mentor-card-bar"></div>
+    <div class="mentor-card-body">
+      <div class="d-flex align-items-start gap-3 mb-3">
+        {% if mentor.photo %}
+          <img src="{{ mentor.photo.url }}"
+               class="mentor-avatar object-fit-cover flex-shrink-0"
+               alt="{{ mentor.display_name }}" loading="lazy">
+        {% else %}
+          <div class="mentor-avatar-initials flex-shrink-0">
+            {{ mentor.display_name|first|upper }}
+          </div>
+        {% endif %}
+        <div class="min-w-0 flex-grow-1">
+          <h5 class="fw-800 mb-0 text-truncate" style="font-size:1rem;">{{ mentor.display_name }}</h5>
+          <div class="text-muted" style="font-size:.8rem;">{{ mentor.get_year_of_study_display }}</div>
+          {% if mentor.total_sessions > 0 %}
+            <div class="d-flex align-items-center gap-1 mt-1">
+              {% for i in "12345" %}
+                <i class="bi bi-star{% if forloop.counter <= mentor.rating_int %}-fill{% endif %} text-warning"
+                   style="font-size:.7rem;"></i>
+              {% endfor %}
+              <span class="text-muted ms-1" style="font-size:.72rem;">
+                {{ mentor.average_rating|floatformat:1 }} · {{ mentor.total_sessions }} session{{ mentor.total_sessions|pluralize }}
+              </span>
+            </div>
+          {% else %}
+            <span class="badge rounded-pill mt-1" style="font-size:.68rem;background:#f0f9ff;color:#0369a1;">New mentor</span>
+          {% endif %}
+        </div>
+        <div class="mentor-price flex-shrink-0">KES {{ mentor.effective_session_price }}</div>
+      </div>
+      <div class="mentor-meta mb-2">
+        {% if mentor.course %}
+          <div class="mentor-meta-item">
+            <i class="bi bi-book-fill text-primary"></i>
+            <span class="text-truncate">{{ mentor.course.name }}</span>
+          </div>
+        {% endif %}
+        {% if mentor.institution %}
+          <div class="mentor-meta-item">
+            <i class="bi bi-building text-secondary"></i>
+            <span class="text-truncate">{{ mentor.institution.name }}</span>
+          </div>
+        {% endif %}
+      </div>
+      <p class="mentor-bio">{{ mentor.bio }}</p>
+      <div class="d-flex align-items-center justify-content-between gap-2 mt-auto">
+        {% with slots=mentor.available_slots_count %}
+          {% if slots > 0 %}
+            <span class="avail-badge avail-open">
+              <i class="bi bi-calendar-check me-1"></i>{{ slots }} slot{{ slots|pluralize }} open
+            </span>
+          {% else %}
+            <span class="avail-badge avail-closed">
+              <i class="bi bi-calendar-x me-1"></i>No open slots
+            </span>
+          {% endif %}
+        {% endwith %}
+        <a href="{% url 'mentorship:mentor_profile' mentor.pk %}"
+           class="btn btn-primary btn-sm rounded-pill px-3 fw-semibold">
+          View Profile
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endfor %}
+{% if page_obj.has_next %}
+<div id="load-more-sentinel" class="col-12 d-flex justify-content-center py-5"
+     hx-get="?page={{ page_obj.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% if filter_institution %}&institution={{ filter_institution }}{% endif %}{% if filter_year %}&year={{ filter_year }}{% endif %}{% if filter_rating %}&rating={{ filter_rating }}{% endif %}"
+     hx-trigger="intersect once"
+     hx-target="#load-more-sentinel"
+     hx-swap="outerHTML">
+  <div class="d-flex flex-column align-items-center gap-2 text-muted">
+    <div class="spinner-border spinner-border-sm text-primary" role="status">
+      <span class="visually-hidden">Loading…</span>
+    </div>
+    <span class="small">Loading more…</span>
+  </div>
+</div>
+{% endif %}
