@@ -41,6 +41,19 @@ def serve_sw(_request):
     from django.http import Http404
     raise Http404('sw.js not found')
 
+def health_check(_request):
+    import json
+    from django.db import connection
+    try:
+        connection.ensure_connection()
+        db_ok = True
+    except Exception:
+        db_ok = False
+    status = 200 if db_ok else 503
+    payload = {"status": "ok" if db_ok else "degraded", "db": db_ok}
+    return HttpResponse(json.dumps(payload), content_type="application/json", status=status)
+
+
 def serve_robots(request):
     from django.template.loader import render_to_string
     content = render_to_string('robots.txt', request=request)
@@ -55,6 +68,7 @@ handler404 = 'django.views.defaults.page_not_found'
 handler500 = 'django.views.defaults.server_error'
 
 urlpatterns = [
+    path('health/', health_check, name='health_check'),
     path('sw.js', serve_sw, name='service_worker'),
     path('robots.txt', serve_robots, name='robots_txt'),
     path('llms.txt', serve_llms, name='llms_txt'),

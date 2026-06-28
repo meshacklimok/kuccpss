@@ -1,6 +1,9 @@
 from django.shortcuts import render, get_object_or_404
+from django.http import JsonResponse
 from django.core.paginator import Paginator
-from .models import ResourceCategory, Resource, Article
+from django.utils import timezone
+from django.views.decorators.http import require_POST
+from .models import ResourceCategory, Resource, Article, SiteFeedback
 
 
 def resource_list(request):
@@ -115,3 +118,27 @@ def kuccps_calendar(request):
 
 def how_to_guides(request):
     return render(request, "resources/guides.html")
+
+
+@require_POST
+def submit_feedback(request):
+    feedback_type = request.POST.get('feedback_type', 'general')
+    message = request.POST.get('message', '').strip()
+    email = request.POST.get('email', '').strip()
+    page_url = request.POST.get('page_url', '').strip()[:300]
+
+    if not message:
+        return JsonResponse({'ok': False, 'error': 'Message is required.'}, status=400)
+    if len(message) > 2000:
+        return JsonResponse({'ok': False, 'error': 'Message too long (max 2000 characters).'}, status=400)
+    valid_types = {c[0] for c in SiteFeedback.TYPE_CHOICES}
+    if feedback_type not in valid_types:
+        feedback_type = 'general'
+
+    SiteFeedback.objects.create(
+        feedback_type=feedback_type,
+        message=message,
+        email=email,
+        page_url=page_url,
+    )
+    return JsonResponse({'ok': True})

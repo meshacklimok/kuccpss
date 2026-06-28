@@ -22,3 +22,5 @@ sentry-sdk[django]>=2.0
 posthog>=3.0
 cloudinary>=1.40
 django-cloudinary-storage>=0.3
+
+geoip2>=4.8

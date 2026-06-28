@@ -230,6 +230,15 @@ def kcse_calculator_view(request):
                 from django.core.cache import cache as _cache
                 _cache.delete(f"elig_user_{request.user.pk}_{kcse_result.pk}")
                 messages.success(request, "KCSE results saved and cluster points calculated!")
+                try:
+                    from analytics.utils import log_event as _log_event
+                    _log_event(request, 'calculator_run', {
+                        'mean_grade': _mean_grade(total_points),
+                        'total_points': total_points,
+                        'auth': True,
+                    })
+                except Exception:
+                    pass
 
                 # Save/reset the grace-period submission record
                 if lock_cfg and lock_cfg.is_enabled:
@@ -252,6 +261,15 @@ def kcse_calculator_view(request):
                 # ── Guest: compute in memory, stash in session, then gate ──
                 results = calculate_clusters_anonymous(named_points)
                 total_points = _compute_aggregate(named_points)
+                try:
+                    from analytics.utils import log_event as _log_event
+                    _log_event(request, 'calculator_run', {
+                        'mean_grade': _mean_grade(total_points),
+                        'total_points': total_points,
+                        'auth': False,
+                    })
+                except Exception:
+                    pass
                 request.session['guest_calc'] = {
                     'named_points': named_points,
                     'total_points': total_points,

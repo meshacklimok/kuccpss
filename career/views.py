@@ -3022,12 +3022,13 @@ def career_results(request):
 
     # Payment gate — computed after matches so we can show the real count on the overlay
     from payments.services import price_for_feature as _price_for
+    from career.models import CareerSubmission as _CareerSubmission
     _feature_on = is_feature_enabled('premium_career_report')
     _guest_locked = is_guest and _feature_on
     _is_locked = (
         not is_guest
         and _feature_on
-        and not has_paid_for_current_session(request.user, CareerSubmission.FEATURE_DEGREE, 'premium_career_report')
+        and not has_paid_for_current_session(request.user, _CareerSubmission.FEATURE_DEGREE, 'premium_career_report')
     )
     _gate_items = [
         "Your full personalised course list — filtered for YOUR exact cluster points",

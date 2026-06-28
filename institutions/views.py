@@ -2,7 +2,7 @@ from datetime import date
 
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
-from django.db.models import Avg, Count
+from django.db.models import Avg, Case, Count, IntegerField, When
 from django.http import JsonResponse
 from django.shortcuts import render, get_object_or_404
 from django.views.decorators.cache import cache_page
@@ -52,9 +52,16 @@ def institution_type_detail(request, type_slug):
         ).values_list('institution_id', flat=True)
     )
 
-    # Sort: sponsored first, then alphabetically, then paginate
-    inst_list = sorted(institutions, key=lambda i: (0 if i.pk in sponsored_ids else 1, i.name))
-    paginator = Paginator(inst_list, INSTITUTIONS_PER_PAGE)
+    # Annotate sponsored flag in DB so sorting happens at the DB level, not in Python
+    institutions = institutions.annotate(
+        is_sponsored=Case(
+            When(pk__in=sponsored_ids, then=0),
+            default=1,
+            output_field=IntegerField(),
+        )
+    ).order_by('is_sponsored', 'name')
+
+    paginator = Paginator(institutions, INSTITUTIONS_PER_PAGE)
     page_obj = paginator.get_page(page_num)
 
     is_htmx = request.headers.get('HX-Request') == 'true'
@@ -85,7 +92,7 @@ def institution_detail(request, type_slug, institution_slug):
         institution_type__slug=type_slug,
     )
 
-    offerings = (
+    offerings = list(
         institution.offerings
         .select_related('course', 'course__course_type', 'course__category')
         .order_by('course__course_type__name', 'course__category__name', 'course__name')
@@ -107,7 +114,7 @@ def institution_detail(request, type_slug, institution_slug):
     return render(request, 'institutions/institution_detail.html', {
         'institution': institution,
         'grouped_offerings': grouped,
-        'total_courses': offerings.count(),
+        'total_courses': len(offerings),
         'reviews': reviews_qs[:20],
         'avg_rating': round(agg['avg'], 1) if agg['avg'] else None,
         'review_count': agg['total'],

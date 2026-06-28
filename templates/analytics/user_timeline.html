@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+{% block title %}User Timeline — {{ target.email }}{% endblock %}
+
+{% block content %}
+<style>
+:root {
+  --navy:#1e3a8a;--blue:#2563eb;--blue-lt:#eff6ff;
+  --green:#16a34a;--green-lt:#f0fdf4;--amber:#d97706;--amber-lt:#fffbeb;
+  --red:#dc2626;--red-lt:#fef2f2;--purple:#7c3aed;--purple-lt:#f5f3ff;
+  --teal:#0891b2;--teal-lt:#ecfeff;--text:#0f172a;--muted:#64748b;
+  --border:#e2e8f0;--bg:#f8fafc;--card:#ffffff;
+  --shadow:0 1px 3px rgba(0,0,0,.06),0 4px 16px rgba(30,58,138,.06);--radius:14px;
+}
+body{background:var(--bg);}
+.an-wrap{max-width:900px;margin:0 auto;padding:1.5rem 1rem 5rem;}
+.an-topbar{display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:.75rem;margin-bottom:1.5rem;}
+.an-topbar h1{font-size:1.35rem;font-weight:800;color:var(--navy);margin:0;}
+.an-topbar p{font-size:.78rem;color:var(--muted);margin:.1rem 0 0;}
+.an-topbar-right{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;}
+.day-pills{display:flex;gap:.3rem;}
+.day-pill{padding:.3rem .75rem;border-radius:20px;font-size:.78rem;font-weight:600;border:1.5px solid var(--border);background:var(--card);color:var(--muted);text-decoration:none;}
+.day-pill:hover{border-color:var(--blue);color:var(--blue);}
+.day-pill.active{background:var(--navy);border-color:var(--navy);color:#fff;}
+.btn-back{display:flex;align-items:center;gap:.4rem;padding:.35rem 1rem;border-radius:8px;font-size:.8rem;font-weight:700;background:var(--navy);color:#fff;text-decoration:none;}
+.btn-back:hover{background:var(--blue);color:#fff;}
+.user-card{background:var(--card);border-radius:var(--radius);padding:1.25rem 1.4rem;box-shadow:var(--shadow);margin-bottom:1.25rem;display:flex;align-items:center;gap:1rem;flex-wrap:wrap;}
+.user-avatar{width:52px;height:52px;border-radius:50%;background:var(--navy);display:flex;align-items:center;justify-content:center;color:#fff;font-size:1.3rem;font-weight:800;flex-shrink:0;}
+.user-info h2{font-size:1rem;font-weight:800;color:var(--navy);margin:0;}
+.user-info p{font-size:.78rem;color:var(--muted);margin:.1rem 0 0;}
+.badge{display:inline-block;padding:.15rem .5rem;border-radius:20px;font-size:.7rem;font-weight:700;margin-left:.3rem;}
+.badge-green{background:var(--green-lt);color:var(--green);}
+.badge-blue{background:var(--blue-lt);color:var(--blue);}
+.badge-red{background:var(--red-lt);color:var(--red);}
+.count-badge{font-size:.78rem;color:var(--muted);margin-top:.5rem;}
+/* Timeline */
+.timeline{position:relative;padding-left:2rem;}
+.timeline::before{content:'';position:absolute;left:.55rem;top:0;bottom:0;width:2px;background:var(--border);}
+.tl-item{position:relative;margin-bottom:1.1rem;}
+.tl-dot{position:absolute;left:-1.46rem;top:.25rem;width:14px;height:14px;border-radius:50%;border:2.5px solid #fff;box-shadow:0 0 0 2px var(--border);}
+.tl-dot.page{background:var(--blue);}
+.tl-dot.search{background:var(--teal);}
+.tl-dot.view{background:var(--green);}
+.tl-dot.career{background:var(--purple);}
+.tl-dot.action{background:var(--amber);}
+.tl-dot.download{background:var(--navy);}
+.tl-dot.event{background:#64748b;}
+.tl-card{background:var(--card);border-radius:10px;padding:.7rem 1rem;box-shadow:0 1px 3px rgba(0,0,0,.06);border-left:3px solid transparent;}
+.tl-card.page{border-color:var(--blue);}
+.tl-card.search{border-color:var(--teal);}
+.tl-card.view{border-color:var(--green);}
+.tl-card.career{border-color:var(--purple);}
+.tl-card.action{border-color:var(--amber);}
+.tl-card.download{border-color:var(--navy);}
+.tl-card.event{border-color:#94a3b8;}
+.tl-label{font-size:.82rem;font-weight:600;color:var(--text);}
+.tl-sub{font-size:.74rem;color:var(--muted);margin-top:.1rem;}
+.tl-ts{font-size:.7rem;color:var(--muted);float:right;margin-top:-1.1rem;}
+.empty-state{text-align:center;padding:3rem;color:var(--muted);}
+</style>
+
+<div class="an-wrap">
+  <div class="an-topbar">
+    <div>
+      <h1>User Timeline</h1>
+      <p>Full activity trace for <strong>{{ target.email }}</strong> — last {{ days }} days ({{ events|length }} events shown)</p>
+    </div>
+    <div class="an-topbar-right">
+      <div class="day-pills">
+        {% for d in day_options %}
+        <a href="?days={{ d }}" class="day-pill{% if days == d %} active{% endif %}">{% if d == 1 %}24h{% else %}{{ d }}d{% endif %}</a>
+        {% endfor %}
+      </div>
+      <a href="{% url 'analytics:actions' %}" class="btn-back">← Actions</a>
+      <a href="{% url 'analytics:dashboard' %}" class="btn-back">← Dashboard</a>
+    </div>
+  </div>
+
+  <!-- User summary card -->
+  <div class="user-card">
+    <div class="user-avatar">{{ target.full_name|default:target.email|first|upper }}</div>
+    <div class="user-info">
+      <h2>{{ target.full_name|default:"—" }}
+        {% if target.is_google_user %}<span class="badge badge-blue">Google</span>{% endif %}
+        {% if target.is_verified %}<span class="badge badge-green">Verified</span>{% endif %}
+        {% if target.is_staff %}<span class="badge badge-red">Staff</span>{% endif %}
+      </h2>
+      <p>{{ target.email }}</p>
+      <p>Joined {{ target.created_at|date:"d M Y" }}</p>
+    </div>
+  </div>
+
+  <!-- Timeline -->
+  {% if events %}
+  <div class="timeline">
+    {% for ev in events %}
+    <div class="tl-item">
+      <div class="tl-dot {{ ev.type }}"></div>
+      <div class="tl-card {{ ev.type }}">
+        <span class="tl-ts">{{ ev.ts|date:"d M H:i:s" }}</span>
+        <div class="tl-label">{{ ev.icon }} {{ ev.label }}</div>
+        {% if ev.sub %}<div class="tl-sub">{{ ev.sub }}</div>{% endif %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <p style="font-size:2rem;">🕳</p>
+    <p>No activity recorded for this user in the last {{ days }} days.</p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

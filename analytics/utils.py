@@ -97,6 +97,23 @@ def log_event(request, name: str, properties: dict = None):
         pass
 
 
+def log_action(request, action: str, properties: dict = None):
+    """Log an explicit user action (login, shortlist_add, quiz_complete, etc.)."""
+    try:
+        from .models import UserActionLog
+        xff = request.META.get('HTTP_X_FORWARDED_FOR', '')
+        ip  = xff.split(',')[0].strip() if xff else request.META.get('REMOTE_ADDR')
+        UserActionLog.objects.create(
+            action=action[:30],
+            properties=properties or {},
+            user=_user(request),
+            session_key=_session_key(request),
+            ip=ip or None,
+        )
+    except Exception:
+        pass
+
+
 def track_posthog(distinct_id: str, event: str, properties: dict = None):
     """Server-side PostHog capture. Fire-and-forget, never raises."""
     try:

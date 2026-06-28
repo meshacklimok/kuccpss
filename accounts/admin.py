@@ -1,5 +1,7 @@
+import csv
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
+from django.http import HttpResponse
 from .models import (
     User,
     EmailVerificationToken,
@@ -50,6 +52,17 @@ def activate_as_affiliate(modeladmin, request, queryset):
 activate_as_affiliate.short_description = "Activate selected users as affiliates (20%)"
 
 
+@admin.action(description="Export selected users to CSV")
+def export_users_csv(_modeladmin, _request, queryset):
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="users.csv"'
+    writer = csv.writer(response)
+    writer.writerow(['ID', 'Email', 'Full Name', 'Is Verified', 'Is Active', 'Is Staff', 'Is Suspended', 'Joined'])
+    for u in queryset.values_list('id', 'email', 'full_name', 'is_verified', 'is_active', 'is_staff', 'is_suspended', 'created_at'):
+        writer.writerow(u)
+    return response
+
+
 class UserAdmin(BaseUserAdmin):
     # Forms for adding and changing users
     form = UserAdminChangeForm
@@ -61,7 +74,7 @@ class UserAdmin(BaseUserAdmin):
     search_fields = ('email', 'full_name')
     ordering = ('email',)
     readonly_fields = ('last_login', 'created_at', 'updated_at', 'deleted_at')
-    actions = [suspend_users, unsuspend_users, activate_as_affiliate]
+    actions = [suspend_users, unsuspend_users, activate_as_affiliate, export_users_csv]
 
     # Fieldsets for changing a user
     fieldsets = (
