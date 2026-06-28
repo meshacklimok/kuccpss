@@ -1,0 +1,364 @@
+{% extends "base.html" %}
+{% block title %}Payment Monitor — CareerNext Staff{% endblock %}
+
+{% block content %}
+<style>
+:root {
+  --navy:#1e3a8a;--blue:#2563eb;--blue-lt:#eff6ff;--blue-bd:#bfdbfe;
+  --green:#16a34a;--green-lt:#f0fdf4;
+  --amber:#d97706;--amber-lt:#fffbeb;--amber-bd:#fde68a;
+  --red:#dc2626;--red-lt:#fef2f2;--red-bd:#fecaca;
+  --purple:#7c3aed;--purple-lt:#f5f3ff;
+  --text:#0f172a;--muted:#64748b;--border:#e2e8f0;--bg:#f8fafc;--card:#ffffff;
+  --shadow:0 1px 3px rgba(0,0,0,.06),0 4px 16px rgba(30,58,138,.06);--radius:14px;
+}
+body{background:var(--bg);}
+.an-wrap{max-width:1400px;margin:0 auto;padding:1.5rem 1rem 5rem;}
+
+/* Top bar */
+.an-topbar{display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:.75rem;margin-bottom:1.5rem;}
+.an-topbar h1{font-size:1.45rem;font-weight:800;color:var(--navy);margin:0;}
+.an-topbar p{font-size:.78rem;color:var(--muted);margin:.15rem 0 0;}
+.an-topbar-right{display:flex;align-items:center;gap:.35rem;flex-wrap:nowrap;overflow-x:auto;}
+.btn-back{display:inline-flex;align-items:center;gap:.3rem;padding:.28rem .75rem;border-radius:7px;font-size:.76rem;font-weight:700;background:var(--navy);color:#fff;text-decoration:none;white-space:nowrap;}
+.btn-back:hover{background:var(--blue);color:#fff;}
+.btn-nav{display:inline-flex;align-items:center;padding:.28rem .7rem;border-radius:7px;font-size:.76rem;font-weight:700;color:#fff;text-decoration:none;white-space:nowrap;transition:opacity .15s;}
+.btn-nav:hover{opacity:.85;color:#fff;}
+.btn-admin{padding:.28rem .75rem;border-radius:7px;font-size:.76rem;font-weight:700;background:var(--amber);color:#fff;text-decoration:none;white-space:nowrap;}
+.btn-admin:hover{background:#b45309;color:#fff;}
+
+/* Status filter pills */
+.status-pills{display:flex;gap:.4rem;margin-bottom:1.25rem;flex-wrap:wrap;}
+.status-pill{padding:.3rem .85rem;border-radius:20px;font-size:.78rem;font-weight:700;text-decoration:none;border:1.5px solid var(--border);color:var(--muted);background:var(--card);}
+.status-pill:hover{border-color:var(--blue);color:var(--blue);}
+.status-pill.active-pending{background:var(--amber-lt);border-color:var(--amber);color:var(--amber);}
+.status-pill.active-failed{background:var(--red-lt);border-color:var(--red);color:var(--red);}
+.status-pill.active-completed{background:var(--green-lt);border-color:var(--green);color:var(--green);}
+.status-pill.active-refunded{background:var(--purple-lt);border-color:var(--purple);color:var(--purple);}
+
+/* KPI row */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1rem;margin-bottom:1.5rem;}
+.kpi{background:var(--card);border-radius:var(--radius);padding:1.1rem 1.2rem;box-shadow:var(--shadow);position:relative;}
+.kpi-label{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-bottom:.3rem;}
+.kpi-val{font-size:2rem;font-weight:900;line-height:1;color:var(--navy);}
+.kpi-sub{font-size:.72rem;color:var(--muted);margin-top:.2rem;}
+.kpi.danger{border-left:4px solid var(--red);}
+.kpi.danger .kpi-val{color:var(--red);}
+.kpi.warn{border-left:4px solid var(--amber);}
+.kpi.warn .kpi-val{color:var(--amber);}
+.kpi.green{border-left:4px solid var(--green);}
+.kpi.green .kpi-val{color:var(--green);}
+.kpi.blue{border-left:4px solid var(--blue);}
+
+/* Alert banner */
+.alert{border-radius:10px;padding:.85rem 1.1rem;font-size:.82rem;font-weight:600;margin-bottom:1.1rem;display:flex;align-items:center;gap:.6rem;}
+.alert-warn{background:var(--amber-lt);border:1.5px solid var(--amber-bd);color:#92400e;}
+.alert-err{background:var(--red-lt);border:1.5px solid var(--red-bd);color:#7f1d1d;}
+
+/* Cards */
+.card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);margin-bottom:1.25rem;overflow:hidden;}
+.card-header{display:flex;align-items:center;justify-content:space-between;padding:.85rem 1.2rem;border-bottom:1px solid var(--border);}
+.card-title{font-size:.9rem;font-weight:800;color:var(--navy);margin:0;}
+.card-count{font-size:.78rem;font-weight:700;padding:.2rem .6rem;border-radius:20px;}
+.count-pending{background:var(--amber-lt);color:var(--amber);}
+.count-failed{background:var(--red-lt);color:var(--red);}
+.count-ok{background:var(--green-lt);color:var(--green);}
+.count-neutral{background:var(--blue-lt);color:var(--blue);}
+
+/* Table */
+.tbl{width:100%;border-collapse:collapse;font-size:.79rem;}
+.tbl th{text-align:left;font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);border-bottom:2px solid var(--border);padding:.5rem .8rem;white-space:nowrap;}
+.tbl td{padding:.5rem .8rem;border-bottom:1px solid var(--border);color:var(--text);vertical-align:middle;}
+.tbl tr:last-child td{border-bottom:none;}
+.tbl tr:hover td{background:#f8faff;}
+.tbl-scroll{overflow-x:auto;}
+
+/* Age / urgency badges */
+.age-ok   {display:inline-block;padding:.15rem .5rem;border-radius:20px;font-size:.7rem;font-weight:700;background:var(--green-lt);color:var(--green);}
+.age-warn {display:inline-block;padding:.15rem .5rem;border-radius:20px;font-size:.7rem;font-weight:700;background:var(--amber-lt);color:var(--amber);}
+.age-err  {display:inline-block;padding:.15rem .5rem;border-radius:20px;font-size:.7rem;font-weight:700;background:var(--red-lt);color:var(--red);}
+
+/* Status badges */
+.badge{display:inline-block;padding:.15rem .55rem;border-radius:20px;font-size:.7rem;font-weight:700;}
+.b-pending  {background:var(--amber-lt);color:var(--amber);}
+.b-completed{background:var(--green-lt);color:var(--green);}
+.b-failed   {background:var(--red-lt);color:var(--red);}
+.b-refunded {background:var(--purple-lt);color:var(--purple);}
+
+/* Code cells */
+.code{font-family:monospace;font-size:.76rem;color:#475569;background:#f1f5f9;padding:.1rem .35rem;border-radius:4px;}
+.code-green{font-family:monospace;font-size:.76rem;color:var(--green);background:var(--green-lt);padding:.1rem .35rem;border-radius:4px;font-weight:700;}
+
+/* Admin link per row */
+.row-link{font-size:.72rem;color:var(--blue);text-decoration:none;white-space:nowrap;}
+.row-link:hover{text-decoration:underline;}
+
+/* Empty state */
+.empty{padding:2.5rem;text-align:center;color:var(--muted);font-size:.85rem;}
+</style>
+
+<div class="an-wrap">
+
+  <!-- Top bar -->
+  <div class="an-topbar">
+    <div>
+      <h1>💳 Payment Monitor</h1>
+      <p>Pending, stale, and failed payments — no admin navigation needed</p>
+    </div>
+    <div class="an-topbar-right">
+      <a href="/admin/payments/payment/?status__exact=pending" target="_blank" class="btn-admin">Open in Admin ↗</a>
+      <a href="{% url 'analytics:mentor_analytics' %}" class="btn-nav" style="background:var(--purple);">Mentors</a>
+      <a href="{% url 'analytics:affiliate_analytics' %}" class="btn-nav" style="background:var(--teal);">Affiliates</a>
+      <a href="{% url 'analytics:insights' %}" class="btn-nav" style="background:#7c3aed;">📊 Insights</a>
+      <a href="{% url 'analytics:pages' %}" class="btn-nav" style="background:#0891b2;">Pages</a>
+      <a href="{% url 'analytics:dashboard' %}" class="btn-back">← Dashboard</a>
+    </div>
+  </div>
+
+  <!-- Alert banners -->
+  {% if very_stale %}
+  <div class="alert alert-err">
+    🔴 <strong>{{ very_stale }} payment{{ very_stale|pluralize }}</strong> have been pending for over 6 hours — these may be stuck or abandoned.
+  </div>
+  {% endif %}
+  {% if stale_pending and not very_stale %}
+  <div class="alert alert-warn">
+    ⚠️ <strong>{{ stale_pending }} payment{{ stale_pending|pluralize }}</strong> have been pending for over 1 hour — worth checking.
+  </div>
+  {% endif %}
+  {% if with_mpesa_code %}
+  <div class="alert alert-warn">
+    📥 <strong>{{ with_mpesa_code }} pending payment{{ with_mpesa_code|pluralize }}</strong> ha{{ with_mpesa_code|pluralize:"s,ve" }} a user-submitted M-Pesa code awaiting manual verification.
+  </div>
+  {% endif %}
+
+  <!-- KPIs -->
+  <div class="kpi-grid">
+    <div class="kpi {% if total_pending %}warn{% endif %}">
+      <div class="kpi-label">Pending</div>
+      <div class="kpi-val">{{ total_pending }}</div>
+      <div class="kpi-sub">awaiting confirmation</div>
+    </div>
+    <div class="kpi {% if stale_pending %}warn{% endif %}">
+      <div class="kpi-label">Stale (&gt;1h)</div>
+      <div class="kpi-val">{{ stale_pending }}</div>
+      <div class="kpi-sub">possibly stuck</div>
+    </div>
+    <div class="kpi {% if very_stale %}danger{% endif %}">
+      <div class="kpi-label">Very Stale (&gt;6h)</div>
+      <div class="kpi-val">{{ very_stale }}</div>
+      <div class="kpi-sub">likely abandoned</div>
+    </div>
+    <div class="kpi {% if with_mpesa_code %}warn{% endif %}">
+      <div class="kpi-label">M-Pesa Code Submitted</div>
+      <div class="kpi-val">{{ with_mpesa_code }}</div>
+      <div class="kpi-sub">manual verification needed</div>
+    </div>
+    <div class="kpi {% if total_failed %}danger{% endif %}">
+      <div class="kpi-label">Failed</div>
+      <div class="kpi-val">{{ total_failed }}</div>
+      <div class="kpi-sub">all time</div>
+    </div>
+    <div class="kpi green">
+      <div class="kpi-label">Completed Today</div>
+      <div class="kpi-val">{{ completed_today }}</div>
+    </div>
+    <div class="kpi blue">
+      <div class="kpi-label">Revenue Today</div>
+      <div class="kpi-val">KES {{ revenue_today }}</div>
+    </div>
+  </div>
+
+  <!-- Status filter pills -->
+  <div class="status-pills">
+    <a href="?" class="status-pill {% if not status_filter %}active-pending{% endif %}">All</a>
+    <a href="?status=pending"   class="status-pill {% if status_filter == 'pending'   %}active-pending{% endif %}">🟡 Pending (full list)</a>
+    <a href="?status=failed"    class="status-pill {% if status_filter == 'failed'    %}active-failed{% endif %}">🔴 Failed (full list)</a>
+    <a href="?status=completed" class="status-pill {% if status_filter == 'completed' %}active-completed{% endif %}">🟢 Completed (full list)</a>
+    <a href="?status=refunded"  class="status-pill {% if status_filter == 'refunded'  %}active-refunded{% endif %}">🟣 Refunded (full list)</a>
+  </div>
+
+  {% if filtered_qs is not None %}
+  <!-- Full status-filtered list -->
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">{{ status_filter|title }} Payments (up to 200)</span>
+      <span class="card-count count-neutral">{{ filtered_qs|length }} rows</span>
+    </div>
+    <div class="tbl-scroll">
+      <table class="tbl">
+        <thead>
+          <tr>
+            <th>User</th><th>Phone</th><th>Feature</th><th>Amount</th>
+            <th>M-Pesa Code</th><th>Checkout ID</th><th>Date</th><th>Admin</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for p in filtered_qs %}
+          <tr>
+            <td>{{ p.user.email }}</td>
+            <td>{{ p.phone_number|default:"—" }}</td>
+            <td>{{ p.get_feature_display }}</td>
+            <td>KES {{ p.amount }}</td>
+            <td>{% if p.mpesa_code %}<span class="code-green">{{ p.mpesa_code }}</span>{% else %}<span style="color:var(--muted);">—</span>{% endif %}</td>
+            <td><span class="code">{{ p.checkout_id|default:"—" }}</span></td>
+            <td>{{ p.created_at|date:"d M H:i" }}</td>
+            <td><a class="row-link" href="/admin/payments/payment/{{ p.pk }}/change/" target="_blank">Edit ↗</a></td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="8" class="empty">No {{ status_filter }} payments found.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  {% else %}
+
+  <!-- ── PENDING — sorted oldest first (most urgent) ────────────────────── -->
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">🟡 Pending Payments</span>
+      <span class="card-count count-pending">{{ pending_annotated|length }}</span>
+    </div>
+    {% if pending_annotated %}
+    <div class="tbl-scroll">
+      <table class="tbl">
+        <thead>
+          <tr>
+            <th>Age</th><th>User</th><th>Phone</th><th>Feature</th><th>Amount</th>
+            <th>M-Pesa Code</th><th>Checkout ID</th><th>Initiated</th><th>Admin</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in pending_annotated %}
+          <tr>
+            <td><span class="age-{{ row.urgency }}">{{ row.age_label }}</span></td>
+            <td>{{ row.p.user.email }}</td>
+            <td>{{ row.p.phone_number|default:"—" }}</td>
+            <td>{{ row.p.get_feature_display }}</td>
+            <td><strong>KES {{ row.p.amount }}</strong></td>
+            <td>
+              {% if row.p.mpesa_code %}
+                <span class="code-green">{{ row.p.mpesa_code }}</span>
+              {% else %}
+                <span style="color:var(--muted);font-size:.72rem;">not submitted</span>
+              {% endif %}
+            </td>
+            <td><span class="code">{{ row.p.checkout_id|default:"—" }}</span></td>
+            <td style="white-space:nowrap;">{{ row.p.created_at|date:"d M H:i" }}</td>
+            <td><a class="row-link" href="/admin/payments/payment/{{ row.p.pk }}/change/" target="_blank">Edit ↗</a></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="empty">✅ No pending payments right now.</div>
+    {% endif %}
+  </div>
+
+  <!-- ── FAILED ───────────────────────────────────────────────────────────── -->
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">🔴 Failed Payments (last 50)</span>
+      <span class="card-count count-failed">{{ failed_qs|length }}</span>
+    </div>
+    {% if failed_qs %}
+    <div class="tbl-scroll">
+      <table class="tbl">
+        <thead>
+          <tr>
+            <th>User</th><th>Phone</th><th>Feature</th><th>Amount</th>
+            <th>Checkout ID</th><th>Failed At</th><th>Admin</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for p in failed_qs %}
+          <tr>
+            <td>{{ p.user.email }}</td>
+            <td>{{ p.phone_number|default:"—" }}</td>
+            <td>{{ p.get_feature_display }}</td>
+            <td>KES {{ p.amount }}</td>
+            <td><span class="code">{{ p.checkout_id|default:"—" }}</span></td>
+            <td>{{ p.created_at|date:"d M H:i" }}</td>
+            <td><a class="row-link" href="/admin/payments/payment/{{ p.pk }}/change/" target="_blank">Edit ↗</a></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="empty">No failed payments.</div>
+    {% endif %}
+  </div>
+
+  <!-- ── RECENTLY COMPLETED ────────────────────────────────────────────────── -->
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">🟢 Recently Completed (last 30)</span>
+      <span class="card-count count-ok">{{ completed_qs|length }}</span>
+    </div>
+    {% if completed_qs %}
+    <div class="tbl-scroll">
+      <table class="tbl">
+        <thead>
+          <tr>
+            <th>User</th><th>Phone</th><th>Feature</th><th>Amount</th>
+            <th>M-Pesa Code</th><th>Completed At</th><th>Admin</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for p in completed_qs %}
+          <tr>
+            <td>{{ p.user.email }}</td>
+            <td>{{ p.phone_number|default:"—" }}</td>
+            <td>{{ p.get_feature_display }}</td>
+            <td><strong style="color:var(--green);">KES {{ p.amount }}</strong></td>
+            <td>{% if p.mpesa_code %}<span class="code-green">{{ p.mpesa_code }}</span>{% else %}—{% endif %}</td>
+            <td>{{ p.updated_at|date:"d M H:i" }}</td>
+            <td><a class="row-link" href="/admin/payments/payment/{{ p.pk }}/change/" target="_blank">Edit ↗</a></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="empty">No completed payments yet.</div>
+    {% endif %}
+  </div>
+
+  <!-- ── REFUNDED ───────────────────────────────────────────────────────────── -->
+  {% if refunded_qs %}
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">🟣 Refunded (last 20)</span>
+      <span class="card-count" style="background:var(--purple-lt);color:var(--purple);">{{ refunded_qs|length }}</span>
+    </div>
+    <div class="tbl-scroll">
+      <table class="tbl">
+        <thead>
+          <tr>
+            <th>User</th><th>Feature</th><th>Amount</th><th>Date</th><th>Admin</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for p in refunded_qs %}
+          <tr>
+            <td>{{ p.user.email }}</td>
+            <td>{{ p.get_feature_display }}</td>
+            <td>KES {{ p.amount }}</td>
+            <td>{{ p.created_at|date:"d M H:i" }}</td>
+            <td><a class="row-link" href="/admin/payments/payment/{{ p.pk }}/change/" target="_blank">Edit ↗</a></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% endif %}
+
+  {% endif %}{# end if filtered_qs #}
+
+</div>
+{% endblock %}

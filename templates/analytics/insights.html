@@ -1,0 +1,465 @@
+{% extends "base.html" %}
+{% block title %}Insights — CareerNext Staff{% endblock %}
+
+{% block content %}
+<style>
+:root {
+  --navy:#1e3a8a;--blue:#2563eb;--blue-lt:#eff6ff;--blue-bd:#bfdbfe;
+  --green:#16a34a;--green-lt:#f0fdf4;--green-bd:#bbf7d0;
+  --amber:#d97706;--amber-lt:#fffbeb;--amber-bd:#fde68a;
+  --red:#dc2626;--red-lt:#fef2f2;
+  --purple:#7c3aed;--purple-lt:#f5f3ff;
+  --teal:#0891b2;--teal-lt:#ecfeff;
+  --text:#0f172a;--muted:#64748b;--border:#e2e8f0;--bg:#f8fafc;--card:#fff;
+  --shadow:0 1px 3px rgba(0,0,0,.06),0 4px 16px rgba(30,58,138,.06);--radius:14px;
+}
+body{background:var(--bg);}
+.an-wrap{max-width:1400px;margin:0 auto;padding:1.5rem 1rem 5rem;}
+.an-topbar{display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:.75rem;margin-bottom:1.5rem;}
+.an-topbar h1{font-size:1.45rem;font-weight:800;color:var(--navy);margin:0;letter-spacing:-.02em;}
+.an-topbar p{font-size:.78rem;color:var(--muted);margin:.15rem 0 0;}
+.an-topbar-right{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;}
+.day-pills{display:flex;gap:.3rem;}
+.day-pill{padding:.3rem .75rem;border-radius:20px;font-size:.78rem;font-weight:600;border:1.5px solid var(--border);background:var(--card);color:var(--muted);text-decoration:none;}
+.day-pill:hover{border-color:var(--blue);color:var(--blue);}
+.day-pill.active{background:var(--navy);border-color:var(--navy);color:#fff;}
+.btn-back{display:flex;align-items:center;gap:.4rem;padding:.28rem .75rem;border-radius:7px;font-size:.76rem;font-weight:700;background:var(--navy);color:#fff;text-decoration:none;white-space:nowrap;}
+.btn-back:hover{background:var(--blue);color:#fff;}
+.btn-nav{display:inline-flex;align-items:center;padding:.28rem .7rem;border-radius:7px;font-size:.76rem;font-weight:700;color:#fff;text-decoration:none;white-space:nowrap;transition:opacity .15s;}
+.btn-nav:hover{opacity:.85;color:#fff;}
+.an-topbar-right{display:flex;align-items:center;gap:.35rem;flex-wrap:nowrap;overflow-x:auto;}
+
+/* Section headers */
+.section-head{display:flex;align-items:center;gap:.5rem;font-size:1rem;font-weight:800;color:var(--navy);margin:2rem 0 .85rem;padding-bottom:.4rem;border-bottom:2px solid var(--border);}
+.section-badge{font-size:.7rem;font-weight:700;padding:.15rem .5rem;border-radius:20px;background:var(--red-lt);color:var(--red);text-transform:uppercase;letter-spacing:.04em;}
+.section-badge.med{background:var(--amber-lt);color:var(--amber);}
+.section-badge.low{background:var(--blue-lt);color:var(--blue);}
+
+/* Cards */
+.card{background:var(--card);border-radius:var(--radius);padding:1.25rem 1.4rem;box-shadow:var(--shadow);margin-bottom:1.25rem;}
+.card-title{font-size:.88rem;font-weight:800;color:var(--navy);margin:0 0 1rem;}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;}
+.three-col{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;}
+@media(max-width:900px){.two-col,.three-col{grid-template-columns:1fr;}}
+.chart-box{position:relative;height:220px;}
+
+/* KPI mini */
+.kpi-row{display:flex;gap:1rem;flex-wrap:wrap;margin-bottom:1rem;}
+.kpi-mini{background:var(--bg);border-radius:10px;padding:.75rem 1rem;border:1px solid var(--border);min-width:120px;}
+.kpi-mini-label{font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-bottom:.2rem;}
+.kpi-mini-val{font-size:1.6rem;font-weight:900;color:var(--navy);line-height:1;}
+.kpi-mini-sub{font-size:.68rem;color:var(--muted);margin-top:.1rem;}
+
+/* ── 1. Heatmap ── */
+.heatmap-wrap{overflow-x:auto;}
+.heatmap{border-collapse:collapse;font-size:.68rem;}
+.heatmap th{padding:.25rem .4rem;color:var(--muted);font-weight:600;text-align:center;white-space:nowrap;}
+.heatmap td{width:28px;height:28px;text-align:center;border-radius:4px;cursor:default;transition:transform .1s;}
+.heatmap td:hover{transform:scale(1.3);z-index:2;position:relative;}
+.heatmap .row-label{font-weight:700;color:var(--muted);text-align:right;padding-right:.5rem;white-space:nowrap;}
+.heatmap-legend{display:flex;align-items:center;gap:.4rem;font-size:.7rem;color:var(--muted);margin-top:.5rem;}
+.heatmap-swatch{width:14px;height:14px;border-radius:3px;display:inline-block;}
+
+/* ── 2. Referrals ── */
+.tbl{width:100%;border-collapse:collapse;font-size:.8rem;}
+.tbl th{text-align:left;font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);border-bottom:2px solid var(--border);padding:.4rem .6rem;}
+.tbl td{padding:.4rem .6rem;border-bottom:1px solid var(--border);color:var(--text);}
+.tbl tr:last-child td{border-bottom:none;}
+.tbl tr:hover td{background:var(--blue-lt);}
+.bar-cell{display:flex;align-items:center;gap:.5rem;}
+.bar-bg{flex:1;height:8px;background:var(--border);border-radius:4px;}
+.bar-fill{height:8px;background:var(--blue);border-radius:4px;}
+
+/* ── 3. Funnel ── */
+.funnel-row{display:flex;align-items:center;gap:.75rem;margin-bottom:.6rem;}
+.funnel-icon{font-size:1.1rem;width:28px;text-align:center;}
+.funnel-label{font-size:.82rem;font-weight:600;color:var(--text);width:140px;flex-shrink:0;}
+.funnel-bar-bg{flex:1;height:22px;background:var(--border);border-radius:6px;overflow:hidden;}
+.funnel-bar-fill{height:22px;border-radius:6px;display:flex;align-items:center;padding-left:.5rem;font-size:.72rem;font-weight:700;color:#fff;white-space:nowrap;transition:width .4s ease;}
+.funnel-n{font-size:.82rem;font-weight:700;color:var(--navy);width:50px;text-align:right;}
+.funnel-pct{font-size:.72rem;color:var(--muted);width:38px;text-align:right;}
+
+/* ── Grade dist ── */
+.grade-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(70px,1fr));gap:.5rem;}
+.grade-cell{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:.6rem .5rem;text-align:center;}
+.grade-cell .g{font-size:1.1rem;font-weight:800;color:var(--navy);}
+.grade-cell .n{font-size:1.4rem;font-weight:900;color:var(--blue);line-height:1;}
+.grade-cell .p{font-size:.68rem;color:var(--muted);}
+
+/* Auth split donut label */
+.split-row{display:flex;align-items:center;gap:.6rem;margin-bottom:.4rem;}
+.split-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0;}
+.split-label{font-size:.8rem;color:var(--text);}
+.split-val{font-size:.8rem;font-weight:700;color:var(--navy);margin-left:auto;}
+</style>
+
+<div class="an-wrap">
+
+  <!-- Top bar -->
+  <div class="an-topbar">
+    <div>
+      <h1>📊 Insights</h1>
+      <p>Peak hours · Referrals · Retention · Funnels · Grade distribution — last {{ days }} days</p>
+    </div>
+    <div class="an-topbar-right">
+      <div class="day-pills">
+        {% for d in day_options %}<a href="?days={{ d }}" class="day-pill{% if days == d %} active{% endif %}">{% if d == 1 %}24h{% else %}{{ d }}d{% endif %}</a>{% endfor %}
+      </div>
+      <a href="{% url 'analytics:mentor_analytics' %}" class="btn-nav" style="background:var(--purple);">Mentors</a>
+      <a href="{% url 'analytics:affiliate_analytics' %}" class="btn-nav" style="background:var(--teal);">Affiliates</a>
+      <a href="{% url 'analytics:pages' %}" class="btn-nav" style="background:#0891b2;">Pages</a>
+      <a href="{% url 'analytics:payments' %}" class="btn-nav" style="background:#16a34a;">Payments</a>
+      <a href="{% url 'analytics:dashboard' %}" class="btn-back">← Dashboard</a>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════════════
+       1. PEAK HOURS HEATMAP
+  ═══════════════════════════════════════════════════════════════════════ -->
+  <div class="section-head">🔥 Peak Hours Heatmap <span class="section-badge">High Priority</span></div>
+  <div class="card">
+    <div class="card-title">Page Hits by Hour × Day of Week (EAT, human traffic)</div>
+    <div class="heatmap-wrap">
+      <table class="heatmap">
+        <thead>
+          <tr>
+            <th></th>
+            {% for h in hour_labels %}
+            <th>{% if h == 0 %}12a{% elif h < 12 %}{{ h }}a{% elif h == 12 %}12p{% else %}{{ h|add:"-12" }}p{% endif %}</th>
+            {% endfor %}
+          </tr>
+        </thead>
+        <tbody>
+          {% for row_data in heatmap_grid %}
+          <tr>
+            <td class="row-label">{% with idx=forloop.counter0 %}{% for lbl in dow_labels %}{% if forloop.counter0 == idx %}{{ lbl }}{% endif %}{% endfor %}{% endwith %}</td>
+            {% for cell in row_data %}
+            <td title="{{ cell.n }} hits"
+                style="background:{% if cell.level == 0 %}#f1f5f9{% elif cell.level == 1 %}#bfdbfe{% elif cell.level == 2 %}#60a5fa{% elif cell.level == 3 %}#2563eb{% else %}#1e3a8a{% endif %};
+                       color:{% if cell.level >= 3 %}#fff{% else %}transparent{% endif %};
+                       font-size:.58rem;font-weight:700;">{% if cell.n %}{{ cell.n }}{% endif %}</td>
+            {% endfor %}
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div class="heatmap-legend">
+      <span>Low</span>
+      <span class="heatmap-swatch" style="background:#f1f5f9;border:1px solid var(--border);"></span>
+      <span class="heatmap-swatch" style="background:#bfdbfe;"></span>
+      <span class="heatmap-swatch" style="background:#60a5fa;"></span>
+      <span class="heatmap-swatch" style="background:#2563eb;"></span>
+      <span class="heatmap-swatch" style="background:#1e3a8a;"></span>
+      <span>High</span>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════════════
+       2. REFERRAL SOURCES
+  ═══════════════════════════════════════════════════════════════════════ -->
+  <div class="section-head">🔗 Referral Sources <span class="section-badge">High Priority</span></div>
+  <div class="two-col">
+    <div class="card">
+      <div class="card-title">Traffic Origin</div>
+      <div class="kpi-row">
+        <div class="kpi-mini">
+          <div class="kpi-mini-label">Direct</div>
+          <div class="kpi-mini-val">{{ direct_hits }}</div>
+          <div class="kpi-mini-sub">{{ direct_pct }}% of traffic</div>
+        </div>
+        <div class="kpi-mini">
+          <div class="kpi-mini-label">Referred</div>
+          <div class="kpi-mini-val">{{ referred_hits }}</div>
+          <div class="kpi-mini-sub">{{ referred_pct }}% of traffic</div>
+        </div>
+      </div>
+      <div class="chart-box"><canvas id="refPieChart"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Top Referring Domains</div>
+      {% if top_referrers %}
+      <table class="tbl">
+        <thead><tr><th>#</th><th>Domain</th><th>Hits</th></tr></thead>
+        <tbody>
+          {% for domain, n in top_referrers %}
+          <tr>
+            <td style="color:var(--muted);">{{ forloop.counter }}</td>
+            <td>{{ domain }}</td>
+            <td>
+              <div class="bar-cell">
+                <div class="bar-bg"><div class="bar-fill" style="width:{% widthratio n top_referrers.0.1 100 %}%;"></div></div>
+                <span style="font-weight:700;font-size:.78rem;">{{ n }}</span>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <p style="color:var(--muted);font-size:.82rem;">No referral data yet — data builds up from incoming traffic.</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════════════
+       3. RETURNING VS NEW VISITORS
+  ═══════════════════════════════════════════════════════════════════════ -->
+  <div class="section-head">🔄 Retention — Returning vs New <span class="section-badge">High Priority</span></div>
+  <div class="two-col">
+    <div class="card">
+      <div class="card-title">Authenticated User Sessions</div>
+      <div class="kpi-row">
+        <div class="kpi-mini">
+          <div class="kpi-mini-label">Returning</div>
+          <div class="kpi-mini-val" style="color:var(--green);">{{ returning_users }}</div>
+          <div class="kpi-mini-sub">{{ returning_pct }}% of active</div>
+        </div>
+        <div class="kpi-mini">
+          <div class="kpi-mini-label">First-time</div>
+          <div class="kpi-mini-val" style="color:var(--blue);">{{ new_users_active }}</div>
+          <div class="kpi-mini-sub">new in period</div>
+        </div>
+        <div class="kpi-mini">
+          <div class="kpi-mini-label">Sessions / user</div>
+          <div class="kpi-mini-val">{{ sessions_per_user }}</div>
+          <div class="kpi-mini-sub">avg frequency</div>
+        </div>
+      </div>
+      <div class="chart-box"><canvas id="retentionChart"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-title">What This Means</div>
+      <p style="font-size:.82rem;color:var(--text);line-height:1.6;">
+        <strong>{{ returning_pct }}%</strong> of active authenticated users have visited before the selected period —
+        {% if returning_pct >= 40 %}
+        strong retention, users are coming back regularly. ✅
+        {% elif returning_pct >= 20 %}
+        moderate retention, consider push notifications or weekly email digests to bring users back.
+        {% else %}
+        low retention — most users don't return. Consider an email re-engagement campaign or push notifications.
+        {% endif %}
+      </p>
+      <p style="font-size:.82rem;color:var(--text);line-height:1.6;margin-top:.75rem;">
+        Average <strong>{{ sessions_per_user }} sessions</strong> per user in this period.
+        {% if sessions_per_user >= 3 %}Highly engaged audience. ✅{% elif sessions_per_user >= 1.5 %}Moderate engagement.{% else %}Low repeat visits.{% endif %}
+      </p>
+      <p style="font-size:.75rem;color:var(--muted);margin-top:.75rem;">
+        Note: anonymous visitors (not logged in) cannot be counted as returning accurately — this metric covers authenticated users only.
+      </p>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════════════
+       4. EMAIL / REGISTRATION FUNNEL
+  ═══════════════════════════════════════════════════════════════════════ -->
+  <div class="section-head">📧 Registration Funnel <span class="section-badge med">Medium</span></div>
+  <div class="two-col">
+    <div class="card">
+      <div class="card-title">Register → Verify → Pay</div>
+      {% for step in email_funnel %}
+      <div class="funnel-row">
+        <span class="funnel-icon">{{ step.icon }}</span>
+        <span class="funnel-label">{{ step.label }}</span>
+        <div class="funnel-bar-bg">
+          <div class="funnel-bar-fill"
+               style="width:{{ step.pct }}%;background:{% if forloop.first %}var(--blue){% elif forloop.last %}var(--green){% else %}var(--teal){% endif %};">
+            {% if step.pct > 15 %}{{ step.pct }}%{% endif %}
+          </div>
+        </div>
+        <span class="funnel-n">{{ step.n }}</span>
+        <span class="funnel-pct">{{ step.pct }}%</span>
+      </div>
+      {% endfor %}
+    </div>
+    <div class="card">
+      <div class="card-title">Sign-up Method</div>
+      <div class="kpi-row">
+        <div class="kpi-mini">
+          <div class="kpi-mini-label">Email</div>
+          <div class="kpi-mini-val">{{ email_reg }}</div>
+        </div>
+        <div class="kpi-mini">
+          <div class="kpi-mini-label">Google</div>
+          <div class="kpi-mini-val">{{ google_reg }}</div>
+        </div>
+      </div>
+      {% if total_reg %}
+      <div style="margin-top:.5rem;">
+        <div style="display:flex;height:20px;border-radius:6px;overflow:hidden;">
+          <div style="flex:{{ email_reg }};background:var(--blue);"></div>
+          <div style="flex:{{ google_reg }};background:var(--amber);"></div>
+        </div>
+        <div style="display:flex;gap:1rem;font-size:.72rem;color:var(--muted);margin-top:.3rem;">
+          <span>🔵 Email {% widthratio email_reg total_reg 100 %}%</span>
+          <span>🟡 Google {% widthratio google_reg total_reg 100 %}%</span>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════════════
+       5. SEARCH → VIEW → SHORTLIST FUNNEL
+  ═══════════════════════════════════════════════════════════════════════ -->
+  <div class="section-head">🔍 Search → View → Shortlist Funnel <span class="section-badge med">Medium</span></div>
+  <div class="card">
+    <div class="card-title">Discovery Funnel</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;align-items:start;">
+      <div>
+        {% for step in search_funnel %}
+        <div class="funnel-row">
+          <span class="funnel-icon">{{ step.icon }}</span>
+          <span class="funnel-label">{{ step.label }}</span>
+          <div class="funnel-bar-bg">
+            <div class="funnel-bar-fill"
+                 style="width:{{ step.pct }}%;background:{% cycle 'var(--blue)' 'var(--purple)' 'var(--teal)' 'var(--green)' %};">
+              {% if step.pct > 15 %}{{ step.pct }}%{% endif %}
+            </div>
+          </div>
+          <span class="funnel-n">{{ step.n }}</span>
+          <span class="funnel-pct">{{ step.pct }}%</span>
+        </div>
+        {% endfor %}
+      </div>
+      <div style="padding-left:1rem;border-left:2px solid var(--border);">
+        <div style="font-size:.8rem;font-weight:700;color:var(--navy);margin-bottom:.5rem;">Conversion Rates</div>
+        {% for step in search_funnel %}{% if not forloop.first %}
+        {% with prev=search_funnel|slice:forloop.counter0|last %}
+        <div style="font-size:.78rem;color:var(--muted);margin-bottom:.3rem;">
+          {{ prev.icon }} → {{ step.icon }}
+          <span style="font-weight:700;color:var(--navy);">
+            {% if prev.n %}{% widthratio step.n prev.n 100 %}%{% else %}—{% endif %}
+          </span>
+        </div>
+        {% endwith %}
+        {% endif %}{% endfor %}
+        <div style="margin-top:.75rem;padding:.6rem .75rem;background:{% if zero_result_pct > 20 %}var(--red-lt){% else %}var(--green-lt){% endif %};border-radius:8px;font-size:.78rem;">
+          <strong>{{ zero_result_pct }}%</strong> of searches return zero results
+          {% if zero_result_pct > 20 %}— high, review missing courses ⚠️{% else %}— healthy ✅{% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════════════
+       6. MENTOR BOOKING FUNNEL
+  ═══════════════════════════════════════════════════════════════════════ -->
+  {% if mentor_ok %}
+  <div class="section-head">🎓 Mentor Booking Funnel <span class="section-badge low">Lower</span></div>
+  <div class="card">
+    <div class="card-title">Mentorship Discovery → Completion</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;align-items:start;">
+      <div>
+        {% for step in mentor_funnel %}
+        <div class="funnel-row">
+          <span class="funnel-icon">{{ step.icon }}</span>
+          <span class="funnel-label">{{ step.label }}</span>
+          <div class="funnel-bar-bg">
+            <div class="funnel-bar-fill"
+                 style="width:{{ step.pct }}%;background:{% cycle 'var(--blue)' 'var(--teal)' 'var(--amber)' 'var(--green)' %};">
+              {% if step.pct > 15 %}{{ step.pct }}%{% endif %}
+            </div>
+          </div>
+          <span class="funnel-n">{{ step.n }}</span>
+        </div>
+        {% endfor %}
+      </div>
+      <div style="padding-left:1rem;border-left:2px solid var(--border);">
+        <div style="font-size:.78rem;color:var(--muted);">
+          Cancellation rate: <strong style="color:{% if mentor_cancel_pct > 30 %}var(--red){% else %}var(--green){% endif %};">{{ mentor_cancel_pct }}%</strong>
+        </div>
+        <div style="font-size:.75rem;color:var(--muted);margin-top:.5rem;">
+          Mentor profile views are tracked via the page hit log under <code>/mentorship/</code> paths.
+          Individual mentor profile views are also recorded in ViewLog.
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- ═══════════════════════════════════════════════════════════════════════
+       7. CALCULATOR GRADE DISTRIBUTION
+  ═══════════════════════════════════════════════════════════════════════ -->
+  <div class="section-head">📐 Calculator Grade Distribution <span class="section-badge med">Medium</span></div>
+  <div class="two-col">
+    <div class="card">
+      <div class="card-title">Mean Grade of Students Running Calculator
+        <span style="font-size:.73rem;font-weight:400;color:var(--muted);margin-left:.5rem;">{{ total_calc_runs }} runs</span>
+      </div>
+      {% if grade_dist %}
+      <div class="grade-grid">
+        {% for row in grade_dist %}
+        <div class="grade-cell">
+          <div class="g">{{ row.grade }}</div>
+          <div class="n">{{ row.n }}</div>
+          <div class="p">{% widthratio row.n total_calc_runs 100 %}%</div>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <p style="color:var(--muted);font-size:.82rem;">No calculator runs tracked yet — data will appear after students use the calculator.</p>
+      {% endif %}
+    </div>
+    <div class="card">
+      <div class="card-title">Grade Distribution Chart</div>
+      {% if grade_dist %}
+      <div class="chart-box"><canvas id="gradeChart"></canvas></div>
+      {% else %}
+      <p style="color:var(--muted);font-size:.82rem;">Waiting for data...</p>
+      {% endif %}
+    </div>
+  </div>
+
+</div><!-- .an-wrap -->
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<script>
+/* Referral pie */
+new Chart(document.getElementById('refPieChart'), {
+  type: 'doughnut',
+  data: {
+    labels: ['Direct', 'Referred'],
+    datasets: [{ data: [{{ direct_hits }}, {{ referred_hits }}],
+      backgroundColor: ['#1e3a8a', '#2563eb'], borderWidth: 2 }]
+  },
+  options: { responsive:true, maintainAspectRatio:false,
+    plugins: { legend: { position:'right' } } }
+});
+
+/* Retention donut */
+new Chart(document.getElementById('retentionChart'), {
+  type: 'doughnut',
+  data: {
+    labels: ['Returning', 'First-time'],
+    datasets: [{ data: {{ chart_ret_data|safe }},
+      backgroundColor: ['#16a34a', '#2563eb'], borderWidth: 2 }]
+  },
+  options: { responsive:true, maintainAspectRatio:false,
+    plugins: { legend: { position:'right' } } }
+});
+
+/* Grade distribution */
+{% if grade_dist %}
+const GRADE_COLORS = {
+  'A':'#1e3a8a','A-':'#2563eb','B+':'#3b82f6','B':'#60a5fa','B-':'#93c5fd',
+  'C+':'#fbbf24','C':'#f59e0b','C-':'#d97706','D+':'#f97316','D':'#ef4444',
+  'D-':'#dc2626','E':'#7f1d1d'
+};
+const gLabels = {{ chart_grade_labels|safe }};
+new Chart(document.getElementById('gradeChart'), {
+  type: 'bar',
+  data: {
+    labels: gLabels,
+    datasets: [{ label:'Students', data:{{ chart_grade_data|safe }},
+      backgroundColor: gLabels.map(g => GRADE_COLORS[g] || '#64748b'),
+      borderRadius: 5 }]
+  },
+  options: { responsive:true, maintainAspectRatio:false,
+    plugins:{ legend:{ display:false } },
+    scales:{ y:{ beginAtZero:true, ticks:{ precision:0 } } }
+  }
+});
+{% endif %}
+</script>
+{% endblock %}

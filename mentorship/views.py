@@ -100,6 +100,11 @@ def directory(request):
 
 def mentor_profile(request, mentor_pk):
     mentor = get_object_or_404(MentorProfile, pk=mentor_pk, is_approved=True, is_active=True)
+    try:
+        from analytics.utils import log_view as _lv
+        _lv(request, 'mentor_profile', mentor.pk, str(mentor.user.get_full_name() or mentor.user.email))
+    except Exception:
+        pass
     available_slots = mentor.slots.filter(
         is_booked=False, date__gte=timezone.now().date()
     ).order_by("date", "start_time")

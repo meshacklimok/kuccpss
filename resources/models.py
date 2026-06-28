@@ -235,3 +235,72 @@ class Article(models.Model):
         words = len(self.content.split())
         minutes = max(1, round(words / 200))
         return minutes
+
+
+# ──────────────────────────────────────────────────────
+# Site-wide announcements (admin-published banners)
+# ──────────────────────────────────────────────────────
+class Announcement(models.Model):
+    TYPE_CHOICES = [
+        ('info',    'Info (blue)'),
+        ('success', 'Success (green)'),
+        ('warning', 'Warning (yellow)'),
+        ('danger',  'Alert (red)'),
+    ]
+
+    title      = models.CharField(max_length=200)
+    body       = models.TextField(help_text="Short announcement text shown to users")
+    link_url   = models.URLField(blank=True, help_text="Optional call-to-action URL")
+    link_label = models.CharField(max_length=60, blank=True, help_text="Button label for the link")
+    kind       = models.CharField(max_length=10, choices=TYPE_CHOICES, default='info')
+    is_active  = models.BooleanField(default=True)
+    starts_at  = models.DateTimeField(null=True, blank=True, help_text="Leave blank to show immediately")
+    ends_at    = models.DateTimeField(null=True, blank=True, help_text="Leave blank to show indefinitely")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name        = 'Announcement'
+        verbose_name_plural = 'Announcements'
+        indexes = [models.Index(fields=['is_active'])]
+
+    def __str__(self):
+        return self.title
+
+
+# ──────────────────────────────────────────────────────
+# User-submitted site feedback
+# ──────────────────────────────────────────────────────
+class SiteFeedback(models.Model):
+    TYPE_CHOICES = [
+        ('bug',        'Bug Report'),
+        ('suggestion', 'Feature Suggestion'),
+        ('general',    'General Feedback'),
+        ('content',    'Content Error'),
+    ]
+    STATUS_CHOICES = [
+        ('new',        'New'),
+        ('reviewing',  'Reviewing'),
+        ('resolved',   'Resolved'),
+        ('dismissed',  'Dismissed'),
+    ]
+
+    feedback_type = models.CharField(max_length=15, choices=TYPE_CHOICES, default='general')
+    message       = models.TextField(max_length=2000)
+    email         = models.EmailField(blank=True, help_text="Optional — for follow-up")
+    page_url      = models.CharField(max_length=300, blank=True, help_text="Page where feedback was submitted")
+    status        = models.CharField(max_length=12, choices=STATUS_CHOICES, default='new')
+    admin_note    = models.TextField(blank=True, help_text="Internal note")
+    created_at    = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name        = 'Site Feedback'
+        verbose_name_plural = 'Site Feedback'
+        indexes = [
+            models.Index(fields=['status']),
+            models.Index(fields=['feedback_type', 'status']),
+        ]
+
+    def __str__(self):
+        return f"[{self.get_feedback_type_display()}] {self.message[:60]}"

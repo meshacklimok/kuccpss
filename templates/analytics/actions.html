@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+{% block title %}User Actions — CareerNext Staff{% endblock %}
+
+{% block content %}
+<style>
+:root {
+  --navy:#1e3a8a;--blue:#2563eb;--blue-lt:#eff6ff;
+  --green:#16a34a;--green-lt:#f0fdf4;--amber:#d97706;--amber-lt:#fffbeb;
+  --red:#dc2626;--red-lt:#fef2f2;--purple:#7c3aed;--purple-lt:#f5f3ff;
+  --text:#0f172a;--muted:#64748b;--border:#e2e8f0;--bg:#f8fafc;--card:#ffffff;
+  --shadow:0 1px 3px rgba(0,0,0,.06),0 4px 16px rgba(30,58,138,.06);--radius:14px;
+}
+body{background:var(--bg);}
+.an-wrap{max-width:1400px;margin:0 auto;padding:1.5rem 1rem 5rem;}
+.an-topbar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.75rem;margin-bottom:1.5rem;}
+.an-topbar h1{font-size:1.45rem;font-weight:800;color:var(--navy);margin:0;}
+.an-topbar p{font-size:.78rem;color:var(--muted);margin:.1rem 0 0;}
+.an-topbar-right{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;}
+.day-pills{display:flex;gap:.3rem;}
+.day-pill{padding:.3rem .75rem;border-radius:20px;font-size:.78rem;font-weight:600;border:1.5px solid var(--border);background:var(--card);color:var(--muted);text-decoration:none;transition:all .15s;}
+.day-pill:hover{border-color:var(--blue);color:var(--blue);}
+.day-pill.active{background:var(--navy);border-color:var(--navy);color:#fff;}
+.btn-back{display:flex;align-items:center;gap:.4rem;padding:.35rem 1rem;border-radius:8px;font-size:.8rem;font-weight:700;background:var(--navy);color:#fff;text-decoration:none;}
+.btn-back:hover{background:var(--blue);color:#fff;}
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1rem;margin-bottom:1.5rem;}
+.kpi{background:var(--card);border-radius:var(--radius);padding:1.1rem 1.2rem;box-shadow:var(--shadow);}
+.kpi-label{font-size:.73rem;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-bottom:.3rem;}
+.kpi-val{font-size:1.8rem;font-weight:800;color:var(--navy);line-height:1;}
+.kpi-sub{font-size:.73rem;color:var(--muted);margin-top:.2rem;}
+.kpi.green .kpi-val{color:var(--green);}
+.kpi.red .kpi-val{color:var(--red);}
+.kpi.purple .kpi-val{color:var(--purple);}
+.card{background:var(--card);border-radius:var(--radius);padding:1.25rem 1.4rem;box-shadow:var(--shadow);margin-bottom:1.25rem;}
+.card-title{font-size:.9rem;font-weight:800;color:var(--navy);margin:0 0 1rem;}
+.tbl{width:100%;border-collapse:collapse;font-size:.8rem;}
+.tbl th{text-align:left;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);border-bottom:2px solid var(--border);padding:.4rem .6rem;}
+.tbl td{padding:.45rem .6rem;border-bottom:1px solid var(--border);color:var(--text);}
+.tbl tr:last-child td{border-bottom:none;}
+.tbl tr:hover td{background:var(--blue-lt);}
+.badge{display:inline-block;padding:.15rem .5rem;border-radius:20px;font-size:.7rem;font-weight:700;}
+.chart-box{position:relative;height:220px;margin-bottom:1rem;}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;}
+@media(max-width:700px){.two-col{grid-template-columns:1fr;}}
+.action-login{color:#16a34a;font-weight:700;}
+.action-login_failed{color:#dc2626;font-weight:700;}
+.action-logout{color:#64748b;}
+.action-shortlist_add{color:#2563eb;font-weight:600;}
+.action-shortlist_remove{color:#d97706;}
+.action-ai_chat{color:#7c3aed;font-weight:600;}
+.action-quiz_complete{color:#0891b2;font-weight:700;}
+</style>
+
+<div class="an-wrap">
+  <div class="an-topbar">
+    <div>
+      <h1>User Actions</h1>
+      <p>Logins, shortlists, quiz completions, AI chats — last {{ days }} days</p>
+    </div>
+    <div class="an-topbar-right">
+      <div class="day-pills">
+        {% for d in day_options %}
+        <a href="?days={{ d }}" class="day-pill{% if days == d %} active{% endif %}">{% if d == 1 %}24h{% else %}{{ d }}d{% endif %}</a>
+        {% endfor %}
+      </div>
+      <a href="{% url 'analytics:dashboard' %}" class="btn-back">← Dashboard</a>
+    </div>
+  </div>
+
+  <div class="kpi-grid">
+    <div class="kpi"><div class="kpi-label">Total Actions</div><div class="kpi-val">{{ total_actions }}</div><div class="kpi-sub">last {{ days }}d</div></div>
+    <div class="kpi"><div class="kpi-label">Actions Today</div><div class="kpi-val">{{ actions_today }}</div></div>
+    <div class="kpi green"><div class="kpi-label">Logins</div><div class="kpi-val">{{ logins_ok }}</div></div>
+    <div class="kpi red"><div class="kpi-label">Failed Logins</div><div class="kpi-val">{{ logins_fail }}</div></div>
+    <div class="kpi"><div class="kpi-label">Logouts</div><div class="kpi-val">{{ logouts }}</div></div>
+    <div class="kpi purple"><div class="kpi-label">Shortlists</div><div class="kpi-val">{{ shortlists }}</div><div class="kpi-sub">courses added</div></div>
+    <div class="kpi"><div class="kpi-label">AI Chats</div><div class="kpi-val">{{ ai_chats }}</div></div>
+    <div class="kpi green"><div class="kpi-label">Quiz Done</div><div class="kpi-val">{{ quiz_done }}</div></div>
+  </div>
+
+  <!-- Trend charts -->
+  <div class="card">
+    <div class="card-title">Daily Actions</div>
+    <div class="chart-box"><canvas id="actionChart"></canvas></div>
+  </div>
+
+  <div class="two-col">
+    <div class="card">
+      <div class="card-title">Login Trend</div>
+      <div class="chart-box"><canvas id="loginChart"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Action Distribution</div>
+      <div class="chart-box"><canvas id="actPieChart"></canvas></div>
+    </div>
+  </div>
+
+  <!-- Action distribution table -->
+  <div class="card">
+    <div class="card-title">Action Breakdown</div>
+    <table class="tbl">
+      <thead><tr><th>Action</th><th>Count</th></tr></thead>
+      <tbody>
+        {% for a in action_dist %}
+        <tr>
+          <td class="action-{{ a.action }}">{{ a.action|title }}</td>
+          <td>{{ a.n }}</td>
+        </tr>
+        {% empty %}<tr><td colspan="2" style="color:var(--muted);">No data yet</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Recent actions feed -->
+  <div class="card">
+    <div class="card-title">Recent Actions</div>
+    <div style="overflow-x:auto;">
+      <table class="tbl">
+        <thead><tr><th>Time</th><th>Action</th><th>User</th><th>IP</th><th>Details</th></tr></thead>
+        <tbody>
+          {% for a in recent_actions %}
+          <tr>
+            <td>{{ a.created_at|date:"d M H:i" }}</td>
+            <td class="action-{{ a.action }}">{{ a.action|title }}</td>
+            <td>{{ a.user__email|default:"anonymous" }}</td>
+            <td>{{ a.ip|default:"—" }}</td>
+            <td style="font-size:.75rem;color:var(--muted);">
+              {% for k,v in a.properties.items %}{{ k }}={{ v }} {% endfor %}
+            </td>
+          </tr>
+          {% empty %}<tr><td colspan="5" style="color:var(--muted);">No actions yet</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<script>
+const labels = {{ chart_labels|safe }};
+new Chart(document.getElementById('actionChart'), {
+  type: 'bar',
+  data: { labels, datasets: [{ label:'Actions', data:{{ chart_actions|safe }},
+    backgroundColor:'rgba(37,99,235,.7)', borderRadius:4 }]
+  },
+  options:{ responsive:true, maintainAspectRatio:false,
+    plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true,ticks:{precision:0}}} }
+});
+new Chart(document.getElementById('loginChart'), {
+  type:'line',
+  data:{ labels, datasets:[{ label:'Logins', data:{{ chart_logins|safe }},
+    borderColor:'#16a34a', backgroundColor:'rgba(22,163,74,.08)', tension:.35, fill:true, pointRadius:2 }]
+  },
+  options:{ responsive:true, maintainAspectRatio:false,
+    plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true,ticks:{precision:0}}} }
+});
+const COLORS = ['#2563eb','#16a34a','#d97706','#7c3aed','#0891b2','#dc2626','#64748b','#f59e0b'];
+new Chart(document.getElementById('actPieChart'), {
+  type:'doughnut',
+  data:{ labels:{{ chart_act_labels|safe }},
+    datasets:[{ data:{{ chart_act_data|safe }}, backgroundColor:COLORS, borderWidth:2 }]
+  },
+  options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'right'}} }
+});
+</script>
+{% endblock %}

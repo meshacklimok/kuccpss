@@ -1,5 +1,6 @@
 from django.contrib import admin
-from .models import ResourceCategory, Resource, Article, FAQItem, SuccessStory, SiteSetting
+from django.utils.html import format_html
+from .models import ResourceCategory, Resource, Article, FAQItem, SuccessStory, SiteSetting, Announcement, SiteFeedback
 
 
 @admin.register(ResourceCategory)
@@ -86,3 +87,50 @@ class SiteSettingAdmin(admin.ModelAdmin):
         v = obj.value
         return (v[:55] + "…") if len(v) > 55 else v
     value_preview.short_description = "Value"
+
+
+@admin.register(Announcement)
+class AnnouncementAdmin(admin.ModelAdmin):
+    list_display  = ('title', 'kind', 'is_active', 'starts_at', 'ends_at', 'created_at')
+    list_filter   = ('kind', 'is_active')
+    list_editable = ('is_active',)
+    search_fields = ('title', 'body')
+    readonly_fields = ('created_at',)
+
+    fieldsets = (
+        (None, {'fields': ('title', 'body', 'kind', 'is_active')}),
+        ('Call to Action', {'fields': ('link_url', 'link_label'), 'classes': ('collapse',)}),
+        ('Schedule', {'fields': ('starts_at', 'ends_at'), 'classes': ('collapse',)}),
+        ('Meta', {'fields': ('created_at',), 'classes': ('collapse',)}),
+    )
+
+
+@admin.register(SiteFeedback)
+class SiteFeedbackAdmin(admin.ModelAdmin):
+    list_display  = ('short_message', 'feedback_type', 'status', 'email', 'page_url', 'created_at')
+    list_filter   = ('feedback_type', 'status')
+    list_editable = ('status',)
+    search_fields = ('message', 'email', 'page_url')
+    readonly_fields = ('created_at', 'feedback_type', 'message', 'email', 'page_url')
+
+    fieldsets = (
+        ('Submission', {'fields': ('feedback_type', 'message', 'email', 'page_url', 'created_at')}),
+        ('Review', {'fields': ('status', 'admin_note')}),
+    )
+
+    actions = ['mark_resolved', 'mark_dismissed']
+
+    @admin.action(description='Mark selected as Resolved')
+    def mark_resolved(self, request, queryset):
+        queryset.update(status='resolved')
+
+    @admin.action(description='Mark selected as Dismissed')
+    def mark_dismissed(self, request, queryset):
+        queryset.update(status='dismissed')
+
+    def short_message(self, obj):
+        return obj.message[:70] + ('…' if len(obj.message) > 70 else '')
+    short_message.short_description = 'Message'
+
+    def has_add_permission(self, request):
+        return False

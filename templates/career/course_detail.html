@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Course Details - {{ course.name|default:tv_course.name|default:kmtc_course.name|default:ttc_course.name }}{% endblock %}
+{% block title %}{{ course.name|default:tv_course.name|default:kmtc_course.name|default:ttc_course.name }} — KUCCPS Course Details Kenya | CareerNext{% endblock %}
 
 {% block content %}
 <div class="container mt-5">

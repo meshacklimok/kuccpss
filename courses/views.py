@@ -76,11 +76,11 @@ def course_type_detail(request, type_slug):
     q = request.GET.get('q', '').strip()
     page_num = request.GET.get('page', 1)
 
-    categories = course_type.categories.all()
+    categories = list(course_type.categories.all())
 
     page_obj = None
     courses = None
-    if not categories.exists() or q:
+    if not categories or q:
         qs = Course.objects.filter(course_type=course_type).select_related(
             'course_type', 'category', 'cluster'
         )
@@ -181,10 +181,11 @@ def course_detail(request, type_slug, category_slug=None, course_slug=None):
     """
     Display course details including core subjects, institutions, cut-offs, and PDF (if any)
     """
+    _qs = Course.objects.select_related('course_type', 'category', 'cluster')
     if category_slug:
-        course = Course.objects.filter(slug=course_slug, category__slug=category_slug, course_type__slug=type_slug).first()
+        course = _qs.filter(slug=course_slug, category__slug=category_slug, course_type__slug=type_slug).first()
     else:
-        course = Course.objects.filter(slug=course_slug, course_type__slug=type_slug).first()
+        course = _qs.filter(slug=course_slug, course_type__slug=type_slug).first()
 
     if course is None:
         # Course may have been moved — find by slug and redirect to its actual URL

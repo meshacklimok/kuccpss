@@ -1651,8 +1651,10 @@ def notifications_view(request: HttpRequest) -> HttpResponse:
 @require_http_methods(["POST"])
 def mark_notifications_read(request: HttpRequest) -> HttpResponse:
     from django.http import JsonResponse
+    from django.core.cache import cache
     from .models import Notification
     Notification.objects.filter(user=request.user, is_read=False).update(is_read=True)
+    cache.delete(f'notif_unread:{request.user.pk}')
     return JsonResponse({"status": "ok"})
 
 
@@ -1660,8 +1662,10 @@ def mark_notifications_read(request: HttpRequest) -> HttpResponse:
 @require_http_methods(["POST"])
 def mark_notification_read(request: HttpRequest, notif_id: int) -> HttpResponse:
     from django.http import JsonResponse
+    from django.core.cache import cache
     from .models import Notification
     Notification.objects.filter(user=request.user, id=notif_id).update(is_read=True)
+    cache.delete(f'notif_unread:{request.user.pk}')
     return JsonResponse({"status": "ok"})
 
 

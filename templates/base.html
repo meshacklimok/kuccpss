@@ -59,6 +59,7 @@
 
     <!-- Critical CSS: Bootstrap + our stylesheet block paint -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
@@ -109,103 +110,6 @@
     {% block extra_schema %}{% endblock %}
 
     {% block extra_head %}{% endblock %}
-<style>
-/* ── Navbar search ── */
-.nav-search-wrap {
-    position: relative;
-    flex: 0 1 160px;
-    min-width: 80px;
-}
-.nav-search-inner {
-    display: flex; align-items: center; gap: 6px;
-    background: rgba(255,255,255,0.1);
-    border: 1.5px solid rgba(255,255,255,0.18);
-    border-radius: 22px;
-    padding: 5px 12px;
-    transition: background 0.2s, border-color 0.2s;
-}
-.nav-search-inner:focus-within {
-    background: rgba(255,255,255,0.18);
-    border-color: rgba(255,255,255,0.45);
-}
-.nav-search-icon { color: rgba(255,255,255,0.5); font-size: 0.75rem; flex-shrink: 0; }
-.nav-search-input {
-    background: none; border: none; outline: none;
-    color: #fff; font-size: 0.83rem; flex: 1; min-width: 0;
-    padding: 1px 0;
-}
-.nav-search-input::placeholder { color: rgba(255,255,255,0.45); }
-.nav-search-clear {
-    background: none; border: none; padding: 0 2px;
-    color: rgba(255,255,255,0.35); font-size: 1.15rem; line-height: 1;
-    cursor: pointer; flex-shrink: 0; display: none;
-    transition: color 0.15s;
-}
-.nav-search-clear:hover { color: rgba(255,255,255,0.8); }
-.nav-search-clear.visible { display: block; }
-
-/* dropdown */
-.nav-search-dropdown {
-    display: none;
-    position: absolute; top: calc(100% + 8px); left: 0; right: 0;
-    background: #fff; border-radius: 14px;
-    box-shadow: 0 10px 40px rgba(30,58,138,0.18), 0 2px 8px rgba(0,0,0,0.08);
-    border: 1.5px solid #e2e8f0;
-    overflow: hidden; z-index: 9999;
-    max-height: 340px; overflow-y: auto;
-    animation: dropIn 0.18s cubic-bezier(0.22,1,0.36,1);
-}
-.nav-search-dropdown.open { display: block; }
-
-@keyframes dropIn {
-    from { opacity: 0; transform: translateY(-6px) scale(0.98); }
-    to   { opacity: 1; transform: translateY(0)   scale(1); }
-}
-
-.nsd-section-label {
-    padding: 8px 14px 5px;
-    font-size: 0.67rem; font-weight: 800; letter-spacing: 0.09em; text-transform: uppercase;
-    color: #94a3b8; background: #f8fafc;
-    border-bottom: 1px solid #f1f5f9;
-}
-.nsd-item {
-    display: flex; align-items: center; gap: 10px;
-    padding: 9px 14px; text-decoration: none; color: inherit;
-    border-bottom: 1px solid #f8fafc;
-    transition: background 0.12s;
-}
-.nsd-item:hover, .nsd-item.active {
-    background: #eff6ff; text-decoration: none; color: inherit;
-}
-.nsd-item-icon {
-    width: 30px; height: 30px; border-radius: 8px; flex-shrink: 0;
-    display: flex; align-items: center; justify-content: center; font-size: 0.78rem;
-}
-.nsd-inst-icon   { background: #eff6ff; color: #1d4ed8; }
-.nsd-course-icon { background: #ecfdf5; color: #059669; }
-.nsd-item-name {
-    font-size: 0.84rem; font-weight: 700; color: #1e293b; line-height: 1.2;
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-}
-.nsd-abbr {
-    display: inline-block; margin-left: 6px;
-    font-size: 0.65rem; font-weight: 800; letter-spacing: 0.05em;
-    background: #eff6ff; color: #1d4ed8; border-radius: 4px; padding: 1px 5px;
-    vertical-align: middle;
-}
-.nsd-item-sub  { font-size: 0.73rem; color: #64748b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.nsd-empty     { padding: 1.2rem 1rem; font-size: 0.83rem; color: #94a3b8; text-align: center; }
-.nsd-footer    { padding: 8px 14px; background: #f8fafc; border-top: 1px solid #e2e8f0; font-size: 0.73rem; color: #94a3b8; text-align: center; }
-.nsd-see-all   { color: #2563eb; font-weight: 600; text-decoration: none; }
-.nsd-see-all:hover { text-decoration: underline; }
-
-/* on mobile the search goes inside the collapsed menu */
-@media (max-width: 991px) {
-    .nav-search-wrap { flex: none; width: 100%; }
-    .nav-search-dropdown { position: fixed; top: auto; left: 1rem; right: 1rem; width: auto; }
-}
-
-</style>
 </head>
 <body>
 
@@ -1445,136 +1349,130 @@ window._ph = function (name, props) {
 }());
 </script>
 
-<!-- ── ONBOARDING WALKTHROUGH (first visit only) ── -->
-<div id="onboarding-overlay" role="dialog" aria-modal="true" aria-label="Welcome to CareerNext"
-     style="display:none;position:fixed;inset:0;z-index:100000;align-items:center;justify-content:center;padding:1rem;">
-  <div id="onboarding-backdrop"
-       style="position:absolute;inset:0;background:rgba(15,23,42,0.78);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);"></div>
-  <div id="onboarding-card"
-       style="position:relative;z-index:1;width:min(420px,96vw);background:#fff;border-radius:24px;overflow:hidden;
-              box-shadow:0 32px 80px rgba(0,0,0,0.45),0 0 0 1px rgba(0,0,0,0.05);
-              animation:ob-in 0.45s cubic-bezier(0.34,1.56,0.64,1);">
+<!-- ── SITE ANNOUNCEMENTS ── -->
+{% if site_announcements %}
+{% for ann in site_announcements %}
+{% with colors="info:#1d4ed8,#eff6ff,#dbeafe success:#15803d,#f0fdf4,#dcfce7 warning:#92400e,#fffbeb,#fde68a danger:#991b1b,#fef2f2,#fecaca" %}
+<div id="ann-{{ ann.pk }}" style="
+  background:{% if ann.kind == 'info' %}#eff6ff{% elif ann.kind == 'success' %}#f0fdf4{% elif ann.kind == 'warning' %}#fffbeb{% else %}#fef2f2{% endif %};
+  border-bottom:1px solid {% if ann.kind == 'info' %}#bfdbfe{% elif ann.kind == 'success' %}#bbf7d0{% elif ann.kind == 'warning' %}#fde68a{% else %}#fecaca{% endif %};
+  color:{% if ann.kind == 'info' %}#1e40af{% elif ann.kind == 'success' %}#15803d{% elif ann.kind == 'warning' %}#92400e{% else %}#991b1b{% endif %};
+  padding:0.55rem 1rem;font-size:0.84rem;display:flex;align-items:center;gap:0.75rem;
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+  <span style="font-weight:700;flex:1;">{{ ann.title }}{% if ann.body %} — {{ ann.body }}{% endif %}</span>
+  {% if ann.link_url %}<a href="{{ ann.link_url }}" style="text-decoration:underline;font-weight:700;white-space:nowrap;">{{ ann.link_label|default:"Learn more" }}</a>{% endif %}
+  <button onclick="document.getElementById('ann-{{ ann.pk }}').remove()" aria-label="Dismiss"
+    style="background:none;border:none;cursor:pointer;font-size:1rem;line-height:1;opacity:0.6;padding:0 4px;">&times;</button>
+</div>
+{% endwith %}
+{% endfor %}
+{% endif %}
 
-    <!-- Progress dots -->
-    <div style="display:flex;justify-content:center;gap:6px;padding:1.1rem 1.5rem 0;">
-      <div class="ob-dot ob-dot-0 active"></div>
-      <div class="ob-dot ob-dot-1"></div>
-      <div class="ob-dot ob-dot-2"></div>
+<!-- ── FEEDBACK BUTTON & MODAL ── -->
+<button id="fb-trigger" onclick="document.getElementById('fb-modal').style.display='flex'"
+  title="Send feedback"
+  style="position:fixed;bottom:1.5rem;right:1.5rem;z-index:9000;
+         background:linear-gradient(135deg,#1e3a8a,#2563eb);color:#fff;
+         border:none;border-radius:50px;padding:0.55rem 1.1rem;
+         font-size:0.82rem;font-weight:700;cursor:pointer;
+         box-shadow:0 4px 16px rgba(30,58,138,0.4);
+         display:none;align-items:center;gap:6px;transition:transform 0.15s;">
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+  Feedback
+</button>
+
+<div id="fb-modal" style="display:none;position:fixed;inset:0;z-index:10000;align-items:flex-end;justify-content:flex-end;padding:1.5rem;">
+  <div style="position:absolute;inset:0;" onclick="document.getElementById('fb-modal').style.display='none'"></div>
+  <div style="position:relative;z-index:1;width:min(380px,96vw);background:#fff;border-radius:20px;
+              box-shadow:0 24px 64px rgba(0,0,0,0.35);overflow:hidden;">
+    <div style="background:linear-gradient(135deg,#1e3a8a,#2563eb);padding:1rem 1.25rem;
+                display:flex;align-items:center;justify-content:space-between;">
+      <span style="color:#fff;font-weight:800;font-size:0.95rem;">Send Feedback</span>
+      <button onclick="document.getElementById('fb-modal').style.display='none'"
+        style="background:rgba(255,255,255,0.15);border:none;color:#fff;border-radius:50%;
+               width:28px;height:28px;cursor:pointer;font-size:1rem;line-height:1;">&times;</button>
     </div>
-
-    <!-- Step panels -->
-    <div id="ob-steps">
-
-      <div class="ob-step ob-step-0" style="padding:1.25rem 1.75rem 1.75rem;text-align:center;">
-        <div style="width:72px;height:72px;border-radius:20px;background:linear-gradient(135deg,#eff6ff,#dbeafe);
-                    display:flex;align-items:center;justify-content:center;margin:0 auto 1.1rem;font-size:1.8rem;">
-          🎯
-        </div>
-        <div style="font-size:0.72rem;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;color:#2563eb;margin-bottom:0.4rem;">Step 1 of 3</div>
-        <h2 style="font-size:1.2rem;font-weight:900;color:#1e293b;margin:0 0 0.6rem;line-height:1.3;">Calculate your cluster points</h2>
-        <p style="font-size:0.88rem;color:#64748b;line-height:1.6;margin:0;">Enter your KCSE grades once and instantly see your exact points across all 23 KUCCPS clusters — no maths needed.</p>
-      </div>
-
-      <div class="ob-step ob-step-1" style="display:none;padding:1.25rem 1.75rem 1.75rem;text-align:center;">
-        <div style="width:72px;height:72px;border-radius:20px;background:linear-gradient(135deg,#f0fdf4,#dcfce7);
-                    display:flex;align-items:center;justify-content:center;margin:0 auto 1.1rem;font-size:1.8rem;">
-          🎓
-        </div>
-        <div style="font-size:0.72rem;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;color:#16a34a;margin-bottom:0.4rem;">Step 2 of 3</div>
-        <h2 style="font-size:1.2rem;font-weight:900;color:#1e293b;margin:0 0 0.6rem;line-height:1.3;">Discover courses you qualify for</h2>
-        <p style="font-size:0.88rem;color:#64748b;line-height:1.6;margin:0;">Our career engine matches your grades against university, KMTC, TVET and TTC programmes across Kenya — sorted by your chances.</p>
-      </div>
-
-      <div class="ob-step ob-step-2" style="display:none;padding:1.25rem 1.75rem 1.75rem;text-align:center;">
-        <div style="width:72px;height:72px;border-radius:20px;background:linear-gradient(135deg,#fefce8,#fef9c3);
-                    display:flex;align-items:center;justify-content:center;margin:0 auto 1.1rem;font-size:1.8rem;">
-          📋
-        </div>
-        <div style="font-size:0.72rem;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;color:#ca8a04;margin-bottom:0.4rem;">Step 3 of 3</div>
-        <h2 style="font-size:1.2rem;font-weight:900;color:#1e293b;margin:0 0 0.6rem;line-height:1.3;">Save and track your shortlist</h2>
-        <p style="font-size:0.88rem;color:#64748b;line-height:1.6;margin:0;">Shortlist up to 5 courses, add notes, set deadlines and track your applications — all in one place. Free forever.</p>
-      </div>
-
-    </div>
-
-    <!-- Actions -->
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:0 1.75rem 1.5rem;gap:0.75rem;">
-      <button id="ob-skip" onclick="obDismiss()"
-              style="background:none;border:none;color:#94a3b8;font-size:0.82rem;cursor:pointer;padding:0.4rem 0;text-decoration:underline;flex-shrink:0;">
-        Skip
+    <form id="fb-form" onsubmit="submitFeedback(event)" style="padding:1.25rem;display:flex;flex-direction:column;gap:0.85rem;">
+      {% csrf_token %}
+      <input type="hidden" name="page_url" id="fb-page-url">
+      <select name="feedback_type" style="border:1.5px solid #e2e8f0;border-radius:10px;padding:0.55rem 0.75rem;font-size:0.85rem;color:#374151;outline:none;">
+        <option value="general">General Feedback</option>
+        <option value="bug">Bug Report</option>
+        <option value="suggestion">Feature Suggestion</option>
+        <option value="content">Content Error</option>
+      </select>
+      <textarea name="message" required maxlength="2000" rows="4" placeholder="Tell us what you think..."
+        style="border:1.5px solid #e2e8f0;border-radius:10px;padding:0.65rem 0.75rem;
+               font-size:0.85rem;resize:vertical;outline:none;font-family:inherit;color:#374151;"></textarea>
+      <input type="email" name="email" placeholder="Your email (optional, for follow-up)"
+        style="border:1.5px solid #e2e8f0;border-radius:10px;padding:0.55rem 0.75rem;font-size:0.85rem;outline:none;">
+      <div id="fb-status" style="display:none;font-size:0.82rem;font-weight:600;text-align:center;padding:0.4rem;border-radius:8px;"></div>
+      <button type="submit" style="background:linear-gradient(135deg,#1e3a8a,#2563eb);color:#fff;border:none;
+                                    border-radius:12px;padding:0.7rem;font-weight:800;font-size:0.88rem;cursor:pointer;">
+        Submit Feedback
       </button>
-      <button id="ob-next" onclick="obNext()"
-              style="background:linear-gradient(135deg,#1e3a8a,#2563eb);color:#fff;border:none;
-                     border-radius:12px;padding:0.72rem 1.75rem;font-weight:800;font-size:0.9rem;
-                     cursor:pointer;flex-shrink:0;box-shadow:0 4px 16px rgba(30,58,138,0.35);
-                     transition:transform 0.15s,box-shadow 0.15s;">
-        Next &rarr;
-      </button>
-    </div>
-
+    </form>
   </div>
 </div>
 
-<style>
-@keyframes ob-in { from { opacity:0; transform:scale(0.88) translateY(20px); } to { opacity:1; transform:scale(1) translateY(0); } }
-.ob-dot { width:8px; height:8px; border-radius:50%; background:#e2e8f0; transition:background 0.25s,transform 0.25s; }
-.ob-dot.active { background:#1e3a8a; transform:scale(1.25); }
-#ob-next:hover { transform:translateY(-1px); box-shadow:0 6px 20px rgba(30,58,138,0.45); }
-</style>
-
 <script>
-(function () {
-    var STORAGE_KEY = 'cn_onboarding_v1';
-    var overlay = document.getElementById('onboarding-overlay');
-    if (!overlay) return;
+document.getElementById('fb-page-url').value = window.location.pathname;
 
-    // Don't show on login, register, admin, or if already seen
-    var path = window.location.pathname;
-    var skipPaths = ['/login/', '/register/', '/cn-staff/'];
-    var skip = skipPaths.some(function (p) { return path.indexOf(p) !== -1; });
-    if (skip || localStorage.getItem(STORAGE_KEY)) return;
+// Show feedback button only during the 5th minute of the session (4:00–5:00)
+(function() {
+  var key = 'fb_session_start';
+  if (!sessionStorage.getItem(key)) sessionStorage.setItem(key, Date.now());
+  var start = parseInt(sessionStorage.getItem(key), 10);
+  var btn = document.getElementById('fb-trigger');
+  var SHOW_AT = 4 * 60 * 1000;   // 4 minutes
+  var HIDE_AT = 5 * 60 * 1000;   // 5 minutes
+  function tick() {
+    var elapsed = Date.now() - start;
+    if (elapsed >= SHOW_AT && elapsed < HIDE_AT) {
+      btn.style.display = 'flex';
+      var remaining = HIDE_AT - elapsed;
+      setTimeout(function() { btn.style.display = 'none'; }, remaining);
+    } else if (elapsed < SHOW_AT) {
+      setTimeout(function() {
+        btn.style.display = 'flex';
+        setTimeout(function() { btn.style.display = 'none'; }, HIDE_AT - (Date.now() - start));
+      }, SHOW_AT - elapsed);
+    }
+    // elapsed >= HIDE_AT: never show
+  }
+  tick();
+})();
 
-    // Show after a short delay so the page settles
-    setTimeout(function () {
-        overlay.style.display = 'flex';
-        document.body.style.overflow = 'hidden';
-    }, 800);
-
-    var step = 0;
-    var totalSteps = 3;
-
-    window.obNext = function () {
-        step++;
-        if (step >= totalSteps) { obDismiss(); return; }
-        // Hide current step panel
-        document.querySelector('.ob-step-' + (step - 1)).style.display = 'none';
-        // Show next
-        document.querySelector('.ob-step-' + step).style.display = '';
-        // Update dots
-        document.querySelectorAll('.ob-dot').forEach(function (d, i) {
-            d.classList.toggle('active', i === step);
-        });
-        // Last step changes button text
-        if (step === totalSteps - 1) {
-            document.getElementById('ob-next').innerHTML = 'Get Started &#10003;';
-            document.getElementById('ob-skip').style.display = 'none';
-        }
-    };
-
-    window.obDismiss = function () {
-        overlay.style.display = 'none';
-        document.body.style.overflow = '';
-        localStorage.setItem(STORAGE_KEY, '1');
-    };
-
-    // Close on backdrop click
-    document.getElementById('onboarding-backdrop').addEventListener('click', obDismiss);
-
-    // Close on Escape
-    document.addEventListener('keydown', function (e) {
-        if (e.key === 'Escape') obDismiss();
+function submitFeedback(e) {
+  e.preventDefault();
+  var form = document.getElementById('fb-form');
+  var status = document.getElementById('fb-status');
+  var data = new FormData(form);
+  fetch('{% url "resources:submit_feedback" %}', {method:'POST',body:data})
+    .then(function(r){return r.json();})
+    .then(function(res){
+      if (res.ok) {
+        status.style.display = 'block';
+        status.style.background = '#f0fdf4';
+        status.style.color = '#15803d';
+        status.textContent = 'Thank you! Your feedback has been received.';
+        form.querySelector('textarea').value = '';
+        form.querySelector('input[type=email]').value = '';
+        setTimeout(function(){document.getElementById('fb-modal').style.display='none';status.style.display='none';},2500);
+      } else {
+        status.style.display = 'block';
+        status.style.background = '#fef2f2';
+        status.style.color = '#991b1b';
+        status.textContent = res.error || 'Something went wrong. Please try again.';
+      }
+    })
+    .catch(function(){
+      status.style.display = 'block';
+      status.style.background = '#fef2f2';
+      status.style.color = '#991b1b';
+      status.textContent = 'Network error. Please try again.';
     });
-}());
+}
 </script>
 
 <!-- Offline connection banner -->
@@ -1599,6 +1497,37 @@ window._ph = function (name, props) {
     if (screen.orientation && screen.orientation.lock) {
         screen.orientation.lock('portrait').catch(function () { /* silently ignored in browser context */ });
     }
+}());
+</script>
+
+<script>
+/* Session heartbeat — keeps SessionLog.last_seen_at fresh for avg-time-on-site metric */
+(function () {
+  var URL = '/analytics/heartbeat/';
+  function getCsrf() {
+    var m = document.cookie.match(/csrftoken=([^;]+)/);
+    return m ? m[1] : '';
+  }
+  function ping() {
+    var csrf = getCsrf();
+    if (!csrf) return;
+    if (navigator.sendBeacon) {
+      var fd = new FormData();
+      fd.append('csrfmiddlewaretoken', csrf);
+      navigator.sendBeacon(URL, fd);
+    } else {
+      fetch(URL, { method: 'POST', headers: { 'X-CSRFToken': csrf }, credentials: 'same-origin' })
+        .catch(function () {});
+    }
+  }
+  // Ping every 60 s while the tab is active
+  setInterval(function () {
+    if (document.visibilityState !== 'hidden') ping();
+  }, 60000);
+  // Ping when user hides tab or closes browser
+  document.addEventListener('visibilitychange', function () {
+    if (document.visibilityState === 'hidden') ping();
+  });
 }());
 </script>
 

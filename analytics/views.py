@@ -15,7 +15,7 @@ from django.views.decorators.http import require_POST
 
 staff_only = user_passes_test(lambda u: u.is_active and u.is_staff, login_url='/accounts/login/')
 
-VALID_DAYS = {7, 30, 90, 365}
+VALID_DAYS = {1, 7, 30, 90, 180, 365}
 
 
 def _parse_days(request):
@@ -41,6 +41,20 @@ def _trend(current, previous):
         return {'pct': None, 'up': True, 'neutral': previous == 0}
     pct = round((current - previous) / previous * 100)
     return {'pct': abs(pct), 'up': pct >= 0, 'neutral': False}
+
+
+@require_POST
+def heartbeat(request):
+    """JS pings this every 60 s while the tab is open → keeps SessionLog.last_seen_at fresh."""
+    try:
+        from .models import SessionLog
+        from django.utils import timezone
+        sk = request.session.session_key or ''
+        if sk:
+            SessionLog.objects.filter(session_key=sk).update(last_seen_at=timezone.now())
+    except Exception:
+        pass
+    return JsonResponse({'ok': True})
 
 
 @csrf_exempt
@@ -261,6 +275,22 @@ def analytics_dashboard(request):
     for f in funnel:
         f['pct'] = round(f['n'] / max(funnel_max, 1) * 100)
 
+    # ── Feedback ──────────────────────────────────────────────────────────────
+    from resources.models import SiteFeedback
+    feedback_new       = SiteFeedback.objects.filter(status='new').count()
+    feedback_total     = SiteFeedback.objects.count()
+    feedback_period    = SiteFeedback.objects.filter(created_at__date__gte=ago).count()
+    feedback_by_type   = list(
+        SiteFeedback.objects.values('feedback_type').annotate(n=Count('id')).order_by('-n')
+    )
+    feedback_by_status = list(
+        SiteFeedback.objects.values('status').annotate(n=Count('id')).order_by('-n')
+    )
+    recent_feedback    = list(
+        SiteFeedback.objects.order_by('-created_at')[:50]
+        .values('id', 'feedback_type', 'message', 'email', 'page_url', 'status', 'created_at')
+    )
+
     context = {
         'days': days,
         # User KPIs
@@ -300,6 +330,11 @@ def analytics_dashboard(request):
         'top_saved': top_saved, 'top_downloads': top_downloads,
         'pathway_dist': pathway_dist, 'top_grades': top_grades,
         'recent_users': recent_users,
+        # Feedback
+        'feedback_new': feedback_new, 'feedback_total': feedback_total,
+        'feedback_period': feedback_period,
+        'feedback_by_type': feedback_by_type, 'feedback_by_status': feedback_by_status,
+        'recent_feedback': recent_feedback,
         # Activity feed
         'feed_items': feed_items,
         # Funnel
@@ -315,7 +350,7 @@ def analytics_dashboard(request):
         'chart_pw_data':   json.dumps([p['n'] for p in pathway_dist]),
         'chart_grade_labels': json.dumps([g['mean_grade'].upper() for g in top_grades]),
         'chart_grade_data':   json.dumps([g['n'] for g in top_grades]),
-        'day_options': [7, 30, 90, 365],
+        'day_options': [1, 7, 30, 90, 180, 365],
         # External monitoring services
         'posthog_configured': bool(getattr(settings, 'POSTHOG_API_KEY', '')),
         'posthog_app_url':    ('https://eu.posthog.com' if 'eu.' in getattr(settings, 'POSTHOG_HOST', 'eu') else 'https://app.posthog.com'),
@@ -575,6 +610,570 @@ def affiliate_analytics(request):
         'chart_status_data':    json.dumps([active_affiliates, total_affiliates - active_affiliates]),
     }
     return render(request, 'analytics/affiliate_analytics.html', context)
+
+
+def _fmt_duration(td):
+    """Timedelta → '4m 32s' string."""
+    if not td:
+        return '—'
+    total_s = max(0, int(td.total_seconds()))
+    m, s = divmod(total_s, 60)
+    return f'{m}m {s:02d}s' if m else f'{s}s'
+
+
+@staff_only
+def pages_analytics(request):
+    """Top pages, session duration, device breakdown, slow pages, and 4xx/5xx errors."""
+    from django.db.models import DurationField, ExpressionWrapper, F as _F
+    from .models import PageViewLog, SessionLog
+
+    days  = _parse_days(request)
+    today = date.today()
+    ago   = today - timedelta(days=days)
+
+    total_hits  = PageViewLog.objects.filter(created_at__date__gte=ago).count()
+    human_hits  = PageViewLog.objects.filter(created_at__date__gte=ago).exclude(device='bot').count()
+    bot_hits    = total_hits - human_hits
+    errors_4xx  = PageViewLog.objects.filter(created_at__date__gte=ago, status_code__gte=400, status_code__lt=500).count()
+    errors_5xx  = PageViewLog.objects.filter(created_at__date__gte=ago, status_code__gte=500).count()
+    hits_today  = PageViewLog.objects.filter(created_at__date=today).count()
+    avg_ms      = PageViewLog.objects.filter(created_at__date__gte=ago).exclude(device='bot').aggregate(a=Avg('response_time_ms'))['a'] or 0
+
+    # ── Session duration ──────────────────────────────────────────────────────
+    session_qs = SessionLog.objects.filter(created_at__date__gte=ago).exclude(device='bot')
+    total_sessions   = session_qs.count()
+    bounce_sessions  = session_qs.filter(page_count=1).count()
+    engaged_sessions = session_qs.filter(page_count__gte=5).count()
+    bounce_rate      = round(bounce_sessions / max(total_sessions, 1) * 100)
+
+    duration_ann = session_qs.filter(page_count__gte=2).annotate(
+        dur=ExpressionWrapper(_F('last_seen_at') - _F('created_at'), output_field=DurationField())
+    )
+    avg_duration_td  = duration_ann.aggregate(avg=Avg('dur'))['avg']
+    avg_duration_str = _fmt_duration(avg_duration_td)
+    avg_duration_s   = int(avg_duration_td.total_seconds()) if avg_duration_td else 0
+
+    # Distribution buckets: <30s, 30s–2m, 2–5m, 5–15m, >15m
+    def _bucket(qs, lo, hi):
+        f = {}
+        if lo is not None:
+            f['last_seen_at__gte'] = _F('created_at') + timedelta(seconds=lo)
+        if hi is not None:
+            f['last_seen_at__lt']  = _F('created_at') + timedelta(seconds=hi)
+        return qs.filter(**f).count()
+
+    duration_buckets = [
+        {'label': '<30s',   'n': _bucket(session_qs, None, 30)},
+        {'label': '30s–2m', 'n': _bucket(session_qs, 30, 120)},
+        {'label': '2–5m',   'n': _bucket(session_qs, 120, 300)},
+        {'label': '5–15m',  'n': _bucket(session_qs, 300, 900)},
+        {'label': '>15m',   'n': _bucket(session_qs, 900, None)},
+    ]
+
+    # ── Geo breakdown ─────────────────────────────────────────────────────────
+    geo_qs = session_qs.exclude(country='')
+    top_countries = list(
+        geo_qs.values('country').annotate(n=Count('id')).order_by('-n')[:15]
+    )
+    # Kenya sessions → break down by region (county)
+    top_counties = list(
+        geo_qs.filter(country='Kenya').exclude(region='')
+        .values('region').annotate(n=Count('id')).order_by('-n')[:47]
+    )
+    kenya_sessions = geo_qs.filter(country='Kenya').count()
+    total_geo      = geo_qs.count()
+
+    top_pages = list(
+        PageViewLog.objects.filter(created_at__date__gte=ago).exclude(device='bot')
+        .values('path').annotate(
+            hits=Count('id'),
+            unique_sessions=Count('session_key', distinct=True),
+            avg_ms=Avg('response_time_ms'),
+            errors=Count('id', filter=Q(status_code__gte=400)),
+        ).order_by('-hits')[:50]
+    )
+
+    device_dist = list(
+        PageViewLog.objects.filter(created_at__date__gte=ago)
+        .values('device').annotate(n=Count('id')).order_by('-n')
+    )
+
+    status_dist = list(
+        PageViewLog.objects.filter(created_at__date__gte=ago)
+        .values('status_code').annotate(n=Count('id')).order_by('status_code')
+    )
+
+    slow_pages = list(
+        PageViewLog.objects.filter(created_at__date__gte=ago, response_time_ms__gt=2000).exclude(device='bot')
+        .values('path').annotate(n=Count('id'), avg_ms=Avg('response_time_ms'))
+        .order_by('-avg_ms')[:20]
+    )
+
+    error_pages = list(
+        PageViewLog.objects.filter(created_at__date__gte=ago, status_code__gte=400)
+        .values('path', 'status_code').annotate(n=Count('id')).order_by('-n')[:30]
+    )
+
+    recent_errors = list(
+        PageViewLog.objects.filter(created_at__date__gte=ago, status_code__gte=400)
+        .order_by('-created_at')[:40]
+        .values('path', 'status_code', 'method', 'referrer', 'ip', 'created_at')
+    )
+
+    labels     = _date_labels(days, ago)
+    hit_series = _fill_series(
+        PageViewLog.objects.filter(created_at__date__gte=ago).exclude(device='bot')
+        .annotate(day=TruncDate('created_at')).values('day').annotate(n=Count('id')).order_by('day'),
+        labels,
+    )
+
+    context = {
+        'days': days, 'day_options': [1, 7, 30, 90, 180, 365],
+        'total_hits': total_hits, 'human_hits': human_hits, 'bot_hits': bot_hits,
+        'errors_4xx': errors_4xx, 'errors_5xx': errors_5xx,
+        'hits_today': hits_today, 'avg_ms': round(avg_ms),
+        'top_pages': top_pages, 'slow_pages': slow_pages,
+        'error_pages': error_pages, 'recent_errors': recent_errors,
+        'device_dist': device_dist, 'status_dist': status_dist,
+        # Session / time-on-site
+        'total_sessions': total_sessions,
+        'bounce_sessions': bounce_sessions, 'engaged_sessions': engaged_sessions,
+        'bounce_rate': bounce_rate,
+        'avg_duration_str': avg_duration_str,
+        'avg_duration_s': avg_duration_s,
+        'duration_buckets': duration_buckets,
+        # Geo
+        'top_countries': top_countries,
+        'top_counties': top_counties,
+        'kenya_sessions': kenya_sessions,
+        'total_geo': total_geo,
+        # Charts
+        'chart_labels':           json.dumps(labels),
+        'chart_hits':             json.dumps(hit_series),
+        'chart_device_labels':    json.dumps([d['device'].title() for d in device_dist]),
+        'chart_device_data':      json.dumps([d['n'] for d in device_dist]),
+        'chart_dur_labels':       json.dumps([b['label'] for b in duration_buckets]),
+        'chart_dur_data':         json.dumps([b['n'] for b in duration_buckets]),
+        'chart_county_labels':    json.dumps([c['region'] for c in top_counties[:20]]),
+        'chart_county_data':      json.dumps([c['n'] for c in top_counties[:20]]),
+    }
+    return render(request, 'analytics/pages.html', context)
+
+
+@staff_only
+def actions_analytics(request):
+    """User action breakdown: logins, shortlists, quiz completions, etc."""
+    from .models import UserActionLog
+
+    days  = _parse_days(request)
+    today = date.today()
+    ago   = today - timedelta(days=days)
+
+    total_actions  = UserActionLog.objects.filter(created_at__date__gte=ago).count()
+    actions_today  = UserActionLog.objects.filter(created_at__date=today).count()
+
+    action_dist = list(
+        UserActionLog.objects.filter(created_at__date__gte=ago)
+        .values('action').annotate(n=Count('id')).order_by('-n')
+    )
+
+    logins_ok   = UserActionLog.objects.filter(created_at__date__gte=ago, action='login').count()
+    logins_fail = UserActionLog.objects.filter(created_at__date__gte=ago, action='login_failed').count()
+    logouts     = UserActionLog.objects.filter(created_at__date__gte=ago, action='logout').count()
+    shortlists  = UserActionLog.objects.filter(created_at__date__gte=ago, action='shortlist_add').count()
+    ai_chats    = UserActionLog.objects.filter(created_at__date__gte=ago, action='ai_chat').count()
+    quiz_done   = UserActionLog.objects.filter(created_at__date__gte=ago, action='quiz_complete').count()
+
+    recent_actions = list(
+        UserActionLog.objects.filter(created_at__date__gte=ago)
+        .select_related('user').order_by('-created_at')[:60]
+        .values('action', 'user__email', 'ip', 'properties', 'created_at')
+    )
+
+    labels         = _date_labels(days, ago)
+    action_series  = _fill_series(
+        UserActionLog.objects.filter(created_at__date__gte=ago)
+        .annotate(day=TruncDate('created_at')).values('day').annotate(n=Count('id')).order_by('day'),
+        labels,
+    )
+    login_series   = _fill_series(
+        UserActionLog.objects.filter(created_at__date__gte=ago, action='login')
+        .annotate(day=TruncDate('created_at')).values('day').annotate(n=Count('id')).order_by('day'),
+        labels,
+    )
+
+    context = {
+        'days': days, 'day_options': [1, 7, 30, 90, 180, 365],
+        'total_actions': total_actions, 'actions_today': actions_today,
+        'action_dist': action_dist,
+        'logins_ok': logins_ok, 'logins_fail': logins_fail,
+        'logouts': logouts, 'shortlists': shortlists,
+        'ai_chats': ai_chats, 'quiz_done': quiz_done,
+        'recent_actions': recent_actions,
+        'chart_labels':       json.dumps(labels),
+        'chart_actions':      json.dumps(action_series),
+        'chart_logins':       json.dumps(login_series),
+        'chart_act_labels':   json.dumps([a['action'].replace('_', ' ').title() for a in action_dist]),
+        'chart_act_data':     json.dumps([a['n'] for a in action_dist]),
+    }
+    return render(request, 'analytics/actions.html', context)
+
+
+@staff_only
+def user_timeline(request, user_pk):
+    """Full activity timeline for a single user."""
+    from django.shortcuts import get_object_or_404
+    from accounts.models import User
+    from .models import (
+        CareerEngineLog, DownloadLog, EventLog,
+        PageViewLog, SearchLog, UserActionLog, ViewLog,
+    )
+
+    target = get_object_or_404(User, pk=user_pk)
+    days   = _parse_days(request)
+    today  = date.today()
+    ago    = today - timedelta(days=days)
+
+    events = []
+
+    for r in PageViewLog.objects.filter(user=target, created_at__date__gte=ago).order_by('-created_at')[:150]:
+        events.append({'type': 'page', 'icon': '🌐',
+                       'label': f'{r.method} {r.path}',
+                       'sub': f'HTTP {r.status_code} — {r.response_time_ms} ms',
+                       'ts': r.created_at})
+
+    for r in SearchLog.objects.filter(user=target, created_at__date__gte=ago).order_by('-created_at')[:80]:
+        events.append({'type': 'search', 'icon': '🔍',
+                       'label': f'Search: "{r.query}"',
+                       'sub': f'{r.result_count} results', 'ts': r.created_at})
+
+    for r in ViewLog.objects.filter(user=target, created_at__date__gte=ago).order_by('-created_at')[:80]:
+        events.append({'type': 'view', 'icon': '👁',
+                       'label': f'Viewed {r.content_type}: {r.object_name}',
+                       'sub': '', 'ts': r.created_at})
+
+    for r in CareerEngineLog.objects.filter(user=target, created_at__date__gte=ago).order_by('-created_at')[:60]:
+        events.append({'type': 'career', 'icon': '🎯',
+                       'label': f'Career Engine — {r.pathway.title()} path',
+                       'sub': f'{r.result_count} matches, grade {r.mean_grade}',
+                       'ts': r.created_at})
+
+    for r in UserActionLog.objects.filter(user=target, created_at__date__gte=ago).order_by('-created_at')[:80]:
+        props = ', '.join(f'{k}={v}' for k, v in r.properties.items())[:80]
+        events.append({'type': 'action', 'icon': '⚡',
+                       'label': r.get_action_display(),
+                       'sub': props, 'ts': r.created_at})
+
+    for r in DownloadLog.objects.filter(user=target, created_at__date__gte=ago).order_by('-created_at')[:40]:
+        events.append({'type': 'download', 'icon': '⬇',
+                       'label': f'Downloaded {r.content_type}: {r.object_name}',
+                       'sub': '', 'ts': r.created_at})
+
+    for r in EventLog.objects.filter(user=target, created_at__date__gte=ago).order_by('-created_at')[:40]:
+        events.append({'type': 'event', 'icon': '📌',
+                       'label': r.name.replace('_', ' ').title(),
+                       'sub': '', 'ts': r.created_at})
+
+    events.sort(key=lambda x: x['ts'], reverse=True)
+
+    context = {
+        'target': target,
+        'events': events[:250],
+        'days': days,
+        'day_options': [1, 7, 30, 90, 180, 365],
+    }
+    return render(request, 'analytics/user_timeline.html', context)
+
+
+@staff_only
+def insights_dashboard(request):
+    """Peak hours, referral sources, retention, funnels — all in one place."""
+    import urllib.parse
+    from django.db.models.functions import ExtractHour, ExtractWeekDay
+    from .models import PageViewLog, SessionLog, UserActionLog, SearchLog, ViewLog, CareerEngineLog, EventLog
+
+    days  = _parse_days(request)
+    today = date.today()
+    ago   = today - timedelta(days=days)
+
+    # ── 1. Peak hours heatmap (UTC → EAT = UTC+3) ────────────────────────────
+    heatmap_raw = list(
+        PageViewLog.objects.filter(created_at__date__gte=ago).exclude(device='bot')
+        .annotate(utc_h=ExtractHour('created_at'), utc_dow=ExtractWeekDay('created_at'))
+        .values('utc_h', 'utc_dow').annotate(n=Count('id'))
+    )
+    # grid[dow_0mon][hour_local] = hit count
+    grid = [[0] * 24 for _ in range(7)]
+    for row in heatmap_raw:
+        utc_h = row['utc_h']
+        # ExtractWeekDay: 1=Sun, 2=Mon, ..., 7=Sat → convert to 0=Mon..6=Sun
+        utc_dow_0mon = (row['utc_dow'] - 2) % 7
+        local_h      = (utc_h + 3) % 24
+        day_offset   = 1 if (utc_h + 3) >= 24 else 0
+        local_dow    = (utc_dow_0mon + day_offset) % 7
+        grid[local_dow][local_h] += row['n']
+    heatmap_max = max((v for row in grid for v in row), default=1)
+    # Precompute intensity level 0-4 for each cell so template avoids arithmetic
+    def _heat_level(v, mx):
+        if v == 0: return 0
+        frac = v / mx
+        if frac <= 0.25: return 1
+        if frac <= 0.50: return 2
+        if frac <= 0.75: return 3
+        return 4
+    heatmap_grid_with_level = [
+        [{'n': grid[d][h], 'level': _heat_level(grid[d][h], heatmap_max)} for h in range(24)]
+        for d in range(7)
+    ]
+
+    # ── 2. Referral sources ───────────────────────────────────────────────────
+    OWN = {'careernext.co.ke', 'www.careernext.co.ke', 'localhost', '127.0.0.1', ''}
+    referrer_raw = list(
+        PageViewLog.objects.filter(created_at__date__gte=ago).exclude(referrer='')
+        .values('referrer').annotate(n=Count('id')).order_by('-n')
+    )
+    domain_counts: dict[str, int] = {}
+    for row in referrer_raw:
+        try:
+            domain = urllib.parse.urlparse(row['referrer']).netloc.lower().replace('www.', '')
+        except Exception:
+            domain = ''
+        if domain and domain not in OWN:
+            domain_counts[domain] = domain_counts.get(domain, 0) + row['n']
+
+    top_referrers = sorted(domain_counts.items(), key=lambda x: -x[1])[:20]
+    human_qs      = PageViewLog.objects.filter(created_at__date__gte=ago).exclude(device='bot')
+    direct_hits   = human_qs.filter(referrer='').count()
+    referred_hits = human_qs.exclude(referrer='').count()
+    total_classified = direct_hits + referred_hits
+    direct_pct    = round(direct_hits  / max(total_classified, 1) * 100)
+    referred_pct  = 100 - direct_pct
+
+    # ── 3. Returning vs new visitors ──────────────────────────────────────────
+    active_sessions = SessionLog.objects.filter(created_at__date__gte=ago, user__isnull=False)
+    prior_user_ids  = set(
+        SessionLog.objects.filter(created_at__date__lt=ago, user__isnull=False)
+        .values_list('user_id', flat=True)
+    )
+    active_user_ids = set(active_sessions.values_list('user_id', flat=True))
+    returning_users  = len(active_user_ids & prior_user_ids)
+    new_users_active = len(active_user_ids - prior_user_ids)
+    total_active     = returning_users + new_users_active
+    returning_pct    = round(returning_users / max(total_active, 1) * 100)
+
+    # Avg sessions per authenticated user
+    from django.db.models import FloatField
+    sessions_per_user = round(
+        (SessionLog.objects.filter(created_at__date__gte=ago, user__isnull=False).count()
+         / max(len(active_user_ids), 1)),
+        1,
+    )
+
+    # ── 4. Email / registration funnel ────────────────────────────────────────
+    from accounts.models import User, SavedCourse
+    from payments.models import Payment
+
+    reg_qs    = User.objects.filter(created_at__date__gte=ago)
+    total_reg = reg_qs.count()
+    verified  = reg_qs.filter(is_verified=True).count()
+    google_reg = reg_qs.filter(is_google_user=True).count()
+    paid_new  = User.objects.filter(
+        created_at__date__gte=ago,
+        payments__status='completed',
+    ).distinct().count()
+    email_funnel = [
+        {'label': 'Registered',     'n': total_reg,  'pct': 100, 'icon': '👤'},
+        {'label': 'Email Verified', 'n': verified,   'pct': round(verified  / max(total_reg, 1) * 100), 'icon': '✉️'},
+        {'label': 'Paid',           'n': paid_new,   'pct': round(paid_new  / max(total_reg, 1) * 100), 'icon': '💳'},
+    ]
+
+    # ── 5. Search → view → shortlist funnel ──────────────────────────────────
+    from .models import SearchLog, ViewLog, CareerEngineLog
+    searches     = SearchLog.objects.filter(created_at__date__gte=ago).count()
+    engine_uses  = CareerEngineLog.objects.filter(created_at__date__gte=ago).count()
+    course_views = ViewLog.objects.filter(created_at__date__gte=ago, content_type='course').count()
+    saves        = SavedCourse.objects.filter(saved_at__date__gte=ago).count()
+    funnel_max   = max(searches, engine_uses, course_views, saves, 1)
+    search_funnel = [
+        {'label': 'Searches',      'n': searches,     'pct': round(searches     / funnel_max * 100), 'icon': '🔍'},
+        {'label': 'Career Engine', 'n': engine_uses,  'pct': round(engine_uses  / funnel_max * 100), 'icon': '🎯'},
+        {'label': 'Course Views',  'n': course_views, 'pct': round(course_views / funnel_max * 100), 'icon': '👁'},
+        {'label': 'Shortlisted',   'n': saves,        'pct': round(saves        / funnel_max * 100), 'icon': '❤️'},
+    ]
+    zero_result_pct = round(
+        SearchLog.objects.filter(created_at__date__gte=ago, result_count=0).count()
+        / max(searches, 1) * 100, 1
+    )
+
+    # ── 6. Mentor booking funnel ──────────────────────────────────────────────
+    try:
+        from mentorship.models import MentorshipSession
+        mentor_page_hits = PageViewLog.objects.filter(
+            created_at__date__gte=ago, path__contains='/mentorship/'
+        ).exclude(device='bot').count()
+        bookings   = MentorshipSession.objects.filter(created_at__date__gte=ago).count()
+        confirmed  = MentorshipSession.objects.filter(created_at__date__gte=ago, status='confirmed').count()
+        m_completed = MentorshipSession.objects.filter(created_at__date__gte=ago, status='completed').count()
+        cancelled  = MentorshipSession.objects.filter(created_at__date__gte=ago, status='cancelled').count()
+        m_funnel_max = max(mentor_page_hits, bookings, confirmed, m_completed, 1)
+        mentor_funnel = [
+            {'label': 'Mentorship Page Hits', 'n': mentor_page_hits, 'pct': round(mentor_page_hits / m_funnel_max * 100), 'icon': '🌐'},
+            {'label': 'Session Requests',     'n': bookings,         'pct': round(bookings         / m_funnel_max * 100), 'icon': '📅'},
+            {'label': 'Confirmed',            'n': confirmed,        'pct': round(confirmed        / m_funnel_max * 100), 'icon': '✅'},
+            {'label': 'Completed',            'n': m_completed,      'pct': round(m_completed      / m_funnel_max * 100), 'icon': '🎓'},
+        ]
+        mentor_cancel_pct = round(cancelled / max(bookings, 1) * 100)
+        mentor_ok = True
+    except Exception:
+        mentor_funnel, mentor_ok = [], False
+        mentor_cancel_pct = 0
+
+    # ── 7. Calculator grade distribution ─────────────────────────────────────
+    from .models import EventLog
+    grade_dist = list(
+        EventLog.objects.filter(name='calculator_run', created_at__date__gte=ago)
+        .values('properties__mean_grade')
+        .annotate(n=Count('id'))
+        .order_by('-n')
+    )
+    # Order by canonical grade scale
+    GRADE_ORDER = ['A', 'A-', 'B+', 'B', 'B-', 'C+', 'C', 'C-', 'D+', 'D', 'D-', 'E']
+    grade_map = {r['properties__mean_grade']: r['n'] for r in grade_dist if r['properties__mean_grade']}
+    grade_dist_ordered = [{'grade': g, 'n': grade_map.get(g, 0)} for g in GRADE_ORDER if g in grade_map]
+    total_calc_runs = sum(r['n'] for r in grade_dist_ordered)
+
+    context = {
+        'days': days, 'day_options': [1, 7, 30, 90, 180, 365],
+        # Heatmap
+        'heatmap_grid': heatmap_grid_with_level,
+        'heatmap_max': heatmap_max,
+        'hour_labels': list(range(24)),
+        'dow_labels': ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+        # Referrals
+        'top_referrers': top_referrers,
+        'direct_hits': direct_hits, 'referred_hits': referred_hits,
+        'direct_pct': direct_pct, 'referred_pct': referred_pct,
+        # Retention
+        'returning_users': returning_users, 'new_users_active': new_users_active,
+        'total_active': total_active, 'returning_pct': returning_pct,
+        'sessions_per_user': sessions_per_user,
+        # Reg funnel
+        'email_funnel': email_funnel, 'total_reg': total_reg,
+        'google_reg': google_reg, 'email_reg': total_reg - google_reg,
+        # Search funnel
+        'search_funnel': search_funnel, 'zero_result_pct': zero_result_pct,
+        # Mentor funnel
+        'mentor_funnel': mentor_funnel, 'mentor_ok': mentor_ok,
+        'mentor_cancel_pct': mentor_cancel_pct,
+        # Grade dist
+        'grade_dist': grade_dist_ordered, 'total_calc_runs': total_calc_runs,
+        # Chart JSON
+        'chart_ref_labels': json.dumps([r[0] for r in top_referrers[:15]]),
+        'chart_ref_data':   json.dumps([r[1] for r in top_referrers[:15]]),
+        'chart_grade_labels': json.dumps([r['grade'] for r in grade_dist_ordered]),
+        'chart_grade_data':   json.dumps([r['n'] for r in grade_dist_ordered]),
+        'chart_ret_labels': json.dumps(['Returning', 'New']),
+        'chart_ret_data':   json.dumps([returning_users, new_users_active]),
+    }
+    return render(request, 'analytics/insights.html', context)
+
+
+@staff_only
+def payments_overview(request):
+    """Actionable payment dashboard — pending, stale, failed, recent completions."""
+    from payments.models import Payment
+    from django.utils import timezone
+
+    now   = timezone.now()
+    today = date.today()
+
+    status_filter = request.GET.get('status', '')  # '', 'pending', 'failed', 'completed', 'refunded'
+
+    # ── KPIs ──────────────────────────────────────────────────────────────────
+    total_pending    = Payment.objects.filter(status='pending').count()
+    stale_cutoff     = now - timedelta(hours=1)
+    stale_pending    = Payment.objects.filter(status='pending', created_at__lte=stale_cutoff).count()
+    very_stale       = Payment.objects.filter(status='pending', created_at__lte=now - timedelta(hours=6)).count()
+    total_failed     = Payment.objects.filter(status='failed').count()
+    completed_today  = Payment.objects.filter(status='completed', created_at__date=today).count()
+    revenue_today    = Payment.objects.filter(status='completed', created_at__date=today).aggregate(
+        t=Sum('amount'))['t'] or 0
+    with_mpesa_code  = Payment.objects.filter(status='pending').exclude(mpesa_code='').count()
+
+    # ── Tables ────────────────────────────────────────────────────────────────
+    pending_qs = (
+        Payment.objects
+        .select_related('user')
+        .filter(status='pending')
+        .order_by('created_at')          # oldest first so you can see what's stuck
+    )
+
+    failed_qs = (
+        Payment.objects
+        .select_related('user')
+        .filter(status='failed')
+        .order_by('-created_at')[:50]
+    )
+
+    completed_qs = (
+        Payment.objects
+        .select_related('user')
+        .filter(status='completed')
+        .order_by('-created_at')[:30]
+    )
+
+    refunded_qs = (
+        Payment.objects
+        .select_related('user')
+        .filter(status='refunded')
+        .order_by('-created_at')[:20]
+    )
+
+    # Apply optional status filter to show a full list
+    if status_filter in ('pending', 'failed', 'completed', 'refunded'):
+        filtered_qs = (
+            Payment.objects
+            .select_related('user')
+            .filter(status=status_filter)
+            .order_by('-created_at')[:200]
+        )
+    else:
+        filtered_qs = None
+
+    # Annotate pending rows with age info
+    pending_annotated = []
+    for p in pending_qs:
+        age_s   = int((now - p.created_at).total_seconds())
+        age_min = age_s // 60
+        if age_s < 3600:
+            age_label = f'{age_min}m ago'
+            urgency   = 'ok' if age_min < 10 else 'warn'
+        elif age_s < 21600:
+            age_label = f'{age_s // 3600}h {(age_s % 3600) // 60}m ago'
+            urgency   = 'warn'
+        else:
+            age_label = f'{age_s // 3600}h ago'
+            urgency   = 'err'
+        pending_annotated.append({'p': p, 'age_label': age_label, 'urgency': urgency})
+
+    context = {
+        # KPIs
+        'total_pending': total_pending,
+        'stale_pending': stale_pending,
+        'very_stale': very_stale,
+        'total_failed': total_failed,
+        'completed_today': completed_today,
+        'revenue_today': revenue_today,
+        'with_mpesa_code': with_mpesa_code,
+        # Tables
+        'pending_annotated': pending_annotated,
+        'failed_qs': failed_qs,
+        'completed_qs': completed_qs,
+        'refunded_qs': refunded_qs,
+        'filtered_qs': filtered_qs,
+        'status_filter': status_filter,
+    }
+    return render(request, 'analytics/payments.html', context)
 
 
 @staff_only

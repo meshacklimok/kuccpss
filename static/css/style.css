@@ -225,6 +225,8 @@ small, .small { font-size: 0.875rem; }
 .nsd-item-sub    { font-size: 0.73rem; color: var(--text-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .nsd-empty       { padding: 1.2rem; font-size: 0.83rem; color: var(--text-3); text-align: center; }
 .nsd-footer      { padding: 8px 14px; background: var(--surface-2); border-top: 1px solid var(--border); font-size: 0.73rem; color: var(--text-3); text-align: center; }
+.nsd-see-all     { color: var(--primary); font-weight: 700; text-decoration: none; }
+.nsd-see-all:hover { text-decoration: underline; }
 @media (max-width: 991px) {
   .nav-search-wrap { flex: none; width: 100%; }
   .nav-search-dropdown { position: fixed; top: auto; left: 1rem; right: 1rem; width: auto; }
@@ -377,10 +379,11 @@ small, .small { font-size: 0.875rem; }
 .section-sub { color: var(--text-2); font-size: 0.95rem; line-height: 1.6; }
 
 .section-eyebrow {
-  display: inline-block;
-  font-size: 0.68rem; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase;
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 0.7rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase;
   color: var(--primary); background: rgba(37,99,235,0.08);
-  border-radius: 20px; padding: 4px 14px; margin-bottom: 0.75rem;
+  border-radius: 20px; padding: 5px 14px; margin-bottom: 0.75rem;
+  border: 1px solid rgba(37,99,235,0.14);
 }
 
 
@@ -1108,6 +1111,12 @@ body.dark :focus-visible {
 /* ── 27. HOVER SCALE UTILITY ────────────────────────────────── */
 .hover-scale { transition: transform 0.2s cubic-bezier(0.34,1.56,0.64,1); }
 .hover-scale:hover { transform: scale(1.03); }
+
+
+/* ── 27b. FONT-WEIGHT UTILITIES (Bootstrap 5 only ships fw-bold=700) ── */
+.fw-700 { font-weight: 700 !important; }
+.fw-800 { font-weight: 800 !important; }
+.fw-900 { font-weight: 900 !important; }
 
 
 /* ── 28. HTMX — loading indicator ──────────────────────────── */

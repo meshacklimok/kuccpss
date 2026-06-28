@@ -28,7 +28,7 @@ body { background: var(--bg); }
 }
 .bi-topbar-left h1 { font-size: 1.45rem; font-weight: 800; color: var(--navy); margin: 0; letter-spacing: -.02em; }
 .bi-topbar-left p  { font-size: .78rem; color: var(--muted); margin: .15rem 0 0; }
-.bi-topbar-right   { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; }
+.bi-topbar-right   { display: flex; align-items: center; gap: .35rem; flex-wrap: nowrap; overflow-x: auto; }
 
 /* Day-range pills */
 .day-pills { display: flex; gap: .3rem; }
@@ -42,18 +42,25 @@ body { background: var(--bg); }
 
 /* Export + refresh */
 .btn-export {
-  display: flex; align-items: center; gap: .4rem;
-  padding: .35rem 1rem; border-radius: 8px; font-size: .8rem; font-weight: 700;
+  display: flex; align-items: center; gap: .3rem;
+  padding: .28rem .75rem; border-radius: 7px; font-size: .76rem; font-weight: 700;
   background: var(--green); color: #fff; text-decoration: none; border: none; cursor: pointer;
-  transition: background .15s;
+  white-space: nowrap; transition: background .15s;
 }
 .btn-export:hover { background: #15803d; color: #fff; }
 .btn-refresh {
-  display: flex; align-items: center; gap: .4rem;
-  padding: .35rem .9rem; border-radius: 8px; font-size: .8rem; font-weight: 700;
+  display: flex; align-items: center; gap: .3rem;
+  padding: .28rem .7rem; border-radius: 7px; font-size: .76rem; font-weight: 700;
   background: var(--navy); color: #fff; text-decoration: none; border: none; cursor: pointer;
+  white-space: nowrap;
 }
 .btn-refresh:hover { background: var(--blue); color: #fff; }
+.btn-sm-link {
+  padding: .25rem .65rem; border-radius: 7px; font-size: .75rem; font-weight: 600;
+  border: 1.5px solid var(--border); background: var(--card); color: var(--muted);
+  text-decoration: none; white-space: nowrap; transition: all .15s;
+}
+.btn-sm-link:hover { border-color: var(--blue); color: var(--blue); }
 
 /* ── Tab nav ── */
 .bi-tabs {
@@ -203,13 +210,13 @@ body { background: var(--bg); }
   <div class="bi-topbar">
     <div class="bi-topbar-left">
       <h1>📊 CareerNext Analytics</h1>
-      <p>Staff-only · Live platform data · Showing last <strong>{{ days }} days</strong></p>
+      <p>Staff-only · Showing last <strong>{{ days }} days</strong></p>
     </div>
     <div class="bi-topbar-right">
       <!-- Date range -->
       <div class="day-pills">
         {% for d in day_options %}
-        <a href="?days={{ d }}" class="day-pill {% if days == d %}active{% endif %}">{{ d }}d</a>
+        <a href="?days={{ d }}" class="day-pill {% if days == d %}active{% endif %}">{% if d == 1 %}24h{% else %}{{ d }}d{% endif %}</a>
         {% endfor %}
       </div>
       <a href="{% url 'analytics:export_csv' %}?days={{ days }}" class="btn-export">
@@ -220,6 +227,9 @@ body { background: var(--bg); }
       </a>
       <a href="{% url 'analytics:mentor_analytics' %}" class="btn-export" style="background:var(--purple);">Mentors</a>
       <a href="{% url 'analytics:affiliate_analytics' %}" class="btn-export" style="background:var(--teal);">Affiliates</a>
+      <a href="{% url 'analytics:insights' %}" class="btn-export" style="background:#7c3aed;">📊 Insights</a>
+      <a href="{% url 'analytics:pages' %}" class="btn-export" style="background:#0891b2;">Pages</a>
+      <a href="{% url 'analytics:payments' %}" class="btn-export" style="background:#16a34a;">Payments</a>
     </div>
   </div>
 
@@ -232,6 +242,10 @@ body { background: var(--bg); }
     <button class="bi-tab"        data-tab="payments"  role="tab"><span class="tab-icon">💳</span> Payments</button>
     <button class="bi-tab"        data-tab="activity"    role="tab"><span class="tab-icon">📡</span> Live Activity</button>
     <button class="bi-tab"        data-tab="monitoring"  role="tab"><span class="tab-icon">🔭</span> Monitoring</button>
+    <button class="bi-tab"        data-tab="feedback"    role="tab">
+      <span class="tab-icon">💬</span> Feedback
+      {% if feedback_new %}<span class="badge b-red" style="font-size:.6rem;padding:1px 5px;">{{ feedback_new }}</span>{% endif %}
+    </button>
   </div>
 
   <!-- ════════════════════════════════════════════════════════════════════════ -->
@@ -1003,6 +1017,129 @@ body { background: var(--bg); }
     </div>
 
   </div><!-- /monitoring -->
+
+
+  <!-- ════════════════════════════════════════════════════════════════════════ -->
+  <!-- FEEDBACK TAB                                                            -->
+  <!-- ════════════════════════════════════════════════════════════════════════ -->
+  <div class="bi-section" id="tab-feedback">
+
+    <div class="four-col" style="margin-bottom:1.5rem;">
+      <div class="kpi-card c-red">
+        <p class="kpi-label">Unread</p>
+        <p class="kpi-value">{{ feedback_new }}</p>
+        <p class="kpi-sub">needs review</p>
+      </div>
+      <div class="kpi-card c-blue">
+        <p class="kpi-label">This Period ({{ days }}d)</p>
+        <p class="kpi-value">{{ feedback_period }}</p>
+        <p class="kpi-sub">new submissions</p>
+      </div>
+      <div class="kpi-card c-purple">
+        <p class="kpi-label">Total</p>
+        <p class="kpi-value">{{ feedback_total }}</p>
+        <p class="kpi-sub">all time</p>
+      </div>
+      <div class="kpi-card c-green">
+        <p class="kpi-label">Manage</p>
+        <p class="kpi-value" style="font-size:1rem;padding-top:.4rem;">
+          <a href="/admin/resources/sitefeedback/" target="_blank" style="color:var(--green);font-weight:700;text-decoration:none;">
+            <i class="fas fa-external-link-alt me-1"></i> Django Admin
+          </a>
+        </p>
+        <p class="kpi-sub">update status &amp; notes</p>
+      </div>
+    </div>
+
+    <div class="two-col" style="margin-bottom:1.25rem;">
+      <div class="card">
+        <p class="card-title"><i class="fas fa-tags me-1" style="color:var(--blue)"></i> By Type</p>
+        {% if feedback_by_type %}
+        <table class="bi-table">
+          <thead><tr><th>Type</th><th>Count</th><th>Share</th></tr></thead>
+          <tbody>
+          {% for row in feedback_by_type %}
+          <tr>
+            <td>
+              {% if row.feedback_type == 'bug' %}<span class="badge b-red">Bug Report</span>
+              {% elif row.feedback_type == 'suggestion' %}<span class="badge b-blue">Feature Suggestion</span>
+              {% elif row.feedback_type == 'content' %}<span class="badge b-amber">Content Error</span>
+              {% else %}<span class="badge b-gray">General</span>{% endif %}
+            </td>
+            <td><strong>{{ row.n }}</strong></td>
+            <td>
+              <div class="bar-wrap"><div class="bar-fill" style="width:{% widthratio row.n feedback_total 100 %}%"></div></div>
+            </td>
+          </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+        {% else %}<p class="no-data">No feedback yet.</p>{% endif %}
+      </div>
+
+      <div class="card">
+        <p class="card-title"><i class="fas fa-tasks me-1" style="color:var(--teal)"></i> By Status</p>
+        {% if feedback_by_status %}
+        <table class="bi-table">
+          <thead><tr><th>Status</th><th>Count</th><th>Share</th></tr></thead>
+          <tbody>
+          {% for row in feedback_by_status %}
+          <tr>
+            <td>
+              {% if row.status == 'new' %}<span class="badge b-red">New</span>
+              {% elif row.status == 'reviewing' %}<span class="badge b-amber">Reviewing</span>
+              {% elif row.status == 'resolved' %}<span class="badge b-green">Resolved</span>
+              {% else %}<span class="badge b-gray">Dismissed</span>{% endif %}
+            </td>
+            <td><strong>{{ row.n }}</strong></td>
+            <td>
+              <div class="bar-wrap"><div class="bar-fill {% if row.status == 'resolved' %}green{% elif row.status == 'new' %}{% endif %}" style="width:{% widthratio row.n feedback_total 100 %}%"></div></div>
+            </td>
+          </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+        {% else %}<p class="no-data">No feedback yet.</p>{% endif %}
+      </div>
+    </div>
+
+    <div class="card">
+      <p class="card-title"><i class="fas fa-comment-dots me-1" style="color:var(--navy)"></i> Recent Submissions</p>
+      {% if recent_feedback %}
+      <table class="bi-table">
+        <thead><tr><th>#</th><th>Type</th><th>Message</th><th>Email</th><th>Page</th><th>Status</th><th>Date</th></tr></thead>
+        <tbody>
+        {% for fb in recent_feedback %}
+        <tr>
+          <td><span class="rn">{{ forloop.counter }}</span></td>
+          <td>
+            {% if fb.feedback_type == 'bug' %}<span class="badge b-red">Bug</span>
+            {% elif fb.feedback_type == 'suggestion' %}<span class="badge b-blue">Suggestion</span>
+            {% elif fb.feedback_type == 'content' %}<span class="badge b-amber">Content</span>
+            {% else %}<span class="badge b-gray">General</span>{% endif %}
+          </td>
+          <td style="max-width:320px;">
+            <span title="{{ fb.message }}">{{ fb.message|truncatechars:80 }}</span>
+          </td>
+          <td style="font-size:.75rem;color:var(--muted);">{{ fb.email|default:"—" }}</td>
+          <td style="font-size:.72rem;color:var(--muted);max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="{{ fb.page_url }}">
+            {{ fb.page_url|default:"—"|truncatechars:25 }}
+          </td>
+          <td>
+            {% if fb.status == 'new' %}<span class="badge b-red">New</span>
+            {% elif fb.status == 'reviewing' %}<span class="badge b-amber">Reviewing</span>
+            {% elif fb.status == 'resolved' %}<span class="badge b-green">Resolved</span>
+            {% else %}<span class="badge b-gray">Dismissed</span>{% endif %}
+          </td>
+          <td style="font-size:.73rem;color:var(--muted);white-space:nowrap;">{{ fb.created_at|date:"d M Y H:i" }}</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+      {% else %}<p class="no-data">No feedback submitted yet.</p>{% endif %}
+    </div>
+
+  </div><!-- /feedback -->
 
 </div><!-- /bi-wrap -->
 

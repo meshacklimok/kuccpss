@@ -131,6 +131,7 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'kuccpss.middleware.PageTrackingMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'allauth.account.middleware.AccountMiddleware',
@@ -146,17 +147,28 @@ DATA_UPDATED    = os.environ.get('DATA_UPDATED', 'March 2025')
 
 ROOT_URLCONF = 'kuccpss.urls'
 
+_template_loaders = [
+    'django.template.loaders.filesystem.Loader',
+    'django.template.loaders.app_directories.Loader',
+]
+# In production, wrap loaders with the cached loader so templates are only
+# parsed from disk once and reused on every subsequent request.
+if not DEBUG:
+    _template_loaders = [('django.template.loaders.cached.Loader', _template_loaders)]
+
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [BASE_DIR/'templates'],
-        'APP_DIRS': True,
+        'APP_DIRS': False,
         'OPTIONS': {
+            'loaders': _template_loaders,
             'context_processors': [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'accounts.context_processors.unread_notifications',
+                'accounts.context_processors.active_announcements',
                 'analytics.context_processors.posthog_keys',
                 'analytics.context_processors.sentry_context',
                 'analytics.context_processors.ga_context',
@@ -180,7 +192,7 @@ DATABASES = {
         'PASSWORD': os.environ.get('DB_PASSWORD', ''),
         'HOST': os.environ.get('DB_HOST', 'localhost'),
         'PORT': os.environ.get('DB_PORT', '5432'),
-        'CONN_MAX_AGE': 60,
+        'CONN_MAX_AGE': 600,
         'OPTIONS': {
             'connect_timeout': 10,
         },
@@ -318,6 +330,10 @@ GOOGLE_OAUTH_AVAILABLE = bool(_google_client_id)
 
 
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
+
+# MaxMind GeoLite2 — place GeoLite2-City.mmdb in BASE_DIR/geoip/
+# Download free at: https://dev.maxmind.com/geoip/geolite2-free-geolocation-data
+GEOIP_PATH = os.environ.get("GEOIP_PATH", str(BASE_DIR / "geoip"))
 
 # PostHog analytics — JS key is public; Python key stays server-side
 POSTHOG_API_KEY  = os.environ.get("POSTHOG_API_KEY", "")
