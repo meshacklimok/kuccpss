@@ -261,13 +261,16 @@ def add_slots(request):
     if form.is_valid():
         date = form.cleaned_data["date"]
         times = form.cleaned_data["times"]
+        custom_time = form.cleaned_data.get("custom_time")
+        all_times = [dt_time(*map(int, ts.split(":"))) for ts in times]
+        if custom_time:
+            all_times.append(custom_time)
         created = 0
-        for ts in times:
-            h, m = map(int, ts.split(":"))
+        for t in all_times:
             _, new = TimeSlot.objects.get_or_create(
                 mentor=mentor,
                 date=date,
-                start_time=dt_time(h, m),
+                start_time=t,
             )
             if new:
                 created += 1
@@ -290,18 +293,21 @@ def add_weekly_slots(request):
         monday = form.cleaned_data["week_start"]
         weekdays = [int(d) for d in form.cleaned_data["weekdays"]]
         times = form.cleaned_data["times"]
+        custom_time = form.cleaned_data.get("custom_time")
+        all_times = [dt_time(*map(int, ts.split(":"))) for ts in times]
+        if custom_time:
+            all_times.append(custom_time)
         created = 0
         today = timezone.now().date()
         for day_offset in weekdays:
             slot_date = monday + timedelta(days=day_offset)
             if slot_date < today:
                 continue
-            for ts in times:
-                h, m = map(int, ts.split(":"))
+            for t in all_times:
                 _, new = TimeSlot.objects.get_or_create(
                     mentor=mentor,
                     date=slot_date,
-                    start_time=dt_time(h, m),
+                    start_time=t,
                 )
                 if new:
                     created += 1

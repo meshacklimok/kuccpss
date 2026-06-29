@@ -236,6 +236,12 @@
                       {% endfor %}
                     </div>
                   </div>
+                  <div class="mb-3">
+                    <label class="form-label fw-semibold small">Or add a custom time</label>
+                    {{ slot_form.custom_time }}
+                    <div class="form-text">e.g. 1:37 PM or 13:37</div>
+                    {% if slot_form.custom_time.errors %}<div class="text-danger small">{{ slot_form.custom_time.errors }}</div>{% endif %}
+                  </div>
                   <button type="submit" class="btn btn-primary w-100 rounded-pill fw-semibold">
                     <i class="bi bi-plus me-1"></i>Add Slots
                   </button>
@@ -277,6 +283,12 @@
                         </div>
                       {% endfor %}
                     </div>
+                  </div>
+                  <div class="mb-3">
+                    <label class="form-label fw-semibold small">Or add a custom time</label>
+                    {{ week_slot_form.custom_time }}
+                    <div class="form-text">e.g. 1:37 PM or 13:37</div>
+                    {% if week_slot_form.custom_time.errors %}<div class="text-danger small">{{ week_slot_form.custom_time.errors }}</div>{% endif %}
                   </div>
                   <button type="submit" class="btn btn-primary w-100 rounded-pill fw-semibold">
                     <i class="bi bi-calendar-week me-1"></i>Add Week Slots
