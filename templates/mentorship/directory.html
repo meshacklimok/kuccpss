@@ -245,90 +245,159 @@
 @media(max-width:576px){ .hiw-arrow { display: none; } }
 
 /* ── Mentor card ── */
-.mentor-card {
+.mc {
   background: #fff;
-  border-radius: 16px;
-  box-shadow: 0 2px 12px rgba(30,58,138,.07);
+  border-radius: 20px;
+  box-shadow: 0 2px 16px rgba(30,58,138,.07);
   border: 1px solid #e9eeff;
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  transition: box-shadow .2s, transform .2s;
+  transition: box-shadow .22s, transform .22s;
 }
-.mentor-card:hover {
-  box-shadow: 0 8px 32px rgba(30,58,138,.15);
-  transform: translateY(-2px);
+.mc:hover {
+  box-shadow: 0 10px 36px rgba(30,58,138,.15);
+  transform: translateY(-3px);
 }
-.mentor-card-bar {
-  height: 5px;
-  background: linear-gradient(90deg, #1e3a8a, #3b82f6, #06b6d4);
+
+/* Header */
+.mc-header {
+  background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 55%, #0891b2 100%);
+  padding: 1.1rem 1.25rem .9rem;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
 }
-.mentor-card-body {
-  padding: 1.25rem 1.25rem 1.25rem;
+.mc-avatar-wrap { position: relative; display: inline-block; }
+.mc-avatar {
+  width: 62px;
+  height: 62px;
+  border-radius: 50%;
+  border: 3px solid rgba(255,255,255,.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.mc-avatar-initials {
+  background: rgba(255,255,255,.2);
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #fff;
+}
+.mc-dot {
+  position: absolute;
+  bottom: 3px;
+  right: 3px;
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  border: 2.5px solid #1e3a8a;
+}
+.mc-dot-open  { background: #4ade80; }
+.mc-dot-closed { background: #94a3b8; }
+.mc-price {
+  font-size: .72rem;
+  font-weight: 800;
+  color: #fff;
+  background: rgba(255,255,255,.18);
+  border: 1px solid rgba(255,255,255,.35);
+  border-radius: 999px;
+  padding: .25rem .7rem;
+  white-space: nowrap;
+  align-self: flex-start;
+  margin-top: .15rem;
+}
+
+/* Body */
+.mc-body {
+  padding: 1.1rem 1.25rem 1.25rem;
   display: flex;
   flex-direction: column;
   flex: 1;
 }
-.mentor-avatar {
-  width: 56px;
-  height: 56px;
-  border-radius: 50%;
-  border: 2.5px solid #e9eeff;
-}
-.mentor-avatar-initials {
-  width: 56px;
-  height: 56px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #e0e7ff, #bfdbfe);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.3rem;
+.mc-name-row { margin-bottom: .2rem; }
+.mc-name {
+  font-size: 1rem;
   font-weight: 800;
-  color: #1e3a8a;
-  border: 2.5px solid #e9eeff;
+  margin: 0;
+  color: #1e293b;
 }
-.mentor-price {
-  font-size: .7rem;
-  font-weight: 800;
-  color: #16a34a;
-  background: #f0fdf4;
-  border: 1px solid #bbf7d0;
-  border-radius: 999px;
-  padding: .2rem .6rem;
-  white-space: nowrap;
-  align-self: flex-start;
+.mc-year {
+  font-size: .73rem;
+  color: #64748b;
+  font-weight: 500;
 }
-.mentor-meta { display: flex; flex-direction: column; gap: .25rem; }
-.mentor-meta-item {
+
+/* Rating */
+.mc-rating {
   display: flex;
   align-items: center;
   gap: .4rem;
+  margin: .35rem 0 .65rem;
+}
+.mc-stars i {
+  font-size: .72rem;
+  color: #f59e0b;
+}
+.mc-rating-txt {
+  font-size: .72rem;
+  color: #64748b;
+}
+.mc-new-badge {
+  display: inline-block;
+  font-size: .68rem;
+  font-weight: 700;
+  color: #0369a1;
+  background: #f0f9ff;
+  border: 1px solid #bae6fd;
+  border-radius: 999px;
+  padding: .15rem .55rem;
+  margin: .35rem 0 .65rem;
+}
+
+/* Meta rows */
+.mc-meta { display: flex; flex-direction: column; gap: .28rem; margin-bottom: .6rem; }
+.mc-meta-row {
+  display: flex;
+  align-items: center;
+  gap: .45rem;
   font-size: .78rem;
   color: #475569;
   min-width: 0;
 }
-.mentor-meta-item i { flex-shrink: 0; font-size: .8rem; }
-.mentor-meta-item span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.mentor-bio {
+.mc-meta-row i { flex-shrink: 0; font-size: .8rem; color: #3b82f6; }
+.mc-meta-row span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* Bio */
+.mc-bio {
   font-size: .8rem;
   color: #64748b;
-  margin: .75rem 0 .75rem;
+  margin: 0 0 .75rem;
   display: -webkit-box;
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
-  line-height: 1.5;
+  line-height: 1.55;
 }
-.avail-badge {
-  font-size: .72rem;
+
+/* Footer */
+.mc-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .5rem;
+  margin-top: auto;
+}
+.mc-avail {
+  font-size: .7rem;
   font-weight: 700;
-  padding: .28rem .75rem;
+  padding: .28rem .7rem;
   border-radius: 999px;
   white-space: nowrap;
 }
-.avail-open  { background:#f0fdf4; color:#15803d; border:1px solid #bbf7d0; }
-.avail-closed { background:#f8fafc; color:#64748b; border:1px solid #e2e8f0; }
+.mc-avail-open  { background:#f0fdf4; color:#15803d; border:1px solid #bbf7d0; }
+.mc-avail-closed { background:#f8fafc; color:#94a3b8; border:1px solid #e2e8f0; }
+.mc-cta { font-size: .8rem; }
 
 /* ── Empty state ── */
 .empty-icon {
@@ -345,15 +414,14 @@
 }
 
 /* ── Dark mode ── */
-[data-bs-theme="dark"] .mentor-card { background:#1e293b; border-color:#334155; }
-[data-bs-theme="dark"] .mentor-avatar { border-color:#334155; }
-[data-bs-theme="dark"] .mentor-avatar-initials { background:linear-gradient(135deg,#1e3a8a,#1d4ed8); border-color:#334155; }
+[data-bs-theme="dark"] .mc { background:#1e293b; border-color:#334155; }
+[data-bs-theme="dark"] .mc-name { color:#e2e8f0; }
+[data-bs-theme="dark"] .mc-meta-row { color:#94a3b8; }
+[data-bs-theme="dark"] .mc-bio { color:#94a3b8; }
+[data-bs-theme="dark"] .mc-avail-closed { background:#0f172a; color:#64748b; border-color:#334155; }
+[data-bs-theme="dark"] .mc-dot { border-color:#1e293b; }
 [data-bs-theme="dark"] .hiw-strip { background:#1e293b; border-bottom-color:#334155; }
 [data-bs-theme="dark"] .hiw-label { color:#e2e8f0; }
-[data-bs-theme="dark"] .mentor-meta-item { color:#94a3b8; }
-[data-bs-theme="dark"] .mentor-bio { color:#94a3b8; }
-[data-bs-theme="dark"] .avail-closed { background:#0f172a; color:#64748b; border-color:#334155; }
-[data-bs-theme="dark"] .mentor-price { background:#052e16; color:#4ade80; border-color:#166534; }
 [data-bs-theme="dark"] .empty-icon { background:#334155; color:#64748b; }
 [data-bs-theme="dark"] .hero-pill { background:rgba(255,255,255,.1); }
 </style>

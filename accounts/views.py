@@ -332,31 +332,12 @@ def dashboard_view(request: HttpRequest) -> HttpResponse:
             ClusterCalculationResult.objects.filter(kcse_result=latest_result)
             .select_related("cluster").order_by("-cluster_points")
         )
-        from courses.models import CourseOffering
-        kcn_map = {}
-        cluster_pks_for_user = []
-        for r in cluster_results:
-            knum = r.cluster.kuccps_number if r.cluster else None
-            if knum:
-                kcn_map[knum] = float(r.cluster_points)
-                cluster_pks_for_user.append(r.cluster.pk)
-        if kcn_map:
-            eligible_set: set = set()
-            for offering in CourseOffering.objects.filter(
-                cutoff_points__isnull=False,
-                course__cluster__pk__in=cluster_pks_for_user,
-            ).select_related("course__cluster"):
-                knum = offering.course.cluster.kuccps_number if offering.course.cluster else None
-                if knum is None:
-                    continue
-                user_pts = kcn_map.get(knum, 0.0)
-                cp = offering.cutoff_points
-                cutoff = cp.get("2024") or cp.get(
-                    max((k for k in cp if cp[k] is not None), default=None)
-                )
-                if cutoff is not None and user_pts >= float(cutoff):
-                    eligible_set.add(offering.course_id)
-            eligible_count = len(eligible_set)
+        from clusterpoints.eligibility import get_eligible_courses
+        try:
+            _elig = get_eligible_courses(user, latest_result)
+            eligible_count = sum(1 for e in _elig if e["status"] == "eligible")
+        except Exception:
+            eligible_count = 0
 
     # ── Watchlist ─────────────────────────────────────────────────────────────
     # Single query for IDs + count; separate query for display rows (needs select_related)
