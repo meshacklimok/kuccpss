@@ -23,14 +23,10 @@
     position: sticky;
     top: 56px;
     z-index: 100;
+    transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
+    will-change: transform;
 }
-/* clip wrapper collapses the bar without touching the sticky element's overflow */
-.filter-bar-clip {
-    overflow: hidden;
-    max-height: 400px;
-    transition: max-height 0.3s cubic-bezier(0.4,0,0.2,1);
-}
-.filter-bar-outer.bar-hidden .filter-bar-clip { max-height: 0; }
+.filter-bar-outer.nav-hidden { transform: translateY(-100%); }
 .filter-bar {
     background: #fff;
     border-bottom: 1px solid #e2e8f0;
@@ -62,6 +58,39 @@
 .tier-easy     { background: #f1f5f9; color: #475569; }
 .tier-longshot { background: #fee2e2; color: #991b1b; }
 .tier-competitive { background: #fce7f3; color: #9d174d; }
+
+/* ── Non-degree qualification badges ── */
+.qual-badge {
+    font-size: 0.72rem; font-weight: 700; padding: 3px 10px;
+    border-radius: 20px; white-space: nowrap;
+    background: #dcfce7; color: #15803d; border: 1px solid #86efac;
+}
+.disqual-badge {
+    font-size: 0.72rem; font-weight: 700; padding: 3px 10px;
+    border-radius: 20px; white-space: nowrap;
+    background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5;
+}
+.disqual-reason {
+    font-size: 0.78rem; font-weight: 600; color: #b91c1c;
+    background: #fff1f2; border: 1px solid #fecdd3;
+    border-radius: 8px; padding: 0.45rem 0.75rem; margin-top: 0.5rem;
+    display: flex; align-items: flex-start; gap: 0.4rem;
+}
+/* Dim card background for non-qualifying courses */
+.result-card.nd-disqualified-card {
+    background: #fafafa;
+    border-color: #fca5a5;
+    opacity: 0.92;
+}
+.result-card.nd-disqualified-card:hover {
+    border-color: #f87171;
+    box-shadow: 0 4px 16px rgba(239,68,68,0.08);
+}
+/* Non-degree qualification verdict in grade bar */
+.nd-meets   { background: #eff6ff; color: #1d4ed8; }
+.nd-good    { background: #dcfce7; color: #15803d; }
+.nd-strong  { background: #d1fae5; color: #065f46; font-weight: 800; }
+.nd-disq    { background: #fee2e2; color: #991b1b; }
 
 .course-link {
     color: #1e293b; text-decoration: none; font-weight: 700;
@@ -179,7 +208,7 @@
     border-radius: 20px;
     white-space: nowrap;
 }
-.nd-just   { background: #dbeafe; color: #1d4ed8; }
+.nd-meets  { background: #dbeafe; color: #1d4ed8; }
 .nd-good   { background: #dcfce7; color: #15803d; }
 .nd-strong { background: #d1fae5; color: #065f46; font-weight: 800; }
 .pts-diff {
@@ -226,12 +255,19 @@
 .filter-chip.chance-active-Likely         { border-color: #4ade80; background: #dcfce7; color: #166534; }
 .filter-chip.chance-active-Borderline     { border-color: #f59e0b; background: #fef9c3; color: #854d0e; }
 .filter-chip.chance-active-Unlikely       { border-color: #ef4444; background: #fee2e2; color: #991b1b; }
-/* Tier filter active states */
+/* Tier filter active states (Degree) */
 .filter-chip.tier-active-best     { border-color: #059669; background: #d1fae5; color: #065f46; }
 .filter-chip.tier-active-stretch  { border-color: #d97706; background: #fef3c7; color: #92400e; }
 .filter-chip.tier-active-safe     { border-color: #2563eb; background: #dbeafe; color: #1e40af; }
 .filter-chip.tier-active-easy     { border-color: #64748b; background: #f1f5f9; color: #475569; }
 .filter-chip.tier-active-longshot { border-color: #dc2626; background: #fee2e2; color: #991b1b; }
+/* Qualification filter active states (non-degree) */
+.filter-chip.qual-active-qualifies      { border-color: #16a34a; background: #dcfce7; color: #14532d; }
+.filter-chip.qual-active-does_not_qualify { border-color: #dc2626; background: #fee2e2; color: #991b1b; }
+/* Does Not Qualify chip active state (Degree) */
+.filter-chip.tier-active-disqualified  { border-color: #991b1b; background: #fee2e2; color: #7f1d1d; }
+/* Degree disqualified tier badge */
+.tier-disqualified { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
 
 /* ── Backup Plan ── */
 .bp-header { display:flex; align-items:flex-start; gap:1rem; margin-bottom:1.5rem; padding-top:.25rem; }
@@ -434,8 +470,7 @@
 {% endif %}
 
 <!-- Filter bar -->
-<div class="filter-bar-outer">
-<div class="filter-bar-clip">
+<div class="filter-bar-outer scroll-hide-bar">
 <div class="filter-bar">
     <div class="container">
         <div class="d-flex align-items-center gap-2 flex-wrap">
@@ -451,8 +486,10 @@
                 </div>
             </form>
 
-            <!-- Tier filters (primary) -->
+            <!-- Tier / qualification filters -->
             <div class="d-flex gap-1 flex-wrap">
+                {% if pathway == 'Degree' %}
+                {# ── Degree: five academic-fit tiers ── #}
                 <a href="?sort={{ sort_by }}{% if search_q %}&q={{ search_q }}{% endif %}"
                    class="filter-chip {% if not filter_tier and not filter_chance %}active{% endif %}">All</a>
                 <a href="?tier=Best+Match&sort={{ sort_by }}{% if search_q %}&q={{ search_q }}{% endif %}"
@@ -480,15 +517,34 @@
                     <span style="width:8px;height:8px;border-radius:50%;background:#dc2626;display:inline-block;"></span>
                     Long Shot{% if tier_counts.LongShot %} ({{ tier_counts.LongShot }}){% endif %}
                 </a>
+                <a href="?tier=Does+Not+Qualify&sort={{ sort_by }}{% if search_q %}&q={{ search_q }}{% endif %}"
+                   class="filter-chip {% if filter_tier == 'Does Not Qualify' %}tier-active-disqualified{% endif %}">
+                    <span style="width:8px;height:8px;border-radius:50%;background:#991b1b;display:inline-block;"></span>
+                    Does Not Qualify{% if tier_counts.DoesNotQualify %} ({{ tier_counts.DoesNotQualify }}){% endif %}
+                </a>
+                {% else %}
+                {# ── Non-degree: binary Qualifies / Does Not Qualify ── #}
+                <a href="?sort={{ sort_by }}{% if search_q %}&q={{ search_q }}{% endif %}"
+                   class="filter-chip {% if not filter_qual %}active{% endif %}">All</a>
+                <a href="?qual=qualifies&sort={{ sort_by }}{% if search_q %}&q={{ search_q }}{% endif %}"
+                   class="filter-chip {% if filter_qual == 'qualifies' %}qual-active-qualifies{% endif %}">
+                    <span style="width:8px;height:8px;border-radius:50%;background:#16a34a;display:inline-block;"></span>
+                    Qualifies{% if tier_counts.Qualifies %} ({{ tier_counts.Qualifies }}){% endif %}
+                </a>
+                <a href="?qual=does_not_qualify&sort={{ sort_by }}{% if search_q %}&q={{ search_q }}{% endif %}"
+                   class="filter-chip {% if filter_qual == 'does_not_qualify' %}qual-active-does_not_qualify{% endif %}">
+                    <span style="width:8px;height:8px;border-radius:50%;background:#dc2626;display:inline-block;"></span>
+                    Does Not Qualify{% if tier_counts.DoesNotQualify %} ({{ tier_counts.DoesNotQualify }}){% endif %}
+                </a>
+                {% endif %}
             </div>
 
             <!-- Sort -->
             <div class="ms-auto d-flex align-items-center gap-2">
                 <select class="form-select form-select-sm"
                         style="width:auto;border-radius:8px;font-size:0.8rem;"
-                        onchange="location.href='?sort='+this.value+'{% if filter_tier %}&tier={{ filter_tier|urlencode }}{% endif %}{% if search_q %}&q={{ search_q }}{% endif %}'">
-                    <option value="tier"        {% if sort_by == 'tier'        %}selected{% endif %}>Sort: {% if pathway == 'Degree' %}Academic Fit{% else %}Required Grade (High→Low){% endif %}</option>
-                    <option value="chance"      {% if sort_by == 'chance'      %}selected{% endif %}>Sort: Admission Likelihood</option>
+                        onchange="location.href='?sort='+this.value+'{% if pathway == 'Degree' %}{% if filter_tier %}&tier={{ filter_tier|urlencode }}{% endif %}{% else %}{% if filter_qual %}&qual={{ filter_qual }}{% endif %}{% endif %}{% if search_q %}&q={{ search_q }}{% endif %}'">
+                    <option value="tier"        {% if sort_by == 'tier'        %}selected{% endif %}>Sort: {% if pathway == 'Degree' %}Academic Fit{% else %}Qualification Status{% endif %}</option>
                     <option value="institution" {% if sort_by == 'institution' %}selected{% endif %}>Sort: Institution</option>
                     <option value="course"      {% if sort_by == 'course'      %}selected{% endif %}>Sort: Course Name</option>
                 </select>
@@ -516,7 +572,6 @@
             </div>
         </div>
     </div>
-</div>
 </div>
 </div>
 
@@ -652,7 +707,7 @@ You should check yours too — it's 100% free and instant!
         <div class="row g-3">
             {% for match in page_obj %}
             <div class="col-12">
-                <div class="result-card"
+                <div class="result-card {% if not match.qualifies %}nd-disqualified-card{% endif %}"
                      style="cursor:pointer;"
                      data-href="{% if match.course_url %}{{ match.course_url }}{% elif match.course and match.course.slug %}{% url 'courses:course_detail_no_category' match.course.course_type.slug match.course.slug %}{% endif %}"
                      onclick="cardClick(event, this)">
@@ -672,7 +727,7 @@ You should check yours too — it's 100% free and instant!
                                 <div class="inst-name mt-1">
                                     <i class="bi bi-building me-1"></i>
                                     {{ match.institution.name }}
-                                    {% if pathway != 'Degree' and match.institution.location %}
+                                    {% if match.institution.location %}
                                     <span class="text-muted mx-1">·</span>
                                     <i class="bi bi-geo-alt-fill" style="color:#3b82f6;font-size:0.75rem;"></i>
                                     <span style="font-size:0.78rem;color:#3b82f6;font-weight:600;">{{ match.institution.location }}</span>
@@ -682,6 +737,13 @@ You should check yours too — it's 100% free and instant!
                             <!-- Right badges + bookmark -->
                             <div class="d-flex gap-1 flex-wrap align-items-center flex-shrink-0">
                                 {% if pathway == 'Degree' %}
+                                {% if not match.qualifies %}
+                                <span class="tier-badge tier-disqualified"
+                                      data-bs-toggle="tooltip" data-bs-placement="top"
+                                      title="{{ match.disqual_reason }}">
+                                    <i class="bi bi-x-circle-fill me-1"></i>Does Not Qualify
+                                </span>
+                                {% else %}
                                 {% if match.is_competitive %}
                                 <span class="tier-badge tier-competitive"
                                       data-bs-toggle="tooltip" data-bs-placement="top"
@@ -694,17 +756,20 @@ You should check yours too — it's 100% free and instant!
                                       title="{{ match.tier_desc }}">
                                     {{ match.tier }}
                                 </span>
+                                {% endif %}
                                 {% else %}
-                                {% if match.has_specific_min %}
-                                <span class="tier-badge {{ match.tier_css }}"
+                                {# ── Non-degree: binary qualification badge ── #}
+                                {% if match.qualifies %}
+                                <span class="qual-badge"
                                       data-bs-toggle="tooltip" data-bs-placement="top"
-                                      title="{{ match.tier_desc }}">
-                                    {{ match.tier }}
+                                      title="Your mean grade meets this course's entry requirements">
+                                    <i class="bi bi-check-circle-fill me-1"></i>Qualifies
                                 </span>
                                 {% else %}
-                                <span class="tier-badge"
-                                      style="background:#dcfce7;color:#15803d;border:1px solid #86efac;">
-                                    <i class="bi bi-check-circle-fill me-1"></i>Qualifies
+                                <span class="disqual-badge"
+                                      data-bs-toggle="tooltip" data-bs-placement="top"
+                                      title="{{ match.disqual_reason }}">
+                                    <i class="bi bi-x-circle-fill me-1"></i>Does Not Qualify
                                 </span>
                                 {% endif %}
                                 {% endif %}
@@ -723,6 +788,7 @@ You should check yours too — it's 100% free and instant!
 
                         {% if pathway == 'Degree' %}
                         <!-- ── DEGREE: chips row ── -->
+                        {% if match.qualifies %}
                         <div class="meta-row">
                             <span class="chance-badge chance-{{ match.chance|cut:' ' }}"
                                   data-bs-toggle="tooltip" data-bs-placement="top"
@@ -771,15 +837,38 @@ You should check yours too — it's 100% free and instant!
                             <span class="meta-chip"><i class="bi bi-hash"></i>{{ match.offering.programme_code }}</span>
                             {% endif %}
                         </div>
+                        {% else %}
+                        {# ── Degree non-qualifying: show cutoff for context + disqual reason ── #}
+                        <div class="meta-row">
+                            {% if match.cutoff %}
+                            <span class="meta-chip">
+                                <i class="bi bi-bullseye me-1"></i>Cutoff: <strong>{{ match.cutoff }}</strong>
+                            </span>
+                            {% endif %}
+                            {% if match.cluster %}
+                            <span class="meta-chip"
+                                  data-bs-toggle="tooltip" data-bs-placement="top"
+                                  title="KUCCPS Cluster {{ match.cluster.kuccps_number }}: {{ match.cluster.name }}">
+                                <i class="bi bi-diagram-3 me-1"></i>Cluster {{ match.cluster.kuccps_number }}
+                            </span>
+                            {% endif %}
+                            {% if match.offering.programme_code %}
+                            <span class="meta-chip"><i class="bi bi-hash"></i>{{ match.offering.programme_code }}</span>
+                            {% endif %}
+                        </div>
+                        {% if match.disqual_reason %}
+                        <div class="disqual-reason mt-1">
+                            <i class="bi bi-exclamation-circle-fill flex-shrink-0 mt-1" style="font-size:0.85rem;"></i>
+                            <span>{{ match.disqual_reason }}</span>
+                        </div>
+                        {% endif %}
+                        {% endif %}
 
                         {% else %}
-                        <!-- ── NON-DEGREE: enriched guidance layout ── -->
+                        <!-- ── NON-DEGREE: binary qualification layout ── -->
 
                         <!-- Row A: programme info chips -->
                         <div class="meta-row">
-                            <span class="chance-badge chance-{{ match.chance|cut:' ' }}"
-                                  data-bs-toggle="tooltip" data-bs-placement="top"
-                                  title="{{ match.chance_desc }}">{{ match.chance }}</span>
                             {% if match.institution.institution_type %}
                             <span class="meta-chip" style="background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;">
                                 <i class="bi bi-bank me-1"></i>{{ match.institution.institution_type.name }}
@@ -795,7 +884,7 @@ You should check yours too — it's 100% free and instant!
                             {% endif %}
                         </div>
 
-                        <!-- Row B: eligibility requirements -->
+                        <!-- Row B: entry requirements (always visible so student understands the bar) -->
                         {% if match.cutoff or match.course.subject_requirements %}
                         <div class="meta-row mt-1">
                             {% if match.cutoff %}
@@ -823,14 +912,24 @@ You should check yours too — it's 100% free and instant!
                             <span class="nd-label">Required</span>
                             <span class="nd-min">{{ match.cutoff|default:"—" }}</span>
                             <span class="nd-spacer"></span>
-                            {% if match.diff == 0 %}
-                            <span class="nd-verdict nd-just">Meets minimum</span>
+                            {% if not match.qualifies %}
+                            <span class="nd-verdict nd-disq">Does not meet requirement</span>
+                            {% elif match.diff == 0 %}
+                            <span class="nd-verdict nd-meets">Meets minimum</span>
                             {% elif match.diff <= 2 %}
                             <span class="nd-verdict nd-good">Comfortably qualifies</span>
                             {% else %}
                             <span class="nd-verdict nd-strong">Strongly qualifies</span>
                             {% endif %}
                         </div>
+
+                        <!-- Row D: disqualification reason (only when student does not qualify) -->
+                        {% if not match.qualifies and match.disqual_reason %}
+                        <div class="disqual-reason mt-1">
+                            <i class="bi bi-exclamation-circle-fill flex-shrink-0 mt-1" style="font-size:0.85rem;"></i>
+                            <span>{{ match.disqual_reason }}</span>
+                        </div>
+                        {% endif %}
                         {% endif %}
 
                         {% if match.job_market %}
@@ -856,7 +955,7 @@ You should check yours too — it's 100% free and instant!
             <ul class="pagination justify-content-center">
                 {% if page_obj.has_previous %}
                 <li class="page-item">
-                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if filter_tier %}&tier={{ filter_tier|urlencode }}{% endif %}{% if filter_chance %}&chance={{ filter_chance }}{% endif %}{% if search_q %}&q={{ search_q }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if pathway == 'Degree' %}{% if filter_tier %}&tier={{ filter_tier|urlencode }}{% endif %}{% if filter_chance %}&chance={{ filter_chance }}{% endif %}{% else %}{% if filter_qual %}&qual={{ filter_qual }}{% endif %}{% endif %}{% if search_q %}&q={{ search_q }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}">
                         <i class="bi bi-chevron-left"></i>
                     </a>
                 </li>
@@ -866,13 +965,13 @@ You should check yours too — it's 100% free and instant!
                     <li class="page-item active"><span class="page-link">{{ num }}</span></li>
                     {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
                     <li class="page-item">
-                        <a class="page-link" href="?page={{ num }}{% if filter_tier %}&tier={{ filter_tier|urlencode }}{% endif %}{% if filter_chance %}&chance={{ filter_chance }}{% endif %}{% if search_q %}&q={{ search_q }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}">{{ num }}</a>
+                        <a class="page-link" href="?page={{ num }}{% if pathway == 'Degree' %}{% if filter_tier %}&tier={{ filter_tier|urlencode }}{% endif %}{% if filter_chance %}&chance={{ filter_chance }}{% endif %}{% else %}{% if filter_qual %}&qual={{ filter_qual }}{% endif %}{% endif %}{% if search_q %}&q={{ search_q }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}">{{ num }}</a>
                     </li>
                     {% endif %}
                 {% endfor %}
                 {% if page_obj.has_next %}
                 <li class="page-item">
-                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if filter_tier %}&tier={{ filter_tier|urlencode }}{% endif %}{% if filter_chance %}&chance={{ filter_chance }}{% endif %}{% if search_q %}&q={{ search_q }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if pathway == 'Degree' %}{% if filter_tier %}&tier={{ filter_tier|urlencode }}{% endif %}{% if filter_chance %}&chance={{ filter_chance }}{% endif %}{% else %}{% if filter_qual %}&qual={{ filter_qual }}{% endif %}{% endif %}{% if search_q %}&q={{ search_q }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}">
                         <i class="bi bi-chevron-right"></i>
                     </a>
                 </li>
@@ -1541,37 +1640,6 @@ function cardClick(e, card) {
     if (href) window.location.href = href;
 }
 
-// Filter-bar: hides on scroll DOWN, shows only after 60px of upward scroll
-(function () {
-    var outer = document.querySelector('.filter-bar-outer');
-    if (!outer) return;
-
-    var isHidden = false;
-    var lastY    = window.scrollY;
-    var upDist   = 0;
-
-    window.addEventListener('scroll', function () {
-        var y     = window.scrollY;
-        var delta = y - lastY;
-        if (Math.abs(delta) < 4) return;
-
-        if (delta > 0) {
-            upDist = 0;
-            if (y > 80 && !isHidden) {
-                isHidden = true;
-                outer.classList.add('bar-hidden');
-            }
-        } else {
-            upDist += Math.abs(delta);
-            if ((upDist >= 60 || y < 80) && isHidden) {
-                isHidden = false;
-                upDist   = 0;
-                outer.classList.remove('bar-hidden');
-            }
-        }
-        lastY = y;
-    }, { passive: true });
-}());
 </script>
 
 {% if not is_locked and not guest_locked and user.is_authenticated %}
