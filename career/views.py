@@ -2732,6 +2732,13 @@ def career_results(request):
 
     cfg = _get_career_config()
 
+    import hashlib as _hl, json as _js
+    from django.core.cache import cache as _dc
+
+    _no_active_filter = not filter_tier and not filter_chance and not filter_qual and not search_q
+    _cache_hit  = False
+    _cache_key  = None
+
     matches             = []
     cluster_pts_single  = float(request.session.get('career_cluster_pts_single', 0) or 0)
     mean_grade          = request.session.get('career_mean_grade', '')
@@ -2758,9 +2765,18 @@ def career_results(request):
 
     if pathway == 'Degree':
         cluster_points_dict = request.session.get('career_cluster_points', {})
-        degree_type = _get_degree_course_type()
 
-        if degree_type:
+        if _no_active_filter:
+            _cache_key = 'cr_' + _hl.md5(
+                f"{request.session.session_key}:D:{_js.dumps(cluster_points_dict, sort_keys=True)}".encode()
+            ).hexdigest()
+            _cached = _dc.get(_cache_key)
+            if _cached is not None:
+                matches = _cached
+                _cache_hit = True
+
+        degree_type = _get_degree_course_type()
+        if degree_type and not _cache_hit:
             qs = (
                 CourseOffering.objects
                 .filter(course__course_type=degree_type)
@@ -2865,16 +2881,28 @@ def career_results(request):
                     'tier_desc':      tier_desc,
                     'qualifies':      qualifies,
                     'disqual_reason': disqual_reason,
-                    'pred':           _enrich_pred(offering) if qualifies else None,
+                    'pred':           None,
                     'is_competitive': float(cutoff) >= cfg.competitive_threshold if qualifies else False,
-                    'course_url':     _build_course_url(course),
+                    'course_url':     None,
                 })
+
+            if _cache_key:
+                _dc.set(_cache_key, matches, timeout=600)
 
     else:
         student_pts = GRADE_POINTS.get(mean_grade, 0)
         type_names  = COURSE_TYPE_MAP.get(pathway, [])
 
-        if type_names:
+        if _no_active_filter:
+            _cache_key = 'cr_' + _hl.md5(
+                f"{request.session.session_key}:{pathway}:{mean_grade}".encode()
+            ).hexdigest()
+            _cached = _dc.get(_cache_key)
+            if _cached is not None:
+                matches = _cached
+                _cache_hit = True
+
+        if type_names and not _cache_hit:
             qs = (
                 CourseOffering.objects
                 .filter(course__course_type__name__in=type_names)
@@ -2948,9 +2976,12 @@ def career_results(request):
                     'disqual_reason':   disqual_reason,
                     'pred':             None,
                     'is_competitive':   False,
-                    'course_url':       _build_course_url(course),
+                    'course_url':       None,
                     'has_specific_min': bool((course.minimum_mean_grade or '').strip()),
                 })
+
+            if _cache_key:
+                _dc.set(_cache_key, matches, timeout=600)
 
     if pathway == 'Degree':
         # Non-qualifying courses always sink to the bottom regardless of sort mode.
@@ -3004,8 +3035,7 @@ def career_results(request):
             tier_counts[key] = tier_counts.get(key, 0) + 1
 
     # ── Persist snapshot for logged-in users (powers Personalised Dashboard) ──
-    _no_active_filter = not filter_tier and not filter_chance and not filter_qual and not search_q
-    if request.user.is_authenticated and matches and _no_active_filter:
+    if request.user.is_authenticated and matches and _no_active_filter and not _cache_hit:
         try:
             from accounts.models import CareerSessionSnapshot
             sorted_top = sorted(matches, key=lambda m: (m['tier_order'], abs(m['diff'])))[:10]
@@ -3096,16 +3126,19 @@ def career_results(request):
         except Exception:
             pass
 
-    # Attach job market data to every match (in-memory dict lookup, no extra DB queries)
+    paginator = Paginator(matches, 20)
+    page_obj  = paginator.get_page(request.GET.get('page', 1))
+
+    # Enrich only the visible page items — avoids running these for all 2000+ matches
     try:
         from career.job_market import get_jmd_for_course
-        for m in matches:
+        for m in page_obj.object_list:
+            if m.get('qualifies', True) and pathway == 'Degree':
+                m['pred'] = _enrich_pred(m['offering'])
+            m['course_url'] = _build_course_url(m['course'])
             m['job_market'] = get_jmd_for_course(m.get('course'))
     except Exception:
         pass
-
-    paginator = Paginator(matches, 20)
-    page_obj  = paginator.get_page(request.GET.get('page', 1))
 
     _LABEL_TO_SLUG = {v: k for k, v in PATHWAY_SLUG_TO_LABEL.items()}
     _pathway_slug  = _LABEL_TO_SLUG.get(pathway, pathway.lower())
