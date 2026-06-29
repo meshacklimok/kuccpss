@@ -1421,6 +1421,9 @@ GRADE_POINTS = {
     'C+': 7, 'C': 6, 'C-': 5, 'D+': 4, 'D': 3, 'D-': 2, 'E': 1,
 }
 
+# Reverse lookup: points → grade letter (used for disqualification messages)
+_POINTS_TO_GRADE = {v: k for k, v in GRADE_POINTS.items()}
+
 KENYAN_COUNTIES = [
     'BARINGO', 'BOMET', 'BUNGOMA', 'BUSIA', 'ELGEYO MARAKWET', 'EMBU',
     'GARISSA', 'HOMA BAY', 'ISIOLO', 'KAJIADO', 'KAKAMEGA', 'KERICHO',
@@ -1749,6 +1752,7 @@ _KUCCPS_CODE_TO_NAME = {
     'hre':   'hindu religious education',
     'mus':   'music',
     'art':   'art and design',
+    'ard':   'art and design',
     'drd':   'drawing and design',
     'bld':   'building construction',
     'bc':    'building construction',
@@ -1774,21 +1778,34 @@ def _meets_subject_requirements(requirements, subject_grades_lower):
     subject_grades_lower: dict of {lowercase_subject_name: points_int}
     Returns True if all slots are satisfied (or requirements is empty/None).
     """
+    ok, _ = _check_subject_requirements(requirements, subject_grades_lower)
+    return ok
+
+
+def _check_subject_requirements(requirements, subject_grades_lower):
+    """
+    Like _meets_subject_requirements but returns (qualifies: bool, reason: str).
+    reason is a plain-English disqualification explanation when qualifies is False.
+    """
     if not requirements:
-        return True
+        return True, ''
     for slot in requirements:
-        subjects_str = slot.get('subjects_str', '')
+        subjects_str  = slot.get('subjects_str', '')
         min_grade_str = (slot.get('min_grade') or 'E').strip()
-        min_pts = GRADE_POINTS.get(min_grade_str, 1)
-        raw_codes = [s.strip().lower() for s in _re.split(r'[/|,]', subjects_str) if s.strip()]
+        min_pts       = GRADE_POINTS.get(min_grade_str, 1)
+        raw_codes     = [s.strip().lower() for s in _re.split(r'[/|,]', subjects_str) if s.strip()]
         if not raw_codes:
             continue
-        # Resolve each shortcode to a full subject name, fall back to the code itself
-        resolved = [_KUCCPS_CODE_TO_NAME.get(code, code) for code in raw_codes]
-        satisfied = any(subject_grades_lower.get(name, 0) >= min_pts for name in resolved)
-        if not satisfied:
-            return False
-    return True
+        resolved  = [_KUCCPS_CODE_TO_NAME.get(code, code) for code in raw_codes]
+        best_pts  = max((subject_grades_lower.get(name, 0) for name in resolved), default=0)
+        if best_pts < min_pts:
+            student_grade   = _POINTS_TO_GRADE.get(best_pts, 'not taken') if best_pts > 0 else 'not taken'
+            subject_display = ' / '.join(s.upper() for s in raw_codes)
+            return False, (
+                f"{subject_display}: you scored {student_grade}, "
+                f"minimum required is {min_grade_str}"
+            )
+    return True, ''
 
 
 # ─────────────────────────────────────────────
@@ -2671,6 +2688,7 @@ def career_results(request):
     pathway             = request.session.get('career_pathway', '')
     filter_chance       = request.GET.get('chance', '')
     filter_tier         = request.GET.get('tier', '')
+    filter_qual         = request.GET.get('qual', '')   # non-degree: 'qualifies' | 'does_not_qualify'
     search_q            = request.GET.get('q', '').strip()
     sort_by             = request.GET.get('sort', 'tier')
 
@@ -2720,6 +2738,12 @@ def career_results(request):
     subject_grades      = request.session.get('career_subject_grades', {})
     cluster_points_dict = {}
 
+    # Degree mean grade — derived from the stored aggregate total (0–84).
+    # Used only for the minimum_mean_grade hard gate; absent for paste/manual entry.
+    _degree_agg        = int(request.session.get('career_aggregate_total', 0) or 0)
+    degree_mean_grade  = _aggregate_to_mean_grade(_degree_agg) if _degree_agg else ''
+    degree_mean_pts    = GRADE_POINTS.get(degree_mean_grade, 0)
+
     def _enrich_pred(offering):
         """Return prediction dict with trend decorators, or None."""
         try:
@@ -2754,29 +2778,78 @@ def career_results(request):
                 if cutoff is None:
                     continue
 
-                if subject_grades and offering.course.subject_requirements:
-                    if not _meets_subject_requirements(offering.course.subject_requirements, subject_grades):
-                        continue
+                course         = offering.course
+                qualifies      = True
+                disqual_reason = ''
 
-                cluster     = offering.course.cluster
+                # ── Gate 1: minimum mean grade ──
+                # All degrees require at least C+; use per-course value when higher.
+                course_min_grade = (course.minimum_mean_grade or 'C+').strip()
+                if degree_mean_pts:
+                    course_min_pts = GRADE_POINTS.get(course_min_grade, 0)
+                    if degree_mean_pts < course_min_pts:
+                        qualifies      = False
+                        disqual_reason = (
+                            f"Overall mean grade ({degree_mean_grade}) is below "
+                            f"the minimum required ({course_min_grade})"
+                        )
+
+                # ── Gate 2: per-subject minimum grades ──
+                if qualifies and subject_grades and course.subject_requirements:
+                    ok, reason = _check_subject_requirements(
+                        course.subject_requirements, subject_grades
+                    )
+                    if not ok:
+                        qualifies      = False
+                        disqual_reason = reason
+
+                # ── Compute cluster points + tier (always, so non-qualifying can show context) ──
+                cluster     = course.cluster
                 if cluster and cluster_points_dict:
                     knum        = cluster.kuccps_number
                     student_pts = float(cluster_points_dict.get(str(knum), cluster_pts_single)) if knum else cluster_pts_single
                 else:
                     student_pts = cluster_pts_single
-                diff        = round(student_pts - float(cutoff), 2)
 
-                chance, badge    = _chance_from_diff(diff)
-                tier, tier_order = _tier_from_diff(diff, cfg)
+                # ── Gate 0: zero cluster points = student lacks required subjects for this cluster ──
+                if qualifies and cluster and cluster_points_dict and student_pts == 0.0:
+                    knum_key = str(cluster.kuccps_number) if cluster.kuccps_number else None
+                    if knum_key and knum_key in cluster_points_dict:
+                        qualifies      = False
+                        disqual_reason = (
+                            f"Your subject combination scores 0 for "
+                            f"Cluster {cluster.kuccps_number} ({cluster.name}) — "
+                            f"you may be missing required subjects for this career path"
+                        )
 
+                diff = round(student_pts - float(cutoff), 2)
+
+                if qualifies:
+                    chance, badge    = _chance_from_diff(diff)
+                    tier, tier_order = _tier_from_diff(diff, cfg)
+                    tier_color       = TIER_META[tier][1]
+                    tier_css         = TIER_META[tier][2]
+                    tier_desc        = TIER_META[tier][3]
+                else:
+                    chance, badge    = '', ''
+                    tier             = 'Does Not Qualify'
+                    tier_order       = 99   # always sorts last
+                    tier_color       = '#dc2626'
+                    tier_css         = 'tier-disqualified'
+                    tier_desc        = disqual_reason
+
+                # ── Apply active filters ──
+                if filter_tier:
+                    if filter_tier == 'Does Not Qualify' and qualifies:
+                        continue
+                    if filter_tier != 'Does Not Qualify' and tier != filter_tier:
+                        continue
                 if filter_chance and chance != filter_chance:
-                    continue
-                if filter_tier and tier != filter_tier:
                     continue
 
                 matches.append({
                     'offering':       offering,
-                    'course':         offering.course,
+                    'course':         course,
                     'institution':    offering.institution,
                     'cluster':        cluster,
                     'cutoff':         cutoff,
@@ -2787,12 +2860,14 @@ def career_results(request):
                     'badge':          badge,
                     'tier':           tier,
                     'tier_order':     tier_order,
-                    'tier_color':     TIER_META[tier][1],
-                    'tier_css':       TIER_META[tier][2],
-                    'tier_desc':      TIER_META[tier][3],
-                    'pred':           _enrich_pred(offering),
-                    'is_competitive': float(cutoff) >= cfg.competitive_threshold,
-                    'course_url':     _build_course_url(offering.course),
+                    'tier_color':     tier_color,
+                    'tier_css':       tier_css,
+                    'tier_desc':      tier_desc,
+                    'qualifies':      qualifies,
+                    'disqual_reason': disqual_reason,
+                    'pred':           _enrich_pred(offering) if qualifies else None,
+                    'is_competitive': float(cutoff) >= cfg.competitive_threshold if qualifies else False,
+                    'course_url':     _build_course_url(course),
                 })
 
     else:
@@ -2819,97 +2894,118 @@ def career_results(request):
             default_min = PATHWAY_DEFAULT_MIN_GRADE.get(pathway, 'E')
             for offering in qs:
                 course    = offering.course
-
-                # Layer 1a: subject requirements (Diploma/Certificate only — KMTC/TTC enter mean grade only)
-                if subject_grades and course.subject_requirements:
-                    if not _meets_subject_requirements(course.subject_requirements, subject_grades):
-                        continue
-
                 min_grade = (course.minimum_mean_grade or '').strip() or default_min
                 min_pts   = GRADE_POINTS.get(min_grade, 0)
                 diff      = student_pts - min_pts
 
-                # Layer 1b: hard grade filter — student must meet the minimum mean grade
+                qualifies      = True
+                disqual_reason = ''
+
+                # Gate 1: mean grade — must meet the course minimum
                 if diff < 0:
+                    qualifies      = False
+                    disqual_reason = (
+                        f"Overall mean grade ({mean_grade}) is below "
+                        f"the minimum required ({min_grade})"
+                    )
+
+                # Gate 2: per-subject minimum grades (Diploma, Certificate, KMTC, TVET)
+                if qualifies and subject_grades and course.subject_requirements:
+                    ok, reason = _check_subject_requirements(
+                        course.subject_requirements, subject_grades
+                    )
+                    if not ok:
+                        qualifies      = False
+                        disqual_reason = reason
+
+                # Apply qualification filter from query string
+                if filter_qual == 'qualifies' and not qualifies:
+                    continue
+                if filter_qual == 'does_not_qualify' and qualifies:
                     continue
 
-                chance, badge    = _chance_from_grade_diff(diff)
-                tier, tier_order = _tier_from_diff(diff, cfg)
-
-                # Layer 3: qualification label for display/PDF
-                if diff == 0:
-                    qual_label = 'Meets Minimum'
-                elif diff <= 2:
-                    qual_label = 'Comfortably Qualifies'
+                # Stripe / badge colours driven purely by qualification
+                if qualifies:
+                    tier_color = '#22c55e'
+                    tier_css   = 'nd-qualifies'
                 else:
-                    qual_label = 'Strongly Qualifies'
-
-                if filter_chance and chance != filter_chance:
-                    continue
-                if filter_tier and tier != filter_tier:
-                    continue
+                    tier_color = '#ef4444'
+                    tier_css   = 'nd-disqualified'
 
                 matches.append({
-                    'offering':        offering,
-                    'course':          course,
-                    'institution':     offering.institution,
-                    'cluster':         None,
-                    'cutoff':          min_grade or '—',
-                    'min_pts':         min_pts,
-                    'student_points':  mean_grade,
-                    'diff':            diff,
-                    'chance':          chance,
-                    'chance_desc':     CHANCE_DESC.get(chance, ''),
-                    'badge':           badge,
-                    'tier':            tier,
-                    'tier_order':      tier_order,
-                    'tier_color':      TIER_META[tier][1],
-                    'tier_css':        TIER_META[tier][2],
-                    'tier_desc':       TIER_META[tier][3],
-                    'qual_label':      qual_label,
-                    'pred':            None,
-                    'is_competitive':  False,
-                    'course_url':      _build_course_url(course),
+                    'offering':         offering,
+                    'course':           course,
+                    'institution':      offering.institution,
+                    'cluster':          None,
+                    'cutoff':           min_grade or '—',
+                    'min_pts':          min_pts,
+                    'student_points':   mean_grade,
+                    'diff':             diff,
+                    'tier_order':       1 if qualifies else 2,
+                    'tier_color':       tier_color,
+                    'tier_css':         tier_css,
+                    'qualifies':        qualifies,
+                    'disqual_reason':   disqual_reason,
+                    'pred':             None,
+                    'is_competitive':   False,
+                    'course_url':       _build_course_url(course),
                     'has_specific_min': bool((course.minimum_mean_grade or '').strip()),
                 })
 
     if pathway == 'Degree':
-        if sort_by == 'tier':
-            def _tier_key(m):
+        # Non-qualifying courses always sink to the bottom regardless of sort mode.
+        def _degree_sort_key(m):
+            is_disq = 0 if m.get('qualifies', True) else 1
+            if sort_by in ('tier', 'chance'):
                 cutoff_val = (
                     float(m['cutoff'])
                     if isinstance(m['cutoff'], (int, float))
                     else GRADE_POINTS.get(str(m['cutoff']).strip(), 0)
                 )
                 if m['tier_order'] == 1:
-                    return (m['tier_order'], -cutoff_val)
-                return (m['tier_order'], abs(m['diff']))
-            matches.sort(key=_tier_key)
-        elif sort_by == 'chance':
-            _CHANCE_ORDER = {'High Likelihood': 0, 'Likely': 1, 'Borderline': 2, 'Unlikely': 3}
-            matches.sort(key=lambda m: (_CHANCE_ORDER.get(m['chance'], 4), abs(m['diff'])))
-        elif sort_by == 'institution':
-            matches.sort(key=lambda m: m['institution'].name)
-        elif sort_by == 'course':
-            matches.sort(key=lambda m: m['course'].name)
+                    return (is_disq, m['tier_order'], -cutoff_val)
+                return (is_disq, m['tier_order'], abs(m['diff']))
+            if sort_by == 'institution':
+                return (is_disq, m['institution'].name)
+            # course
+            return (is_disq, m['course'].name)
+        matches.sort(key=_degree_sort_key)
     else:
-        # Non-degree: default sort by required grade descending (most selective first),
-        # then by student margin, then alphabetically — gives meaningful ordering even
-        # when all courses share the same pathway-default minimum.
+        # Non-degree: qualifying courses first, then non-qualifying.
+        # Within each group: most selective (highest min grade) first, then by margin, then alpha.
         if sort_by in ('tier', 'chance'):
-            matches.sort(key=lambda m: (-m.get('min_pts', 0), -m['diff'], m['course'].name))
+            matches.sort(key=lambda m: (
+                0 if m['qualifies'] else 1,
+                -m.get('min_pts', 0),
+                -m['diff'],
+                m['course'].name,
+            ))
         elif sort_by == 'institution':
-            matches.sort(key=lambda m: (m['institution'].name, -m.get('min_pts', 0)))
+            matches.sort(key=lambda m: (
+                0 if m['qualifies'] else 1,
+                m['institution'].name,
+                -m.get('min_pts', 0),
+            ))
         elif sort_by == 'course':
-            matches.sort(key=lambda m: m['course'].name)
+            matches.sort(key=lambda m: (0 if m['qualifies'] else 1, m['course'].name))
 
+    # Tier / qualification counts — drive filter chip badges in the template
     tier_counts = {}
-    for m in matches:
-        key = m['tier'].replace(' ', '')
-        tier_counts[key] = tier_counts.get(key, 0) + 1
+    if pathway == 'Degree':
+        for m in matches:
+            if not m.get('qualifies', True):
+                tier_counts['DoesNotQualify'] = tier_counts.get('DoesNotQualify', 0) + 1
+            else:
+                key = m['tier'].replace(' ', '')
+                tier_counts[key] = tier_counts.get(key, 0) + 1
+    else:
+        for m in matches:
+            key = 'Qualifies' if m.get('qualifies', True) else 'DoesNotQualify'
+            tier_counts[key] = tier_counts.get(key, 0) + 1
 
     # ── Persist snapshot for logged-in users (powers Personalised Dashboard) ──
-    if request.user.is_authenticated and matches and not filter_tier and not filter_chance and not search_q:
+    _no_active_filter = not filter_tier and not filter_chance and not filter_qual and not search_q
+    if request.user.is_authenticated and matches and _no_active_filter:
         try:
             from accounts.models import CareerSessionSnapshot
             sorted_top = sorted(matches, key=lambda m: (m['tier_order'], abs(m['diff'])))[:10]
@@ -2918,11 +3014,11 @@ def career_results(request):
                 'offering_id':      _m['offering'].id,
                 'course_name':      _m['course'].name,
                 'institution_name': _m['institution'].name,
-                'tier':             _m['tier'],
+                'tier':             _m.get('tier', 'Qualifies' if _m.get('qualifies', True) else 'Does Not Qualify'),
                 'tier_css':         _m['tier_css'],
                 'tier_color':       _m['tier_color'],
                 'diff':             _m['diff'],
-                'chance':           _m['chance'],
+                'chance':           _m.get('chance', ''),
                 'cutoff':           _m['cutoff'],
                 'student_pts':      float(_m['student_points']) if isinstance(_m['student_points'], (int, float)) else 0,
                 'kuccps_num':       _m['cluster'].kuccps_number if _m['cluster'] else None,
@@ -3062,6 +3158,7 @@ def career_results(request):
         'total_count':         len(matches),
         'filter_chance':       filter_chance,
         'filter_tier':         filter_tier,
+        'filter_qual':         filter_qual,
         'search_q':            search_q,
         'sort_by':             sort_by,
         'mean_grade':          mean_grade,
@@ -3130,6 +3227,9 @@ def _build_career_matches(request):
 
     if pathway == 'Degree':
         cluster_points_dict = request.session.get('career_cluster_points', {})
+        _degree_agg        = int(request.session.get('career_aggregate_total', 0) or 0)
+        degree_mean_grade  = _aggregate_to_mean_grade(_degree_agg) if _degree_agg else ''
+        degree_mean_pts    = GRADE_POINTS.get(degree_mean_grade, 0)
         degree_type = _get_degree_course_type()
         if degree_type:
             qs = (
@@ -3145,20 +3245,55 @@ def _build_career_matches(request):
                 cutoff = offering.latest_cutoff()
                 if cutoff is None:
                     continue
-                if subject_grades and offering.course.subject_requirements:
-                    if not _meets_subject_requirements(offering.course.subject_requirements, subject_grades):
-                        continue
-                cluster     = offering.course.cluster
+
+                course         = offering.course
+                qualifies      = True
+                disqual_reason = ''
+
+                # Gate 1: overall mean grade must meet per-course minimum
+                if degree_mean_pts:
+                    course_min_grade = (course.minimum_mean_grade or 'C+').strip()
+                    if degree_mean_pts < GRADE_POINTS.get(course_min_grade, 0):
+                        qualifies      = False
+                        disqual_reason = (
+                            f"Mean grade ({degree_mean_grade}) is below the "
+                            f"minimum required ({course_min_grade})"
+                        )
+
+                # Gate 2: per-subject minimum grades
+                if qualifies and subject_grades and course.subject_requirements:
+                    ok, reason = _check_subject_requirements(course.subject_requirements, subject_grades)
+                    if not ok:
+                        qualifies      = False
+                        disqual_reason = reason
+
+                cluster = course.cluster
                 if cluster and cluster_points_dict:
                     knum        = cluster.kuccps_number
                     student_pts = float(cluster_points_dict.get(str(knum), cluster_pts_single)) if knum else cluster_pts_single
                 else:
                     student_pts = cluster_pts_single
-                diff        = round(student_pts - float(cutoff), 2)
-                chance, badge    = _chance_from_diff(diff)
-                tier, tier_order = _tier_from_diff(diff, cfg)
+
+                # Gate 0: zero cluster points = missing required subjects for this cluster
+                if qualifies and cluster and cluster_points_dict and student_pts == 0.0:
+                    knum_key = str(cluster.kuccps_number) if cluster.kuccps_number else None
+                    if knum_key and knum_key in cluster_points_dict:
+                        qualifies      = False
+                        disqual_reason = (
+                            f"Cluster {cluster.kuccps_number} score is 0 — "
+                            f"required subject(s) for this cluster not taken or below minimum"
+                        )
+
+                diff = round(student_pts - float(cutoff), 2)
+                if qualifies:
+                    chance, badge    = _chance_from_diff(diff)
+                    tier, tier_order = _tier_from_diff(diff, cfg)
+                else:
+                    chance, badge    = '', ''
+                    tier, tier_order = 'Does Not Qualify', 99
+
                 matches.append({
-                    'course':         offering.course,
+                    'course':         course,
                     'institution':    offering.institution,
                     'cluster':        cluster,
                     'cutoff':         cutoff,
@@ -3167,8 +3302,10 @@ def _build_career_matches(request):
                     'chance':         chance,
                     'tier':           tier,
                     'tier_order':     tier_order,
-                    'pred':           _enrich_pred(offering),
-                    'is_competitive': float(cutoff) >= cfg.competitive_threshold,
+                    'qualifies':      qualifies,
+                    'disqual_reason': disqual_reason,
+                    'pred':           _enrich_pred(offering) if qualifies else None,
+                    'is_competitive': float(cutoff) >= cfg.competitive_threshold if qualifies else False,
                 })
     else:
         student_pts_val = GRADE_POINTS.get(mean_grade, 0)
@@ -3189,23 +3326,41 @@ def _build_career_matches(request):
 
             default_min = PATHWAY_DEFAULT_MIN_GRADE.get(pathway, 'E')
             for offering in qs:
-                course = offering.course
-                if subject_grades and course.subject_requirements:
-                    if not _meets_subject_requirements(course.subject_requirements, subject_grades):
-                        continue
-                min_grade = (course.minimum_mean_grade or '').strip() or default_min
-                min_pts   = GRADE_POINTS.get(min_grade, 0)
-                diff      = student_pts_val - min_pts
+                course         = offering.course
+                min_grade      = (course.minimum_mean_grade or '').strip() or default_min
+                min_pts        = GRADE_POINTS.get(min_grade, 0)
+                diff           = student_pts_val - min_pts
+                qualifies      = True
+                disqual_reason = ''
+
+                # Gate 1: mean grade must meet course minimum
                 if diff < 0:
-                    continue
-                chance, badge    = _chance_from_grade_diff(diff)
-                tier, tier_order = _tier_from_diff(diff, cfg)
-                if diff == 0:
-                    qual_label = 'Meets Minimum'
-                elif diff <= 2:
-                    qual_label = 'Comfortably Qualifies'
+                    qualifies      = False
+                    disqual_reason = (
+                        f"Mean grade ({mean_grade}) is below the minimum required ({min_grade})"
+                    )
+
+                # Gate 2: per-subject minimum grades
+                if qualifies and subject_grades and course.subject_requirements:
+                    ok, reason = _check_subject_requirements(course.subject_requirements, subject_grades)
+                    if not ok:
+                        qualifies      = False
+                        disqual_reason = reason
+
+                if qualifies:
+                    chance, badge    = _chance_from_grade_diff(diff)
+                    tier, tier_order = _tier_from_diff(diff, cfg)
+                    if diff == 0:
+                        qual_label = 'Meets Minimum'
+                    elif diff <= 2:
+                        qual_label = 'Comfortably Qualifies'
+                    else:
+                        qual_label = 'Strongly Qualifies'
                 else:
-                    qual_label = 'Strongly Qualifies'
+                    chance, badge    = '', ''
+                    tier, tier_order = 'Does Not Qualify', 99
+                    qual_label       = 'Does Not Qualify'
+
                 matches.append({
                     'course':         course,
                     'institution':    offering.institution,
@@ -3217,14 +3372,20 @@ def _build_career_matches(request):
                     'tier':           tier,
                     'tier_order':     tier_order,
                     'qual_label':     qual_label,
+                    'qualifies':      qualifies,
+                    'disqual_reason': disqual_reason,
                     'pred':           None,
                     'is_competitive': False,
                 })
 
     if pathway == 'Degree':
-        matches.sort(key=lambda m: (m['tier_order'], abs(m['diff'])))
+        matches.sort(key=lambda m: (0 if m.get('qualifies', True) else 1, m['tier_order'], abs(m['diff'])))
     else:
-        matches.sort(key=lambda m: (-m['diff'], m['course'].name))
+        matches.sort(key=lambda m: (
+            0 if m.get('qualifies', True) else 1,
+            -m['diff'],
+            m['course'].name,
+        ))
 
     # Build 20-group KUCCPS cluster score table for PDF display.
     # career_cluster_points is now keyed by KUCCPS group number (1-20 as strings).
@@ -3272,6 +3433,9 @@ def career_results_pdf_quick(request):
             "No career matches found. Please run the career guidance tool first.",
             status=400,
         )
+
+    qualifying   = [m for m in matches if m.get('qualifies', True)]
+    disqualified = [m for m in matches if not m.get('qualifies', True)]
 
     numeric_pts = [m['student_points'] for m in matches if isinstance(m['student_points'], (int, float))]
     best_pts    = max(numeric_pts, default=cluster_pts_single) if pathway == 'Degree' else None
@@ -3334,7 +3498,7 @@ def career_results_pdf_quick(request):
     score_txt = f"Your Score: {best_pts:.1f} / 48 pts" if best_pts is not None else f"Mean Grade: {mean_grade}"
     c.setFont("Helvetica-Bold", 9)
     c.setFillColor(NAVY)
-    c.drawString(1.5*cm, y, f"Pathway: {pathway}   |   {score_txt}   |   Total Matches: {len(matches)}")
+    c.drawString(1.5*cm, y, f"Pathway: {pathway}   |   {score_txt}   |   Eligible: {len(qualifying)}   |   Does Not Qualify: {len(disqualified)}")
     y -= 0.45*cm
     c.setFont("Helvetica", 8)
     c.setFillColor(SLATE)
@@ -3342,30 +3506,73 @@ def career_results_pdf_quick(request):
     y -= 0.65*cm
 
     if pathway == 'Degree':
-        # ── Degree: cluster scores mini-table ────────────────────────────────
+        # ── Degree: cluster score cards (2-column grid) ───────────────────────
         if cluster_score_table:
-            c.setFont("Helvetica-Bold", 8)
+            _GREEN    = colors.HexColor("#16a34a")
+            _ORANGE   = colors.HexColor("#f97316")
+            _BLUE_BG  = colors.HexColor("#eff6ff")
+            _AMBER_BG = colors.HexColor("#fefce8")
+
+            # Section title
+            c.setFont("Helvetica-Bold", 10)
             c.setFillColor(NAVY)
-            c.drawString(1.5*cm, y, "YOUR CLUSTER SCORES (KUCCPS Groups 1–20, out of 48 pts)")
-            y -= 0.4*cm
-            col_w = (W - 3*cm) / 4
-            GREEN = colors.HexColor("#16a34a")
+            c.drawString(1.5*cm, y, "ALL CLUSTER SCORES")
+            y -= 0.32*cm
+            c.setFont("Helvetica", 7.5)
+            c.setFillColor(SLATE)
+            c.drawString(1.5*cm, y,
+                f"{len(cluster_score_table)} clusters calculated  |  Maximum per cluster: 48 pts")
+            y -= 0.38*cm
+
+            # Legend
+            dot_cy = y - 0.07*cm
+            c.setFillColor(_GREEN);  c.circle(1.65*cm, dot_cy, 0.07*cm, fill=1, stroke=0)
+            c.setFont("Helvetica", 7.5); c.setFillColor(SLATE)
+            c.drawString(1.85*cm, y - 0.14*cm, "Strong (36–48 pts)")
+            c.setFillColor(NAVY);    c.circle(6.2*cm,  dot_cy, 0.07*cm, fill=1, stroke=0)
+            c.drawString(6.4*cm,  y - 0.14*cm, "Moderate (24–35 pts)")
+            c.setFillColor(_ORANGE); c.circle(11.6*cm, dot_cy, 0.07*cm, fill=1, stroke=0)
+            c.drawString(11.8*cm, y - 0.14*cm, "Below 24 pts")
+            y -= 0.52*cm
+
+            CARD_W   = (W - 3.3*cm) / 2
+            CARD_H   = 0.92*cm
+            CARD_GAP = 0.3*cm
+            BADGE_W  = 2.6*cm
+
             for i, (knum, gname, score) in enumerate(cluster_score_table):
-                col = i % 4
+                col = i % 2
                 if col == 0 and i > 0:
-                    y -= 0.5*cm
-                x = 1.5*cm + col * col_w
-                bar_max = col_w - 1.4*cm
-                bar_w   = (score / 48.0) * bar_max if score else 0
-                bar_col = GREEN if score >= 36 else (NAVY if score >= 24 else colors.HexColor("#f97316"))
-                c.setFillColor(LIGHT)
-                c.rect(x + 1.05*cm, y - 0.28*cm, bar_max, 0.16*cm, fill=1, stroke=0)
-                c.setFillColor(bar_col)
-                c.rect(x + 1.05*cm, y - 0.28*cm, bar_w, 0.16*cm, fill=1, stroke=0)
-                c.setFont("Helvetica", 7.5)
-                c.setFillColor(colors.black)
-                c.drawString(x, y, f"C{knum}: {score:.1f}")
-            y -= 0.65*cm
+                    y -= (CARD_H + 0.12*cm)
+                    if y < 2.5*cm:
+                        y = new_page()
+                x = 1.5*cm + col * (CARD_W + CARD_GAP)
+
+                is_zero = (score == 0.0)
+                c.setFillColor(_AMBER_BG if is_zero else _BLUE_BG)
+                c.roundRect(x, y - CARD_H + 0.08*cm, CARD_W, CARD_H, 3, fill=1, stroke=0)
+                c.setFillColor(_ORANGE if is_zero else NAVY)
+                c.rect(x, y - CARD_H + 0.08*cm, 0.18*cm, CARD_H, fill=1, stroke=0)
+
+                c.setFont("Helvetica-Bold", 8)
+                c.setFillColor(NAVY)
+                c.drawString(x + 0.32*cm, y - 0.26*cm, f"Cluster {knum}")
+
+                short = (gname[:27] + '…') if len(gname) > 29 else gname
+                c.setFont("Helvetica", 7)
+                c.setFillColor(SLATE)
+                c.drawString(x + 0.32*cm, y - 0.62*cm, short)
+
+                badge_col = _GREEN if score >= 36 else (NAVY if score >= 24 else _ORANGE)
+                bx = x + CARD_W - BADGE_W - 0.12*cm
+                by = y - CARD_H + 0.14*cm
+                c.setFillColor(badge_col)
+                c.roundRect(bx, by, BADGE_W, CARD_H - 0.18*cm, 4, fill=1, stroke=0)
+                c.setFillColor(colors.white)
+                c.setFont("Helvetica-Bold", 9)
+                c.drawCentredString(bx + BADGE_W / 2, by + 0.19*cm, f"{score:.1f} / 48")
+
+            y -= (CARD_H + 0.5*cm)
         elif best_pts:
             c.setFont("Helvetica", 8)
             c.setFillColor(SLATE)
@@ -3400,7 +3607,7 @@ def career_results_pdf_quick(request):
 
         draw_headers()
 
-        for i, m in enumerate(matches):
+        for i, m in enumerate(qualifying):
             if y < 2.0*cm:
                 y = new_page()
                 draw_headers()
@@ -3477,7 +3684,7 @@ def career_results_pdf_quick(request):
             'Meets Minimum':         colors.HexColor("#1d4ed8"),
         }
 
-        for i, m in enumerate(matches):
+        for i, m in enumerate(qualifying):
             if y < 2.0*cm:
                 y = new_page()
                 draw_headers_nd()
@@ -3511,6 +3718,113 @@ def career_results_pdf_quick(request):
             c.drawString(COL_ND['qual'], y, ql[:22])
             y -= 0.41*cm
 
+    # ── Does Not Qualify section (all pathways) ──────────────────────────────
+    if disqualified:
+        RED      = colors.HexColor("#dc2626")
+        RED_LIGHT = colors.HexColor("#fef2f2")
+
+        # Section header
+        if y < 3.0*cm:
+            y = new_page()
+        y -= 0.4*cm
+        c.setFillColor(RED)
+        c.rect(1.5*cm, y - 0.48*cm, W - 3*cm, 0.44*cm, fill=1, stroke=0)
+        c.setFillColor(colors.white)
+        c.setFont("Helvetica-Bold", 9)
+        c.drawString(2.0*cm, y - 0.32*cm,
+            f"DOES NOT QUALIFY  ({len(disqualified)} courses) — eligibility requirements not met")
+        y -= 0.85*cm
+
+        # Column layout differs by pathway
+        if pathway == 'Degree':
+            DQ_COL = {
+                'course':  1.6*cm,
+                'inst':    9.2*cm,
+                'cluster': 17.2*cm,
+                'cutoff':  19.0*cm,
+                'reason':  20.8*cm,
+            }
+
+            def _dq_headers_degree():
+                nonlocal y
+                c.setFont("Helvetica-Bold", 7.5)
+                c.setFillColor(SLATE)
+                c.drawString(DQ_COL['course'],  y, "COURSE")
+                c.drawString(DQ_COL['inst'],    y, "INSTITUTION")
+                c.drawString(DQ_COL['cluster'], y, "CLUST")
+                c.drawString(DQ_COL['cutoff'],  y, "CUTOFF")
+                c.drawString(DQ_COL['reason'],  y, "REASON NOT QUALIFIED")
+                y -= 0.1*cm
+                c.setStrokeColor(colors.HexColor("#fca5a5"))
+                c.line(1.5*cm, y, W - 1.5*cm, y)
+                y -= 0.38*cm
+                c.setFillColor(colors.black)
+
+            _dq_headers_degree()
+
+            for i, m in enumerate(disqualified):
+                if y < 2.0*cm:
+                    y = new_page()
+                    _dq_headers_degree()
+                if i % 2 == 0:
+                    c.setFillColor(RED_LIGHT)
+                    c.rect(1.5*cm, y - 0.22*cm, W - 3*cm, 0.36*cm, fill=1, stroke=0)
+                c.setFont("Helvetica", 7.5)
+                c.setFillColor(colors.black)
+                cn = m['course'].name
+                c.drawString(DQ_COL['course'], y, (cn[:42] + '…') if len(cn) > 44 else cn)
+                iname = m['institution'].name
+                c.drawString(DQ_COL['inst'], y, (iname[:28] + '…') if len(iname) > 30 else iname)
+                knum = m['cluster'].kuccps_number if m['cluster'] else None
+                c.drawString(DQ_COL['cluster'], y, f"C{knum}" if knum else '—')
+                c.drawString(DQ_COL['cutoff'],  y, str(m['cutoff'])[:6])
+                reason = m.get('disqual_reason', '—')
+                c.setFillColor(RED)
+                c.drawString(DQ_COL['reason'], y, (reason[:52] + '…') if len(reason) > 54 else reason)
+                y -= 0.41*cm
+        else:
+            DQ_COL_ND = {
+                'course': 1.6*cm,
+                'inst':   9.2*cm,
+                'min':    18.5*cm,
+                'reason': 20.0*cm,
+            }
+
+            def _dq_headers_nd():
+                nonlocal y
+                c.setFont("Helvetica-Bold", 7.5)
+                c.setFillColor(SLATE)
+                c.drawString(DQ_COL_ND['course'], y, "COURSE / PROGRAMME")
+                c.drawString(DQ_COL_ND['inst'],   y, "INSTITUTION")
+                c.drawString(DQ_COL_ND['min'],    y, "MIN")
+                c.drawString(DQ_COL_ND['reason'], y, "REASON NOT QUALIFIED")
+                y -= 0.1*cm
+                c.setStrokeColor(colors.HexColor("#fca5a5"))
+                c.line(1.5*cm, y, W - 1.5*cm, y)
+                y -= 0.38*cm
+                c.setFillColor(colors.black)
+
+            _dq_headers_nd()
+
+            for i, m in enumerate(disqualified):
+                if y < 2.0*cm:
+                    y = new_page()
+                    _dq_headers_nd()
+                if i % 2 == 0:
+                    c.setFillColor(RED_LIGHT)
+                    c.rect(1.5*cm, y - 0.22*cm, W - 3*cm, 0.36*cm, fill=1, stroke=0)
+                c.setFont("Helvetica", 7.5)
+                c.setFillColor(colors.black)
+                cn = m['course'].name
+                c.drawString(DQ_COL_ND['course'], y, (cn[:42] + '…') if len(cn) > 44 else cn)
+                iname = m['institution'].name
+                c.drawString(DQ_COL_ND['inst'], y, (iname[:28] + '…') if len(iname) > 30 else iname)
+                c.drawString(DQ_COL_ND['min'],  y, str(m['cutoff'])[:4])
+                reason = m.get('disqual_reason', '—')
+                c.setFillColor(RED)
+                c.drawString(DQ_COL_ND['reason'], y, (reason[:60] + '…') if len(reason) > 62 else reason)
+                y -= 0.41*cm
+
     c.save()
     return response
 
@@ -3531,6 +3845,9 @@ def career_results_pdf_detailed(request):
             "No career matches found. Please run the career guidance tool first.",
             status=400,
         )
+
+    qualifying   = [m for m in matches if m.get('qualifies', True)]
+    disqualified = [m for m in matches if not m.get('qualifies', True)]
 
     numeric_pts = [m['student_points'] for m in matches if isinstance(m['student_points'], (int, float))]
     best_pts    = max(numeric_pts, default=cluster_pts_single) if pathway == 'Degree' else None
@@ -3626,14 +3943,15 @@ def career_results_pdf_detailed(request):
             "Eligibility: based on minimum mean grade and subject requirements per programme.")
     y -= 4.5*cm
 
-    chance_counts = Counter(m['chance'] for m in matches)
+    chance_counts = Counter(m['chance'] for m in qualifying)
     c.setFont("Helvetica-Bold", 10)
     c.setFillColor(NAVY)
-    c.drawString(1.5*cm, y, f"MATCH SUMMARY — {len(matches)} qualifying programmes found")
+    c.drawString(1.5*cm, y,
+        f"MATCH SUMMARY — {len(qualifying)} eligible programmes | {len(disqualified)} does not qualify")
     y -= 0.55*cm
 
     if pathway == 'Degree':
-        tier_counts = Counter(m['tier'] for m in matches)
+        tier_counts = Counter(m['tier'] for m in qualifying)
         for tier in ['Best Match', 'Stretch', 'Safe Option', 'Easy Admission', 'Long Shot']:
             cnt = tier_counts.get(tier, 0)
             if cnt == 0:
@@ -3650,7 +3968,7 @@ def career_results_pdf_detailed(request):
             'Comfortably Qualifies': colors.HexColor("#15803d"),
             'Meets Minimum':         colors.HexColor("#1d4ed8"),
         }
-        qual_counts = Counter(m.get('qual_label', '') for m in matches)
+        qual_counts = Counter(m.get('qual_label', '') for m in qualifying)
         QUAL_DESC = {
             'Strongly Qualifies':    'Mean grade is well above the minimum — very strong candidate.',
             'Comfortably Qualifies': 'Mean grade exceeds the minimum by 1–2 grades — good candidate.',
@@ -3702,34 +4020,74 @@ def career_results_pdf_detailed(request):
         c.drawString(2.0*cm, y - 1.45*cm, "Verify requirements at the institution directly or via the KUCCPS portal before applying.")
     y -= 2.1*cm
 
-    # ── Cluster scores — Degree only ─────────────────────────────────────────
+    # ── Cluster scores — Degree only (2-column card grid) ────────────────────
     if pathway == 'Degree':
         if cluster_score_table:
-            c.setFont("Helvetica-Bold", 9)
+            _GREEN    = colors.HexColor("#16a34a")
+            _ORANGE   = colors.HexColor("#f97316")
+            _BLUE_BG  = colors.HexColor("#eff6ff")
+            _AMBER_BG = colors.HexColor("#fefce8")
+
+            # Section title
+            c.setFont("Helvetica-Bold", 10)
             c.setFillColor(NAVY)
-            c.drawString(1.5*cm, y, "YOUR KUCCPS CLUSTER SCORES (Groups 1–20, out of 48 pts)")
-            y -= 0.42*cm
-            col_w = (W - 3*cm) / 4
-            BAR_GREEN  = colors.HexColor("#16a34a")
-            BAR_ORANGE = colors.HexColor("#f97316")
+            c.drawString(1.5*cm, y, "ALL CLUSTER SCORES")
+            y -= 0.32*cm
+            c.setFont("Helvetica", 7.5)
+            c.setFillColor(SLATE)
+            c.drawString(1.5*cm, y,
+                f"{len(cluster_score_table)} clusters calculated  |  Maximum per cluster: 48 pts")
+            y -= 0.38*cm
+
+            # Legend
+            dot_cy = y - 0.07*cm
+            c.setFillColor(_GREEN);  c.circle(1.65*cm, dot_cy, 0.07*cm, fill=1, stroke=0)
+            c.setFont("Helvetica", 7.5); c.setFillColor(SLATE)
+            c.drawString(1.85*cm, y - 0.14*cm, "Strong (36–48 pts)")
+            c.setFillColor(NAVY);    c.circle(6.2*cm,  dot_cy, 0.07*cm, fill=1, stroke=0)
+            c.drawString(6.4*cm,  y - 0.14*cm, "Moderate (24–35 pts)")
+            c.setFillColor(_ORANGE); c.circle(11.6*cm, dot_cy, 0.07*cm, fill=1, stroke=0)
+            c.drawString(11.8*cm, y - 0.14*cm, "Below 24 pts")
+            y -= 0.52*cm
+
+            CARD_W   = (W - 3.3*cm) / 2
+            CARD_H   = 0.92*cm
+            CARD_GAP = 0.3*cm
+            BADGE_W  = 2.6*cm
+
             for i, (knum, gname, score) in enumerate(cluster_score_table):
-                col = i % 4
+                col = i % 2
                 if col == 0 and i > 0:
-                    y -= 0.5*cm
-                    if y < 2.0*cm:
-                        y = new_page("Student Cluster Scores (continued)")
-                x = 1.5*cm + col * col_w
-                bar_max = col_w - 1.4*cm
-                bar_w   = (score / 48.0) * bar_max if score else 0
-                bar_col = BAR_GREEN if score >= 36 else (NAVY if score >= 24 else BAR_ORANGE)
-                c.setFillColor(LIGHT)
-                c.rect(x + 1.05*cm, y - 0.28*cm, bar_max, 0.16*cm, fill=1, stroke=0)
-                c.setFillColor(bar_col)
-                c.rect(x + 1.05*cm, y - 0.28*cm, bar_w, 0.16*cm, fill=1, stroke=0)
-                c.setFont("Helvetica", 7.5)
-                c.setFillColor(colors.black)
-                c.drawString(x, y, f"C{knum}: {score:.1f}")
-            y -= 0.65*cm
+                    y -= (CARD_H + 0.12*cm)
+                    if y < 2.5*cm:
+                        y = new_page("All Cluster Scores (continued)")
+                x = 1.5*cm + col * (CARD_W + CARD_GAP)
+
+                is_zero = (score == 0.0)
+                c.setFillColor(_AMBER_BG if is_zero else _BLUE_BG)
+                c.roundRect(x, y - CARD_H + 0.08*cm, CARD_W, CARD_H, 3, fill=1, stroke=0)
+                c.setFillColor(_ORANGE if is_zero else NAVY)
+                c.rect(x, y - CARD_H + 0.08*cm, 0.18*cm, CARD_H, fill=1, stroke=0)
+
+                c.setFont("Helvetica-Bold", 8)
+                c.setFillColor(NAVY)
+                c.drawString(x + 0.32*cm, y - 0.26*cm, f"Cluster {knum}")
+
+                short = (gname[:27] + '…') if len(gname) > 29 else gname
+                c.setFont("Helvetica", 7)
+                c.setFillColor(SLATE)
+                c.drawString(x + 0.32*cm, y - 0.62*cm, short)
+
+                badge_col = _GREEN if score >= 36 else (NAVY if score >= 24 else _ORANGE)
+                bx = x + CARD_W - BADGE_W - 0.12*cm
+                by = y - CARD_H + 0.14*cm
+                c.setFillColor(badge_col)
+                c.roundRect(bx, by, BADGE_W, CARD_H - 0.18*cm, 4, fill=1, stroke=0)
+                c.setFillColor(colors.white)
+                c.setFont("Helvetica-Bold", 9)
+                c.drawCentredString(bx + BADGE_W / 2, by + 0.19*cm, f"{score:.1f} / 48")
+
+            y -= (CARD_H + 0.5*cm)
         elif best_pts:
             c.setFont("Helvetica", 8.5)
             c.setFillColor(SLATE)
@@ -3763,7 +4121,7 @@ def career_results_pdf_detailed(request):
             return y_pos - 0.38*cm
 
         for tier_label in ['Best Match', 'Stretch', 'Safe Option', 'Easy Admission', 'Long Shot']:
-            tier_matches = [m for m in matches if m['tier'] == tier_label]
+            tier_matches = [m for m in qualifying if m['tier'] == tier_label]
             if not tier_matches:
                 continue
             y = new_page(f"Tier: {tier_label} — {TIER_DESC_SHORT.get(tier_label, '')}")
@@ -3845,7 +4203,7 @@ def career_results_pdf_detailed(request):
             return y_pos - 0.38*cm
 
         for ql_label in ['Strongly Qualifies', 'Comfortably Qualifies', 'Meets Minimum']:
-            ql_matches = [m for m in matches if m.get('qual_label') == ql_label]
+            ql_matches = [m for m in qualifying if m.get('qual_label') == ql_label]
             if not ql_matches:
                 continue
             y = new_page(f"{ql_label} — {len(ql_matches)} programmes")
@@ -3888,6 +4246,118 @@ def career_results_pdf_detailed(request):
                 if len(req_str) > 28:
                     req_str = req_str[:26] + '…'
                 c.drawString(COL_ND['subj'], y, req_str)
+                y -= 0.41*cm
+
+    # ── Does Not Qualify page (all pathways) ─────────────────────────────────
+    if disqualified:
+        RED       = colors.HexColor("#dc2626")
+        RED_BG    = colors.HexColor("#fef2f2")
+        RED_LIGHT = colors.HexColor("#fff1f2")
+
+        y = new_page(f"Does Not Qualify — {len(disqualified)} courses not meeting eligibility requirements")
+        c.setFillColor(RED)
+        c.rect(1.5*cm, y - 0.55*cm, W - 3*cm, 0.5*cm, fill=1, stroke=0)
+        c.setFillColor(colors.white)
+        c.setFont("Helvetica-Bold", 9.5)
+        c.drawString(2.0*cm, y - 0.36*cm,
+            f"DOES NOT QUALIFY  ({len(disqualified)} courses) — eligibility requirements not met")
+        y -= 0.95*cm
+
+        # Explanatory note
+        c.setFillColor(RED_BG)
+        c.rect(1.5*cm, y - 1.1*cm, W - 3*cm, 1.0*cm, fill=1, stroke=0)
+        c.setFont("Helvetica", 8)
+        c.setFillColor(RED)
+        c.drawString(2.0*cm, y - 0.4*cm,
+            "These courses are listed for reference. Each entry shows why you currently do not meet "
+            "the entry requirements.")
+        c.drawString(2.0*cm, y - 0.78*cm,
+            "Consider upgrading qualifications, taking bridging programmes, or exploring alternative pathways.")
+        y -= 1.4*cm
+
+        if pathway == 'Degree':
+            DQ_COL = {
+                'course':  1.7*cm,
+                'inst':    9.2*cm,
+                'cluster': 17.0*cm,
+                'cutoff':  18.8*cm,
+                'reason':  20.6*cm,
+            }
+
+            def _draw_dq_hdr_degree(y_pos):
+                c.setFont("Helvetica-Bold", 7.5)
+                c.setFillColor(SLATE)
+                c.drawString(DQ_COL['course'],  y_pos, "COURSE")
+                c.drawString(DQ_COL['inst'],    y_pos, "INSTITUTION")
+                c.drawString(DQ_COL['cluster'], y_pos, "CLUST")
+                c.drawString(DQ_COL['cutoff'],  y_pos, "CUTOFF")
+                c.drawString(DQ_COL['reason'],  y_pos, "REASON NOT QUALIFIED")
+                y_pos -= 0.1*cm
+                c.setStrokeColor(colors.HexColor("#fca5a5"))
+                c.line(1.5*cm, y_pos, W - 1.5*cm, y_pos)
+                return y_pos - 0.38*cm
+
+            y = _draw_dq_hdr_degree(y)
+            for i, m in enumerate(disqualified):
+                if y < 2.0*cm:
+                    y = new_page("Does Not Qualify (continued)")
+                    y = _draw_dq_hdr_degree(y)
+                if i % 2 == 0:
+                    c.setFillColor(RED_LIGHT)
+                    c.rect(1.5*cm, y - 0.22*cm, W - 3*cm, 0.36*cm, fill=1, stroke=0)
+                c.setFont("Helvetica", 7.5)
+                c.setFillColor(colors.black)
+                cn = m['course'].name
+                c.drawString(DQ_COL['course'], y, (cn[:42] + '…') if len(cn) > 44 else cn)
+                iname = m['institution'].name
+                c.drawString(DQ_COL['inst'], y, (iname[:26] + '…') if len(iname) > 28 else iname)
+                knum = m['cluster'].kuccps_number if m['cluster'] else None
+                c.drawString(DQ_COL['cluster'], y, f"C{knum}" if knum else '—')
+                c.drawString(DQ_COL['cutoff'],  y, str(m['cutoff'])[:6])
+                reason = m.get('disqual_reason', '—')
+                c.setFillColor(RED)
+                c.setFont("Helvetica-Bold", 7.5)
+                c.drawString(DQ_COL['reason'], y, (reason[:54] + '…') if len(reason) > 56 else reason)
+                y -= 0.41*cm
+        else:
+            DQ_COL_ND = {
+                'course': 1.7*cm,
+                'inst':   9.2*cm,
+                'min':    18.5*cm,
+                'reason': 20.0*cm,
+            }
+
+            def _draw_dq_hdr_nd(y_pos):
+                c.setFont("Helvetica-Bold", 7.5)
+                c.setFillColor(SLATE)
+                c.drawString(DQ_COL_ND['course'], y_pos, "PROGRAMME")
+                c.drawString(DQ_COL_ND['inst'],   y_pos, "INSTITUTION")
+                c.drawString(DQ_COL_ND['min'],    y_pos, "MIN")
+                c.drawString(DQ_COL_ND['reason'], y_pos, "REASON NOT QUALIFIED")
+                y_pos -= 0.1*cm
+                c.setStrokeColor(colors.HexColor("#fca5a5"))
+                c.line(1.5*cm, y_pos, W - 1.5*cm, y_pos)
+                return y_pos - 0.38*cm
+
+            y = _draw_dq_hdr_nd(y)
+            for i, m in enumerate(disqualified):
+                if y < 2.0*cm:
+                    y = new_page("Does Not Qualify (continued)")
+                    y = _draw_dq_hdr_nd(y)
+                if i % 2 == 0:
+                    c.setFillColor(RED_LIGHT)
+                    c.rect(1.5*cm, y - 0.22*cm, W - 3*cm, 0.36*cm, fill=1, stroke=0)
+                c.setFont("Helvetica", 7.5)
+                c.setFillColor(colors.black)
+                cn = m['course'].name
+                c.drawString(DQ_COL_ND['course'], y, (cn[:42] + '…') if len(cn) > 44 else cn)
+                iname = m['institution'].name
+                c.drawString(DQ_COL_ND['inst'], y, (iname[:28] + '…') if len(iname) > 30 else iname)
+                c.drawString(DQ_COL_ND['min'],  y, str(m['cutoff'])[:4])
+                reason = m.get('disqual_reason', '—')
+                c.setFillColor(RED)
+                c.setFont("Helvetica-Bold", 7.5)
+                c.drawString(DQ_COL_ND['reason'], y, (reason[:62] + '…') if len(reason) > 64 else reason)
                 y -= 0.41*cm
 
     c.save()
