@@ -18,7 +18,6 @@ from .forms import UserRegistrationForm, UserLoginForm
 from .models import (
     User,
     EmailVerificationToken,
-    RememberToken,
     DeviceSession,
 )
 
@@ -186,29 +185,8 @@ class LoginView(View):
             # Mark as recently verified (re-auth window starts from login)
             request.session['_auth_verified_at'] = time.time()
 
-            # Mentor sessions are shorter (stricter security)
-            try:
-                from mentorship.models import MentorProfile
-                is_mentor = MentorProfile.objects.filter(user=user).exists()
-            except Exception:
-                is_mentor = False
-
-            remember_me = form.cleaned_data.get("remember_me")
-            if remember_me:
-                token = secrets.token_urlsafe(32)
-                expires_at = timezone.now() + timezone.timedelta(days=30 if is_mentor else 90)
-                RememberToken.objects.create(
-                    user=user,
-                    token=token,
-                    expires_at=expires_at,
-                    ip_address=get_client_ip(request),
-                    user_agent=request.META.get("HTTP_USER_AGENT", ""),
-                )
-                # Mentors: 30 days with remember me; regular: 90 days
-                request.session.set_expiry(30 * 24 * 3600 if is_mentor else 90 * 24 * 3600)
-            else:
-                # Mentors: 14 days; regular users: 30 days
-                request.session.set_expiry(14 * 24 * 3600 if is_mentor else 30 * 24 * 3600)
+            # Keep all users logged in for 90 days
+            request.session.set_expiry(90 * 24 * 3600)
 
             messages.success(
                 request, f"Welcome back, {user.full_name or user.email}!"

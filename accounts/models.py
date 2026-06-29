@@ -93,6 +93,8 @@ class User(AbstractBaseUser, PermissionsMixin):
         upload_to='profile_pics/', null=True, blank=True
     )
 
+    email_notifications = models.BooleanField(default=True)
+
     created_at = models.DateTimeField(auto_now_add=True, db_index=True)
     updated_at = models.DateTimeField(auto_now=True)
     deleted_at = models.DateTimeField(null=True, blank=True)
@@ -576,3 +578,44 @@ class PushSubscription(models.Model):
 
     def __str__(self):
         return f"{self.user.email if self.user else 'anon'} — {self.endpoint[:60]}"
+
+
+# =====================================================
+# EMAIL BROADCAST
+# Records every bulk email sent to all subscribers.
+# =====================================================
+
+class EmailBroadcast(models.Model):
+    STATUS_CHOICES = [
+        ('draft',   'Draft'),
+        ('sent',    'Sent'),
+        ('failed',  'Failed'),
+    ]
+
+    subject          = models.CharField(max_length=255)
+    heading          = models.CharField(max_length=255)
+    body             = models.TextField(help_text="One paragraph per line. Each line becomes a separate paragraph.")
+    cta_label        = models.CharField(max_length=100, blank=True)
+    cta_url          = models.URLField(blank=True)
+    banner_color     = models.CharField(
+        max_length=20,
+        choices=[('green','Green'),('blue','Blue'),('amber','Amber'),('red','Red'),('purple','Purple')],
+        default='blue',
+    )
+    send_to_leads    = models.BooleanField(default=False, help_text="Also send to captured email leads (non-registered visitors)")
+    recipient_count  = models.PositiveIntegerField(default=0)
+    status           = models.CharField(max_length=10, choices=STATUS_CHOICES, default='draft')
+    sent_by          = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,
+        null=True, blank=True, related_name='broadcasts_sent'
+    )
+    sent_at          = models.DateTimeField(null=True, blank=True)
+    created_at       = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'Email Broadcast'
+        verbose_name_plural = 'Email Broadcasts'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"[{self.status.upper()}] {self.subject} ({self.recipient_count} recipients)"

@@ -126,8 +126,6 @@ class UserRegistrationForm(forms.ModelForm):
 class UserLoginForm(forms.Form):
     email = forms.EmailField(widget=forms.EmailInput(attrs={'placeholder': 'Email'}))
     password = forms.CharField(widget=forms.PasswordInput(attrs={'placeholder': 'Password'}))
-    remember_me = forms.BooleanField(required=False, label=_("Remember Me"))
-
     def clean(self):
         cleaned_data = super().clean()
         email = cleaned_data.get("email")

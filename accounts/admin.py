@@ -2,6 +2,10 @@ import csv
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.http import HttpResponse
+from django.shortcuts import redirect
+from django.urls import path
+from django.utils import timezone
+from django.utils.html import format_html
 from .models import (
     User,
     EmailVerificationToken,
@@ -17,6 +21,8 @@ from .models import (
     AffiliateProfile,
     AffiliateCommission,
     AffiliateWithdrawalRequest,
+    EmailBroadcast,
+    EmailLead,
 )
 from .forms import UserAdminCreationForm, UserAdminChangeForm
 
@@ -69,8 +75,8 @@ class UserAdmin(BaseUserAdmin):
     add_form = UserAdminCreationForm
 
     # Fields to display in admin list view
-    list_display = ('email', 'full_name', 'is_staff', 'is_verified', 'is_active', 'is_suspended')
-    list_filter = ('is_staff', 'is_verified', 'is_active', 'is_suspended')
+    list_display = ('email', 'full_name', 'is_staff', 'is_verified', 'is_active', 'is_suspended', 'email_notifications')
+    list_filter = ('is_staff', 'is_verified', 'is_active', 'is_suspended', 'email_notifications')
     search_fields = ('email', 'full_name')
     ordering = ('email',)
     readonly_fields = ('last_login', 'created_at', 'updated_at', 'deleted_at')
@@ -80,7 +86,7 @@ class UserAdmin(BaseUserAdmin):
     fieldsets = (
         (None, {'fields': ('email', 'full_name', 'password')}),
         ('Permissions', {'fields': ('is_active', 'is_staff', 'is_superuser', 'is_verified', 'is_suspended', 'groups', 'user_permissions')}),
-        ('Compliance', {'fields': ('agreed_terms', 'terms_version')}),
+        ('Compliance', {'fields': ('agreed_terms', 'terms_version', 'email_notifications')}),
         ('Timestamps', {'fields': ('last_login', 'created_at', 'updated_at', 'deleted_at')}),
     )
 
@@ -274,3 +280,131 @@ class AffiliateWithdrawalRequestAdmin(admin.ModelAdmin):
     list_filter   = ('status',)
     search_fields = ('affiliate__user__email', 'mpesa_number')
     readonly_fields = ('affiliate', 'amount', 'mpesa_number', 'created_at', 'processed_at')
+
+
+# =====================================================
+# EMAIL LEADS ADMIN
+# =====================================================
+
+@admin.action(description="Export selected leads to CSV")
+def export_leads_csv(_modeladmin, _request, queryset):
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="email_leads.csv"'
+    writer = csv.writer(response)
+    writer.writerow(['Email', 'Source', 'Converted', 'Captured At'])
+    for lead in queryset.values_list('email', 'source', 'converted_to_user_id', 'created_at'):
+        writer.writerow(lead)
+    return response
+
+
+@admin.register(EmailLead)
+class EmailLeadAdmin(admin.ModelAdmin):
+    list_display  = ('email', 'source', 'converted_to_user', 'created_at')
+    list_filter   = ('source', 'created_at')
+    search_fields = ('email',)
+    readonly_fields = ('created_at',)
+    actions = [export_leads_csv]
+
+
+# =====================================================
+# EMAIL BROADCAST ADMIN
+# =====================================================
+
+@admin.register(EmailBroadcast)
+class EmailBroadcastAdmin(admin.ModelAdmin):
+    list_display  = ('subject', 'status', 'recipient_count', 'sent_by', 'sent_at', 'created_at', 'send_action_button')
+    list_filter   = ('status', 'banner_color', 'send_to_leads')
+    search_fields = ('subject', 'heading')
+    readonly_fields = ('status', 'recipient_count', 'sent_by', 'sent_at', 'created_at')
+
+    fieldsets = (
+        ('Content', {
+            'fields': ('subject', 'heading', 'body', 'banner_color', 'cta_label', 'cta_url'),
+        }),
+        ('Recipients', {
+            'fields': ('send_to_leads',),
+            'description': 'By default this sends to all active registered users who have email notifications enabled.',
+        }),
+        ('Status (read-only)', {
+            'fields': ('status', 'recipient_count', 'sent_by', 'sent_at', 'created_at'),
+        }),
+    )
+
+    @admin.display(description='Action')
+    def send_action_button(self, obj):
+        if obj.status == 'draft':
+            url = f'/admin/accounts/emailbroadcast/{obj.pk}/send/'
+            return format_html('<a class="button" href="{}">Send Now</a>', url)
+        return obj.get_status_display()
+
+    def get_urls(self):
+        urls = super().get_urls()
+        custom = [
+            path('<uuid:pk>/send/', self.admin_site.admin_view(self._send_broadcast_view), name='emailbroadcast_send'),
+        ]
+        return custom + urls
+
+    def _send_broadcast_view(self, request, pk):
+        from kuccpss.email_utils import send_branded_email
+
+        try:
+            broadcast = EmailBroadcast.objects.get(pk=pk)
+        except EmailBroadcast.DoesNotExist:
+            self.message_user(request, "Broadcast not found.", level='error')
+            return redirect('/admin/accounts/emailbroadcast/')
+
+        if broadcast.status != 'draft':
+            self.message_user(request, f"This broadcast is already {broadcast.status}.", level='warning')
+            return redirect('/admin/accounts/emailbroadcast/')
+
+        body_lines = [line.strip() for line in broadcast.body.splitlines() if line.strip()]
+
+        # Collect recipient emails
+        user_emails = list(
+            User.objects.filter(is_active=True, email_notifications=True, deleted_at__isnull=True)
+            .values_list('email', flat=True)
+        )
+
+        if broadcast.send_to_leads:
+            lead_emails = list(
+                EmailLead.objects.filter(converted_to_user__isnull=True)
+                .values_list('email', flat=True)
+                .distinct()
+            )
+            all_emails = list(set(user_emails + lead_emails))
+        else:
+            all_emails = user_emails
+
+        sent_count = 0
+        BATCH = 50
+        for i in range(0, len(all_emails), BATCH):
+            batch = all_emails[i:i + BATCH]
+            try:
+                send_branded_email(
+                    to=batch,
+                    subject=broadcast.subject,
+                    heading=broadcast.heading,
+                    body_lines=body_lines,
+                    banner_label="CareerNext",
+                    banner_color=broadcast.banner_color,
+                    cta_url=broadcast.cta_url,
+                    cta_label=broadcast.cta_label,
+                    fail_silently=False,
+                )
+                sent_count += len(batch)
+            except Exception as exc:
+                broadcast.status = 'failed'
+                broadcast.recipient_count = sent_count
+                broadcast.sent_by = request.user
+                broadcast.sent_at = timezone.now()
+                broadcast.save(update_fields=['status', 'recipient_count', 'sent_by', 'sent_at'])
+                self.message_user(request, f"Send failed after {sent_count} emails: {exc}", level='error')
+                return redirect('/admin/accounts/emailbroadcast/')
+
+        broadcast.status = 'sent'
+        broadcast.recipient_count = sent_count
+        broadcast.sent_by = request.user
+        broadcast.sent_at = timezone.now()
+        broadcast.save(update_fields=['status', 'recipient_count', 'sent_by', 'sent_at'])
+        self.message_user(request, f"Broadcast sent successfully to {sent_count} recipients.")
+        return redirect('/admin/accounts/emailbroadcast/')
