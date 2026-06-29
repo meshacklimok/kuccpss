@@ -1,16 +1,30 @@
+from datetime import datetime as dt_datetime
+
 from django import forms
 from django.utils import timezone
 
 from .models import MentorProfile, TimeSlot, WithdrawalRequest
 
 TIME_OPTIONS = [
-    ("06:00", "6:00 AM"),  ("07:00", "7:00 AM"),  ("08:00", "8:00 AM"),
-    ("09:00", "9:00 AM"),  ("10:00", "10:00 AM"), ("11:00", "11:00 AM"),
+    ("11:00", "11:00 AM"),
     ("12:00", "12:00 PM"), ("13:00", "1:00 PM"),  ("14:00", "2:00 PM"),
     ("15:00", "3:00 PM"),  ("16:00", "4:00 PM"),  ("17:00", "5:00 PM"),
     ("18:00", "6:00 PM"),  ("19:00", "7:00 PM"),  ("20:00", "8:00 PM"),
     ("21:00", "9:00 PM"),
 ]
+
+
+def parse_custom_time(value):
+    """Parse a user-supplied time string like '1:37 PM' or '13:37'. Returns a time object or None."""
+    value = value.strip()
+    if not value:
+        return None
+    for fmt in ("%I:%M %p", "%H:%M", "%I:%M%p"):
+        try:
+            return dt_datetime.strptime(value.upper(), fmt).time()
+        except ValueError:
+            continue
+    raise forms.ValidationError("Enter a time like '1:37 PM' or '13:37'.")
 
 
 class MentorRegistrationForm(forms.ModelForm):
@@ -177,6 +191,15 @@ class AddSlotsForm(forms.Form):
         choices=TIME_OPTIONS,
         widget=forms.CheckboxSelectMultiple,
         label="Available times (15-min sessions)",
+        required=False,
+    )
+    custom_time = forms.CharField(
+        required=False,
+        label="Custom time",
+        widget=forms.TextInput(attrs={
+            "class": "form-control form-control-sm",
+            "placeholder": "e.g. 1:37 PM or 13:37",
+        }),
     )
 
     def clean_date(self):
@@ -184,6 +207,15 @@ class AddSlotsForm(forms.Form):
         if date < timezone.now().date():
             raise forms.ValidationError("Please choose a future date.")
         return date
+
+    def clean_custom_time(self):
+        return parse_custom_time(self.cleaned_data.get("custom_time", ""))
+
+    def clean(self):
+        cleaned = super().clean()
+        if not cleaned.get("times") and not cleaned.get("custom_time"):
+            raise forms.ValidationError("Select at least one time or enter a custom time.")
+        return cleaned
 
 
 class AddWeekSlotsForm(forms.Form):
@@ -201,7 +233,25 @@ class AddWeekSlotsForm(forms.Form):
         choices=TIME_OPTIONS,
         widget=forms.CheckboxSelectMultiple,
         label="Times available each selected day",
+        required=False,
     )
+    custom_time = forms.CharField(
+        required=False,
+        label="Custom time",
+        widget=forms.TextInput(attrs={
+            "class": "form-control form-control-sm",
+            "placeholder": "e.g. 1:37 PM or 13:37",
+        }),
+    )
+
+    def clean_custom_time(self):
+        return parse_custom_time(self.cleaned_data.get("custom_time", ""))
+
+    def clean(self):
+        cleaned = super().clean()
+        if not cleaned.get("times") and not cleaned.get("custom_time"):
+            raise forms.ValidationError("Select at least one time or enter a custom time.")
+        return cleaned
 
     def clean_week_start(self):
         from datetime import timedelta
