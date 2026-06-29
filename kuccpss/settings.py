@@ -292,8 +292,9 @@ AUTH_USER_MODEL = "accounts.User"
 LOGIN_REDIRECT_URL = "/accounts/dashboard/"
 LOGOUT_REDIRECT_URL = "/accounts/login/"
 
-# Session: 90-day max (individual views call set_expiry() to match user type)
 SESSION_COOKIE_AGE = 90 * 24 * 3600  # 90 days
+SESSION_EXPIRE_AT_BROWSER_CLOSE = False  # persist cookie after browser closes
+SESSION_SAVE_EVERY_REQUEST = True  # slide the 90-day window on each request
 
 AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
