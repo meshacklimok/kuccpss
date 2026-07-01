@@ -77,8 +77,8 @@
       </svg>
     </div>
 
-    <h1 class="gconfirm-title">Sign in to CareerNext</h1>
-    <p class="gconfirm-sub">You're about to continue with your <strong>Google account</strong>.</p>
+    <h1 class="gconfirm-title">Redirecting to Google&hellip;</h1>
+    <p class="gconfirm-sub">Taking you to your <strong>Google account</strong> chooser.</p>
 
     <div class="gconfirm-scope">
       <i class="fas fa-shield-halved"></i>
@@ -87,12 +87,12 @@
 
     <div class="gconfirm-actions">
       <a href="{% url 'accounts:login' %}" class="btn-gconfirm-secondary">Cancel</a>
-      <form method="post" action="{{ process_url }}">
+      <form method="post" action="{{ process_url }}" id="gconfirm-form">
         {% csrf_token %}
         {% if request.GET.next %}
         <input type="hidden" name="next" value="{{ request.GET.next }}">
         {% endif %}
-        <button type="submit" class="btn-gconfirm-primary">Continue</button>
+        <button type="submit" class="btn-gconfirm-primary" id="gconfirm-submit">Continue</button>
       </form>
     </div>
 
@@ -102,4 +102,8 @@
     </div>
   </div>
 </div>
+<script>
+document.getElementById('gconfirm-submit').textContent = 'Redirecting…';
+document.getElementById('gconfirm-form').submit();
+</script>
 {% endblock %}
