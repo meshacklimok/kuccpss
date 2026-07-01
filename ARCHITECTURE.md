@@ -141,7 +141,7 @@ Results rendered with admission_chance: VERY HIGH / HIGH / MEDIUM / LOW
 - `CareerInsight` — demand level, salary, career fields per course
 - `CareerProfile` — career title, slug, duties, skills, educational_pathway, salary, demand_level, career_tags, M2M to courses.Course
 - `QuizQuestion`, `QuizOption`, `QuizSubmission`, `QuizAnswer` — career assessment quiz; options carry career_tags used for scoring
-- `CareerConfig` — singleton admin config: ai_free_message_limit, ai_paid_message_limit, ai_free_reset_days, session price, payout rate, rate-limiting controls, Tawk.to enabled flag, mentor_signup_enabled
+- `CareerConfig` — singleton admin config: ai_free_message_limit, ai_paid_message_limit, ai_free_reset_days, `ai_model_name` (OpenAI model used by ALL AI features — chat/insight/quiz summary, default `gpt-4o-mini`, editable without a deploy), `ai_temperature` (0.0–2.0 sampling temperature, default 0.6, applied to all AI calls), session price, payout rate, rate-limiting controls, Tawk.to enabled flag, mentor_signup_enabled
 - `AIKnowledgeEntry` — admin-editable knowledge base entries injected into the AI system prompt
 - `JobMarketData` — per-career demand level, average salary range, top sectors (Kenyan data)
 - `AICallLog` — per-user log of AI API calls; used for rate limiting and cost tracking
@@ -167,19 +167,35 @@ Results rendered with admission_chance: VERY HIGH / HIGH / MEDIUM / LOW
 - `Transaction` — mpesa_ref, phone_number, raw_response JSONField
 
 ### analytics
-- `SearchLog` — per-search log: query, result_count, user (nullable), timestamp
-- `ViewLog` — per-page view: content_type (course/institution/career), object_id, user (nullable), IP, timestamp
-- `DownloadLog` — per-download: resource type, object_id, user (nullable)
-- `EventLog` — generic named event (e.g. "pathway_selected", "payment_initiated") with JSON properties
-- `CareerEngineLog` — per career engine run: pathway, grade summary, match count, duration
+- `SearchLog` — per-search log: query, result_count, user (nullable), session_key, timestamp
+- `ViewLog` — per-page view: content_type (course/institution/career_profile/resource/article/mentor_profile), object_id, object_name, user (nullable), session_key, timestamp
+- `DownloadLog` — per-download: content_type (resource_pdf/course_pdf/institution_pdf/career_pdf/cluster_pdf), object_id, object_name, user (nullable)
+- `EventLog` — generic named event (e.g. "calculator_run", "calculator_share", "ai_chat_message", "ai_chat_paywall_hit") with JSON properties; ip captured
+- `CareerEngineLog` — per career engine run: pathway, result_count, mean_grade, user (nullable), session_key
+- `PageViewLog` — auto-recorded by `PageTrackingMiddleware` for every non-static, non-bot page hit: path, method, status_code, response_time_ms, referrer, device (mobile/tablet/desktop/bot/unknown), user, session_key, ip
+- `UserActionLog` — explicit user-initiated actions (login, login_failed, logout, shortlist_add/remove, compare_add/remove, profile_update, share, ai_chat, quiz_start/complete, calculator_run, referral_click, email_verified, password_reset); JSON properties
+- `SessionLog` — one row per browser session; created on first hit, `last_seen_at` updated on every hit + JS heartbeat (every 60s via `/analytics/heartbeat/`); tracks page_count, device, country/region (GeoIP2); `duration_seconds` property drives time-on-site metrics
+- `PWAInstallLog` — records PWA install events from the browser (`/analytics/pwa-install/`); platform (android/ios/desktop/unknown)
+
+`analytics/geo.py` wraps a MaxMind GeoLite2-City `.mmdb` database (path via `GEOIP_PATH` setting) to resolve IP → (country, region); falls back silently to `('', '')` if the database file is absent. `analytics/utils.py` provides `log_search/log_view/log_download/log_career_engine/log_event/log_action/track_posthog` helpers — all wrapped in try/except so logging never breaks the main request.
 
 ### resources
-- `SiteSetting` — key/value store for admin-configurable site settings (e.g. admin_email)
-- `FAQItem` — question + answer; category; is_published; display_order
-- `SuccessStory` — student success story: name, pathway, institution, grade, quote, is_published
-- `ResourceCategory` — grouping for resources
-- `Resource` — PDF/video/link; is_free flag; download_count
-- `Article` — long-form content; is_published flag; tags; is_featured
+- `SiteSetting` — key/value store for admin-configurable site settings (key, label, value, setting_type, group, help_note); `SiteSetting.get(key, default)` classmethod is the read helper used throughout the codebase (e.g. `admin_email`, `courses_per_page`, `mentors_per_page`, `trends_cache_ttl` — the "performance" group)
+- `FAQItem` — question + answer; category (general/cluster/courses/kuccps/account); order; is_active
+- `SuccessStory` — student success story: name, county, work_location, kcse_grade, quote, course_name, institution, pathway, year, avatar colours; auto-fills `initials` from name on save; is_active
+- `ResourceCategory` — grouping for resources; auto-slug
+- `Resource` — PDF/video/link; is_free flag; download_count; auto-slug with collision suffix
+- `Article` — long-form content; auto-slug; tags (comma-separated); is_published; featured; `reading_time` property (~200 words/min)
+- `Announcement` — admin-published site-wide banner: title, body, link_url/link_label, kind (info/success/warning/danger), is_active, starts_at/ends_at window
+- `SiteFeedback` — user-submitted feedback: feedback_type (bug/suggestion/general/content), message, email (optional), page_url, status (new/reviewing/resolved/dismissed), admin_note
+
+## Admin-Tunable Performance Settings
+Three `SiteSetting` rows (group=`performance`, seeded by `resources/migrations/0007_seed_performance_settings.py`) let staff tune list sizes/caching from `/cn-staff/` without a deploy:
+- `courses_per_page` (default 24) — read by `courses/views.py` `_courses_per_page()`; paginates course type/category listings
+- `mentors_per_page` (default 18) — read by `mentorship/views.py` `_mentors_per_page()`; paginates the mentor directory
+- `trends_cache_ttl` (default 3600s) — read by `courses/trends.py` `_cache_ttl()`; controls how long the homepage Course Spotlight & Trends section (`CACHE_KEY = 'homepage_trends_v1'`) is cached
+
+The public homepage (`accounts/views.py public_home_view`) also caches its static context (success stories, institution promos, recent articles) for 5 minutes under `public_home_static_v1` via `_get_home_static_context()` — identical for every visitor, so a single cache entry serves all traffic.
 
 ## URL Structure
 ```
@@ -240,15 +256,17 @@ Login
 SecurityMiddleware
 WhiteNoiseMiddleware       ← must be near top to serve static files
 GracefulErrorMiddleware    ← catches unhandled exceptions, returns friendly response
-HeavyEndpointRateLimitMiddleware ← rate-limits /career/ and /clusterpoints/ heavy views
-SlowRequestLogMiddleware   ← logs requests over threshold to analytics.EventLog
+HeavyEndpointRateLimitMiddleware ← IP-based: 20 POST/10min on /clusterpoints/, 30 GET/10min on /clusterpoints/eligible-courses/, 10 POST/10min on /career/; 429 + Retry-After on breach
+SlowRequestLogMiddleware   ← logs requests over 1.5s threshold to analytics.EventLog
+DisableHttp3Middleware     ← sets alt-svc: clear on every response
 SessionMiddleware
 CommonMiddleware
 CsrfViewMiddleware
 AuthenticationMiddleware
+PageTrackingMiddleware     ← records every non-static, non-bot page hit to analytics.PageViewLog (path, status, timing, device); must come after Session+Auth; skips /static/, /media/, /favicon, /robots, /sitemap, and analytics' own AJAX endpoints
 MessageMiddleware
 XFrameOptionsMiddleware
 AccountMiddleware          ← allauth
-ReferralMiddleware         ← tracks referral source to User model
-DisableHttp3Middleware     ← sets alt-svc: clear on every response
+ReferralMiddleware         ← captures ?ref=CODE from URL into session for attribution on registration (validates against accounts.Referral, cached 5 min)
 ```
+Defined in `kuccpss/middleware.py` (project-level) except allauth's `AccountMiddleware`.

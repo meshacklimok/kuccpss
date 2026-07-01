@@ -559,8 +559,10 @@ body.dark .helb-criteria-item    { background: rgba(22,163,74,0.12); border-colo
       <i class="fas fa-bell" style="color:#d97706;margin-top:2px;flex-shrink:0;font-size:0.9rem;"></i>
       <div class="flex-grow-1" style="min-width:0;">
         {% for notif in notifications|slice:":2" %}
-        <div class="small text-dark {% if not forloop.last %}mb-1{% endif %}"
-             style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ notif.message }}</div>
+        <div class="small text-dark dash-notif-item {% if not forloop.last %}mb-1{% endif %}"
+             data-notif-id="{{ notif.id }}"
+             data-link="{{ notif.link }}"
+             style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer;">{{ notif.message }}</div>
         {% endfor %}
         {% if unread_count > 2 %}
         <a href="{% url 'accounts:notifications' %}" class="small text-muted">
@@ -2718,5 +2720,22 @@ Tawk_API.onLoad = function () {
 })();
 {% endif %}
 
+document.querySelectorAll('.dash-notif-item').forEach(function (item) {
+  item.addEventListener('click', function () {
+    var id = this.dataset.notifId;
+    var link = this.dataset.link;
+    var csrf = (document.cookie.match(/csrftoken=([^;]+)/) || [])[1] || '';
+    fetch('/accounts/notifications/' + id + '/read/', {
+      method: 'POST',
+      headers: { 'X-CSRFToken': csrf },
+    }).finally(function () {
+      if (link) {
+        window.location.href = link;
+      } else {
+        window.location.href = "{% url 'accounts:notifications' %}";
+      }
+    });
+  });
+});
 </script>
 {% endblock %}

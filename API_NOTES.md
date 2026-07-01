@@ -9,6 +9,7 @@
 - `career/engine.py` — dispatches to real pathway functions (`match_degree_courses`, `match_diploma_courses`, etc.); no longer returns hardcoded stubs
 - Document scanner (`degree_upload` view in `career/views.py`) — GPT-4o vision; accepts JPG/PNG/PDF; detects KCSE slips vs cluster point docs; extracts grades with subject alias resolution; returns structured JSON. Falls back to manual entry if key is absent.
 - CareerNext AI chat — in-career-engine AI chat with full KUCCPS system prompt, `AIChatCredit` paywall, `AIKnowledgeEntry` knowledge base, per-user rate limiting
+- **Model/temperature are now admin-configurable, not hardcoded.** `CareerConfig.ai_model_name` (default `gpt-4o-mini`) and `CareerConfig.ai_temperature` (default `0.6`) drive every CareerNext AI call — `_generate_quiz_ai_summary`, `ajax_ai_insight`, `ajax_ai_chat` in `career/views.py`, and `generate_ai_recommendation()` in `career/models.py` all call `CareerConfig.get()` rather than hardcoding the model string. Change the model or temperature from `/cn-staff/` with no deploy needed.
 
 **What is still stubbed:**
 - `generate_ai_recommendation()` in `career/engine.py` — returns placeholder text; the full results AI recommendation (not the chat) is not yet live

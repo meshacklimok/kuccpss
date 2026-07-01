@@ -416,6 +416,12 @@ def export_cluster_pdf(request):
         kcse_result.cluster_results.select_related('cluster').order_by('cluster__number')  # type: ignore[attr-defined]
     )
 
+    try:
+        from analytics.utils import log_download as _log_download
+        _log_download(request, 'cluster_pdf', object_id=kcse_result.pk)
+    except Exception:
+        pass
+
     response = HttpResponse(content_type='application/pdf')
     response['Content-Disposition'] = 'attachment; filename="careernext_cluster_points_quick.pdf"'
 
@@ -633,6 +639,12 @@ def export_full_results_pdf(request):
                       key=lambda x: x['gap'])          # smallest positive gap first (+0.1 → +40)
     nearly   = sorted([r for r in eligible_list if r['status'] == 'nearly'],
                       key=lambda x: x['gap'], reverse=True)  # closest to cutoff first (0 → -50)
+
+    try:
+        from analytics.utils import log_download as _log_download
+        _log_download(request, 'career_pdf', object_id=kcse_result.pk)
+    except Exception:
+        pass
 
     response = HttpResponse(content_type='application/pdf')
     response['Content-Disposition'] = 'attachment; filename="careernext_full_report.pdf"'
@@ -1183,6 +1195,11 @@ def share_calculator_create(request):
             top_courses_json=top_courses_json,
         )
         share_url = request.build_absolute_uri(sr.get_absolute_url())
+        try:
+            from analytics.utils import log_event as _log_event
+            _log_event(request, 'calculator_share', {'pathway': 'Calculator'})
+        except Exception:
+            pass
         return JsonResponse({'ok': True, 'url': share_url})
     except Exception as exc:
         import logging

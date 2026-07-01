@@ -659,12 +659,13 @@ def generate_ai_recommendation(matches: List[StudentCourseMatch], user=None) -> 
                 "Name their top 2 specific courses. Tell them what their match scores mean. "
                 "Give one actionable next step. Address them as 'you'. No bullet points. Max 100 words."
             )
+            cfg = CareerConfig.get()
             client = OpenAI(api_key=api_key)
             resp = client.chat.completions.create(
-                model='gpt-4o-mini',
+                model=cfg.ai_model_name,
                 messages=[{'role': 'user', 'content': prompt}],
                 max_tokens=200,
-                temperature=0.6,
+                temperature=cfg.ai_temperature,
             )
             text = resp.choices[0].message.content.strip()
         except Exception as exc:
@@ -776,6 +777,21 @@ class CareerConfig(models.Model):
             "Prompt sent to GPT-4o-mini for the quiz results summary. "
             "Use {tag_str} for interest tags and {careers_str} for matched careers. "
             "Leave blank to use the default prompt."
+        ),
+    )
+    ai_model_name = models.CharField(
+        max_length=50,
+        default='gpt-4o-mini',
+        help_text=(
+            "OpenAI model used for all CareerNext AI features (chat, insight, quiz summary). "
+            "Change this to switch models without a code deploy, e.g. 'gpt-4o' or 'gpt-4o-mini'."
+        ),
+    )
+    ai_temperature = models.FloatField(
+        default=0.6,
+        help_text=(
+            "Sampling temperature (0.0–2.0) applied to all CareerNext AI calls. "
+            "Lower = more focused/deterministic, higher = more creative/varied."
         ),
     )
 

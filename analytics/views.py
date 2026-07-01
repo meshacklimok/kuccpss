@@ -1193,3 +1193,353 @@ def live_feed_json(request):
                       'sub': '', 'ts': e['created_at'].strftime('%H:%M:%S')})
     items.sort(key=lambda x: x['ts'], reverse=True)
     return JsonResponse({'items': items[:30]})
+
+
+GRADE_ORDER = ['A', 'A-', 'B+', 'B', 'B-', 'C+', 'C', 'C-', 'D+', 'D', 'D-', 'E']
+
+
+@staff_only
+def calculator_analytics(request):
+    """Cluster-points calculator usage: runs, exports, shares, grade & cluster breakdowns."""
+    from .models import EventLog, DownloadLog
+    from clusterpoints.models import ClusterCalculationResult
+
+    days  = _parse_days(request)
+    today = date.today()
+    ago   = today - timedelta(days=days)
+    prev_ago = ago - timedelta(days=days)
+
+    runs_qs = EventLog.objects.filter(name='calculator_run', created_at__date__gte=ago)
+    total_runs = runs_qs.count()
+    prev_runs = EventLog.objects.filter(
+        name='calculator_run', created_at__date__gte=prev_ago, created_at__date__lt=ago
+    ).count()
+    runs_trend = _trend(total_runs, prev_runs)
+
+    guest_runs = runs_qs.filter(properties__auth=False).count()
+    auth_runs = runs_qs.filter(properties__auth=True).count()
+
+    pdf_exports = DownloadLog.objects.filter(
+        content_type='cluster_pdf', created_at__date__gte=ago
+    ).count()
+    shares = EventLog.objects.filter(name='calculator_share', created_at__date__gte=ago).count()
+
+    # Daily run trend
+    date_labels = _date_labels(days, ago)
+    runs_by_day = list(
+        runs_qs.annotate(day=TruncDate('created_at')).values('day').annotate(n=Count('id')).order_by('day')
+    )
+    runs_series = _fill_series(runs_by_day, date_labels)
+
+    # Mean grade distribution
+    grade_raw = list(
+        runs_qs.values('properties__mean_grade').annotate(n=Count('id'))
+    )
+    grade_map = {r['properties__mean_grade']: r['n'] for r in grade_raw if r['properties__mean_grade']}
+    grade_dist = [{'grade': g, 'n': grade_map.get(g, 0)} for g in GRADE_ORDER if g in grade_map]
+
+    # Average cluster points per cluster
+    cluster_stats = list(
+        ClusterCalculationResult.objects.filter(created_at__date__gte=ago)
+        .values('cluster__name', 'cluster__number')
+        .annotate(avg_points=Avg('cluster_points'), n=Count('id'))
+        .order_by('-avg_points')
+    )
+    strongest_clusters = cluster_stats[:10]
+    weakest_clusters = sorted(cluster_stats, key=lambda r: r['avg_points'])[:10]
+
+    # Pathway recommendation split — same thresholds as clusterpoints/views.py:_pathway_recommendation
+    pathway_buckets = {'degree': 0, 'diploma': 0, 'kmtc_tvet': 0, 'certificate': 0}
+    for tp in runs_qs.values_list('properties__total_points', flat=True):
+        if tp is None:
+            continue
+        try:
+            tp = float(tp)
+        except (TypeError, ValueError):
+            continue
+        if tp >= 60:
+            pathway_buckets['degree'] += 1
+        elif tp >= 46:
+            pathway_buckets['diploma'] += 1
+        elif tp >= 32:
+            pathway_buckets['kmtc_tvet'] += 1
+        else:
+            pathway_buckets['certificate'] += 1
+
+    context = {
+        'days': days, 'day_options': [1, 7, 30, 90, 180, 365],
+        'total_runs': total_runs, 'runs_trend': runs_trend,
+        'guest_runs': guest_runs, 'auth_runs': auth_runs,
+        'pdf_exports': pdf_exports, 'shares': shares,
+        'grade_dist': grade_dist,
+        'strongest_clusters': strongest_clusters,
+        'weakest_clusters': weakest_clusters,
+        'pathway_buckets': pathway_buckets,
+        'chart_run_labels': json.dumps(date_labels),
+        'chart_run_data': json.dumps(runs_series),
+        'chart_grade_labels': json.dumps([r['grade'] for r in grade_dist]),
+        'chart_grade_data': json.dumps([r['n'] for r in grade_dist]),
+        'chart_pathway_labels': json.dumps(['Degree', 'Diploma', 'KMTC/TVET', 'Certificate']),
+        'chart_pathway_data': json.dumps([
+            pathway_buckets['degree'], pathway_buckets['diploma'],
+            pathway_buckets['kmtc_tvet'], pathway_buckets['certificate'],
+        ]),
+    }
+    return render(request, 'analytics/calculator.html', context)
+
+
+@staff_only
+def conversion_analytics(request):
+    """Course discovery → shortlist conversion: funnel, top/zero-converting courses, institutions."""
+    from .models import ViewLog
+    from accounts.models import SavedCourse
+    from courses.models import Course
+
+    days  = _parse_days(request)
+    today = date.today()
+    ago   = today - timedelta(days=days)
+
+    course_views_qs = ViewLog.objects.filter(content_type='course', created_at__date__gte=ago)
+    total_views = course_views_qs.count()
+    total_saves = SavedCourse.objects.filter(saved_at__date__gte=ago).count()
+
+    funnel_max = max(total_views, total_saves, 1)
+    funnel = [
+        {'label': 'Course Views', 'n': total_views, 'pct': round(total_views / funnel_max * 100), 'icon': '👁'},
+        {'label': 'Shortlisted', 'n': total_saves, 'pct': round(total_saves / funnel_max * 100), 'icon': '❤️'},
+    ]
+    conversion_pct = round(total_saves / max(total_views, 1) * 100, 1)
+
+    # Per-course view counts (object_id = Course.pk)
+    view_counts = list(
+        course_views_qs.values('object_id').annotate(n=Count('id')).order_by('-n')
+    )
+    view_map = {r['object_id']: r['n'] for r in view_counts}
+    save_counts = list(
+        SavedCourse.objects.filter(saved_at__date__gte=ago).values('course_id').annotate(n=Count('id'))
+    )
+    save_map = {r['course_id']: r['n'] for r in save_counts}
+
+    course_ids = set(view_map.keys()) | set(save_map.keys())
+    courses_by_id = {
+        c.pk: c for c in Course.objects.filter(id__in=course_ids).select_related('course_type')
+    }
+
+    top_converting = []
+    zero_conversion = []
+    for cid, views in view_map.items():
+        course = courses_by_id.get(cid)
+        if not course:
+            continue
+        saves = save_map.get(cid, 0)
+        row = {
+            'course': course, 'views': views, 'saves': saves,
+            'conv_pct': round(saves / views * 100, 1) if views else 0,
+        }
+        if views >= 5:
+            top_converting.append(row)
+        if views >= 10 and saves == 0:
+            zero_conversion.append(row)
+    top_converting.sort(key=lambda r: -r['conv_pct'])
+    zero_conversion.sort(key=lambda r: -r['views'])
+
+    # Course-type breakdown
+    type_views = list(
+        course_views_qs.values('object_id').annotate(n=Count('id'))
+    )
+    type_view_totals: dict[str, int] = {}
+    type_save_totals: dict[str, int] = {}
+    for r in type_views:
+        c = courses_by_id.get(r['object_id'])
+        if c and c.course_type:
+            type_view_totals[c.course_type.name] = type_view_totals.get(c.course_type.name, 0) + r['n']
+    for cid, saves in save_map.items():
+        c = courses_by_id.get(cid)
+        if c and c.course_type:
+            type_save_totals[c.course_type.name] = type_save_totals.get(c.course_type.name, 0) + saves
+    type_breakdown = sorted(
+        [{'type': t, 'views': v, 'saves': type_save_totals.get(t, 0)} for t, v in type_view_totals.items()],
+        key=lambda r: -r['views'],
+    )
+
+    # Top institutions by course views
+    inst_totals: dict[str, int] = {}
+    for cid, views in view_map.items():
+        course = courses_by_id.get(cid)
+        if not course:
+            continue
+        for inst_name in course.offerings.values_list('institution__name', flat=True):
+            inst_totals[inst_name] = inst_totals.get(inst_name, 0) + views
+    top_institutions = sorted(
+        [{'institution': n, 'views': v} for n, v in inst_totals.items()], key=lambda r: -r['views']
+    )[:15]
+
+    context = {
+        'days': days, 'day_options': [1, 7, 30, 90, 180, 365],
+        'total_views': total_views, 'total_saves': total_saves, 'conversion_pct': conversion_pct,
+        'funnel': funnel,
+        'top_converting': top_converting[:20],
+        'zero_conversion': zero_conversion[:20],
+        'type_breakdown': type_breakdown,
+        'top_institutions': top_institutions,
+        'chart_type_labels': json.dumps([r['type'] for r in type_breakdown]),
+        'chart_type_views': json.dumps([r['views'] for r in type_breakdown]),
+        'chart_type_saves': json.dumps([r['saves'] for r in type_breakdown]),
+    }
+    return render(request, 'analytics/conversion.html', context)
+
+
+@staff_only
+def retention_analytics(request):
+    """Weekly cohort retention grid + returning/new visitor KPIs."""
+    from .models import SessionLog
+    from accounts.models import User
+
+    days  = _parse_days(request)
+    today = date.today()
+    ago   = today - timedelta(days=days)
+
+    # Returning vs new (reused from insights_dashboard)
+    active_sessions = SessionLog.objects.filter(created_at__date__gte=ago, user__isnull=False)
+    prior_user_ids  = set(
+        SessionLog.objects.filter(created_at__date__lt=ago, user__isnull=False)
+        .values_list('user_id', flat=True)
+    )
+    active_user_ids = set(active_sessions.values_list('user_id', flat=True))
+    returning_users  = len(active_user_ids & prior_user_ids)
+    new_users_active = len(active_user_ids - prior_user_ids)
+    total_active     = returning_users + new_users_active
+    returning_pct    = round(returning_users / max(total_active, 1) * 100)
+    sessions_per_user = round(
+        active_sessions.count() / max(len(active_user_ids), 1), 1
+    )
+
+    # Weekly cohort grid — cap at 12 weeks
+    WEEKS = 12
+    cohort_start = today - timedelta(weeks=WEEKS)
+    cohorts = User.objects.filter(created_at__date__gte=cohort_start).values('id', 'created_at')
+
+    def _week_of(dt):
+        return dt.isocalendar()[1], dt.isocalendar()[0]
+
+    cohort_users: dict[tuple, list] = {}
+    for u in cohorts:
+        wk = (u['created_at'].isocalendar()[0], u['created_at'].isocalendar()[1])
+        cohort_users.setdefault(wk, []).append(u['id'])
+
+    active_by_user_week: dict[int, set] = {}
+    sessions = SessionLog.objects.filter(
+        created_at__date__gte=cohort_start, user__isnull=False
+    ).values_list('user_id', 'created_at')
+    for uid, dt in sessions:
+        wk = (dt.isocalendar()[0], dt.isocalendar()[1])
+        active_by_user_week.setdefault(uid, set()).add(wk)
+
+    def _heat_level(v, mx):
+        if v == 0: return 0
+        frac = v / mx
+        if frac <= 0.25: return 1
+        if frac <= 0.50: return 2
+        if frac <= 0.75: return 3
+        return 4
+
+    sorted_cohort_weeks = sorted(cohort_users.keys())
+    cohort_grid = []
+    for (yr, wk) in sorted_cohort_weeks:
+        users = cohort_users[(yr, wk)]
+        n_users = len(users)
+        row = {'label': f'{yr}-W{wk:02d}', 'n_users': n_users, 'cells': []}
+        # week offsets 0..min(WEEKS, weeks since cohort started)
+        cohort_monday = date.fromisocalendar(yr, wk, 1)
+        max_offset = min(WEEKS, (today - cohort_monday).days // 7)
+        for offset in range(max_offset + 1):
+            target_date = cohort_monday + timedelta(weeks=offset)
+            t_yr, t_wk, _ = target_date.isocalendar()
+            active_n = sum(1 for uid in users if (t_yr, t_wk) in active_by_user_week.get(uid, set()))
+            pct = round(active_n / max(n_users, 1) * 100)
+            row['cells'].append({'pct': pct, 'level': _heat_level(pct, 100)})
+        cohort_grid.append(row)
+
+    context = {
+        'days': days, 'day_options': [1, 7, 30, 90, 180, 365],
+        'returning_users': returning_users, 'new_users_active': new_users_active,
+        'total_active': total_active, 'returning_pct': returning_pct,
+        'sessions_per_user': sessions_per_user,
+        'cohort_grid': cohort_grid,
+        'week_offsets': list(range(WEEKS + 1)),
+        'chart_ret_labels': json.dumps(['Returning', 'New']),
+        'chart_ret_data': json.dumps([returning_users, new_users_active]),
+    }
+    return render(request, 'analytics/retention.html', context)
+
+
+@staff_only
+def ai_chat_analytics(request):
+    """CareerNext AI chat usage: volume, free/paid split, KB hit rate, paywall hits."""
+    from .models import EventLog
+
+    days  = _parse_days(request)
+    today = date.today()
+    ago   = today - timedelta(days=days)
+    prev_ago = ago - timedelta(days=days)
+
+    msgs_qs = EventLog.objects.filter(name='ai_chat_message', created_at__date__gte=ago)
+    total_messages = msgs_qs.count()
+    prev_messages = EventLog.objects.filter(
+        name='ai_chat_message', created_at__date__gte=prev_ago, created_at__date__lt=ago
+    ).count()
+    messages_trend = _trend(total_messages, prev_messages)
+
+    active_users = msgs_qs.filter(user__isnull=False).values('user_id').distinct().count()
+    avg_per_user = round(total_messages / max(active_users, 1), 1)
+
+    paid_messages = msgs_qs.filter(properties__is_paid=True).count()
+    free_messages = total_messages - paid_messages
+    kb_hits = msgs_qs.filter(properties__kb_hit=True).count()
+    kb_hit_rate = round(kb_hits / max(total_messages, 1) * 100, 1)
+
+    paywall_hits = EventLog.objects.filter(
+        name='ai_chat_paywall_hit', created_at__date__gte=ago
+    ).count()
+
+    # Daily message volume
+    date_labels = _date_labels(days, ago)
+    msgs_by_day = list(
+        msgs_qs.annotate(day=TruncDate('created_at')).values('day').annotate(n=Count('id')).order_by('day')
+    )
+    msgs_series = _fill_series(msgs_by_day, date_labels)
+
+    # AIChatCredit summary
+    try:
+        from career.models import AIChatCredit
+        credit_agg = AIChatCredit.objects.aggregate(
+            total_free_used=Sum('free_messages_used'),
+            total_paid_ever=Sum('total_paid_ever'),
+        )
+        total_free_used = credit_agg['total_free_used'] or 0
+        total_paid_ever = credit_agg['total_paid_ever'] or 0
+    except Exception:
+        total_free_used = total_paid_ever = 0
+
+    try:
+        from payments.models import Payment
+        ai_revenue = Payment.objects.filter(
+            feature='ai_chat_access', status='completed', created_at__date__gte=ago
+        ).aggregate(total=Sum('amount'))['total'] or 0
+    except Exception:
+        ai_revenue = 0
+
+    context = {
+        'days': days, 'day_options': [1, 7, 30, 90, 180, 365],
+        'total_messages': total_messages, 'messages_trend': messages_trend,
+        'active_users': active_users, 'avg_per_user': avg_per_user,
+        'paid_messages': paid_messages, 'free_messages': free_messages,
+        'kb_hit_rate': kb_hit_rate, 'paywall_hits': paywall_hits,
+        'total_free_used': total_free_used, 'total_paid_ever': total_paid_ever,
+        'ai_revenue': ai_revenue,
+        'chart_msg_labels': json.dumps(date_labels),
+        'chart_msg_data': json.dumps(msgs_series),
+        'chart_split_labels': json.dumps(['Free', 'Paid']),
+        'chart_split_data': json.dumps([free_messages, paid_messages]),
+    }
+    return render(request, 'analytics/ai_chat.html', context)

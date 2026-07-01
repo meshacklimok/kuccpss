@@ -1163,21 +1163,36 @@ def public_home_view(request):
         if visits > 4:
             return redirect('accounts:dashboard')
 
-    from resources.models import SuccessStory
-    from institutions.models import InstitutionPromotion
     from courses.trends import get_trends_context
+
+    ctx = dict(_get_home_static_context())
+    ctx.update(get_trends_context())
+    return render(request, "accounts/home.html", ctx)
+
+
+def _get_home_static_context():
+    """Stories/promos/articles for the homepage — cached, identical for every visitor."""
+    from django.core.cache import cache
     from datetime import date as _date
 
-    stories = SuccessStory.objects.filter(is_active=True).order_by('order', 'id')
+    cache_key = "public_home_static_v1"
+    cached = cache.get(cache_key)
+    if cached is not None:
+        return cached
+
+    from resources.models import SuccessStory, Article as _HomeArticle
+    from institutions.models import InstitutionPromotion
+
+    stories = list(SuccessStory.objects.filter(is_active=True).order_by('order', 'id'))
 
     _today = _date.today()
-    _live = InstitutionPromotion.objects.filter(
+    _live = list(InstitutionPromotion.objects.filter(
         start_date__lte=_today, end_date__gte=_today
     ).select_related('institution', 'institution__institution_type').prefetch_related(
         'institution__offerings__course'
-    )
-    featured_promos    = list(_live.filter(tier='featured')[:4])
-    scholarship_alerts = list(_live.filter(tier='scholarship')[:4])
+    ))
+    featured_promos    = [p for p in _live if p.tier == 'featured'][:4]
+    scholarship_alerts = [p for p in _live if p.tier == 'scholarship'][:4]
 
     # Sample cluster preview bars for the hero card (static illustrative data)
     sample_clusters = [
@@ -1187,7 +1202,6 @@ def public_home_view(request):
         ("Cluster 12", 52, "#d97706"),
     ]
 
-    from resources.models import Article as _HomeArticle
     recent_articles = list(_HomeArticle.objects.filter(is_published=True).order_by('-featured', '-created_at')[:3])
 
     ctx = {
@@ -1197,8 +1211,8 @@ def public_home_view(request):
         "scholarship_alerts": scholarship_alerts,
         "recent_articles":    recent_articles,
     }
-    ctx.update(get_trends_context())
-    return render(request, "accounts/home.html", ctx)
+    cache.set(cache_key, ctx, 300)  # 5 min — promos are date-driven, keep reasonably fresh
+    return ctx
 
 
 def privacy_view(request):

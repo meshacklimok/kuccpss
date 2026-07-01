@@ -648,10 +648,10 @@ def _generate_quiz_ai_summary(tag_scores: dict, top_career_names: list) -> str:
         from openai import OpenAI
         client = OpenAI(api_key=api_key)
         resp = client.chat.completions.create(
-            model='gpt-4o-mini',
+            model=cfg.ai_model_name,
             messages=[{'role': 'user', 'content': prompt}],
             max_tokens=120,
-            temperature=0.7,
+            temperature=cfg.ai_temperature,
         )
         return (resp.choices[0].message.content or "").strip()
     except Exception as _e:
@@ -694,17 +694,69 @@ def _build_ai_db_context(request) -> str:
     """
     Returns a string of the student's actual course matches from the DB.
     Uses CareerSessionSnapshot for logged-in users, or a quick query for anonymous.
+    Falls back to DB (CareerSessionSnapshot, then ClusterCalculationResult) when session
+    is empty — e.g. after session expiry or on a new device.
     """
     pathway            = request.session.get('career_pathway', '')
     cluster_pts_single = float(request.session.get('career_cluster_pts_single', 0) or 0)
     mean_grade         = request.session.get('career_mean_grade', '')
-    score_str          = f"{cluster_pts_single:.1f}/48 cluster points" if pathway == 'Degree' else f"mean grade {mean_grade}"
 
-    lines      = [f"STUDENT: {pathway} pathway | Score: {score_str}"]
+    # For authenticated users with an empty session, load core fields from the latest snapshot
+    _snap_cache = None
+    if request.user.is_authenticated and (not pathway or not mean_grade):
+        try:
+            from accounts.models import CareerSessionSnapshot
+            _snap_cache = CareerSessionSnapshot.objects.filter(
+                user=request.user
+            ).order_by('-computed_at').first()
+            if _snap_cache:
+                if not pathway:
+                    pathway = _snap_cache.pathway
+                if not mean_grade:
+                    mean_grade = _snap_cache.mean_grade or ''
+                if not cluster_pts_single:
+                    cluster_pts_single = float(_snap_cache.aggregate_score or 0)
+        except Exception:
+            pass
+
+    score_str = f"{cluster_pts_single:.1f}/48 cluster points" if pathway == 'Degree' else f"mean grade {mean_grade}"
+
+    lines = [f"STUDENT: {pathway} pathway | Score: {score_str}"]
+
+    cluster_points_dict: dict = {}
 
     # Include all 20 cluster points so AI can evaluate any course correctly
     if pathway == 'Degree':
         cluster_points_dict = request.session.get('career_cluster_points', {})
+
+        # Session empty — try snapshot first, then ClusterCalculationResult
+        if not cluster_points_dict and request.user.is_authenticated:
+            try:
+                from accounts.models import CareerSessionSnapshot
+                snap_pts = _snap_cache or CareerSessionSnapshot.objects.filter(
+                    user=request.user, pathway='Degree'
+                ).order_by('-computed_at').first()
+                if snap_pts and snap_pts.cluster_points_json:
+                    cluster_points_dict = snap_pts.cluster_points_json
+            except Exception:
+                pass
+
+            if not cluster_points_dict:
+                try:
+                    from clusterpoints.models import ClusterCalculationResult
+                    seen: set = set()
+                    cluster_points_dict = {}
+                    for r in (ClusterCalculationResult.objects
+                              .filter(user=request.user)
+                              .select_related('cluster')
+                              .order_by('-created_at')):
+                        knum = r.cluster.kuccps_number if r.cluster else None
+                        if knum and knum not in seen:
+                            cluster_points_dict[str(knum)] = float(r.cluster_points)
+                            seen.add(knum)
+                except Exception:
+                    pass
+
         if cluster_points_dict:
             lines.append("\nSTUDENT'S CLUSTER POINTS (all 20 KUCCPS clusters):")
             for cnum in range(1, 21):
@@ -720,9 +772,13 @@ def _build_ai_db_context(request) -> str:
     if request.user.is_authenticated:
         try:
             from accounts.models import CareerSessionSnapshot
-            snap = CareerSessionSnapshot.objects.filter(
-                user=request.user, pathway=pathway
-            ).order_by('-computed_at').first()
+            snap = (
+                _snap_cache
+                if (_snap_cache and _snap_cache.pathway == pathway)
+                else CareerSessionSnapshot.objects.filter(
+                    user=request.user, pathway=pathway
+                ).order_by('-computed_at').first()
+            )
             if snap and snap.top_matches_json:
                 top_matches = snap.top_matches_json
                 lines.append(f"Total matches in database: {snap.total_matches}")
@@ -737,7 +793,8 @@ def _build_ai_db_context(request) -> str:
     if not top_matches:
         try:
             from courses.models import CourseOffering
-            cluster_points_dict = request.session.get('career_cluster_points', {})
+            if not cluster_points_dict:
+                cluster_points_dict = request.session.get('career_cluster_points', {})
             cfg = _get_career_config()
 
             if pathway == 'Degree':
@@ -870,10 +927,10 @@ def ajax_ai_insight(request):
 
         client = OpenAI(api_key=api_key)
         resp = client.chat.completions.create(
-            model='gpt-4o-mini',
+            model=cfg.ai_model_name,
             messages=[{'role': 'user', 'content': prompt}],
             max_tokens=250,
-            temperature=0.5,
+            temperature=cfg.ai_temperature,
         )
         text = (resp.choices[0].message.content or "").strip()
         return JsonResponse({"insight": text})
@@ -997,6 +1054,11 @@ def ajax_ai_chat(request):
             paid_topup = getattr(cfg, 'ai_paid_message_limit', 200)
             from payments.services import price_for_feature as _pfp
             price = _pfp('ai_chat_access')
+            try:
+                from analytics.utils import log_event as _log_event
+                _log_event(request, 'ai_chat_paywall_hit', {'free_limit': free_limit})
+            except Exception:
+                pass
             return JsonResponse({
                 "error": (
                     f"You have used all {free_limit} free AI messages. "
@@ -1361,12 +1423,27 @@ def ajax_ai_chat(request):
         from openai import OpenAI
         client = OpenAI(api_key=api_key)
         resp = client.chat.completions.create(
-            model='gpt-4o-mini',
+            model=cfg.ai_model_name,
             messages=messages,  # type: ignore[arg-type]
             max_tokens=400,
-            temperature=0.4,
+            temperature=cfg.ai_temperature,
         )
         reply = (resp.choices[0].message.content or "").strip()
+        try:
+            from analytics.utils import log_event as _log_event
+            is_paid = False
+            if request.user.is_authenticated:
+                from .models import AIChatCredit
+                free_limit = getattr(cfg, 'ai_free_message_limit', 20)
+                credit = AIChatCredit.for_user(request.user)
+                is_paid = credit.free_messages_used >= free_limit
+            _log_event(request, 'ai_chat_message', {
+                'kb_hit': bool(kb_entries),
+                'is_paid': is_paid,
+                'message_len': len(user_message),
+            })
+        except Exception:
+            pass
         return JsonResponse({"reply": reply, "kb_used": len(kb_entries)})
 
     except Exception as e:
@@ -1532,6 +1609,8 @@ class _DefaultCareerCfg:
     stretch_min_diff     = -3.0
     safe_max_diff        = 8.0
     competitive_threshold = 40.0
+    ai_model_name        = 'gpt-4o-mini'
+    ai_temperature       = 0.6
 
 _career_cfg_cache: object = None
 _career_cfg_ts:    float  = 0.0
@@ -2427,7 +2506,7 @@ def degree_manual(request):
     # Course.cluster is set only for university/degree courses (see courses/models.py).
     cluster_ids = (
         Course.objects
-        .filter(cluster__isnull=False, courseoffering__isnull=False)
+        .filter(cluster__isnull=False, offerings__isnull=False)
         .values_list('cluster_id', flat=True)
         .distinct()
     )

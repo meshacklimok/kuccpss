@@ -1,0 +1,515 @@
+{% extends "base.html" %}
+{% block title %}{% block analytics_title %}Analytics{% endblock %} — CareerNext Staff{% endblock %}
+
+{% block extra_head %}
+<style>
+/* ════════════════════════════════════════════════════════════════════════
+   ANALYTICS SHARED DESIGN SYSTEM
+   All analytics pages extend this template.
+   Page-specific CSS goes in the extra_css block.
+════════════════════════════════════════════════════════════════════════ */
+
+/* ── Design tokens ── */
+:root {
+  --navy:      #1e3a8a;
+  --blue:      #2563eb; --blue-lt:   #eff6ff; --blue-bd: #bfdbfe;
+  --green:     #16a34a; --green-lt:  #f0fdf4; --green-bd:#bbf7d0;
+  --amber:     #d97706; --amber-lt:  #fffbeb; --amber-bd:#fde68a;
+  --red:       #dc2626; --red-lt:    #fef2f2; --red-bd:  #fecaca;
+  --purple:    #7c3aed; --purple-lt: #f5f3ff;
+  --teal:      #0891b2; --teal-lt:   #ecfeff;
+  --text:      #0f172a;
+  --muted:     #64748b;
+  --border:    #e2e8f0;
+  --bg:        #f1f5f9;
+  --card:      #ffffff;
+  --shadow:    0 1px 3px rgba(0,0,0,.06), 0 4px 16px rgba(30,58,138,.06);
+  --radius:    12px;
+  --sidebar-w: 220px;
+
+  /* Sidebar palette */
+  --sb-bg:      #0f172a;
+  --sb-hover:   #1e293b;
+  --sb-active:  #2563eb;
+  --sb-text:    #94a3b8;
+  --sb-border:  #1e293b;
+  --sb-section: #475569;
+}
+
+body { background: var(--bg); }
+
+/* ════════ SHELL LAYOUT ════════ */
+.an-shell {
+  display: flex;
+  min-height: calc(100vh - 60px);
+  background: var(--bg);
+}
+
+/* ════════ SIDEBAR ════════ */
+.an-sidebar {
+  width: var(--sidebar-w);
+  flex-shrink: 0;
+  background: var(--sb-bg);
+  display: flex;
+  flex-direction: column;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  z-index: 40;
+}
+.an-sidebar::-webkit-scrollbar { width: 3px; }
+.an-sidebar::-webkit-scrollbar-thumb { background: #334155; border-radius: 2px; }
+
+/* Brand */
+.an-brand {
+  display: flex; align-items: center; gap: .65rem;
+  padding: 1rem .9rem .85rem;
+  border-bottom: 1px solid var(--sb-border);
+  text-decoration: none;
+}
+.an-brand-icon {
+  width: 30px; height: 30px; border-radius: 7px;
+  background: var(--blue);
+  display: flex; align-items: center; justify-content: center;
+  font-size: .8rem; flex-shrink: 0;
+}
+.an-brand-name { font-size: .88rem; font-weight: 800; color: #fff; line-height: 1.15; display: block; }
+.an-brand-sub  { font-size: .6rem;  font-weight: 500; color: var(--sb-text); display: block; }
+
+/* Nav sections */
+.an-nav-section {
+  padding: .9rem .8rem .2rem;
+  font-size: .58rem; font-weight: 800;
+  text-transform: uppercase; letter-spacing: .1em;
+  color: var(--sb-section);
+}
+.an-nav-item {
+  display: flex; align-items: center; gap: .55rem;
+  padding: .48rem .85rem;
+  border-radius: 6px; margin: 1px .4rem;
+  font-size: .79rem; font-weight: 600;
+  color: var(--sb-text);
+  text-decoration: none; transition: all .12s;
+  white-space: nowrap;
+}
+.an-nav-item:hover { background: var(--sb-hover); color: #e2e8f0; }
+.an-nav-item.active { background: var(--sb-active); color: #fff; }
+.an-nav-item .nav-ico { width: 15px; text-align: center; flex-shrink: 0; font-size: .8rem; }
+.an-nav-badge {
+  margin-left: auto; font-size: .58rem; font-weight: 800;
+  background: var(--red); color: #fff;
+  border-radius: 20px; padding: 1px 6px;
+}
+
+/* Sidebar footer */
+.an-sidebar-footer {
+  margin-top: auto;
+  padding: .75rem .9rem;
+  border-top: 1px solid var(--sb-border);
+  font-size: .7rem; color: var(--sb-section);
+}
+.an-sidebar-footer a {
+  color: var(--sb-text); text-decoration: none;
+  transition: color .12s;
+}
+.an-sidebar-footer a:hover { color: #e2e8f0; }
+
+/* ════════ MAIN AREA ════════ */
+.an-main { flex: 1; min-width: 0; }
+
+/* ── Sticky page header ── */
+.an-header {
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: .75rem;
+  background: var(--card);
+  border-bottom: 1px solid var(--border);
+  padding: .9rem 1.6rem;
+  position: sticky; top: 0; z-index: 30;
+  box-shadow: 0 1px 4px rgba(0,0,0,.04);
+}
+.an-header-left h1 {
+  font-size: 1.2rem; font-weight: 800; color: var(--navy);
+  margin: 0; letter-spacing: -.02em;
+}
+.an-header-left p { font-size: .74rem; color: var(--muted); margin: .1rem 0 0; }
+.an-header-right { display: flex; align-items: center; gap: .4rem; flex-wrap: wrap; }
+
+/* Day pills */
+.day-pills { display: flex; gap: .25rem; }
+.day-pill {
+  padding: .25rem .65rem; border-radius: 20px; font-size: .75rem; font-weight: 600;
+  border: 1.5px solid var(--border); background: var(--card); color: var(--muted);
+  text-decoration: none; transition: all .12s;
+}
+.day-pill:hover { border-color: var(--blue); color: var(--blue); }
+.day-pill.active { background: var(--navy); border-color: var(--navy); color: #fff; }
+
+/* Action buttons */
+.btn-action {
+  display: inline-flex; align-items: center; gap: .3rem;
+  padding: .28rem .75rem; border-radius: 7px; font-size: .75rem; font-weight: 700;
+  text-decoration: none; white-space: nowrap; transition: all .12s;
+  border: 1.5px solid transparent; cursor: pointer;
+}
+.btn-action.primary { background: var(--navy); color: #fff; }
+.btn-action.primary:hover { background: var(--blue); color: #fff; }
+.btn-action.success { background: var(--green); color: #fff; }
+.btn-action.success:hover { background: #15803d; color: #fff; }
+.btn-action.outline { border-color: var(--border); background: var(--card); color: var(--muted); }
+.btn-action.outline:hover { border-color: var(--blue); color: var(--blue); }
+.btn-action.amber { background: var(--amber); color: #fff; }
+.btn-action.amber:hover { background: #b45309; color: #fff; }
+
+/* ── Content area ── */
+.an-content { padding: 1.5rem 1.75rem 5rem; }
+
+/* ════════ CARDS ════════ */
+.card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 1.25rem 1.4rem;
+  box-shadow: var(--shadow); margin-bottom: 1.25rem;
+}
+.card-title {
+  font-size: .85rem; font-weight: 700; color: var(--text);
+  margin: 0 0 1rem;
+  display: flex; align-items: center; gap: .5rem;
+}
+.card-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+/* ════════ KPI CARDS — dashboard/mentor/affiliate style ════════ */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(175px, 1fr));
+  gap: 1rem; margin-bottom: 1.5rem;
+}
+.kpi-card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 1.1rem 1.25rem;
+  box-shadow: var(--shadow); border-left: 4px solid transparent;
+  transition: box-shadow .2s;
+}
+.kpi-card:hover { box-shadow: 0 4px 24px rgba(30,58,138,.1); }
+.kpi-card.c-blue   { border-left-color: var(--blue);   }
+.kpi-card.c-green  { border-left-color: var(--green);  }
+.kpi-card.c-amber  { border-left-color: var(--amber);  }
+.kpi-card.c-red    { border-left-color: var(--red);    }
+.kpi-card.c-purple { border-left-color: var(--purple); }
+.kpi-card.c-teal   { border-left-color: var(--teal);   }
+.kpi-label {
+  font-size: .68rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .07em; color: var(--muted); margin: 0 0 .3rem;
+}
+.kpi-value {
+  font-size: 1.9rem; font-weight: 800; color: var(--text);
+  margin: 0; line-height: 1;
+}
+.kpi-card.c-blue   .kpi-value { color: var(--navy);   }
+.kpi-card.c-green  .kpi-value { color: var(--green);  }
+.kpi-card.c-amber  .kpi-value { color: var(--amber);  }
+.kpi-card.c-red    .kpi-value { color: var(--red);    }
+.kpi-card.c-purple .kpi-value { color: var(--purple); }
+.kpi-card.c-teal   .kpi-value { color: var(--teal);   }
+.kpi-meta { display: flex; align-items: center; gap: .35rem; margin-top: .35rem; }
+.kpi-sub  { font-size: .73rem; color: var(--muted); }
+
+/* ════════ KPI CARDS — sub-page lightweight style (.kpi / .kpi-val) ════════ */
+.kpi {
+  background: var(--card); border-radius: var(--radius);
+  padding: 1.1rem 1.2rem; box-shadow: var(--shadow);
+}
+.kpi-val {
+  font-size: 1.8rem; font-weight: 800; color: var(--navy); line-height: 1;
+}
+.kpi.red    .kpi-val { color: var(--red);    }
+.kpi.amber  .kpi-val { color: var(--amber);  }
+.kpi.green  .kpi-val { color: var(--green);  }
+.kpi.purple .kpi-val { color: var(--purple); }
+.kpi.teal   .kpi-val { color: var(--teal);   }
+
+/* ════════ TREND BADGES ════════ */
+.trend-up   { font-size: .7rem; font-weight: 700; color: var(--green);  background: var(--green-lt);  border-radius: 20px; padding: 1px 6px; }
+.trend-down { font-size: .7rem; font-weight: 700; color: var(--red);    background: var(--red-lt);    border-radius: 20px; padding: 1px 6px; }
+.trend-flat { font-size: .7rem; font-weight: 700; color: var(--muted);  background: #f1f5f9;          border-radius: 20px; padding: 1px 6px; }
+/* Inline trend used in sub-pages */
+.trend       { font-size: .72rem; font-weight: 700; margin-top: .2rem; }
+.trend.up    { color: var(--green); }
+.trend.down  { color: var(--red);   }
+
+/* ════════ TABLES ════════ */
+/* .bi-table — dashboard/mentor/affiliate style */
+.bi-table { width: 100%; border-collapse: collapse; font-size: .83rem; }
+.bi-table th {
+  text-align: left; font-size: .67rem; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .07em; color: var(--muted);
+  padding: .45rem .55rem; border-bottom: 2px solid var(--border);
+  white-space: nowrap; background: #f8fafc;
+}
+.bi-table td {
+  padding: .48rem .55rem; border-bottom: 1px solid #f1f5f9;
+  color: var(--text); vertical-align: middle;
+}
+.bi-table tr:last-child td { border-bottom: none; }
+.bi-table tr:hover td { background: var(--blue-lt); }
+
+/* .tbl — sub-page compact style */
+.tbl { width: 100%; border-collapse: collapse; font-size: .8rem; }
+.tbl th {
+  text-align: left; font-size: .7rem; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .05em; color: var(--muted);
+  border-bottom: 2px solid var(--border); padding: .4rem .6rem;
+  background: #f8fafc;
+}
+.tbl td {
+  padding: .45rem .6rem; border-bottom: 1px solid var(--border);
+  color: var(--text);
+}
+.tbl td.name { font-size: .79rem; }
+.tbl tr:last-child td { border-bottom: none; }
+.tbl tr:hover td { background: var(--blue-lt); }
+
+.rn {
+  font-weight: 700; color: var(--muted);
+  min-width: 1.6rem; display: inline-block; font-size: .75rem;
+}
+
+/* ════════ BADGES ════════ */
+.badge {
+  display: inline-flex; align-items: center;
+  padding: .15rem .55rem; border-radius: 20px;
+  font-size: .7rem; font-weight: 700; white-space: nowrap;
+}
+.b-blue   { background: var(--blue-lt);   color: var(--blue);   }
+.b-green  { background: var(--green-lt);  color: var(--green);  }
+.b-amber  { background: var(--amber-lt);  color: var(--amber);  }
+.b-red    { background: var(--red-lt);    color: var(--red);    }
+.b-purple { background: var(--purple-lt); color: var(--purple); }
+.b-teal   { background: var(--teal-lt);   color: var(--teal);   }
+.b-gray   { background: #f1f5f9;          color: var(--muted);  }
+
+/* ════════ GRID HELPERS ════════ */
+.two-col   { display: grid; grid-template-columns: 1fr 1fr;       gap: 1.25rem; }
+.three-col { display: grid; grid-template-columns: 1fr 1fr 1fr;   gap: 1.25rem; }
+.four-col  { display: grid; grid-template-columns: repeat(4,1fr); gap: 1rem;    }
+@media(max-width:1100px) { .three-col,.four-col { grid-template-columns: 1fr 1fr; } }
+@media(max-width:700px)  { .two-col,.three-col,.four-col { grid-template-columns: 1fr; } }
+
+/* ════════ CHARTS ════════ */
+.chart-box          { position: relative; }
+.chart-box.h200     { height: 200px; }
+.chart-box.h220     { height: 220px; }
+.chart-box.h260     { height: 260px; }
+.chart-box.donut    { height: 220px; max-width: 260px; margin: 0 auto; }
+
+/* ════════ PROGRESS BARS ════════ */
+.bar-wrap { height: 5px; border-radius: 3px; background: #f1f5f9; margin-top: 4px; min-width: 60px; }
+.bar-fill { height: 100%; border-radius: 3px; background: var(--navy); }
+.bar-fill.green  { background: var(--green); }
+.bar-fill.purple { background: var(--purple); }
+.bar-fill.amber  { background: var(--amber); }
+
+/* ════════ FUNNEL (dashboard style) ════════ */
+.funnel-row   { display: flex; align-items: center; gap: .75rem; margin-bottom: .65rem; }
+.funnel-label { min-width: 110px; font-size: .78rem; color: var(--muted); font-weight: 600; text-align: right; }
+.funnel-track { flex: 1; height: 28px; background: #f1f5f9; border-radius: 6px; overflow: hidden; }
+.funnel-fill  {
+  height: 100%; border-radius: 6px;
+  background: linear-gradient(90deg, var(--navy), var(--blue));
+  display: flex; align-items: center; padding: 0 10px;
+  transition: width .5s cubic-bezier(.4,0,.2,1);
+}
+.funnel-fill span { font-size: .73rem; font-weight: 700; color: #fff; white-space: nowrap; }
+.funnel-n { min-width: 50px; font-size: .83rem; font-weight: 700; color: var(--text); }
+
+/* ════════ SPLIT BAR ════════ */
+.split-track { height: 8px; border-radius: 4px; background: #f1f5f9; overflow: hidden; margin: .4rem 0; }
+.split-fill  { height: 100%; border-radius: 4px; background: var(--navy); }
+.split-row   { display: flex; justify-content: space-between; font-size: .73rem; color: var(--muted); }
+
+/* ════════ SECTION HEADER ════════ */
+.sec-head {
+  font-size: .95rem; font-weight: 800; color: var(--navy);
+  margin: 1.5rem 0 1rem; display: flex; align-items: center; gap: .5rem;
+}
+.sec-head::after { content: ''; flex: 1; height: 1px; background: var(--border); margin-left: .5rem; }
+
+/* ════════ ACTIVITY FEED ════════ */
+.feed-item { display: flex; align-items: flex-start; gap: .75rem; padding: .6rem 0; border-bottom: 1px solid #f1f5f9; }
+.feed-item:last-child { border-bottom: none; }
+.feed-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 5px; }
+.fd-search  { background: var(--blue);   }
+.fd-view    { background: var(--purple); }
+.fd-career  { background: var(--green);  }
+.fd-event   { background: var(--amber);  }
+.feed-label { font-size: .8rem; font-weight: 600; color: var(--text); line-height: 1.3; }
+.feed-sub   { font-size: .72rem; color: var(--muted); }
+.feed-ts    { font-size: .7rem; color: var(--muted); white-space: nowrap; margin-left: auto; }
+
+/* ════════ MISC ════════ */
+.rate-ring { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 1.25rem; }
+.rate-val  { font-size: 2.6rem; font-weight: 900; color: var(--green); line-height: 1; }
+.rate-lbl  { font-size: .75rem; color: var(--muted); font-weight: 600; margin-top: .2rem; }
+.rate-sub  { font-size: .73rem; color: var(--muted); margin-top: .5rem; text-align: center; }
+
+.user-email { font-weight: 600; color: var(--navy); }
+.user-name  { font-size: .75rem; color: var(--muted); }
+.no-data    { color: var(--muted); font-size: .85rem; text-align: center; padding: 2.5rem 1rem; }
+
+/* ════════ TAB NAV (dashboard + mentor/affiliate) ════════ */
+.bi-tabs {
+  display: flex; gap: .15rem; border-bottom: 2px solid var(--border);
+  margin-bottom: 1.5rem; overflow-x: auto;
+  -webkit-overflow-scrolling: touch; scrollbar-width: none;
+}
+.bi-tabs::-webkit-scrollbar { display: none; }
+.bi-tab {
+  display: flex; align-items: center; gap: .4rem;
+  padding: .6rem 1.1rem; border-radius: 8px 8px 0 0;
+  font-size: .82rem; font-weight: 600; color: var(--muted);
+  border: none; background: none; cursor: pointer; white-space: nowrap;
+  border-bottom: 2px solid transparent; margin-bottom: -2px; transition: color .15s;
+}
+.bi-tab:hover { color: var(--navy); }
+.bi-tab.active { color: var(--navy); border-bottom-color: var(--navy); background: var(--blue-lt); }
+.tab-icon { font-size: .9rem; }
+.bi-section { display: none; }
+.bi-section.active { display: block; }
+
+/* ════════ RESPONSIVE ════════ */
+@media(max-width:768px) {
+  .an-sidebar { display: none; }
+  .an-sidebar.open { display: flex; position: fixed; top: 0; left: 0; bottom: 0; z-index: 100; }
+  .an-content { padding: 1rem 1rem 5rem; }
+  .kpi-grid   { grid-template-columns: 1fr 1fr; }
+  .an-header  { padding: .7rem 1rem; }
+}
+@media(max-width:480px) {
+  .kpi-grid { grid-template-columns: 1fr; }
+}
+
+/* Mobile toggle */
+.an-sidebar-toggle {
+  display: none; position: fixed; bottom: 1.25rem; left: 1rem; z-index: 50;
+  width: 42px; height: 42px; border-radius: 10px;
+  background: var(--navy); border: none; cursor: pointer;
+  align-items: center; justify-content: center;
+  color: #fff; font-size: 1rem;
+  box-shadow: 0 4px 16px rgba(0,0,0,.25);
+}
+@media(max-width:768px) { .an-sidebar-toggle { display: flex; } }
+
+@keyframes pulse {
+  0%,100% { opacity:1; transform:scale(1); }
+  50%      { opacity:.4; transform:scale(1.4); }
+}
+</style>
+{% block extra_css %}{% endblock %}
+{% endblock %}
+
+{% block content %}
+<div class="an-shell">
+
+  <!-- ═══════ SIDEBAR ═══════ -->
+  <aside class="an-sidebar" id="anSidebar">
+    <a class="an-brand" href="{% url 'analytics:dashboard' %}">
+      <span class="an-brand-icon">📊</span>
+      <span>
+        <span class="an-brand-name">Analytics</span>
+        <span class="an-brand-sub">CareerNext Staff</span>
+      </span>
+    </a>
+
+    <nav style="flex:1;padding:.5rem 0;">
+
+      <div class="an-nav-section">Overview</div>
+      <a href="{% url 'analytics:dashboard' %}"
+         class="an-nav-item {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+        <span class="nav-ico"><i class="fas fa-home"></i></span> Overview
+      </a>
+      <a href="{% url 'analytics:insights' %}"
+         class="an-nav-item {% if request.resolver_match.url_name == 'insights' %}active{% endif %}">
+        <span class="nav-ico"><i class="fas fa-lightbulb"></i></span> Insights
+      </a>
+
+      <div class="an-nav-section">Behaviour</div>
+      <a href="{% url 'analytics:pages' %}"
+         class="an-nav-item {% if request.resolver_match.url_name == 'pages' %}active{% endif %}">
+        <span class="nav-ico"><i class="fas fa-file-alt"></i></span> Pages &amp; Sessions
+      </a>
+      <a href="{% url 'analytics:calculator_analytics' %}"
+         class="an-nav-item {% if request.resolver_match.url_name == 'calculator_analytics' %}active{% endif %}">
+        <span class="nav-ico"><i class="fas fa-calculator"></i></span> Calculator
+      </a>
+      <a href="{% url 'analytics:ai_chat_analytics' %}"
+         class="an-nav-item {% if request.resolver_match.url_name == 'ai_chat_analytics' %}active{% endif %}">
+        <span class="nav-ico"><i class="fas fa-robot"></i></span> AI Chat
+      </a>
+      <a href="{% url 'analytics:actions' %}"
+         class="an-nav-item {% if request.resolver_match.url_name == 'actions' %}active{% endif %}">
+        <span class="nav-ico"><i class="fas fa-bolt"></i></span> User Actions
+      </a>
+
+      <div class="an-nav-section">Growth</div>
+      <a href="{% url 'analytics:conversion_analytics' %}"
+         class="an-nav-item {% if request.resolver_match.url_name == 'conversion_analytics' %}active{% endif %}">
+        <span class="nav-ico"><i class="fas fa-funnel-dollar"></i></span> Conversion
+      </a>
+      <a href="{% url 'analytics:retention_analytics' %}"
+         class="an-nav-item {% if request.resolver_match.url_name == 'retention_analytics' %}active{% endif %}">
+        <span class="nav-ico"><i class="fas fa-redo"></i></span> Retention
+      </a>
+
+      <div class="an-nav-section">Revenue</div>
+      <a href="{% url 'analytics:payments' %}"
+         class="an-nav-item {% if request.resolver_match.url_name == 'payments' %}active{% endif %}">
+        <span class="nav-ico"><i class="fas fa-credit-card"></i></span> Payments
+      </a>
+      <a href="{% url 'analytics:affiliate_analytics' %}"
+         class="an-nav-item {% if request.resolver_match.url_name == 'affiliate_analytics' %}active{% endif %}">
+        <span class="nav-ico"><i class="fas fa-share-alt"></i></span> Affiliates
+      </a>
+
+      <div class="an-nav-section">Community</div>
+      <a href="{% url 'analytics:mentor_analytics' %}"
+         class="an-nav-item {% if request.resolver_match.url_name == 'mentor_analytics' %}active{% endif %}">
+        <span class="nav-ico"><i class="fas fa-chalkboard-teacher"></i></span> Mentors
+      </a>
+
+    </nav>
+
+    <div class="an-sidebar-footer">
+      <a href="{% url 'analytics:export_csv' %}?days={{ days|default:30 }}">
+        <i class="fas fa-download"></i> Export CSV
+      </a>
+      &nbsp;&middot;&nbsp;
+      <a href="/cn-staff/">Admin</a>
+    </div>
+  </aside>
+
+  <!-- ═══════ MAIN ═══════ -->
+  <main class="an-main">
+    <div class="an-header">
+      <div class="an-header-left">
+        <h1>{% block page_title %}Analytics{% endblock %}</h1>
+        <p>{% block page_subtitle %}Staff only{% endblock %}</p>
+      </div>
+      <div class="an-header-right">
+        {% block header_actions %}{% endblock %}
+      </div>
+    </div>
+
+    <div class="an-content">
+      {% block analytics_content %}{% endblock %}
+    </div>
+  </main>
+
+</div>
+
+<!-- Mobile sidebar toggle -->
+<button class="an-sidebar-toggle" id="sidebarToggle"
+        onclick="document.getElementById('anSidebar').classList.toggle('open')"
+        aria-label="Toggle navigation">
+  <i class="fas fa-bars"></i>
+</button>
+{% endblock %}

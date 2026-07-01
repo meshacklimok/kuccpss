@@ -1,3 +1,4 @@
+import base64
 import logging
 
 import requests as http_requests
@@ -39,6 +40,17 @@ class ResendEmailBackend(BaseEmailBackend):
                 }
                 if html_body:
                     payload["html"] = html_body
+
+                attachments = []
+                for filename, content, mimetype in getattr(message, "attachments", []) or []:
+                    if isinstance(content, str):
+                        content = content.encode("utf-8")
+                    attachments.append({
+                        "filename": filename,
+                        "content": base64.b64encode(content).decode("ascii"),
+                    })
+                if attachments:
+                    payload["attachments"] = attachments
 
                 response = http_requests.post(
                     RESEND_API_URL,

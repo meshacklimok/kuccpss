@@ -1,6 +1,21 @@
 from django.contrib import admin
 from django.utils.timezone import now
-from .models import Payment, Transaction, PaymentFeature, PaymentExemption
+from .models import Payment, Transaction, PaymentFeature, PaymentExemption, PRODUCT_CHOICES
+
+
+class ProductListFilter(admin.SimpleListFilter):
+    title = "product"
+    parameter_name = "product"
+
+    def lookups(self, request, model_admin):
+        return PRODUCT_CHOICES
+
+    def queryset(self, request, queryset):
+        if not self.value():
+            return queryset
+        from .models import FEATURE_TO_PRODUCT
+        features = [f for f, p in FEATURE_TO_PRODUCT.items() if p == self.value()]
+        return queryset.filter(feature__in=features)
 
 
 @admin.register(PaymentFeature)
@@ -31,13 +46,17 @@ mark_failed.short_description = "Mark selected payments as FAILED"
 
 @admin.register(Payment)
 class PaymentAdmin(admin.ModelAdmin):
-    list_display = ("user", "feature", "amount", "phone_number", "status", "mpesa_code", "checkout_id", "created_at")
-    list_filter = ("status", "feature")
+    list_display = ("user", "product_label", "amount", "phone_number", "status", "mpesa_code", "checkout_id", "created_at")
+    list_filter = ("status", ProductListFilter, "feature")
     search_fields = ("user__email", "checkout_id", "phone_number", "mpesa_code")
     readonly_fields = ("created_at", "updated_at")
     list_editable = ("status",)
     actions = [mark_completed, mark_failed]
     inlines = [TransactionInline]
+
+    @admin.display(description="Product")
+    def product_label(self, obj):
+        return obj.get_product_display()
 
 
 @admin.register(Transaction)

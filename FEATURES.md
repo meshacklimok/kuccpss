@@ -271,16 +271,31 @@ Status legend: ✅ Done | 🚧 In Progress | 📋 Planned | ❌ Blocked | [-] Dr
 ## Analytics (analytics app)
 | Feature | Status | Notes |
 |---|---|---|
-| SearchLog model | ✅ | Per-search: query, result_count, user, timestamp |
-| ViewLog model | ✅ | Per-page view: content_type, object_id, user, IP, timestamp |
-| DownloadLog model | ✅ | Per-download: resource type, object_id, user |
-| EventLog model | ✅ | Generic named events with JSON properties |
-| CareerEngineLog model | ✅ | Per career engine run: pathway, grades, match count, duration |
-| Analytics admin dashboard | ✅ | `/analytics/` staff-only dashboard; most-viewed courses shown on dashboard trending section |
-| PostHog integration | ✅ | Client-side `POSTHOG_JS_KEY`; context processor injects key |
+| SearchLog / ViewLog / DownloadLog / EventLog / CareerEngineLog | ✅ | Core logging models — see ARCHITECTURE.md for fields |
+| PageViewLog + PageTrackingMiddleware | ✅ | Auto-records every non-static, non-bot page hit: path, status, response time, device, referrer |
+| UserActionLog | ✅ | Explicit actions: login/logout, shortlist add/remove, compare, profile update, share, ai_chat, quiz start/complete, calculator_run, referral_click |
+| SessionLog + JS heartbeat | ✅ | One row per browser session; `last_seen_at` refreshed by 60s heartbeat ping (`/analytics/heartbeat/`); drives time-on-site / bounce-rate metrics |
+| PWAInstallLog | ✅ | Records install events from browser (`/analytics/pwa-install/`); platform breakdown |
+| GeoIP2 country/region | ✅ | `analytics/geo.py` wraps MaxMind GeoLite2-City `.mmdb`; falls back silently if DB file absent |
+| Main analytics dashboard | ✅ | `/analytics/` — user/search/view/career/payment/PWA KPIs, trends, conversion funnel, activity feed, feedback summary |
+| Pages analytics | ✅ | `/analytics/pages/` — top pages, slow pages (>2s), 4xx/5xx error pages, device split, session duration buckets, country/county (Kenya) breakdown |
+| User actions analytics | ✅ | `/analytics/actions/` — login success/fail, shortlists, AI chats, quiz completions; daily trend chart |
+| Per-user timeline | ✅ | `/analytics/users/<uuid>/` — merged chronological feed of one user's page views, searches, views, actions, downloads, events |
+| Insights dashboard | ✅ | `/analytics/insights/` — peak-hours heatmap (EAT timezone), referral source breakdown, returning vs new visitors, registration/search/mentor-booking funnels, calculator grade distribution |
+| Calculator analytics | ✅ | `/analytics/calculator/` — run volume + trend, guest vs auth split, PDF export/share counts, mean-grade distribution, strongest/weakest clusters by avg points, pathway-recommendation bucket split |
+| Conversion analytics | ✅ | `/analytics/conversion/` — course view→shortlist funnel, top/zero-converting courses, course-type and institution breakdowns |
+| Retention analytics | ✅ | `/analytics/retention/` — weekly cohort retention heatmap grid (12-week window), returning/new visitor KPIs |
+| AI chat analytics | ✅ | `/analytics/ai-chat/` — message volume + trend, free/paid split, knowledge-base hit rate, paywall-hit count, AIChatCredit totals, AI feature revenue |
+| Mentor analytics | ✅ | `/analytics/mentors/` — mentor comparison table (earnings/sessions/rating/balance), monthly session+payout chart, rating distribution |
+| Affiliate analytics | ✅ | `/analytics/affiliates/` — affiliate comparison table, monthly commission chart, active/inactive split |
+| Payments overview | ✅ | `/analytics/payments/` — pending/stale/failed/completed/refunded queues with age-urgency flags; status filter |
+| CSV export | ✅ | `/analytics/export-csv/` — registrations, top queries, top courses, pathway distribution, payment summary in one file |
+| Live activity feed | ✅ | `/analytics/live-feed/` — AJAX endpoint, 30 most recent events, polled client-side |
+| PostHog integration | ✅ | Client-side `POSTHOG_JS_KEY`; context processor injects key; server-side `track_posthog()` helper for fire-and-forget capture |
 | Google Analytics | ✅ | `GA_MEASUREMENT_ID` env var; context processor injects |
 | Sentry error monitoring | ✅ | sentry-sdk[django] 2.x; init guarded by SENTRY_DSN; filters noise; 10% trace sampling |
 | Most-viewed courses on dashboard | ✅ | ViewLog aggregated to show trending courses on `/dashboard/` |
+| SiteFeedback model + dashboard summary | ✅ | User-submitted bug/suggestion/general/content feedback; type/status breakdown shown on main dashboard |
 
 ---
 

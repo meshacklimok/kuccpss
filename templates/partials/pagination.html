@@ -15,7 +15,7 @@
     {% for num in page_obj.paginator.page_range %}
       {% if page_obj.number == num %}
       <li class="page-item active">
-        <span class="page-link rounded-pill px-3" style="background:#1e3a8a;border-color:#1e3a8a;">{{ num }}</span>
+        <span class="page-link rounded-pill px-3 fw-bold" style="background:#1e3a8a;border-color:#1e3a8a;color:#fff;font-size:1.15rem;">{{ num }}</span>
       </li>
       {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
       <li class="page-item">

@@ -1,0 +1,90 @@
+{% extends "analytics/base_analytics.html" %}
+{% block analytics_title %}AI Chat Analytics{% endblock %}
+{% block page_title %}AI Chat Analytics{% endblock %}
+{% block page_subtitle %}CareerNext AI usage — last {{ days }} days{% endblock %}
+
+{% block header_actions %}
+<div class="day-pills">
+  {% for d in day_options %}
+  <a href="?days={{ d }}" class="day-pill{% if days == d %} active{% endif %}">{% if d == 1 %}24h{% else %}{{ d }}d{% endif %}</a>
+  {% endfor %}
+</div>
+{% endblock %}
+
+{% block analytics_content %}
+
+<div class="kpi-grid">
+  <div class="kpi">
+    <div class="kpi-label">Total Messages</div>
+    <div class="kpi-val">{{ total_messages }}</div>
+    {% if messages_trend.pct is not None %}
+    <div class="trend {% if messages_trend.up %}up{% else %}down{% endif %}">{% if messages_trend.up %}▲{% else %}▼{% endif %} {{ messages_trend.pct }}% vs prior period</div>
+    {% endif %}
+  </div>
+  <div class="kpi green">
+    <div class="kpi-label">Active Chat Users</div>
+    <div class="kpi-val">{{ active_users }}</div>
+    <div class="kpi-sub">{{ avg_per_user }} msgs/user avg</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-label">KB Hit Rate</div>
+    <div class="kpi-val">{{ kb_hit_rate }}%</div>
+  </div>
+  <div class="kpi red">
+    <div class="kpi-label">Paywall Hits</div>
+    <div class="kpi-val">{{ paywall_hits }}</div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-title">Daily Message Volume</div>
+  <div class="chart-box h220"><canvas id="msgChart"></canvas></div>
+</div>
+
+<div class="two-col">
+  <div class="card">
+    <div class="card-title">Free vs Paid Messages</div>
+    <div class="chart-box h220"><canvas id="splitChart"></canvas></div>
+  </div>
+  <div class="card">
+    <div class="card-title">Credit &amp; Revenue Summary</div>
+    <div class="kpi-grid" style="margin-bottom:0;">
+      <div class="kpi">
+        <div class="kpi-label">Free Msgs Consumed (all-time)</div>
+        <div class="kpi-val" style="font-size:1.4rem;">{{ total_free_used }}</div>
+      </div>
+      <div class="kpi amber">
+        <div class="kpi-label">Paid Msgs Sold (all-time)</div>
+        <div class="kpi-val" style="font-size:1.4rem;">{{ total_paid_ever }}</div>
+      </div>
+      <div class="kpi green">
+        <div class="kpi-label">AI Chat Revenue (period)</div>
+        <div class="kpi-val" style="font-size:1.4rem;">KES {{ ai_revenue }}</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<script>
+new Chart(document.getElementById('msgChart'), {
+  type: 'line',
+  data: { labels: {{ chart_msg_labels|safe }},
+    datasets: [{ label:'Messages', data:{{ chart_msg_data|safe }},
+      borderColor:'#0891b2', backgroundColor:'rgba(8,145,178,.08)',
+      tension:.35, fill:true, pointRadius:2 }]
+  },
+  options: { responsive:true, maintainAspectRatio:false,
+    plugins:{ legend:{ display:false } },
+    scales:{ y:{ beginAtZero:true, ticks:{ precision:0 } } } }
+});
+new Chart(document.getElementById('splitChart'), {
+  type: 'doughnut',
+  data: { labels: {{ chart_split_labels|safe }},
+    datasets: [{ data:{{ chart_split_data|safe }}, backgroundColor:['#2563eb','#d97706'], borderWidth:2 }]
+  },
+  options: { responsive:true, maintainAspectRatio:false,
+    plugins:{ legend:{ position:'right' } } }
+});
+</script>
+{% endblock %}

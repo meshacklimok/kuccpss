@@ -343,7 +343,8 @@ body { background: #060c1a; min-height: 100vh; }
                 <div class="pr-phone-row">
                     <span class="pr-prefix">+254</span>
                     <input type="tel" id="pr-phone" class="pr-phone-inp"
-                           placeholder="712 345 678" maxlength="9" inputmode="numeric">
+                           placeholder="712 345 678" maxlength="14" inputmode="numeric"
+                           value="{{ request.user.phone_number|default:'' }}">
                 </div>
                 <button class="pr-btn" id="pr-pay-btn">
                     <i class="fas fa-lock-open"></i> Pay KES {{ price }} &amp; Unlock
@@ -461,6 +462,22 @@ function defaultNext(){
 
 document.getElementById('pr-pay-btn').addEventListener('click', prPay);
 
+// Accept 0712345678, +254712345678, 254712345678 or plain 712345678 — always returns 9 digits or null
+function prNormalizePhone(input){
+    var digits = (input || '').replace(/\D/g,'');
+    if(digits.length === 9 && /^[17]/.test(digits)) return digits;
+    if(digits.length === 10 && digits.startsWith('0')) return digits.slice(1);
+    if(digits.length === 12 && digits.startsWith('254')) return digits.slice(3);
+    return null;
+}
+
+// Pre-fill from saved profile number, cleaned to the 9-digit local form
+(function(){
+    var phoneEl = document.getElementById('pr-phone');
+    var clean = prNormalizePhone(phoneEl.value);
+    phoneEl.value = clean || '';
+})();
+
 // Check for pending payment on load
 (async function(){
     try{
@@ -471,10 +488,10 @@ document.getElementById('pr-pay-btn').addEventListener('click', prPay);
 })();
 
 async function prPay(){
-    var raw = document.getElementById('pr-phone').value.trim().replace(/\s/g,'');
+    var raw = prNormalizePhone(document.getElementById('pr-phone').value);
     var err = document.getElementById('pr-err');
-    if(!/^\d{9}$/.test(raw)){
-        err.textContent = 'Enter a valid 9-digit Safaricom number (e.g. 712345678)';
+    if(!raw){
+        err.textContent = 'Enter a valid Safaricom number, e.g. 0712345678 or +254712345678';
         err.style.display = 'block'; return;
     }
     err.style.display = 'none';
