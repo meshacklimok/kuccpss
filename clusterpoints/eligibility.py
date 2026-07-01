@@ -1,4 +1,9 @@
+from django.core.cache import cache
+
 from .models import ClusterCalculationResult, UserKCSEResult
+
+COURSE_CUTOFF_CACHE_KEY = 'degree_course_min_cutoffs_v1'
+COURSE_CUTOFF_CACHE_TTL = 900  # 15 min — same staleness tradeoff as courses/trends.py
 
 CURRENT_YEAR = "2024"
 NEARLY_ELIGIBLE_GAP = 5.0
@@ -28,11 +33,16 @@ COURSE_TYPE_MAP = {
 }
 
 
-def _build_results_from_cluster_map(cluster_map: dict) -> list:
+def _get_course_cutoff_data() -> dict:
     """
-    Shared logic for both authenticated and guest eligible-course lookups.
-    cluster_map: {kuccps_number (int): cluster_points (float)}
+    User-independent per-course minimum cutoff + institutions, across all
+    degree offerings. This is the expensive part (thousands of rows with
+    5-way joins) so it's cached like courses/trends.py caches its rankings.
     """
+    cached = cache.get(COURSE_CUTOFF_CACHE_KEY)
+    if cached is not None:
+        return cached
+
     from courses.models import CourseOffering
 
     offerings = (
@@ -66,14 +76,13 @@ def _build_results_from_cluster_map(cluster_map: dict) -> list:
         if knum is None:
             continue
 
-        user_pts = cluster_map.get(knum, 0.0)
         cid = course.pk
 
         if cid not in course_data:
             course_data[cid] = {
                 "course": course,
                 "min_cutoff": cutoff_val,
-                "user_pts": user_pts,
+                "knum": knum,
                 "institutions": [offering.institution],
             }
         else:
@@ -82,10 +91,21 @@ def _build_results_from_cluster_map(cluster_map: dict) -> list:
             if len(course_data[cid]["institutions"]) < 5:
                 course_data[cid]["institutions"].append(offering.institution)
 
+    cache.set(COURSE_CUTOFF_CACHE_KEY, course_data, COURSE_CUTOFF_CACHE_TTL)
+    return course_data
+
+
+def _build_results_from_cluster_map(cluster_map: dict) -> list:
+    """
+    Shared logic for both authenticated and guest eligible-course lookups.
+    cluster_map: {kuccps_number (int): cluster_points (float)}
+    """
+    course_data = _get_course_cutoff_data()
+
     results = []
     for data in course_data.values():
         cutoff = data["min_cutoff"]
-        user_pts = data["user_pts"]
+        user_pts = cluster_map.get(data["knum"], 0.0)
         gap = round(user_pts - cutoff, 2)
         if gap >= 0:
             status = "eligible"

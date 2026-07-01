@@ -15,7 +15,7 @@ FAQ_DATA = [
      "CareerNext is a free online platform that helps Kenyan KCSE graduates calculate their cluster points, discover which university, KMTC, TVET, and TTC courses they qualify for, and explore career options — all using the official KUCCPS formula and placement criteria."),
 
     ("general", "Is CareerNext the same as KUCCPS?",
-     "No. KUCCPS (Kenya Universities and Colleges Central Placement Service) is the official government body that places students into institutions. You apply at kuccps.ac.ke.\n\nCareerNext (careernext.co.ke) is an independent, free tool to help you prepare for that application — by calculating your points and finding your eligible courses before the portal opens. We are not affiliated with the government."),
+     "No. KUCCPS (Kenya Universities and Colleges Central Placement Service) is the official government body that places students into institutions. You apply at students.kuccps.net.\n\nCareerNext (careernext.co.ke) is an independent, free tool to help you prepare for that application — by calculating your points and finding your eligible courses before the portal opens. We are not affiliated with the government."),
 
     ("general", "Is CareerNext free to use?",
      "Yes — completely free. Every feature including the cluster points calculator, eligible courses list, career engine, course shortlist, and PDF exports is free for all students. There are no hidden charges or premium tiers."),
@@ -69,7 +69,7 @@ FAQ_DATA = [
      "KUCCPS works through your ranked choices in order. If you don't qualify for your first choice (because your cluster points are below the cutoff or slots are filled), the system tries your second choice, then third, and so on. If none of your choices are successful, you may participate in the revision or inter-institutional transfer window."),
 
     ("kuccps", "Does CareerNext submit my application to KUCCPS?",
-     "No. CareerNext is only a preparation and guidance tool. Your actual placement application must be submitted directly on the official KUCCPS portal at kuccps.ac.ke during the application window. CareerNext helps you decide what to apply for — you still complete the application yourself on the official site."),
+     "No. CareerNext is only a preparation and guidance tool. Your actual placement application must be submitted directly on the official KUCCPS portal at students.kuccps.net during the application window. CareerNext helps you decide what to apply for — you still complete the application yourself on the official site."),
 
     ("kuccps", "What is the HELB loan and how do I apply?",
      "The Higher Education Loans Board (HELB) provides subsidised loans and bursaries to Kenyan students in accredited institutions. Applications are done online at helb.co.ke. Apply as soon as you get your placement letter — bursary deadlines are typically strict."),

@@ -93,18 +93,11 @@ class RegisterView(View):
                 pass
 
             # ── Referral attribution ──────────────────────────────
-            ref_code = request.session.pop('referral_code', None)
-            if ref_code:
-                from accounts.models import Referral as ReferralModel
-                try:
-                    ref = ReferralModel.objects.get(code=ref_code, converted=False)
-                    ref.referred_user  = user
-                    ref.referred_email = user.email
-                    ref.converted      = True
-                    ref.converted_at   = timezone.now()
-                    ref.save(update_fields=['referred_user', 'referred_email', 'converted', 'converted_at'])
-                except Exception:
-                    pass
+            from accounts.models import Referral as ReferralModel
+            try:
+                ReferralModel.attribute_from_session(request, user)
+            except Exception:
+                pass
 
             # ── Email lead conversion ─────────────────────────────
             try:
@@ -249,7 +242,7 @@ def dashboard_view(request: HttpRequest) -> HttpResponse:
         elif days_to_close > 0:
             timeline_phase, timeline_days, timeline_label, timeline_date = 'open', days_to_close, 'Days left to apply', 'Closes Est. 21 Aug 2026'
         else:
-            timeline_phase, timeline_days, timeline_label, timeline_date = 'closed', 0, 'Portal closed for 2026', 'Check kuccps.ac.ke for 2027 dates'
+            timeline_phase, timeline_days, timeline_label, timeline_date = 'closed', 0, 'Portal closed for 2026', 'Check students.kuccps.net for 2027 dates'
         from institutions.models import InstitutionPromotion as _IP
         from datetime import date as _date
         _today = _date.today()
@@ -465,7 +458,7 @@ def dashboard_view(request: HttpRequest) -> HttpResponse:
         timeline_phase = 'closed'
         timeline_days  = 0
         timeline_label = 'Portal closed for 2026'
-        timeline_date  = 'Check kuccps.ac.ke for 2027 dates'
+        timeline_date  = 'Check students.kuccps.net for 2027 dates'
 
     # ── Active promotions ─────────────────────────────────────────────────────
     from institutions.models import InstitutionType, Institution, InstitutionPromotion
@@ -1164,9 +1157,13 @@ def public_home_view(request):
             return redirect('accounts:dashboard')
 
     from courses.trends import get_trends_context
+    from payments.services import price_for_feature
 
     ctx = dict(_get_home_static_context())
     ctx.update(get_trends_context())
+    # Computed fresh on every request (not cached) so it always matches admin settings.
+    ctx["calculator_price"] = price_for_feature('view_cluster_points')
+    ctx["engine_price"] = price_for_feature('premium_career_report')
     return render(request, "accounts/home.html", ctx)
 
 
@@ -1678,6 +1675,20 @@ def broadcast_notification_view(request: HttpRequest) -> HttpResponse:
         "push_sub_count": push_sub_count,
         "sent_count":     sent_count,
         "push_count":     push_count,
+    })
+
+
+# =====================================================
+# STAFF & ADMIN DIRECTORY (staff only)
+# =====================================================
+def staff_team_view(request: HttpRequest) -> HttpResponse:
+    if not (request.user.is_authenticated and request.user.is_superuser):
+        from django.contrib.auth.views import redirect_to_login
+        return redirect_to_login(request.get_full_path())
+
+    staff_users = User.objects.filter(is_staff=True).order_by('-is_superuser', 'email')
+    return render(request, "accounts/staff_team.html", {
+        "staff_users": staff_users,
     })
 
 

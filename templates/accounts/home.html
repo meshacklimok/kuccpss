@@ -31,6 +31,16 @@
 .feature-tile:hover { transform: translateY(-5px); box-shadow: var(--shadow-md); border-color: var(--primary-light); text-decoration: none; }
 .feature-tile h6 { color: var(--text); font-size: 0.88rem; font-weight: 800; margin-bottom: 0.25rem; }
 .feature-tile p  { color: var(--text-2); font-size: 0.78rem; line-height: 1.5; margin: 0; }
+.feature-tile { position: relative; }
+.tile-price-badge {
+  position: absolute; top: 0.6rem; right: 0.6rem;
+  font-size: 0.62rem; font-weight: 800; letter-spacing: 0.02em;
+  padding: 2px 8px; border-radius: 20px; white-space: nowrap;
+}
+.tile-price-badge.free { background: #f0fdf4; color: #15803d; border: 1px solid #86efac; }
+.tile-price-badge.paid { background: #fffbeb; color: #b45309; border: 1px solid #fde68a; }
+body.dark .tile-price-badge.free { background: rgba(22,163,74,0.12); border-color: rgba(22,163,74,0.3); }
+body.dark .tile-price-badge.paid { background: rgba(217,119,6,0.12); border-color: rgba(217,119,6,0.3); }
 
 /* ── Step cards (How it works) ── */
 .step-card {
@@ -236,6 +246,81 @@ body.dark .step-card          { background: var(--surface); border-color: var(--
 </script>
 
 
+<!-- ── FEATURES ── -->
+<section style="background:var(--bg);padding:4.5rem 0;">
+  <div class="container">
+    <div class="text-center mb-5 reveal">
+      <span class="section-eyebrow" style="color:var(--accent);background:rgba(22,163,74,0.08);">Platform</span>
+      <h2 class="section-header mt-2">Everything You Need</h2>
+      <p class="section-sub">Powerful tools built for Kenyan KCSE students</p>
+    </div>
+    <div class="row g-3">
+      {% for feat in features_list %}
+      <div class="col-6 col-md-4 reveal">
+        <a href="{{ feat.url }}" class="feature-tile">
+          <div class="feature-icon feature-icon-{{ feat.color }}"><i class="fas {{ feat.icon }}"></i></div>
+          <div><h6>{{ feat.title }}</h6><p>{{ feat.desc }}</p></div>
+        </a>
+      </div>
+      {% empty %}
+      <div class="col-6 col-md-4 reveal">
+        <a href="{% url 'career:career_profiles' %}" class="feature-tile">
+          <div class="feature-icon feature-icon-purple"><i class="fas fa-user-tie"></i></div>
+          <div><h6>Career Profiles</h6><p>60+ detailed career profiles with salary info.</p></div>
+        </a>
+      </div>
+      <div class="col-6 col-md-4 reveal">
+        <a href="{% url 'career:home' %}" class="feature-tile">
+          {% if engine_price %}
+          <span class="tile-price-badge paid">From KES {{ engine_price }}</span>
+          {% else %}
+          <span class="tile-price-badge free">Free</span>
+          {% endif %}
+          <div class="feature-icon feature-icon-blue"><i class="fas fa-brain"></i></div>
+          <div><h6>Career Engine</h6><p>Get a full career match report from your grades &amp; interests.</p></div>
+        </a>
+      </div>
+      <div class="col-6 col-md-4 reveal">
+        <a href="{% url 'clusterpoints:calculator' %}" class="feature-tile">
+          {% if calculator_price %}
+          <span class="tile-price-badge paid">From KES {{ calculator_price }}</span>
+          {% else %}
+          <span class="tile-price-badge free">Free</span>
+          {% endif %}
+          <div class="feature-icon feature-icon-blue"><i class="fas fa-calculator"></i></div>
+          <div><h6>Cluster Calculator</h6><p>Input your KCSE grades. Get results instantly.</p></div>
+        </a>
+      </div>
+      <div class="col-6 col-md-4 reveal">
+        <a href="{% url 'clusterpoints:eligible_courses' %}" class="feature-tile">
+          <div class="feature-icon feature-icon-green"><i class="fas fa-check-circle"></i></div>
+          <div><h6>Eligible Courses</h6><p>See only courses you qualify for.</p></div>
+        </a>
+      </div>
+      <div class="col-6 col-md-4 reveal">
+        <a href="{% url 'institutions:institution_types_list' %}" class="feature-tile">
+          <div class="feature-icon feature-icon-orange"><i class="fas fa-university"></i></div>
+          <div><h6>All Institutions</h6><p>Universities, KMTCs, TVETs &amp; TTCs.</p></div>
+        </a>
+      </div>
+      <div class="col-6 col-md-4 reveal">
+        <a href="{% url 'career:quiz' %}" class="feature-tile">
+          <div class="feature-icon feature-icon-teal"><i class="fas fa-clipboard-question"></i></div>
+          <div><h6>Career Quiz</h6><p>Discover careers that match your interests.</p></div>
+        </a>
+      </div>
+      <div class="col-6 col-md-4 reveal">
+        <a href="{% url 'resources:resource_list' %}" class="feature-tile">
+          <div class="feature-icon feature-icon-red"><i class="fas fa-file-pdf"></i></div>
+          <div><h6>Guides &amp; Resources</h6><p>PDFs, articles and placement tips.</p></div>
+        </a>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+
 <!-- ── HOW IT WORKS ── -->
 <section style="background:var(--surface-2);padding:4.5rem 0;border-top:1px solid var(--border);border-bottom:1px solid var(--border);">
   <div class="container">
@@ -275,65 +360,6 @@ body.dark .step-card          { background: var(--surface); border-color: var(--
           <p class="small mb-0">Explore career profiles, take the career quiz, and get AI-powered guidance to pick the right path.</p>
         </div>
       </div>
-    </div>
-  </div>
-</section>
-
-
-<!-- ── FEATURES ── -->
-<section style="background:var(--bg);padding:4.5rem 0;">
-  <div class="container">
-    <div class="text-center mb-5 reveal">
-      <span class="section-eyebrow" style="color:var(--accent);background:rgba(22,163,74,0.08);">Platform</span>
-      <h2 class="section-header mt-2">Everything You Need</h2>
-      <p class="section-sub">Powerful tools built for Kenyan KCSE students</p>
-    </div>
-    <div class="row g-3">
-      {% for feat in features_list %}
-      <div class="col-6 col-md-4 reveal">
-        <a href="{{ feat.url }}" class="feature-tile">
-          <div class="feature-icon feature-icon-{{ feat.color }}"><i class="fas {{ feat.icon }}"></i></div>
-          <div><h6>{{ feat.title }}</h6><p>{{ feat.desc }}</p></div>
-        </a>
-      </div>
-      {% empty %}
-      <div class="col-6 col-md-4 reveal">
-        <a href="{% url 'clusterpoints:calculator' %}" class="feature-tile">
-          <div class="feature-icon feature-icon-blue"><i class="fas fa-calculator"></i></div>
-          <div><h6>Cluster Calculator</h6><p>Input your KCSE grades. Get results instantly.</p></div>
-        </a>
-      </div>
-      <div class="col-6 col-md-4 reveal">
-        <a href="{% url 'clusterpoints:eligible_courses' %}" class="feature-tile">
-          <div class="feature-icon feature-icon-green"><i class="fas fa-check-circle"></i></div>
-          <div><h6>Eligible Courses</h6><p>See only courses you qualify for.</p></div>
-        </a>
-      </div>
-      <div class="col-6 col-md-4 reveal">
-        <a href="{% url 'institutions:institution_types_list' %}" class="feature-tile">
-          <div class="feature-icon feature-icon-orange"><i class="fas fa-university"></i></div>
-          <div><h6>All Institutions</h6><p>Universities, KMTCs, TVETs &amp; TTCs.</p></div>
-        </a>
-      </div>
-      <div class="col-6 col-md-4 reveal">
-        <a href="{% url 'career:career_profiles' %}" class="feature-tile">
-          <div class="feature-icon feature-icon-purple"><i class="fas fa-user-tie"></i></div>
-          <div><h6>Career Profiles</h6><p>60+ detailed career profiles with salary info.</p></div>
-        </a>
-      </div>
-      <div class="col-6 col-md-4 reveal">
-        <a href="{% url 'career:quiz' %}" class="feature-tile">
-          <div class="feature-icon feature-icon-teal"><i class="fas fa-clipboard-question"></i></div>
-          <div><h6>Career Quiz</h6><p>Discover careers that match your interests.</p></div>
-        </a>
-      </div>
-      <div class="col-6 col-md-4 reveal">
-        <a href="{% url 'resources:resource_list' %}" class="feature-tile">
-          <div class="feature-icon feature-icon-red"><i class="fas fa-file-pdf"></i></div>
-          <div><h6>Guides &amp; Resources</h6><p>PDFs, articles and placement tips.</p></div>
-        </a>
-      </div>
-      {% endfor %}
     </div>
   </div>
 </section>

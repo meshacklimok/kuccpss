@@ -1,4 +1,4 @@
-const CACHE = 'careernext-v6';
+const CACHE = 'careernext-v7';
 const OFFLINE_URL = '/offline/';
 
 self.addEventListener('install', e => {
@@ -65,10 +65,14 @@ self.addEventListener('fetch', e => {
     return;
   }
 
-  // Page navigations: network-only; serve offline page if connection is lost
+  // Page navigations: network-only; retry once before assuming we're offline,
+  // since a single failed fetch (slow dev server, aborted request, etc.) doesn't
+  // necessarily mean there's no internet connection.
   if (e.request.mode === 'navigate') {
     e.respondWith(
-      fetch(e.request).catch(() => caches.match(OFFLINE_URL))
+      fetch(e.request).catch(() =>
+        fetch(e.request).catch(() => caches.match(OFFLINE_URL))
+      )
     );
     return;
   }

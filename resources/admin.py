@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.utils.html import format_html
-from .models import ResourceCategory, Resource, Article, FAQItem, SuccessStory, SiteSetting, Announcement, SiteFeedback
+from .models import ResourceCategory, Resource, Article, FAQItem, SuccessStory, SiteSetting, Announcement, SiteFeedback, DeadlineBanner
 
 
 @admin.register(ResourceCategory)
@@ -103,6 +103,25 @@ class AnnouncementAdmin(admin.ModelAdmin):
         ('Schedule', {'fields': ('starts_at', 'ends_at'), 'classes': ('collapse',)}),
         ('Meta', {'fields': ('created_at',), 'classes': ('collapse',)}),
     )
+
+
+@admin.register(DeadlineBanner)
+class DeadlineBannerAdmin(admin.ModelAdmin):
+    list_display = ('heading_text', 'deadline1_label', 'deadline1_date', 'is_active')
+
+    fieldsets = (
+        (None, {'fields': ('is_active', 'heading_text')}),
+        ('Key Dates', {'fields': ('deadline1_label', 'deadline1_date', 'deadline2_label', 'deadline2_date')}),
+        ('Links — Logged-in Users', {'fields': ('auth_link1_label', 'auth_link1_url', 'auth_link2_label', 'auth_link2_url')}),
+        ('Links — Logged-out Visitors', {'fields': ('guest_link1_label', 'guest_link1_url', 'guest_link2_label', 'guest_link2_url')}),
+    )
+
+    def has_add_permission(self, request):
+        # Singleton — only one banner configuration needed
+        return not DeadlineBanner.objects.exists()
+
+    def has_delete_permission(self, request, obj=None):
+        return False
 
 
 @admin.register(SiteFeedback)

@@ -18,6 +18,9 @@ FEATURE_TO_PRODUCT = {
     "mentorship_booking": "mentorship",
 }
 
+# Payments for these features never earn an affiliate commission.
+AFFILIATE_EXCLUDED_FEATURES = {"mentorship_booking", "ai_chat_access"}
+
 
 class PaymentFeature(models.Model):
     """Admin-configurable price and enabled flag per feature."""

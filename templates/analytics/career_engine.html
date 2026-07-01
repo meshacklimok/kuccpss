@@ -1,0 +1,112 @@
+{% extends "analytics/base_analytics.html" %}
+{% block analytics_title %}Career Engine Analytics{% endblock %}
+{% block page_title %}Career Engine Analytics{% endblock %}
+{% block page_subtitle %}CareerNext matching engine usage — last {{ days }} days{% endblock %}
+
+{% block header_actions %}
+<div class="day-pills">
+  {% for d in day_options %}
+  <a href="?days={{ d }}" class="day-pill{% if days == d %} active{% endif %}">{% if d == 1 %}24h{% else %}{{ d }}d{% endif %}</a>
+  {% endfor %}
+</div>
+{% endblock %}
+
+{% block analytics_content %}
+
+<div class="kpi-grid">
+  <div class="kpi">
+    <div class="kpi-label">Total Uses</div>
+    <div class="kpi-val">{{ total_uses }}</div>
+    {% if uses_trend.pct is not None %}
+    <div class="trend {% if uses_trend.up %}up{% else %}down{% endif %}">{% if uses_trend.up %}▲{% else %}▼{% endif %} {{ uses_trend.pct }}% vs prior period</div>
+    {% endif %}
+  </div>
+  <div class="kpi green">
+    <div class="kpi-label">Unique Users</div>
+    <div class="kpi-val">{{ unique_users }}</div>
+    <div class="kpi-sub">{{ auth_uses }} logged-in runs, {{ guest_uses }} guest runs</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-label">Today</div>
+    <div class="kpi-val">{{ uses_today }}</div>
+  </div>
+  <div class="kpi purple">
+    <div class="kpi-label">Avg Matches / Run</div>
+    <div class="kpi-val">{{ avg_results }}</div>
+  </div>
+  <div class="kpi amber">
+    <div class="kpi-label">Zero-Match Runs</div>
+    <div class="kpi-val">{{ zero_matches }}</div>
+    <div class="kpi-sub">{{ zero_pct }}% of runs</div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-title">Daily Career Engine Runs</div>
+  <div class="chart-box h220"><canvas id="usesChart"></canvas></div>
+</div>
+
+<div class="two-col">
+  <div class="card">
+    <div class="card-title">Pathway Distribution</div>
+    <div class="chart-box h220"><canvas id="pathwayChart"></canvas></div>
+  </div>
+  <div class="card">
+    <div class="card-title">Mean Grade Distribution</div>
+    <div class="chart-box h220"><canvas id="gradeChart"></canvas></div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-title">Recent Runs</div>
+  <table class="tbl">
+    <thead><tr><th>Pathway</th><th>Grade</th><th>Matches</th><th>User</th><th>When</th></tr></thead>
+    <tbody>
+      {% for r in recent_uses %}
+      <tr>
+        <td>{{ r.pathway|title }}</td>
+        <td>{{ r.mean_grade|upper|default:"—" }}</td>
+        <td>{{ r.result_count }}</td>
+        <td>{{ r.user__email|default:"Guest" }}</td>
+        <td>{{ r.created_at|date:"M j, H:i" }}</td>
+      </tr>
+      {% empty %}<tr><td colspan="5" style="color:var(--muted);">No data yet</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<script>
+new Chart(document.getElementById('usesChart'), {
+  type: 'line',
+  data: { labels: {{ chart_labels|safe }},
+    datasets: [{ label:'Runs', data:{{ chart_uses|safe }},
+      borderColor:'#2563eb', backgroundColor:'rgba(37,99,235,.08)',
+      tension:.35, fill:true, pointRadius:2 }]
+  },
+  options: { responsive:true, maintainAspectRatio:false,
+    plugins:{ legend:{ display:false } },
+    scales:{ y:{ beginAtZero:true, ticks:{ precision:0 } } } }
+});
+new Chart(document.getElementById('pathwayChart'), {
+  type: 'doughnut',
+  data: { labels: {{ chart_pathway_labels|safe }},
+    datasets: [{ data:{{ chart_pathway_data|safe }},
+      backgroundColor:['#1e3a8a','#2563eb','#16a34a','#d97706','#7c3aed','#0891b2','#dc2626'], borderWidth:2 }]
+  },
+  options: { responsive:true, maintainAspectRatio:false,
+    plugins:{ legend:{ position:'right' } } }
+});
+new Chart(document.getElementById('gradeChart'), {
+  type: 'bar',
+  data: { labels: {{ chart_grade_labels|safe }},
+    datasets: [{ label:'Runs', data:{{ chart_grade_data|safe }},
+      backgroundColor:'rgba(124,58,237,.75)', borderRadius:6 }]
+  },
+  options: { responsive:true, maintainAspectRatio:false,
+    plugins:{ legend:{ display:false } },
+    scales:{ y:{ beginAtZero:true, ticks:{ precision:0 } } } }
+});
+</script>
+{% endblock %}

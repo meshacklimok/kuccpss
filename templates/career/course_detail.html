@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load custom_filters %}
 
 {% block title %}{{ course.name|default:tv_course.name|default:kmtc_course.name|default:ttc_course.name }} — KUCCPS Course Details Kenya | CareerNext{% endblock %}
 

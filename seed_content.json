@@ -1236,7 +1236,7 @@
   "pk": 2,
   "fields": {
     "question": "Is CareerNext the same as KUCCPS?",
-    "answer": "No. KUCCPS (Kenya Universities and Colleges Central Placement Service) is the official government body that places students into institutions. You apply at kuccps.ac.ke.\n\nCareerNext (this website) is an independent tool to help you prepare for that application — by calculating your points and finding your eligible courses before the portal opens. We are not affiliated with the government.",
+    "answer": "No. KUCCPS (Kenya Universities and Colleges Central Placement Service) is the official government body that places students into institutions. You apply at students.kuccps.net.\n\nCareerNext (this website) is an independent tool to help you prepare for that application — by calculating your points and finding your eligible courses before the portal opens. We are not affiliated with the government.",
     "category": "general",
     "order": 2,
     "is_active": true,
@@ -1440,7 +1440,7 @@
   "pk": 19,
   "fields": {
     "question": "Does CareerNext submit my application to KUCCPS?",
-    "answer": "No. CareerNext is only a preparation and guidance tool. Your actual placement application must be submitted directly on the official KUCCPS portal at kuccps.ac.ke during the application window. CareerNext helps you decide what to apply for — you still complete the application yourself on the official site.",
+    "answer": "No. CareerNext is only a preparation and guidance tool. Your actual placement application must be submitted directly on the official KUCCPS portal at students.kuccps.net during the application window. CareerNext helps you decide what to apply for — you still complete the application yourself on the official site.",
     "category": "kuccps",
     "order": 19,
     "is_active": true,

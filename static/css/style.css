@@ -934,10 +934,12 @@ small, .small { font-size: 0.875rem; }
   .mobile-bottom-nav a i { font-size: 1rem; }
 }
 
-@media (orientation: landscape) and (min-aspect-ratio: 3/2) and (max-height: 500px) {
-  .hero-section { padding: 2rem 0 1.5rem; }
-  .mobile-bottom-nav { padding: 0.2rem 0 calc(0.2rem + env(safe-area-inset-bottom)); }
-  .mobile-bottom-nav a { padding: 0.2rem 0; font-size: 0; }
+/* .layout-landscape is only added by JS once the device has turned a full
+   quarter-turn (screen.orientation.angle 90/270), not just tilted slightly. */
+@media (max-height: 500px) {
+  body.layout-landscape .hero-section { padding: 2rem 0 1.5rem; }
+  body.layout-landscape .mobile-bottom-nav { padding: 0.2rem 0 calc(0.2rem + env(safe-area-inset-bottom)); }
+  body.layout-landscape .mobile-bottom-nav a { padding: 0.2rem 0; font-size: 0; }
 }
 
 

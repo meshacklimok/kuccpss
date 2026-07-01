@@ -9,16 +9,33 @@
 }
 .faq-hero h1 { font-size: clamp(1.7rem, 4vw, 2.5rem); font-weight: 900; line-height: 1.15; }
 
+/* Sticky scrollspy nav */
+.faq-nav-wrap {
+    position: sticky; top: 0; z-index: 30; background: rgba(255,255,255,0.92);
+    backdrop-filter: blur(8px); border-bottom: 1px solid #e2e8f0;
+    padding: 0.7rem 0; margin-bottom: 0.5rem;
+}
+.faq-tabs { overflow-x: auto; scrollbar-width: none; }
+.faq-tabs::-webkit-scrollbar { display: none; }
 .faq-tab-btn {
     border: 1.5px solid #e2e8f0; background: #fff; border-radius: 20px;
     padding: 6px 18px; font-size: 0.82rem; font-weight: 700; color: #475569;
-    cursor: pointer; transition: all 0.18s; white-space: nowrap;
+    cursor: pointer; transition: all 0.18s; white-space: nowrap; flex-shrink: 0;
 }
 .faq-tab-btn:hover { border-color: #4f46e5; color: #4f46e5; }
-.faq-tab-btn.active { background: #4f46e5; border-color: #4f46e5; color: #fff; }
+.faq-tab-btn.active { background: #4f46e5; border-color: #4f46e5; color: #fff; box-shadow: 0 4px 12px rgba(79,70,229,0.3); }
 
-.faq-group { display: none; }
-.faq-group.active { display: block; }
+/* Continuous scroll sections */
+.faq-group { scroll-margin-top: 5.5rem; padding-bottom: 1rem; margin-bottom: 1.5rem; border-bottom: 1px dashed #e2e8f0; }
+.faq-group:last-of-type { border-bottom: none; }
+.faq-section-title {
+    display: flex; align-items: center; gap: 0.6rem; font-size: 1.15rem; font-weight: 900;
+    color: #1e293b; margin-bottom: 1rem;
+}
+.faq-section-title .faq-section-icon {
+    width: 34px; height: 34px; border-radius: 10px; display: flex; align-items: center; justify-content: center;
+    background: #eef2ff; color: #4f46e5; font-size: 0.9rem; flex-shrink: 0;
+}
 
 .faq-item {
     border: 1.5px solid #e2e8f0; border-radius: 14px; margin-bottom: 0.6rem;
@@ -71,17 +88,29 @@
 
 <div class="container py-5">
 
-  <!-- Category tabs -->
-  <div class="d-flex flex-wrap gap-2 mb-4" id="faqTabs">
-    {% for cat_key, cat_label, cat_items in faq_groups %}
-    <button class="faq-tab-btn {% if forloop.first %}active{% endif %}" data-tab="{{ cat_key }}">{{ cat_label }}</button>
-    {% endfor %}
+  <!-- Category tabs (sticky scrollspy nav) -->
+  <div class="faq-nav-wrap">
+    <div class="d-flex flex-nowrap gap-2 faq-tabs" id="faqTabs">
+      {% for cat_key, cat_label, cat_items in faq_groups %}
+      <button class="faq-tab-btn {% if forloop.first %}active{% endif %}" data-tab="{{ cat_key }}">{{ cat_label }}</button>
+      {% endfor %}
+    </div>
   </div>
 
   {% if has_content %}
-  <!-- ── DB-DRIVEN FAQ GROUPS ── -->
+  <!-- ── DB-DRIVEN FAQ GROUPS (continuous scroll) ── -->
   {% for cat_key, cat_label, cat_items in faq_groups %}
-  <div class="faq-group {% if forloop.first %}active{% endif %}" id="tab-{{ cat_key }}">
+  <div class="faq-group" id="tab-{{ cat_key }}" data-tab="{{ cat_key }}">
+    <h2 class="faq-section-title">
+      <span class="faq-section-icon">
+        {% if cat_key == 'general' %}<i class="fas fa-circle-info"></i>
+        {% elif cat_key == 'cluster' %}<i class="fas fa-calculator"></i>
+        {% elif cat_key == 'courses' %}<i class="fas fa-graduation-cap"></i>
+        {% elif cat_key == 'kuccps' %}<i class="fas fa-file-signature"></i>
+        {% elif cat_key == 'account' %}<i class="fas fa-user-gear"></i>
+        {% else %}<i class="fas fa-circle-question"></i>{% endif %}
+      </span>{{ cat_label }}
+    </h2>
     {% for item in cat_items %}
     <div class="faq-item">
       <button class="faq-q">
@@ -97,9 +126,10 @@
   {% endfor %}
 
   {% else %}
-  <!-- ── FALLBACK HARDCODED FAQ (shown when DB is empty) ── -->
+  <!-- ── FALLBACK HARDCODED FAQ (shown when DB is empty, continuous scroll) ── -->
   <!-- ── GENERAL ── -->
-  <div class="faq-group active" id="tab-general">
+  <div class="faq-group" id="tab-general" data-tab="general">
+    <h2 class="faq-section-title"><span class="faq-section-icon"><i class="fas fa-circle-info"></i></span>General</h2>
 
     <div class="faq-item">
       <button class="faq-q">
@@ -121,7 +151,7 @@
       <div class="faq-a">
         <strong>No.</strong> KUCCPS (Kenya Universities and Colleges Central Placement Service) is
         the official government body that places students into institutions. You <em>apply</em> at
-        <a href="https://kuccps.ac.ke" target="_blank" rel="noopener">kuccps.ac.ke</a>.<br><br>
+        <a href="https://students.kuccps.net/" target="_blank" rel="noopener">students.kuccps.net</a>.<br><br>
         CareerNext (this website) is an independent tool to help you <em>prepare</em> for that
         application — by calculating your points and finding your eligible courses before the portal
         opens. We are not affiliated with the government.
@@ -169,7 +199,8 @@
   </div>
 
   <!-- ── CLUSTER POINTS ── -->
-  <div class="faq-group" id="tab-cluster">
+  <div class="faq-group" id="tab-cluster" data-tab="cluster">
+    <h2 class="faq-section-title"><span class="faq-section-icon"><i class="fas fa-calculator"></i></span>Cluster Points</h2>
 
     <div class="faq-item">
       <button class="faq-q">
@@ -245,7 +276,8 @@
   </div>
 
   <!-- ── COURSES & PATHWAYS ── -->
-  <div class="faq-group" id="tab-courses">
+  <div class="faq-group" id="tab-courses" data-tab="courses">
+    <h2 class="faq-section-title"><span class="faq-section-icon"><i class="fas fa-graduation-cap"></i></span>Courses & Pathways</h2>
 
     <div class="faq-item">
       <button class="faq-q">
@@ -319,7 +351,8 @@
   </div>
 
   <!-- ── KUCCPS PROCESS ── -->
-  <div class="faq-group" id="tab-kuccps">
+  <div class="faq-group" id="tab-kuccps" data-tab="kuccps">
+    <h2 class="faq-section-title"><span class="faq-section-icon"><i class="fas fa-file-signature"></i></span>KUCCPS Process</h2>
 
     <div class="faq-item">
       <button class="faq-q">
@@ -330,7 +363,7 @@
         The portal typically opens between <strong>June and August</strong> each year, after KCSE
         results are released. For 2026, the portal is estimated to open around <strong>3 July 2026</strong>
         and close around <strong>21 August 2026</strong>. Check the official
-        <a href="https://kuccps.ac.ke" target="_blank" rel="noopener">KUCCPS website</a> and the
+        <a href="https://students.kuccps.net/" target="_blank" rel="noopener">KUCCPS website</a> and the
         <a href="{% url 'resources:kuccps_calendar' %}">KUCCPS Calendar</a> on this site for
         confirmed dates.
       </div>
@@ -369,7 +402,7 @@
       <div class="faq-a">
         <strong>No.</strong> CareerNext is only a preparation and guidance tool. Your actual
         placement application must be submitted directly on the official KUCCPS portal at
-        <a href="https://kuccps.ac.ke" target="_blank" rel="noopener">kuccps.ac.ke</a> during
+        <a href="https://students.kuccps.net/" target="_blank" rel="noopener">students.kuccps.net</a> during
         the application window. CareerNext helps you decide <em>what to apply for</em> — you still
         complete the application yourself on the official site.
       </div>
@@ -391,7 +424,8 @@
   </div>
 
   <!-- ── MY ACCOUNT ── -->
-  <div class="faq-group" id="tab-account">
+  <div class="faq-group" id="tab-account" data-tab="account">
+    <h2 class="faq-section-title"><span class="faq-section-icon"><i class="fas fa-user-gear"></i></span>My Account</h2>
 
     <div class="faq-item">
       <button class="faq-q">
@@ -476,23 +510,47 @@
 </div>
 
 <script>
-// Tab switching
-document.querySelectorAll('.faq-tab-btn').forEach(function(btn) {
+// Smooth-scroll to section on tab click
+var faqTabBtns = document.querySelectorAll('.faq-tab-btn');
+var faqSections = document.querySelectorAll('.faq-group');
+var faqNav = document.querySelector('.faq-nav-wrap');
+var isClickScrolling = false;
+
+faqTabBtns.forEach(function(btn) {
   btn.addEventListener('click', function() {
-    document.querySelectorAll('.faq-tab-btn').forEach(function(b) { b.classList.remove('active'); });
-    document.querySelectorAll('.faq-group').forEach(function(g) { g.classList.remove('active'); });
+    var section = document.getElementById('tab-' + btn.dataset.tab);
+    if (!section) return;
+    isClickScrolling = true;
+    faqTabBtns.forEach(function(b) { b.classList.remove('active'); });
     btn.classList.add('active');
-    var group = document.getElementById('tab-' + btn.dataset.tab);
-    if (group) group.classList.add('active');
+    section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    window.clearTimeout(window._faqScrollTimer);
+    window._faqScrollTimer = window.setTimeout(function() { isClickScrolling = false; }, 900);
   });
 });
+
+// Continuous-scroll spy: highlight the tab for whichever section is in view
+if ('IntersectionObserver' in window) {
+  var navHeight = faqNav ? faqNav.offsetHeight : 0;
+  var observer = new IntersectionObserver(function(entries) {
+    if (isClickScrolling) return;
+    entries.forEach(function(entry) {
+      if (!entry.isIntersecting) return;
+      var tabKey = entry.target.dataset.tab;
+      faqTabBtns.forEach(function(b) {
+        b.classList.toggle('active', b.dataset.tab === tabKey);
+      });
+    });
+  }, { rootMargin: '-' + (navHeight + 10) + 'px 0px -70% 0px', threshold: 0 });
+  faqSections.forEach(function(section) { observer.observe(section); });
+}
 
 // Accordion toggle
 document.querySelectorAll('.faq-q').forEach(function(btn) {
   btn.addEventListener('click', function() {
     var item = btn.closest('.faq-item');
     var wasOpen = item.classList.contains('open');
-    // close all in same group
+    // close all others in same section only
     var group = item.closest('.faq-group');
     group.querySelectorAll('.faq-item').forEach(function(i) { i.classList.remove('open'); });
     if (!wasOpen) item.classList.add('open');
