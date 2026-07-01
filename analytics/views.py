@@ -1289,6 +1289,69 @@ def calculator_analytics(request):
 
 
 @staff_only
+def career_engine_analytics(request):
+    """Career Engine (CareerNext matching) usage: who's using it, which pathway, how many matches."""
+    from .models import CareerEngineLog
+
+    days     = _parse_days(request)
+    today    = date.today()
+    ago      = today - timedelta(days=days)
+    prev_ago = today - timedelta(days=days * 2)
+
+    uses_qs      = CareerEngineLog.objects.filter(created_at__date__gte=ago)
+    total_uses   = uses_qs.count()
+    prev_uses    = CareerEngineLog.objects.filter(
+        created_at__date__gte=prev_ago, created_at__date__lt=ago
+    ).count()
+    uses_today   = CareerEngineLog.objects.filter(created_at__date=today).count()
+    uses_trend   = _trend(total_uses, prev_uses)
+
+    auth_uses    = uses_qs.filter(user__isnull=False).count()
+    guest_uses   = total_uses - auth_uses
+    unique_users = uses_qs.filter(user__isnull=False).values('user_id').distinct().count()
+
+    avg_results  = uses_qs.aggregate(a=Avg('result_count'))['a'] or 0
+    zero_matches = uses_qs.filter(result_count=0).count()
+    zero_pct     = round(zero_matches / max(total_uses, 1) * 100, 1)
+
+    pathway_dist = list(
+        uses_qs.values('pathway').annotate(n=Count('id')).order_by('-n')
+    )
+
+    grade_raw = list(uses_qs.exclude(mean_grade='').values('mean_grade').annotate(n=Count('id')))
+    grade_map = {r['mean_grade'].upper(): r['n'] for r in grade_raw}
+    grade_dist = [{'grade': g, 'n': grade_map.get(g, 0)} for g in GRADE_ORDER if g in grade_map]
+
+    date_labels = _date_labels(days, ago)
+    uses_series = _fill_series(
+        uses_qs.annotate(day=TruncDate('created_at')).values('day').annotate(n=Count('id')).order_by('day'),
+        date_labels,
+    )
+
+    recent_uses = list(
+        uses_qs.select_related('user').order_by('-created_at')[:40]
+        .values('pathway', 'mean_grade', 'result_count', 'user__email', 'created_at')
+    )
+
+    context = {
+        'days': days, 'day_options': [1, 7, 30, 90, 180, 365],
+        'total_uses': total_uses, 'uses_trend': uses_trend, 'uses_today': uses_today,
+        'auth_uses': auth_uses, 'guest_uses': guest_uses, 'unique_users': unique_users,
+        'avg_results': round(avg_results, 1),
+        'zero_matches': zero_matches, 'zero_pct': zero_pct,
+        'pathway_dist': pathway_dist, 'grade_dist': grade_dist,
+        'recent_uses': recent_uses,
+        'chart_labels':       json.dumps(date_labels),
+        'chart_uses':         json.dumps(uses_series),
+        'chart_pathway_labels': json.dumps([p['pathway'].title() for p in pathway_dist]),
+        'chart_pathway_data':   json.dumps([p['n'] for p in pathway_dist]),
+        'chart_grade_labels': json.dumps([g['grade'] for g in grade_dist]),
+        'chart_grade_data':   json.dumps([g['n'] for g in grade_dist]),
+    }
+    return render(request, 'analytics/career_engine.html', context)
+
+
+@staff_only
 def conversion_analytics(request):
     """Course discovery → shortlist conversion: funnel, top/zero-converting courses, institutions."""
     from .models import ViewLog

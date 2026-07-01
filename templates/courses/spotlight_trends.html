@@ -1,4 +1,4 @@
-{% load static %}
+﻿{% load static %}
 {# ── Course Spotlight & Trends ─────────────────────────────────────────────── #}
 <section class="st-section" id="spotlight-trends">
 <style>
@@ -336,101 +336,14 @@
 
     <div class="st-grid">
 
-        <!-- ── LEFT: Course of the Week ── -->
-        <div class="st-spotlight">
-            {% if spotlight %}
-                {% with c=spotlight.course %}
-                    {% if spotlight.hero_image %}
-                        <img src="{{ spotlight.hero_image.url }}" alt="{{ c.name }}" class="st-hero" loading="lazy">
-                    {% else %}
-                        <div class="st-hero-placeholder">
-                            <i class="fas fa-graduation-cap" style="color:rgba(255,255,255,0.5);position:relative;z-index:1;"></i>
-                        </div>
-                    {% endif %}
-
-                    <div class="st-spotlight-body">
-                        <div class="st-week-badge">
-                            <i class="fas fa-fire-flame-curved"></i> Course of the Week
-                        </div>
-
-                        <div class="st-course-name">{{ c.name }}</div>
-                        {% if spotlight.headline %}
-                            <div class="st-headline">"{{ spotlight.headline }}"</div>
-                        {% endif %}
-                        <div class="st-summary">{{ spotlight.summary }}</div>
-
-                        <!-- Stat chips -->
-                        <div class="st-chips">
-                            {% if c.course_type %}
-                            <span class="st-chip">
-                                <i class="fas fa-tag"></i> {{ c.course_type.name }}
-                            </span>
-                            {% endif %}
-                            {% if c.duration %}
-                            <span class="st-chip">
-                                <i class="fas fa-clock"></i> {{ c.duration }}
-                            </span>
-                            {% endif %}
-                            {% if c.minimum_mean_grade %}
-                            <span class="st-chip">
-                                <i class="fas fa-chart-bar"></i> Min grade: {{ c.minimum_mean_grade }}
-                            </span>
-                            {% endif %}
-                            {% with count=c.offerings.count %}
-                            {% if count %}
-                            <span class="st-chip">
-                                <i class="fas fa-university"></i> {{ count }} institution{{ count|pluralize }}
-                            </span>
-                            {% endif %}
-                            {% endwith %}
-                        </div>
-
-                        <!-- Top universities with cutoffs -->
-                        {% with top_offs=c.offerings.all|slice:":4" %}
-                        {% if top_offs %}
-                        <div class="st-unis">
-                            <div class="st-unis-label">
-                                <i class="fas fa-map-marker-alt" style="margin-right:3px;"></i> Where to study
-                            </div>
-                            {% for off in top_offs %}
-                            {% with lc=off.latest_cutoff %}
-                            <div class="st-uni-row">
-                                <span class="st-uni-name">{{ off.institution.name }}</span>
-                                {% if lc %}
-                                <span class="st-uni-cut">{{ lc }} pts</span>
-                                {% endif %}
-                            </div>
-                            {% endwith %}
-                            {% endfor %}
-                        </div>
-                        {% endif %}
-                        {% endwith %}
-
-                        <a href="{{ c.get_absolute_url }}" class="st-cta">
-                            Explore this Course <i class="fas fa-arrow-right"></i>
-                        </a>
-                    </div>
-                {% endwith %}
-            {% else %}
-                <div class="st-hero-placeholder">
-                    <i class="fas fa-calendar-week" style="color:rgba(255,255,255,0.2);position:relative;z-index:1;"></i>
-                </div>
-                <div class="st-spotlight-empty">
-                    <i class="fas fa-star"></i>
-                    <p><strong style="color:rgba(255,255,255,0.4);">No spotlight this week yet</strong><br>
-                    Admin can pick a Course of the Week from the dashboard.</p>
-                </div>
-            {% endif %}
-        </div>
-
-        <!-- ── RIGHT: Trending Rankings ── -->
+        <!-- ── LEFT: Trending Rankings ── -->
         <div class="st-trending">
             <div class="st-trending-header">
                 <div class="st-trending-title">
                     <div class="st-live-dot"></div>
                     Trending Now
                 </div>
-                <span class="st-update-badge"><i class="fas fa-rotate me-1" style="font-size:0.55rem;"></i>Updated 30 min</span>
+                <span class="st-update-badge"><i class="fas fa-rotate me-1" style="font-size:0.55rem;"></i>Updated {% if trends_generated_at %}{{ trends_generated_at|timesince }} ago{% else %}recently{% endif %}</span>
             </div>
 
             <!-- Tabs -->
@@ -558,6 +471,93 @@
                 Browse all courses <i class="fas fa-arrow-right ms-1"></i>
             </a>
         </div><!-- /st-trending -->
+
+        <!-- ── RIGHT: Course of the Week ── -->
+        <div class="st-spotlight">
+            {% if spotlight %}
+                {% with c=spotlight.course %}
+                    {% if spotlight.hero_image %}
+                        <img src="{{ spotlight.hero_image.url }}" alt="{{ c.name }}" class="st-hero" loading="lazy">
+                    {% else %}
+                        <div class="st-hero-placeholder">
+                            <i class="fas fa-graduation-cap" style="color:rgba(255,255,255,0.5);position:relative;z-index:1;"></i>
+                        </div>
+                    {% endif %}
+
+                    <div class="st-spotlight-body">
+                        <div class="st-week-badge">
+                            <i class="fas fa-fire-flame-curved"></i> Course of the Week
+                        </div>
+
+                        <div class="st-course-name">{{ c.name }}</div>
+                        {% if spotlight.headline %}
+                            <div class="st-headline">"{{ spotlight.headline }}"</div>
+                        {% endif %}
+                        <div class="st-summary">{{ spotlight.summary }}</div>
+
+                        <!-- Stat chips -->
+                        <div class="st-chips">
+                            {% if c.course_type %}
+                            <span class="st-chip">
+                                <i class="fas fa-tag"></i> {{ c.course_type.name }}
+                            </span>
+                            {% endif %}
+                            {% if c.duration %}
+                            <span class="st-chip">
+                                <i class="fas fa-clock"></i> {{ c.duration }}
+                            </span>
+                            {% endif %}
+                            {% if c.minimum_mean_grade %}
+                            <span class="st-chip">
+                                <i class="fas fa-chart-bar"></i> Min grade: {{ c.minimum_mean_grade }}
+                            </span>
+                            {% endif %}
+                            {% with count=c.offerings.count %}
+                            {% if count %}
+                            <span class="st-chip">
+                                <i class="fas fa-university"></i> {{ count }} institution{{ count|pluralize }}
+                            </span>
+                            {% endif %}
+                            {% endwith %}
+                        </div>
+
+                        <!-- Top universities with cutoffs -->
+                        {% with top_offs=c.offerings.all|slice:":4" %}
+                        {% if top_offs %}
+                        <div class="st-unis">
+                            <div class="st-unis-label">
+                                <i class="fas fa-map-marker-alt" style="margin-right:3px;"></i> Where to study
+                            </div>
+                            {% for off in top_offs %}
+                            {% with lc=off.latest_cutoff %}
+                            <div class="st-uni-row">
+                                <span class="st-uni-name">{{ off.institution.name }}</span>
+                                {% if lc %}
+                                <span class="st-uni-cut">{{ lc }} pts</span>
+                                {% endif %}
+                            </div>
+                            {% endwith %}
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                        {% endwith %}
+
+                        <a href="{{ c.get_absolute_url }}" class="st-cta">
+                            Explore this Course <i class="fas fa-arrow-right"></i>
+                        </a>
+                    </div>
+                {% endwith %}
+            {% else %}
+                <div class="st-hero-placeholder">
+                    <i class="fas fa-calendar-week" style="color:rgba(255,255,255,0.2);position:relative;z-index:1;"></i>
+                </div>
+                <div class="st-spotlight-empty">
+                    <i class="fas fa-star"></i>
+                    <p><strong style="color:rgba(255,255,255,0.4);">No spotlight this week yet</strong><br>
+                    Admin can pick a Course of the Week from the dashboard.</p>
+                </div>
+            {% endif %}
+        </div>
 
     </div><!-- /st-grid -->
 </div>

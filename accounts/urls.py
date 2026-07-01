@@ -42,6 +42,9 @@ urlpatterns = [
     path("notifications/broadcast/", views.broadcast_notification_view, name="broadcast_notification"),
     path("push/subscribe/",          views.push_subscribe,              name="push_subscribe"),
 
+    # Staff & admin directory
+    path("staff/team/", views.staff_team_view, name="staff_team"),
+
     # ==============================
     # Allauth URLs (Google OAuth + built-in email/password)
     # ==============================

@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block title %}Staff & Admins{% endblock %}
+
+{% block content %}
+<style>
+.st-wrap  { max-width: 720px; margin: 2.5rem auto; padding: 0 1rem 4rem; }
+.st-card  { background: #fff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 2rem 2.25rem; box-shadow: 0 4px 24px rgba(30,58,138,0.08); }
+.st-title { font-size: 1.35rem; font-weight: 800; color: #1e3a8a; margin: 0 0 .25rem; }
+.st-sub   { font-size: .875rem; color: #64748b; margin: 0 0 1.75rem; }
+.st-table { width: 100%; border-collapse: collapse; }
+.st-table th {
+  text-align: left; font-size: .72rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .04em; color: #94a3b8; padding: .5rem .6rem; border-bottom: 2px solid #e2e8f0;
+}
+.st-table td { padding: .75rem .6rem; border-bottom: 1px solid #f1f5f9; font-size: .9rem; color: #1e293b; }
+.st-badge {
+  display: inline-flex; align-items: center; gap: .3rem; border-radius: 20px;
+  font-size: .72rem; font-weight: 700; padding: .2rem .7rem; letter-spacing: .02em;
+}
+.st-badge.super  { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
+.st-badge.staff  { background: #eff6ff; color: #1e3a8a; border: 1px solid #bfdbfe; }
+.st-empty { text-align: center; color: #94a3b8; padding: 2rem 0; font-size: .9rem; }
+</style>
+
+<div class="st-wrap">
+  <div class="st-card">
+    <h1 class="st-title">Staff & Admins</h1>
+    <p class="st-sub">Everyone with staff or superuser access on this platform.</p>
+
+    {% if staff_users %}
+    <table class="st-table">
+      <thead>
+        <tr>
+          <th>Email</th>
+          <th>Name</th>
+          <th>Role</th>
+          <th>Joined</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for u in staff_users %}
+        <tr>
+          <td>{{ u.email }}</td>
+          <td>{{ u.get_full_name|default:"—" }}</td>
+          <td>
+            {% if u.is_superuser %}
+              <span class="st-badge super">Superuser</span>
+            {% else %}
+              <span class="st-badge staff">Staff</span>
+            {% endif %}
+          </td>
+          <td>{{ u.date_joined|date:"d M Y" }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p class="st-empty">No staff or admin accounts found.</p>
+    {% endif %}
+
+    <p style="margin-top:1.5rem;font-size:.8rem;color:#94a3b8;text-align:center;">
+      <a href="/cn-staff/accounts/user/" style="color:#1e3a8a;">Manage users in admin →</a>
+    </p>
+  </div>
+</div>
+{% endblock %}

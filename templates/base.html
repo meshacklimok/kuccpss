@@ -360,15 +360,15 @@
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle px-2" href="#" data-bs-toggle="dropdown">Careers</a>
                         <ul class="dropdown-menu">
+                            <li><a class="dropdown-item fw-semibold" href="{% url 'career:home' %}">
+                                <i class="fas fa-compass me-2 text-success"></i>Career Engine
+                                <span class="badge rounded-pill ms-1" style="font-size:0.6rem;background:#dcfce7;color:#15803d;padding:2px 6px;">New</span>
+                            </a></li>
                             <li><a class="dropdown-item" href="{% url 'career:career_profiles' %}">
                                 <i class="fas fa-user-tie me-2 text-primary"></i>Career Profiles
                             </a></li>
                             <li><a class="dropdown-item" href="{% url 'career:quiz' %}">
                                 <i class="fas fa-clipboard-question me-2 text-warning"></i>Career Quiz
-                            </a></li>
-                            <li><a class="dropdown-item fw-semibold" href="{% url 'career:home' %}">
-                                <i class="fas fa-compass me-2 text-success"></i>Career Engine
-                                <span class="badge rounded-pill ms-1" style="font-size:0.6rem;background:#dcfce7;color:#15803d;padding:2px 6px;">New</span>
                             </a></li>
                         </ul>
                     </li>
@@ -379,9 +379,15 @@
                         <a class="nav-link dropdown-toggle px-2" href="#" data-bs-toggle="dropdown">More</a>
                         <ul class="dropdown-menu">
                             {% if user.is_authenticated %}
+                            {% if '/accounts/dashboard' in request.path %}
                             <li><a class="dropdown-item" href="{% url 'home' %}">
                                 <i class="fas fa-home me-2 text-primary"></i>Home Page
                             </a></li>
+                            {% else %}
+                            <li><a class="dropdown-item" href="{% url 'accounts:dashboard' %}">
+                                <i class="fas fa-tachometer-alt me-2 text-primary"></i>Dashboard
+                            </a></li>
+                            {% endif %}
                             <li><hr class="dropdown-divider"></li>
                             {% endif %}
                             <li><a class="dropdown-item" href="{% url 'mentorship:directory' %}">
@@ -515,25 +521,27 @@
     </nav>
 
     <!-- ── KUCCPS DEADLINE COUNTDOWN ── -->
+    {% if deadline_banner %}
     <div id="deadlineBar" style="display:none;background:linear-gradient(90deg,#dc2626,#b91c1c);color:white;font-size:0.8rem;padding:7px 0;position:relative;z-index:999;">
         <div class="container d-flex align-items-center justify-content-between gap-2 flex-wrap">
             <div class="d-flex align-items-center gap-2 flex-wrap">
-                <span style="font-weight:800;letter-spacing:0.04em;">⏰ KUCCPS 2026</span>
+                <span style="font-weight:800;letter-spacing:0.04em;">{{ deadline_banner.heading_text }}</span>
                 <span id="deadlineMsg" style="font-weight:600;"></span>
                 <span id="deadlineCounter" style="background:rgba(255,255,255,0.2);border-radius:6px;padding:2px 10px;font-weight:800;font-size:0.85rem;letter-spacing:0.03em;"></span>
             </div>
             <div class="d-flex align-items-center gap-2 flex-wrap">
                 {% if user.is_authenticated %}
-                <a href="{% url 'career:home' %}" style="color:white;font-weight:700;font-size:0.78rem;white-space:nowrap;text-decoration:underline;">Check Eligibility →</a>
-                <a href="https://students.kuccps.net/login/" target="_blank" rel="noopener noreferrer" style="color:#fde68a;font-weight:700;font-size:0.78rem;white-space:nowrap;text-decoration:underline;">Apply on KUCCPS →</a>
+                <a href="{{ deadline_banner.auth_link1_url }}" style="color:white;font-weight:700;font-size:0.78rem;white-space:nowrap;text-decoration:underline;">{{ deadline_banner.auth_link1_label }}</a>
+                {% if deadline_banner.auth_link2_label %}<a href="{{ deadline_banner.auth_link2_url }}" target="_blank" rel="noopener noreferrer" style="color:#fde68a;font-weight:700;font-size:0.78rem;white-space:nowrap;text-decoration:underline;">{{ deadline_banner.auth_link2_label }}</a>{% endif %}
                 {% else %}
-                <a href="{% url 'clusterpoints:calculator' %}" style="color:white;font-weight:700;font-size:0.78rem;white-space:nowrap;text-decoration:underline;">Calculate Points →</a>
-                <a href="https://students.kuccps.net/login/" target="_blank" rel="noopener noreferrer" style="color:#fde68a;font-weight:700;font-size:0.78rem;white-space:nowrap;text-decoration:underline;">Apply on KUCCPS →</a>
+                <a href="{{ deadline_banner.guest_link1_url }}" style="color:white;font-weight:700;font-size:0.78rem;white-space:nowrap;text-decoration:underline;">{{ deadline_banner.guest_link1_label }}</a>
+                {% if deadline_banner.guest_link2_label %}<a href="{{ deadline_banner.guest_link2_url }}" target="_blank" rel="noopener noreferrer" style="color:#fde68a;font-weight:700;font-size:0.78rem;white-space:nowrap;text-decoration:underline;">{{ deadline_banner.guest_link2_label }}</a>{% endif %}
                 {% endif %}
                 <button onclick="dismissDeadlineBar()" style="background:none;border:none;color:rgba(255,255,255,0.7);font-size:1.1rem;padding:0;cursor:pointer;line-height:1;" aria-label="Dismiss">×</button>
             </div>
         </div>
     </div>
+    {% endif %}
 
     <!-- ── MAIN CONTENT ── -->
     <main id="main-content" tabindex="-1">
@@ -1270,11 +1278,13 @@ window._ph = function (name, props) {
         if (document.visibilityState === 'visible') tryLockPortrait();
     });
 
-    /* Browser fallback: suppress landscape body class until aspect ratio ≥ 1.5:1.
-       Applies .layout-landscape only when truly horizontal so CSS can key off it. */
+    /* Browser fallback: only apply .layout-landscape once the device has actually
+       been turned a full quarter-turn (angle 90/270) — not merely tilted. */
     function checkRatio() {
-        var ratio = window.innerWidth / window.innerHeight;
-        document.body.classList.toggle('layout-landscape', ratio >= 1.5);
+        var angle = (screen.orientation && typeof screen.orientation.angle === 'number')
+            ? screen.orientation.angle
+            : (typeof window.orientation === 'number' ? Math.abs(window.orientation) : 0);
+        document.body.classList.toggle('layout-landscape', angle === 90 || angle === 270);
     }
     checkRatio();
     var rafId;
@@ -1282,15 +1292,20 @@ window._ph = function (name, props) {
         cancelAnimationFrame(rafId);
         rafId = requestAnimationFrame(checkRatio);
     });
+    window.addEventListener('orientationchange', checkRatio);
+    if (screen.orientation && screen.orientation.addEventListener) {
+        screen.orientation.addEventListener('change', checkRatio);
+    }
 }());
 </script>
 
+{% if deadline_banner %}
 <script>
 (function () {
-    // KUCCPS 2026 key dates — update each year
+    // Key dates — configurable via Django admin (Resources → Deadline Banner)
     const DEADLINES = [
-        { label: 'KUCCPS Portal Opens — Build Your Shortlist Now', date: new Date('2026-07-03T12:00:00+03:00') },
-        { label: 'KUCCPS Application Closes',                      date: new Date('2026-08-21T23:59:00+03:00') },
+        { label: '{{ deadline_banner.deadline1_label|escapejs }}', date: new Date('{{ deadline_banner.deadline1_date|date:"c" }}') },
+        {% if deadline_banner.deadline2_date %}{ label: '{{ deadline_banner.deadline2_label|escapejs }}', date: new Date('{{ deadline_banner.deadline2_date|date:"c" }}') },{% endif %}
     ];
 
     const DISMISS_KEY = 'cn_deadline_dismissed_v3';
@@ -1350,6 +1365,7 @@ window._ph = function (name, props) {
     };
 }());
 </script>
+{% endif %}
 
 <!-- ── SITE ANNOUNCEMENTS ── -->
 {% if site_announcements %}

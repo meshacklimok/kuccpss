@@ -441,6 +441,10 @@ body { background: var(--bg); }
          class="an-nav-item {% if request.resolver_match.url_name == 'calculator_analytics' %}active{% endif %}">
         <span class="nav-ico"><i class="fas fa-calculator"></i></span> Calculator
       </a>
+      <a href="{% url 'analytics:career_engine_analytics' %}"
+         class="an-nav-item {% if request.resolver_match.url_name == 'career_engine_analytics' %}active{% endif %}">
+        <span class="nav-ico"><i class="fas fa-compass"></i></span> Career Engine
+      </a>
       <a href="{% url 'analytics:ai_chat_analytics' %}"
          class="an-nav-item {% if request.resolver_match.url_name == 'ai_chat_analytics' %}active{% endif %}">
         <span class="nav-ico"><i class="fas fa-robot"></i></span> AI Chat

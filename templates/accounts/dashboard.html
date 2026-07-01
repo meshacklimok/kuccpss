@@ -641,6 +641,12 @@ body.dark .helb-criteria-item    { background: rgba(22,163,74,0.12); border-colo
           <i class="fas fa-chart-line"></i>Analytics
         </a>
         {% endif %}
+        {% if user.is_superuser %}
+        <a href="{% url 'accounts:staff_team' %}" class="btn-dash-action"
+           style="background:linear-gradient(120deg,#1e3a8a,#2563eb);color:#fff;border:none;">
+          <i class="bi bi-shield-lock-fill"></i>Staff & Admins
+        </a>
+        {% endif %}
       </div>
     </div>
     {% endif %}
@@ -1653,7 +1659,7 @@ body.dark .helb-criteria-item    { background: rgba(22,163,74,0.12); border-colo
         <i class="fas fa-rocket me-1"></i>Prepare Now
       </a>
       {% elif timeline_phase == 'open' %}
-      <a href="https://kuccps.ac.ke" target="_blank" rel="noopener"
+      <a href="https://students.kuccps.net/" target="_blank" rel="noopener"
          class="btn btn-light btn-sm w-100 mt-3 fw-700" style="border-radius:10px;font-size:0.8rem;">
         <i class="fas fa-external-link-alt me-1"></i>Apply on KUCCPS
       </a>
@@ -2139,14 +2145,14 @@ body.dark .helb-criteria-item    { background: rgba(22,163,74,0.12); border-colo
       </h6>
     </div>
     <div style="padding:0.25rem 0;">
-      <a href="https://kuccps.ac.ke" target="_blank" rel="noopener" class="ext-link-row">
+      <a href="https://students.kuccps.net/" target="_blank" rel="noopener" class="ext-link-row">
         <div class="rounded-circle flex-shrink-0 d-flex align-items-center justify-content-center"
              style="width:32px;height:32px;background:#dbeafe;">
           <i class="fas fa-university" style="color:#1d4ed8;font-size:0.8rem;"></i>
         </div>
         <div style="min-width:0;flex:1;">
           <div class="fw-700 small" style="color:#1e3a8a;">KUCCPS Portal</div>
-          <div class="text-muted" style="font-size:0.68rem;">kuccps.ac.ke</div>
+          <div class="text-muted" style="font-size:0.68rem;">students.kuccps.net</div>
         </div>
         <i class="fas fa-external-link-alt text-muted" style="font-size:0.6rem;"></i>
       </a>

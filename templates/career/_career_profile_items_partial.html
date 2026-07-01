@@ -1,3 +1,4 @@
+{% load custom_filters %}
 {% for profile in page_obj %}
 {% with first_tag=profile.career_tags|split:","|first %}
 <div class="col-sm-6 col-lg-4 col-xl-3">

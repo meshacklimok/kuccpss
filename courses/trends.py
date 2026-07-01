@@ -139,6 +139,7 @@ def get_trends_context():
         'trending_competitive':  _most_competitive(),
         'trending_offered':      _most_offered(),
         'trending_rated':        _top_rated(),
+        'trends_generated_at':   timezone.now(),
     }
     cache.set(CACHE_KEY, ctx, _cache_ttl())
     return ctx

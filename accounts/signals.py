@@ -7,11 +7,13 @@ from django.contrib.auth.signals import (
 )
 from django.dispatch import receiver
 
+from allauth.account.signals import user_signed_up
 from allauth.socialaccount.signals import social_account_added
 
 from .models import (
     LoginHistory,
     DeviceSession,
+    Referral,
     User
 )
 
@@ -140,9 +142,23 @@ def log_user_logout(sender, request, user, **kwargs):
 # =====================================================
 
 @receiver(social_account_added)
-def mark_google_user(request, sociallogin, **kwargs):
+def mark_google_user_on_connect(request, sociallogin, **kwargs):
+    """Handles a Google account being connected to an already-logged-in user."""
     user = sociallogin.user
     if sociallogin.account.provider == "google":
         user.is_google_user = True
         user.is_verified = True
         user.save(update_fields=["is_google_user", "is_verified"])
+
+
+@receiver(user_signed_up)
+def on_user_signed_up(request, user, sociallogin=None, **kwargs):
+    """Fires for every brand-new account (email/password or social).
+    `sociallogin` is only present for social signups."""
+    if sociallogin and sociallogin.account.provider == "google":
+        user.is_google_user = True
+        user.is_verified = True
+        user.save(update_fields=["is_google_user", "is_verified"])
+
+    if request:
+        Referral.attribute_from_session(request, user)

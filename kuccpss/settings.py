@@ -169,6 +169,7 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 'accounts.context_processors.unread_notifications',
                 'accounts.context_processors.active_announcements',
+                'resources.context_processors.deadline_banner',
                 'analytics.context_processors.posthog_keys',
                 'analytics.context_processors.sentry_context',
                 'analytics.context_processors.ga_context',

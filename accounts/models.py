@@ -423,6 +423,23 @@ class Referral(models.Model):
         return f"{self.referrer.email} → {self.code}"
 
     @staticmethod
+    def attribute_from_session(request, user):
+        """Credit whoever's ?ref=CODE was captured in this session to `user`,
+        who just registered (via email/password or a social provider)."""
+        code = request.session.pop('referral_code', None)
+        if not code:
+            return
+        try:
+            ref = Referral.objects.get(code=code, converted=False)
+        except Referral.DoesNotExist:
+            return
+        ref.referred_user  = user
+        ref.referred_email = user.email
+        ref.converted      = True
+        ref.converted_at   = timezone.now()
+        ref.save(update_fields=['referred_user', 'referred_email', 'converted', 'converted_at'])
+
+    @staticmethod
     def get_or_create_for_user(user):
         obj, _ = Referral.objects.get_or_create(
             referrer=user, referred_user=None, converted=False,

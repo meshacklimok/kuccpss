@@ -13,7 +13,7 @@ from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 
-from .models import Payment, Transaction
+from .models import Payment, Transaction, AFFILIATE_EXCLUDED_FEATURES
 from .services import initiate_stk_push, price_for_feature, fetch_intasend_status, lock_submission_on_payment
 
 logger = logging.getLogger(__name__)
@@ -442,8 +442,9 @@ def mpesa_webhook(request):
         lock_submission_on_payment(payment)
         _send_payment_receipt(payment)
 
-    # Award affiliate commission if the paying user was referred by an active affiliate
-    if state == "COMPLETE":
+    # Award affiliate commission if the paying user was referred by an active affiliate.
+    # Mentorship bookings and AI chat top-ups never earn commission.
+    if state == "COMPLETE" and payment.feature not in AFFILIATE_EXCLUDED_FEATURES:
         try:
             from django.db.models import F
             from accounts.models import Referral, AffiliateProfile, AffiliateCommission

@@ -269,6 +269,37 @@ class Announcement(models.Model):
 
 
 # ──────────────────────────────────────────────────────
+# KUCCPS deadline countdown bar (shown site-wide under the navbar)
+# ──────────────────────────────────────────────────────
+class DeadlineBanner(models.Model):
+    is_active = models.BooleanField(default=True, help_text="Show the countdown bar site-wide")
+    heading_text = models.CharField(max_length=100, default="⏰ KUCCPS 2026")
+
+    deadline1_label = models.CharField(max_length=150, default="KUCCPS Portal Opens — Build Your Shortlist Now")
+    deadline1_date = models.DateTimeField(help_text="First key date, e.g. portal opening")
+
+    deadline2_label = models.CharField(max_length=150, blank=True, default="KUCCPS Application Closes")
+    deadline2_date = models.DateTimeField(null=True, blank=True, help_text="Second key date, e.g. application deadline")
+
+    auth_link1_label = models.CharField(max_length=60, default="Check Eligibility →")
+    auth_link1_url   = models.CharField(max_length=300, default="/career/", help_text="Shown to logged-in users")
+    auth_link2_label = models.CharField(max_length=60, blank=True, default="Apply on KUCCPS →")
+    auth_link2_url   = models.CharField(max_length=300, blank=True, default="https://students.kuccps.net/login/")
+
+    guest_link1_label = models.CharField(max_length=60, default="Calculate Points →")
+    guest_link1_url   = models.CharField(max_length=300, default="/career/", help_text="Shown to logged-out visitors")
+    guest_link2_label = models.CharField(max_length=60, blank=True, default="Apply on KUCCPS →")
+    guest_link2_url   = models.CharField(max_length=300, blank=True, default="https://students.kuccps.net/login/")
+
+    class Meta:
+        verbose_name        = 'Deadline Banner'
+        verbose_name_plural = 'Deadline Banner'
+
+    def __str__(self):
+        return self.heading_text or "Deadline Banner"
+
+
+# ──────────────────────────────────────────────────────
 # User-submitted site feedback
 # ──────────────────────────────────────────────────────
 class SiteFeedback(models.Model):
