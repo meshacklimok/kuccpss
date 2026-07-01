@@ -55,7 +55,7 @@ def activate_as_affiliate(modeladmin, request, queryset):
         if was_created:
             created += 1
     modeladmin.message_user(request, f"Activated {created} new affiliate(s). ({queryset.count() - created} already existed.)")
-activate_as_affiliate.short_description = "Activate selected users as affiliates (20%)"
+activate_as_affiliate.short_description = "Activate selected users as affiliates (20%%)"
 
 
 @admin.action(description="Export selected users to CSV")
