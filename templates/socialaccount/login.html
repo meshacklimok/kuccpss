@@ -4,90 +4,102 @@
 {% block title %}Continue with Google — CareerNext{% endblock %}
 
 {% block content %}
-<div class="auth-page">
-  <div class="auth-split">
+<style>
+.gconfirm-page {
+  min-height: 100svh;
+  background: #f1f5f9;
+  display: flex; align-items: center; justify-content: center;
+  padding: 2rem 1rem;
+}
+.gconfirm-card {
+  width: 100%; max-width: 380px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  box-shadow: 0 24px 64px rgba(15,23,42,0.12), 0 2px 8px rgba(15,23,42,0.06);
+  padding: 2.25rem 2rem 1.75rem;
+  animation: fadeInUp 0.35s ease both;
+}
+.gconfirm-icon {
+  width: 48px; height: 48px; margin: 0 auto 1.25rem;
+  display: flex; align-items: center; justify-content: center;
+}
+.gconfirm-title {
+  font-size: 1.15rem; font-weight: 700; color: var(--text);
+  text-align: center; margin: 0 0 0.4rem; letter-spacing: -0.2px;
+}
+.gconfirm-sub {
+  font-size: 0.85rem; color: var(--text-3); text-align: center;
+  line-height: 1.55; margin: 0 0 1.5rem;
+}
+.gconfirm-sub strong { color: var(--text-2); font-weight: 600; }
+.gconfirm-scope {
+  display: flex; align-items: flex-start; gap: 0.6rem;
+  background: var(--surface-2); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 0.8rem 0.9rem;
+  margin-bottom: 1.5rem;
+}
+.gconfirm-scope i { color: var(--text-3); font-size: 0.8rem; margin-top: 2px; }
+.gconfirm-scope span { font-size: 0.78rem; color: var(--text-2); line-height: 1.5; }
+.gconfirm-actions { display: flex; gap: 0.6rem; }
+.gconfirm-actions form { flex: 1; }
+.btn-gconfirm-primary {
+  width: 100%; padding: 0.65rem 1rem; min-height: 42px;
+  background: #1a73e8; border: none; border-radius: var(--radius-sm);
+  color: #fff; font-weight: 600; font-size: 0.86rem; cursor: pointer;
+  transition: background 0.15s;
+}
+.btn-gconfirm-primary:hover { background: #1558b0; }
+.btn-gconfirm-secondary {
+  flex: 1; display: flex; align-items: center; justify-content: center;
+  padding: 0.65rem 1rem; min-height: 42px;
+  background: var(--surface); border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm); color: var(--text-2); font-weight: 600;
+  font-size: 0.86rem; text-decoration: none; transition: all 0.15s;
+}
+.btn-gconfirm-secondary:hover { background: var(--surface-2); color: var(--text); }
+.gconfirm-footer {
+  display: flex; align-items: center; justify-content: center; gap: 0.35rem;
+  margin-top: 1.5rem; font-size: 0.7rem; color: var(--text-3);
+}
+.gconfirm-footer i { color: #10b981; }
+</style>
 
-    <!-- Left brand panel -->
-    <div class="auth-panel-left">
-      <a href="{% url 'home' %}" class="auth-panel-logo text-decoration-none">
-        <span style="font-size:1.25rem;font-weight:900;color:#fff;letter-spacing:-0.5px;">
-          Career<span style="color:#93C5FD;">Next</span>
-        </span>
-      </a>
+<div class="gconfirm-page">
+  <div class="gconfirm-card">
 
-      <div>
-        <h2 class="auth-panel-title">Welcome back to your future</h2>
-        <p class="auth-panel-sub">Thousands of Kenyan students trust CareerNext to navigate KUCCPS placement.</p>
-      </div>
-
-      <ul class="auth-panel-features">
-        <li>
-          <div class="auth-feat-icon"><i class="fas fa-calculator"></i></div>
-          <span>Instant cluster point calculation for all 23 KUCCPS clusters</span>
-        </li>
-        <li>
-          <div class="auth-feat-icon"><i class="fas fa-graduation-cap"></i></div>
-          <span>Find courses at 60+ universities, KMTCs, TVETs &amp; TTCs</span>
-        </li>
-        <li>
-          <div class="auth-feat-icon"><i class="fas fa-brain"></i></div>
-          <span>AI career advisor matching your grades to ideal careers</span>
-        </li>
-        <li>
-          <div class="auth-feat-icon"><i class="fas fa-bookmark"></i></div>
-          <span>Save courses and get cut-off alerts for your combinations</span>
-        </li>
-      </ul>
-
-      <div class="auth-panel-badge">
-        Trusted by KCSE students across Kenya &nbsp;·&nbsp; Time-Saving
-      </div>
+    <div class="gconfirm-icon">
+      <svg width="40" height="40" viewBox="0 0 48 48">
+        <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+        <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+        <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+        <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+      </svg>
     </div>
 
-    <!-- Right form panel -->
-    <div class="auth-panel-right" style="align-items:center;text-align:center;">
-      <div style="width:56px;height:56px;background:var(--surface-2);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 1.1rem;">
-        <svg width="28" height="28" viewBox="0 0 48 48">
-          <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
-          <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
-          <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
-          <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
-        </svg>
-      </div>
+    <h1 class="gconfirm-title">Sign in to CareerNext</h1>
+    <p class="gconfirm-sub">You're about to continue with your <strong>Google account</strong>.</p>
 
-      <h2>Continue with Google</h2>
-      <p class="auth-panel-sub-text">
-        You're signing in with your <strong>Google account</strong>.<br>
-        CareerNext only accesses your name and email.
-      </p>
+    <div class="gconfirm-scope">
+      <i class="fas fa-shield-halved"></i>
+      <span>CareerNext will only receive your <strong>name</strong> and <strong>email address</strong>. Your Google password is never shared.</span>
+    </div>
 
-      <form method="post" action="{{ process_url }}" style="width:100%;">
+    <div class="gconfirm-actions">
+      <a href="{% url 'accounts:login' %}" class="btn-gconfirm-secondary">Cancel</a>
+      <form method="post" action="{{ process_url }}">
         {% csrf_token %}
         {% if request.GET.next %}
         <input type="hidden" name="next" value="{{ request.GET.next }}">
         {% endif %}
-        <button type="submit" class="btn-auth-submit" style="display:flex;align-items:center;justify-content:center;gap:10px;">
-          <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true">
-            <path fill="#fff" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z" opacity="0.9"/>
-            <path fill="#fff" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z" opacity="0.9"/>
-            <path fill="#fff" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z" opacity="0.9"/>
-            <path fill="#fff" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z" opacity="0.9"/>
-          </svg>
-          Yes, Continue with Google
-        </button>
+        <button type="submit" class="btn-gconfirm-primary">Continue</button>
       </form>
+    </div>
 
-      <a href="{% url 'accounts:login' %}" style="display:block;margin-top:1.1rem;font-size:0.82rem;color:var(--text-3);text-decoration:none;">
-        ← Back to sign in
-      </a>
-
-      <div class="auth-divider"><span>&nbsp;</span></div>
-      <p style="font-size:0.72rem;color:var(--text-3);line-height:1.5;">
-        <i class="fas fa-check-circle" style="color:#10b981;margin-right:3px;"></i>
-        Secure OAuth 2.0 &nbsp;&middot;&nbsp; We never see your Google password
-      </p>
-    </div><!-- /auth-panel-right -->
-
+    <div class="gconfirm-footer">
+      <i class="fas fa-lock"></i>
+      <span>Secured with OAuth 2.0</span>
+    </div>
   </div>
 </div>
 {% endblock %}
