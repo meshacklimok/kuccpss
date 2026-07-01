@@ -157,9 +157,17 @@ class CareerConfigAdmin(admin.ModelAdmin):
             ),
             "fields": ("ai_enabled",),
         }),
+        ("AI Model Settings", {
+            "description": (
+                "Controls the OpenAI model and sampling temperature used by ALL CareerNext AI features "
+                "(chat, insight, quiz summary). Change ai_model_name to switch models (e.g. 'gpt-4o') without a deploy. "
+                "ai_temperature ranges 0.0 (focused) to 2.0 (creative)."
+            ),
+            "fields": ("ai_model_name", "ai_temperature"),
+        }),
         ("AI Quiz Summary Prompt", {
             "description": (
-                "Customise the GPT-4o-mini prompt for the quiz results summary. "
+                "Customise the prompt for the quiz results summary. "
                 "Available placeholders: {tag_str} = student interest tags, {careers_str} = top matched careers. "
                 "Leave blank to use the built-in default prompt."
             ),

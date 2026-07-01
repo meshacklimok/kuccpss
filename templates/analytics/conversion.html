@@ -1,0 +1,140 @@
+{% extends "analytics/base_analytics.html" %}
+{% block analytics_title %}Conversion Analytics{% endblock %}
+{% block page_title %}Conversion Analytics{% endblock %}
+{% block page_subtitle %}Course discovery → shortlist conversion — last {{ days }} days{% endblock %}
+
+{% block extra_css %}
+<style>
+/* Conversion-specific funnel (horizontal bar variant) */
+.conv-funnel { display:flex;flex-direction:column;gap:.5rem; }
+.conv-funnel .funnel-icon  { font-size:1.1rem;width:1.6rem;text-align:center; }
+.conv-funnel .funnel-label { width:130px;font-size:.78rem;font-weight:600;color:var(--text); }
+.conv-funnel .funnel-bar   { flex:1;height:22px;background:var(--border);border-radius:6px;overflow:hidden; }
+.conv-funnel .funnel-fill  { height:100%;background:linear-gradient(90deg,var(--blue),var(--navy));border-radius:6px; }
+.conv-funnel .funnel-n     { width:90px;text-align:right;font-size:.8rem;font-weight:700;color:var(--navy); }
+</style>
+{% endblock %}
+
+{% block header_actions %}
+<div class="day-pills">
+  {% for d in day_options %}
+  <a href="?days={{ d }}" class="day-pill{% if days == d %} active{% endif %}">{% if d == 1 %}24h{% else %}{{ d }}d{% endif %}</a>
+  {% endfor %}
+</div>
+{% endblock %}
+
+{% block analytics_content %}
+
+<div class="kpi-grid">
+  <div class="kpi">
+    <div class="kpi-label">Course Views</div>
+    <div class="kpi-val">{{ total_views }}</div>
+  </div>
+  <div class="kpi green">
+    <div class="kpi-label">Shortlisted</div>
+    <div class="kpi-val">{{ total_saves }}</div>
+  </div>
+  <div class="kpi amber">
+    <div class="kpi-label">Conversion Rate</div>
+    <div class="kpi-val">{{ conversion_pct }}%</div>
+  </div>
+  <div class="kpi red">
+    <div class="kpi-label">Zero-Conversion Courses</div>
+    <div class="kpi-val">{{ zero_conversion|length }}</div>
+    <div class="kpi-sub">≥10 views, 0 saves</div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-title">Funnel</div>
+  <div class="conv-funnel">
+    {% for f in funnel %}
+    <div class="funnel-row">
+      <span class="funnel-icon">{{ f.icon }}</span>
+      <span class="funnel-label">{{ f.label }}</span>
+      <div class="funnel-bar"><div class="funnel-fill" style="width:{{ f.pct }}%;"></div></div>
+      <span class="funnel-n">{{ f.n }} ({{ f.pct }}%)</span>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+<div class="two-col">
+  <div class="card">
+    <div class="card-title">Course-Type Breakdown</div>
+    <div class="chart-box h220"><canvas id="typeChart"></canvas></div>
+  </div>
+  <div class="card">
+    <div class="card-title">Top Institutions by Course Views</div>
+    <table class="tbl">
+      <thead><tr><th>#</th><th>Institution</th><th>Views</th></tr></thead>
+      <tbody>
+        {% for i in top_institutions %}
+        <tr>
+          <td style="color:var(--muted);">{{ forloop.counter }}</td>
+          <td class="name">{{ i.institution }}</td>
+          <td>{{ i.views }}</td>
+        </tr>
+        {% empty %}<tr><td colspan="3" style="color:var(--muted);">No data yet</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-title">Top Converting Courses (≥5 views)</div>
+  <div style="overflow-x:auto;">
+    <table class="tbl">
+      <thead><tr><th>Course</th><th>Type</th><th>Views</th><th>Saves</th><th>Conv %</th></tr></thead>
+      <tbody>
+        {% for r in top_converting %}
+        <tr>
+          <td class="name">{{ r.course.name }}</td>
+          <td>{{ r.course.course_type.name|default:"—" }}</td>
+          <td>{{ r.views }}</td>
+          <td>{{ r.saves }}</td>
+          <td><span class="badge {% if r.conv_pct > 0 %}b-green{% else %}b-amber{% endif %}">{{ r.conv_pct }}%</span></td>
+        </tr>
+        {% empty %}<tr><td colspan="5" style="color:var(--muted);">No data yet</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-title">Zero-Conversion Courses (viewed ≥10×, never saved)</div>
+  <div style="overflow-x:auto;">
+    <table class="tbl">
+      <thead><tr><th>Course</th><th>Type</th><th>Views</th></tr></thead>
+      <tbody>
+        {% for r in zero_conversion %}
+        <tr>
+          <td class="name">{{ r.course.name }}</td>
+          <td>{{ r.course.course_type.name|default:"—" }}</td>
+          <td>{{ r.views }}</td>
+        </tr>
+        {% empty %}<tr><td colspan="3" style="color:var(--muted);">None 🎉</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<script>
+new Chart(document.getElementById('typeChart'), {
+  type: 'bar',
+  data: { labels: {{ chart_type_labels|safe }},
+    datasets: [
+      { label:'Views', data:{{ chart_type_views|safe }}, backgroundColor:'rgba(37,99,235,.75)', borderRadius:4 },
+      { label:'Saves', data:{{ chart_type_saves|safe }}, backgroundColor:'rgba(22,163,74,.75)', borderRadius:4 }
+    ]
+  },
+  options: { responsive:true, maintainAspectRatio:false,
+    plugins:{ legend:{ position:'top' } },
+    scales:{ y:{ beginAtZero:true, ticks:{ precision:0 } } } }
+});
+</script>
+{% endblock %}

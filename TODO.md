@@ -2,7 +2,7 @@
 
 Format: `[ ]` not done | `[x]` done | `[~]` in progress | `[-]` dropped/deferred
 
-Last updated: 2026-06-25
+Last updated: 2026-06-30
 
 ---
 
@@ -104,7 +104,7 @@ Copy every variable from your Render dashboard into Railway → Variables:
 - [x] KMTC subject entry — now uses full KCSE subject accordion (same as Diploma/Certificate) instead of single mean-grade picker
 - [x] OCR activation — `degree_upload` uses OpenAI GPT-4o vision; handles both KCSE grade slips and cluster points documents; robust subject alias matching; falls back to manual entry if no key
 - [x] `degree_upload` redirect — cluster points docs → `loading_page` directly; KCSE slips → `degree_calculate` for review/correction
-- [ ] `degree_manual` — limit cluster list to the ~20 clusters that have actual degree `CourseOffering` records (shows all 61 now)
+- [x] `degree_manual` — limit cluster list to the ~20 clusters that have actual degree `CourseOffering` records (shows all 61 now)
 - [ ] `degree_paste` — paste view + URL + template not yet built
 - [x] Switch cluster points to midpoint-marks formula — `GRADE_MIDPOINT_MARKS` dict in services.py; shared `_weighted_cp()` helper used by both calculators
 - [x] Career engine dispatch — `career/engine.py` now calls real pathway functions (`match_degree_courses`, etc.); no longer a stub
@@ -171,7 +171,7 @@ Copy every variable from your Render dashboard into Railway → Variables:
 - [x] M-Pesa Transaction model stub
 - [x] Career results payment gate UI (blurred preview + lock card)
 - [ ] Subscription tier system — define Free / Basic / Premium access levels
-- [ ] Receipt / invoice email after payment
+- [x] Receipt / invoice email after payment
 - [-] Refund flow for failed lookups — deferred; M-Pesa refund process too complex for MVP; handle manually for now
 
 ---
@@ -190,7 +190,7 @@ Copy every variable from your Render dashboard into Railway → Variables:
 
 ## P2 — Analytics & Insights ⭐⭐⭐
 
-- [ ] **Admin Analytics Dashboard** — most searched course, most viewed institution, most saved programme, most downloaded PDF; requires `SearchLog`, `ViewLog`, `DownloadLog` models
+- [x] **Admin Analytics Dashboard** — `/analytics/` plus pages/actions/insights/calculator/conversion/retention/ai-chat/mentor/affiliate/payments sub-dashboards; built on `SearchLog`, `ViewLog`, `DownloadLog`, `PageViewLog`, `UserActionLog`, `SessionLog`, `EventLog`, `CareerEngineLog`
 - [ ] **Placement Trends Dashboard** — public page: most applied courses this season, fastest-growing careers, most competitive programmes
 - [ ] **Competition Pressure Indicator** — per-course badge: Low / Medium / High / Extreme 🔥, from applicants vs intake capacity
 - [ ] **Cutoff Trend Chart** — year-on-year cutoff chart per course/university (Chart.js line graph using `cutoff_points` JSONField)
@@ -272,7 +272,8 @@ Copy every variable from your Render dashboard into Railway → Variables:
 
 ### Technical
 - [ ] N+1 query audit — eligible courses view and career engine results loop over ORM objects in Python; needs `select_related` / `prefetch_related` pass
-- [ ] Cache static lookups — subject list, cluster list, institution types change rarely; add Django cache (Redis or local-mem) to avoid repeated DB hits per request
+- [x] Cache static lookups — homepage static context cached (`public_home_static_v1`, 300s) and trends cached (`homepage_trends_v1`, TTL from `SiteSetting.trends_cache_ttl`)
+- [x] Admin-tunable pagination/cache settings — `SiteSetting` performance group (`courses_per_page`, `mentors_per_page`, `trends_cache_ttl`) seeded via migration `resources/0007_seed_performance_settings.py`; read by `courses/trends.py`, `courses/views.py`, `mentorship/views.py`
 - [ ] Docker / deployment config (Procfile + Dockerfile + `render.yaml`)
 - [ ] Write unit tests for cluster points calculation — the formula must never regress
 - [ ] Write integration tests for grade entry → loading → results flow

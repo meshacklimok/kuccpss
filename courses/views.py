@@ -11,7 +11,13 @@ from .models import CourseType, CourseCategory, Course, Review
 
 log = logging.getLogger(__name__)
 
-COURSES_PER_PAGE = 24
+
+def _courses_per_page() -> int:
+    from resources.models import SiteSetting
+    try:
+        return int(SiteSetting.get('courses_per_page', '24'))
+    except (TypeError, ValueError):
+        return 24
 
 # ------------------------------
 # Course Types List View
@@ -92,7 +98,7 @@ def course_type_detail(request, type_slug):
                     f |= _Q(name__icontains=tok)
             qs = qs.filter(f)
         qs = qs.order_by('name')
-        paginator = Paginator(qs, COURSES_PER_PAGE)
+        paginator = Paginator(qs, _courses_per_page())
         page_obj = paginator.get_page(page_num)
         courses = page_obj
 
@@ -149,7 +155,7 @@ def course_category_detail(request, type_slug, category_slug):
         qs = qs.filter(f)
     qs = qs.order_by('name')
 
-    paginator = Paginator(qs, COURSES_PER_PAGE)
+    paginator = Paginator(qs, _courses_per_page())
     page_obj = paginator.get_page(page_num)
 
     is_htmx = request.headers.get('HX-Request') == 'true'

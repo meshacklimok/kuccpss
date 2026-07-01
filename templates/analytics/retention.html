@@ -1,0 +1,104 @@
+{% extends "analytics/base_analytics.html" %}
+{% block analytics_title %}Retention Analytics{% endblock %}
+{% block page_title %}Retention Analytics{% endblock %}
+{% block page_subtitle %}Weekly cohort retention — last {{ days }} days KPI window, 12-week cohort grid{% endblock %}
+
+{% block extra_css %}
+<style>
+.cohort-table { border-collapse:collapse;font-size:.72rem;width:100%; }
+.cohort-table th, .cohort-table td { padding:.3rem .4rem;text-align:center;border:1px solid var(--border);white-space:nowrap; }
+.cohort-table th { background:var(--bg);font-weight:700;color:var(--muted); }
+.cohort-row-label { text-align:left !important;font-weight:700;color:var(--navy); }
+.heat-0 { background:#fff;color:var(--muted); }
+.heat-1 { background:#dbeafe;color:#1e3a8a; }
+.heat-2 { background:#93c5fd;color:#1e3a8a; }
+.heat-3 { background:#3b82f6;color:#fff; }
+.heat-4 { background:#1e3a8a;color:#fff; }
+</style>
+{% endblock %}
+
+{% block header_actions %}
+<div class="day-pills">
+  {% for d in day_options %}
+  <a href="?days={{ d }}" class="day-pill{% if days == d %} active{% endif %}">{% if d == 1 %}24h{% else %}{{ d }}d{% endif %}</a>
+  {% endfor %}
+</div>
+{% endblock %}
+
+{% block analytics_content %}
+
+<div class="kpi-grid">
+  <div class="kpi green">
+    <div class="kpi-label">Returning Users</div>
+    <div class="kpi-val">{{ returning_users }}</div>
+    <div class="kpi-sub">{{ returning_pct }}% of active</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-label">New Active Users</div>
+    <div class="kpi-val">{{ new_users_active }}</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-label">Total Active</div>
+    <div class="kpi-val">{{ total_active }}</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-label">Sessions / User</div>
+    <div class="kpi-val">{{ sessions_per_user }}</div>
+  </div>
+</div>
+
+<div class="two-col">
+  <div class="card">
+    <div class="card-title">Returning vs New</div>
+    <div class="chart-box h220"><canvas id="retChart"></canvas></div>
+  </div>
+  <div class="card">
+    <div class="card-title">How to read the cohort grid</div>
+    <p style="font-size:.82rem;color:var(--muted);line-height:1.6;">
+      Each row is a registration week (cohort). Each column is the % of that cohort that had
+      at least one session in the N-th week after they registered. Darker cells = higher
+      retention. Week 0 is always 100% since that's the registration week itself.
+    </p>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-title">Weekly Cohort Retention Grid</div>
+  <div style="overflow-x:auto;">
+    <table class="cohort-table">
+      <thead>
+        <tr>
+          <th class="cohort-row-label">Cohort</th>
+          <th>Users</th>
+          {% for w in week_offsets %}<th>W{{ w }}</th>{% endfor %}
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in cohort_grid %}
+        <tr>
+          <td class="cohort-row-label">{{ row.label }}</td>
+          <td>{{ row.n_users }}</td>
+          {% for cell in row.cells %}
+          <td class="heat-{{ cell.level }}">{{ cell.pct }}%</td>
+          {% endfor %}
+        </tr>
+        {% empty %}
+        <tr><td colspan="14" style="color:var(--muted);">No cohorts in this window yet</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<script>
+new Chart(document.getElementById('retChart'), {
+  type: 'doughnut',
+  data: { labels: {{ chart_ret_labels|safe }},
+    datasets: [{ data: {{ chart_ret_data|safe }}, backgroundColor:['#16a34a','#2563eb'], borderWidth:2 }]
+  },
+  options: { responsive:true, maintainAspectRatio:false,
+    plugins:{ legend:{ position:'right' } } }
+});
+</script>
+{% endblock %}

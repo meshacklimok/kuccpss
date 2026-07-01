@@ -18,7 +18,7 @@
         <table class="table table-hover align-middle">
           <thead class="table-light">
             <tr>
-              <th>Feature</th>
+              <th>Product</th>
               <th>Amount</th>
               <th>Status</th>
               <th>Reference</th>
@@ -29,7 +29,7 @@
             {% for payment in payments %}
             <tr>
               <td>
-                <span class="fw-semibold">{{ payment.get_feature_display }}</span>
+                <span class="fw-semibold">{{ payment.get_product_display }}</span>
               </td>
               <td>KES {{ payment.amount }}</td>
               <td>

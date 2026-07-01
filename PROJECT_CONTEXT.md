@@ -34,8 +34,8 @@ CareerNext automates this calculation, shows students where they stand, recommen
 
 ## Core Business Rules
 1. **Aggregate total (max 84):** Mathematics + best(English, Kiswahili) + next 5 best subjects
-2. **Cluster points (max 48):** `48 × sqrt( (core_total/48) × (aggregate/84) )`
-   - Core = 4 best subjects in the cluster (required subjects first, then optional)
+2. **Cluster points (max 48):** `48 × sqrt( (core_midpoint_marks/400) × (aggregate/84) )`
+   - Core = 4 best subjects in the cluster (required subjects first, then optional); `core_midpoint_marks` is the sum of KUCCPS midpoint raw marks for those 4 subjects (A=90.2 … E=14.0), not a grade-point fraction — see `DECISIONS.md #2`
 3. **Cutoff comparison:** student cluster points vs university's cutoff for that course/year
 4. **Admission chance:** VERY HIGH (≥3 above cutoff), HIGH (≥1), MEDIUM (≥0), LOW (below)
 

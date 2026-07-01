@@ -200,7 +200,8 @@
             <div class="pw-phone-row">
                 <span class="pw-prefix">+254</span>
                 <input type="tel" id="pw-phone" class="pw-phone-inp"
-                       placeholder="712 345 678" maxlength="9" inputmode="numeric">
+                       placeholder="712 345 678" maxlength="14" inputmode="numeric"
+                       value="{{ request.user.phone_number|default:'' }}">
             </div>
             <button class="pw-btn" id="pw-btn">
                 <i class="fas fa-lock-open"></i> Unlock My Results &rarr;
@@ -285,11 +286,27 @@
     document.getElementById('pw-already-paid').addEventListener('click', pwToggleCodeSection);
     document.getElementById('pw-code-btn').addEventListener('click', pwSubmitCode);
 
+    // Accept 0712345678, +254712345678, 254712345678 or plain 712345678 — always returns 9 digits or null
+    function pwNormalizePhone(input){
+        var digits = (input || '').replace(/\D/g,'');
+        if(digits.length === 9 && /^[17]/.test(digits)) return digits;
+        if(digits.length === 10 && digits.startsWith('0')) return digits.slice(1);
+        if(digits.length === 12 && digits.startsWith('254')) return digits.slice(3);
+        return null;
+    }
+
+    // Pre-fill from saved profile number, cleaned to the 9-digit local form
+    (function(){
+        var phoneEl = document.getElementById('pw-phone');
+        var clean = pwNormalizePhone(phoneEl.value);
+        phoneEl.value = clean || '';
+    })();
+
     async function pwPay(){
-        var raw = document.getElementById('pw-phone').value.trim().replace(/\s/g,'');
+        var raw = pwNormalizePhone(document.getElementById('pw-phone').value);
         var err = document.getElementById('pw-err');
-        if(!/^\d{9}$/.test(raw)){
-            err.textContent = 'Enter a valid 9-digit Safaricom number (e.g. 712345678)';
+        if(!raw){
+            err.textContent = 'Enter a valid Safaricom number, e.g. 0712345678 or +254712345678';
             err.style.display = 'block'; return;
         }
         err.style.display = 'none';

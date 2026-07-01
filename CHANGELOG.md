@@ -13,6 +13,20 @@ Format: `[YYYY-MM-DD]` — description of what changed and why.
 
 ---
 
+## [2026-06-30] — Admin-configurable AI model/temperature, SiteSetting performance knobs, analytics dashboard expansion
+
+### Added
+- `CareerConfig.ai_model_name` / `ai_temperature` fields (migration `0022_careerconfig_ai_model_name_and_more.py`) — all CareerNext AI calls (chat, insight, quiz summary) now read the OpenAI model name and sampling temperature from the admin panel instead of hardcoded `'gpt-4o-mini'` literals scattered across `career/models.py` and `career/views.py`
+- `SiteSetting` performance group seeded via migration `resources/0007_seed_performance_settings.py`: `courses_per_page` (24), `mentors_per_page` (18), `trends_cache_ttl` (3600s) — admin can now tune pagination and cache lifetime without a deploy
+- Homepage static context caching (`public_home_static_v1`, 300s) in `public_home_view` to cut repeated DB hits on the landing page
+- Four new analytics sub-dashboards: Calculator Analytics, Conversion Analytics, Retention Analytics, AI Chat Analytics (`analytics/views.py`, wired in `analytics/urls.py`)
+- Event logging added in `career/views.py` and `clusterpoints/views.py` for AI chat, calculator runs, and PDF export/share actions feeding the new dashboards
+
+### Changed
+- `courses/trends.py`, `courses/views.py`, `mentorship/views.py` now read pagination size / cache TTL from `SiteSetting` instead of hardcoded constants
+
+---
+
 ## [2026-06-25] — Brand logo circles, payment polish, M-Pesa code verify on calculator paywall
 
 ### Changed

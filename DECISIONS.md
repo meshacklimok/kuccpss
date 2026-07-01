@@ -132,6 +132,8 @@ Records *why* major choices were made. Read this before refactoring or "improvin
 
 **Impact:** Always read price/limits from these models, not from settings.py or hardcoded constants. Both are `get_or_create`-style singletons — call `.load()` or `CareerConfig.get_solo()` to fetch them.
 
+**Extended (2026-06-30):** `CareerConfig` now also carries `ai_model_name` and `ai_temperature` (migration 0022), so the OpenAI model and sampling temperature used by all CareerNext AI calls are admin-editable too — not just business/pricing settings. The same singleton-config pattern was reused for a separate concern (`resources.SiteSetting` key/value store) to make pagination sizes (`courses_per_page`, `mentors_per_page`) and cache TTLs (`trends_cache_ttl`) admin-tunable without touching `CareerConfig`/`MentorshipConfig`, since those settings aren't specific to career or mentorship.
+
 ---
 
 ## 13. Mentorship Payout Split (70/30)

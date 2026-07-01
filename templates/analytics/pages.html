@@ -1,337 +1,274 @@
-{% extends "base.html" %}
-{% block title %}Page Analytics — CareerNext Staff{% endblock %}
+{% extends "analytics/base_analytics.html" %}
+{% block analytics_title %}Page Analytics{% endblock %}
+{% block page_title %}Page Analytics{% endblock %}
+{% block page_subtitle %}Every page hit tracked by the server — last {{ days }} days{% endblock %}
 
-{% block content %}
+{% block extra_css %}
 <style>
-:root {
-  --navy:#1e3a8a;--blue:#2563eb;--blue-lt:#eff6ff;--blue-bd:#bfdbfe;
-  --green:#16a34a;--green-lt:#f0fdf4;--amber:#d97706;--amber-lt:#fffbeb;
-  --red:#dc2626;--red-lt:#fef2f2;--purple:#7c3aed;--purple-lt:#f5f3ff;
-  --teal:#0891b2;--teal-lt:#ecfeff;--text:#0f172a;--muted:#64748b;
-  --border:#e2e8f0;--bg:#f8fafc;--card:#ffffff;
-  --shadow:0 1px 3px rgba(0,0,0,.06),0 4px 16px rgba(30,58,138,.06);--radius:14px;
-}
-body{background:var(--bg);}
-.an-wrap{max-width:1400px;margin:0 auto;padding:1.5rem 1rem 5rem;}
-.an-topbar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.75rem;margin-bottom:1.5rem;}
-.an-topbar h1{font-size:1.45rem;font-weight:800;color:var(--navy);margin:0;}
-.an-topbar p{font-size:.78rem;color:var(--muted);margin:.1rem 0 0;}
-.an-topbar-right{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;}
-.day-pills{display:flex;gap:.3rem;}
-.day-pill{padding:.3rem .75rem;border-radius:20px;font-size:.78rem;font-weight:600;border:1.5px solid var(--border);background:var(--card);color:var(--muted);text-decoration:none;transition:all .15s;}
-.day-pill:hover{border-color:var(--blue);color:var(--blue);}
-.day-pill.active{background:var(--navy);border-color:var(--navy);color:#fff;}
-.btn-back{display:inline-flex;align-items:center;gap:.3rem;padding:.28rem .75rem;border-radius:7px;font-size:.76rem;font-weight:700;background:var(--navy);color:#fff;text-decoration:none;white-space:nowrap;}
-.btn-back:hover{background:var(--blue);color:#fff;}
-.btn-nav{display:inline-flex;align-items:center;padding:.28rem .7rem;border-radius:7px;font-size:.76rem;font-weight:700;color:#fff;text-decoration:none;white-space:nowrap;transition:opacity .15s;}
-.btn-nav:hover{opacity:.85;color:#fff;}
-.an-topbar-right{display:flex;align-items:center;gap:.35rem;flex-wrap:nowrap;overflow-x:auto;}
-.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:1rem;margin-bottom:1.5rem;}
-.kpi{background:var(--card);border-radius:var(--radius);padding:1.1rem 1.2rem;box-shadow:var(--shadow);}
-.kpi-label{font-size:.73rem;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-bottom:.3rem;}
-.kpi-val{font-size:1.8rem;font-weight:800;color:var(--navy);line-height:1;}
-.kpi-sub{font-size:.73rem;color:var(--muted);margin-top:.2rem;}
-.kpi.red .kpi-val{color:var(--red);}
-.kpi.amber .kpi-val{color:var(--amber);}
-.kpi.green .kpi-val{color:var(--green);}
-.card{background:var(--card);border-radius:var(--radius);padding:1.25rem 1.4rem;box-shadow:var(--shadow);margin-bottom:1.25rem;}
-.card-title{font-size:.9rem;font-weight:800;color:var(--navy);margin:0 0 1rem;}
-.tbl{width:100%;border-collapse:collapse;font-size:.8rem;}
-.tbl th{text-align:left;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);border-bottom:2px solid var(--border);padding:.4rem .6rem;}
-.tbl td{padding:.45rem .6rem;border-bottom:1px solid var(--border);color:var(--text);font-family:monospace;}
-.tbl td.name{font-family:inherit;font-size:.79rem;}
-.tbl tr:last-child td{border-bottom:none;}
-.tbl tr:hover td{background:var(--blue-lt);}
-.badge{display:inline-block;padding:.15rem .5rem;border-radius:20px;font-size:.7rem;font-weight:700;}
-.badge-ok{background:var(--green-lt);color:var(--green);}
-.badge-warn{background:var(--amber-lt);color:var(--amber);}
-.badge-err{background:var(--red-lt);color:var(--red);}
-.chart-box{position:relative;height:220px;margin-bottom:1rem;}
-.two-col{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;}
-@media(max-width:700px){.two-col{grid-template-columns:1fr;}}
+.badge-ok   { background: var(--green-lt); color: var(--green); }
+.badge-warn { background: var(--amber-lt); color: var(--amber); }
+.badge-err  { background: var(--red-lt);   color: var(--red);   }
 </style>
+{% endblock %}
 
-<div class="an-wrap">
-  <!-- Top bar -->
-  <div class="an-topbar">
+{% block header_actions %}
+<div class="day-pills">
+  {% for d in day_options %}
+  <a href="?days={{ d }}" class="day-pill{% if days == d %} active{% endif %}">{% if d == 1 %}24h{% else %}{{ d }}d{% endif %}</a>
+  {% endfor %}
+</div>
+{% endblock %}
+
+{% block analytics_content %}
+
+<!-- Session / time-on-site hero card -->
+<div class="card" style="background:linear-gradient(135deg,#1e3a8a 0%,#2563eb 100%);color:#fff;margin-bottom:1.25rem;">
+  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;">
     <div>
-      <h1>Page Analytics</h1>
-      <p>Every page hit tracked by the server — last {{ days }} days</p>
+      <div style="font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;opacity:.75;margin-bottom:.3rem;">Avg Time on Site</div>
+      <div style="font-size:3rem;font-weight:900;line-height:1;letter-spacing:-.03em;">{{ avg_duration_str }}</div>
+      <div style="font-size:.8rem;opacity:.7;margin-top:.4rem;">sessions with 2+ pages · last {{ days }} days</div>
     </div>
-    <div class="an-topbar-right">
-      <div class="day-pills">
-        {% for d in day_options %}
-        <a href="?days={{ d }}" class="day-pill{% if days == d %} active{% endif %}">{% if d == 1 %}24h{% else %}{{ d }}d{% endif %}</a>
-        {% endfor %}
-      </div>
-      <a href="{% url 'analytics:mentor_analytics' %}" class="btn-nav" style="background:var(--purple);">Mentors</a>
-      <a href="{% url 'analytics:affiliate_analytics' %}" class="btn-nav" style="background:var(--teal);">Affiliates</a>
-      <a href="{% url 'analytics:insights' %}" class="btn-nav" style="background:#7c3aed;">📊 Insights</a>
-      <a href="{% url 'analytics:payments' %}" class="btn-nav" style="background:#16a34a;">Payments</a>
-      <a href="{% url 'analytics:dashboard' %}" class="btn-back">← Dashboard</a>
-    </div>
-  </div>
-
-  <!-- Session / time-on-site hero card -->
-  <div class="card" style="background:linear-gradient(135deg,#1e3a8a 0%,#2563eb 100%);color:#fff;margin-bottom:1.25rem;">
-    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem 1.5rem;">
       <div>
-        <div style="font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;opacity:.75;margin-bottom:.3rem;">Avg Time on Site</div>
-        <div style="font-size:3rem;font-weight:900;line-height:1;letter-spacing:-.03em;">{{ avg_duration_str }}</div>
-        <div style="font-size:.8rem;opacity:.7;margin-top:.4rem;">sessions with 2+ pages · last {{ days }} days</div>
+        <div style="font-size:.7rem;font-weight:700;text-transform:uppercase;opacity:.7;">Sessions</div>
+        <div style="font-size:1.6rem;font-weight:800;">{{ total_sessions }}</div>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem 1.5rem;">
-        <div>
-          <div style="font-size:.7rem;font-weight:700;text-transform:uppercase;opacity:.7;">Sessions</div>
-          <div style="font-size:1.6rem;font-weight:800;">{{ total_sessions }}</div>
-        </div>
-        <div>
-          <div style="font-size:.7rem;font-weight:700;text-transform:uppercase;opacity:.7;">Bounce Rate</div>
-          <div style="font-size:1.6rem;font-weight:800;">{{ bounce_rate }}%</div>
-        </div>
-        <div>
-          <div style="font-size:.7rem;font-weight:700;text-transform:uppercase;opacity:.7;">Single-page</div>
-          <div style="font-size:1.6rem;font-weight:800;">{{ bounce_sessions }}</div>
-        </div>
-        <div>
-          <div style="font-size:.7rem;font-weight:700;text-transform:uppercase;opacity:.7;">Engaged (5+ pages)</div>
-          <div style="font-size:1.6rem;font-weight:800;">{{ engaged_sessions }}</div>
-        </div>
+      <div>
+        <div style="font-size:.7rem;font-weight:700;text-transform:uppercase;opacity:.7;">Bounce Rate</div>
+        <div style="font-size:1.6rem;font-weight:800;">{{ bounce_rate }}%</div>
+      </div>
+      <div>
+        <div style="font-size:.7rem;font-weight:700;text-transform:uppercase;opacity:.7;">Single-page</div>
+        <div style="font-size:1.6rem;font-weight:800;">{{ bounce_sessions }}</div>
+      </div>
+      <div>
+        <div style="font-size:.7rem;font-weight:700;text-transform:uppercase;opacity:.7;">Engaged (5+ pages)</div>
+        <div style="font-size:1.6rem;font-weight:800;">{{ engaged_sessions }}</div>
       </div>
     </div>
   </div>
+</div>
 
-  <!-- KPIs -->
-  <div class="kpi-grid">
-    <div class="kpi">
-      <div class="kpi-label">Total Hits</div>
-      <div class="kpi-val">{{ total_hits|default:0 }}</div>
-      <div class="kpi-sub">inc. bots</div>
-    </div>
-    <div class="kpi green">
-      <div class="kpi-label">Human Hits</div>
-      <div class="kpi-val">{{ human_hits|default:0 }}</div>
-      <div class="kpi-sub">excl. bots</div>
-    </div>
-    <div class="kpi">
-      <div class="kpi-label">Bot Hits</div>
-      <div class="kpi-val">{{ bot_hits|default:0 }}</div>
-      <div class="kpi-sub">crawlers / scrapers</div>
-    </div>
-    <div class="kpi amber">
-      <div class="kpi-label">4xx Errors</div>
-      <div class="kpi-val">{{ errors_4xx|default:0 }}</div>
-      <div class="kpi-sub">Not found / forbidden</div>
-    </div>
-    <div class="kpi red">
-      <div class="kpi-label">5xx Errors</div>
-      <div class="kpi-val">{{ errors_5xx|default:0 }}</div>
-      <div class="kpi-sub">Server errors</div>
-    </div>
-    <div class="kpi">
-      <div class="kpi-label">Hits Today</div>
-      <div class="kpi-val">{{ hits_today|default:0 }}</div>
-      <div class="kpi-sub">human only</div>
-    </div>
-    <div class="kpi">
-      <div class="kpi-label">Avg Response</div>
-      <div class="kpi-val">{{ avg_ms }} ms</div>
-      <div class="kpi-sub">server time</div>
-    </div>
+<!-- KPIs -->
+<div class="kpi-grid">
+  <div class="kpi">
+    <div class="kpi-label">Total Hits</div>
+    <div class="kpi-val">{{ total_hits|default:0 }}</div>
+    <div class="kpi-sub">inc. bots</div>
   </div>
+  <div class="kpi green">
+    <div class="kpi-label">Human Hits</div>
+    <div class="kpi-val">{{ human_hits|default:0 }}</div>
+    <div class="kpi-sub">excl. bots</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-label">Bot Hits</div>
+    <div class="kpi-val">{{ bot_hits|default:0 }}</div>
+    <div class="kpi-sub">crawlers / scrapers</div>
+  </div>
+  <div class="kpi amber">
+    <div class="kpi-label">4xx Errors</div>
+    <div class="kpi-val">{{ errors_4xx|default:0 }}</div>
+    <div class="kpi-sub">Not found / forbidden</div>
+  </div>
+  <div class="kpi red">
+    <div class="kpi-label">5xx Errors</div>
+    <div class="kpi-val">{{ errors_5xx|default:0 }}</div>
+    <div class="kpi-sub">Server errors</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-label">Hits Today</div>
+    <div class="kpi-val">{{ hits_today|default:0 }}</div>
+    <div class="kpi-sub">human only</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-label">Avg Response</div>
+    <div class="kpi-val">{{ avg_ms }} ms</div>
+    <div class="kpi-sub">server time</div>
+  </div>
+</div>
 
-  <!-- Hit trend chart -->
+<div class="card">
+  <div class="card-title">Daily Page Hits (Human)</div>
+  <div class="chart-box h220"><canvas id="hitChart"></canvas></div>
+</div>
+
+<div class="two-col">
   <div class="card">
-    <div class="card-title">Daily Page Hits (Human)</div>
-    <div class="chart-box"><canvas id="hitChart"></canvas></div>
+    <div class="card-title">Session Duration Distribution</div>
+    <div class="chart-box h220"><canvas id="durChart"></canvas></div>
+  </div>
+  <div class="card">
+    <div class="card-title">Device Breakdown</div>
+    <div class="chart-box h220"><canvas id="deviceChart"></canvas></div>
   </div>
 
-  <div class="two-col">
-    <!-- Session duration distribution -->
-    <div class="card">
-      <div class="card-title">Session Duration Distribution</div>
-      <div class="chart-box"><canvas id="durChart"></canvas></div>
-    </div>
-    <!-- Device breakdown -->
-    <div class="card">
-      <div class="card-title">Device Breakdown</div>
-      <div class="chart-box"><canvas id="deviceChart"></canvas></div>
-    </div>
-
-    <!-- Status codes -->
-    <div class="card">
-      <div class="card-title">Status Code Breakdown</div>
-      <table class="tbl">
-        <thead><tr><th>Code</th><th>Hits</th></tr></thead>
-        <tbody>
-          {% for s in status_dist %}
-          <tr>
-            <td>
-              {% if s.status_code >= 500 %}<span class="badge badge-err">{{ s.status_code }}</span>
-              {% elif s.status_code >= 400 %}<span class="badge badge-warn">{{ s.status_code }}</span>
-              {% else %}<span class="badge badge-ok">{{ s.status_code }}</span>{% endif %}
-            </td>
-            <td>{{ s.n }}</td>
-          </tr>
-          {% empty %}<tr><td colspan="2" style="color:var(--muted);">No data</td></tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
+  <div class="card">
+    <div class="card-title">Status Code Breakdown</div>
+    <table class="tbl">
+      <thead><tr><th>Code</th><th>Hits</th></tr></thead>
+      <tbody>
+        {% for s in status_dist %}
+        <tr>
+          <td>
+            {% if s.status_code >= 500 %}<span class="badge badge-err">{{ s.status_code }}</span>
+            {% elif s.status_code >= 400 %}<span class="badge badge-warn">{{ s.status_code }}</span>
+            {% else %}<span class="badge badge-ok">{{ s.status_code }}</span>{% endif %}
+          </td>
+          <td>{{ s.n }}</td>
+        </tr>
+        {% empty %}<tr><td colspan="2" style="color:var(--muted);">No data</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
   </div>
+</div>
 
-  <!-- Geo: County & Country breakdown -->
-  {% if top_counties or top_countries %}
-  <div class="two-col">
-    <!-- Kenyan counties -->
-    <div class="card">
-      <div class="card-title">
-        🇰🇪 Kenyan Counties
-        <span style="font-size:.73rem;font-weight:400;color:var(--muted);margin-left:.5rem;">{{ kenya_sessions }} Kenya sessions / {{ total_geo }} geo-tagged</span>
-      </div>
-      {% if top_counties %}
-      <canvas id="countyChart" style="max-height:360px;"></canvas>
-      <div style="margin-top:1rem;overflow-x:auto;">
-        <table class="tbl">
-          <thead><tr><th>#</th><th>County</th><th>Sessions</th><th>Share</th></tr></thead>
-          <tbody>
-            {% for c in top_counties %}
-            <tr>
-              <td style="color:var(--muted);">{{ forloop.counter }}</td>
-              <td class="name">{{ c.region }}</td>
-              <td>{{ c.n }}</td>
-              <td>
-                {% if kenya_sessions %}
-                <div style="display:flex;align-items:center;gap:.4rem;">
-                  <div style="flex:1;height:6px;background:var(--border);border-radius:3px;min-width:60px;">
-                    <div style="height:6px;background:var(--blue);border-radius:3px;width:{% widthratio c.n kenya_sessions 100 %}%;"></div>
-                  </div>
-                  <span style="font-size:.72rem;color:var(--muted);white-space:nowrap;">{% widthratio c.n kenya_sessions 100 %}%</span>
-                </div>
-                {% endif %}
-              </td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
-      {% else %}
-      <p style="color:var(--muted);font-size:.82rem;padding:1rem 0;">No Kenya county data yet — install the GeoLite2-City database to enable this.</p>
-      {% endif %}
+{% if top_counties or top_countries %}
+<div class="two-col">
+  <div class="card">
+    <div class="card-title">
+      🇰🇪 Kenyan Counties
+      <span style="font-size:.73rem;font-weight:400;color:var(--muted);margin-left:.5rem;">{{ kenya_sessions }} Kenya sessions / {{ total_geo }} geo-tagged</span>
     </div>
-
-    <!-- All countries -->
-    <div class="card">
-      <div class="card-title">🌍 Countries</div>
-      {% if top_countries %}
+    {% if top_counties %}
+    <canvas id="countyChart" style="max-height:360px;"></canvas>
+    <div style="margin-top:1rem;overflow-x:auto;">
       <table class="tbl">
-        <thead><tr><th>#</th><th>Country</th><th>Sessions</th></tr></thead>
+        <thead><tr><th>#</th><th>County</th><th>Sessions</th><th>Share</th></tr></thead>
         <tbody>
-          {% for c in top_countries %}
+          {% for c in top_counties %}
           <tr>
             <td style="color:var(--muted);">{{ forloop.counter }}</td>
-            <td class="name">{{ c.country }}</td>
+            <td class="name">{{ c.region }}</td>
             <td>{{ c.n }}</td>
+            <td>
+              {% if kenya_sessions %}
+              <div style="display:flex;align-items:center;gap:.4rem;">
+                <div style="flex:1;height:6px;background:var(--border);border-radius:3px;min-width:60px;">
+                  <div style="height:6px;background:var(--blue);border-radius:3px;width:{% widthratio c.n kenya_sessions 100 %}%;"></div>
+                </div>
+                <span style="font-size:.72rem;color:var(--muted);white-space:nowrap;">{% widthratio c.n kenya_sessions 100 %}%</span>
+              </div>
+              {% endif %}
+            </td>
           </tr>
           {% endfor %}
         </tbody>
       </table>
-      {% else %}
-      <p style="color:var(--muted);font-size:.82rem;padding:1rem 0;">No geo data yet — install the GeoLite2-City database to enable this.</p>
-      {% endif %}
-
-      {% if not total_geo %}
-      <div style="margin-top:1rem;padding:.85rem 1rem;background:var(--amber-lt);border:1px solid var(--amber-bd);border-radius:8px;font-size:.78rem;color:#92400e;">
-        <strong>Setup required:</strong> Download <code>GeoLite2-City.mmdb</code> from
-        <a href="https://dev.maxmind.com/geoip/geolite2-free-geolocation-data" target="_blank" rel="noopener">maxmind.com</a>
-        (free) and place it in <code>geoip/</code> at the project root, or set the <code>GEOIP_PATH</code> env var.
-      </div>
-      {% endif %}
     </div>
-  </div>
-  {% endif %}
-
-  <!-- Top pages -->
-  <div class="card">
-    <div class="card-title">Top Pages (Human, last {{ days }}d)</div>
-    <div style="overflow-x:auto;">
-      <table class="tbl">
-        <thead><tr><th>Path</th><th>Hits</th><th>Unique Sessions</th><th>Avg ms</th><th>Errors</th></tr></thead>
-        <tbody>
-          {% for p in top_pages %}
-          <tr>
-            <td class="name">{{ p.path }}</td>
-            <td>{{ p.hits }}</td>
-            <td>{{ p.unique_sessions }}</td>
-            <td>{{ p.avg_ms|floatformat:0 }}</td>
-            <td>{% if p.errors %}<span class="badge badge-err">{{ p.errors }}</span>{% else %}—{% endif %}</td>
-          </tr>
-          {% empty %}<tr><td colspan="5" style="color:var(--muted);">No data yet</td></tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
+    {% else %}
+    <p style="color:var(--muted);font-size:.82rem;padding:1rem 0;">No Kenya county data yet — install the GeoLite2-City database to enable this.</p>
+    {% endif %}
   </div>
 
-  <!-- Slow pages -->
   <div class="card">
-    <div class="card-title">Slow Pages (>2 s avg)</div>
+    <div class="card-title">🌍 Countries</div>
+    {% if top_countries %}
     <table class="tbl">
-      <thead><tr><th>Path</th><th>Occurrences</th><th>Avg ms</th></tr></thead>
+      <thead><tr><th>#</th><th>Country</th><th>Sessions</th></tr></thead>
       <tbody>
-        {% for p in slow_pages %}
+        {% for c in top_countries %}
+        <tr>
+          <td style="color:var(--muted);">{{ forloop.counter }}</td>
+          <td class="name">{{ c.country }}</td>
+          <td>{{ c.n }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p style="color:var(--muted);font-size:.82rem;padding:1rem 0;">No geo data yet — install the GeoLite2-City database to enable this.</p>
+    {% endif %}
+
+    {% if not total_geo %}
+    <div style="margin-top:1rem;padding:.85rem 1rem;background:var(--amber-lt);border:1px solid var(--amber-bd);border-radius:8px;font-size:.78rem;color:#92400e;">
+      <strong>Setup required:</strong> Download <code>GeoLite2-City.mmdb</code> from
+      <a href="https://dev.maxmind.com/geoip/geolite2-free-geolocation-data" target="_blank" rel="noopener">maxmind.com</a>
+      (free) and place it in <code>geoip/</code> at the project root, or set the <code>GEOIP_PATH</code> env var.
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endif %}
+
+<div class="card">
+  <div class="card-title">Top Pages (Human, last {{ days }}d)</div>
+  <div style="overflow-x:auto;">
+    <table class="tbl">
+      <thead><tr><th>Path</th><th>Hits</th><th>Unique Sessions</th><th>Avg ms</th><th>Errors</th></tr></thead>
+      <tbody>
+        {% for p in top_pages %}
         <tr>
           <td class="name">{{ p.path }}</td>
-          <td>{{ p.n }}</td>
-          <td><span class="badge badge-warn">{{ p.avg_ms|floatformat:0 }}</span></td>
+          <td>{{ p.hits }}</td>
+          <td>{{ p.unique_sessions }}</td>
+          <td>{{ p.avg_ms|floatformat:0 }}</td>
+          <td>{% if p.errors %}<span class="badge badge-err">{{ p.errors }}</span>{% else %}—{% endif %}</td>
         </tr>
-        {% empty %}<tr><td colspan="3" style="color:var(--muted);">No slow pages 🎉</td></tr>
+        {% empty %}<tr><td colspan="5" style="color:var(--muted);">No data yet</td></tr>
         {% endfor %}
       </tbody>
     </table>
   </div>
+</div>
 
-  <!-- Error pages -->
-  <div class="card">
-    <div class="card-title">Error Pages (4xx / 5xx)</div>
+<div class="card">
+  <div class="card-title">Slow Pages (&gt;2 s avg)</div>
+  <table class="tbl">
+    <thead><tr><th>Path</th><th>Occurrences</th><th>Avg ms</th></tr></thead>
+    <tbody>
+      {% for p in slow_pages %}
+      <tr>
+        <td class="name">{{ p.path }}</td>
+        <td>{{ p.n }}</td>
+        <td><span class="badge badge-warn">{{ p.avg_ms|floatformat:0 }}</span></td>
+      </tr>
+      {% empty %}<tr><td colspan="3" style="color:var(--muted);">No slow pages 🎉</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<div class="card">
+  <div class="card-title">Error Pages (4xx / 5xx)</div>
+  <table class="tbl">
+    <thead><tr><th>Path</th><th>Code</th><th>Count</th></tr></thead>
+    <tbody>
+      {% for e in error_pages %}
+      <tr>
+        <td class="name">{{ e.path }}</td>
+        <td>{% if e.status_code >= 500 %}<span class="badge badge-err">{{ e.status_code }}</span>
+            {% else %}<span class="badge badge-warn">{{ e.status_code }}</span>{% endif %}</td>
+        <td>{{ e.n }}</td>
+      </tr>
+      {% empty %}<tr><td colspan="3" style="color:var(--muted);">No errors 🎉</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<div class="card">
+  <div class="card-title">Recent Errors</div>
+  <div style="overflow-x:auto;">
     <table class="tbl">
-      <thead><tr><th>Path</th><th>Code</th><th>Count</th></tr></thead>
+      <thead><tr><th>Time</th><th>Code</th><th>Method</th><th>Path</th><th>IP</th><th>Referrer</th></tr></thead>
       <tbody>
-        {% for e in error_pages %}
+        {% for e in recent_errors %}
         <tr>
-          <td class="name">{{ e.path }}</td>
+          <td>{{ e.created_at|date:"d M H:i" }}</td>
           <td>{% if e.status_code >= 500 %}<span class="badge badge-err">{{ e.status_code }}</span>
               {% else %}<span class="badge badge-warn">{{ e.status_code }}</span>{% endif %}</td>
-          <td>{{ e.n }}</td>
+          <td>{{ e.method }}</td>
+          <td class="name">{{ e.path }}</td>
+          <td>{{ e.ip|default:"—" }}</td>
+          <td class="name" style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ e.referrer|default:"—" }}</td>
         </tr>
-        {% empty %}<tr><td colspan="3" style="color:var(--muted);">No errors 🎉</td></tr>
+        {% empty %}<tr><td colspan="6" style="color:var(--muted);">No errors 🎉</td></tr>
         {% endfor %}
       </tbody>
     </table>
-  </div>
-
-  <!-- Recent errors -->
-  <div class="card">
-    <div class="card-title">Recent Errors</div>
-    <div style="overflow-x:auto;">
-      <table class="tbl">
-        <thead><tr><th>Time</th><th>Code</th><th>Method</th><th>Path</th><th>IP</th><th>Referrer</th></tr></thead>
-        <tbody>
-          {% for e in recent_errors %}
-          <tr>
-            <td>{{ e.created_at|date:"d M H:i" }}</td>
-            <td>{% if e.status_code >= 500 %}<span class="badge badge-err">{{ e.status_code }}</span>
-                {% else %}<span class="badge badge-warn">{{ e.status_code }}</span>{% endif %}</td>
-            <td>{{ e.method }}</td>
-            <td class="name">{{ e.path }}</td>
-            <td>{{ e.ip|default:"—" }}</td>
-            <td class="name" style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ e.referrer|default:"—" }}</td>
-          </tr>
-          {% empty %}<tr><td colspan="6" style="color:var(--muted);">No errors 🎉</td></tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
   </div>
 </div>
 

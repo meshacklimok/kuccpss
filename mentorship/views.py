@@ -26,6 +26,14 @@ def _admin_email():
     return SiteSetting.get('admin_email', default=settings.ADMIN_EMAIL)
 
 
+def _mentors_per_page() -> int:
+    from resources.models import SiteSetting
+    try:
+        return int(SiteSetting.get('mentors_per_page', '18'))
+    except (TypeError, ValueError):
+        return 18
+
+
 # ── Public: Mentor Directory ─────────────────────────────────────────────────
 
 def directory(request):
@@ -63,7 +71,7 @@ def directory(request):
     ).distinct()
 
     from django.core.paginator import Paginator
-    paginator = Paginator(mentors, 18)
+    paginator = Paginator(mentors, _mentors_per_page())
     page_obj = paginator.get_page(request.GET.get("page", 1))
 
     institutions = Institution.objects.filter(
@@ -466,7 +474,20 @@ def initiate_payment(request, token):
     if not phone:
         return JsonResponse({"ok": False, "error": "Phone number is required."}, status=400)
 
+    from payments.models import Payment
     from payments.services import initiate_stk_push, normalise_phone
+
+    payment, _ = Payment.objects.update_or_create(
+        mentorship_session=session,
+        defaults={
+            "user": request.user,
+            "feature": "mentorship_booking",
+            "amount": session.amount,
+            "phone_number": phone,
+            "status": "pending",
+        },
+    )
+
     try:
         checkout_id = initiate_stk_push(
             phone_number=phone,
@@ -478,9 +499,13 @@ def initiate_payment(request, token):
         session.phone_used = normalise_phone(phone)
         session.payment_ref = checkout_id
         session.save(update_fields=["phone_used", "payment_ref"])
+        payment.checkout_id = checkout_id
+        payment.save(update_fields=["checkout_id"])
         return JsonResponse({"ok": True, "message": "STK push sent — enter your M-Pesa PIN on your phone."})
     except Exception as exc:
         logger.error("Mentorship STK push failed: %s", exc)
+        payment.status = "failed"
+        payment.save(update_fields=["status"])
         return JsonResponse({"ok": False, "error": "Payment gateway error. Please try again."}, status=502)
 
 
@@ -564,6 +589,8 @@ def _confirm_session_after_payment(session: MentorshipSession):
     """Shared logic: mark session confirmed, credit mentor, send emails."""
     session.status = "confirmed"
     session.save(update_fields=["status"])
+    from payments.models import Payment
+    Payment.objects.filter(mentorship_session=session).exclude(status="completed").update(status="completed")
     mentor = session.mentor
     mentor.wallet_balance += session.mentor_payout
     mentor.total_earned += session.mentor_payout

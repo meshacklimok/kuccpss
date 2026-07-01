@@ -19,8 +19,135 @@ from .services import initiate_stk_push, price_for_feature, fetch_intasend_statu
 logger = logging.getLogger(__name__)
 
 
+def _generate_receipt_pdf(payment: "Payment", user_name: str, mpesa_ref: str, paid_at: str) -> bytes:
+    """Render a branded one-page PDF receipt the user can download and keep."""
+    import io
+    from reportlab.pdfgen import canvas as pdf_canvas
+    from reportlab.lib.pagesizes import A4
+    from reportlab.lib.units import cm
+    from reportlab.lib import colors as rc
+
+    NAVY = rc.HexColor("#1e3a8a")
+    TEAL = rc.HexColor("#0e7490")
+    EMERALD = rc.HexColor("#16a34a")
+    SLATE = rc.HexColor("#475569")
+    LIGHT = rc.HexColor("#f8fafc")
+    BORDER = rc.HexColor("#e2e8f0")
+    WHITE = rc.white
+
+    buf = io.BytesIO()
+    p = pdf_canvas.Canvas(buf, pagesize=A4)
+    W, H = A4
+
+    # Header band
+    p.setFillColor(NAVY)
+    p.rect(0, H - 3.2 * cm, W, 3.2 * cm, fill=1, stroke=0)
+    p.setFillColor(TEAL)
+    p.rect(0, H - 3.32 * cm, W, 0.12 * cm, fill=1, stroke=0)
+    p.setFillColor(WHITE)
+    p.setFont("Helvetica-Bold", 20)
+    p.drawString(1.8 * cm, H - 1.6 * cm, "CareerNext")
+    p.setFont("Helvetica", 9)
+    p.setFillColor(rc.HexColor("#bfdbfe"))
+    p.drawString(1.8 * cm, H - 2.15 * cm, "Kenya's Course & Career Placement Platform")
+    p.setFont("Helvetica-Bold", 12)
+    p.setFillColor(WHITE)
+    p.drawRightString(W - 1.8 * cm, H - 1.6 * cm, "PAYMENT RECEIPT")
+    p.setFont("Helvetica", 9)
+    p.setFillColor(rc.HexColor("#bfdbfe"))
+    p.drawRightString(W - 1.8 * cm, H - 2.15 * cm, f"Receipt #{payment.pk}")
+
+    # Success banner
+    p.setFillColor(EMERALD)
+    p.rect(0, H - 4.0 * cm, W, 0.8 * cm, fill=1, stroke=0)
+    p.setFillColor(WHITE)
+    p.setFont("Helvetica-Bold", 10)
+    p.drawCentredString(W / 2, H - 3.55 * cm, "PAYMENT CONFIRMED")
+
+    # Bill-to block
+    y = H - 5.0 * cm
+    p.setFillColor(SLATE)
+    p.setFont("Helvetica-Bold", 9)
+    p.drawString(1.8 * cm, y, "BILLED TO")
+    p.setFont("Helvetica", 10)
+    p.setFillColor(rc.HexColor("#1e293b"))
+    p.drawString(1.8 * cm, y - 0.55 * cm, user_name)
+    p.setFillColor(SLATE)
+    p.drawString(1.8 * cm, y - 1.0 * cm, payment.user.email)
+
+    p.setFillColor(SLATE)
+    p.setFont("Helvetica-Bold", 9)
+    p.drawRightString(W - 1.8 * cm, y, "DATE")
+    p.setFont("Helvetica", 10)
+    p.setFillColor(rc.HexColor("#1e293b"))
+    p.drawRightString(W - 1.8 * cm, y - 0.55 * cm, paid_at)
+
+    # Line-item table
+    table_top = y - 2.0 * cm
+    row_h = 1.0 * cm
+    rows = [
+        ("Product", payment.get_product_display()),  # type: ignore[attr-defined]
+    ]
+    if mpesa_ref:
+        rows.append(("M-Pesa Reference", mpesa_ref))
+    rows.append(("Payment ID", f"#{payment.pk}"))
+
+    p.setFillColor(NAVY)
+    p.rect(1.8 * cm, table_top, W - 3.6 * cm, row_h, fill=1, stroke=0)
+    p.setFillColor(WHITE)
+    p.setFont("Helvetica-Bold", 9)
+    p.drawString(2.1 * cm, table_top + 0.35 * cm, "DESCRIPTION")
+    p.drawRightString(W - 2.1 * cm, table_top + 0.35 * cm, "DETAIL")
+
+    cur_y = table_top
+    for i, (label, value) in enumerate(rows):
+        cur_y -= row_h
+        p.setFillColor(LIGHT if i % 2 == 0 else WHITE)
+        p.rect(1.8 * cm, cur_y, W - 3.6 * cm, row_h, fill=1, stroke=0)
+        p.setStrokeColor(BORDER)
+        p.line(1.8 * cm, cur_y, W - 1.8 * cm, cur_y)
+        p.setFillColor(rc.HexColor("#334155"))
+        p.setFont("Helvetica", 9.5)
+        p.drawString(2.1 * cm, cur_y + 0.35 * cm, label)
+        p.setFont("Helvetica-Bold", 9.5)
+        p.drawRightString(W - 2.1 * cm, cur_y + 0.35 * cm, value)
+
+    # Amount paid block
+    cur_y -= 1.4 * cm
+    p.setFillColor(NAVY)
+    p.rect(1.8 * cm, cur_y, W - 3.6 * cm, 1.2 * cm, fill=1, stroke=0)
+    p.setFillColor(WHITE)
+    p.setFont("Helvetica-Bold", 11)
+    p.drawString(2.1 * cm, cur_y + 0.4 * cm, "TOTAL PAID")
+    p.setFont("Helvetica-Bold", 16)
+    p.drawRightString(W - 2.1 * cm, cur_y + 0.35 * cm, f"KES {int(payment.amount)}")
+
+    # Footer
+    p.setFillColor(SLATE)
+    p.setFont("Helvetica", 8)
+    p.drawCentredString(
+        W / 2, 2.4 * cm,
+        "This is a computer-generated receipt and serves as proof of payment.",
+    )
+    p.drawCentredString(
+        W / 2, 1.9 * cm,
+        "Questions? support@careernext.co.ke   |   careernext.co.ke",
+    )
+    p.setFillColor(TEAL)
+    p.rect(0, 1.3 * cm, W, 0.08 * cm, fill=1, stroke=0)
+    p.setFillColor(NAVY)
+    p.rect(0, 0, W, 1.3 * cm, fill=1, stroke=0)
+    p.setFillColor(WHITE)
+    p.setFont("Helvetica-Bold", 8)
+    p.drawCentredString(W / 2, 0.75 * cm, "careernext.co.ke — Your Journey Begins Here")
+
+    p.showPage()
+    p.save()
+    return buf.getvalue()
+
+
 def _send_payment_receipt(payment: "Payment") -> None:
-    """Email the user a branded HTML receipt when their payment is confirmed."""
+    """Email the user a branded HTML receipt (with a downloadable PDF attached)."""
     try:
         mpesa_ref = (
             payment.transactions.order_by("-created_at")
@@ -35,7 +162,7 @@ def _send_payment_receipt(payment: "Payment") -> None:
         ctx = {
             "user_name": user_name,
             "user_email": payment.user.email,
-            "feature_label": payment.get_feature_display(),
+            "feature_label": payment.get_product_display(),
             "amount": int(payment.amount),
             "mpesa_ref": mpesa_ref,
             "payment_id": payment.pk,
@@ -52,8 +179,8 @@ def _send_payment_receipt(payment: "Payment") -> None:
         plain_body = (
             f"Hi {user_name},\n\n"
             f"Your payment of KES {int(payment.amount)} for "
-            f'"{payment.get_feature_display()}" has been received and {action_phrase}.\n\n'
-            f"Feature:        {payment.get_feature_display()}\n"
+            f'"{payment.get_product_display()}" has been received and {action_phrase}.\n\n'
+            f"Product:        {payment.get_product_display()}\n"
             f"Amount:         KES {int(payment.amount)}\n"
             + (f"M-Pesa Ref:     {mpesa_ref}\n" if mpesa_ref else "")
             + f"Payment ID:     #{payment.pk}\n"
@@ -70,6 +197,13 @@ def _send_payment_receipt(payment: "Payment") -> None:
             to=[payment.user.email],
         )
         email.attach_alternative(html_body, "text/html")
+
+        try:
+            pdf_bytes = _generate_receipt_pdf(payment, user_name, mpesa_ref, paid_at)
+            email.attach(f"CareerNext_Receipt_{payment.pk}.pdf", pdf_bytes, "application/pdf")
+        except Exception as pdf_exc:
+            logger.error("Receipt PDF generation failed for payment %s: %s", payment.pk, pdf_exc)
+
         email.send(fail_silently=True)
 
     except Exception as exc:
@@ -265,6 +399,8 @@ def mpesa_webhook(request):
             mentor.wallet_balance += session.mentor_payout
             mentor.total_earned += session.mentor_payout
             mentor.save(update_fields=["wallet_balance", "total_earned"])
+
+            Payment.objects.filter(mentorship_session=session).exclude(status="completed").update(status="completed")
 
             from mentorship.views import _send_booking_confirmation
             _send_booking_confirmation(session)

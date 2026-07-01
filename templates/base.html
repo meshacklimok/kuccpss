@@ -437,13 +437,8 @@
                 </div>
 
                 <ul class="navbar-nav align-items-center">
-                    <li class="nav-item me-1">
-                        <button id="dark-toggle" title="Toggle dark mode" aria-label="Toggle dark mode" aria-pressed="false">
-                            <i class="fas fa-moon" id="dark-icon"></i>
-                        </button>
-                    </li>
                     {% if user.is_authenticated %}
-                    <li class="nav-item">
+                    <li class="nav-item me-1">
                         <a class="nav-link position-relative" href="{% url 'accounts:notifications' %}"
                            aria-label="Notifications{% if unread_notification_count %} ({{ unread_notification_count }} unread){% endif %}">
                             <i class="fas fa-bell" aria-hidden="true"></i>
@@ -452,6 +447,13 @@
                             {% endif %}
                         </a>
                     </li>
+                    {% endif %}
+                    <li class="nav-item me-1">
+                        <button id="dark-toggle" title="Toggle dark mode" aria-label="Toggle dark mode" aria-pressed="false">
+                            <i class="fas fa-moon" id="dark-icon"></i>
+                        </button>
+                    </li>
+                    {% if user.is_authenticated %}
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle d-flex align-items-center gap-2" href="#" data-bs-toggle="dropdown">
                             {% if user.profile_picture %}

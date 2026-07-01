@@ -1,0 +1,125 @@
+{% extends "analytics/base_analytics.html" %}
+{% block analytics_title %}Calculator Analytics{% endblock %}
+{% block page_title %}Calculator Analytics{% endblock %}
+{% block page_subtitle %}Cluster-points calculator usage — last {{ days }} days{% endblock %}
+
+{% block header_actions %}
+<div class="day-pills">
+  {% for d in day_options %}
+  <a href="?days={{ d }}" class="day-pill{% if days == d %} active{% endif %}">{% if d == 1 %}24h{% else %}{{ d }}d{% endif %}</a>
+  {% endfor %}
+</div>
+{% endblock %}
+
+{% block analytics_content %}
+
+<div class="kpi-grid">
+  <div class="kpi">
+    <div class="kpi-label">Total Runs</div>
+    <div class="kpi-val">{{ total_runs }}</div>
+    {% if runs_trend.pct is not None %}
+    <div class="trend {% if runs_trend.up %}up{% else %}down{% endif %}">{% if runs_trend.up %}▲{% else %}▼{% endif %} {{ runs_trend.pct }}% vs prior period</div>
+    {% endif %}
+  </div>
+  <div class="kpi green">
+    <div class="kpi-label">Authenticated Runs</div>
+    <div class="kpi-val">{{ auth_runs }}</div>
+    <div class="kpi-sub">{{ guest_runs }} guest runs</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-label">PDF Exports</div>
+    <div class="kpi-val">{{ pdf_exports }}</div>
+  </div>
+  <div class="kpi amber">
+    <div class="kpi-label">Shares</div>
+    <div class="kpi-val">{{ shares }}</div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-title">Daily Calculator Runs</div>
+  <div class="chart-box h220"><canvas id="runChart"></canvas></div>
+</div>
+
+<div class="two-col">
+  <div class="card">
+    <div class="card-title">Mean Grade Distribution</div>
+    <div class="chart-box h220"><canvas id="gradeChart"></canvas></div>
+  </div>
+  <div class="card">
+    <div class="card-title">Pathway Recommendation Split</div>
+    <div class="chart-box h220"><canvas id="pathwayChart"></canvas></div>
+  </div>
+</div>
+
+<div class="two-col">
+  <div class="card">
+    <div class="card-title">Strongest Clusters (avg points)</div>
+    <table class="tbl">
+      <thead><tr><th>#</th><th>Cluster</th><th>Avg Points</th><th>Runs</th></tr></thead>
+      <tbody>
+        {% for c in strongest_clusters %}
+        <tr>
+          <td>{{ c.cluster__number|default:"—" }}</td>
+          <td>{{ c.cluster__name }}</td>
+          <td>{{ c.avg_points|floatformat:1 }}</td>
+          <td>{{ c.n }}</td>
+        </tr>
+        {% empty %}<tr><td colspan="4" style="color:var(--muted);">No data yet</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div class="card">
+    <div class="card-title">Weakest Clusters (avg points)</div>
+    <table class="tbl">
+      <thead><tr><th>#</th><th>Cluster</th><th>Avg Points</th><th>Runs</th></tr></thead>
+      <tbody>
+        {% for c in weakest_clusters %}
+        <tr>
+          <td>{{ c.cluster__number|default:"—" }}</td>
+          <td>{{ c.cluster__name }}</td>
+          <td>{{ c.avg_points|floatformat:1 }}</td>
+          <td>{{ c.n }}</td>
+        </tr>
+        {% empty %}<tr><td colspan="4" style="color:var(--muted);">No data yet</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<script>
+new Chart(document.getElementById('runChart'), {
+  type: 'line',
+  data: { labels: {{ chart_run_labels|safe }},
+    datasets: [{ label:'Runs', data:{{ chart_run_data|safe }},
+      borderColor:'#2563eb', backgroundColor:'rgba(37,99,235,.08)',
+      tension:.35, fill:true, pointRadius:2 }]
+  },
+  options: { responsive:true, maintainAspectRatio:false,
+    plugins:{ legend:{ display:false } },
+    scales:{ y:{ beginAtZero:true, ticks:{ precision:0 } } } }
+});
+new Chart(document.getElementById('gradeChart'), {
+  type: 'bar',
+  data: { labels: {{ chart_grade_labels|safe }},
+    datasets: [{ label:'Runs', data:{{ chart_grade_data|safe }},
+      backgroundColor:'rgba(124,58,237,.75)', borderRadius:6 }]
+  },
+  options: { responsive:true, maintainAspectRatio:false,
+    plugins:{ legend:{ display:false } },
+    scales:{ y:{ beginAtZero:true, ticks:{ precision:0 } } } }
+});
+new Chart(document.getElementById('pathwayChart'), {
+  type: 'doughnut',
+  data: { labels: {{ chart_pathway_labels|safe }},
+    datasets: [{ data:{{ chart_pathway_data|safe }},
+      backgroundColor:['#1e3a8a','#2563eb','#16a34a','#d97706'], borderWidth:2 }]
+  },
+  options: { responsive:true, maintainAspectRatio:false,
+    plugins:{ legend:{ position:'right' } } }
+});
+</script>
+{% endblock %}

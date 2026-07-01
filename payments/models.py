@@ -2,6 +2,23 @@ from django.db import models
 from django.conf import settings
 
 
+PRODUCT_CHOICES = [
+    ("cluster_points", "Cluster Points Calculator"),
+    ("career_engine", "Premium Career Engine"),
+    ("careernext_ai", "CareerNext AI"),
+    ("mentorship", "Mentorship"),
+]
+
+FEATURE_TO_PRODUCT = {
+    "view_cluster_points": "cluster_points",
+    "view_eligible_courses": "cluster_points",
+    "premium_career_report": "career_engine",
+    "advanced_analysis": "career_engine",
+    "ai_chat_access": "careernext_ai",
+    "mentorship_booking": "mentorship",
+}
+
+
 class PaymentFeature(models.Model):
     """Admin-configurable price and enabled flag per feature."""
     feature = models.CharField(max_length=50, unique=True)
@@ -32,6 +49,7 @@ class Payment(models.Model):
         ("premium_career_report", "Premium Career Report"),
         ("advanced_analysis", "Advanced Career Analysis"),
         ("ai_chat_access", "AI Chat Top-Up"),
+        ("mentorship_booking", "Mentorship Booking"),
     ]
 
     user = models.ForeignKey(
@@ -43,6 +61,12 @@ class Payment(models.Model):
     checkout_id = models.CharField(max_length=120, blank=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="pending")
     mpesa_code = models.CharField(max_length=20, blank=True, help_text="User-submitted M-Pesa transaction code for manual verification")
+    mentorship_session = models.OneToOneField(
+        "mentorship.MentorshipSession",
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name="payment_record",
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -66,6 +90,13 @@ class Payment(models.Model):
 
     def is_active(self):
         return self.status == "completed"
+
+    @property
+    def product(self):
+        return FEATURE_TO_PRODUCT.get(self.feature, self.feature)
+
+    def get_product_display(self):
+        return dict(PRODUCT_CHOICES).get(self.product, self.product)
 
 
 class PaymentExemption(models.Model):
