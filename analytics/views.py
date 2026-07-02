@@ -13,6 +13,8 @@ from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 
+from kuccpss.ip_utils import get_client_ip
+
 staff_only = user_passes_test(lambda u: u.is_active and u.is_staff, login_url='/accounts/login/')
 
 VALID_DAYS = {1, 7, 30, 90, 180, 365}
@@ -67,8 +69,7 @@ def pwa_install(request):
     if platform not in {'android', 'ios', 'desktop', 'unknown'}:
         platform = 'unknown'
 
-    ip = request.META.get('HTTP_X_FORWARDED_FOR', '').split(',')[0].strip() or \
-         request.META.get('REMOTE_ADDR')
+    ip = get_client_ip(request)
 
     PWAInstallLog.objects.create(
         platform=platform,
@@ -1030,8 +1031,9 @@ def insights_dashboard(request):
 
     # ── 7. Calculator grade distribution ─────────────────────────────────────
     from .models import EventLog
+    from .events import CALCULATOR_RUN
     grade_dist = list(
-        EventLog.objects.filter(name='calculator_run', created_at__date__gte=ago)
+        EventLog.objects.filter(name=CALCULATOR_RUN, created_at__date__gte=ago)
         .values('properties__mean_grade')
         .annotate(n=Count('id'))
         .order_by('-n')
@@ -1202,6 +1204,7 @@ GRADE_ORDER = ['A', 'A-', 'B+', 'B', 'B-', 'C+', 'C', 'C-', 'D+', 'D', 'D-', 'E'
 def calculator_analytics(request):
     """Cluster-points calculator usage: runs, exports, shares, grade & cluster breakdowns."""
     from .models import EventLog, DownloadLog
+    from .events import CALCULATOR_RUN, CALCULATOR_SHARE, DOWNLOAD_CLUSTER_PDF
     from clusterpoints.models import ClusterCalculationResult
 
     days  = _parse_days(request)
@@ -1209,10 +1212,10 @@ def calculator_analytics(request):
     ago   = today - timedelta(days=days)
     prev_ago = ago - timedelta(days=days)
 
-    runs_qs = EventLog.objects.filter(name='calculator_run', created_at__date__gte=ago)
+    runs_qs = EventLog.objects.filter(name=CALCULATOR_RUN, created_at__date__gte=ago)
     total_runs = runs_qs.count()
     prev_runs = EventLog.objects.filter(
-        name='calculator_run', created_at__date__gte=prev_ago, created_at__date__lt=ago
+        name=CALCULATOR_RUN, created_at__date__gte=prev_ago, created_at__date__lt=ago
     ).count()
     runs_trend = _trend(total_runs, prev_runs)
 
@@ -1220,9 +1223,9 @@ def calculator_analytics(request):
     auth_runs = runs_qs.filter(properties__auth=True).count()
 
     pdf_exports = DownloadLog.objects.filter(
-        content_type='cluster_pdf', created_at__date__gte=ago
+        content_type=DOWNLOAD_CLUSTER_PDF, created_at__date__gte=ago
     ).count()
-    shares = EventLog.objects.filter(name='calculator_share', created_at__date__gte=ago).count()
+    shares = EventLog.objects.filter(name=CALCULATOR_SHARE, created_at__date__gte=ago).count()
 
     # Daily run trend
     date_labels = _date_labels(days, ago)
@@ -1540,16 +1543,17 @@ def retention_analytics(request):
 def ai_chat_analytics(request):
     """CareerNext AI chat usage: volume, free/paid split, KB hit rate, paywall hits."""
     from .models import EventLog
+    from .events import AI_CHAT_MESSAGE, AI_CHAT_PAYWALL_HIT
 
     days  = _parse_days(request)
     today = date.today()
     ago   = today - timedelta(days=days)
     prev_ago = ago - timedelta(days=days)
 
-    msgs_qs = EventLog.objects.filter(name='ai_chat_message', created_at__date__gte=ago)
+    msgs_qs = EventLog.objects.filter(name=AI_CHAT_MESSAGE, created_at__date__gte=ago)
     total_messages = msgs_qs.count()
     prev_messages = EventLog.objects.filter(
-        name='ai_chat_message', created_at__date__gte=prev_ago, created_at__date__lt=ago
+        name=AI_CHAT_MESSAGE, created_at__date__gte=prev_ago, created_at__date__lt=ago
     ).count()
     messages_trend = _trend(total_messages, prev_messages)
 
@@ -1562,7 +1566,7 @@ def ai_chat_analytics(request):
     kb_hit_rate = round(kb_hits / max(total_messages, 1) * 100, 1)
 
     paywall_hits = EventLog.objects.filter(
-        name='ai_chat_paywall_hit', created_at__date__gte=ago
+        name=AI_CHAT_PAYWALL_HIT, created_at__date__gte=ago
     ).count()
 
     # Daily message volume
