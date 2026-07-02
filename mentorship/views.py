@@ -14,7 +14,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 
 from accounts.decorators import require_recent_auth
-from .forms import AddSlotsForm, AddWeekSlotsForm, BookingForm, CancelSessionForm, MentorRegistrationForm, RatingForm, WithdrawalForm
+from .forms import AddSlotsForm, AddWeekSlotsForm, BookingForm, CancelSessionForm, MentorRegistrationForm, RatingForm, WithdrawalForm, _mentor_min_withdrawal
 from .models import MentorProfile, MentorshipConfig, MentorshipSession, TimeSlot, WithdrawalRequest
 
 logger = logging.getLogger(__name__)
@@ -220,7 +220,10 @@ def become_mentor(request):
     else:
         form = MentorRegistrationForm()
 
-    return render(request, "mentorship/become_mentor.html", {"form": form})
+    return render(request, "mentorship/become_mentor.html", {
+        "form": form,
+        "min_withdrawal": _mentor_min_withdrawal(),
+    })
 
 
 def become_mentor_success(request):
@@ -257,6 +260,7 @@ def mentor_dashboard(request):
         "week_slot_form": AddWeekSlotsForm(),
         "withdrawal_form": WithdrawalForm(mentor.wallet_balance),
         "withdrawals": withdrawals,
+        "min_withdrawal": _mentor_min_withdrawal(),
     })
 
 
@@ -538,7 +542,7 @@ def verify_payment_manual(request, token):
             state = fetch_intasend_status(session.payment_ref)
             logger.info("IntaSend status check for session %s: %s", session.token, state)
             if state == "COMPLETE":
-                _confirm_session_after_payment(session)
+                _confirm_session_after_payment(session, source="mentorship:verify_payment_manual")
                 messages.success(
                     request,
                     "Payment verified! Your session is now confirmed. "
@@ -585,8 +589,16 @@ def verify_payment_manual(request, token):
     return redirect("mentorship:checkout", token=token)
 
 
-def _confirm_session_after_payment(session: MentorshipSession):
-    """Shared logic: mark session confirmed, credit mentor, send emails."""
+def _confirm_session_after_payment(session: MentorshipSession, source: str = "unknown"):
+    """Shared logic: mark session confirmed, credit mentor, send emails.
+
+    Called from both webhook endpoints (payments:mpesa_webhook and
+    mentorship:payment_webhook) and the manual verification fallback, so payout
+    behavior is identical no matter which path confirms the payment. `source` is
+    logged only, to make it observable in production which path confirmed a given
+    session.
+    """
+    logger.info("Mentorship session %s confirmed via %s", session.token, source)
     session.status = "confirmed"
     session.save(update_fields=["status"])
     from payments.models import Payment
@@ -604,9 +616,22 @@ def _confirm_session_after_payment(session: MentorshipSession):
 
 @csrf_exempt
 def payment_webhook(request):
-    """IntaSend webhook — called when payment completes or fails."""
+    """
+    IntaSend webhook — called when payment completes or fails.
+
+    In practice, payments:mpesa_webhook (which also handles mentorship sessions via
+    their UUID api_ref) is the endpoint registered with IntaSend. This one is kept as
+    a fallback and requires the same HMAC signature IntaSend sends on every webhook —
+    without it, a session's UUID token (visible in the checkout URL) could otherwise
+    be POSTed here directly to fake a payment confirmation.
+    """
     if request.method != "POST":
         return HttpResponse(status=405)
+
+    from payments.services import verify_intasend_signature
+    if not verify_intasend_signature(request):
+        logger.warning("mentorship:payment_webhook signature rejected")
+        return HttpResponse(status=403)
 
     try:
         payload = json.loads(request.body)
@@ -632,7 +657,7 @@ def payment_webhook(request):
                 session.payment_ref = invoice_id
                 session.save(update_fields=["payment_ref"])
 
-            _confirm_session_after_payment(session)
+            _confirm_session_after_payment(session, source="mentorship:payment_webhook")
 
         except MentorshipSession.DoesNotExist:
             pass  # Already processed or unrelated ref

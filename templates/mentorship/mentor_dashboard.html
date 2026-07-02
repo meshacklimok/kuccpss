@@ -360,11 +360,11 @@
                 </button>
               </div>
             </form>
-            <div class="form-text mt-1">Processed within 24 hours to your M-Pesa. Minimum KES 100.</div>
+            <div class="form-text mt-1">Processed within 24 hours to your M-Pesa. Minimum KES {{ min_withdrawal }}.</div>
           {% else %}
             <div class="text-muted small">
               <i class="bi bi-info-circle me-1"></i>
-              Minimum withdrawal is KES 100. Complete more sessions to reach the threshold.
+              Minimum withdrawal is KES {{ min_withdrawal }}. Complete more sessions to reach the threshold.
             </div>
           {% endif %}
 
