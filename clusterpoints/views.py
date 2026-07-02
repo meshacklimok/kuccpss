@@ -14,7 +14,7 @@ from reportlab.lib.units import cm
 from .forms import KCSEForm
 from clusters.models import Subject
 from .models import UserKCSEResult, SubjectResult, ClusterCalculationResult
-from .services import calculate_all_clusters, calculate_clusters_anonymous
+from .services import calculate_all_clusters, calculate_clusters_anonymous, compute_aggregate_total
 
 # KCSE mean grade bands (based on 7-subject aggregate max 84)
 _GRADE_BANDS = [
@@ -69,19 +69,7 @@ def _pathway_recommendation(total):
 
 def _compute_aggregate(named: dict) -> int:
     """Compute the 7-subject aggregate (max 84) from {subject_name: points}."""
-    working = named.copy()
-    agg = []
-    if 'Mathematics' in working:
-        agg.append(working.pop('Mathematics'))
-    langs = {l: working.pop(l) for l in ['English', 'Kiswahili'] if l in working}
-    if langs:
-        best = max(langs, key=lambda k: langs[k])
-        agg.append(langs[best])
-        for l, p in langs.items():
-            if l != best:
-                working[l] = p
-    agg += sorted(working.values(), reverse=True)[:5]
-    return sum(agg)
+    return compute_aggregate_total(named)
 
 
 # =====================================================
@@ -232,7 +220,8 @@ def kcse_calculator_view(request):
                 messages.success(request, "KCSE results saved and cluster points calculated!")
                 try:
                     from analytics.utils import log_event as _log_event
-                    _log_event(request, 'calculator_run', {
+                    from analytics.events import CALCULATOR_RUN
+                    _log_event(request, CALCULATOR_RUN, {
                         'mean_grade': _mean_grade(total_points),
                         'total_points': total_points,
                         'auth': True,
@@ -263,7 +252,8 @@ def kcse_calculator_view(request):
                 total_points = _compute_aggregate(named_points)
                 try:
                     from analytics.utils import log_event as _log_event
-                    _log_event(request, 'calculator_run', {
+                    from analytics.events import CALCULATOR_RUN
+                    _log_event(request, CALCULATOR_RUN, {
                         'mean_grade': _mean_grade(total_points),
                         'total_points': total_points,
                         'auth': False,
@@ -403,6 +393,7 @@ def kcse_calculator_view(request):
 def export_cluster_pdf(request):
     """Export all 20 cluster results for user's latest KCSE result — styled report."""
     from reportlab.lib import colors as rc
+    from .pdf_palette import NAVY, TEAL, EMERALD, AMBER, PURPLE, SLATE, LIGHT, WHITE
 
     kcse_result = UserKCSEResult.objects.filter(
         user=request.user
@@ -418,7 +409,8 @@ def export_cluster_pdf(request):
 
     try:
         from analytics.utils import log_download as _log_download
-        _log_download(request, 'cluster_pdf', object_id=kcse_result.pk)
+        from analytics.events import DOWNLOAD_CLUSTER_PDF
+        _log_download(request, DOWNLOAD_CLUSTER_PDF, object_id=kcse_result.pk)
     except Exception:
         pass
 
@@ -427,16 +419,6 @@ def export_cluster_pdf(request):
 
     p = canvas.Canvas(response, pagesize=A4)  # type: ignore[arg-type]
     W, H = A4
-
-    # Brand colour palette
-    NAVY    = rc.HexColor("#1e3a8a")
-    TEAL    = rc.HexColor("#0e7490")
-    EMERALD = rc.HexColor("#059669")
-    AMBER   = rc.HexColor("#d97706")
-    PURPLE  = rc.HexColor("#7c3aed")
-    SLATE   = rc.HexColor("#475569")
-    LIGHT   = rc.HexColor("#f0f9ff")
-    WHITE   = rc.white
 
     page_num = [0]
 
@@ -621,6 +603,7 @@ def export_full_results_pdf(request):
     courses (eligible then nearly-there), and a next-steps action plan.
     """
     from reportlab.lib import colors as rc
+    from .pdf_palette import NAVY, TEAL, EMERALD, AMBER, PURPLE, SLATE, LIGHT, RED, WHITE
     from .eligibility import get_eligible_courses
 
     kcse_result = UserKCSEResult.objects.filter(
@@ -642,7 +625,8 @@ def export_full_results_pdf(request):
 
     try:
         from analytics.utils import log_download as _log_download
-        _log_download(request, 'career_pdf', object_id=kcse_result.pk)
+        from analytics.events import DOWNLOAD_CAREER_PDF
+        _log_download(request, DOWNLOAD_CAREER_PDF, object_id=kcse_result.pk)
     except Exception:
         pass
 
@@ -651,16 +635,6 @@ def export_full_results_pdf(request):
 
     p = canvas.Canvas(response, pagesize=A4)  # type: ignore[arg-type]
     W, H = A4
-
-    NAVY    = rc.HexColor("#1e3a8a")
-    TEAL    = rc.HexColor("#0e7490")
-    EMERALD = rc.HexColor("#059669")
-    AMBER   = rc.HexColor("#d97706")
-    PURPLE  = rc.HexColor("#7c3aed")
-    SLATE   = rc.HexColor("#475569")
-    LIGHT   = rc.HexColor("#f0f9ff")
-    RED     = rc.HexColor("#dc2626")
-    WHITE   = rc.white
 
     page_num = [0]
 
@@ -1197,7 +1171,8 @@ def share_calculator_create(request):
         share_url = request.build_absolute_uri(sr.get_absolute_url())
         try:
             from analytics.utils import log_event as _log_event
-            _log_event(request, 'calculator_share', {'pathway': 'Calculator'})
+            from analytics.events import CALCULATOR_SHARE
+            _log_event(request, CALCULATOR_SHARE, {'pathway': 'Calculator'})
         except Exception:
             pass
         return JsonResponse({'ok': True, 'url': share_url})

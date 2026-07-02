@@ -1056,7 +1056,8 @@ def ajax_ai_chat(request):
             price = _pfp('ai_chat_access')
             try:
                 from analytics.utils import log_event as _log_event
-                _log_event(request, 'ai_chat_paywall_hit', {'free_limit': free_limit})
+                from analytics.events import AI_CHAT_PAYWALL_HIT
+                _log_event(request, AI_CHAT_PAYWALL_HIT, {'free_limit': free_limit})
             except Exception:
                 pass
             return JsonResponse({
@@ -1431,13 +1432,14 @@ def ajax_ai_chat(request):
         reply = (resp.choices[0].message.content or "").strip()
         try:
             from analytics.utils import log_event as _log_event
+            from analytics.events import AI_CHAT_MESSAGE
             is_paid = False
             if request.user.is_authenticated:
                 from .models import AIChatCredit
                 free_limit = getattr(cfg, 'ai_free_message_limit', 20)
                 credit = AIChatCredit.for_user(request.user)
                 is_paid = credit.free_messages_used >= free_limit
-            _log_event(request, 'ai_chat_message', {
+            _log_event(request, AI_CHAT_MESSAGE, {
                 'kb_hit': bool(kb_entries),
                 'is_paid': is_paid,
                 'message_len': len(user_message),
