@@ -118,8 +118,6 @@ else:
 DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'CareerNext <noreply@careernext.co.ke>')
 ADMIN_EMAIL = os.environ.get('ADMIN_EMAIL', 'support@careernext.co.ke')
 
-TIME_ZONE = 'Africa/Nairobi'
-
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
@@ -392,9 +390,11 @@ if not DEBUG:
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
 
-    # Additional cookie hardening
+    # Additional cookie hardening.
+    # NOTE: CSRF_COOKIE_HTTPONLY must stay False — frontend JS reads the
+    # csrftoken cookie for AJAX POSTs (heartbeat, reviews, shortlist, AI chat),
+    # and per Django docs hiding it offers no practical CSRF protection.
     SESSION_COOKIE_HTTPONLY = True
-    CSRF_COOKIE_HTTPONLY = True
 
 # Structured logging — ERROR+ always goes to stdout (Render captures it).
 # In DEBUG mode lower to WARNING so slow requests and app warnings are visible.

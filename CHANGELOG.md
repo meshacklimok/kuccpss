@@ -13,6 +13,38 @@ Format: `[YYYY-MM-DD]` — description of what changed and why.
 
 ---
 
+## [2026-07-02] — Grade-entry forms now tell students exactly what's missing
+
+### Changed
+- `KCSEForm.clean()` (`clusterpoints/forms.py`) — invalid submissions now name the missing compulsory subjects ("You haven't entered a grade for: Mathematics…") and say how many more subjects are needed, instead of per-field errors the accordion templates never rendered (students only saw "Please correct the errors below")
+- Calculator, degree grade entry, and pathway input pages (`calculator.html`, `degree_calculate.html`, `pathway_input.html`):
+  - Continue/Calculate button now also requires English, Kiswahili and Mathematics client-side (was: any 7 subjects, then a vague server rejection)
+  - Footer note names the specific missing subjects, not just a count
+  - Tapping the disabled button now flashes the reason, opens the Core Subjects accordion, and scrolls to/highlights the first missing required subject (`pointer-events: none` on `:disabled` lets the tap reach the footer wrapper); on the mean-grade pathway variant it scrolls to the mean grade or category section
+  - Multiple form errors render one per line instead of concatenated
+- Views pass `required_subject_names` to the three templates (`clusterpoints/views.py::kcse_calculator_view`, `career/views.py::degree_calculate`, `career/views.py::pathway_input`)
+
+---
+
+## [2026-07-02] — CareerNext AI chat: streaming replies, prompt caching, student-friendly formatting
+
+### Added
+- Token streaming in `ajax_ai_chat` (`career/views.py`) — chat page sends `stream: true` and renders the reply as it types via `StreamingHttpResponse`; dashboard/results widgets keep the JSON path
+- "Student-friendly style" section in the chat system prompt: direct answer first, simple English, terms explained in brackets, replies under ~120 words for simple questions, top 5 course matches by default (was 10)
+
+### Added (chat answers from DB, no more interrogating the student)
+- `_build_ai_db_context` now injects the student's saved KCSE subject grades (session `career_subject_grades`, falling back to `UserKCSEResult`/`SubjectResult`) and mean grade into the chat prompt
+- `_search_courses_for_message` (`career/views.py`) — targeted DB lookup of courses named in the student's question (e.g. "Do I qualify for Nursing?") injecting real cluster, min mean grade, subject requirements, and per-institution cutoffs; max 2 per course type so Degree AND Diploma/KMTC routes both appear
+- Prompt rules: "check student data sections FIRST — never ask for grades/subjects if present" and "'Do I qualify for X?' → verdict in the first line, one card, no questions"
+
+### Changed
+- System prompt reordered so all static rules come first and per-student KB/DB context comes last — enables OpenAI automatic prompt caching (faster first token, ~50% cheaper input on the long static prefix)
+- Removed the "say you can only see their top 10 matches" rule — the AI now evaluates any course found by the targeted lookup
+- Chat `max_tokens` raised 400 → 700 so course recommendation cards no longer truncate mid-sentence
+- Chat markdown renderer (`templates/career/chat.html` `fmt()`) now supports `###` headings, numbered lists, and escapes HTML in model output
+
+---
+
 ## [2026-06-30] — Admin-configurable AI model/temperature, SiteSetting performance knobs, analytics dashboard expansion
 
 ### Added

@@ -74,36 +74,33 @@ concrete, code-verified detail rather than repeating the summary table.
 
 ## 🐛 Confirmed bugs / inconsistencies
 
+Re-verified against the code on 2026-07-02. Items previously listed here that are now fixed:
+mentorship webhook HMAC verification, unified webhook payout logic (`_confirm_session_after_payment`),
+affiliate commission on all verification paths, `WithdrawalRequest` "failed" status choice,
+`get_client_ip()` unified in `kuccpss/ip_utils.py`, password-validator sync (6-char in both places),
+AI knowledge-base formula (now midpoint-marks), duplicate `/accounts/` + `dashboard/` URL mounts,
+orphaned `clusters` views (now wired), `mentorship/directory.html` dark-mode selector,
+`MentorRegistrationForm` slug-based institution filter, `MENTOR_AUTO_PAY_THRESHOLD` (defined in
+settings), and the previously untracked `resources/0010` migration (committed).
+
+Still open:
+
 | Issue | Where | Detail |
 |---|---|---|
-| Unsigned mentorship webhook | `mentorship/views.py::payment_webhook` | No HMAC signature check — a guessed/observed session UUID token can be POSTed to confirm payment and credit a mentor's wallet without ever paying. See [SECURITY.md](SECURITY.md) §3. |
-| Duplicated, diverging webhook logic | `payments/views.py::mpesa_webhook` vs. `mentorship/views.py::_confirm_session_after_payment` | The payments-app webhook reimplements mentorship confirmation inline and does **not** call `_maybe_auto_pay_mentor` — mentor auto-payout depends on which webhook IntaSend happens to hit. |
-| Affiliate commission not credited on fallback paths | `payments/views.py::verify_payment`, `verify_by_transaction_code` | Only `mpesa_webhook` credits `AffiliateCommission`; manual-verification fallbacks silently skip it. |
-| `WithdrawalRequest.status = "failed"` not in `STATUS_CHOICES` | `mentorship/models.py` | Saves without DB error (Django doesn't enforce choices at the DB layer) but breaks `get_status_display()` and choices-based admin filters. |
-| `get_client_ip()` disagreement | `accounts/views.py` (last XFF entry) vs. `accounts/signals.py` (first XFF entry) | Rate limiting uses the trustworthy last-entry convention; login-history/analytics IP logging uses the spoofable first-entry convention. See [SECURITY.md](SECURITY.md) §9. |
-| Password-strength validator never invoked | `kuccpss/settings.py` `AUTH_PASSWORD_VALIDATORS` (6-char min) vs. `accounts/forms.py::validate_password_strength` (4-char min, actually used) | Django's registered validator is dead for registration/change-password; both flows bypass it. |
-| AI knowledge base has the wrong formula | `career/management/commands/seed_knowledge.py` | Seeds an `AIKnowledgeEntry` restating the old fraction-based cluster-points formula, not the midpoint-marks version actually implemented. CareerNext AI chat could explain the formula incorrectly if it surfaces this entry verbatim. |
-| Hardcoded OCR model | `career/views.py::degree_upload` | Uses a hardcoded `model='gpt-4o'` instead of the admin-configurable `CareerConfig.ai_model_name` used by every other AI call site. |
 | `advanced_analysis` feature default mismatch | `payments/migrations/0004_seed_payment_features.py` (enabled) vs. `payments/management/commands/seed_payment_features.py` (disabled) | Re-running the command with `--force` would silently flip production behavior. |
-| Duplicate `/accounts/` URL mounts | `kuccpss/urls.py` | Includes `accounts.urls` (which itself includes `allauth.urls`), then separately `django.contrib.auth.urls`, then separately `allauth.urls` again. Harmless (resolved by list order) but redundant. |
-| Duplicate `dashboard/` route | `kuccpss/urls.py` | Registered at project root (`dashboard_root`) in addition to `accounts:dashboard`, pointing to the same view. |
-| Orphaned `clusters` views | `clusters/views.py::subject_group_create`/`subject_group_edit` | Defined but not wired into `clusters/urls.py`. |
-| `mentorship/directory.html` dark-mode selector | Template | Uses `[data-bs-theme="dark"]` instead of the site-wide `body.dark` pattern — likely does not respond to the dark-mode toggle. |
 | Duplicated paywall polling JS | `templates/payments/payment_required.html` vs. `paywall_overlay.html` | Near-identical M-Pesa polling logic under separate JS namespaces (`pr*` vs `pw*`). |
 | No shared PDF-styling module | `clusterpoints/views.py`, `career/views.py`, `payments/views.py` | Branded palette/header/footer drawing logic copy-pasted independently in 3 files. |
-| `MentorRegistrationForm` hardcoded institution-type IDs | `mentorship/forms.py` | `institution_type_id__in=[2,3,4]` — fragile if seed IDs ever change. |
-| `MENTOR_AUTO_PAY_THRESHOLD` never defined | `kuccpss/settings.py` | Read via `getattr(..., 500)` everywhere; always silently uses the 500 default. |
-| Untracked migration | `resources/migrations/0010_seed_withdrawal_settings.py` | Confirmed untracked in git as of this documentation pass — functionally harmless (code fallbacks match seeded values) but should be committed before deploy. |
 
-## 📋 No test coverage / thin coverage
+## 📋 Test coverage
 
-- `payments/tests.py` — empty stub.
-- `institutions/tests.py` — effectively empty (3 lines).
+Now covered (previously listed as gaps): `payments/tests.py` (pricing/feature-gate tests),
+`institutions/tests.py`, `predictor/tests.py`, and formula-correctness tests in
+`clusterpoints/tests.py` (weighted formula, 48 cap, aggregate max-84 selection rules — 12 tests, passing).
+
+Remaining thin spots:
+
 - `courses/tests.py` — smoke/review flows only, not chart logic, category-fallback redirects, or `trends.py`.
-- `predictor/` — no `tests.py` at all.
-- No formula-correctness unit tests exist anywhere for the cluster-points calculation or the
-  aggregate algorithm, despite both being business-critical and independently reimplemented in 4
-  places (see [FILE_EXPLANATIONS.md](FILE_EXPLANATIONS.md)).
+- No integration test for the full grade entry → loading → results flow (tracked in TODO.md).
 
 ## Two unmerged systems (structural, not a bug)
 
@@ -115,11 +112,12 @@ system is in play. See [DATABASE.md](DATABASE.md) and [FEATURES.md](FEATURES.md)
 
 ## Infrastructure / operational gaps
 
+Now resolved (previously listed as gaps): dependency vulnerability scanning
+(`.github/workflows/dependency-audit.yml`), Content-Security-Policy headers
+(`kuccpss.middleware.ContentSecurityPolicyMiddleware`), and `.env.example` sync
+(`CLOUDINARY_URL`, `GOOGLE_CLIENT_ID`, `VAPID_*` now present).
+
 - No scheduled job visibly purges old analytics logs (`analytics/tasks.py::purge_old_logs` exists
   but has no cron/management-command wiring found).
 - No automated cron processes `WithdrawalRequest` rows beyond the synchronous request-time call —
   `mentorship_housekeeping` only handles session reminders/completion.
-- No dependency vulnerability scanning (`pip-audit`/`safety`/Dependabot) found in the repo.
-- No Content-Security-Policy headers configured.
-- `.env.example` omits `CLOUDINARY_URL`, `GOOGLE_CLIENT_ID`/`GOOGLE_SECRET`, and `VAPID_*` keys
-  despite [DEPLOY.md](../DEPLOY.md) documenting them as required/optional for production.

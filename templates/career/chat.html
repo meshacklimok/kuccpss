@@ -2,7 +2,9 @@
 {% load static %}
 {% load custom_filters %}
 
-{% block title %}CareerNext AI — Career Guidance Chat{% endblock %}
+{% block title %}CareerNext AI — Ask Anything About Courses, Careers & KUCCPS | CareerNext{% endblock %}
+
+{% block meta %}<meta name="description" content="Chat with CareerNext AI about your future. It already knows your saved KCSE results, so ask 'what courses do I qualify for?' or 'can I do nursing?' and get answers based on your actual grades and real KUCCPS course data.">{% endblock %}
 
 {% block content %}
 
@@ -256,19 +258,17 @@
                     <span id="paidCount">{{ credit_info.paid_remaining }}</span> paid msgs left
                 </span>
             {% else %}
-                {% with left=credit_info.free_limit|add:"-1" %}
-                    {% if credit_info.free_used >= left %}
-                        <span class="credit-badge low" id="creditBadge">
-                            <i class="bi bi-exclamation-triangle-fill"></i>
-                            {{ credit_info.free_limit|add:"-"|add:credit_info.free_used }} free msgs left
-                        </span>
-                    {% else %}
-                        <span class="credit-badge free" id="creditBadge">
-                            <i class="bi bi-chat-dots"></i>
-                            {{ credit_info.free_limit }} free msgs
-                        </span>
-                    {% endif %}
-                {% endwith %}
+                {% if credit_info.free_remaining <= 3 %}
+                    <span class="credit-badge low" id="creditBadge">
+                        <i class="bi bi-exclamation-triangle-fill"></i>
+                        {{ credit_info.free_remaining }} free msg{{ credit_info.free_remaining|pluralize }} left
+                    </span>
+                {% else %}
+                    <span class="credit-badge free" id="creditBadge">
+                        <i class="bi bi-chat-dots"></i>
+                        {{ credit_info.free_remaining }} of {{ credit_info.free_limit }} free msgs left
+                    </span>
+                {% endif %}
             {% endif %}
         {% endif %}
 
@@ -574,20 +574,30 @@ function appendMsg(role, html, extraClass = '') {
 
 /* ─── Simple markdown formatter ─────────────────────── */
 function fmt(text) {
-    text = text.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+    text = text.replace(/&/g, '&amp;').replace(/</g, '&lt;')
+               .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
     const lines = text.split('\n');
-    let out = '', inList = false;
-    for (let line of lines) {
-        const bullet = line.match(/^[•\-]\s+(.*)/);
-        if (bullet) {
-            if (!inList) { out += '<ul>'; inList = true; }
+    let out = '', list = null;   /* 'ul' | 'ol' | null */
+    const closeList = () => { if (list) { out += `</${list}>`; list = null; } };
+    for (const line of lines) {
+        const head   = line.match(/^#{1,4}\s+(.*)/);
+        const bullet = line.match(/^\s*[•\-\*]\s+(.*)/);
+        const number = line.match(/^\s*\d+[.)]\s+(.*)/);
+        if (head) {
+            closeList();
+            out += `<strong style="display:block;margin:10px 0 4px">${head[1]}</strong>`;
+        } else if (bullet) {
+            if (list !== 'ul') { closeList(); out += '<ul>'; list = 'ul'; }
             out += `<li>${bullet[1]}</li>`;
+        } else if (number) {
+            if (list !== 'ol') { closeList(); out += '<ol>'; list = 'ol'; }
+            out += `<li>${number[1]}</li>`;
         } else {
-            if (inList) { out += '</ul>'; inList = false; }
-            out += line ? `<p style="margin:0 0 4px">${line}</p>` : '<br>';
+            closeList();
+            out += line.trim() ? `<p style="margin:0 0 4px">${line}</p>` : '<br>';
         }
     }
-    if (inList) out += '</ul>';
+    closeList();
     return out;
 }
 
@@ -608,12 +618,60 @@ async function send() {
     const typing = appendMsg('bot',
         '<span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span>');
 
+    /* Record the turn + update credit counters after a successful reply */
+    function afterReply(replyText) {
+        history.push({ role: 'user',      content: text });
+        history.push({ role: 'assistant', content: replyText });
+        if (history.length > 16) history = history.slice(-16);
+
+        if (freeLimit !== null) {
+            if (paidLeft > 0) { paidLeft--; }
+            else { freeUsed++; }
+            updateCreditBadge();
+
+            const left = freeLimit - freeUsed;
+            if (paidLeft === 0 && left === 2) {
+                appendMsg('bot',
+                    `<i class="bi bi-exclamation-triangle-fill me-1 text-warning"></i>
+                     <strong>Heads up:</strong> You have <strong>2 free messages remaining</strong>.
+                     After that, a small top-up gives you more.`,
+                    ''
+                );
+            }
+        }
+        btn.disabled = false;
+    }
+
     try {
         const res  = await fetch(CHAT_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF },
-            body: JSON.stringify({ message: text, history }),
+            body: JSON.stringify({ message: text, history, stream: true }),
         });
+
+        const ctype = res.headers.get('content-type') || '';
+
+        /* ── Streamed reply: render tokens as they arrive ── */
+        if (res.ok && !ctype.includes('application/json')) {
+            typing.remove();
+            const msgDiv = appendMsg('bot', '');
+            const bubble = msgDiv.querySelector('.bubble');
+            const box    = document.getElementById('chatMessages');
+            const reader  = res.body.getReader();
+            const decoder = new TextDecoder();
+            let full = '';
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+                full += decoder.decode(value, { stream: true });
+                bubble.innerHTML = fmt(full);
+                box.scrollTop = box.scrollHeight;
+            }
+            afterReply(full);
+            inp.focus();
+            return;
+        }
+
         const data = await res.json();
 
         typing.remove();
@@ -636,28 +694,7 @@ async function send() {
             btn.disabled = false;
         } else {
             appendMsg('bot', fmt(data.reply));
-            history.push({ role: 'user',      content: text });
-            history.push({ role: 'assistant', content: data.reply });
-            if (history.length > 16) history = history.slice(-16);
-
-            /* Update credit counters locally */
-            if (freeLimit !== null) {
-                if (paidLeft > 0) { paidLeft--; }
-                else { freeUsed++; }
-                updateCreditBadge();
-
-                /* Warn at 2 free messages left */
-                const left = freeLimit - freeUsed;
-                if (paidLeft === 0 && left === 2) {
-                    appendMsg('bot',
-                        `<i class="bi bi-exclamation-triangle-fill me-1 text-warning"></i>
-                         <strong>Heads up:</strong> You have <strong>2 free messages remaining</strong>.
-                         After that, a small top-up gives you more.`,
-                        ''
-                    );
-                }
-            }
-            btn.disabled = false;
+            afterReply(data.reply);
         }
     } catch {
         typing.remove();

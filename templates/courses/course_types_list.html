@@ -332,7 +332,7 @@ body.dark .ct-section-label-text { color: var(--text-3); }
             </div>
             <div class="ct-stat-div"></div>
             <div class="ct-stat">
-                <div class="ct-stat-num">{{ main_types|length|add:tvet_types|length }}</div>
+                <div class="ct-stat-num">{% with tvet_n=tvet_types|length %}{{ main_types|length|add:tvet_n }}{% endwith %}</div>
                 <div class="ct-stat-label">Programme Types</div>
             </div>
             <div class="ct-stat-div"></div>

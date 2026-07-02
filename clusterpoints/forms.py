@@ -84,9 +84,25 @@ class KCSEForm(forms.Form):
 
     def clean(self):
         cleaned = super().clean() or {}
+        # Per-field "required" errors attach to subject_<pk> fields the
+        # accordion templates never render, so name the missing subjects here.
+        missing = [
+            str(field.label or name) for name, field in self.fields.items()
+            if field.required and name in self.errors
+        ]
+        if missing:
+            self.add_error(None, forms.ValidationError(
+                "You haven't entered a grade for: %s. English, Kiswahili and "
+                "Mathematics are required for every KCSE candidate."
+                % ", ".join(missing)
+            ))
         filled = [v for v in cleaned.values() if v]
         if len(filled) < 7:
-            raise forms.ValidationError("Please enter grades for at least 7 subjects.")
+            need = 7 - len(filled)
+            self.add_error(None, forms.ValidationError(
+                "Please enter grades for at least 7 subjects — you've entered "
+                "%d, so add %d more." % (len(filled), need)
+            ))
         return cleaned
 
     def get_points_dict(self):

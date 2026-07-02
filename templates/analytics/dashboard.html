@@ -1,7 +1,7 @@
 {% extends "analytics/base_analytics.html" %}
 {% block analytics_title %}Analytics{% endblock %}
 {% block page_title %}CareerNext Analytics{% endblock %}
-{% block page_subtitle %}Staff-only · Showing last <strong>{{ days }} days</strong>{% endblock %}
+{% block page_subtitle %}Staff-only · Last <strong>{{ days }} day{{ days|pluralize }}</strong> · Updated {% now "j M Y, H:i" %} EAT{% endblock %}
 
 {% block header_actions %}
 <div class="day-pills">
@@ -20,15 +20,15 @@
 {% block analytics_content %}
   <!-- ── Tab navigation ─────────────────────────────────────────────────────── -->
   <div class="bi-tabs" role="tablist">
-    <button class="bi-tab active" data-tab="overview"  role="tab"><span class="tab-icon">🏠</span> Overview</button>
-    <button class="bi-tab"        data-tab="users"     role="tab"><span class="tab-icon">👥</span> Users</button>
-    <button class="bi-tab"        data-tab="content"   role="tab"><span class="tab-icon">🔍</span> Content &amp; Search</button>
-    <button class="bi-tab"        data-tab="career"    role="tab"><span class="tab-icon">🎓</span> Career Engine</button>
-    <button class="bi-tab"        data-tab="payments"  role="tab"><span class="tab-icon">💳</span> Payments</button>
-    <button class="bi-tab"        data-tab="activity"    role="tab"><span class="tab-icon">📡</span> Live Activity</button>
-    <button class="bi-tab"        data-tab="monitoring"  role="tab"><span class="tab-icon">🔭</span> Monitoring</button>
+    <button class="bi-tab active" data-tab="overview"  role="tab"><span class="tab-icon"><i class="fas fa-gauge-high"></i></span> Overview</button>
+    <button class="bi-tab"        data-tab="users"     role="tab"><span class="tab-icon"><i class="fas fa-users"></i></span> Users</button>
+    <button class="bi-tab"        data-tab="content"   role="tab"><span class="tab-icon"><i class="fas fa-magnifying-glass"></i></span> Content &amp; Search</button>
+    <button class="bi-tab"        data-tab="career"    role="tab"><span class="tab-icon"><i class="fas fa-graduation-cap"></i></span> Career Engine</button>
+    <button class="bi-tab"        data-tab="payments"  role="tab"><span class="tab-icon"><i class="fas fa-credit-card"></i></span> Payments</button>
+    <button class="bi-tab"        data-tab="activity"    role="tab"><span class="tab-icon"><i class="fas fa-satellite-dish"></i></span> Live Activity</button>
+    <button class="bi-tab"        data-tab="monitoring"  role="tab"><span class="tab-icon"><i class="fas fa-desktop"></i></span> Monitoring</button>
     <button class="bi-tab"        data-tab="feedback"    role="tab">
-      <span class="tab-icon">💬</span> Feedback
+      <span class="tab-icon"><i class="fas fa-comment-dots"></i></span> Feedback
       {% if feedback_new %}<span class="badge b-red" style="font-size:.6rem;padding:1px 5px;">{{ feedback_new }}</span>{% endif %}
     </button>
   </div>
@@ -55,7 +55,7 @@
 
       <div class="kpi-card c-green">
         <p class="kpi-label">New ({{ days }}d)</p>
-        <p class="kpi-value">{{ new_users }}</p>
+        <p class="kpi-value">{{ new_users|floatformat:"0g" }}</p>
         <div class="kpi-meta">
           <span class="kpi-sub">{{ verified_pct }}% verified</span>
           {% if trend_users.pct is not None %}
@@ -67,7 +67,7 @@
 
       <div class="kpi-card c-blue">
         <p class="kpi-label">Searches</p>
-        <p class="kpi-value">{{ total_searches }}</p>
+        <p class="kpi-value">{{ total_searches|floatformat:"0g" }}</p>
         <div class="kpi-meta">
           <span class="kpi-sub">{{ searches_today }} today</span>
           {% if trend_searches.pct is not None %}
@@ -79,7 +79,7 @@
 
       <div class="kpi-card c-purple">
         <p class="kpi-label">Page Views</p>
-        <p class="kpi-value">{{ total_views }}</p>
+        <p class="kpi-value">{{ total_views|floatformat:"0g" }}</p>
         <div class="kpi-meta">
           <span class="kpi-sub">{{ views_today }} today</span>
           {% if trend_views.pct is not None %}
@@ -91,7 +91,7 @@
 
       <div class="kpi-card c-teal">
         <p class="kpi-label">Career Engine</p>
-        <p class="kpi-value">{{ total_engine }}</p>
+        <p class="kpi-value">{{ total_engine|floatformat:"0g" }}</p>
         <div class="kpi-meta">
           <span class="kpi-sub">{{ engine_today }} today</span>
           {% if trend_engine.pct is not None %}
@@ -103,7 +103,7 @@
 
       <div class="kpi-card c-green">
         <p class="kpi-label">Revenue (KES)</p>
-        <p class="kpi-value">{{ revenue|floatformat:0 }}</p>
+        <p class="kpi-value">{{ revenue|floatformat:"0g" }}</p>
         <div class="kpi-meta">
           <span class="kpi-sub">{{ pay_completed }} payments</span>
           {% if trend_revenue.pct is not None %}
@@ -121,7 +121,7 @@
 
       <div class="kpi-card c-red">
         <p class="kpi-label">Pay Failed</p>
-        <p class="kpi-value">{{ pay_failed }}</p>
+        <p class="kpi-value">{{ pay_failed|floatformat:"0g" }}</p>
         <p class="kpi-sub">{{ success_rate }}% success rate</p>
       </div>
 
@@ -168,7 +168,7 @@
             <span style="color:var(--muted)">Google OAuth</span><span style="font-weight:700;color:var(--navy)">{{ google_pct }}%</span>
           </div>
           <div class="split-track"><div class="split-fill" style="width:{{ google_pct }}%;background:var(--teal)"></div></div>
-          <div class="split-row"><span class="text-muted">Google: {{ google_users }}</span><span class="text-muted">Email: {{ total_users|add:"-"|add:google_users }}</span></div>
+          <div class="split-row"><span class="text-muted">Google: {{ google_users }}</span><span class="text-muted">Email: {{ email_users }}</span></div>
         </div>
       </div>
 
@@ -191,12 +191,12 @@
     <div class="four-col" style="margin-bottom:1.5rem;">
       <div class="kpi-card c-blue">
         <p class="kpi-label">Total Users</p>
-        <p class="kpi-value">{{ total_users }}</p>
+        <p class="kpi-value">{{ total_users|floatformat:"0g" }}</p>
         <p class="kpi-sub">all time</p>
       </div>
       <div class="kpi-card c-green">
         <p class="kpi-label">New ({{ days }}d)</p>
-        <p class="kpi-value">{{ new_users }}</p>
+        <p class="kpi-value">{{ new_users|floatformat:"0g" }}</p>
         <div class="kpi-meta">
           {% if trend_users.pct is not None %}
             {% if trend_users.up %}<span class="trend-up">↑ {{ trend_users.pct }}% vs prev</span>
@@ -259,7 +259,7 @@
     <div class="four-col" style="margin-bottom:1.5rem;">
       <div class="kpi-card c-blue">
         <p class="kpi-label">Searches ({{ days }}d)</p>
-        <p class="kpi-value">{{ total_searches }}</p>
+        <p class="kpi-value">{{ total_searches|floatformat:"0g" }}</p>
         <p class="kpi-sub">{{ searches_today }} today</p>
       </div>
       <div class="kpi-card c-amber">
@@ -269,12 +269,12 @@
       </div>
       <div class="kpi-card c-purple">
         <p class="kpi-label">Page Views</p>
-        <p class="kpi-value">{{ total_views }}</p>
+        <p class="kpi-value">{{ total_views|floatformat:"0g" }}</p>
         <p class="kpi-sub">{{ views_today }} today</p>
       </div>
       <div class="kpi-card c-green">
         <p class="kpi-label">Downloads</p>
-        <p class="kpi-value">{{ total_downloads }}</p>
+        <p class="kpi-value">{{ total_downloads|floatformat:"0g" }}</p>
         <p class="kpi-sub">PDFs &amp; reports</p>
       </div>
     </div>
@@ -419,7 +419,7 @@
     <div class="four-col" style="margin-bottom:1.5rem;">
       <div class="kpi-card c-teal">
         <p class="kpi-label">Engine Runs ({{ days }}d)</p>
-        <p class="kpi-value">{{ total_engine }}</p>
+        <p class="kpi-value">{{ total_engine|floatformat:"0g" }}</p>
         <p class="kpi-sub">{{ engine_today }} today</p>
       </div>
       <div class="kpi-card c-blue">
@@ -429,7 +429,7 @@
       </div>
       <div class="kpi-card c-green">
         <p class="kpi-label">Auth Users</p>
-        <p class="kpi-value">{{ auth_engine }}</p>
+        <p class="kpi-value">{{ auth_engine|floatformat:"0g" }}</p>
         <p class="kpi-sub">{{ anon_engine }} anonymous</p>
       </div>
       <div class="kpi-card c-purple">
@@ -491,12 +491,12 @@
     <div class="four-col" style="margin-bottom:1.5rem;">
       <div class="kpi-card c-blue">
         <p class="kpi-label">Initiated ({{ days }}d)</p>
-        <p class="kpi-value">{{ pay_initiated }}</p>
+        <p class="kpi-value">{{ pay_initiated|floatformat:"0g" }}</p>
         <p class="kpi-sub">payment attempts</p>
       </div>
       <div class="kpi-card c-green">
         <p class="kpi-label">Completed</p>
-        <p class="kpi-value">{{ pay_completed }}</p>
+        <p class="kpi-value">{{ pay_completed|floatformat:"0g" }}</p>
         <div class="kpi-meta">
           {% if trend_revenue.pct is not None %}
             {% if trend_revenue.up %}<span class="trend-up">↑ {{ trend_revenue.pct }}%</span>
@@ -506,12 +506,12 @@
       </div>
       <div class="kpi-card c-red">
         <p class="kpi-label">Failed</p>
-        <p class="kpi-value">{{ pay_failed }}</p>
+        <p class="kpi-value">{{ pay_failed|floatformat:"0g" }}</p>
         <p class="kpi-sub">{{ pay_pending }} pending</p>
       </div>
       <div class="kpi-card c-green">
         <p class="kpi-label">Revenue (KES)</p>
-        <p class="kpi-value">{{ revenue|floatformat:0 }}</p>
+        <p class="kpi-value">{{ revenue|floatformat:"0g" }}</p>
         <p class="kpi-sub">confirmed</p>
       </div>
     </div>
@@ -674,17 +674,17 @@
       </div>
       <div class="kpi-card c-green">
         <p class="kpi-label">Searches ({{ days }}d)</p>
-        <p class="kpi-value">{{ total_searches }}</p>
+        <p class="kpi-value">{{ total_searches|floatformat:"0g" }}</p>
         <div class="kpi-meta"><span class="kpi-sub">{{ searches_today }} today</span></div>
       </div>
       <div class="kpi-card c-purple">
         <p class="kpi-label">Page Views ({{ days }}d)</p>
-        <p class="kpi-value">{{ total_views }}</p>
+        <p class="kpi-value">{{ total_views|floatformat:"0g" }}</p>
         <div class="kpi-meta"><span class="kpi-sub">{{ views_today }} today</span></div>
       </div>
       <div class="kpi-card c-amber">
         <p class="kpi-label">Revenue ({{ days }}d)</p>
-        <p class="kpi-value">KES {{ revenue }}</p>
+        <p class="kpi-value">KES {{ revenue|floatformat:"0g" }}</p>
         <div class="kpi-meta"><span class="kpi-sub">{{ pay_completed }} payments</span></div>
       </div>
     </div>
@@ -822,7 +822,7 @@
       </div>
       <div class="kpi-card c-purple">
         <p class="kpi-label">Total</p>
-        <p class="kpi-value">{{ feedback_total }}</p>
+        <p class="kpi-value">{{ feedback_total|floatformat:"0g" }}</p>
         <p class="kpi-sub">all time</p>
       </div>
       <div class="kpi-card c-green">
@@ -975,7 +975,11 @@
     responsive: true, maintainAspectRatio: false,
     plugins: {
       legend: { position: 'top', labels: { boxWidth: 10, padding: 12, font: { size: 11 } } },
-      tooltip: { mode: 'index', intersect: false, padding: 10 },
+      tooltip: {
+        mode: 'index', intersect: false, padding: 10,
+        backgroundColor: '#0f172a', cornerRadius: 8,
+        titleFont: { weight: '700' }, boxPadding: 4,
+      },
     },
     scales: {
       x: { grid: { display: false }, ticks: { maxTicksLimit: 8, maxRotation: 0 } },

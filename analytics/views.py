@@ -298,6 +298,7 @@ def analytics_dashboard(request):
         'total_users': total_users, 'new_users': new_users, 'new_today': new_today,
         'google_pct': google_pct, 'verified_pct': verified_pct,
         'trend_users': trend_users, 'google_users': google_users, 'verified': verified,
+        'email_users': total_users - google_users,
         # Search KPIs
         'total_searches': total_searches, 'searches_today': searches_today,
         'zero_pct': zero_pct, 'trend_searches': trend_searches,
