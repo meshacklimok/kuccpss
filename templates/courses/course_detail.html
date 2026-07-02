@@ -3,7 +3,7 @@
 {% block title %}{{ course.name }} | {{ course.course_type.name }} in Kenya — CareerNext{% endblock %}
 
 {% block meta %}
-<meta name="description" content="{{ course.description|default:'Explore '|add:course.name|add:' offered at Kenyan universities and colleges. Check minimum cluster points, subject requirements and institutions via KUCCPS.' |truncatechars:155 }}">
+<meta name="description" content="{% if course.description %}{{ course.description|truncatechars:155 }}{% else %}Explore {{ course.name }} offered at Kenyan universities and colleges. Check minimum cluster points, subject requirements and institutions via KUCCPS.{% endif %}">
 {% endblock %}
 
 {% block canonical %}<link rel="canonical" href="{{ request.build_absolute_uri }}">{% endblock %}

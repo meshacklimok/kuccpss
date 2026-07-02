@@ -193,8 +193,22 @@
     box-shadow: 0 4px 16px rgba(30,58,138,0.35);
 }
 .lce-btn-calc:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(30,58,138,0.45); }
-.lce-btn-calc:disabled { background: #e2e8f0; color: #94a3b8; box-shadow: none; cursor: not-allowed; transform: none; }
+/* pointer-events:none lets taps on the disabled button reach the footer,
+   which explains what's still missing */
+.lce-btn-calc:disabled { background: #e2e8f0; color: #94a3b8; box-shadow: none; cursor: not-allowed; transform: none; pointer-events: none; }
 .spin-icon { animation: cl-spin 0.7s linear infinite; display:inline-block; }
+
+/* "why can't I continue?" feedback */
+@keyframes lce-shake { 0%,100%{transform:translateX(0)} 20%,60%{transform:translateX(-5px)} 40%,80%{transform:translateX(5px)} }
+.lce-footer-title.note-flash { color: #dc2626; animation: lce-shake 0.4s; }
+.lce-footer-title.note-flash strong { color: #dc2626; }
+.acc-row.row-missing { background: #fef2f2; }
+.acc-row.row-missing .lce-select { border-color: #f87171; box-shadow: 0 0 0 3px rgba(239,68,68,0.15); }
+@media (max-width: 479px) {
+    /* the footer info is hidden on small phones — re-show it while flashing */
+    .lce-footer.show-note { flex-wrap: wrap; }
+    .lce-footer.show-note .lce-footer-info { display: block; width: 100%; order: 2; }
+}
 
 /* ── results section ── */
 .results-divider {
@@ -796,7 +810,7 @@ body.dark .lce-btn-calc:disabled { background: var(--surface-2); color: var(--te
     {% if form.non_field_errors %}
     <div class="lce-alert danger">
         <i class="bi bi-x-circle-fill flex-shrink-0 mt-1"></i>
-        <span>{% for e in form.non_field_errors %}{{ e }}{% endfor %}</span>
+        <div>{% for e in form.non_field_errors %}<div>{{ e }}</div>{% endfor %}</div>
     </div>
     {% endif %}
 
@@ -816,6 +830,7 @@ body.dark .lce-btn-calc:disabled { background: var(--surface-2); color: var(--te
                 <div class="row-icon"><i class="bi {{ icon }}"></i></div>
                 <div class="row-name">{{ subj.name }}</div>
                 <select name="{{ bound.html_name }}" class="lce-select"
+                        data-subject="{{ subj.name }}"{% if subj.name in required_subject_names %} data-required="1"{% endif %}
                         onchange="onSelChange('{{ bound.html_name }}', 'compulsory', this)">
                     <option value="">Grade</option>
                     <option value="12" {% if bound.value == '12' %}selected{% endif %}>A</option>
@@ -1175,7 +1190,7 @@ body.dark .lce-btn-calc:disabled { background: var(--surface-2); color: var(--te
         fetch("{% url 'clusterpoints:share_calculator_create' %}", {
             method: 'POST',
             headers: {
-                'X-CSRFToken': document.cookie.match(/csrftoken=([^;]+)/)?.[1] || '',
+                'X-CSRFToken': '{{ csrf_token }}',
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify(_calcData),
@@ -1355,9 +1370,25 @@ function updateSecCount(secId) {
     if (sec) sec.classList.toggle('has-values', filled > 0);
 }
 var HAS_RESULTS = {% if results %}true{% else %}false{% endif %};
+function missingRequired() {
+    return Array.from(document.querySelectorAll('select.lce-select[data-required]'))
+        .filter(function (s) { return !s.value; })
+        .map(function (s) { return s.dataset.subject; });
+}
+function notReadyNote(all, missing, verb) {
+    const need = 7 - all;
+    if (missing.length) {
+        let txt = 'Fill in <strong>' + missing.join(', ') + '</strong>';
+        const extra = need - missing.length;
+        if (extra > 0) txt += ' and <strong>' + extra + ' more subject' + (extra !== 1 ? 's' : '') + '</strong>';
+        return txt + ' to ' + verb;
+    }
+    return 'Enter <strong>' + need + ' more subject' + (need !== 1 ? 's' : '') + '</strong> to ' + verb;
+}
 function updateGlobal() {
-    const all   = document.querySelectorAll('select.lce-select.has-value').length;
-    const ready = all >= 7;
+    const all     = document.querySelectorAll('select.lce-select.has-value').length;
+    const missing = missingRequired();
+    const ready   = all >= 7 && missing.length === 0;
     const pct   = Math.min(100, Math.round((all / 7) * 100));
     const sb    = document.getElementById('sbCounter');
     const fill  = document.getElementById('sbFill');
@@ -1374,11 +1405,47 @@ function updateGlobal() {
         if (ready) {
             note.innerHTML = '<strong>' + all + ' subjects entered</strong> — ready to calculate!';
         } else {
-            const need = 7 - all;
-            note.innerHTML = 'Enter <strong>' + need + ' more subject' + (need !== 1 ? 's' : '') + '</strong> to continue';
+            note.innerHTML = notReadyNote(all, missing, 'calculate');
         }
     }
 }
+
+/* Tapping a disabled Calculate button: flash what's missing and jump to it */
+function explainBlocked() {
+    updateGlobal();
+    const footer = document.querySelector('.lce-footer');
+    const note   = document.getElementById('footerNote');
+    if (footer) {
+        footer.classList.add('show-note');
+        setTimeout(function () { footer.classList.remove('show-note'); }, 3500);
+    }
+    if (note) {
+        note.classList.remove('note-flash');
+        void note.offsetWidth;
+        note.classList.add('note-flash');
+        setTimeout(function () { note.classList.remove('note-flash'); }, 1500);
+    }
+    var firstRow = null;
+    document.querySelectorAll('select.lce-select[data-required]').forEach(function (s) {
+        if (s.value) return;
+        var row = s.closest('.acc-row');
+        if (!row) return;
+        row.classList.add('row-missing');
+        setTimeout(function () { row.classList.remove('row-missing'); }, 3500);
+        if (!firstRow) firstRow = row;
+    });
+    if (firstRow) {
+        var body = firstRow.closest('.acc-body');
+        if (body && !body.classList.contains('open')) toggleAcc(body.previousElementSibling);
+        firstRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+}
+document.querySelector('.lce-footer').addEventListener('click', function (e) {
+    var btn = document.getElementById('calcBtn');
+    if (!btn || !btn.disabled || btn.dataset.submitted === '1') return;
+    if (e.target.closest('a')) return;
+    explainBlocked();
+});
 document.querySelectorAll('select.lce-select').forEach(sel => {
     if (sel.value) { sel.classList.add('has-value'); const r = sel.closest('.acc-row'); if (r) r.classList.add('filled'); }
 });

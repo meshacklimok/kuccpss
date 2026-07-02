@@ -3,6 +3,8 @@
 
 {% block title %}{{ pathway_label }} — Enter KCSE Grades for KUCCPS Placement | CareerNext{% endblock %}
 
+{% block meta %}<meta name="description" content="Enter your KCSE grades for the {{ pathway_label }} pathway and see which courses your results qualify you for through KUCCPS placement in Kenya.">{% endblock %}
+
 {% block content %}
 
 
@@ -233,7 +235,16 @@
     box-shadow: 0 4px 16px rgba(30,58,138,0.35);
 }
 .lce-btn-continue:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(30,58,138,0.45); }
-.lce-btn-continue:disabled { background: #e2e8f0; color: #94a3b8; box-shadow: none; cursor: not-allowed; transform: none; }
+/* pointer-events:none lets taps on the disabled button reach the footer,
+   which explains what's still missing */
+.lce-btn-continue:disabled { background: #e2e8f0; color: #94a3b8; box-shadow: none; cursor: not-allowed; transform: none; pointer-events: none; }
+
+/* "why can't I continue?" feedback */
+@keyframes lce-shake { 0%,100%{transform:translateX(0)} 20%,60%{transform:translateX(-5px)} 40%,80%{transform:translateX(5px)} }
+.lce-footer-title.note-flash { color: #dc2626; animation: lce-shake 0.4s; }
+.lce-footer-title.note-flash strong { color: #dc2626; }
+.acc-row.row-missing { background: #fef2f2; }
+.acc-row.row-missing .lce-select { border-color: #f87171; box-shadow: 0 0 0 3px rgba(239,68,68,0.15); }
 
 @media (max-width: 480px) {
     .lce-footer { flex-wrap: wrap; gap: 0.6rem; padding: 0.75rem 1rem calc(0.75rem + env(safe-area-inset-bottom)); }
@@ -283,7 +294,7 @@
     {% if form and form.non_field_errors %}
     <div class="lce-alert danger">
         <i class="bi bi-x-circle-fill flex-shrink-0 mt-1"></i>
-        <span>{% for e in form.non_field_errors %}{{ e }}{% endfor %}</span>
+        <div>{% for e in form.non_field_errors %}<div>{{ e }}</div>{% endfor %}</div>
     </div>
     {% endif %}
 
@@ -307,6 +318,7 @@
                 <div class="row-icon"><i class="bi {{ icon }}"></i></div>
                 <div class="row-name">{{ subj.name }}</div>
                 <select name="{{ bound.html_name }}" class="lce-select form-select"
+                        data-subject="{{ subj.name }}"{% if subj.name in required_subject_names %} data-required="1"{% endif %}
                         onchange="onSelChange('{{ bound.html_name }}', 'compulsory', this)">
                     <option value="">None</option>
                     <option value="12" {% if bound.value == '12' %}selected{% endif %}>A</option>
@@ -546,9 +558,16 @@ function updateSecCount(secId) {
     if (sec) sec.classList.toggle('has-values', filled > 0);
 }
 
+function missingRequired() {
+    return Array.from(document.querySelectorAll('select.lce-select[data-required]'))
+        .filter(sel => !sel.value)
+        .map(sel => sel.dataset.subject);
+}
+
 function updateGlobal() {
     const all      = document.querySelectorAll('select.lce-select.has-value').length;
-    const gradesOk = all >= 7;
+    const missing  = missingRequired();
+    const gradesOk = all >= 7 && missing.length === 0;
     const ready    = gradesOk && catsOk();
     const pct      = Math.min(100, Math.round((all / 7) * 100));
     const sb   = document.getElementById('sbCounter');
@@ -558,7 +577,12 @@ function updateGlobal() {
     if (sb)   { sb.textContent = all + ' / 7 subjects'; sb.className = 'sb-counter' + (gradesOk ? ' ready' : ''); }
     if (fill) fill.style.width = pct + '%';
     btn.disabled = !ready;
-    if (!gradesOk) {
+    if (missing.length) {
+        const extra = 7 - all - missing.length;
+        note.innerHTML = 'Fill in <strong>' + missing.join(', ') + '</strong>'
+            + (extra > 0 ? ' and <strong>' + extra + ' more subject' + (extra !== 1 ? 's' : '') + '</strong>' : '')
+            + ' to proceed';
+    } else if (all < 7) {
         const need = 7 - all;
         note.innerHTML = 'Enter <strong>' + need + ' more</strong> subject' + (need !== 1 ? 's' : '') + ' to proceed';
     } else if (!catsOk()) {
@@ -575,6 +599,45 @@ document.querySelectorAll('select.lce-select').forEach(sel => {
 ['compulsory',1,2,3,4].forEach(id => updateSecCount(id));
 updateGlobal();
 {% endif %}
+
+/* Tapping a disabled Proceed button: flash what's missing and jump to it */
+document.querySelector('.lce-footer').addEventListener('click', function (e) {
+    const btn = document.getElementById('proceedBtn');
+    if (!btn || !btn.disabled) return;
+    if (e.target.closest('a')) return;
+    {% if use_kcse_form %}updateGlobal();{% else %}updateMeanReady();{% endif %}
+    const note = document.getElementById('footerNote');
+    if (note) {
+        note.classList.remove('note-flash');
+        void note.offsetWidth;
+        note.classList.add('note-flash');
+        setTimeout(() => note.classList.remove('note-flash'), 1500);
+    }
+    let scrollTarget = null;
+    {% if use_kcse_form %}
+    document.querySelectorAll('select.lce-select[data-required]').forEach(sel => {
+        if (sel.value) return;
+        const row = sel.closest('.acc-row');
+        if (!row) return;
+        row.classList.add('row-missing');
+        setTimeout(() => row.classList.remove('row-missing'), 3500);
+        if (!scrollTarget) scrollTarget = row;
+    });
+    if (scrollTarget) {
+        const body = scrollTarget.closest('.acc-body');
+        if (body && !body.classList.contains('open')) toggleAcc(body.previousElementSibling);
+    } else if (!catsOk()) {
+        scrollTarget = document.getElementById('cat-section');
+    }
+    {% else %}
+    if (document.getElementById('meanGradeHidden').value === '') {
+        scrollTarget = document.querySelector('.mean-section');
+    } else if (!catsOk()) {
+        scrollTarget = document.getElementById('cat-section');
+    }
+    {% endif %}
+    if (scrollTarget) scrollTarget.scrollIntoView({ behavior: 'smooth', block: 'center' });
+});
 
 /* ══ Category tag chips ══ */
 document.querySelectorAll('.tag-chip').forEach(chip => {

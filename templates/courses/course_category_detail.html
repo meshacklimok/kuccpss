@@ -1,6 +1,8 @@
 {% extends 'base.html' %}
 {% block title %}{{ category.name }} — {{ category.course_type.name }} | CareerNext{% endblock %}
 
+{% block meta %}<meta name="description" content="{{ category.name }} {{ category.course_type.name }} courses in Kenya — compare institutions, KUCCPS cutoff points and entry requirements in one place.">{% endblock %}
+
 {% block content %}
 <div class="page-hero">
   <div class="container">

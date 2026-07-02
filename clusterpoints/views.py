@@ -286,7 +286,7 @@ def kcse_calculator_view(request):
 
     # ── Build accordion context (same pattern as degree_calculate) ────────────
     from clusters.models import GROUP_CHOICES as _GC
-    from clusterpoints.forms import COMPULSORY_SUBJECT_NAMES as _COMP
+    from clusterpoints.forms import COMPULSORY_SUBJECT_NAMES as _COMP, REQUIRED_SUBJECT_NAMES as _REQ
     _ICONS = {
         'English': 'bi-book-half', 'Kiswahili': 'bi-translate',
         'Mathematics': 'bi-calculator-fill', 'Chemistry': 'bi-droplet-fill',
@@ -377,6 +377,7 @@ def kcse_calculator_view(request):
         "predicted_groups": predicted_groups,
         "compulsory_fields": compulsory_fields,
         "optional_groups": optional_groups,
+        "required_subject_names": _REQ,
         "cluster_courses_map": cluster_courses_map,
         "cluster_course_counts": cluster_course_counts,
         "sub_banner": sub_banner,

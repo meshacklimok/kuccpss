@@ -43,6 +43,12 @@ body { background: var(--bg); }
   display: flex;
   min-height: calc(100vh - 60px);
   background: var(--bg);
+  font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+/* Align digits in KPIs and tables */
+.kpi-value, .kpi-val, .bi-table td, .tbl td, .funnel-n, .rate-val {
+  font-variant-numeric: tabular-nums;
 }
 
 /* ════════ SIDEBAR ════════ */
@@ -203,7 +209,7 @@ body { background: var(--bg); }
 }
 .kpi-value {
   font-size: 1.9rem; font-weight: 800; color: var(--text);
-  margin: 0; line-height: 1;
+  margin: 0; line-height: 1; letter-spacing: -.02em;
 }
 .kpi-card.c-blue   .kpi-value { color: var(--navy);   }
 .kpi-card.c-green  .kpi-value { color: var(--green);  }
@@ -354,7 +360,16 @@ body { background: var(--bg); }
 
 .user-email { font-weight: 600; color: var(--navy); }
 .user-name  { font-size: .75rem; color: var(--muted); }
-.no-data    { color: var(--muted); font-size: .85rem; text-align: center; padding: 2.5rem 1rem; }
+.no-data {
+  color: var(--muted); font-size: .82rem; text-align: center;
+  padding: 2.25rem 1rem; margin: 0;
+  border: 1.5px dashed var(--border); border-radius: 10px;
+  background: #fafbfc;
+}
+.no-data::before {
+  content: '\f080'; font-family: 'Font Awesome 6 Free'; font-weight: 900;
+  display: block; font-size: 1.3rem; color: #cbd5e1; margin-bottom: .5rem;
+}
 
 /* ════════ TAB NAV (dashboard + mentor/affiliate) ════════ */
 .bi-tabs {
@@ -413,7 +428,7 @@ body { background: var(--bg); }
   <!-- ═══════ SIDEBAR ═══════ -->
   <aside class="an-sidebar" id="anSidebar">
     <a class="an-brand" href="{% url 'analytics:dashboard' %}">
-      <span class="an-brand-icon">📊</span>
+      <span class="an-brand-icon"><i class="fas fa-chart-line" style="color:#fff;"></i></span>
       <span>
         <span class="an-brand-name">Analytics</span>
         <span class="an-brand-sub">CareerNext Staff</span>
