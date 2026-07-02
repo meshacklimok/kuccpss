@@ -7,6 +7,7 @@ from django.contrib.auth import login, logout, authenticate, update_session_auth
 from django.contrib.auth.decorators import login_required
 from django.core.cache import cache
 from kuccpss.email_utils import send_branded_email
+from kuccpss.ip_utils import get_client_ip
 from django.utils import timezone
 from django.views import View
 from django.views.decorators.http import require_http_methods
@@ -20,18 +21,6 @@ from .models import (
     EmailVerificationToken,
     DeviceSession,
 )
-
-
-# =====================================================
-# Helper
-# =====================================================
-def get_client_ip(request: HttpRequest) -> str:
-    x_forwarded = request.META.get('HTTP_X_FORWARDED_FOR')
-    if x_forwarded:
-        # Trust the last IP — Render appends the real client IP at the end,
-        # preventing spoofing via a forged X-Forwarded-For header.
-        return x_forwarded.split(',')[-1].strip()
-    return request.META.get('REMOTE_ADDR', '')
 
 
 def _is_rate_limited(key: str, limit: int, window: int) -> bool:
@@ -999,7 +988,9 @@ def affiliate_dashboard(request):
     paid_out_amount = sum(c.amount for c in commissions if c.status == 'paid_out')
 
     from django.conf import settings as _settings
+    from accounts.forms import _affiliate_min_withdrawal
     payout_phone = getattr(_settings, 'AFFILIATE_PAYOUT_PHONE', '254700000000')
+    min_withdrawal = _affiliate_min_withdrawal()
 
     return render(request, 'accounts/affiliate_dashboard.html', {
         'affiliate':        affiliate,
@@ -1012,7 +1003,8 @@ def affiliate_dashboard(request):
         'commissions':      commissions,
         'pending_amount':   pending_amount,
         'paid_out_amount':  paid_out_amount,
-        'can_request_payout': affiliate.wallet_balance >= 500,
+        'can_request_payout': affiliate.wallet_balance >= min_withdrawal,
+        'min_withdrawal':   min_withdrawal,
         'payout_phone':     payout_phone,
         'withdrawal_form':  _build_affiliate_withdrawal_form(affiliate),
         'withdrawals':      affiliate.withdrawals.all()[:5],
@@ -1030,7 +1022,7 @@ def request_affiliate_payout(request):
     import logging
     from django.conf import settings as django_settings
     from accounts.models import AffiliateProfile, AffiliateWithdrawalRequest, AffiliateCommission
-    from accounts.forms import AffiliateWithdrawalForm
+    from accounts.forms import AffiliateWithdrawalForm, _affiliate_min_withdrawal
     from django.http import Http404
 
     if request.method != 'POST':
@@ -1052,8 +1044,8 @@ def request_affiliate_payout(request):
     amount = form.cleaned_data['amount']
     mpesa  = form.cleaned_data['mpesa_number']
 
-    if affiliate.wallet_balance < 500:
-        messages.error(request, "Minimum payout is KES 500.")
+    if affiliate.wallet_balance < _affiliate_min_withdrawal():
+        messages.error(request, f"Minimum payout is KES {_affiliate_min_withdrawal()}.")
         return redirect('accounts:affiliate_dashboard')
 
     if affiliate.withdrawals.filter(status='pending').exists():

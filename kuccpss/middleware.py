@@ -5,7 +5,53 @@ from django.core.cache import cache
 from django.http import JsonResponse
 from django.shortcuts import render
 
+from kuccpss.ip_utils import get_client_ip
+
 log = logging.getLogger(__name__)
+
+
+class ContentSecurityPolicyMiddleware:
+    """
+    Sends a Content-Security-Policy in **report-only** mode.
+
+    The site loads first-party assets plus a fairly wide set of third parties
+    (jsdelivr/cdnjs/unpkg CDNs, Google Fonts, Google OAuth, GA, Sentry,
+    PostHog, Tawk.to chat, Cloudinary images) and there's no browser available
+    in this environment to verify an enforcing policy wouldn't break login,
+    checkout, or the chat widget in production. Report-Only lets browsers
+    report violations (visible in devtools / the `CSP-Report-Only` header)
+    without blocking anything, so the policy below can be tightened and
+    promoted to `Content-Security-Policy` once verified against real traffic.
+    """
+    POLICY = "; ".join([
+        "default-src 'self'",
+        "script-src 'self' 'unsafe-inline' 'unsafe-eval' "
+            "https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://unpkg.com "
+            "https://code.jquery.com https://www.googletagmanager.com "
+            "https://browser.sentry-cdn.com https://embed.tawk.to https://va.tawk.to "
+            "https://accounts.google.com https://apis.google.com",
+        "style-src 'self' 'unsafe-inline' "
+            "https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.googleapis.com",
+        "font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com data:",
+        "img-src 'self' data: blob: https://res.cloudinary.com https://images.unsplash.com "
+            "https://cdn-icons-png.flaticon.com https://flagcdn.com https://ssl.gstatic.com "
+            "https://www.googletagmanager.com https://embed.tawk.to",
+        "connect-src 'self' https://www.google-analytics.com https://analytics.google.com "
+            "https://eu.posthog.com https://app.posthog.com https://*.sentry.io "
+            "https://embed.tawk.to https://va.tawk.to wss://va.tawk.to",
+        "frame-src 'self' https://accounts.google.com https://embed.tawk.to",
+        "object-src 'none'",
+        "base-uri 'self'",
+        "form-action 'self' https://accounts.google.com",
+    ])
+
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        response = self.get_response(request)
+        response['Content-Security-Policy-Report-Only'] = self.POLICY
+        return response
 
 
 class ReferralMiddleware:
@@ -137,8 +183,7 @@ class PageTrackingMiddleware:
         try:
             from analytics.models import PageViewLog
             ua  = request.META.get('HTTP_USER_AGENT', '')
-            xff = request.META.get('HTTP_X_FORWARDED_FOR', '')
-            ip  = xff.split(',')[0].strip() if xff else request.META.get('REMOTE_ADDR')
+            ip  = get_client_ip(request)
             user = request.user if request.user.is_authenticated else None
             sk = ''
             try:
@@ -201,14 +246,8 @@ class HeavyEndpointRateLimitMiddleware:
     def __init__(self, get_response):
         self.get_response = get_response
 
-    @staticmethod
-    def _get_ip(request):
-        xff = request.META.get('HTTP_X_FORWARDED_FOR', '')
-        # Use the last IP in the chain — set by Render's trusted edge, not the client
-        return xff.split(',')[-1].strip() if xff else request.META.get('REMOTE_ADDR', '')
-
     def __call__(self, request):
-        ip = self._get_ip(request)
+        ip = get_client_ip(request)
         for path_prefix, method, limit, window in self.RULES:
             if request.method == method and request.path.startswith(path_prefix):
                 key = f'rl:{method}:{path_prefix}:{ip}'
