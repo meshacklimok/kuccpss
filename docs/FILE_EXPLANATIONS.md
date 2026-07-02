@@ -89,7 +89,7 @@ Selected function views:
 | `applications_view` + add/update/delete | Application CRUD |
 | `saved_courses_view`, `toggle_save_course`, `toggle_save_career` | watchlist |
 | `shortlist_view`, `shortlist_toggle`, `shortlist_update_notes`, `shortlist_set_rank`, `export_shortlist_pdf`, `course_comparison_view` | shortlist/comparison (reportlab PDF) |
-| `notifications_view`, `mark_notifications_read`, `mark_notification_read`, `broadcast_notification_view` | notifications |
+| `notifications_view`, `mark_notification_read`, `broadcast_notification_view` | notifications |
 | `push_subscribe`, `_send_push_to_all`, `_send_push_to_user` | Web Push via `pywebpush` |
 | `staff_team_view` | superuser-only staff directory |
 

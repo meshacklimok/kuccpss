@@ -312,7 +312,7 @@ cluster_points = 48 × sqrt( (core_midpoint_marks / 400) × (aggregate_total / 8
 
 **Files:**
 - `accounts/models.py` — `Notification` (message, notif_type, is_read, link, published_by), `PushSubscription` (endpoint/p256dh/auth)
-- `accounts/views.py` — `notifications_view`, `mark_notifications_read`, `mark_notification_read` (both invalidate the `notif_unread:<uid>` cache key), `broadcast_notification_view` (staff-only bulk create + push), `push_subscribe`, `_send_push_to_all`/`_send_push_to_user` (use `pywebpush`, VAPID keys from settings, prune dead subscriptions on failure)
+- `accounts/views.py` — `notifications_view` (marks all unread as read on open), `mark_notification_read` (both invalidate the `notif_unread:<uid>` cache key), `broadcast_notification_view` (staff-only bulk create + push), `push_subscribe`, `_send_push_to_all`/`_send_push_to_user` (use `pywebpush`, VAPID keys from settings, prune dead subscriptions on failure)
 - `accounts/context_processors.py::unread_notifications` — cache-backed (60s TTL) unread count injected into every template, also injects `VAPID_PUBLIC_KEY`
 - `static/js/main.js` — client-side push subscription IIFE (`doSubscribe()`, requests permission after a 12s delay, posts to `/accounts/push/subscribe/`)
 - `static/js/sw.js` — service worker `push`/`notificationclick` handlers

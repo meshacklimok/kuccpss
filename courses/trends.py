@@ -58,27 +58,39 @@ def _most_viewed(limit=5):
 
 
 def _most_competitive(limit=5):
-    from .models import CourseOffering
+    from .models import Course, CourseOffering
 
     # cutoff_points is JSONB — PostgreSQL has no MAX(jsonb), so we resolve
-    # the latest cutoff year per offering in Python, then rank.
-    offerings = list(
+    # the latest cutoff year per offering in Python, then rank. Only the two
+    # columns we need are fetched; full Course objects are loaded for the
+    # winners alone.
+    rows = (
         CourseOffering.objects
         .exclude(cutoff_points__isnull=True)
-        .select_related('course', 'course__course_type', 'course__category')
+        .values_list('course_id', 'cutoff_points')
     )
     course_max: dict = {}
-    for off in offerings:
-        lc = off.latest_cutoff()
-        if lc is not None:
-            cid = off.course_id
-            if cid not in course_max or lc > course_max[cid][1]:
-                course_max[cid] = (off.course, lc)
+    for cid, cutoffs in rows:
+        if not cutoffs:
+            continue
+        latest_year = max(cutoffs.keys())
+        lc = cutoffs.get(latest_year)
+        if lc is not None and (cid not in course_max or lc > course_max[cid]):
+            course_max[cid] = lc
 
-    sorted_pairs = sorted(course_max.values(), key=lambda x: x[1], reverse=True)[:limit]
+    top = sorted(course_max.items(), key=lambda x: x[1], reverse=True)[:limit]
+    courses = {
+        c.pk: c
+        for c in Course.objects
+        .filter(pk__in=[cid for cid, _ in top])
+        .select_related('course_type', 'category')
+    }
 
     result = []
-    for course, cutoff in sorted_pairs:
+    for cid, cutoff in top:
+        course = courses.get(cid)
+        if course is None:
+            continue
         course.trend_stat  = f"{cutoff}"
         course.trend_label = "pts cutoff"
         course.trend_icon  = "fa-fire"

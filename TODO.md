@@ -294,3 +294,7 @@ One requirement for both to work in production
 The IntaSend "Send Money / B2C" feature must be activated on your IntaSend account. It's separate from STK push (collecting money) — you have to request it from IntaSend support. If it's not activated, both withdrawal flows will fail with an API error.
 
 To check: log into your IntaSend dashboard → Send Money → if it says "contact us to activate", that's the blocker. Once activated it works automatically.
+
+### Performance follow-up (2026-07-02)
+- [x] Fix slow cold-cache homepage (~4.6s) — `_most_competitive()` now fetches only ids + cutoff JSON instead of all ~2k offering objects (`courses/trends.py`); background warmer thread (`accounts/tasks.py`, started from `AccountsConfig.ready()`) pre-populates homepage caches and compiles the template tree at startup, re-warming every 240s so visitors never pay the recompute
+- [ ] Set `REDIS_URL` in production (Render) — settings auto-upgrade the cache backend to Redis; cache then survives worker restarts/deploys instead of dying with each LocMemCache process
