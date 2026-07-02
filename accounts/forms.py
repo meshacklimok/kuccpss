@@ -9,8 +9,9 @@ from .models import User, RememberToken
 # HELPER VALIDATORS
 # =====================================================
 def validate_password_strength(password: str):
-    if len(password) < 4:
-        raise ValidationError("Password must be at least 4 characters long.")
+    # Kept in sync with AUTH_PASSWORD_VALIDATORS' MinimumLengthValidator in settings.py.
+    if len(password) < 6:
+        raise ValidationError("Password must be at least 6 characters long.")
 
 
 # Known disposable / throwaway email domains
@@ -154,33 +155,6 @@ class UserProfileForm(forms.ModelForm):
         }
 
 # =====================================================
-# PASSWORD CHANGE FORM
-# =====================================================
-class PasswordChangeForm(forms.Form):
-    password1 = forms.CharField(
-        label=_("New Password"),
-        widget=forms.PasswordInput(attrs={'placeholder': 'New password'}),
-        strip=False,
-    )
-    password2 = forms.CharField(
-        label=_("Confirm Password"),
-        widget=forms.PasswordInput(attrs={'placeholder': 'Confirm new password'}),
-        strip=False,
-    )
-
-    def clean_password1(self):
-        password = self.cleaned_data.get('password1')
-        validate_password_strength(password)
-        return password
-
-    def clean_password2(self):
-        p1 = self.cleaned_data.get('password1')
-        p2 = self.cleaned_data.get('password2')
-        if p1 != p2:
-            raise ValidationError(_("Passwords do not match."))
-        return p2
-
-# =====================================================
 # REMEMBER TOKEN FORM (Optional / Admin)
 # =====================================================
 class RememberTokenForm(forms.ModelForm):
@@ -204,6 +178,8 @@ class UserAdminCreationForm(forms.ModelForm):
         p2 = self.cleaned_data.get("password2")
         if p1 != p2:
             raise ValidationError(_("Passwords do not match"))
+        if p2:
+            validate_password_strength(p2)
         return p2
 
     def save(self, commit=True):
@@ -217,11 +193,18 @@ class UserAdminCreationForm(forms.ModelForm):
 # ADMIN USER CHANGE FORM
 # =====================================================
 
+def _affiliate_min_withdrawal() -> int:
+    from resources.models import SiteSetting
+    try:
+        return int(SiteSetting.get('affiliate_min_withdrawal', '500'))
+    except (TypeError, ValueError):
+        return 500
+
+
 class AffiliateWithdrawalForm(forms.Form):
     amount = forms.IntegerField(
-        min_value=500,
         label="Amount to withdraw (KES)",
-        widget=forms.NumberInput(attrs={"class": "form-control", "placeholder": "Min KES 500"}),
+        widget=forms.NumberInput(attrs={"class": "form-control"}),
     )
     mpesa_number = forms.CharField(
         max_length=20,
@@ -231,11 +214,16 @@ class AffiliateWithdrawalForm(forms.Form):
 
     def __init__(self, max_amount, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.min_amount = _affiliate_min_withdrawal()
         self.max_amount = int(max_amount)
+        self.fields["amount"].widget.attrs["min"] = self.min_amount
         self.fields["amount"].widget.attrs["max"] = self.max_amount
+        self.fields["amount"].widget.attrs["placeholder"] = f"Min KES {self.min_amount}"
 
     def clean_amount(self):
         amount = self.cleaned_data["amount"]
+        if amount < self.min_amount:
+            raise forms.ValidationError(f"Minimum withdrawal is KES {self.min_amount}.")
         if amount > self.max_amount:
             raise forms.ValidationError(f"You only have KES {self.max_amount} in your wallet.")
         return amount
