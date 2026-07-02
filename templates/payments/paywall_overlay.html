@@ -269,13 +269,25 @@
     </div>
 </div>
 
+<script src="{% static 'js/payment_polling.js' %}"></script>
 <script>
 (function(){
     var FEATURE   = "{{ gate_feature }}";
-    var INITIATE  = "{% url 'payments:initiate_payment' %}";
     var CSRF      = "{{ csrf_token }}";
-    var poll, dots, currentPaymentId = null;
-    var MAX_ATTEMPTS = 40; // 40 × 3 s = 2 minutes
+
+    var poller = createPaymentPoller({
+        feature: FEATURE,
+        initiateUrl: "{% url 'payments:initiate_payment' %}",
+        csrfToken: CSRF,
+        state: pwState,
+        onDots: function(){
+            var dotsEl = document.getElementById('pw-dots');
+            if(dotsEl) dotsEl.textContent = dotsEl.textContent.length >= 3 ? '.' : dotsEl.textContent+'.';
+        },
+        onSuccess: function(){ pwState('success'); setTimeout(function(){ location.reload(); },3000); },
+        onFailed: function(){},
+        onTimeout: function(){}
+    });
 
     document.getElementById('pw-btn').addEventListener('click', pwPay);
     document.getElementById('pw-later').addEventListener('click', function(){
@@ -286,84 +298,38 @@
     document.getElementById('pw-already-paid').addEventListener('click', pwToggleCodeSection);
     document.getElementById('pw-code-btn').addEventListener('click', pwSubmitCode);
 
-    // Accept 0712345678, +254712345678, 254712345678 or plain 712345678 — always returns 9 digits or null
-    function pwNormalizePhone(input){
-        var digits = (input || '').replace(/\D/g,'');
-        if(digits.length === 9 && /^[17]/.test(digits)) return digits;
-        if(digits.length === 10 && digits.startsWith('0')) return digits.slice(1);
-        if(digits.length === 12 && digits.startsWith('254')) return digits.slice(3);
-        return null;
-    }
-
     // Pre-fill from saved profile number, cleaned to the 9-digit local form
     (function(){
         var phoneEl = document.getElementById('pw-phone');
-        var clean = pwNormalizePhone(phoneEl.value);
+        var clean = poller.normalizePhone(phoneEl.value);
         phoneEl.value = clean || '';
     })();
 
     async function pwPay(){
-        var raw = pwNormalizePhone(document.getElementById('pw-phone').value);
         var err = document.getElementById('pw-err');
-        if(!raw){
-            err.textContent = 'Enter a valid Safaricom number, e.g. 0712345678 or +254712345678';
-            err.style.display = 'block'; return;
-        }
-        err.style.display = 'none';
         var btn = document.getElementById('pw-btn');
-        btn.disabled = true;
-        btn.innerHTML = '<span class="spinner-border spinner-border-sm" style="width:.9rem;height:.9rem;border-width:2px;"></span>&nbsp;Sending STK push&hellip;';
-
-        try{
-            var res = await fetch(INITIATE,{
-                method:'POST',
-                headers:{'Content-Type':'application/json','X-CSRFToken':CSRF},
-                body:JSON.stringify({feature:FEATURE, phone:'0'+raw})
-            });
-            var d = await res.json();
-            if(d.success){
-                currentPaymentId = d.payment_id;
-                pwStartPolling(d.payment_id);
-            } else if(res.status === 400 && d.message && d.message.indexOf('already unlocked') !== -1){
+        await poller.pay(document.getElementById('pw-phone').value, {
+            onInvalidPhone: function(){
+                err.textContent = 'Enter a valid Safaricom number, e.g. 0712345678 or +254712345678';
+                err.style.display = 'block';
+            },
+            onSending: function(){
+                err.style.display = 'none';
+                btn.disabled = true;
+                btn.innerHTML = '<span class="spinner-border spinner-border-sm" style="width:.9rem;height:.9rem;border-width:2px;"></span>&nbsp;Sending STK push&hellip;';
+            },
+            onAlreadyUnlocked: function(){
                 // Feature is already paid — just show the results
                 location.reload();
-            } else if(res.status === 409 && d.payment_id){
-                // A recent payment is already in progress — resume polling it
-                currentPaymentId = d.payment_id;
-                pwStartPolling(d.payment_id);
-            } else {
-                err.textContent = d.message || 'Something went wrong. Please try again.';
+            },
+            onResumePending: function(){},
+            onError: function(message){
+                err.textContent = message;
                 err.style.display = 'block';
                 btn.disabled = false;
                 btn.innerHTML = '<i class="fas fa-lock-open"></i> Unlock My Results &rarr;';
             }
-        } catch(e){
-            err.textContent = 'Network error. Check your connection and try again.';
-            err.style.display = 'block';
-            btn.disabled = false;
-            btn.innerHTML = '<i class="fas fa-lock-open"></i> Unlock My Results &rarr;';
-        }
-    }
-
-    function pwStartPolling(paymentId){
-        pwState('waiting');
-        var dotsEl = document.getElementById('pw-dots');
-        var attempts = 0;
-        dots = setInterval(function(){
-            if(dotsEl) dotsEl.textContent = dotsEl.textContent.length >= 3 ? '.' : dotsEl.textContent+'.';
-        },500);
-        poll = setInterval(async function(){
-            attempts++;
-            try{
-                var sr = await fetch('/payments/status/'+paymentId+'/');
-                var sd = await sr.json();
-                if(sd.status==='completed'){ pwClear(); pwState('success'); setTimeout(function(){ location.reload(); },3000); }
-                else if(sd.status==='failed'){ pwClear(); pwState('failed'); }
-                else if(attempts >= MAX_ATTEMPTS){ pwClear(); pwState('timeout'); }
-            }catch(e){
-                if(attempts >= MAX_ATTEMPTS){ pwClear(); pwState('timeout'); }
-            }
-        },3000);
+        });
     }
 
     function pwToggleCodeSection(){
@@ -399,30 +365,18 @@
         }
     }
 
-    window.pwVerify = function(){
-        if(currentPaymentId) pwVerifyById(currentPaymentId);
-    };
-
-    async function pwVerifyById(paymentId){
-        pwState('checking');
-        try{
-            var r = await fetch('/payments/verify/'+paymentId+'/');
-            var d = await r.json();
-            if(d.status === 'completed'){
-                pwState('success');
-                setTimeout(function(){ location.reload(); },3000);
-            } else if(d.status === 'failed'){
-                pwState('failed');
-            } else {
-                // Still pending — show timeout state with updated message
-                document.getElementById('pw-timeout-sub').textContent = d.message || 'Payment still processing. Please wait a few minutes and try again.';
-                pwState('timeout');
+    window.pwVerify = async function(){
+        var paymentId = poller.getCurrentPaymentId();
+        if(!paymentId) return;
+        await poller.verifyById(paymentId, {
+            onStillPending: function(message){
+                document.getElementById('pw-timeout-sub').textContent = message || 'Payment still processing. Please wait a few minutes and try again.';
+            },
+            onNetworkError: function(){
+                document.getElementById('pw-timeout-sub').textContent = 'Could not reach the server. Please check your internet and try again.';
             }
-        }catch(e){
-            document.getElementById('pw-timeout-sub').textContent = 'Could not reach the server. Please check your internet and try again.';
-            pwState('timeout');
-        }
-    }
+        });
+    };
 
     function pwState(s){
         ['phone','waiting','success','failed','timeout','checking'].forEach(function(x){
@@ -432,7 +386,6 @@
         var t = document.getElementById('pw-step-'+s);
         if(t) t.classList.add('pw-active');
     }
-    function pwClear(){ if(poll) clearInterval(poll); if(dots) clearInterval(dots); }
-    window.pwReset = function(){ pwClear(); var btn=document.getElementById('pw-btn'); btn.disabled=false; btn.innerHTML='<i class="fas fa-lock-open"></i> Unlock My Results &rarr;'; pwState('phone'); };
+    window.pwReset = function(){ poller.clear(); var btn=document.getElementById('pw-btn'); btn.disabled=false; btn.innerHTML='<i class="fas fa-lock-open"></i> Unlock My Results &rarr;'; pwState('phone'); };
 })();
 </script>

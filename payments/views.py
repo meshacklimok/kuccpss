@@ -1,6 +1,4 @@
 import json
-import hmac
-import hashlib
 import logging
 
 from django.conf import settings
@@ -13,8 +11,15 @@ from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 
-from .models import Payment, Transaction, AFFILIATE_EXCLUDED_FEATURES
-from .services import initiate_stk_push, price_for_feature, fetch_intasend_status, lock_submission_on_payment
+from .models import Payment, Transaction
+from .services import (
+    initiate_stk_push,
+    price_for_feature,
+    fetch_intasend_status,
+    lock_submission_on_payment,
+    verify_intasend_signature,
+    credit_affiliate_commission,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -344,19 +349,9 @@ def mpesa_webhook(request):
     IntaSend posts here when a payment completes or fails.
     Saves a Transaction and updates Payment.status automatically.
     """
-    webhook_secret = getattr(settings, "INTASEND_WEBHOOK_SECRET", "")
-    sig = request.headers.get("X-IntaSend-Signature", "")
-    if webhook_secret:
-        if not sig:
-            logger.warning("Webhook received with no signature — rejected")
-            return HttpResponse(status=403)
-        expected = hmac.new(
-            webhook_secret.encode(), request.body, hashlib.sha256
-        ).hexdigest()
-        sig_valid = hmac.compare_digest(sig, expected) or hmac.compare_digest(sig, webhook_secret)
-        if not sig_valid:
-            logger.warning("Webhook signature mismatch — rejected sig=%r", sig[:20])
-            return HttpResponse(status=403)
+    if not verify_intasend_signature(request):
+        logger.warning("payments:mpesa_webhook signature rejected")
+        return HttpResponse(status=403)
     logger.info("M-Pesa webhook received")
 
     try:
@@ -386,24 +381,16 @@ def mpesa_webhook(request):
             return HttpResponse(status=200)
 
         if state == "COMPLETE":
-            session.status = "confirmed"
             invoice_id = (
                 payload.get("invoice_id")
                 or payload.get("invoice", {}).get("invoice_id", "")
             )
             if invoice_id:
                 session.payment_ref = invoice_id
-            session.save(update_fields=["status", "payment_ref"])
+                session.save(update_fields=["payment_ref"])
 
-            mentor = session.mentor
-            mentor.wallet_balance += session.mentor_payout
-            mentor.total_earned += session.mentor_payout
-            mentor.save(update_fields=["wallet_balance", "total_earned"])
-
-            Payment.objects.filter(mentorship_session=session).exclude(status="completed").update(status="completed")
-
-            from mentorship.views import _send_booking_confirmation
-            _send_booking_confirmation(session)
+            from mentorship.views import _confirm_session_after_payment
+            _confirm_session_after_payment(session, source="payments:mpesa_webhook")
 
         return HttpResponse(status=200)
 
@@ -444,36 +431,8 @@ def mpesa_webhook(request):
 
     # Award affiliate commission if the paying user was referred by an active affiliate.
     # Mentorship bookings and AI chat top-ups never earn commission.
-    if state == "COMPLETE" and payment.feature not in AFFILIATE_EXCLUDED_FEATURES:
-        try:
-            from django.db.models import F
-            from accounts.models import Referral, AffiliateProfile, AffiliateCommission
-            referral = Referral.objects.select_related('referrer').get(
-                referred_user=payment.user, converted=True
-            )
-            affiliate = AffiliateProfile.objects.get(user=referral.referrer, is_active=True)
-            if not AffiliateCommission.objects.filter(payment=payment).exists():
-                rate = affiliate.commission_rate
-                commission_amount = (rate / 100) * payment.amount
-                AffiliateCommission.objects.create(
-                    affiliate=affiliate,
-                    payment=payment,
-                    referred_user=payment.user,
-                    referral=referral,
-                    amount=commission_amount,
-                    rate_snapshot=rate,
-                    status='pending',
-                )
-                AffiliateProfile.objects.filter(pk=affiliate.pk).update(
-                    wallet_balance=F('wallet_balance') + commission_amount,
-                    total_earned=F('total_earned') + commission_amount,
-                )
-                logger.info("Affiliate commission KES %s awarded to %s for payment %s",
-                            commission_amount, affiliate.user.email, payment.pk)
-        except (Referral.DoesNotExist, AffiliateProfile.DoesNotExist):
-            pass  # user wasn't referred, or referrer isn't an affiliate
-        except Exception as exc:
-            logger.error("Affiliate commission error for payment %s: %s", payment.pk, exc)
+    if state == "COMPLETE":
+        credit_affiliate_commission(payment)
 
     return HttpResponse(status=200)
 
@@ -513,6 +472,7 @@ def verify_payment(request, payment_id):
         _grant_ai_credits_if_applicable(payment)
         lock_submission_on_payment(payment)
         _send_payment_receipt(payment)
+        credit_affiliate_commission(payment)
         return JsonResponse({"status": "completed", "feature": payment.feature, "message": "Payment confirmed!"})
     elif remote_state == "FAILED":
         payment.status = "failed"
@@ -568,6 +528,7 @@ def verify_by_transaction_code(request):
             _grant_ai_credits_if_applicable(payment)
             lock_submission_on_payment(payment)
             _send_payment_receipt(payment)
+            credit_affiliate_commission(payment)
         logger.info("Transaction code verified: user=%s code=%s payment=%s", request.user.email, mpesa_code, payment.pk)
         return JsonResponse({
             "status": "completed",

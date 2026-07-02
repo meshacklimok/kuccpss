@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load static %}
 {% block title %}Unlock Access — CareerNext{% endblock %}
 
 {% block content %}
@@ -443,15 +444,11 @@ body { background: #060c1a; min-height: 100vh; }
 </div><!-- /pr-inner -->
 </div><!-- /pr-wrap -->
 
+<script src="{% static 'js/payment_polling.js' %}"></script>
 <script>
 (function(){
 var FEATURE  = "{{ feature }}";
-var INITIATE = "{% url 'payments:initiate_payment' %}";
-var CSRF     = "{{ csrf_token }}";
 var NEXT_URL = "{{ next_url|escapejs }}";
-var currentPaymentId = null;
-var poll, dots;
-var MAX_ATTEMPTS = 40;
 
 // Default redirect after payment based on feature
 function defaultNext(){
@@ -460,21 +457,26 @@ function defaultNext(){
     return '/accounts/dashboard/';
 }
 
-document.getElementById('pr-pay-btn').addEventListener('click', prPay);
+var poller = createPaymentPoller({
+    feature: FEATURE,
+    initiateUrl: "{% url 'payments:initiate_payment' %}",
+    csrfToken: "{{ csrf_token }}",
+    state: prState,
+    onDots: function(){
+        var dotsEl = document.getElementById('pr-dots');
+        if(dotsEl) dotsEl.textContent = dotsEl.textContent.length >= 3 ? '.' : dotsEl.textContent+'.';
+    },
+    onSuccess: prShowSuccess,
+    onFailed: function(){},
+    onTimeout: function(){}
+});
 
-// Accept 0712345678, +254712345678, 254712345678 or plain 712345678 — always returns 9 digits or null
-function prNormalizePhone(input){
-    var digits = (input || '').replace(/\D/g,'');
-    if(digits.length === 9 && /^[17]/.test(digits)) return digits;
-    if(digits.length === 10 && digits.startsWith('0')) return digits.slice(1);
-    if(digits.length === 12 && digits.startsWith('254')) return digits.slice(3);
-    return null;
-}
+document.getElementById('pr-pay-btn').addEventListener('click', prPay);
 
 // Pre-fill from saved profile number, cleaned to the 9-digit local form
 (function(){
     var phoneEl = document.getElementById('pr-phone');
-    var clean = prNormalizePhone(phoneEl.value);
+    var clean = poller.normalizePhone(phoneEl.value);
     phoneEl.value = clean || '';
 })();
 
@@ -483,65 +485,30 @@ function prNormalizePhone(input){
     try{
         var r = await fetch('/payments/pending/?feature='+encodeURIComponent(FEATURE));
         var d = await r.json();
-        if(d.found) currentPaymentId = d.payment_id;
+        if(d.found) poller.setCurrentPaymentId(d.payment_id);
     }catch(e){}
 })();
 
 async function prPay(){
-    var raw = prNormalizePhone(document.getElementById('pr-phone').value);
     var err = document.getElementById('pr-err');
-    if(!raw){
-        err.textContent = 'Enter a valid Safaricom number, e.g. 0712345678 or +254712345678';
-        err.style.display = 'block'; return;
-    }
-    err.style.display = 'none';
     var btn = document.getElementById('pr-pay-btn');
-    btn.disabled = true;
-    btn.innerHTML = '<span class="spinner-border spinner-border-sm" style="width:.85rem;height:.85rem;border-width:2px;"></span>&nbsp;Sending STK push&hellip;';
-
-    try{
-        var res = await fetch(INITIATE,{
-            method:'POST',
-            headers:{'Content-Type':'application/json','X-CSRFToken':CSRF},
-            body:JSON.stringify({feature:FEATURE,phone:'0'+raw})
-        });
-        var d = await res.json();
-        if(d.success){
-            currentPaymentId = d.payment_id;
-            prState('waiting');
-            prStartPolling(d.payment_id);
-        } else {
-            err.textContent = d.message || 'Something went wrong. Please try again.';
+    await poller.pay(document.getElementById('pr-phone').value, {
+        onInvalidPhone: function(){
+            err.textContent = 'Enter a valid Safaricom number, e.g. 0712345678 or +254712345678';
+            err.style.display = 'block';
+        },
+        onSending: function(){
+            err.style.display = 'none';
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm" style="width:.85rem;height:.85rem;border-width:2px;"></span>&nbsp;Sending STK push&hellip;';
+        },
+        onError: function(message){
+            err.textContent = message;
             err.style.display = 'block';
             btn.disabled = false;
             btn.innerHTML = '<i class="fas fa-lock-open"></i> Pay KES {{ price }} &amp; Unlock';
         }
-    }catch(e){
-        err.textContent = 'Network error. Check your connection and try again.';
-        err.style.display = 'block';
-        btn.disabled = false;
-        btn.innerHTML = '<i class="fas fa-lock-open"></i> Pay KES {{ price }} &amp; Unlock';
-    }
-}
-
-function prStartPolling(paymentId){
-    var dotsEl = document.getElementById('pr-dots');
-    var attempts = 0;
-    dots = setInterval(function(){
-        if(dotsEl) dotsEl.textContent = dotsEl.textContent.length >= 3 ? '.' : dotsEl.textContent+'.';
-    },500);
-    poll = setInterval(async function(){
-        attempts++;
-        try{
-            var sr = await fetch('/payments/status/'+paymentId+'/');
-            var sd = await sr.json();
-            if(sd.status==='completed'){ prClear(); prShowSuccess(); }
-            else if(sd.status==='failed'){ prClear(); prState('failed'); }
-            else if(attempts >= MAX_ATTEMPTS){ prClear(); prState('timeout'); }
-        }catch(e){
-            if(attempts >= MAX_ATTEMPTS){ prClear(); prState('timeout'); }
-        }
-    },3000);
+    });
 }
 
 // ── 6-second loading with ring + ticking checklist ──
@@ -619,23 +586,16 @@ function prShowSuccess(){
 }
 
 window.prVerify = async function(){
-    if(!currentPaymentId){ alert('No payment to verify.'); return; }
-    prState('checking');
-    try{
-        var r = await fetch('/payments/verify/'+currentPaymentId+'/');
-        var d = await r.json();
-        if(d.status==='completed'){
-            prShowSuccess();
-        } else if(d.status==='failed'){
-            prState('failed');
-        } else {
-            document.getElementById('pr-timeout-msg').textContent = d.message || 'Payment still processing. Please wait a few minutes and try again.';
-            prState('timeout');
+    var paymentId = poller.getCurrentPaymentId();
+    if(!paymentId){ alert('No payment to verify.'); return; }
+    await poller.verifyById(paymentId, {
+        onStillPending: function(message){
+            document.getElementById('pr-timeout-msg').textContent = message || 'Payment still processing. Please wait a few minutes and try again.';
+        },
+        onNetworkError: function(){
+            document.getElementById('pr-timeout-msg').textContent = 'Could not reach the server. Check your internet and try again.';
         }
-    }catch(e){
-        document.getElementById('pr-timeout-msg').textContent = 'Could not reach the server. Check your internet and try again.';
-        prState('timeout');
-    }
+    });
 };
 
 function prState(s){
@@ -646,9 +606,8 @@ function prState(s){
     var t = document.getElementById('pr-step-'+s);
     if(t) t.classList.add('pr-active');
 }
-function prClear(){ if(poll) clearInterval(poll); if(dots) clearInterval(dots); }
 window.prReset = function(){
-    prClear();
+    poller.clear();
     var btn = document.getElementById('pr-pay-btn');
     btn.disabled = false;
     btn.innerHTML = '<i class="fas fa-lock-open"></i> Pay KES {{ price }} &amp; Unlock';

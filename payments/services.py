@@ -1,3 +1,5 @@
+import hmac
+import hashlib
 import logging
 import requests
 from django.conf import settings
@@ -103,6 +105,67 @@ def lock_submission_on_payment(payment: "Payment") -> None:
         )
     except Exception as exc:
         logger.warning("lock_submission_on_payment failed for payment %s: %s", payment.pk, exc)
+
+
+def verify_intasend_signature(request) -> bool:
+    """
+    Verify the X-IntaSend-Signature header (HMAC-SHA256 over the raw body) against
+    INTASEND_WEBHOOK_SECRET. Shared by every IntaSend webhook endpoint so no endpoint
+    can accidentally skip signature verification.
+
+    Returns True if INTASEND_WEBHOOK_SECRET isn't configured (local/dev), or if the
+    signature is present and valid. Returns False otherwise.
+    """
+    webhook_secret = getattr(settings, "INTASEND_WEBHOOK_SECRET", "")
+    if not webhook_secret:
+        return True
+    sig = request.headers.get("X-IntaSend-Signature", "")
+    if not sig:
+        return False
+    expected = hmac.new(webhook_secret.encode(), request.body, hashlib.sha256).hexdigest()
+    return hmac.compare_digest(sig, expected) or hmac.compare_digest(sig, webhook_secret)
+
+
+def credit_affiliate_commission(payment: "Payment") -> None:
+    """
+    Award affiliate commission if `payment.user` was referred by an active affiliate.
+    Idempotent (skipped if a commission for this payment already exists) and shared by
+    every payment-confirmation path (webhook + both manual-verification fallbacks) so
+    referrers are credited no matter how the payment got confirmed.
+    """
+    from .models import AFFILIATE_EXCLUDED_FEATURES
+    if payment.feature in AFFILIATE_EXCLUDED_FEATURES:
+        return
+    try:
+        from django.db.models import F
+        from accounts.models import Referral, AffiliateProfile, AffiliateCommission
+        referral = Referral.objects.select_related('referrer').get(
+            referred_user=payment.user, converted=True
+        )
+        affiliate = AffiliateProfile.objects.get(user=referral.referrer, is_active=True)
+        if AffiliateCommission.objects.filter(payment=payment).exists():
+            return
+        rate = affiliate.commission_rate
+        commission_amount = (rate / 100) * payment.amount
+        AffiliateCommission.objects.create(
+            affiliate=affiliate,
+            payment=payment,
+            referred_user=payment.user,
+            referral=referral,
+            amount=commission_amount,
+            rate_snapshot=rate,
+            status='pending',
+        )
+        AffiliateProfile.objects.filter(pk=affiliate.pk).update(
+            wallet_balance=F('wallet_balance') + commission_amount,
+            total_earned=F('total_earned') + commission_amount,
+        )
+        logger.info("Affiliate commission KES %s awarded to %s for payment %s",
+                    commission_amount, affiliate.user.email, payment.pk)
+    except (Referral.DoesNotExist, AffiliateProfile.DoesNotExist):
+        pass  # user wasn't referred, or referrer isn't an active affiliate
+    except Exception as exc:
+        logger.error("Affiliate commission error for payment %s: %s", payment.pk, exc)
 
 
 def get_base_url():
