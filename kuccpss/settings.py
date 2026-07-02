@@ -136,6 +136,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'allauth.account.middleware.AccountMiddleware',
     'kuccpss.middleware.ReferralMiddleware',
+    'kuccpss.middleware.ContentSecurityPolicyMiddleware',
 ]
 
 # ── Data versioning — update each KUCCPS cycle ───────────────────────────────
@@ -247,6 +248,9 @@ INTASEND_PUBLISHABLE_KEY = os.environ.get("INTASEND_PUBLISHABLE_KEY", "")
 INTASEND_SECRET_KEY = os.environ.get("INTASEND_SECRET_KEY", "")
 INTASEND_WEBHOOK_SECRET = os.environ.get("INTASEND_WEBHOOK_SECRET", "")
 INTASEND_SANDBOX = os.environ.get("INTASEND_SANDBOX", "false").lower() == "true"
+
+# Mentorship: wallet balance (KES) at which a mentor is auto-paid out via M-Pesa B2C.
+MENTOR_AUTO_PAY_THRESHOLD = int(os.environ.get("MENTOR_AUTO_PAY_THRESHOLD", "500"))
 
 # Prevent browsers from MIME-sniffing responses — applied universally, not just production
 SECURE_CONTENT_TYPE_NOSNIFF = True
