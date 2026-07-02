@@ -20,6 +20,7 @@ python manage.py shell              # Django shell
 - Backlog & prioritised tasks: [TODO.md](TODO.md)
 - OpenAI integration notes: [API_NOTES.md](API_NOTES.md)
 - Change history: [CHANGELOG.md](CHANGELOG.md)
+- Known stubs, dead code, and gaps: [docs/IMPLEMENTATION_STATUS.md](docs/IMPLEMENTATION_STATUS.md)
 
 ## App Layout
 | App | Purpose |
@@ -58,6 +59,13 @@ Auth uses `accounts.User` (UUID primary key, email-based login). Never switch to
 - `career/models.py` — older course models used by the career engine (Course, TVETCourse, KMTCourse, TTCCourse)
 - `courses/models.py` — newer unified Course model linked to `institutions` and `clusters`
 These are not yet merged. Do not conflate them without explicit instruction.
+
+## Known Issues
+Full detail in [docs/IMPLEMENTATION_STATUS.md](docs/IMPLEMENTATION_STATUS.md). Headline items:
+- **Sub-cluster data gap**: all 61 KUCCPS sub-clusters (numbers < 100) have zero `SubjectGroup` rows — only the 20 master calculation clusters (101–120) are seeded.
+- **`career/models.py::generate_ai_recommendation()`** still returns placeholder text (known stub, see [API_NOTES.md](API_NOTES.md)).
+- **Duplicate dispatcher**: `career/models.py` defines its own unused `career_guidance_engine()` alongside the real one in `career/engine.py` — don't confuse the two.
+- TVET/TTC cutoff points and subject requirements are largely unsourced (logic is correct, data entry is incomplete).
 
 ## Conventions
 - Function-based views with `@login_required` decorator for protected pages

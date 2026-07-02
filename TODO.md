@@ -105,7 +105,7 @@ Copy every variable from your Render dashboard into Railway → Variables:
 - [x] OCR activation — `degree_upload` uses OpenAI GPT-4o vision; handles both KCSE grade slips and cluster points documents; robust subject alias matching; falls back to manual entry if no key
 - [x] `degree_upload` redirect — cluster points docs → `loading_page` directly; KCSE slips → `degree_calculate` for review/correction
 - [x] `degree_manual` — limit cluster list to the ~20 clusters that have actual degree `CourseOffering` records (shows all 61 now)
-- [ ] `degree_paste` — paste view + URL + template not yet built
+- [x] `degree_paste` — paste view + URL + template built and wired into `degree_options` (paste action)
 - [x] Switch cluster points to midpoint-marks formula — `GRADE_MIDPOINT_MARKS` dict in services.py; shared `_weighted_cp()` helper used by both calculators
 - [x] Career engine dispatch — `career/engine.py` now calls real pathway functions (`match_degree_courses`, etc.); no longer a stub
 - [x] **Document Scanner (OCR)** — supports JPG/PNG/PDF; dual-mode prompt detects KCSE grade slips vs KUCCPS cluster points docs; subject alias resolution; JSON extraction with code-fence stripping and regex fallback
