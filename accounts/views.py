@@ -1604,20 +1604,16 @@ def export_shortlist_pdf(request: HttpRequest) -> HttpResponse:
 # =====================================================
 @login_required
 def notifications_view(request: HttpRequest) -> HttpResponse:
-    from .models import Notification
-    notifs = Notification.objects.filter(user=request.user).select_related("published_by")
-    return render(request, "accounts/notifications.html", {"notifications": notifs})
-
-
-@login_required
-@require_http_methods(["POST"])
-def mark_notifications_read(request: HttpRequest) -> HttpResponse:
-    from django.http import JsonResponse
     from django.core.cache import cache
     from .models import Notification
+    # Evaluate the list first so this render still highlights what was new,
+    # then mark everything read — opening the page counts as reading.
+    notifs = list(
+        Notification.objects.filter(user=request.user).select_related("published_by")
+    )
     Notification.objects.filter(user=request.user, is_read=False).update(is_read=True)
     cache.delete(f'notif_unread:{request.user.pk}')
-    return JsonResponse({"status": "ok"})
+    return render(request, "accounts/notifications.html", {"notifications": notifs})
 
 
 @login_required

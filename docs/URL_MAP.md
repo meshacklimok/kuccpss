@@ -51,7 +51,6 @@ see [SECURITY.md](SECURITY.md) note), `clusterpoints/`, `clusters/`, `institutio
 | `shortlist/rank/<int:course_id>/` | `shortlist_set_rank` | shortlist_rank | `@login_required` |
 | `shortlist/export/pdf/` | `export_shortlist_pdf` | shortlist_pdf | `@login_required` |
 | `notifications/` | `notifications_view` | notifications | `@login_required` |
-| `notifications/mark-read/` | `mark_notifications_read` | mark_notifications_read | `@login_required` |
 | `notifications/<int:notif_id>/read/` | `mark_notification_read` | mark_notification_read | `@login_required` |
 | `notifications/broadcast/` | `broadcast_notification_view` | broadcast_notification | Staff-only |
 | `push/subscribe/` | `push_subscribe` | push_subscribe | `@login_required` |
