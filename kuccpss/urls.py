@@ -23,7 +23,7 @@ from django.http import FileResponse, HttpResponse
 from django.views.generic import TemplateView
 from django.contrib.sitemaps.views import sitemap
 import os
-from accounts.views import dashboard_view, public_home_view, email_lead_capture
+from accounts.views import public_home_view, email_lead_capture
 from kuccpss.search_views import api_search_suggest
 from kuccpss.sitemaps import sitemaps
 
@@ -76,11 +76,9 @@ urlpatterns = [
     path('offline/', TemplateView.as_view(template_name='offline.html'), name='offline'),
     path('cn-staff/', admin.site.urls),
     path('accounts/', include('accounts.urls')),
-    path('', public_home_view, name='home'),
-    path('dashboard/', dashboard_view, name='dashboard_root'),
-    path('clusterpoints/', include('clusterpoints.urls', namespace='clusterpoints')),
-    path('accounts/', include('django.contrib.auth.urls')),
     path("accounts/", include("allauth.urls")),
+    path('', public_home_view, name='home'),
+    path('clusterpoints/', include('clusterpoints.urls', namespace='clusterpoints')),
     path('clusters/', include('clusters.urls', namespace='clusters')),
     path('institutions/', include('institutions.urls', namespace='institutions')),
     path('courses/', include('courses.urls', namespace='courses')),
