@@ -2,6 +2,8 @@
 Logging helpers — all wrapped in try/except so they never break the main request.
 """
 
+from kuccpss.ip_utils import get_client_ip
+
 
 def _session_key(request):
     try:
@@ -21,8 +23,7 @@ def _user(request):
 
 def _get_ip(request):
     try:
-        xff = request.META.get('HTTP_X_FORWARDED_FOR')
-        return xff.split(',')[0].strip() if xff else request.META.get('REMOTE_ADDR')
+        return get_client_ip(request)
     except Exception:
         return None
 
@@ -101,8 +102,7 @@ def log_action(request, action: str, properties: dict = None):
     """Log an explicit user action (login, shortlist_add, quiz_complete, etc.)."""
     try:
         from .models import UserActionLog
-        xff = request.META.get('HTTP_X_FORWARDED_FOR', '')
-        ip  = xff.split(',')[0].strip() if xff else request.META.get('REMOTE_ADDR')
+        ip = get_client_ip(request)
         UserActionLog.objects.create(
             action=action[:30],
             properties=properties or {},

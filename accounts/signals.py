@@ -16,20 +16,7 @@ from .models import (
     Referral,
     User
 )
-
-
-# =====================================================
-# HELPER: Get Client IP (SAFE VERSION)
-# =====================================================
-
-def get_client_ip(request):
-    if not request:
-        return None
-
-    x_forwarded = request.META.get('HTTP_X_FORWARDED_FOR')
-    if x_forwarded:
-        return x_forwarded.split(',')[0]
-    return request.META.get('REMOTE_ADDR')
+from kuccpss.ip_utils import get_client_ip
 
 
 # =====================================================

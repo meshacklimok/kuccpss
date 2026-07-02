@@ -2,6 +2,8 @@ from django.contrib.auth.signals import user_logged_in, user_logged_out
 from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
 
+from kuccpss.ip_utils import get_client_ip
+
 
 # ── Registration ──────────────────────────────────────────────────────────────
 
@@ -55,8 +57,7 @@ def on_payment_saved(sender, instance, created, **kwargs):
 def on_user_login(sender, request, user, **kwargs):
     try:
         from .models import UserActionLog
-        xff = request.META.get('HTTP_X_FORWARDED_FOR', '')
-        ip  = xff.split(',')[0].strip() if xff else request.META.get('REMOTE_ADDR')
+        ip  = get_client_ip(request)
         sk  = ''
         try:
             sk = request.session.session_key or ''
@@ -79,8 +80,7 @@ def on_user_logout(sender, request, user, **kwargs):
         from .models import UserActionLog
         if not user:
             return
-        xff = request.META.get('HTTP_X_FORWARDED_FOR', '')
-        ip  = xff.split(',')[0].strip() if xff else request.META.get('REMOTE_ADDR')
+        ip  = get_client_ip(request)
         UserActionLog.objects.create(
             action='logout',
             properties={},
