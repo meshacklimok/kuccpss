@@ -29,12 +29,13 @@ def _weighted_cp(core_pts: list[int], aggregate_total: int) -> float:
     return round(min(48 * sqrt((core_marks / 400) * (aggregate_total / 84)), 48.0), 3)
 
 
-def calculate_clusters_anonymous(named_points: dict[str, int]) -> list:
+def compute_aggregate_total(named_points: dict[str, int]) -> int:
     """
-    Same algorithm as calculate_all_clusters but runs entirely in memory —
-    no DB writes. Accepts {subject_name: points} and returns SimpleNamespace
-    objects whose attributes match the ClusterCalculationResult API used in
-    the calculator template (cluster, cluster_points, pk=None).
+    KCSE aggregate (max 84): Mathematics + best(English, Kiswahili) + next 5 best
+    subjects. The non-best language returns to the subject pool (not discarded)
+    before picking the top 5. See CLAUDE.md rule #2 — this is the single canonical
+    implementation; every other call site (clusterpoints/models.py, clusterpoints/views.py,
+    career/models.py) imports this function rather than reimplementing it.
     """
     working = named_points.copy()
     agg = []
@@ -48,7 +49,17 @@ def calculate_clusters_anonymous(named_points: dict[str, int]) -> list:
             if l != best:
                 working[l] = p
     agg += sorted(working.values(), reverse=True)[:5]
-    aggregate_total = sum(agg)
+    return sum(agg)
+
+
+def calculate_clusters_anonymous(named_points: dict[str, int]) -> list:
+    """
+    Same algorithm as calculate_all_clusters but runs entirely in memory —
+    no DB writes. Accepts {subject_name: points} and returns SimpleNamespace
+    objects whose attributes match the ClusterCalculationResult API used in
+    the calculator template (cluster, cluster_points, pk=None).
+    """
+    aggregate_total = compute_aggregate_total(named_points)
 
     clusters = (
         Cluster.objects
@@ -127,27 +138,7 @@ def calculate_all_clusters(kcse_result: UserKCSEResult):
     all_subjects_by_name = {s.name: s for s in Subject.objects.all()}
 
     # ── Step 1: Aggregate total (max 84) ──────────────────────────
-    working = points_dict.copy()
-
-    agg_subjects = []
-
-    # Mathematics (compulsory)
-    if 'Mathematics' in working:
-        agg_subjects.append(working.pop('Mathematics'))
-
-    # Best language (non-best language returns to pool)
-    lang_scores = {lang: working.pop(lang) for lang in ['English', 'Kiswahili'] if lang in working}
-    if lang_scores:
-        best_lang = max(lang_scores, key=lambda k: lang_scores[k])
-        agg_subjects.append(lang_scores[best_lang])
-        for lang, pts in lang_scores.items():
-            if lang != best_lang:
-                working[lang] = pts
-
-    # Next 5 best remaining
-    agg_subjects += sorted(working.values(), reverse=True)[:5]
-
-    aggregate_total = sum(agg_subjects)
+    aggregate_total = compute_aggregate_total(points_dict)
 
     # ── Step 2: Calculate cluster points ──────────────────────────
     clusters = (
