@@ -418,19 +418,9 @@ def _grades_to_points(kcse_grades: Dict[str, str]) -> Dict[str, int]:
 
 
 def _compute_aggregate(named_points: Dict[str, int]) -> int:
-    working = named_points.copy()
-    agg = []
-    if 'Mathematics' in working:
-        agg.append(working.pop('Mathematics'))
-    langs = {l: working.pop(l) for l in ['English', 'Kiswahili'] if l in working}
-    if langs:
-        best = max(langs, key=lambda k: langs[k])
-        agg.append(langs[best])
-        for l, p in langs.items():
-            if l != best:
-                working[l] = p
-    agg += sorted(working.values(), reverse=True)[:5]
-    return sum(agg)
+    """KCSE aggregate (max 84) — delegates to clusterpoints.services.compute_aggregate_total."""
+    from clusterpoints.services import compute_aggregate_total
+    return compute_aggregate_total(named_points)
 
 
 def calculate_cluster_points(kcse_grades: Dict[str, str], cluster_subjects: List[str]) -> float:
@@ -678,34 +668,6 @@ def generate_ai_recommendation(matches: List[StudentCourseMatch], user=None) -> 
     ai = AIRecommendation(advice_text=text, user=user)
     ai.save()
     return ai
-
-
-# =====================================================
-# 10. Full Career Guidance Engine
-# =====================================================
-def career_guidance_engine(kcse_grades: Dict[str, str], pathway: str, tvet_category: Optional[str] = None, user=None):
-    """
-    pathway: "Degree", "Diploma", "KMTC", "TVET", "TTC"
-    tvet_category: required if pathway is TVET
-    Returns: top matches + AI recommendation
-    """
-    if pathway == "Degree":
-        matches = match_degree_courses(kcse_grades)
-    elif pathway == "Diploma":
-        matches = match_diploma_courses(kcse_grades)
-    elif pathway == "KMTC":
-        matches = match_kmtc_courses(kcse_grades)
-    elif pathway == "TVET":
-        if not tvet_category:
-            raise ValueError("TVET pathway requires a category (Certificate, Diploma, Artisan)")
-        matches = match_tvet_courses(kcse_grades, tvet_category)
-    elif pathway == "TTC":
-        matches = match_ttc_courses(kcse_grades)
-    else:
-        raise ValueError("Invalid pathway selected")
-
-    ai = generate_ai_recommendation(matches, user=user)
-    return matches, ai
 
 
 # =====================================================

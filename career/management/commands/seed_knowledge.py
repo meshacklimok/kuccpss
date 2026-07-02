@@ -791,9 +791,11 @@ ENTRIES = [
         "question": "What is the KUCCPS cluster points formula?",
         "answer": (
             "The official KUCCPS cluster points formula is: "
-            "Cluster Points = 48 × √((sum of 4 cluster subject points ÷ 48) × (KCSE aggregate ÷ 84)). "
+            "Cluster Points = 48 × √((core midpoint marks ÷ 400) × (KCSE aggregate ÷ 84)). "
+            "'Core midpoint marks' is the sum of the midpoint raw marks (out of 100) for your best 4 "
+            "cluster subjects — e.g. A=90.2, A-=77.5, B+=71.0, B=66.0, B-=60.0, C+=56.0, C=50.0, "
+            "C-=46.0, D+=40.0, D=36.0, D-=31.0, E=14.0. "
             "The KCSE aggregate (max 84) = Mathematics + best of (English or Kiswahili) + next 5 best subjects. "
-            "Each subject grade earns points: A=12, A-=11, B+=10, B=9, B-=8, C+=7, C=6, C-=5, D+=4, D=3, D-=2, E=1. "
             "Maximum cluster points = 48. Different courses use different cluster subject groups."
         ),
         "keywords": "cluster points,formula,calculate,kuccps,aggregate,how calculated,maximum,48",
