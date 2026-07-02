@@ -13,13 +13,13 @@ python manage.py shell              # Django shell
 ```
 
 ## Project Docs
-- Business rules & Kenyan context: [PROJECT_CONTEXT.md](PROJECT_CONTEXT.md)
-- App structure & data flow: [ARCHITECTURE.md](ARCHITECTURE.md)
-- Feature status (done / in-progress / planned): [FEATURES.md](FEATURES.md)
-- Key design decisions: [DECISIONS.md](DECISIONS.md)
-- Backlog & prioritised tasks: [TODO.md](TODO.md)
-- OpenAI integration notes: [API_NOTES.md](API_NOTES.md)
-- Change history: [CHANGELOG.md](CHANGELOG.md)
+- Business rules & Kenyan context: [docs/PROJECT_CONTEXT.md](docs/PROJECT_CONTEXT.md)
+- App structure & data flow: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
+- Feature status (done / in-progress / planned): [docs/FEATURE_STATUS.md](docs/FEATURE_STATUS.md)
+- Key design decisions: [docs/DECISIONS.md](docs/DECISIONS.md)
+- Backlog & prioritised tasks: [docs/TODO.md](docs/TODO.md)
+- OpenAI integration notes: [docs/API_NOTES.md](docs/API_NOTES.md)
+- Change history: [docs/CHANGELOG.md](docs/CHANGELOG.md)
 - Known stubs, dead code, and gaps: [docs/IMPLEMENTATION_STATUS.md](docs/IMPLEMENTATION_STATUS.md)
 
 ## App Layout
@@ -53,7 +53,7 @@ The KCSE aggregate (max 84) is always: Mathematics + best(English, Kiswahili) + 
 Auth uses `accounts.User` (UUID primary key, email-based login). Never switch to Django's default `auth.User`. All foreign keys to users must use `settings.AUTH_USER_MODEL`.
 
 ### 4. Career Engine
-`career/engine.py` now dispatches to real pathway functions (`match_degree_courses`, etc.) — it is no longer a stub. AI chat (CareerNext AI) uses `OPENAI_API_KEY` or `ANTHROPIC_API_KEY`. See [API_NOTES.md](API_NOTES.md) before touching the engine.
+`career/engine.py` now dispatches to real pathway functions (`match_degree_courses`, etc.) — it is no longer a stub. AI chat (CareerNext AI) uses `OPENAI_API_KEY` or `ANTHROPIC_API_KEY`. See [docs/API_NOTES.md](docs/API_NOTES.md) before touching the engine.
 
 ### 5. Two Separate Course Systems
 - `career/models.py` — older course models used by the career engine (Course, TVETCourse, KMTCourse, TTCCourse)
@@ -63,7 +63,7 @@ These are not yet merged. Do not conflate them without explicit instruction.
 ## Known Issues
 Full detail in [docs/IMPLEMENTATION_STATUS.md](docs/IMPLEMENTATION_STATUS.md). Headline items:
 - **Sub-cluster data gap**: all 61 KUCCPS sub-clusters (numbers < 100) have zero `SubjectGroup` rows — only the 20 master calculation clusters (101–120) are seeded.
-- **`career/models.py::generate_ai_recommendation()`** still returns placeholder text (known stub, see [API_NOTES.md](API_NOTES.md)).
+- **`career/models.py::generate_ai_recommendation()`** still returns placeholder text (known stub, see [docs/API_NOTES.md](docs/API_NOTES.md)).
 - **Duplicate dispatcher**: `career/models.py` defines its own unused `career_guidance_engine()` alongside the real one in `career/engine.py` — don't confuse the two.
 - TVET/TTC cutoff points and subject requirements are largely unsourced (logic is correct, data entry is incomplete).
 

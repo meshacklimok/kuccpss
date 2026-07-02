@@ -3,10 +3,10 @@ Create KUCCPS clusters from a cluster-programme CSV and link Course records.
 
 Usage:
     # Step 1 — generate the CSV from the PDF first:
-    python extract_cluster_programmes.py DEGREE_CLUSTER_DOCUMENT_2025.pdf clusters_map.csv
+    python scripts/extract_cluster_programmes.py data/DEGREE_CLUSTER_DOCUMENT_2025.pdf data/clusters_map.csv
 
     # Step 2 — seed clusters and link courses:
-    python manage.py link_clusters clusters_map.csv
+    python manage.py link_clusters data/clusters_map.csv
 
 What this does:
     - Creates a Cluster record for each unique cluster code (e.g. 1A, 2A, 3B)

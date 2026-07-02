@@ -23,24 +23,24 @@ kuccpss/
 ├── static/              # CSS/JS/images/icons served by WhiteNoise
 ├── media/               # User/admin-uploaded files (profile pics, logos, PDFs) — dev only
 ├── geoip/                # MaxMind GeoLite2-City.mmdb (analytics IP→location)
-├── docs/                # This documentation set
-├── scripts/             # Misc utility scripts (not part of app runtime)
+├── docs/                # This documentation set + hand-maintained project docs
+├── scripts/             # One-off ETL / seeding / inspection scripts (not part of app runtime)
+├── data/                # Seed-data inputs & ETL artifacts: KUCCPS source PDFs, CSVs, JSON fixtures
 ├── manage.py            # Django management entrypoint
 ├── requirements.txt     # Python dependencies
 ├── build.sh             # Render/Railway build/deploy bootstrap script
 ├── gunicorn.conf.py     # Gunicorn WSGI server config (production)
 ├── render.yaml / railway.toml  # Platform-as-a-service deployment configs
 ├── db.sqlite3           # Local dev database (Postgres used in production)
-├── *.pdf                # Official KUCCPS/KMTC/TVET programme-list source PDFs (data-seeding inputs)
-├── *.py (root-level: extract_*.py, gen_*.py, build_*.py, check_*.py, _deep_parse.py, etc.)
-│                        # One-off / exploratory ETL scripts used to seed courses/institutions
-│                        # from the official PDFs — developer tooling, not part of the running app
-├── *.csv / *.json / *.txt (data.json, clusters_map.csv, tveta_*.csv, tvet_*.json, etc.)
-│                        # Intermediate/output artifacts of the above ETL scripts
-├── PROJECT_CONTEXT.md, ARCHITECTURE.md, FEATURES.md, DECISIONS.md, TODO.md,
-│   API_NOTES.md, CHANGELOG.md, DEPLOY.md  # Pre-existing hand-maintained project docs
 └── CLAUDE.md            # Instructions for AI coding agents working on this repo
 ```
+
+Hand-maintained project docs (PROJECT_CONTEXT.md, ARCHITECTURE.md, FEATURE_STATUS.md,
+DECISIONS.md, TODO.md, API_NOTES.md, CHANGELOG.md, DEPLOY.md) live in `docs/` alongside
+this documentation set. The official KUCCPS/KMTC/TVET source PDFs and the CSV/JSON
+seed artifacts live in `data/`; the one-off ETL scripts that produce/consume them
+(extract_*.py, gen_*.py, build_*.py, check_*.py, etc.) live in `scripts/` and are run
+from the repo root, e.g. `python scripts/gen_tvet_data.py`.
 
 ## App folder contents (each app follows the same internal shape)
 
@@ -113,11 +113,11 @@ static/
 ```
 See [STATIC_FILES.md](STATIC_FILES.md).
 
-## Data-seeding artifacts (root + `resources/`)
+## Data-seeding artifacts (`data/`, `scripts/`, `resources/`)
 
-The project root and `resources/` contain a large number of one-off Python scripts, PDFs, CSVs,
-and text files used to bootstrap `courses`/`institutions` data from official KUCCPS/KMTC/TVET
-programme-list PDFs (e.g. `DEGREE_CUTOFFS_14-07-2025_copy.pdf`, `KMTC_Programmes.pdf`,
+`data/` holds the official KUCCPS/KMTC/TVET programme-list PDFs and the CSV/JSON artifacts;
+`scripts/` (plus a few leftovers in `resources/`) holds the one-off Python scripts used to
+bootstrap `courses`/`institutions` data from those PDFs (e.g. `DEGREE_CUTOFFS_14-07-2025_copy.pdf`, `KMTC_Programmes.pdf`,
 `ARTISAN_18_03_2024_RV2.pdf`). These are **developer tooling, not runtime application code** —
 they were run once (or a handful of times) to populate the database and are kept for historical
 traceability. See [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md) for a fuller inventory.

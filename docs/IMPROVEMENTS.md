@@ -61,7 +61,7 @@ priority-ordered within each category.
 ## Performance
 
 1. **Audit for N+1 queries** in the analytics dashboards and course/institution list views — the
-   root TODO.md already flags this as an open item; the heavy per-dashboard ORM aggregation in
+   TODO.md already flags this as an open item; the heavy per-dashboard ORM aggregation in
    `analytics/views.py` (~1600 lines) is the most likely hotspot given its volume of annotated
    querysets.
 2. **Schedule `analytics/tasks.py::purge_old_logs`.** It exists but nothing calls it — analytics
@@ -132,12 +132,12 @@ priority-ordered within each category.
 
 ## Scalability / deployment
 
-1. Root [TODO.md](../TODO.md) already tracks the headline scalability item (migrating off Render
+1. [TODO.md](TODO.md) already tracks the headline scalability item (migrating off Render
    Free's ~40-concurrent-user ceiling) — no additional finding to add here beyond confirming the
    plan exists and is detailed.
 2. **Sync `.env.example` with actual production requirements.** It currently omits
    `CLOUDINARY_URL`, `GOOGLE_CLIENT_ID`/`GOOGLE_SECRET`, and `VAPID_*` despite
-   [DEPLOY.md](../DEPLOY.md) documenting them as required/optional — a new developer following only
+   [DEPLOY.md](DEPLOY.md) documenting them as required/optional — a new developer following only
    `.env.example` would hit confusing runtime gaps (missing media storage, no Google login, no push).
 
 ## Monitoring
@@ -152,7 +152,7 @@ priority-ordered within each category.
 
 ## Documentation
 
-1. **Keep this `docs/` set and the root docs (`ARCHITECTURE.md`, `DECISIONS.md`, `FEATURES.md`,
+1. **Keep this `docs/` set and the hand-maintained docs (`ARCHITECTURE.md`, `DECISIONS.md`, `FEATURE_STATUS.md`,
    `TODO.md`, `CHANGELOG.md`) in sync going forward** — this documentation pass found them broadly
    accurate and detailed, which is a real asset; the main risk is drift as the two unmerged course
    systems, the webhook duplication, and the aggregate-algorithm duplication get fixed (or don't).

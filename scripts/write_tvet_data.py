@@ -1,6 +1,6 @@
 import json
 
-with open('tvet_clean_offerings.json', encoding='utf-8') as f:
+with open('data/tvet_clean_offerings.json', encoding='utf-8') as f:
     data = json.load(f)
 
 EXTRA_CANONICAL = {

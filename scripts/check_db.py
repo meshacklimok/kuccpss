@@ -1,6 +1,6 @@
 import django, os, sys
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'kuccpss.settings')
-sys.path.insert(0, '.')
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 django.setup()
 from institutions.models import InstitutionType, Institution
 from courses.models import CourseType, Course, CourseOffering

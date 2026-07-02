@@ -1,4 +1,5 @@
-import django, os
+import django, os, sys
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'kuccpss.settings')
 django.setup()
 

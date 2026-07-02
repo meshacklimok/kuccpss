@@ -1,6 +1,6 @@
 import pypdf, re, json
 
-r = pypdf.PdfReader('DIPLOMA_PROGRAMMES.pdf')
+r = pypdf.PdfReader('data/DIPLOMA_PROGRAMMES.pdf')
 offerings = []
 
 for page in r.pages:
@@ -29,7 +29,7 @@ programmes = sorted(set(o['programme'] for o in offerings))
 print(f'Unique institutions: {len(institutions)}')
 print(f'Unique programmes: {len(programmes)}')
 
-with open('tvet_raw_data.json', 'w', encoding='utf-8') as f:
+with open('data/tvet_raw_data.json', 'w', encoding='utf-8') as f:
     json.dump({'offerings': offerings, 'institutions': institutions, 'programmes': programmes}, f, indent=2)
 
 print('Saved to tvet_raw_data.json')

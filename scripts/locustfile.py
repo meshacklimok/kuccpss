@@ -4,7 +4,7 @@ CareerNext Load Test
 Run against your staging/production URL:
 
     pip install locust
-    locust -f locustfile.py --host https://careernext.co.ke
+    locust -f scripts/locustfile.py --host https://careernext.co.ke
 
 Then open http://localhost:8089 in your browser.
 

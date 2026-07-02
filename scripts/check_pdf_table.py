@@ -1,6 +1,6 @@
 import pdfplumber, sys
 
-f = r'c:\Users\user\OneDrive\Desktop\webdev2025\kuccpss\ARTISAN_18_03_2024_RV2.pdf'
+f = r'c:\Users\user\OneDrive\Desktop\webdev2025\kuccpss\data\ARTISAN_18_03_2024_RV2.pdf'
 with pdfplumber.open(f) as pdf:
     page = pdf.pages[0]
     tables = page.extract_tables()

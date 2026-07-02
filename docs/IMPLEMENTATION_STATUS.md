@@ -3,7 +3,7 @@
 A consolidated Completed vs. Remaining/Incomplete/Broken view of the codebase, synthesized from
 every other doc in this set (especially [FEATURES.md](FEATURES.md), [DATABASE.md](DATABASE.md),
 [SECURITY.md](SECURITY.md), [FILE_EXPLANATIONS.md](FILE_EXPLANATIONS.md)). Where the root
-[FEATURES.md](../FEATURES.md)/[TODO.md](../TODO.md) already track a status legend, this doc adds
+[FEATURE_STATUS.md](FEATURE_STATUS.md)/[TODO.md](TODO.md) already track a status legend, this doc adds
 concrete, code-verified detail rather than repeating the summary table.
 
 ## ✅ Completed and live
@@ -41,13 +41,13 @@ concrete, code-verified detail rather than repeating the summary table.
   `subject_requirements` rows are blank for most non-KMTC non-degree courses. Eligibility *logic*
   is correct; results will simply be less precise until this data-entry work is done.
 - Clusters **1A, 2B, 3D** (and part of 2A) have placeholder requirement-description text rather
-  than real KUCCPS requirement text (per root [CHANGELOG.md](../CHANGELOG.md)/TODO.md, unresolved
+  than real KUCCPS requirement text (per [CHANGELOG.md](CHANGELOG.md)/TODO.md, unresolved
   as of the most recent dated changelog entry, 2026-06-30).
 
 ## 🚧 Stubbed / placeholder functionality
 
 - **`career/models.py::generate_ai_recommendation()`** (the non-chat, results-page recommendation
-  text) still returns placeholder text — confirmed by [API_NOTES.md](../API_NOTES.md) as a known
+  text) still returns placeholder text — confirmed by [API_NOTES.md](API_NOTES.md) as a known
   stub. AI chat and quiz-summary AI calls are real; this specific call site is not.
 ## ❌ Dead code
 

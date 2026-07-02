@@ -9,7 +9,7 @@ python manage.py migrate
 python manage.py seed_payment_features
 
 # Load initial data (clusters, institutions, courses) — skip on error if already loaded
-python manage.py loaddata data.json \
+python manage.py loaddata data/data.json \
   --exclude=admin \
   --exclude=sessions \
   --exclude=accounts \
@@ -22,7 +22,7 @@ python manage.py loaddata data.json \
   || echo "Data load skipped (may already exist)"
 
 # Load career profiles, quiz, articles, FAQs, success stories
-python manage.py loaddata seed_content.json || echo "Content seed skipped (may already exist)"
+python manage.py loaddata data/seed_content.json || echo "Content seed skipped (may already exist)"
 
 # Add new career profiles and link courses to career ideas
 python manage.py seed_careers

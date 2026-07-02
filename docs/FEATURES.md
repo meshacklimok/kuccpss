@@ -1,6 +1,6 @@
 # Feature Catalog (Developer Onboarding)
 
-This document is a feature-by-feature developer guide to KUCCPSS/CareerNext. For each feature it lists purpose, every file involved, the user-facing flow, current state, and explicitly flagged gaps/inconsistencies. It complements (does not replace) the root [FEATURES.md](../FEATURES.md) status table, [ARCHITECTURE.md](../ARCHITECTURE.md), [DECISIONS.md](../DECISIONS.md), and the cross-reference docs [DATABASE.md](DATABASE.md), [URL_MAP.md](URL_MAP.md), [TEMPLATE_MAP.md](TEMPLATE_MAP.md).
+This document is a feature-by-feature developer guide to KUCCPSS/CareerNext. For each feature it lists purpose, every file involved, the user-facing flow, current state, and explicitly flagged gaps/inconsistencies. It complements (does not replace) the [FEATURE_STATUS.md](FEATURE_STATUS.md) status table, [ARCHITECTURE.md](ARCHITECTURE.md), [DECISIONS.md](DECISIONS.md), and the cross-reference docs [DATABASE.md](DATABASE.md), [URL_MAP.md](URL_MAP.md), [TEMPLATE_MAP.md](TEMPLATE_MAP.md).
 
 Read [CLAUDE.md](../CLAUDE.md) before changing any of the "Critical Rules" areas (cluster formula, aggregate calc, custom User model, career engine, two course systems).
 
@@ -103,7 +103,7 @@ cluster_points = 48 × sqrt( (core_midpoint_marks / 400) × (aggregate_total / 8
 **State:** Complete for degree pathway; non-degree pathway works but its underlying cutoff/requirement *data* is incomplete (see gap below — this is a data gap, not a logic gap).
 
 **Flagged issues:**
-- **TVET/TTC cutoff points and subject requirements have not yet been sourced** for most courses (per root FEATURES.md and TODO.md) — the mean-grade-only logic is correct and complete, but many `Course.minimum_mean_grade`/`subject_requirements` rows are still blank, so eligibility results for those pathways may be less precise than for KMTC/Degree until that data entry work is done.
+- **TVET/TTC cutoff points and subject requirements have not yet been sourced** for most courses (per FEATURE_STATUS.md and TODO.md) — the mean-grade-only logic is correct and complete, but many `Course.minimum_mean_grade`/`subject_requirements` rows are still blank, so eligibility results for those pathways may be less precise than for KMTC/Degree until that data entry work is done.
 - **`Course.cutoff_points`** (on the parent `Course`, not `CourseOffering`) appears to be a legacy/summary field that nothing in the reviewed eligibility/predictor/trends code actually reads — the authoritative source is always `CourseOffering.cutoff_points` (per-institution). Worth confirming before removing.
 
 ---
@@ -348,7 +348,7 @@ cluster_points = 48 × sqrt( (core_midpoint_marks / 400) × (aggregate_total / 8
 
 **Flagged issues:**
 - **No shared PDF-styling module.** The branded palette and header/footer drawing logic is copy-pasted independently across `clusterpoints/views.py`, `career/views.py`, and `payments/views.py` — a rebrand or layout tweak requires editing 3+ places consistently.
-- Root FEATURES.md/TODO.md note the "full-results PDF (all clusters)" as a P1 item — confirm current completeness of `export_full_results_pdf` against that goal before assuming full parity.
+- FEATURE_STATUS.md/TODO.md note the "full-results PDF (all clusters)" as a P1 item — confirm current completeness of `export_full_results_pdf` against that goal before assuming full parity.
 
 ---
 

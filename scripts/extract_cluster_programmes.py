@@ -3,7 +3,7 @@
 Extract KUCCPS Degree Programmes Clusters PDF -> CSV for cluster seeding.
 
 Usage:
-    python extract_cluster_programmes.py <path/to/clusters.pdf> clusters_map.csv
+    python scripts/extract_cluster_programmes.py <path/to/clusters.pdf> data/clusters_map.csv
 
 Output CSV columns:
     cluster_code, programme_name, requirements

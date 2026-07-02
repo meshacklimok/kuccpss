@@ -193,7 +193,7 @@ class Command(BaseCommand):
     # ── TTC ───────────────────────────────────────────────────────────────────
 
     def _seed_ttc(self, dry, prefix, norm_to_ttc, totals):
-        pdf_path = os.path.join(BASE_DIR, "DSTE_18_03_2024_RV2.pdf")
+        pdf_path = os.path.join(BASE_DIR, "data", "DSTE_18_03_2024_RV2.pdf")
         self.stdout.write(f'\n{"=" * 60}')
         self.stdout.write(f"{prefix}TTC  ->  CourseType 'TTC'")
         self.stdout.write(f"  File: {pdf_path}")
@@ -283,7 +283,7 @@ class Command(BaseCommand):
     # ── KMTC ──────────────────────────────────────────────────────────────────
 
     def _seed_kmtc(self, dry, prefix, key_to_kmtc, totals):
-        pdf_path = os.path.join(BASE_DIR, "KMTC_Programmes.pdf")
+        pdf_path = os.path.join(BASE_DIR, "data", "KMTC_Programmes.pdf")
         self.stdout.write(f'\n{"=" * 60}')
         self.stdout.write(f"{prefix}KMTC  ->  CourseType 'KMTC'")
         self.stdout.write(f"  File: {pdf_path}")

@@ -5,7 +5,7 @@ Output: tvet_seed_data.json
 import json, re
 from collections import defaultdict
 
-with open('tvet_raw_data.json', encoding='utf-8') as f:
+with open('data/tvet_raw_data.json', encoding='utf-8') as f:
     raw = json.load(f)
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -449,7 +449,7 @@ print(f"\nUnique canonical programmes: {len(canonical_programmes)}")
 for p in canonical_programmes:
     print(f"  {p}")
 
-with open('tvet_clean_offerings.json', 'w', encoding='utf-8') as f:
+with open('data/tvet_clean_offerings.json', 'w', encoding='utf-8') as f:
     json.dump({'offerings': clean_offerings, 'programmes': canonical_programmes}, f, indent=2)
 
 print("\nSaved tvet_clean_offerings.json")

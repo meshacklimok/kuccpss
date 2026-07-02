@@ -3,7 +3,7 @@ Generate the INSTITUTIONS list for seed_tvet.py.
 """
 import json, re
 
-with open('tvet_clean_offerings.json', encoding='utf-8') as f:
+with open('data/tvet_clean_offerings.json', encoding='utf-8') as f:
     data = json.load(f)
 
 inst_names = sorted(set(o['institution'] for o in data['offerings']))
