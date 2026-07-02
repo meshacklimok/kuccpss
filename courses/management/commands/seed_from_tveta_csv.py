@@ -78,6 +78,7 @@ STRIP_SUFFIXES = [
 DEFAULT_CSV = os.path.join(
     os.path.dirname(os.path.dirname(os.path.dirname(
         os.path.dirname(os.path.abspath(__file__))))),
+    "data",
     "tveta_offerings.csv",
 )
 
@@ -235,7 +236,7 @@ class Command(BaseCommand):
         if not os.path.exists(csv_path):
             self.stderr.write(self.style.ERROR(
                 f"CSV not found: {csv_path}\n"
-                "Run 'python build_tveta_csv.py' first to generate it."
+                "Run 'python scripts/build_tveta_csv.py' first to generate it."
             ))
             return
 

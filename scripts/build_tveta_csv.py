@@ -7,8 +7,8 @@ Scrapes tveta.go.ke and produces two CSV files:
   tveta_offerings.csv      — course → institution mappings (active only)
 
 Usage:
-    python build_tveta_csv.py                  # all levels
-    python build_tveta_csv.py --levels artisan craft   # specific levels
+    python scripts/build_tveta_csv.py                  # all levels
+    python scripts/build_tveta_csv.py --levels artisan craft   # specific levels
 
 Requirements: only Python standard library (urllib, html.parser, csv, time)
 
@@ -33,8 +33,8 @@ BASE_URL       = "https://www.tveta.go.ke"
 COURSES_URL    = f"{BASE_URL}/tvet-courses/"
 COURSE_URL     = f"{BASE_URL}/course/?course_id="
 
-OUTPUT_COURSES  = "tveta_courses.csv"
-OUTPUT_OFFERINGS = "tveta_offerings.csv"
+OUTPUT_COURSES  = "data/tveta_courses.csv"
+OUTPUT_OFFERINGS = "data/tveta_offerings.csv"
 
 # Levels to scrape.  Override via --levels argument.
 DEFAULT_LEVELS = {

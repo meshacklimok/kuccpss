@@ -63,7 +63,7 @@ Copy every variable from your Render dashboard into Railway → Variables:
 - [ ] Run calculator with real grades → results appear
 - [ ] Check Django admin at /cn-staff/
 - [ ] Send a test email (register a new account)
-- [ ] Run locust load test: `locust -f locustfile.py --host https://careernext.co.ke`
+- [ ] Run locust load test: `locust -f scripts/locustfile.py --host https://careernext.co.ke`
       → set 50 users, ramp 5/sec → all green = migration successful
 
 ### Capacity after migration (Railway Hobby, $10/mo)

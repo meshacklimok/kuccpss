@@ -2,7 +2,7 @@
 Seed institutions from a KUCCPS cutoffs CSV into the database.
 
 Usage:
-    python manage.py seed_institutions degree_cutoffs.csv --type "Public University"
+    python manage.py seed_institutions data/degree_cutoffs.csv --type "Public University"
     python manage.py seed_institutions diploma_cutoffs.csv --type "Private University"
 
 The CSV must have an 'institution' column (institution names as they appear in the PDF).

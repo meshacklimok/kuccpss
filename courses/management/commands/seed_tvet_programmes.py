@@ -39,7 +39,7 @@ BASE_DIR = os.path.dirname(  # kuccpss/
 
 PDF_CONFIG = {
     "diploma": {
-        "path": os.path.join(BASE_DIR, "DIPLOMA_PROGRAMMES.pdf"),
+        "path": os.path.join(BASE_DIR, "data", "DIPLOMA_PROGRAMMES.pdf"),
         "course_type": "TVET Diploma (Level 6)",
         "format": "diploma",  # section header in text, big data tables
     },
@@ -51,7 +51,7 @@ PDF_CONFIG = {
         "section_prefix_whitelist": re.compile(r"^CERTIFICATE\s+IN\b", re.IGNORECASE),
     },
     "artisan": {
-        "path": os.path.join(BASE_DIR, "ARTISAN_18_03_2024_RV2.pdf"),
+        "path": os.path.join(BASE_DIR, "data", "ARTISAN_18_03_2024_RV2.pdf"),
         "course_type": "TVET Artisan Certificate (Level 4)",
         "format": "artisan",  # section header is a table row
         # Only accept Artisan/Grade sections; skip any Certificate or Craft sections
@@ -61,7 +61,7 @@ PDF_CONFIG = {
         ),
     },
     "craft": {
-        "path": os.path.join(BASE_DIR, "CRAFT_18_03_2024_RV2.pdf"),
+        "path": os.path.join(BASE_DIR, "data", "CRAFT_18_03_2024_RV2.pdf"),
         "course_type": "TVET Craft Certificate (Level 3)",
         "format": "artisan",  # same layout
         # Only accept Craft/Grade sections; skip Certificate or Artisan sections

@@ -3,7 +3,7 @@
 Extract KUCCPS Degree Programme Cut Offs PDF → CSV for CourseOffering import.
 
 Install dependency:  pip install pdfplumber
-Usage:               python extract_degree_cutoffs.py <path/to/cutoffs.pdf> <output.csv>
+Usage:               python scripts/extract_degree_cutoffs.py <path/to/cutoffs.pdf> <output.csv>
 
 Output CSV columns (matches CourseOfferingResource):
     course_name, course_type, institution, cutoff_2024, cutoff_2023, cutoff_2022, cutoff_2021

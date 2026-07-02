@@ -72,7 +72,7 @@ The STK push response nests the checkout ID at `invoice.invoice_id` (with fallba
 | `/payments/webhook/mpesa/` | `payments.views.mpesa_webhook` | **HMAC-SHA256 verified** via `X-IntaSend-Signature` header against `INTASEND_WEBHOOK_SECRET` (constant-time `hmac.compare_digest`) — rejected with 403 if the header is missing/mismatched *and* a secret is configured | Handles both generic feature payments (`api_ref` = payment PK) and, as a secondary/duplicate entry point, mentorship session confirmations (`api_ref` = session UUID token) |
 | `/mentorship/webhook/payment/` | `mentorship.views.payment_webhook` | **No signature check at all** (flagged in `docs/URL_MAP.md` as `@csrf_exempt`, **no signature check**) | Mentorship-specific confirmation path; duplicates confirmation logic independently of the payments-app webhook |
 
-Both webhook URLs must be registered in the IntaSend dashboard per [DEPLOY.md](../DEPLOY.md). Production settings (`kuccpss/settings.py`) **hard-fail at startup** (`RuntimeError`) if `INTASEND_WEBHOOK_SECRET` is unset, to prevent an unauthenticated production deploy of the payments webhook.
+Both webhook URLs must be registered in the IntaSend dashboard per [DEPLOY.md](DEPLOY.md). Production settings (`kuccpss/settings.py`) **hard-fail at startup** (`RuntimeError`) if `INTASEND_WEBHOOK_SECRET` is unset, to prevent an unauthenticated production deploy of the payments webhook.
 
 **Webhook side effects on `state == "COMPLETE"`:** marks `Payment`/`MentorshipSession` completed, credits mentor wallet (mentorship), tops up `AIChatCredit` (if feature is `ai_chat_access`), locks the linked `CareerSubmission` (if `view_cluster_points`/`premium_career_report`), emails a branded PDF receipt (ReportLab-generated), and — for the payments-app webhook only — awards affiliate commission (this logic is **not duplicated** in the `verify_payment` / `verify_by_transaction_code` fallback paths, meaning payments confirmed by those fallbacks never earn affiliate commission; a known inconsistency).
 
@@ -117,7 +117,7 @@ Both webhook URLs must be registered in the IntaSend dashboard per [DEPLOY.md](.
 
 **Env vars:** `GOOGLE_CLIENT_ID`, `GOOGLE_SECRET` — read to populate the `SocialApp` row and to compute `GOOGLE_OAUTH_AVAILABLE = bool(GOOGLE_CLIENT_ID)`, a settings flag surfaced via `accounts.context_processors.unread_notifications` so templates can conditionally hide the Google button if not configured.
 
-**Flag:** `.env.example` does **not** list `GOOGLE_CLIENT_ID`/`GOOGLE_SECRET` even though [DEPLOY.md](../DEPLOY.md) marks both **required** (✅) for the Render environment — a documentation gap between the two files.
+**Flag:** `.env.example` does **not** list `GOOGLE_CLIENT_ID`/`GOOGLE_SECRET` even though [DEPLOY.md](DEPLOY.md) marks both **required** (✅) for the Render environment — a documentation gap between the two files.
 
 ---
 
@@ -215,13 +215,13 @@ Both webhook URLs must be registered in the IntaSend dashboard per [DEPLOY.md](.
 
 **Auth mechanism:** Single connection-string env var `CLOUDINARY_URL` in the format `cloudinary://<api_key>:<api_secret>@<cloud_name>`, parsed automatically by the `cloudinary` package at import time.
 
-**Env vars:** `CLOUDINARY_URL` — marked **required** (✅) in [DEPLOY.md](../DEPLOY.md)'s env table, but **absent from `.env.example`** — a real gap since local dev without it silently falls back to local disk storage (which is fine for dev, but means a new contributor following only `.env.example` would never learn this var is needed for production).
+**Env vars:** `CLOUDINARY_URL` — marked **required** (✅) in [DEPLOY.md](DEPLOY.md)'s env table, but **absent from `.env.example`** — a real gap since local dev without it silently falls back to local disk storage (which is fine for dev, but means a new contributor following only `.env.example` would never learn this var is needed for production).
 
 ---
 
 ## Environment Variables — Full Reference
 
-Sources: `requirements.txt` (packages), `.env.example` (dev template — currently incomplete), [DEPLOY.md](../DEPLOY.md) (production/Render env var table — more complete), and direct code reads of `kuccpss/settings.py` and each integration's call sites.
+Sources: `requirements.txt` (packages), `.env.example` (dev template — currently incomplete), [DEPLOY.md](DEPLOY.md) (production/Render env var table — more complete), and direct code reads of `kuccpss/settings.py` and each integration's call sites.
 
 | Variable | Purpose | Status |
 |---|---|---|

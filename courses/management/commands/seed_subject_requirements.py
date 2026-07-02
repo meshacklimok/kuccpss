@@ -26,7 +26,7 @@ from django.core.management.base import BaseCommand
 from django.conf import settings
 from courses.models import Course
 
-CSV_PATH = os.path.join(settings.BASE_DIR, 'clusters_map.csv')
+CSV_PATH = os.path.join(settings.BASE_DIR, 'data', 'clusters_map.csv')
 
 # ── Subject code normalisation ────────────────────────────────────────────────
 _CODE_MAP = {

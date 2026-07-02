@@ -2,7 +2,7 @@
 import pdfplumber, sys
 
 for key, path in [
-    ("diploma",     r"c:\Users\user\OneDrive\Desktop\webdev2025\kuccpss\DIPLOMA_PROGRAMMES.pdf"),
+    ("diploma",     r"c:\Users\user\OneDrive\Desktop\webdev2025\kuccpss\data\DIPLOMA_PROGRAMMES.pdf"),
     ("certificate", r"c:\Users\user\OneDrive\Desktop\webdev2025\kuccpss\resources\CERTIFICATE_PROGRAMMES.pdf"),
 ]:
     sys.stdout.write(f'\n=== {key.upper()} page 1 ===\n')

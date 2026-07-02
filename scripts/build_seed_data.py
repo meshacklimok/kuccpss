@@ -5,7 +5,7 @@ Run once to inspect the data, then use output in seed_tvet.py.
 import json, re
 from collections import defaultdict
 
-with open('tvet_raw_data.json', encoding='utf-8') as f:
+with open('data/tvet_raw_data.json', encoding='utf-8') as f:
     data = json.load(f)
 
 offerings = data['offerings']

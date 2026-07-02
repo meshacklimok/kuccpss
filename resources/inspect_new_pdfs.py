@@ -2,9 +2,9 @@
 import pdfplumber, sys
 
 PDFS = [
-    ("DSTE",  r"c:\Users\user\OneDrive\Desktop\webdev2025\kuccpss\DSTE_18_03_2024_RV2.pdf"),
-    ("KMTC",  r"c:\Users\user\OneDrive\Desktop\webdev2025\kuccpss\KMTC_Programmes.pdf"),
-    ("TVET_CLUSTER", r"c:\Users\user\OneDrive\Desktop\webdev2025\kuccpss\TVET_CLUSTER_DOCUMENT_2025.pdf"),
+    ("DSTE",  r"c:\Users\user\OneDrive\Desktop\webdev2025\kuccpss\data\DSTE_18_03_2024_RV2.pdf"),
+    ("KMTC",  r"c:\Users\user\OneDrive\Desktop\webdev2025\kuccpss\data\KMTC_Programmes.pdf"),
+    ("TVET_CLUSTER", r"c:\Users\user\OneDrive\Desktop\webdev2025\kuccpss\data\TVET_CLUSTER_DOCUMENT_2025.pdf"),
 ]
 
 for label, path in PDFS:

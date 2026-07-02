@@ -14,7 +14,7 @@ for i in Institution.objects.filter(institution_type__name="KMTC").order_by("nam
 
 print("\n=== Unique institution names in DSTE PDF ===")
 seen = set()
-with pdfplumber.open(r"c:\Users\user\OneDrive\Desktop\webdev2025\kuccpss\DSTE_18_03_2024_RV2.pdf") as pdf:
+with pdfplumber.open(r"c:\Users\user\OneDrive\Desktop\webdev2025\kuccpss\data\DSTE_18_03_2024_RV2.pdf") as pdf:
     for page in pdf.pages:
         for table in page.extract_tables():
             for row in table:
@@ -27,7 +27,7 @@ for n in sorted(seen):
 
 print("\n=== Unique campus names in KMTC PDF (col 2) ===")
 seen2 = set()
-with pdfplumber.open(r"c:\Users\user\OneDrive\Desktop\webdev2025\kuccpss\KMTC_Programmes.pdf") as pdf:
+with pdfplumber.open(r"c:\Users\user\OneDrive\Desktop\webdev2025\kuccpss\data\KMTC_Programmes.pdf") as pdf:
     for page in pdf.pages:
         for table in page.extract_tables():
             for row in table:

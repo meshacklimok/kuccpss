@@ -8,10 +8,10 @@ import sys
 import pdfplumber
 
 PDFS = {
-    "diploma":     r"c:\Users\user\OneDrive\Desktop\webdev2025\kuccpss\DIPLOMA_PROGRAMMES.pdf",
+    "diploma":     r"c:\Users\user\OneDrive\Desktop\webdev2025\kuccpss\data\DIPLOMA_PROGRAMMES.pdf",
     "certificate": r"c:\Users\user\OneDrive\Desktop\webdev2025\kuccpss\resources\CERTIFICATE_PROGRAMMES.pdf",
-    "artisan":     r"c:\Users\user\OneDrive\Desktop\webdev2025\kuccpss\ARTISAN_18_03_2024_RV2.pdf",
-    "craft":       r"c:\Users\user\OneDrive\Desktop\webdev2025\kuccpss\CRAFT_18_03_2024_RV2.pdf",
+    "artisan":     r"c:\Users\user\OneDrive\Desktop\webdev2025\kuccpss\data\ARTISAN_18_03_2024_RV2.pdf",
+    "craft":       r"c:\Users\user\OneDrive\Desktop\webdev2025\kuccpss\data\CRAFT_18_03_2024_RV2.pdf",
 }
 
 SECTION_HEADER_PATTERN = re.compile(
