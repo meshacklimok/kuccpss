@@ -17,7 +17,7 @@ def generate_ai_recommendation_async(
     Run the career guidance engine and persist the AIRecommendation.
     Returns the AIRecommendation pk so the caller can fetch it later.
     """
-    from career.models import career_guidance_engine
+    from career.engine import career_guidance_engine
     from accounts.models import User
 
     user = None
