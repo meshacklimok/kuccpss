@@ -1,0 +1,27 @@
+name: Dependency vulnerability audit
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - 'requirements*.txt'
+      - '.github/workflows/dependency-audit.yml'
+  pull_request:
+    paths:
+      - 'requirements*.txt'
+  schedule:
+    - cron: '0 6 * * 1'  # weekly, Monday 06:00 UTC
+  workflow_dispatch: {}
+
+jobs:
+  pip-audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install pip-audit
+        run: pip install pip-audit
+      - name: Run pip-audit against requirements.txt
+        run: pip-audit -r requirements.txt
