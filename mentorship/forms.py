@@ -80,7 +80,7 @@ class MentorRegistrationForm(forms.ModelForm):
         from courses.models import Course
         # Only universities (degree) and KMTC — not TVETs or TTCs
         self.fields["institution"].queryset = Institution.objects.filter(
-            institution_type_id__in=[2, 3, 4]  # KMTC=2, Public Uni=3, Private Uni=4
+            institution_type__slug__in=["kmtc", "public-university", "private-university"]
         ).order_by("institution_type_id", "name")
         self.fields["student_id_upload"].required = True
         self.fields["portal_screenshot"].required = True
@@ -285,11 +285,18 @@ class RatingForm(forms.Form):
     )
 
 
+def _mentor_min_withdrawal() -> int:
+    from resources.models import SiteSetting
+    try:
+        return int(SiteSetting.get('mentor_min_withdrawal', '100'))
+    except (TypeError, ValueError):
+        return 100
+
+
 class WithdrawalForm(forms.Form):
     amount = forms.IntegerField(
-        min_value=100,
         label="Amount to withdraw (KES)",
-        widget=forms.NumberInput(attrs={"class": "form-control", "placeholder": "Min KES 100"}),
+        widget=forms.NumberInput(attrs={"class": "form-control"}),
     )
     mpesa_number = forms.CharField(
         max_length=20,
@@ -299,11 +306,16 @@ class WithdrawalForm(forms.Form):
 
     def __init__(self, max_amount, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.min_amount = _mentor_min_withdrawal()
         self.max_amount = max_amount
+        self.fields["amount"].widget.attrs["min"] = self.min_amount
         self.fields["amount"].widget.attrs["max"] = max_amount
+        self.fields["amount"].widget.attrs["placeholder"] = f"Min KES {self.min_amount}"
 
     def clean_amount(self):
         amount = self.cleaned_data["amount"]
+        if amount < self.min_amount:
+            raise forms.ValidationError(f"Minimum withdrawal is KES {self.min_amount}.")
         if amount > self.max_amount:
             raise forms.ValidationError(f"You only have KES {self.max_amount} in your wallet.")
         return amount
