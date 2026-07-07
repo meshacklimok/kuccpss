@@ -44,18 +44,18 @@ class ClusterAdmin(admin.ModelAdmin):
         ('Timestamps', {'fields': ('created_at', 'updated_at')}),
     )
 
+    @admin.display(description="Color")
     def display_color_tag(self, obj):
         color = obj.color_code or "#3498db"
         return format_html('<span style="display:inline-block;width:30px;height:20px;background-color:{};"></span>', color)
-    display_color_tag.short_description = "Color"
 
+    @admin.display(description="Icon")
     def display_icon_tag(self, obj):
         icon = obj.icon or "fa-solid fa-graduation-cap"
         return format_html('<i class="{}"></i>', icon)
-    display_icon_tag.short_description = "Icon"
 
+    @admin.display(description="Image")
     def image_preview(self, obj):
         if obj.image:
             return format_html('<img src="{}" style="width:60px;height:auto;border-radius:5px;" />', obj.image.url)
         return "-"
-    image_preview.short_description = "Image"

@@ -1,4 +1,5 @@
 import logging
+import threading
 import time
 
 from django.core.cache import cache
@@ -181,10 +182,11 @@ class PageTrackingMiddleware:
         elapsed_ms = int((time.monotonic() - t0) * 1000)
 
         try:
-            from analytics.models import PageViewLog
+            # Capture everything from request/response synchronously — the
+            # request object must not be touched from the background thread.
             ua  = request.META.get('HTTP_USER_AGENT', '')
             ip  = get_client_ip(request)
-            user = request.user if request.user.is_authenticated else None
+            user_id = request.user.pk if request.user.is_authenticated else None
             sk = ''
             try:
                 if not request.session.session_key:
@@ -192,15 +194,41 @@ class PageTrackingMiddleware:
                 sk = request.session.session_key or ''
             except Exception:
                 pass
-            device = self._detect_device(ua)
+            threading.Thread(
+                target=self._write_logs,
+                args=(
+                    path[:500],
+                    request.method[:10],
+                    response.status_code,
+                    elapsed_ms,
+                    request.META.get('HTTP_REFERER', '')[:500],
+                    self._detect_device(ua),
+                    user_id,
+                    sk,
+                    ip,
+                ),
+                daemon=True,
+            ).start()
+        except Exception:
+            pass
+
+        return response
+
+    @staticmethod
+    def _write_logs(path, method, status_code, elapsed_ms, referrer,
+                    device, user_id, sk, ip):
+        """Runs in a background thread so DB writes never delay the response."""
+        from django.db import connections
+        try:
+            from analytics.models import PageViewLog
             PageViewLog.objects.create(
-                path=path[:500],
-                method=request.method[:10],
-                status_code=response.status_code,
+                path=path,
+                method=method,
+                status_code=status_code,
                 response_time_ms=elapsed_ms,
-                referrer=request.META.get('HTTP_REFERER', '')[:500],
+                referrer=referrer,
                 device=device,
-                user=user,
+                user_id=user_id,
                 session_key=sk,
                 ip=ip or None,
             )
@@ -211,21 +239,21 @@ class PageTrackingMiddleware:
                 from analytics.models import SessionLog
                 now = _tz.now()
                 upd_kw = {'last_seen_at': now, 'page_count': _F('page_count') + 1}
-                if user:
-                    upd_kw['user'] = user
+                if user_id:
+                    upd_kw['user_id'] = user_id
                 if not SessionLog.objects.filter(session_key=sk).update(**upd_kw):
                     from analytics.geo import get_location
                     country, region = get_location(ip or '')
                     SessionLog.objects.create(
-                        session_key=sk, user=user,
+                        session_key=sk, user_id=user_id,
                         ip=ip or None, device=device,
                         country=country, region=region,
                         last_seen_at=now,
                     )
         except Exception:
             pass
-
-        return response
+        finally:
+            connections.close_all()
 
 
 class HeavyEndpointRateLimitMiddleware:

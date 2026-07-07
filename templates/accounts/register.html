@@ -51,7 +51,7 @@
     <!-- Right form panel -->
     <div class="auth-panel-right">
       <h2>Create your account</h2>
-      <p class="auth-panel-sub-text">No credit card required</p>
+      <p class="auth-panel-sub-text">Join thousands of KCSE students choosing smarter</p>
 
       {% if GOOGLE_OAUTH_AVAILABLE %}
       <a href="/accounts/google/login/?process=signup{% if request.GET.next %}&next={{ request.GET.next|urlencode }}{% endif %}"
@@ -79,7 +79,7 @@
 
         <div class="auth-field">
           <label for="{{ form.full_name.id_for_label }}">Full name</label>
-          {{ form.full_name|add_class:"form-control"|attr:"placeholder:Your full name"|attr:"autocomplete:name" }}
+          {{ form.full_name|add_class:"form-control"|attr:"placeholder:Your full name"|attr:"autocomplete:name"|attr:"autofocus" }}
           {% if form.full_name.errors %}
           <div class="field-error"><i class="fas fa-exclamation-circle"></i>{{ form.full_name.errors|striptags }}</div>
           {% endif %}
@@ -96,7 +96,7 @@
         <div class="auth-field">
           <label for="{{ form.password1.id_for_label }}">Password</label>
           <div class="auth-pw-wrap">
-            {{ form.password1|add_class:"form-control"|attr:"placeholder:At least 4 characters"|attr:"autocomplete:new-password" }}
+            {{ form.password1|add_class:"form-control"|attr:"placeholder:At least 8 characters"|attr:"autocomplete:new-password" }}
             <button type="button" class="auth-pw-toggle" onclick="authTogglePw(this)" aria-label="Show or hide password">
               <i class="far fa-eye"></i>
             </button>
@@ -153,11 +153,29 @@ function authTogglePw(btn) {
   if (inp.type === 'password') { inp.type = 'text'; icon.className = 'far fa-eye-slash'; }
   else { inp.type = 'password'; icon.className = 'far fa-eye'; }
 }
-document.getElementById('register-form').addEventListener('submit', function() {
-  var btn = document.getElementById('register-submit');
-  btn.textContent = 'Creating account…';
-  btn.style.opacity = '0.75';
-  btn.disabled = true;
-});
+(function () {
+  var form = document.getElementById('register-form');
+  var btn  = document.getElementById('register-submit');
+  var originalHTML = btn.innerHTML;
+
+  function resetBtn() {
+    btn.innerHTML = originalHTML;
+    btn.style.opacity = '';
+    btn.disabled = false;
+  }
+
+  form.addEventListener('submit', function() {
+    btn.textContent = 'Creating account…';
+    btn.style.opacity = '0.75';
+    btn.disabled = true;
+    // Fallback: re-enable if navigation never happens (network error, etc.)
+    setTimeout(resetBtn, 8000);
+  });
+
+  // Restore the button when the page is served from the back/forward cache
+  window.addEventListener('pageshow', function (e) {
+    if (e.persisted) resetBtn();
+  });
+})();
 </script>
 {% endblock %}
