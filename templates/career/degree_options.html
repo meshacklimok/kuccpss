@@ -115,6 +115,24 @@ form:nth-of-type(4) .opt-card { animation-delay: 0.33s; }
 .opt-arrow { margin-left: auto; color: #94a3b8; font-size: 1.1rem; flex-shrink: 0; transition: color 0.2s, transform 0.2s; }
 .opt-card.primary .opt-arrow { color: #4f46e5; }
 .opt-card:hover .opt-arrow   { color: var(--accent); transform: translateX(3px); }
+
+/* ── dark mode ── */
+body.dark { background: var(--bg); }
+body.dark .opt-card {
+    background: var(--surface);
+    --accent-border: rgba(255, 255, 255, 0.09);
+}
+body.dark .opt-card.primary { background: linear-gradient(135deg, rgba(79,70,229,0.16) 0%, rgba(99,102,241,0.1) 100%); --accent-border: rgba(99,102,241,0.35); }
+body.dark .opt-card::before { background: linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.06) 50%, transparent 60%); }
+body.dark .opt-title { color: var(--text); }
+body.dark .opt-card.primary .opt-title { color: #a5b4fc; }
+body.dark .opt-desc  { color: var(--text-2); }
+body.dark .opt-card.upload .opt-icon { background: rgba(8,145,178,0.18);  color: #67e8f9; }
+body.dark .opt-card.paste  .opt-icon { background: rgba(5,150,105,0.18);  color: #6ee7b7; }
+body.dark .opt-card.manual .opt-icon { background: rgba(217,119,6,0.18);  color: #fcd34d; }
+body.dark .step-badge { background: rgba(22,163,74,0.15); color: #86efac; border-color: rgba(34,197,94,0.3); }
+body.dark h2.fw-bold { color: var(--text) !important; }
+body.dark .options-wrap p.text-muted { color: var(--text-2) !important; }
 </style>
 
 <div class="options-wrap">
@@ -141,32 +159,29 @@ form:nth-of-type(4) .opt-card { animation-delay: 0.33s; }
         Choose the most convenient option below. Your KCSE grades are already saved.
     </p>
 
-    <!-- Option 1: Use the calculator (primary) -->
+    <!-- Option 1: Use the calculator -->
     <form method="post">
         {% csrf_token %}
         <input type="hidden" name="action" value="calculate">
         <button type="submit" class="opt-card primary">
             <div class="opt-icon"><i class="bi bi-calculator-fill"></i></div>
             <div>
-                <div class="opt-title">
-                    Use Our Calculator
-                    <span class="recommended-badge">RECOMMENDED</span>
-                </div>
+                <div class="opt-title">Calculate from Grades <span class="recommended-badge">RECOMMENDED</span></div>
                 <div class="opt-desc">We automatically compute your cluster points from the grades you just entered. Fast and accurate.</div>
             </div>
             <i class="bi bi-arrow-right opt-arrow"></i>
         </button>
     </form>
 
-    <!-- Option 2: Upload KCSE slip -->
+    <!-- Option 2: Upload cluster points screenshot -->
     <form method="post">
         {% csrf_token %}
         <input type="hidden" name="action" value="upload">
         <button type="submit" class="opt-card upload">
-            <div class="opt-icon"><i class="bi bi-camera-fill"></i></div>
+            <div class="opt-icon"><i class="bi bi-image-fill"></i></div>
             <div>
-                <div class="opt-title">Upload KCSE Slip</div>
-                <div class="opt-desc">Take a photo or upload an image of your official KCSE result slip — we'll read the points automatically.</div>
+                <div class="opt-title">Upload Cluster Points Screenshot</div>
+                <div class="opt-desc">Take a screenshot or photo of your KUCCPS cluster points — we'll read the values automatically.</div>
             </div>
             <i class="bi bi-arrow-right opt-arrow"></i>
         </button>
@@ -177,7 +192,7 @@ form:nth-of-type(4) .opt-card { animation-delay: 0.33s; }
         {% csrf_token %}
         <input type="hidden" name="action" value="paste">
         <button type="submit" class="opt-card paste">
-            <div class="opt-icon"><i class="bi bi-clipboard2-fill"></i></div>
+            <div class="opt-icon"><i class="bi bi-clipboard2-data-fill"></i></div>
             <div>
                 <div class="opt-title">Paste Cluster Values</div>
                 <div class="opt-desc">Already know your cluster points? Paste the values directly from your KUCCPS result.</div>
@@ -191,7 +206,7 @@ form:nth-of-type(4) .opt-card { animation-delay: 0.33s; }
         {% csrf_token %}
         <input type="hidden" name="action" value="manual">
         <button type="submit" class="opt-card manual">
-            <div class="opt-icon"><i class="bi bi-sliders"></i></div>
+            <div class="opt-icon"><i class="bi bi-pencil-square"></i></div>
             <div>
                 <div class="opt-title">Enter Cluster Points Manually</div>
                 <div class="opt-desc">Type in your cluster point values yourself, one cluster group at a time.</div>

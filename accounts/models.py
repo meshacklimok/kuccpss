@@ -104,7 +104,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = []
 
-    class Meta:
+    class Meta(AbstractBaseUser.Meta, PermissionsMixin.Meta):
         ordering = ["-created_at"]
         indexes = [
             models.Index(fields=["email"]),

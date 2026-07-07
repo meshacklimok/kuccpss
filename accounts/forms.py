@@ -10,8 +10,8 @@ from .models import User, RememberToken
 # =====================================================
 def validate_password_strength(password: str):
     # Kept in sync with AUTH_PASSWORD_VALIDATORS' MinimumLengthValidator in settings.py.
-    if len(password) < 6:
-        raise ValidationError("Password must be at least 6 characters long.")
+    if len(password) < 8:
+        raise ValidationError("Password must be at least 8 characters long.")
 
 
 # Known disposable / throwaway email domains
@@ -47,11 +47,20 @@ _DISPOSABLE_DOMAINS = {
 }
 
 
+# Major providers we never need to DNS-check
+_KNOWN_GOOD_DOMAINS = {
+    "gmail.com", "googlemail.com", "yahoo.com", "outlook.com", "hotmail.com",
+    "live.com", "icloud.com", "proton.me", "protonmail.com", "aol.com",
+}
+
+
 def _check_email_domain(email: str):
     """
     1. Block disposable domains.
     2. Check the domain has live MX records (can actually receive email).
-    Raises ValidationError with a user-friendly message if either check fails.
+       Only a definitive "domain does not exist / has no mail server" answer
+       rejects; DNS timeouts or resolver failures must never block a signup.
+    Raises ValidationError with a user-friendly message if a check fails.
     """
     domain = email.split("@", 1)[-1].lower()
 
@@ -61,17 +70,23 @@ def _check_email_domain(email: str):
             "Please use your real email so we can help you."
         )
 
+    if domain in _KNOWN_GOOD_DOMAINS:
+        return
+
     try:
         import dns.resolver
-        dns.resolver.resolve(domain, "MX", lifetime=3)
     except ImportError:
-        pass  # dnspython not installed — skip check
-    except Exception:
-        # NXDOMAIN, NoAnswer, Timeout, etc.
+        return  # dnspython not installed — skip check
+
+    try:
+        dns.resolver.resolve(domain, "MX", lifetime=3)
+    except (dns.resolver.NXDOMAIN, dns.resolver.NoAnswer):
         raise ValidationError(
             f"'{domain}' doesn't look like a valid email domain. "
             "Please double-check your email address."
         )
+    except Exception:
+        pass  # Timeout, no nameservers, etc. — fail open, don't block real users
 
 # =====================================================
 # USER REGISTRATION FORM
@@ -81,7 +96,7 @@ class UserRegistrationForm(forms.ModelForm):
         label=_("Password"),
         widget=forms.PasswordInput(attrs={'placeholder': 'Enter password'}),
         strip=False,
-        help_text=_("Minimum 4 characters."),
+        help_text=_("Minimum 8 characters."),
     )
     password2 = forms.CharField(
         label=_("Confirm Password"),
