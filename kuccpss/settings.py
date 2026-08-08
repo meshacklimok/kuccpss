@@ -382,11 +382,29 @@ if _vapid_priv_b64:
 VAPID_PRIVATE_KEY = _b64.b64decode(_vapid_priv_b64).decode() if _vapid_priv_b64 else ""
 VAPID_MAILTO      = os.environ.get("VAPID_MAILTO", "support@careernext.co.ke")
 
-# Render / production database — overrides individual DB_* vars if set
+# Production database (Neon Postgres) — overrides individual DB_* vars if set.
+#
+# Neon's pooled connection string (host contains "-pooler") runs PgBouncer in
+# transaction mode.  Two things follow from that:
+#   * server-side cursors break, so they must be disabled;
+#   * PgBouncer already pools, so Django holding its own persistent connections
+#     buys nothing — and worse, an idle-but-open connection keeps Neon's compute
+#     awake, burning the free tier's monthly compute hours.
+# Both are handled automatically below when a pooled host is detected.
 _DATABASE_URL = os.environ.get('DATABASE_URL')
 if _DATABASE_URL:
     import dj_database_url
-    DATABASES['default'] = dj_database_url.parse(_DATABASE_URL, conn_max_age=600, ssl_require=True)
+
+    _is_pooled = '-pooler' in _DATABASE_URL
+    _conn_max_age = int(os.environ.get('DB_CONN_MAX_AGE', '0' if _is_pooled else '600'))
+
+    DATABASES['default'] = dj_database_url.parse(
+        _DATABASE_URL,
+        conn_max_age=_conn_max_age,
+        ssl_require=True,
+    )
+    if _is_pooled:
+        DATABASES['default']['DISABLE_SERVER_SIDE_CURSORS'] = True
 
 # ── Production security ───────────────────────────────────────────────────────
 if not DEBUG:
