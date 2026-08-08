@@ -55,6 +55,26 @@ CSRF_TRUSTED_ORIGINS = [
     'https://www.careernext.co.ke',
 ]
 
+# ── Maintenance mode ─────────────────────────────────────────────────────────
+# Flip MAINTENANCE_MODE=True in the host's env vars to take the site offline.
+# Staff users, /admin/, and any IP in MAINTENANCE_ALLOWED_IPS still get through
+# so you can verify the site before switching it back on.
+MAINTENANCE_MODE = os.environ.get('MAINTENANCE_MODE', 'False') == 'True'
+MAINTENANCE_MESSAGE = os.environ.get(
+    'MAINTENANCE_MESSAGE',
+    "We're carrying out scheduled upgrades to CareerNext. "
+    "Your saved KCSE results and shortlist are safe.",
+)
+# Rough "back by" text shown to visitors, e.g. "Today at 6:00 PM EAT".
+MAINTENANCE_UNTIL = os.environ.get('MAINTENANCE_UNTIL', '')
+# Seconds to put in the Retry-After header (search engines use this).
+MAINTENANCE_RETRY_AFTER = int(os.environ.get('MAINTENANCE_RETRY_AFTER', '3600'))
+MAINTENANCE_ALLOWED_IPS = [
+    ip.strip()
+    for ip in os.environ.get('MAINTENANCE_ALLOWED_IPS', '').split(',')
+    if ip.strip()
+]
+
 
 # Application definition
 
@@ -129,6 +149,7 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'kuccpss.middleware.MaintenanceModeMiddleware',
     'kuccpss.middleware.PageTrackingMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',

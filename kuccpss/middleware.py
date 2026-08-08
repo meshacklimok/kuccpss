@@ -147,6 +147,77 @@ class GracefulErrorMiddleware:
         return render(request, '500.html', status=500)
 
 
+class MaintenanceModeMiddleware:
+    """
+    Serves a 503 "we'll be right back" page to everyone while
+    ``settings.MAINTENANCE_MODE`` is on.
+
+    Deliberately let through so you can still work on a sleeping site:
+      * staff / superusers (session cookie must already exist, or log in via /admin/)
+      * /cn-staff/ (admin) and the login pages, so you can *become* staff
+      * any IP listed in ``settings.MAINTENANCE_ALLOWED_IPS``
+      * static & media files, and health checks
+
+    Returns HTTP 503 with ``Retry-After`` — the correct status for planned
+    downtime, so Google treats it as temporary and keeps your rankings.
+    """
+
+    # Prefixes that stay reachable while maintenance mode is on.
+    EXEMPT_PREFIXES = (
+        '/cn-staff/',          # Django admin
+        '/accounts/login/',
+        '/accounts/logout/',
+        '/static/',
+        '/media/',
+        '/health/',
+        '/robots.txt',         # keep 200 — a 503 here can stall crawling
+        '/sw.js',
+        '/offline/',
+    )
+
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        from django.conf import settings
+
+        if not getattr(settings, 'MAINTENANCE_MODE', False):
+            return self.get_response(request)
+
+        if request.path.startswith(self.EXEMPT_PREFIXES):
+            return self.get_response(request)
+
+        user = getattr(request, 'user', None)
+        if user is not None and user.is_authenticated and user.is_staff:
+            return self.get_response(request)
+
+        allowed_ips = getattr(settings, 'MAINTENANCE_ALLOWED_IPS', [])
+        if allowed_ips and get_client_ip(request) in allowed_ips:
+            return self.get_response(request)
+
+        retry_after = getattr(settings, 'MAINTENANCE_RETRY_AFTER', 3600)
+
+        if request.headers.get('HX-Request') == 'true' or request.path.startswith('/api/'):
+            response = JsonResponse(
+                {'error': settings.MAINTENANCE_MESSAGE, 'maintenance': True},
+                status=503,
+            )
+        else:
+            response = render(
+                request,
+                '503.html',
+                {
+                    'maintenance_message': settings.MAINTENANCE_MESSAGE,
+                    'maintenance_until': getattr(settings, 'MAINTENANCE_UNTIL', ''),
+                },
+                status=503,
+            )
+
+        response['Retry-After'] = str(retry_after)
+        response['Cache-Control'] = 'no-store'
+        return response
+
+
 class PageTrackingMiddleware:
     """
     Records every non-static, non-bot page hit to PageViewLog with timing and device.
