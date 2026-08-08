@@ -406,6 +406,13 @@ if _DATABASE_URL:
     if _is_pooled:
         DATABASES['default']['DISABLE_SERVER_SIDE_CURSORS'] = True
 
+    # parse() replaces OPTIONS wholesale, dropping the connect_timeout set above.
+    # Restore it so a stalled DB fails fast instead of tying up a gunicorn worker.
+    # Generous by default: Neon suspends idle computes and needs a moment to wake.
+    DATABASES['default'].setdefault('OPTIONS', {}).setdefault(
+        'connect_timeout', int(os.environ.get('DB_CONNECT_TIMEOUT', '15'))
+    )
+
 # ── Production security ───────────────────────────────────────────────────────
 if not DEBUG:
     # Crash loudly if SECRET_KEY is still the insecure fallback
