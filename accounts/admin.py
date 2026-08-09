@@ -333,7 +333,7 @@ class EmailBroadcastAdmin(admin.ModelAdmin):
     @admin.display(description='Action')
     def send_action_button(self, obj):
         if obj.status == 'draft':
-            url = f'/admin/accounts/emailbroadcast/{obj.pk}/send/'
+            url = f'/cn-staff/accounts/emailbroadcast/{obj.pk}/send/'
             return format_html('<a class="button" href="{}">Send Now</a>', url)
         return obj.get_status_display()
 
@@ -351,11 +351,11 @@ class EmailBroadcastAdmin(admin.ModelAdmin):
             broadcast = EmailBroadcast.objects.get(pk=pk)
         except EmailBroadcast.DoesNotExist:
             self.message_user(request, "Broadcast not found.", level='error')
-            return redirect('/admin/accounts/emailbroadcast/')
+            return redirect('/cn-staff/accounts/emailbroadcast/')
 
         if broadcast.status != 'draft':
             self.message_user(request, f"This broadcast is already {broadcast.status}.", level='warning')
-            return redirect('/admin/accounts/emailbroadcast/')
+            return redirect('/cn-staff/accounts/emailbroadcast/')
 
         body_lines = [line.strip() for line in broadcast.body.splitlines() if line.strip()]
 
@@ -399,7 +399,7 @@ class EmailBroadcastAdmin(admin.ModelAdmin):
                 broadcast.sent_at = timezone.now()
                 broadcast.save(update_fields=['status', 'recipient_count', 'sent_by', 'sent_at'])
                 self.message_user(request, f"Send failed after {sent_count} emails: {exc}", level='error')
-                return redirect('/admin/accounts/emailbroadcast/')
+                return redirect('/cn-staff/accounts/emailbroadcast/')
 
         broadcast.status = 'sent'
         broadcast.recipient_count = sent_count
@@ -407,4 +407,4 @@ class EmailBroadcastAdmin(admin.ModelAdmin):
         broadcast.sent_at = timezone.now()
         broadcast.save(update_fields=['status', 'recipient_count', 'sent_by', 'sent_at'])
         self.message_user(request, f"Broadcast sent successfully to {sent_count} recipients.")
-        return redirect('/admin/accounts/emailbroadcast/')
+        return redirect('/cn-staff/accounts/emailbroadcast/')
