@@ -298,3 +298,8 @@ To check: log into your IntaSend dashboard → Send Money → if it says "contac
 ### Performance follow-up (2026-07-02)
 - [x] Fix slow cold-cache homepage (~4.6s) — `_most_competitive()` now fetches only ids + cutoff JSON instead of all ~2k offering objects (`courses/trends.py`); background warmer thread (`accounts/tasks.py`, started from `AccountsConfig.ready()`) pre-populates homepage caches and compiles the template tree at startup, re-warming every 240s so visitors never pay the recompute
 - [ ] Set `REDIS_URL` in production (Render) — settings auto-upgrade the cache backend to Redis; cache then survives worker restarts/deploys instead of dying with each LocMemCache process
+
+
+--- back button in big screens
+---- kuccps 2026 application portal closes ,check eligibility,apply on kuccps when one cancels  let it appear after 48 hrs
+---- soft delete dont delete completely like  a user
