@@ -1,4 +1,4 @@
-from django.contrib import admin
+from django.contrib import admin, messages
 from django.utils.timezone import now
 from .models import Payment, Transaction, PaymentFeature, PaymentExemption, PRODUCT_CHOICES
 
@@ -32,9 +32,30 @@ class TransactionInline(admin.TabularInline):
     can_delete = False
 
 
+def _complete_payment(payment):
+    """Run the same fulfilment as the webhook so the user actually gets what they paid for
+    (feature unlock, AI credits, receipt email, affiliate commission / mentor booking)."""
+    session = payment.mentorship_session
+    if session is not None and session.status in ("pending_payment", "pending_manual_verification"):
+        from mentorship.views import _confirm_session_after_payment
+        _confirm_session_after_payment(session, source="payments:admin")
+        return
+    from .views import fulfil_completed_payment
+    fulfil_completed_payment(payment)
+
+
 def mark_completed(modeladmin, request, queryset):
-    updated = queryset.filter(status__in=["pending", "failed"]).update(status="completed")
-    modeladmin.message_user(request, f"{updated} payment(s) marked as completed.")
+    updated = 0
+    for payment in queryset.filter(status__in=["pending", "failed"]).select_related("user", "mentorship_session"):
+        payment.status = "completed"
+        payment.save(update_fields=["status", "updated_at"])
+        _complete_payment(payment)
+        updated += 1
+    modeladmin.message_user(
+        request,
+        f"{updated} payment(s) marked as completed — features unlocked and users sent a receipt.",
+        messages.SUCCESS if updated else messages.WARNING,
+    )
 mark_completed.short_description = "Mark selected payments as COMPLETED (manual override)"
 
 
@@ -53,6 +74,14 @@ class PaymentAdmin(admin.ModelAdmin):
     list_editable = ("status",)
     actions = [mark_completed, mark_failed]
     inlines = [TransactionInline]
+
+    def save_model(self, request, obj, form, change):
+        # Covers both the change form and the list_editable status column.
+        was_completed = change and Payment.objects.filter(pk=obj.pk, status="completed").exists()
+        super().save_model(request, obj, form, change)
+        if obj.status == "completed" and not was_completed:
+            _complete_payment(obj)
+            self.message_user(request, f"Payment #{obj.pk} completed — {obj.user.email} has been unlocked and sent a receipt.")
 
     @admin.display(description="Product")
     def product_label(self, obj):

@@ -1,0 +1,29 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+  <a href="{% url 'admin:index' %}">{% translate 'Home' %}</a>
+  &rsaquo; <a href="{% url 'admin:app_list' app_label=opts.app_label %}">{{ opts.app_config.verbose_name }}</a>
+  &rsaquo; <a href="{{ changelist_url }}">{{ opts.verbose_name_plural|capfirst }}</a>
+  &rsaquo; Send
+</div>
+{% endblock %}
+
+{% block content %}
+<div id="content-main">
+  <p>You are about to send this email broadcast. This cannot be undone.</p>
+  <table>
+    <tr><th>Subject</th><td>{{ broadcast.subject }}</td></tr>
+    <tr><th>Heading</th><td>{{ broadcast.heading }}</td></tr>
+    <tr><th>Recipients</th><td><strong>{{ recipient_count }}</strong>{% if broadcast.send_to_leads %} (users + unconverted leads){% else %} (active users with email notifications on){% endif %}</td></tr>
+  </table>
+  <form method="post" style="margin-top:16px">
+    {% csrf_token %}
+    <div class="submit-row">
+      <input type="submit" class="default" value="Yes, send to {{ recipient_count }} recipient{{ recipient_count|pluralize }}"{% if not recipient_count %} disabled{% endif %}>
+      <a href="{% url 'admin:accounts_emailbroadcast_change' broadcast.pk %}" class="button cancel-link">No, go back</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

@@ -6,13 +6,16 @@ from django.contrib import messages
 from django.contrib.auth import login, logout, authenticate, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
 from django.core.cache import cache
-from kuccpss.email_utils import send_branded_email
+from kuccpss.email_utils import notify_admin_withdrawal, send_branded_email
 from kuccpss.ip_utils import get_client_ip
+from datetime import timedelta
 from django.utils import timezone
 from django.views import View
 from django.views.decorators.http import require_http_methods
 from django.http import HttpRequest, HttpResponse, JsonResponse
 from django.utils.http import url_has_allowed_host_and_scheme
+from django.urls import reverse
+from courses.models import LATEST_CUTOFF_YEAR
 
 from .decorators import require_recent_auth
 from .forms import UserRegistrationForm, UserLoginForm
@@ -110,9 +113,13 @@ class RegisterView(View):
 # =====================================================
 @require_http_methods(["GET"])
 def email_verify_view(request: HttpRequest, token: str) -> HttpResponse:
-    verification = get_object_or_404(
-        EmailVerificationToken, token=token, is_used=False
-    )
+    verification = EmailVerificationToken.objects.filter(token=token).select_related("user").first()
+    if verification is None:
+        messages.error(request, "Verification link is invalid.")
+        return redirect("accounts:login")
+    if verification.is_used:
+        messages.info(request, "This email is already verified. You may log in.")
+        return redirect("accounts:login")
     if not verification.is_valid():
         messages.error(request, "Verification link is invalid or expired.")
         return redirect("accounts:login")
@@ -286,12 +293,14 @@ def dashboard_view(request: HttpRequest) -> HttpResponse:
     # ── KCSE results & cluster chart ──────────────────────────────────────────
     latest_result = UserKCSEResult.objects.filter(user=user).order_by("-created_at").first()
     cluster_results = []
+    top_cluster_result = None
     eligible_count = 0
     if latest_result:
         cluster_results = list(
             ClusterCalculationResult.objects.filter(kcse_result=latest_result)
-            .select_related("cluster").order_by("-cluster_points")
+            .select_related("cluster").order_by("cluster__number")
         )
+        top_cluster_result = max(cluster_results, key=lambda r: r.cluster_points, default=None)
         from clusterpoints.eligibility import get_eligible_courses
         try:
             _elig = get_eligible_courses(user, latest_result)
@@ -316,7 +325,12 @@ def dashboard_view(request: HttpRequest) -> HttpResponse:
         .order_by('rank', '-added_at')
     )
     shortlist_count = len(shortlist_items)
-    all_unread = list(Notification.objects.filter(user=user, is_read=False).order_by("-created_at"))
+    all_unread = list(
+        Notification.objects.filter(
+            user=user, is_read=False,
+            created_at__gte=timezone.now() - timedelta(days=Notification.RETENTION_DAYS),
+        ).order_by("-created_at")
+    )
     unread_count  = len(all_unread)
     notifications = all_unread[:5]
 
@@ -405,8 +419,7 @@ def dashboard_view(request: HttpRequest) -> HttpResponse:
             _off = next((o for o in _c.offerings.all() if o.cutoff_points), None)
             _cutoff = None
             if _off and _off.cutoff_points:
-                _cutoff = (_off.cutoff_points.get('2024') or
-                           next((v for v in _off.cutoff_points.values() if v is not None), None))
+                _cutoff = _off.latest_cutoff()
             _icon, _bg, _color = _course_meta(_c.name)
             preview_courses.append({
                 'name': _c.name, 'cluster_num': _knum,
@@ -540,7 +553,7 @@ def dashboard_view(request: HttpRequest) -> HttpResponse:
                 continue
             _off2 = _shared_offering_map.get(_c.id)
             _cutoff_history = (_off2.cutoff_points if _off2 else None) or _c.cutoff_points
-            _cutoff = _off2.latest_cutoff() if _off2 else None
+            _cutoff = _off2.newest_cutoff() if _off2 else None
             if _cutoff is None and _c.cutoff_points:
                 _yr = max(
                     (k for k in _c.cutoff_points if _c.cutoff_points[k] is not None),
@@ -639,11 +652,7 @@ def dashboard_view(request: HttpRequest) -> HttpResponse:
             _off = _shared_offering_map.get(_c.id)
             _cv = _off.latest_cutoff() if _off else None
             if _cv is None and _c.cutoff_points:
-                _yr = max(
-                    (k for k in _c.cutoff_points if _c.cutoff_points[k] is not None),
-                    default=None,
-                )
-                _cv = _c.cutoff_points.get(_yr) if _yr else None
+                _cv = _c.cutoff_points.get(LATEST_CUTOFF_YEAR)
             shortlist_comparison.append({
                 'name':      _c.name,
                 'inst':      _off.institution.name if _off else '—',
@@ -740,6 +749,7 @@ def dashboard_view(request: HttpRequest) -> HttpResponse:
         # KCSE / clusters
         "latest_result":     latest_result,
         "cluster_results":   cluster_results,
+        "top_cluster_result": top_cluster_result,
         "eligible_count":    eligible_count,
         "all_clusters":      all_clusters,
         # Watchlist
@@ -842,6 +852,59 @@ def change_password_view(request: HttpRequest) -> HttpResponse:
             messages.error(request, error)
 
     return render(request, "accounts/change_password.html")
+
+
+# =====================================================
+# DELETE ACCOUNT VIEW
+# =====================================================
+@login_required
+@require_http_methods(["GET", "POST"])
+def delete_account_view(request: HttpRequest) -> HttpResponse:
+    """
+    Let a user delete their own account.
+
+    The row is soft-deleted (kept for payment/audit records) but all personal
+    data is scrubbed immediately and the email is freed so the person can
+    register again later.
+    """
+    user = request.user
+    if user.is_staff or user.is_superuser:
+        messages.error(request, "Staff accounts can't be deleted from here. Ask another admin to remove it.")
+        return redirect("accounts:profile")
+
+    needs_password = user.has_usable_password()
+
+    if request.method == "POST":
+        confirm = request.POST.get("confirm", "").strip()
+        password = request.POST.get("password", "")
+        if confirm != "DELETE":
+            messages.error(request, 'Please type DELETE in capital letters to confirm.')
+        elif needs_password and not user.check_password(password):
+            messages.error(request, "Incorrect password. Please try again.")
+        else:
+            from allauth.account.models import EmailAddress
+            from allauth.socialaccount.models import SocialAccount
+
+            SocialAccount.objects.filter(user=user).delete()
+            EmailAddress.objects.filter(user=user).delete()
+
+            if user.profile_picture:
+                user.profile_picture.delete(save=False)
+            user.email = f"deleted-{user.pk}@deleted.careernext.invalid"
+            user.full_name = ""
+            user.phone_number = ""
+            user.county = ""
+            user.last_login_ip = None
+            user.last_login_user_agent = None
+            user.email_notifications = False
+            user.set_unusable_password()
+            user.soft_delete()
+
+            logout(request)
+            messages.success(request, "Your account has been deleted. We're sorry to see you go.")
+            return redirect("/")
+
+    return render(request, "accounts/delete_account.html", {"needs_password": needs_password})
 
 
 # =====================================================
@@ -1086,7 +1149,7 @@ def request_affiliate_payout(request):
                 {"label": "Amount", "value": f"KES {amount}", "highlight": True},
                 {"label": "M-Pesa Number", "value": mpesa},
             ],
-            cta_url="https://careernext.co.ke/accounts/affiliate-dashboard/",
+            cta_url="https://www.careernext.co.ke" + reverse("accounts:affiliate_dashboard"),
             cta_label="View Affiliate Dashboard →",
             user_email=request.user.email,
         )
@@ -1099,7 +1162,36 @@ def request_affiliate_payout(request):
         logging.getLogger(__name__).error("Affiliate payout failed for %s: %s", affiliate.pk, exc)
         messages.error(request, "Payout failed — please try again or contact support.")
 
+    notify_admin_withdrawal(
+        kind="Affiliate",
+        name=request.user.full_name or request.user.email,
+        email=request.user.email,
+        amount=amount,
+        mpesa_number=mpesa,
+        status=wr.status,
+        balance_after=affiliate.wallet_balance,
+        error=wr.admin_note,
+        admin_path=reverse("admin:accounts_affiliatewithdrawalrequest_change", args=[wr.pk]),
+    )
     return redirect('accounts:affiliate_dashboard')
+
+
+@login_required
+def affiliate_withdrawal_history(request):
+    from accounts.models import AffiliateProfile
+    from django.http import Http404
+
+    try:
+        affiliate = request.user.affiliate_profile
+    except AffiliateProfile.DoesNotExist:
+        raise Http404
+
+    withdrawals = affiliate.withdrawals.all()
+    return render(request, 'accounts/affiliate_withdrawal_history.html', {
+        'affiliate':       affiliate,
+        'withdrawals':     withdrawals,
+        'total_withdrawn': sum(w.amount for w in withdrawals if w.status == 'processed'),
+    })
 
 
 def email_lead_capture(request):
@@ -1205,7 +1297,9 @@ def _get_home_static_context():
 
 
 def privacy_view(request):
-    return render(request, "accounts/privacy.html")
+    from resources.models import SiteSetting
+    contact_phone = SiteSetting.get("contact_phone").strip()
+    return render(request, "accounts/privacy.html", {"contact_phone": contact_phone})
 
 
 def about_view(request):
@@ -1357,7 +1451,7 @@ def shortlist_view(request: HttpRequest) -> HttpResponse:
                 cluster_map[knum] = float(r.cluster_points)
 
     # Annotate each item with eligibility and competition level
-    from clusterpoints.eligibility import NEARLY_ELIGIBLE_GAP, CURRENT_YEAR
+    from clusterpoints.eligibility import NEARLY_ELIGIBLE_GAP, newest_cutoff
     RANK_CHOICES = [1, 2, 3, 4]
     for item in items:
         course = item.course
@@ -1368,7 +1462,7 @@ def shortlist_view(request: HttpRequest) -> HttpResponse:
         min_cutoff = None
         for off in offerings:
             cp = off.cutoff_points or {}
-            v = cp.get(CURRENT_YEAR) or cp.get(max((k for k in cp if cp[k]), default=None))
+            v = newest_cutoff(cp)
             if v is not None:
                 v = float(v)
                 if min_cutoff is None or v < min_cutoff:
@@ -1576,11 +1670,14 @@ def export_shortlist_pdf(request: HttpRequest) -> HttpResponse:
             f'Type: {type_label}   |   Cluster: {cluster_label}   |   Min Grade: {grade_label}   |   Duration: {duration_label}')
         y -= 0.42*cm
 
-        offs = list(course.offerings.all()[:4])
+        # Slice the prefetched list in Python — slicing the manager or calling
+        # .count() would bypass the prefetch and hit the DB per course.
+        all_offs = list(course.offerings.all())
+        offs = all_offs[:4]
         if offs:
             inst_names = ', '.join(o.institution.name for o in offs)
-            if course.offerings.count() > 4:
-                inst_names += f' +{course.offerings.count()-4} more'
+            if len(all_offs) > 4:
+                inst_names += f' +{len(all_offs)-4} more'
             p.drawString(1.5*cm, y, f'Institutions: {inst_names}')
             y -= 0.42*cm
 
@@ -1609,7 +1706,10 @@ def notifications_view(request: HttpRequest) -> HttpResponse:
     # Evaluate the list first so this render still highlights what was new,
     # then mark everything read — opening the page counts as reading.
     notifs = list(
-        Notification.objects.filter(user=request.user).select_related("published_by")
+        Notification.objects.filter(
+            user=request.user,
+            created_at__gte=timezone.now() - timedelta(days=Notification.RETENTION_DAYS),
+        ).select_related("published_by")
     )
     Notification.objects.filter(user=request.user, is_read=False).update(is_read=True)
     cache.delete(f'notif_unread:{request.user.pk}')
@@ -1819,11 +1919,7 @@ def course_comparison_view(request: HttpRequest) -> HttpResponse:
         off = offering_map.get(c.id)
         cv = off.latest_cutoff() if off else None
         if cv is None and c.cutoff_points:
-            yr = max(
-                (k for k in c.cutoff_points if c.cutoff_points[k] is not None),
-                default=None,
-            )
-            cv = c.cutoff_points.get(yr) if yr else None
+            cv = c.cutoff_points.get(LATEST_CUTOFF_YEAR)
         comparison.append({
             'name':      c.name,
             'inst':      off.institution.name if off else '—',

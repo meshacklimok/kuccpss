@@ -7,9 +7,111 @@ Format: `[YYYY-MM-DD]` — description of what changed and why.
 ## [Unreleased]
 
 ### In Progress
-- Cluster requirements data — 3 clusters still have placeholder descriptions: 1A, 2B, 3D (need official KUCCPS PDF)
 - Career engine AI recommendation text — CareerNext AI chat live; `generate_ai_recommendation()` still returns stub text in non-chat flow
 - Mentorship B2C payout disbursement — IntaSend "Send Money" must be activated on account before auto-payouts work
+
+---
+
+## [2026-09-29] — Admin actions reach users
+
+### Fixed
+- Payments: admin "Mark completed" (and editing status to Completed) now runs the same fulfilment as the webhook via `payments.views.fulfil_completed_payment()` — feature unlock, AI credits, receipt email, affiliate commission; mentorship payments confirm the session. Previously it only flipped the status and the feature stayed locked
+- Mentor withdrawals: "Mark processed" / "Reject" now handle `failed` requests (failed B2C payouts are what admins must settle), debit the wallet only when processing, skip insufficient balances, and email the mentor on rejection
+- Mentorship "Mark refunded" no longer debits the mentor for sessions that were never confirmed; it frees the slot, marks the payment refunded and emails the mentee
+- Mentor approval email shows the real payout (was hardcoded KES 70); rejection email no longer says "you may re-apply"; ticking Approved/Rejected on the change form now emails the applicant
+- Reject-mentor button and broadcast "Send Now" are no longer state-changing GET links: both show a confirmation page and act on POST; broadcasts are claimed atomically so a double-submit can't send twice, and are delivered in a background thread (no request timeout); the status flips to Failed with the delivered count if sending stops early
+- Suspending a user now signs out their existing sessions (`SuspendedUserMiddleware`); admins can't suspend themselves; suspend/unsuspend counts are correct when the list is filtered
+- Admin links in failed-withdrawal alert emails pointed to `/admin/…` (404) — now `reverse()` to `/cn-staff/…`
+- Affiliate commission "Mark paid out" debited the wallet per commission while processing a withdrawal also marks pending commissions paid out, risking a double debit — it now records one processed `AffiliateWithdrawalRequest` per affiliate, debits once, skips insufficient balances and emails the affiliate
+- Affiliate payout emails linked to `/accounts/affiliate-dashboard/` (404) — now `reverse('accounts:affiliate_dashboard')`
+
+### Added
+- Affiliate withdrawal admin actions: mark processed (manual payout) / mark failed, both notifying the affiliate
+- "Activate as affiliate" emails each newly activated affiliate with a dashboard link
+- Confirmation messages on every bulk action that lacked them (feedback resolve/dismiss, session actions)
+- `accounts/test_admin_smoke.py` — renders every admin changelist/add page and exercises the user-facing actions
+
+---
+
+## [2026-09-29] — Course cutoff trend chart
+
+### Changed
+- Chart logic moved into `courses.views._cutoff_trend()`; offerings need 2+ non-empty years to plot, and years come from the data instead of a hardcoded 2021–2025 list (table view included)
+- "Average" line now averages only institutions with a cutoff in every plotted year — previously the sparse 2025 data made the average jump
+- Colours use the validated categorical palette with light and dark steps; the chart recolours when the dark-mode toggle flips. Lines are straight (no curve smoothing overshooting the real values)
+- Course detail offerings query now also selects `institution_type` (removes an N+1 in the table view)
+
+### Added
+- "Add another institution" picker on the trend chart — any institution beyond the top six can be plotted as a highlighted line
+
+---
+
+## [2026-09-28] — Database linkage cleanup
+
+### Fixed
+- 19 Craft (L3) / Artisan (L4) `CourseCategory` rows were still attached to the opposite level after the earlier course-level swap fix, leaving 94 courses whose category belonged to another course type — categories moved to the matching type and slugs renamed (`a4-*` ↔ `c3-*`)
+- Stale `accounts.applicationtracking` content type (and its 4 permissions) removed
+
+### Removed
+- 106 non-degree courses with no `CourseOffering` (no institution) — mostly Short Course / Trade Test / Proficiency / Professional, plus 13 L5, 11 L3 and 4 L4 entries
+- Empty course types: TVET Short Course, TVET Trade Test, TVET Proficiency, TVET Professional
+- `seed_tvet_craft_artisan` (used the old swapped L3/L4 mapping and would wipe offerings) and `seed_tvet_remaining` (created courses without offerings)
+- Short Course career pathway (home card, KCSE-input and floating-modal options, pathway maps in `career/views.py` / `clusterpoints/eligibility.py`) and the four types from `seed_tvet.py`; `/career/input/shortcourse/` now redirects to the career home
+
+---
+
+## [2026-09-28] — Database performance & reliability pass
+
+### Changed
+- `calculate_all_clusters` persists the 18 results with bulk update/create + one M2M rewrite (~90 queries → 11); formula untouched
+- `PageTrackingMiddleware` writes logs through one bounded per-process queue/worker instead of a thread + fresh DB connection per request; bots no longer get a DB session row per hit
+- `SiteSetting.get` cached (5 min, invalidated on save/delete); `deadline_banner` no longer re-queries every request when no banner is active
+- Quiz submission uses prefetched options + `bulk_create`; mentorship rating distribution is one grouped query; shortlist PDF and cluster detail no longer bypass prefetch / re-count
+- `CONN_HEALTH_CHECKS` on persistent DB connections; Redis cache socket timeouts
+- `backup_db` now writes compressed custom-format dumps, keeps SSL params from `DATABASE_URL` (Neon), and prunes to `--keep` (default 7)
+
+### Added
+- `.github/workflows/db-backup.yml`: daily encrypted off-site `pg_dump` (needs `BACKUP_DATABASE_URL` + `BACKUP_PASSPHRASE` secrets; 30-day artifact retention)
+- Index `(user, is_read, created_at)` on Notification; functional `UPPER(mpesa_ref)` index on Transaction
+- `build.sh` runs `clearsessions` and `purge_notifications` on deploy
+- `redis` in requirements (RedisCache/django-q would crash without it when `REDIS_URL` is set)
+
+### Removed
+- 22 duplicate single-column indexes on fields already indexed by `unique=True` or a ForeignKey (migrations `*_db_index_cleanup`)
+
+---
+
+## [2026-09-27] — KUCCPS-style programme search & variations
+
+### Added
+- `courses/programmes.py`: reduces course names to a core programme ("BACHELOR OF SCIENCE (DATA SCIENCE)" / "BSc in Data Science" / "Bachelor of Data Science" → "data science")
+- `/courses/?q=` programme search (`templates/courses/programme_search.html`): results grouped by programme with institution counts and all name variations, best match first, filterable by course type. The courses hub search box and the navbar "see all" link now land here
+- Course detail "Variations of …" card: same programme under other names + related programmes (e.g. Data Science and Analytics), each listing its institutions and latest cutoff
+
+### Fixed
+- In-page course search matched ANY word ≥3 chars ("data science" returned every "Bachelor of Science …" course); now every significant word must match and results are ranked by relevance
+
+---
+
+## [2026-09-27] — KUCCPS 2025 cutoffs, 18 clusters, per-course requirements
+
+### Added
+- `import_kuccps_portal` management command + `scripts/scrape_kuccps_portal.py` → `data/kuccps_portal_degrees.json` (1,126 portal programme pages, 2,226 offerings)
+- `import_kuccps_institutions` management command (`--dry-run`, `--no-create`) + `data/kuccps_portal_institutions.json` (514 rows from students.kuccps.net/institutions/): sets institution type (public/private university, KMTC, TTC, public/private TVET) and location as "Town, County County" from the portal. Renames university TVET wings stored under the parent university's name, and institutes upgraded to National Polytechnics; creates 85 portal institutions missing locally. Kaimosi Friends University → public; 4 colleges private → public TVET. Duplicate local rows are reported and merged by the new `merge_institutions` command (Kaiboi TTI → Kaiboi National Polytechnic, KU – Mama Ngina → Mama Ngina University College, Kirinyaga Central TVC, Laikipia/Tharaka University TVET, stray "Nairobi kmtc" → KMTC Nairobi; offerings/reviews/promotions/mentors/analytics logs moved, shared courses' cutoffs combined); institutions not on the portal (mostly private TVETs) are untouched
+- 2025 cutoffs for 958 degree offerings; 2023/2024 values refreshed from the portal. Year keys are the portal's KCSE-year labels (no shift)
+- `Course.entry_requirements` (migration `courses/0010`) — the 4 cluster-subject slots; `subject_requirements` filled from the portal for 700 courses (GSC ignored)
+- `programme_code` on offerings; 7 new universities/university colleges, 145 new degree courses, 331 new offerings
+- `clusters/constants.py` — the 18 KUCCPS cluster names
+- [KUCCPS_2025_CLUSTER_MOVES.md](KUCCPS_2025_CLUSTER_MOVES.md) — the 98 courses that moved cluster
+
+### Changed
+- 20 calculator clusters → the 18 KUCCPS clusters (101–118), subject slots rebuilt from the portal; 119/120 and all 61 sub-clusters removed; saved results recalculated
+- "Latest cutoff" shown to students = the `LATEST_CUTOFF_YEAR` (2025) value only, "—" when KUCCPS published none; eligibility still uses the newest year on record (`CourseOffering.newest_cutoff()`), and match results label a non-2025 cutoff with its year
+- Predictor, cluster list/detail, PDF export, CareerNext AI prompt and all copy now say 18 clusters; predictor maps clusters by `number − 100`
+- `seed_clusters` builds clusters from the portal data; admin/CSV cutoff editing gains 2025, caps at 48 and merges instead of wiping other years
+- `DATA_VERSION` 2025, `DATA_CYCLE` 2026/2027, `DATA_UPDATED` September 2026
+- FAQ "What are the 18 KUCCPS clusters?" (old example wrongly called Cluster 1 Medicine)
+- Degree `CareerSessionSnapshot`s still keyed on the old 20 clusters deleted (they regenerate on the student's next Degree results view); `llms.txt` KMTC count 88 → 98 campuses; `seed_tvet` docstring warns to re-run `import_kuccps_institutions` + `merge_institutions` after re-seeding
 
 ---
 
