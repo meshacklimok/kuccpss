@@ -5,11 +5,10 @@ from datetime import time as dt_time, datetime
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from kuccpss.email_utils import notify_admin_withdrawal, send_branded_email
+from kuccpss.email_utils import send_branded_email
 from django.db.models import Q
 from django.http import JsonResponse, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
-from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
@@ -450,9 +449,9 @@ def session_status(request, token):
             session_full = MentorshipSession.objects.select_related(
                 "mentor", "mentor__user", "mentee", "slot"
             ).get(pk=session.pk)
-            if _send_booking_confirmation(session_full):
-                session_full.confirmation_sent = True
-                session_full.save(update_fields=["confirmation_sent"])
+            _send_booking_confirmation(session_full)
+            session_full.confirmation_sent = True
+            session_full.save(update_fields=["confirmation_sent"])
         except Exception:
             pass
 
@@ -609,9 +608,9 @@ def _confirm_session_after_payment(session: MentorshipSession, source: str = "un
     mentor.total_earned += session.mentor_payout
     mentor.save(update_fields=["wallet_balance", "total_earned"])
     if not session.confirmation_sent:
-        if _send_booking_confirmation(session):
-            session.confirmation_sent = True
-            session.save(update_fields=["confirmation_sent"])
+        _send_booking_confirmation(session)
+        session.confirmation_sent = True
+        session.save(update_fields=["confirmation_sent"])
     _maybe_auto_pay_mentor(mentor)
 
 
@@ -907,12 +906,9 @@ def _send_booking_confirmation(session: MentorshipSession):
             ),
             user_email=session.mentee.email,
             attachments=[(ics_filename, ics_content, "text/calendar")],
-            fail_silently=False,
         )
-        mentee_sent = True
         logger.info("Booking confirmation sent to mentee %s for session %s", session.mentee.email, session.token)
     except Exception as exc:
-        mentee_sent = False
         logger.error("Failed to send booking confirmation to mentee %s: %s", session.mentee.email, exc)
 
     # ── Email to MENTOR ───────────────────────────────────────────────────────
@@ -948,7 +944,6 @@ def _send_booking_confirmation(session: MentorshipSession):
             ),
             user_email=session.mentor.user.email,
             attachments=[(ics_filename, ics_content, "text/calendar")],
-            fail_silently=False,
         )
         logger.info("Booking confirmation sent to mentor %s for session %s", session.mentor.user.email, session.token)
     except Exception as exc:
@@ -989,8 +984,6 @@ def _send_booking_confirmation(session: MentorshipSession):
         )
     except Exception:
         pass
-
-    return mentee_sent
 
 
 # ── Calendar download (ics) ──────────────────────────────────────────────────
@@ -1197,26 +1190,4 @@ def request_withdrawal(request):
         logger.error("Mentor payout failed for %s: %s", mentor.pk, exc)
         messages.error(request, "Payout failed — please try again or contact support.")
 
-    notify_admin_withdrawal(
-        kind="Mentor",
-        name=mentor.display_name,
-        email=mentor.user.email,
-        amount=amount,
-        mpesa_number=mpesa,
-        status=wr.status,
-        balance_after=mentor.wallet_balance,
-        error=wr.admin_note,
-        admin_path=reverse("admin:mentorship_withdrawalrequest_change", args=[wr.pk]),
-    )
     return redirect("mentorship:dashboard")
-
-
-@login_required
-def withdrawal_history(request):
-    mentor = get_object_or_404(MentorProfile, user=request.user)
-    withdrawals = mentor.withdrawals.all()
-    return render(request, "mentorship/withdrawal_history.html", {
-        "mentor": mentor,
-        "withdrawals": withdrawals,
-        "total_withdrawn": sum(w.amount for w in withdrawals if w.status == "processed"),
-    })

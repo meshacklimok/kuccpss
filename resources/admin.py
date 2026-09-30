@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.utils.html import format_html
-from .models import ResourceCategory, Resource, Article, FAQItem, SuccessStory, SiteSetting, Announcement, SiteFeedback, DeadlineBanner, CalendarCycle, CalendarEvent
+from .models import ResourceCategory, Resource, Article, FAQItem, SuccessStory, SiteSetting, Announcement, SiteFeedback, DeadlineBanner
 
 
 @admin.register(ResourceCategory)
@@ -141,13 +141,11 @@ class SiteFeedbackAdmin(admin.ModelAdmin):
 
     @admin.action(description='Mark selected as Resolved')
     def mark_resolved(self, request, queryset):
-        n = queryset.update(status='resolved')
-        self.message_user(request, f"{n} feedback item(s) marked as resolved.")
+        queryset.update(status='resolved')
 
     @admin.action(description='Mark selected as Dismissed')
     def mark_dismissed(self, request, queryset):
-        n = queryset.update(status='dismissed')
-        self.message_user(request, f"{n} feedback item(s) dismissed.")
+        queryset.update(status='dismissed')
 
     def short_message(self, obj):
         return obj.message[:70] + ('…' if len(obj.message) > 70 else '')
@@ -155,22 +153,3 @@ class SiteFeedbackAdmin(admin.ModelAdmin):
 
     def has_add_permission(self, request):
         return False
-
-
-class CalendarEventInline(admin.TabularInline):
-    model  = CalendarEvent
-    extra  = 1
-    fields = ('order', 'phase', 'title', 'date_label', 'start_date', 'end_date',
-              'status', 'icon', 'color', 'description')
-    ordering = ('order', 'id')
-
-
-@admin.register(CalendarCycle)
-class CalendarCycleAdmin(admin.ModelAdmin):
-    list_display  = ('title', 'tab_label', 'is_current', 'is_completed', 'is_active', 'order', 'event_count')
-    list_editable = ('is_current', 'is_completed', 'is_active', 'order')
-    inlines       = [CalendarEventInline]
-
-    @admin.display(description='Events')
-    def event_count(self, obj):
-        return obj.events.count()

@@ -230,15 +230,6 @@ def _grant_ai_credits_if_applicable(payment: "Payment") -> None:
         logger.error("AI credit top-up failed for payment %s: %s", payment.pk, exc)
 
 
-def fulfil_completed_payment(payment: "Payment") -> None:
-    """Everything that must happen once a Payment becomes 'completed', whichever
-    path confirmed it (webhook, IntaSend poll, M-Pesa code, or admin override)."""
-    _grant_ai_credits_if_applicable(payment)
-    lock_submission_on_payment(payment)
-    _send_payment_receipt(payment)
-    credit_affiliate_commission(payment)
-
-
 @login_required
 def payment_required(request):
     from django.utils.http import url_has_allowed_host_and_scheme
@@ -432,8 +423,16 @@ def mpesa_webhook(request):
 
     payment.save(update_fields=["status", "updated_at"])
 
+    # Grant AI chat credits if applicable
     if state == "COMPLETE":
-        fulfil_completed_payment(payment)
+        _grant_ai_credits_if_applicable(payment)
+        lock_submission_on_payment(payment)
+        _send_payment_receipt(payment)
+
+    # Award affiliate commission if the paying user was referred by an active affiliate.
+    # Mentorship bookings and AI chat top-ups never earn commission.
+    if state == "COMPLETE":
+        credit_affiliate_commission(payment)
 
     return HttpResponse(status=200)
 
@@ -470,7 +469,10 @@ def verify_payment(request, payment_id):
     if remote_state == "COMPLETE":
         payment.status = "completed"
         payment.save(update_fields=["status", "updated_at"])
-        fulfil_completed_payment(payment)
+        _grant_ai_credits_if_applicable(payment)
+        lock_submission_on_payment(payment)
+        _send_payment_receipt(payment)
+        credit_affiliate_commission(payment)
         return JsonResponse({"status": "completed", "feature": payment.feature, "message": "Payment confirmed!"})
     elif remote_state == "FAILED":
         payment.status = "failed"
@@ -523,7 +525,10 @@ def verify_by_transaction_code(request):
             payment.status = "completed"
             payment.mpesa_code = mpesa_code
             payment.save(update_fields=["status", "mpesa_code", "updated_at"])
-            fulfil_completed_payment(payment)
+            _grant_ai_credits_if_applicable(payment)
+            lock_submission_on_payment(payment)
+            _send_payment_receipt(payment)
+            credit_affiliate_commission(payment)
         logger.info("Transaction code verified: user=%s code=%s payment=%s", request.user.email, mpesa_code, payment.pk)
         return JsonResponse({
             "status": "completed",

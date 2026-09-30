@@ -1,8 +1,7 @@
-from django.contrib import admin, messages
+from django.contrib import admin
 from django.conf import settings
 from django.http import HttpResponseRedirect
-from django.shortcuts import get_object_or_404, render
-from django.utils import timezone
+from django.shortcuts import get_object_or_404
 from django.urls import path, reverse
 from django.utils.html import format_html, mark_safe
 from kuccpss.email_utils import send_branded_email
@@ -182,7 +181,8 @@ class MentorProfileAdmin(admin.ModelAdmin):
         url = reverse("admin:mentorship_reject_mentor", args=[obj.pk])
         return format_html(
             '<a href="{}" style="background:#dc3545;color:#fff;padding:2px 10px;'
-            'border-radius:3px;text-decoration:none;font-size:12px;font-weight:bold;">'
+            'border-radius:3px;text-decoration:none;font-size:12px;font-weight:bold;"'
+            ' onclick="return confirm(\'Reject this mentor application? They will NOT be able to reapply.\');">'
             '⛔ Reject</a>',
             url,
         )
@@ -203,29 +203,11 @@ class MentorProfileAdmin(admin.ModelAdmin):
 
     def _reject_mentor_view(self, request, pk):
         mentor = get_object_or_404(MentorProfile, pk=pk)
-        change_url = reverse("admin:mentorship_mentorprofile_change", args=[pk])
 
-        if mentor.is_rejected:
-            self.message_user(request, f"{mentor.display_name} is already rejected.", level="warning")
-            return HttpResponseRedirect(change_url)
-
-        # GET only shows a confirmation page — the state change + emails need a POST.
-        if request.method != "POST":
-            return render(request, "admin/mentorship/mentorprofile/reject_confirm.html", {
-                **self.admin_site.each_context(request),
-                "title": f"Reject {mentor.display_name}?",
-                "mentor": mentor,
-                "opts": self.model._meta,
-                "change_url": change_url,
-            })
-
-        reason = request.POST.get("rejection_reason", "").strip()
-        if reason:
-            mentor.rejection_reason = reason
         mentor.is_rejected = True
         mentor.is_approved = False
         mentor.is_active = False
-        mentor.save(update_fields=["is_rejected", "is_approved", "is_active", "rejection_reason"])
+        mentor.save(update_fields=["is_rejected", "is_approved", "is_active"])
 
         self._send_rejection_emails(request, mentor)
 
@@ -262,7 +244,7 @@ class MentorProfileAdmin(admin.ModelAdmin):
             banner_color="amber",
             greeting=f"Hi {mentor.display_name},",
             body_lines=rejection_lines,
-            note="This decision is final and the application cannot be resubmitted.",
+            note="You may re-apply in the future once the issues have been resolved.",
             user_email=mentor.user.email,
         )
 
@@ -280,70 +262,39 @@ class MentorProfileAdmin(admin.ModelAdmin):
                 {"label": "Email",  "value": mentor.user.email},
                 {"label": "Reason", "value": mentor.rejection_reason or "No reason provided"},
             ],
-            cta_url=SITE_URL + reverse("admin:mentorship_mentorprofile_change", args=[mentor.pk]),
+            cta_url=f"https://www.careernext.co.ke/cn-staff/mentorship/mentorprofile/{mentor.pk}/change/",
             cta_label="View Application →",
         )
 
     # ── Bulk actions ──────────────────────────────────────────────────────────
 
-    def _send_approval_email(self, mentor):
-        send_branded_email(
-            to=mentor.user.email,
-            subject="CareerNext — You're Approved as a Mentor!",
-            heading="You're Approved!",
-            banner_label="✓ Application Approved",
-            banner_color="green",
-            greeting=f"Hi {mentor.display_name},",
-            body_lines=[
-                "Great news — your CareerNext mentor profile has been approved!",
-                "Students studying your course can now book a 15-minute session with you. Start by adding your availability slots from your dashboard.",
-            ],
-            table_rows=[
-                {"label": "Earnings per session", "value": f"KES {mentor.effective_mentor_payout()}", "highlight": True},
-                {"label": "Session duration",     "value": "15 minutes"},
-            ],
-            cta_url="https://www.careernext.co.ke/mentorship/dashboard/",
-            cta_label="Set My Availability →",
-            note="Welcome to the CareerNext Mentor Community! If you have any questions, email us at support@careernext.co.ke.",
-            user_email=mentor.user.email,
-        )
-
-    def save_model(self, request, obj, form, change):
-        """Ticking Approved / Rejected on the change form notifies the applicant,
-        exactly like the bulk actions and the Reject button do."""
-        before = None
-        if change:
-            before = MentorProfile.objects.filter(pk=obj.pk).values("is_approved", "is_rejected").first()
-        if obj.is_rejected:
-            obj.is_approved = False
-            obj.is_active = False
-        super().save_model(request, obj, form, change)
-        if not before:
-            return
-        if obj.is_rejected and not before["is_rejected"]:
-            self._send_rejection_emails(request, obj)
-            self.message_user(request, f"{obj.display_name} rejected and notified by email.")
-        elif obj.is_approved and not before["is_approved"]:
-            if not obj.is_active:
-                obj.is_active = True
-                obj.save(update_fields=["is_active"])
-            self._send_approval_email(obj)
-            self.message_user(request, f"{obj.display_name} approved and notified by email.")
-
     def approve_selected(self, request, queryset):
-        count = 0
         for mentor in queryset.filter(is_approved=False):
             mentor.is_approved = True
             mentor.is_rejected = False
             mentor.is_active = True
             mentor.save(update_fields=["is_approved", "is_rejected", "is_active"])
-            self._send_approval_email(mentor)
-            count += 1
-        skipped = queryset.count() - count
-        msg = f"Approved and notified {count} mentor(s)."
-        if skipped:
-            msg += f" {skipped} were already approved and were skipped."
-        self.message_user(request, msg)
+            send_branded_email(
+                to=mentor.user.email,
+                subject="CareerNext — You're Approved as a Mentor!",
+                heading="You're Approved!",
+                banner_label="✓ Application Approved",
+                banner_color="green",
+                greeting=f"Hi {mentor.display_name},",
+                body_lines=[
+                    "Great news — your CareerNext mentor profile has been approved!",
+                    "Students studying your course can now book a 15-minute session with you. Start by adding your availability slots from your dashboard.",
+                ],
+                table_rows=[
+                    {"label": "Earnings per session", "value": "KES 70", "highlight": True},
+                    {"label": "Session duration",     "value": "15 minutes"},
+                ],
+                cta_url="https://www.careernext.co.ke/mentorship/dashboard/",
+                cta_label="Set My Availability →",
+                note="Welcome to the CareerNext Mentor Community! If you have any questions, email us at support@careernext.co.ke.",
+                user_email=mentor.user.email,
+            )
+        self.message_user(request, f"Approved and notified {queryset.count()} mentor(s).")
     approve_selected.short_description = "Approve selected mentors and notify"
 
     def reject_selected(self, request, queryset):
@@ -363,8 +314,8 @@ class MentorProfileAdmin(admin.ModelAdmin):
     reject_selected.short_description = "Reject selected (blocks reapplication + notifies)"
 
     def deactivate_selected(self, request, queryset):
-        n = queryset.update(is_active=False)
-        self.message_user(request, f"{n} mentor(s) deactivated — they no longer appear in the directory.")
+        queryset.update(is_active=False)
+        self.message_user(request, "Selected mentors deactivated.")
     deactivate_selected.short_description = "Deactivate selected mentors"
 
 
@@ -411,21 +362,6 @@ class MentorshipSessionAdmin(admin.ModelAdmin):
         }),
     )
 
-    def save_model(self, request, obj, form, change):
-        """Editing status to 'confirmed' on a pending session must run the same
-        confirmation flow as the webhook/action (wallet credit + emails)."""
-        old_status = None
-        if change and "status" in form.changed_data and obj.status == "confirmed":
-            old_status = type(obj).objects.filter(pk=obj.pk).values_list("status", flat=True).first()
-        if old_status in ("pending_payment", "pending_manual_verification"):
-            from mentorship.views import _confirm_session_after_payment
-            obj.status = old_status
-            super().save_model(request, obj, form, change)
-            _confirm_session_after_payment(obj, source="mentorship:admin_status_edit")
-            self.message_user(request, "Session confirmed — mentor credited and both parties notified.")
-            return
-        super().save_model(request, obj, form, change)
-
     def short_token(self, obj):
         return str(obj.token)[:8] + "…"
     short_token.short_description = "Token"
@@ -459,59 +395,22 @@ class MentorshipSessionAdmin(admin.ModelAdmin):
     status_badge.short_description = "Status"
 
     def mark_completed(self, request, queryset):
-        count = 0
         for session in queryset.filter(status="confirmed"):
             session.status = "completed"
             session.save(update_fields=["status"])
             session.mentor.refresh_stats()
-            count += 1
-        self.message_user(
-            request,
-            f"{count} session(s) marked as completed. Only confirmed sessions can be completed.",
-            messages.SUCCESS if count else messages.WARNING,
-        )
+        self.message_user(request, "Sessions marked as completed.")
     mark_completed.short_description = "Mark selected as completed"
 
     def mark_refunded(self, request, queryset):
-        from payments.models import Payment
-        count = 0
         for session in queryset.filter(status__in=["confirmed", "pending_payment", "pending_manual_verification"]):
-            was_credited = session.status == "confirmed"
             session.status = "refunded"
             session.save(update_fields=["status"])
-            # Release the slot so it can be booked again.
-            if session.slot_id:
-                TimeSlot.objects.filter(pk=session.slot_id).update(is_booked=False)
-            # Only confirmed sessions ever credited the mentor's wallet.
-            if was_credited:
-                mentor = session.mentor
-                mentor.wallet_balance = max(0, mentor.wallet_balance - session.mentor_payout)
-                mentor.total_earned = max(0, mentor.total_earned - session.mentor_payout)
-                mentor.save(update_fields=["wallet_balance", "total_earned"])
-            Payment.objects.filter(mentorship_session=session).update(status="refunded")
-            send_branded_email(
-                to=session.mentee.email,
-                subject="CareerNext — Mentorship Session Refunded",
-                heading="Your Session Has Been Refunded",
-                banner_label="Refund",
-                banner_color="amber",
-                greeting="Hi,",
-                body_lines=[
-                    f"Your mentorship session with {session.mentor.display_name} has been cancelled and marked for refund.",
-                    "The amount will be returned to the M-Pesa number you paid with.",
-                ],
-                table_rows=[
-                    {"label": "Amount", "value": f"KES {session.amount}", "highlight": True},
-                    {"label": "Slot",   "value": session.slot.datetime_display if session.slot_id else "—"},
-                ],
-                user_email=session.mentee.email,
-            )
-            count += 1
-        self.message_user(
-            request,
-            f"{count} session(s) refunded — slots released and mentees notified.",
-            messages.SUCCESS if count else messages.WARNING,
-        )
+            mentor = session.mentor
+            mentor.wallet_balance = max(0, mentor.wallet_balance - session.mentor_payout)
+            mentor.total_earned = max(0, mentor.total_earned - session.mentor_payout)
+            mentor.save(update_fields=["wallet_balance", "total_earned"])
+        self.message_user(request, "Sessions marked as refunded.")
     mark_refunded.short_description = "Mark selected as refunded"
 
     def confirm_manual_payment(self, request, queryset):
@@ -523,15 +422,11 @@ class MentorshipSessionAdmin(admin.ModelAdmin):
         count = 0
         for session in queryset.filter(status="pending_manual_verification"):
             try:
-                _confirm_session_after_payment(session, source="mentorship:admin_action")
+                _confirm_session_after_payment(session)
                 count += 1
             except Exception as exc:
                 self.message_user(request, f"Error confirming session {session.token}: {exc}", level="error")
-        self.message_user(
-            request,
-            f"Confirmed {count} session(s) and notified both parties. Only sessions pending manual verification are affected.",
-            messages.SUCCESS if count else messages.WARNING,
-        )
+        self.message_user(request, f"Confirmed {count} session(s) and notified both parties.")
     confirm_manual_payment.short_description = "Confirm manual payment and notify both parties"
 
 
@@ -548,18 +443,14 @@ class WithdrawalRequestAdmin(admin.ModelAdmin):
     mentor_name.short_description = "Mentor"
 
     def mark_processed(self, request, queryset):
-        """For manual M-Pesa payouts — typically requests whose automatic B2C payout failed.
-        The wallet is only debited here, since failed/pending requests never debited it."""
-        count, skipped = 0, []
-        for wr in queryset.filter(status__in=["pending", "failed"]).select_related("mentor__user"):
+        from django.utils import timezone as tz
+        for wr in queryset.filter(status="pending"):
             mentor = wr.mentor
-            if mentor.wallet_balance < wr.amount:
-                skipped.append(f"{mentor.display_name} (wallet KES {mentor.wallet_balance} < KES {wr.amount})")
-                continue
-            mentor.wallet_balance -= wr.amount
-            mentor.save(update_fields=["wallet_balance"])
+            if mentor.wallet_balance >= wr.amount:
+                mentor.wallet_balance -= wr.amount
+                mentor.save(update_fields=["wallet_balance"])
             wr.status = "processed"
-            wr.processed_at = timezone.now()
+            wr.processed_at = tz.now()
             wr.save(update_fields=["status", "processed_at"])
             send_branded_email(
                 to=mentor.user.email,
@@ -578,50 +469,13 @@ class WithdrawalRequestAdmin(admin.ModelAdmin):
                 cta_label="View Dashboard →",
                 user_email=mentor.user.email,
             )
-            count += 1
-        self.message_user(
-            request,
-            f"{count} withdrawal(s) marked as processed, wallets debited and mentors notified.",
-            messages.SUCCESS if count else messages.WARNING,
-        )
-        if skipped:
-            self.message_user(request, "Skipped (insufficient balance): " + "; ".join(skipped), messages.ERROR)
-    mark_processed.short_description = "Mark selected as processed (paid manually) and notify mentor"
+        self.message_user(request, "Withdrawals marked as processed and mentors notified.")
+    mark_processed.short_description = "Mark selected as processed and notify mentor"
 
     def mark_rejected(self, request, queryset):
-        count = 0
-        for wr in queryset.filter(status__in=["pending", "failed"]).select_related("mentor__user"):
-            wr.status = "rejected"
-            wr.processed_at = timezone.now()
-            wr.save(update_fields=["status", "processed_at"])
-            mentor = wr.mentor
-            body = ["Your withdrawal request could not be completed. The amount remains in your CareerNext wallet."]
-            if wr.admin_note:
-                body.append(f"Note: {wr.admin_note}")
-            send_branded_email(
-                to=mentor.user.email,
-                subject="CareerNext — Withdrawal Not Completed",
-                heading="Withdrawal Not Completed",
-                banner_label="Withdrawal Update",
-                banner_color="amber",
-                greeting=f"Hi {mentor.display_name},",
-                body_lines=body,
-                table_rows=[
-                    {"label": "Amount",         "value": f"KES {wr.amount}"},
-                    {"label": "Wallet balance", "value": f"KES {mentor.wallet_balance}", "highlight": True},
-                ],
-                cta_url="https://www.careernext.co.ke/mentorship/dashboard/",
-                cta_label="View Dashboard →",
-                note="Please check your M-Pesa number and try again, or reply to this email for help.",
-                user_email=mentor.user.email,
-            )
-            count += 1
-        self.message_user(
-            request,
-            f"{count} withdrawal(s) rejected and mentors notified. Funds stay in their wallets.",
-            messages.SUCCESS if count else messages.WARNING,
-        )
-    mark_rejected.short_description = "Reject selected withdrawal requests and notify mentor"
+        queryset.filter(status="pending").update(status="rejected")
+        self.message_user(request, "Withdrawals rejected.")
+    mark_rejected.short_description = "Reject selected withdrawal requests"
 
 
 @admin.register(MentorshipConfig)

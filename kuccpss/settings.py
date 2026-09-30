@@ -152,7 +152,6 @@ MIDDLEWARE = [
     'kuccpss.middleware.MaintenanceModeMiddleware',
     'kuccpss.middleware.PageTrackingMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
-    'kuccpss.middleware.SuspendedUserMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'allauth.account.middleware.AccountMiddleware',
     'kuccpss.middleware.ReferralMiddleware',
@@ -162,9 +161,9 @@ MIDDLEWARE = [
 # ── Data versioning — update each KUCCPS cycle ───────────────────────────────
 # These constants appear in templates and results pages so students always know
 # which cycle's data they are viewing.
-DATA_VERSION    = os.environ.get('DATA_VERSION', '2025')
-DATA_CYCLE      = os.environ.get('DATA_CYCLE', '2026/2027')
-DATA_UPDATED    = os.environ.get('DATA_UPDATED', 'September 2026')
+DATA_VERSION    = os.environ.get('DATA_VERSION', '2024')
+DATA_CYCLE      = os.environ.get('DATA_CYCLE', '2025/2026')
+DATA_UPDATED    = os.environ.get('DATA_UPDATED', 'March 2025')
 
 ROOT_URLCONF = 'kuccpss.urls'
 
@@ -191,7 +190,6 @@ TEMPLATES = [
                 'accounts.context_processors.unread_notifications',
                 'accounts.context_processors.active_announcements',
                 'resources.context_processors.deadline_banner',
-                'resources.context_processors.social_links',
                 'analytics.context_processors.posthog_keys',
                 'analytics.context_processors.sentry_context',
                 'analytics.context_processors.ga_context',
@@ -216,9 +214,6 @@ DATABASES = {
         'HOST': os.environ.get('DB_HOST', 'localhost'),
         'PORT': os.environ.get('DB_PORT', '5432'),
         'CONN_MAX_AGE': 600,
-        # Ping a reused persistent connection before handing it to a request, so a
-        # connection dropped by the server (restart, idle suspend) doesn't 500 a page.
-        'CONN_HEALTH_CHECKS': True,
         'OPTIONS': {
             'connect_timeout': 10,
         },
@@ -259,12 +254,7 @@ if _REDIS_URL:
         'BACKEND': 'django.core.cache.backends.redis.RedisCache',
         'LOCATION': _REDIS_URL,
         'TIMEOUT': 300,
-        'OPTIONS': {
-            'max_connections': 20,
-            # Fail fast rather than hang a gunicorn thread if Redis stalls.
-            'socket_connect_timeout': 3,
-            'socket_timeout': 3,
-        },
+        'OPTIONS': {'max_connections': 20},
         'KEY_PREFIX': 'cn',
     }
 
@@ -329,12 +319,6 @@ LOGOUT_REDIRECT_URL = "/accounts/login/"
 SESSION_COOKIE_AGE = 90 * 24 * 3600  # 90 days
 SESSION_EXPIRE_AT_BROWSER_CLOSE = False  # persist cookie after browser closes
 SESSION_SAVE_EVERY_REQUEST = True  # slide the 90-day window on each request
-if DEBUG:
-    # Browser cookies ignore the port, so any other Django dev server on
-    # 127.0.0.1 (e.g. :8000) shares — and overwrites — the default "sessionid"
-    # cookie, logging you out here. Production keeps the default name so live
-    # users aren't all logged out.
-    SESSION_COOKIE_NAME = 'kuccpss_sessionid'
 
 AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
@@ -421,7 +405,6 @@ if _DATABASE_URL:
     )
     if _is_pooled:
         DATABASES['default']['DISABLE_SERVER_SIDE_CURSORS'] = True
-    DATABASES['default']['CONN_HEALTH_CHECKS'] = _conn_max_age > 0
 
     # parse() replaces OPTIONS wholesale, dropping the connect_timeout set above.
     # Restore it so a stalled DB fails fast instead of tying up a gunicorn worker.

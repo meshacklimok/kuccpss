@@ -1,11 +1,9 @@
 import logging
-import queue
 import threading
 import time
 
 from django.core.cache import cache
-from django.http import HttpResponse, JsonResponse
-from django.template.loader import render_to_string
+from django.http import JsonResponse
 from django.shortcuts import render
 
 from kuccpss.ip_utils import get_client_ip
@@ -73,27 +71,6 @@ class ReferralMiddleware:
                 cache.set(cache_key, is_valid, 300)
             if is_valid:
                 request.session['referral_code'] = code
-        return self.get_response(request)
-
-
-class SuspendedUserMiddleware:
-    """
-    Signs out a user who was suspended (or deactivated) in admin while logged in.
-    Login already refuses suspended users; this closes their existing sessions.
-    Must sit after AuthenticationMiddleware and MessageMiddleware.
-    """
-    def __init__(self, get_response):
-        self.get_response = get_response
-
-    def __call__(self, request):
-        user = getattr(request, 'user', None)
-        if user is not None and user.is_authenticated and (user.is_suspended or not user.is_active):
-            from django.contrib import messages
-            from django.contrib.auth import logout
-            from django.shortcuts import redirect
-            logout(request)
-            messages.error(request, "Your account is inactive or suspended. Contact support if you think this is a mistake.")
-            return redirect('accounts:login')
         return self.get_response(request)
 
 
@@ -280,71 +257,39 @@ class PageTrackingMiddleware:
             # request object must not be touched from the background thread.
             ua  = request.META.get('HTTP_USER_AGENT', '')
             ip  = get_client_ip(request)
-            device = self._detect_device(ua)
             user_id = request.user.pk if request.user.is_authenticated else None
             sk = ''
             try:
-                # Bots never send the cookie back, so creating a session for them
-                # would insert a fresh django_session row on every single hit.
-                if not request.session.session_key and device != 'bot':
+                if not request.session.session_key:
                     request.session.create()
                 sk = request.session.session_key or ''
             except Exception:
                 pass
-            self._enqueue((
-                path[:500],
-                request.method[:10],
-                response.status_code,
-                elapsed_ms,
-                request.META.get('HTTP_REFERER', '')[:500],
-                device,
-                user_id,
-                sk,
-                ip,
-            ))
+            threading.Thread(
+                target=self._write_logs,
+                args=(
+                    path[:500],
+                    request.method[:10],
+                    response.status_code,
+                    elapsed_ms,
+                    request.META.get('HTTP_REFERER', '')[:500],
+                    self._detect_device(ua),
+                    user_id,
+                    sk,
+                    ip,
+                ),
+                daemon=True,
+            ).start()
         except Exception:
             pass
 
         return response
 
-    # One long-lived writer thread per process instead of a thread (and a brand-new
-    # DB connection) per page view. The queue is bounded: under a burst we drop
-    # log rows rather than pile up memory or starve the DB.
-    _queue = queue.Queue(maxsize=2000)
-    _worker = None
-    _worker_lock = threading.Lock()
-
-    @classmethod
-    def _enqueue(cls, row):
-        if cls._worker is None or not cls._worker.is_alive():
-            with cls._worker_lock:
-                if cls._worker is None or not cls._worker.is_alive():
-                    cls._worker = threading.Thread(target=cls._drain, name='pageview-log', daemon=True)
-                    cls._worker.start()
-        try:
-            cls._queue.put_nowait(row)
-        except queue.Full:
-            pass
-
-    @classmethod
-    def _drain(cls):
-        from django.db import close_old_connections, connection
-        while True:
-            row = cls._queue.get()
-            try:
-                cls._write_logs(*row)
-            finally:
-                if cls._queue.empty():
-                    # Idle: release the connection so it doesn't keep Neon's compute awake.
-                    connection.close()
-                else:
-                    # Busy: reuse the connection across the backlog (honours CONN_MAX_AGE).
-                    close_old_connections()
-
     @staticmethod
     def _write_logs(path, method, status_code, elapsed_ms, referrer,
                     device, user_id, sk, ip):
-        """Runs on the background writer thread so DB writes never delay the response."""
+        """Runs in a background thread so DB writes never delay the response."""
+        from django.db import connections
         try:
             from analytics.models import PageViewLog
             PageViewLog.objects.create(
@@ -378,6 +323,8 @@ class PageTrackingMiddleware:
                     )
         except Exception:
             pass
+        finally:
+            connections.close_all()
 
 
 class HeavyEndpointRateLimitMiddleware:
@@ -393,66 +340,30 @@ class HeavyEndpointRateLimitMiddleware:
         ('/clusterpoints/', 'POST', 20, 600),
         ('/clusterpoints/eligible-courses/', 'GET', 30, 600),
         ('/career/', 'POST', 10, 600),
-        # Password reset / email verification (allauth + custom) — anti email-bombing
-        ('/accounts/password/reset/', 'POST', 5, 3600),
-        ('/accounts/confirm-email/', 'POST', 5, 3600),
-        # M-Pesa STK push initiation and manual code verification
-        ('/payments/initiate/', 'POST', 5, 600),
-        ('/payments/verify-code/', 'POST', 10, 600),
-        ('/mentorship/checkout/', 'POST', 10, 600),
-        # Mentorship booking, contact/lead capture, feedback and reviews
-        ('/mentorship/mentor/', 'POST', 10, 3600),
-        ('/api/email-lead/', 'POST', 10, 3600),
-        ('/resources/feedback/submit/', 'POST', 5, 3600),
-        ('/courses/', 'POST', 10, 3600),
     ]
-
-    # Global per-IP ceiling across all non-exempt requests.
-    GLOBAL_LIMIT = 300
-    GLOBAL_WINDOW = 60
-    # Payment-provider callbacks and static/media files never count toward it.
-    GLOBAL_EXEMPT_PREFIXES = ('/static/', '/media/', '/payments/webhook/', '/mentorship/webhook/')
 
     def __init__(self, get_response):
         self.get_response = get_response
 
-    def _too_many(self, request, window):
-        is_htmx = request.headers.get('HX-Request') == 'true'
-        if is_htmx or request.headers.get('Accept', '').startswith('application/json'):
-            resp = JsonResponse(
-                {'error': 'Too many requests. Please wait a moment and try again.'},
-                status=429,
-            )
-        else:
-            # No request context: this runs before AuthenticationMiddleware, so
-            # context processors that read request.user would fail.
-            resp = HttpResponse(render_to_string('429.html'), status=429)
-        resp['Retry-After'] = str(window)
-        return resp
-
-    def _hit(self, key, limit, window):
-        """Count a hit; return True if the caller is over the limit."""
-        count = cache.get(key, 0)
-        if count >= limit:
-            return True
-        cache.set(key, count + 1, window)
-        return False
-
     def __call__(self, request):
         ip = get_client_ip(request)
-
-        if not request.path.startswith(self.GLOBAL_EXEMPT_PREFIXES):
-            if self._hit(f'rl:global:{ip}', self.GLOBAL_LIMIT, self.GLOBAL_WINDOW):
-                log.warning("Global rate limit hit from %s", ip)
-                return self._too_many(request, self.GLOBAL_WINDOW)
-
         for path_prefix, method, limit, window in self.RULES:
             if request.method == method and request.path.startswith(path_prefix):
-                if request.path.startswith(self.GLOBAL_EXEMPT_PREFIXES):
-                    break
-                if self._hit(f'rl:{method}:{path_prefix}:{ip}', limit, window):
+                key = f'rl:{method}:{path_prefix}:{ip}'
+                count = cache.get(key, 0)
+                if count >= limit:
                     log.warning("Rate limit hit: %s %s from %s", method, path_prefix, ip)
-                    return self._too_many(request, window)
+                    is_htmx = request.headers.get('HX-Request') == 'true'
+                    if is_htmx or request.headers.get('Accept', '').startswith('application/json'):
+                        resp = JsonResponse(
+                            {'error': 'Too many requests. Please wait a moment and try again.'},
+                            status=429,
+                        )
+                    else:
+                        resp = render(request, '429.html', status=429)
+                    resp['Retry-After'] = str(window)
+                    return resp
+                cache.set(key, count + 1, window)
                 break
 
         return self.get_response(request)
