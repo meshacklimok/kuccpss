@@ -336,6 +336,9 @@ class Notification(models.Model):
         ("system", "System"),
     ]
 
+    # Notifications older than this are hidden from users and purged.
+    RETENTION_DAYS = 30
+
     user = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name="notifications"
     )
