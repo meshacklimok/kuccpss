@@ -12,6 +12,41 @@ Format: `[YYYY-MM-DD]` — description of what changed and why.
 
 ---
 
+## [2026-09-29] — Security hardening
+- **Staff TOTP 2FA:**
+  - `StaffSecurityMiddleware` requires every `is_staff` user to verify a code from an authenticator app. Unenrolled staff are sent to `/accounts/staff/2fa/setup/` (QR code); enrolled staff re-verify every 12 h.
+  - The secret is Fernet-encrypted at rest. Replayed codes are rejected, and wrong codes are limited to 5 per 5 min.
+  - New `StaffTOTPDevice` model (migration `accounts/0017`) and new dependency `segno` for the QR code.
+  - Recovery: superuser admin delete, or `manage.py reset_staff_2fa <email>`. `STAFF_2FA_REQUIRED=False` is the emergency kill switch.
+- **Staff sessions:** 12 h idle expiry (`STAFF_SESSION_MAX_AGE`) instead of 90 days.
+- **Login throttling:** there is now also a per-account limit (8 failures / 15 min), alongside the per-IP limit, so distributed guessing is caught. Counters are atomic (`cache.add` + `incr`) and are cleared on success.
+- **Script-context XSS:** 59 `{{ x|safe }}` inside `<script>` blocks (analytics dashboards, both `course_detail` templates) are replaced with the new builtin `|js_json` filter. It escapes `<`, `>` and `&` like `json_script`, so a stored `</script>` can't break out.
+- **Headers:**
+  - An enforced CSP subset (`object-src 'none'; base-uri 'self'; frame-ancestors 'self'`) alongside the existing report-only policy.
+  - New `Permissions-Policy` disabling camera, mic, geolocation, payment, USB and the sensors.
+- **Other fixes:**
+  - The change-password view now requires 8 characters. It previously required only 4, which bypassed the registration rule.
+  - `analytics:pwa_install` is limited to 5/hour/IP.
+- `docs/SECURITY.md` updated. It also corrects stale sections: the mentorship webhook is signed, and IP resolution is unified in `kuccpss/ip_utils.py`.
+
+## [2026-09-29] — Fix intermittent "Continue with Google" failures
+- Sessions: `cached_db` only when `REDIS_URL` is set, plain `db` otherwise. Per-worker `LocMemCache` let one gunicorn worker serve a stale session that was missing the OAuth `state` another worker had just saved, so the callback failed depending on which worker handled it.
+- New `CanonicalHostMiddleware` 301/308-redirects `www.careernext.co.ke` → `careernext.co.ke` (`CANONICAL_HOST` env var; `''` disables). This avoids split host-only session cookies and a Google `redirect_uri` that differed by host.
+- `SocialAccountAdapter` now uses `on_authentication_error()` and raises `ImmediateHttpResponse`. The old deprecated `authentication_error()` redirect was ignored, so users saw allauth's "Third-Party Login Failure" page. Messages now distinguish cancelled / timed out / other errors, and the log line includes the host.
+- Login/register show a warning inside WhatsApp/Instagram/Facebook/TikTok in-app browsers, where Google blocks OAuth (`403 disallowed_useragent`), with a copy-link button.
+
+## [2026-09-29] — Circuit breakers for OpenAI and IntaSend
+- New `kuccpss/circuit_breaker.py`: cache-backed breaker opens after 5 service failures (timeout, connection error, 5xx, 429) in 60s, refuses calls for 60s, then half-opens. Client errors (e.g. 400 bad phone) never trip it.
+- Wrapped every OpenAI call (quiz summary, AI insight, AI chat incl. streaming, OCR upload, `generate_ai_recommendation`) and IntaSend STK push + status fetch. B2C payouts and webhooks are deliberately not wrapped.
+- AI chat / insight check the breaker **before** charging a message credit; STK push views check it before creating a `Payment` row. Users get a 503 "try again in a minute" instead of a hung request.
+- OpenAI clients now come from `get_openai_client()` with a 45s timeout and 1 retry (SDK default was 600s × 2 retries).
+
+## [2026-09-29] — Payment pages overhaul + "paid but still locked" recovery
+- **Root-cause fixes:** payment → CareerSubmission link is always written (not only when a lock config exists) and `has_paid_for_current_session` self-heals a missing link; `complete_payment()` makes fulfilment idempotent across webhook / poll / code / sweep races; stale-payment sweep asks IntaSend before marking anything failed.
+- **M-Pesa code recovery** (`verify_by_transaction_code`): accepts a pasted SMS, checks logged transactions, then asks IntaSend about recent unconfirmed payments, then queues for admin review (code stored on the Payment + admin email). Rate-limited, rejects codes owned by other accounts. Admins approve by setting the payment to Completed.
+- **Shared UI:** `templates/payments/_payment_help.html` "Paid but still locked?" panel (code entry + WhatsApp/email from SiteSettings `whatsapp_number` / `contact_email`) on every payment surface; `payment_polling.js` handles 409 resume, already-unlocked, tab-return re-check and a final verify before timeout.
+- **Pages:** payment_required (how-it-works, resume banner, no-prompt tips, already-unlocked state, honest non-"lifetime" copy), paywall overlay (phone step now hides while waiting), calculator gate (fixed invisible white-on-white code input), AI chat top-up modal (accepts 07/01 numbers, no NaN counter), payment history (mobile cards, Check status, PDF receipts, status legend), mentorship checkout timeout guidance. All mobile-friendly with 44px tap targets and 16px inputs.
+
 ## [2026-09-29] — Admin actions reach users
 
 ### Fixed

@@ -4,6 +4,8 @@ from django.db import models
 from django.urls import reverse
 from django.utils.text import slugify
 
+from kuccpss.upload_validators import SafeImageValidator, SafePDFValidator
+
 class InstitutionType(models.Model):
     """
     Top-level types of institutions: Public University, Private University, KMTC, TVET, TTC, Specialized Schools
@@ -18,10 +20,6 @@ class InstitutionType(models.Model):
         verbose_name = "Institution Type"
         verbose_name_plural = "Institution Types"
         ordering = ['name']
-        indexes = [
-            models.Index(fields=['name']),
-            models.Index(fields=['slug']),
-        ]
 
     def save(self, *args, **kwargs):
         if not self.slug:
@@ -65,8 +63,8 @@ class Institution(models.Model):
     website = models.URLField(blank=True, null=True)
     email = models.EmailField(blank=True, null=True)
     phone = models.CharField(max_length=50, blank=True, null=True)
-    logo = models.ImageField(upload_to="institution_logos/", blank=True, null=True)
-    pdf_file = models.FileField(upload_to="institution_pdfs/", blank=True, null=True, help_text="Upload PDF brochure or requirements")
+    logo = models.ImageField(upload_to="institution_logos/", blank=True, null=True, validators=[SafeImageValidator()])
+    pdf_file = models.FileField(upload_to="institution_pdfs/", blank=True, null=True, validators=[SafePDFValidator()], help_text="Upload PDF brochure or requirements")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -74,8 +72,6 @@ class Institution(models.Model):
         ordering = ['institution_type', 'name']
         indexes = [
             models.Index(fields=['name']),
-            models.Index(fields=['slug']),
-            models.Index(fields=['institution_type']),
         ]
 
     def save(self, *args, **kwargs):
@@ -136,7 +132,7 @@ class InstitutionPromotion(models.Model):
     )
     tier = models.CharField(max_length=20, choices=TIER_CHOICES, default=TIER_FEATURED)
     tagline = models.CharField(max_length=200, blank=True, help_text="Short marketing message shown on the platform")
-    banner_image = models.ImageField(upload_to='institution_banners/', blank=True, null=True)
+    banner_image = models.ImageField(upload_to='institution_banners/', blank=True, null=True, validators=[SafeImageValidator()])
 
     # For course_spotlight tier — highlight a specific course in career results
     featured_course = models.ForeignKey(

@@ -15,6 +15,7 @@ Scoring logic (highest wins):
 """
 
 from difflib import SequenceMatcher
+from urllib.parse import quote
 from django.http import JsonResponse
 from django.db.models import Q
 
@@ -177,5 +178,100 @@ def api_search_suggest(request):
         'courses': course_out,
         'institutions': inst_out,
         'more_courses': more_courses,
-        'search_url': f"/courses/?q={q}",
+        'search_url': f"/courses/?q={quote(q)}",
+    })
+
+
+# ── Page-level search suggestions ────────────────────────────────────────────
+# Powers the dropdown on in-page search boxes (static/js/search_suggest.js).
+# Unlike the navbar API, results are scoped to what that page actually filters,
+# and each suggestion is a plain term that gets dropped into the page's ?q=.
+
+def _suggest_candidates(request, scope, q):
+    """Return a list of (label, sub, abbr) candidates for `scope`."""
+    prefix = q[:4]
+    name_q = Q(name__icontains=prefix) | Q(name__icontains=q)
+
+    if scope in ('courses', 'career'):
+        from courses.models import Course
+        qs = Course.objects.filter(name_q)
+        if scope == 'career':
+            # Only courses in the student's current Career Engine pathway
+            from career.views import COURSE_TYPE_MAP, _get_degree_course_type
+            pathway = request.session.get('career_pathway', '')
+            if pathway == 'Degree':
+                qs = qs.filter(course_type=_get_degree_course_type())
+            elif pathway in COURSE_TYPE_MAP:
+                qs = qs.filter(course_type__name__in=COURSE_TYPE_MAP[pathway])
+        if request.GET.get('type'):
+            qs = qs.filter(course_type__slug=request.GET['type'])
+        if request.GET.get('category'):
+            qs = qs.filter(category__slug=request.GET['category'])
+        return [(c['name'], c['course_type__name'] or '', '')
+                for c in qs.values('name', 'course_type__name')[:200]]
+
+    if scope == 'institutions':
+        from institutions.models import Institution
+        qs = Institution.objects.filter(name_q | Q(abbreviation__icontains=q))
+        if request.GET.get('itype'):
+            qs = qs.filter(institution_type__slug=request.GET['itype'])
+        return [(i['name'], i['location'] or '', i['abbreviation'] or '')
+                for i in qs.values('name', 'location', 'abbreviation')[:100]]
+
+    if scope == 'careers':
+        from career.models import CareerProfile
+        qs = CareerProfile.objects.filter(Q(title__icontains=prefix) | Q(title__icontains=q))
+        return [(t, 'Career', '') for t in qs.values_list('title', flat=True)[:100]]
+
+    if scope == 'articles':
+        from resources.models import Article
+        qs = Article.objects.filter(is_published=True).filter(
+            Q(title__icontains=prefix) | Q(title__icontains=q))
+        return [(t, 'Article', '') for t in qs.values_list('title', flat=True)[:100]]
+
+    if scope == 'resources':
+        from resources.models import Resource
+        qs = Resource.objects.filter(Q(title__icontains=prefix) | Q(title__icontains=q))
+        return [(t, 'Resource', '') for t in qs.values_list('title', flat=True)[:100]]
+
+    if scope == 'mentors':
+        # Mentor search matches course, university or mentor name
+        from mentorship.models import MentorProfile
+        mentors = MentorProfile.objects.filter(is_approved=True, is_active=True)
+        out = []
+        for c in mentors.filter(Q(course__name__icontains=prefix) | Q(course__name__icontains=q)) \
+                        .values_list('course__name', flat=True).distinct()[:50]:
+            out.append((c, 'Course', ''))
+        for i in mentors.filter(Q(institution__name__icontains=prefix) | Q(institution__name__icontains=q)) \
+                        .values('institution__name', 'institution__abbreviation').distinct()[:50]:
+            out.append((i['institution__name'], 'University', i['institution__abbreviation'] or ''))
+        for n in mentors.filter(user__full_name__icontains=q) \
+                        .values_list('user__full_name', flat=True)[:20]:
+            out.append((n, 'Mentor', ''))
+        return out
+
+    return []
+
+
+SUGGEST_SCOPES = ('courses', 'career', 'institutions', 'careers', 'articles', 'resources', 'mentors')
+
+
+def api_search_terms(request):
+    q = request.GET.get('q', '').strip()[:80]
+    scope = request.GET.get('scope', 'courses')
+    if len(q) < 2 or scope not in SUGGEST_SCOPES:
+        return JsonResponse({'suggestions': []})
+
+    scored, seen = [], set()
+    for label, sub, abbr in _suggest_candidates(request, scope, q):
+        if not label or label.lower() in seen:
+            continue
+        s = _score(q, label, abbr)
+        if s >= 30:
+            seen.add(label.lower())
+            scored.append((s, label, sub))
+    scored.sort(key=lambda x: (-x[0], len(x[1]), x[1].lower()))
+
+    return JsonResponse({
+        'suggestions': [{'label': label, 'sub': sub} for _, label, sub in scored[:8]],
     })

@@ -4,6 +4,12 @@ from django.utils.text import slugify
 from clusters.models import Cluster
 from institutions.models import Institution
 
+from kuccpss.upload_validators import SafeImageValidator, SafePDFValidator
+
+# Newest KCSE year on the KUCCPS portal. "Latest cutoff" shown to students is this year's
+# value only; bump it when the next year's cutoffs are imported.
+LATEST_CUTOFF_YEAR = '2025'
+
 class CourseType(models.Model):
     """
     Top-level course type: Degree, Diploma, KMTC, TTC, Short Courses, Artisan Certificate, etc.
@@ -18,10 +24,6 @@ class CourseType(models.Model):
         verbose_name = "Course Type"
         verbose_name_plural = "Course Types"
         ordering = ['name']
-        indexes = [
-            models.Index(fields=['name']),
-            models.Index(fields=['slug']),
-        ]
 
     def save(self, *args, **kwargs):
         if not self.slug:
@@ -49,7 +51,6 @@ class CourseCategory(models.Model):
     class Meta:
         unique_together = ('name', 'course_type')
         ordering = ['name']
-        indexes = [models.Index(fields=["course_type"])]
 
     def save(self, *args, **kwargs):
         if not self.slug:
@@ -78,9 +79,14 @@ class Course(models.Model):
         blank=True, null=True,
         help_text='[{"slot":1,"subjects_str":"ENG/KIS","min_grade":"C"}, ...]'
     )
+    entry_requirements = models.JSONField(
+        blank=True, null=True,
+        help_text='KUCCPS minimum entry requirements (the 4 cluster-subject slots): '
+                  '[{"slot":1,"subjects_str":"MAT A/MAT B/BST"}, ...]'
+    )
     duration = models.CharField(max_length=60, blank=True, help_text="e.g. 3 years, 18 months")
     career_outcomes = models.TextField(blank=True, help_text="Comma-separated example job titles e.g. Doctor, Surgeon, Physician")
-    pdf_file = models.FileField(upload_to="course_pdfs/", blank=True, null=True)
+    pdf_file = models.FileField(upload_to="course_pdfs/", blank=True, null=True, validators=[SafePDFValidator()])
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -97,9 +103,6 @@ class Course(models.Model):
         ordering = ['course_type', 'category', 'name']
         indexes = [
             models.Index(fields=['name']),
-            models.Index(fields=['slug']),
-            models.Index(fields=['course_type']),
-            models.Index(fields=['category']),
         ]
 
     def save(self, *args, **kwargs):
@@ -154,16 +157,24 @@ class CourseOffering(models.Model):
         ordering = ['institution__name']
         verbose_name = "Course Offering"
         verbose_name_plural = "Course Offerings"
-        indexes = [models.Index(fields=["institution"])]
 
     def __str__(self):
         return f"{self.course.name} @ {self.institution.name}"
 
     def latest_cutoff(self):
-        if not self.cutoff_points:
-            return None
-        years = sorted(self.cutoff_points.keys(), reverse=True)
-        return self.cutoff_points.get(years[0]) if years else None
+        """Cutoff for LATEST_CUTOFF_YEAR only — None (shown as "—") when KUCCPS published none."""
+        return (self.cutoff_points or {}).get(LATEST_CUTOFF_YEAR)
+
+    def newest_cutoff_year(self):
+        """Newest KCSE year (as labelled on the KUCCPS portal) that has a cutoff value."""
+        cp = self.cutoff_points or {}
+        return max((y for y, v in cp.items() if v is not None), default=None)
+
+    def newest_cutoff(self):
+        """Newest cutoff on record, any year — used for eligibility so courses without a
+        LATEST_CUTOFF_YEAR value are still matched against their most recent cutoff."""
+        year = self.newest_cutoff_year()
+        return self.cutoff_points[year] if year else None
 
 
 class Review(models.Model):
@@ -196,7 +207,7 @@ class CourseSpotlight(models.Model):
     course     = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='spotlights')
     headline   = models.CharField(max_length=200, help_text="Editorial headline shown on homepage")
     summary    = models.TextField(help_text="2-3 sentence editorial blurb")
-    hero_image = models.ImageField(upload_to='course_spotlights/', blank=True, null=True)
+    hero_image = models.ImageField(upload_to='course_spotlights/', blank=True, null=True, validators=[SafeImageValidator()])
     start_date = models.DateField()
     end_date   = models.DateField()
     created_at = models.DateTimeField(auto_now_add=True)

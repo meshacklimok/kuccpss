@@ -156,11 +156,11 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
 <script>
 (function () {
-  const monthlyLabels = {{ chart_monthly_labels|safe }};
-  const monthlyCounts = {{ chart_monthly_counts|safe }};
-  const monthlyTotals = {{ chart_monthly_totals|safe }};
-  const statusLabels  = {{ chart_status_labels|safe }};
-  const statusData    = {{ chart_status_data|safe }};
+  const monthlyLabels = {{ chart_monthly_labels|js_json }};
+  const monthlyCounts = {{ chart_monthly_counts|js_json }};
+  const monthlyTotals = {{ chart_monthly_totals|js_json }};
+  const statusLabels  = {{ chart_status_labels|js_json }};
+  const statusData    = {{ chart_status_data|js_json }};
 
   const monthlyCtx = document.getElementById('monthlyChart');
   if (monthlyCtx) {

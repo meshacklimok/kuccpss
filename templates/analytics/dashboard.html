@@ -320,7 +320,7 @@
           {% endfor %}
           </tbody>
         </table>
-        {% else %}<p class="no-data">No zero-result searches — great!</p>{% endif %}
+        {% else %}<p class="no-data">No zero-result searches, great!</p>{% endif %}
       </div>
     </div>
 
@@ -626,19 +626,19 @@
           <div style="display:flex;flex-direction:column;gap:.6rem;">
             <div style="display:flex;align-items:center;gap:.6rem;font-size:.82rem;">
               <span style="width:10px;height:10px;border-radius:50%;background:var(--blue);flex-shrink:0;"></span>
-              <strong>Search</strong> <span style="color:var(--muted)">— user typed into the search bar</span>
+              <strong>Search</strong> <span style="color:var(--muted)">user typed into the search bar</span>
             </div>
             <div style="display:flex;align-items:center;gap:.6rem;font-size:.82rem;">
               <span style="width:10px;height:10px;border-radius:50%;background:var(--purple);flex-shrink:0;"></span>
-              <strong>View</strong> <span style="color:var(--muted)">— course / institution / article viewed</span>
+              <strong>View</strong> <span style="color:var(--muted)">course / institution / article viewed</span>
             </div>
             <div style="display:flex;align-items:center;gap:.6rem;font-size:.82rem;">
               <span style="width:10px;height:10px;border-radius:50%;background:var(--green);flex-shrink:0;"></span>
-              <strong>Career</strong> <span style="color:var(--muted)">— career engine run completed</span>
+              <strong>Career</strong> <span style="color:var(--muted)">career engine run completed</span>
             </div>
             <div style="display:flex;align-items:center;gap:.6rem;font-size:.82rem;">
               <span style="width:10px;height:10px;border-radius:50%;background:var(--amber);flex-shrink:0;"></span>
-              <strong>Event</strong> <span style="color:var(--muted)">— registration, payment, or system event</span>
+              <strong>Event</strong> <span style="color:var(--muted)">registration, payment, or system event</span>
             </div>
           </div>
         </div>
@@ -702,7 +702,7 @@
             <span class="badge b-gray" style="margin-left:auto;font-size:.65rem;">Not set</span>
           {% endif %}
         </p>
-        <p style="font-size:.8rem;color:var(--muted);margin:0 0 1rem;">Product analytics — events, funnels, session recordings, feature flags.</p>
+        <p style="font-size:.8rem;color:var(--muted);margin:0 0 1rem;">Product analytics: events, funnels, session recordings, feature flags.</p>
         {% if not posthog_configured %}
         <div style="background:var(--amber-lt);border:1px solid #fde68a;border-radius:8px;padding:10px 12px;margin-bottom:1rem;font-size:.78rem;color:#92400e;">
           Set <code style="background:#fef3c7;padding:1px 5px;border-radius:3px;">POSTHOG_API_KEY</code> in your environment to enable tracking.
@@ -738,7 +738,7 @@
             <span class="badge b-gray" style="margin-left:auto;font-size:.65rem;">Not set</span>
           {% endif %}
         </p>
-        <p style="font-size:.8rem;color:var(--muted);margin:0 0 1rem;">Error monitoring — exceptions, performance traces, session replays, uptime alerts.</p>
+        <p style="font-size:.8rem;color:var(--muted);margin:0 0 1rem;">Error monitoring: exceptions, performance traces, session replays, uptime alerts.</p>
         {% if not sentry_configured %}
         <div style="background:var(--amber-lt);border:1px solid #fde68a;border-radius:8px;padding:10px 12px;margin-bottom:1rem;font-size:.78rem;color:#92400e;">
           Set <code style="background:#fef3c7;padding:1px 5px;border-radius:3px;">SENTRY_DSN</code> in your environment to enable error capture.
@@ -774,7 +774,7 @@
             <span class="badge b-gray" style="margin-left:auto;font-size:.65rem;">Not set</span>
           {% endif %}
         </p>
-        <p style="font-size:.8rem;color:var(--muted);margin:0 0 1rem;">Traffic analytics — sessions, acquisition channels, page views, conversions.</p>
+        <p style="font-size:.8rem;color:var(--muted);margin:0 0 1rem;">Traffic analytics: sessions, acquisition channels, page views, conversions.</p>
         {% if not ga_configured %}
         <div style="background:var(--amber-lt);border:1px solid #fde68a;border-radius:8px;padding:10px 12px;margin-bottom:1rem;font-size:.78rem;color:#92400e;">
           Set <code style="background:#fef3c7;padding:1px 5px;border-radius:3px;">GA_MEASUREMENT_ID</code> in your environment to enable tracking.
@@ -964,12 +964,12 @@
     };
   }
 
-  const labels   = {{ chart_labels|safe }};
-  const regs     = {{ chart_regs|safe }};
-  const searches = {{ chart_searches|safe }};
-  const engine   = {{ chart_engine|safe }};
-  const views    = {{ chart_views|safe }};
-  const payments = {{ chart_payments|safe }};
+  const labels   = {{ chart_labels|js_json }};
+  const regs     = {{ chart_regs|js_json }};
+  const searches = {{ chart_searches|js_json }};
+  const engine   = {{ chart_engine|js_json }};
+  const views    = {{ chart_views|js_json }};
+  const payments = {{ chart_payments|js_json }};
 
   const baseOpts = {
     responsive: true, maintainAspectRatio: false,
@@ -1008,8 +1008,8 @@
   function makeDonut(id) {
     const ctx = document.getElementById(id);
     if (!ctx) return;
-    const pwLabels = {{ chart_pw_labels|safe }};
-    const pwData   = {{ chart_pw_data|safe }};
+    const pwLabels = {{ chart_pw_labels|js_json }};
+    const pwData   = {{ chart_pw_data|js_json }};
     if (!pwData.length) return;
     new Chart(ctx, {
       type: 'doughnut',
@@ -1047,8 +1047,8 @@
   /* Career tab: grade bar chart */
   const gradeCtx = document.getElementById('gradeChart');
   if (gradeCtx) {
-    const gradeLabels = {{ chart_grade_labels|safe }};
-    const gradeData   = {{ chart_grade_data|safe }};
+    const gradeLabels = {{ chart_grade_labels|js_json }};
+    const gradeData   = {{ chart_grade_data|js_json }};
     new Chart(gradeCtx, {
       type: 'bar',
       data: { labels: gradeLabels, datasets: [{

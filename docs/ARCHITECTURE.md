@@ -124,7 +124,7 @@ Results rendered with admission_chance: VERY HIGH / HIGH / MEDIUM / LOW
 - `InstitutionPromotion` — admin-configurable promoted/featured institution; priority, is_active, label
 
 ### courses
-- `CourseType` — Degree, Diploma, KMTC, TVET, TTC, Short Courses
+- `CourseType` — Degree, KMTC, TTC, TVET Diploma L6 / Certificate L5 / Artisan L4 / Craft L3
 - `CourseCategory` — subcategory (e.g. Health Sciences under Degree)
 - `Course` — individual course; linked to Institution (M2M via CourseOffering), Cluster (FK), core_subjects (M2M to clusters.Subject), cutoff_points (JSONField per year), career_outcomes, duration
 - `CourseOffering` — through model for Course↔Institution; holds per-institution cutoff_points JSONField; `latest_cutoff()` method; programme_code for KMTC

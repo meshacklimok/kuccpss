@@ -1,14 +1,14 @@
 {% extends "base.html" %}
 {% load custom_filters %}
-{% block title %}Career Ideas for KCSE Students — KUCCPS Pathways in Kenya | CareerNext{% endblock %}
+{% block title %}Career Ideas for KCSE Students: KUCCPS Pathways in Kenya | CareerNext{% endblock %}
 
-{% block meta %}<meta name="description" content="Explore real careers in Kenya in plain language — what each job actually involves, what it pays, and which KUCCPS courses and grades get you there.">{% endblock %}
+{% block meta %}<meta name="description" content="Explore real careers in Kenya in plain language: what each job actually involves, what it pays, and which KUCCPS courses and grades get you there.">{% endblock %}
 
 {% block content %}
 <style>
 /* ── Hero ── */
 .careers-hero {
-  background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 60%, #1d4ed8 100%);
+  background: #0f172a;
   padding: 3.5rem 0 2.5rem;
   position: relative;
   overflow: hidden;
@@ -17,7 +17,7 @@
   content: '';
   position: absolute;
   inset: 0;
-  background: radial-gradient(ellipse at 70% 50%, rgba(99,102,241,0.3) 0%, transparent 60%);
+  background: rgba(99,102,241,0.3);
   pointer-events: none;
 }
 .hero-search {
@@ -99,19 +99,19 @@
 }
 
 /* Banner gradients per sector tag */
-.banner-technology  { background: linear-gradient(135deg, #1e1b4b, #4f46e5); }
-.banner-health      { background: linear-gradient(135deg, #052e16, #16a34a); }
-.banner-engineering { background: linear-gradient(135deg, #1c1917, #ea580c); }
-.banner-finance     { background: linear-gradient(135deg, #042f2e, #0d9488); }
-.banner-business    { background: linear-gradient(135deg, #0c1a4b, #2563eb); }
-.banner-law         { background: linear-gradient(135deg, #2d1654, #7c3aed); }
-.banner-education   { background: linear-gradient(135deg, #172554, #0369a1); }
-.banner-agriculture { background: linear-gradient(135deg, #14532d, #65a30d); }
-.banner-creative    { background: linear-gradient(135deg, #4a044e, #c026d3); }
-.banner-science     { background: linear-gradient(135deg, #1e3a5f, #0891b2); }
-.banner-environment { background: linear-gradient(135deg, #14532d, #15803d); }
-.banner-social      { background: linear-gradient(135deg, #4c0519, #e11d48); }
-.banner-default     { background: linear-gradient(135deg, #1e293b, #475569); }
+.banner-technology  { background: #1e1b4b; }
+.banner-health      { background: #052e16; }
+.banner-engineering { background: #1c1917; }
+.banner-finance     { background: #042f2e; }
+.banner-business    { background: #0c1a4b; }
+.banner-law         { background: #2d1654; }
+.banner-education   { background: #172554; }
+.banner-agriculture { background: #14532d; }
+.banner-creative    { background: #4a044e; }
+.banner-science     { background: #1e3a5f; }
+.banner-environment { background: #14532d; }
+.banner-social      { background: #4c0519; }
+.banner-default     { background: #1e293b; }
 
 /* Demand badge colours */
 .demand-very_high { background: #dcfce7; color: #166534; }
@@ -133,18 +133,18 @@
         </div>
         <h1 class="fw-900 text-white mb-2" style="font-size:clamp(1.8rem,4vw,2.5rem);line-height:1.15;">
           Discover Your<br>
-          <span style="background:linear-gradient(90deg,#818cf8,#38bdf8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">
+          <span style="background:#818cf8;-webkit-background-clip:text;-webkit-text-fill-color:transparent;">
             Perfect Career Path
           </span>
         </h1>
         <p class="text-white-75 mb-4" style="font-size:1rem;max-width:480px;">
           Explore 27+ real Kenyan careers with salary data, educational pathways,
-          and job market outlook — all tailored to KCSE graduates.
+          and job market outlook, all tailored to KCSE graduates.
         </p>
         <form method="GET" id="searchForm" class="d-flex gap-2 flex-wrap">
           {% if active_sector %}<input type="hidden" name="sector" value="{{ active_sector }}">{% endif %}
           {% if active_demand %}<input type="hidden" name="demand" value="{{ active_demand }}">{% endif %}
-          <input type="text" name="q" class="hero-search" placeholder="Search careers e.g. Doctor, Engineer…" value="{{ query }}">
+          <input type="text" name="q" data-suggest="careers" class="hero-search" placeholder="Search careers e.g. Doctor, Engineer…" value="{{ query }}">
           {% if query %}
           <a href="{% url 'career:career_profiles' %}{% if active_sector %}?sector={{ active_sector }}{% endif %}"
              class="btn btn-sm" style="background:rgba(255,255,255,0.15);color:#fff;border-radius:50px;border:1.5px solid rgba(255,255,255,0.3);">
@@ -230,8 +230,8 @@
 
   <!-- Quiz CTA banner -->
   <div class="mt-5 p-4 rounded-3 text-center text-white position-relative overflow-hidden"
-       style="background:linear-gradient(135deg,#1e3a8a 0%,#4f46e5 100%);">
-    <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 30% 50%,rgba(129,140,248,0.25) 0%,transparent 60%);pointer-events:none;"></div>
+       style="background:#1e3a8a;">
+    <div style="position:absolute;inset:0;background:rgba(129,140,248,0.25);pointer-events:none;"></div>
     <div class="position-relative">
       <i class="fas fa-clipboard-list fa-2x mb-2 d-block" style="color:#a5b4fc;"></i>
       <h4 class="fw-800 mb-1">Not sure which career fits you?</h4>

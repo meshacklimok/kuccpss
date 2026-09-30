@@ -60,3 +60,9 @@ Thumbs.db
 # CSV data files
 tveta_offerings.csv
 geoip/*.mmdb
+
+# KUCCPS portal scrape cache (scripts/scrape_kuccps_portal.py)
+.cache/
+
+# Local pg_dump output (manage.py backup_db)
+backups/

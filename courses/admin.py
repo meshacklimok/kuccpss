@@ -3,35 +3,39 @@ from django.contrib import admin
 from django.utils.html import format_html, mark_safe
 from import_export.admin import ImportExportModelAdmin
 from import_export.formats.base_formats import CSV
-from .models import CourseType, CourseCategory, Course, CourseOffering, Review, CourseSpotlight
-from .resources import CourseResource, CourseOfferingResource
+from .models import LATEST_CUTOFF_YEAR, CourseType, CourseCategory, Course, CourseOffering, Review, CourseSpotlight
+from .resources import CUTOFF_YEARS, CourseResource, CourseOfferingResource
 
 
 class CourseOfferingForm(forms.ModelForm):
-    cutoff_2024 = forms.FloatField(required=False, label="Cutoff 2024", min_value=0, max_value=84)
-    cutoff_2023 = forms.FloatField(required=False, label="Cutoff 2023", min_value=0, max_value=84)
-    cutoff_2022 = forms.FloatField(required=False, label="Cutoff 2022", min_value=0, max_value=84)
-    cutoff_2021 = forms.FloatField(required=False, label="Cutoff 2021", min_value=0, max_value=84)
+    cutoff_2025 = forms.FloatField(required=False, label="Cutoff 2025", min_value=0, max_value=48)
+    cutoff_2024 = forms.FloatField(required=False, label="Cutoff 2024", min_value=0, max_value=48)
+    cutoff_2023 = forms.FloatField(required=False, label="Cutoff 2023", min_value=0, max_value=48)
+    cutoff_2022 = forms.FloatField(required=False, label="Cutoff 2022", min_value=0, max_value=48)
+    cutoff_2021 = forms.FloatField(required=False, label="Cutoff 2021", min_value=0, max_value=48)
 
     class Meta:
         model = CourseOffering
-        fields = ('course', 'institution', 'cutoff_2024', 'cutoff_2023', 'cutoff_2022', 'cutoff_2021')
+        fields = ('course', 'institution', 'cutoff_2025', 'cutoff_2024', 'cutoff_2023', 'cutoff_2022', 'cutoff_2021')
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         obj = kwargs.get('instance')
         if obj and obj.cutoff_points:
-            for year in ('2024', '2023', '2022', '2021'):
+            for year in CUTOFF_YEARS:
                 val = obj.cutoff_points.get(year)
                 if val is not None:
                     self.fields[f'cutoff_{year}'].initial = val
 
     def save(self, commit=True):
         instance = super().save(commit=False)
-        cutoffs = {}
-        for year in ('2024', '2023', '2022', '2021'):
+        # Merge so years without a form field are never dropped
+        cutoffs = dict(instance.cutoff_points or {})
+        for year in CUTOFF_YEARS:
             val = self.cleaned_data.get(f'cutoff_{year}')
-            if val is not None:
+            if val is None:
+                cutoffs.pop(year, None)
+            else:
                 cutoffs[year] = val
         instance.cutoff_points = cutoffs if cutoffs else None
         if commit:
@@ -67,7 +71,7 @@ class CourseOfferingInline(admin.TabularInline):
     model = CourseOffering
     form = CourseOfferingForm
     extra = 1
-    fields = ('institution', 'cutoff_2024', 'cutoff_2023', 'cutoff_2022', 'cutoff_2021')
+    fields = ('institution', 'cutoff_2025', 'cutoff_2024', 'cutoff_2023', 'cutoff_2022', 'cutoff_2021')
     autocomplete_fields = ('institution',)
 
 
@@ -120,12 +124,12 @@ class CourseOfferingAdmin(ImportExportModelAdmin):
     list_filter = ('institution__institution_type', 'course__course_type')
     search_fields = ('course__name', 'institution__name')
     autocomplete_fields = ('course', 'institution')
-    fields = ('course', 'institution', 'cutoff_2024', 'cutoff_2023', 'cutoff_2022', 'cutoff_2021')
+    fields = ('course', 'institution', 'cutoff_2025', 'cutoff_2024', 'cutoff_2023', 'cutoff_2022', 'cutoff_2021')
 
     def latest_cutoff_display(self, obj):
         val = obj.latest_cutoff()
-        return f"{val} pts" if val else "-"
-    latest_cutoff_display.short_description = "Latest Cutoff"
+        return f"{val} pts" if val is not None else "—"
+    latest_cutoff_display.short_description = f"{LATEST_CUTOFF_YEAR} Cutoff"
 
 
 @admin.register(Review)

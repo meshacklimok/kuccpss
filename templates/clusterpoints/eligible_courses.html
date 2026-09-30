@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% load custom_filters %}
-{% block title %}My KUCCPS Eligible Courses — Based on Cluster Points Kenya | CareerNext{% endblock %}
+{% block title %}My KUCCPS Eligible Courses: Based on Cluster Points Kenya | CareerNext{% endblock %}
 
 {% block content %}
 {% if is_locked %}{% include "payments/paywall_overlay.html" %}{% endif %}
@@ -52,10 +52,10 @@
   {% if is_guest %}
   <!-- Guest save-results banner -->
   <div class="d-flex align-items-center gap-3 flex-wrap p-3 mb-4 rounded-3"
-       style="background:linear-gradient(135deg,#eef2ff,#e0f2fe);border:1.5px solid #bfdbfe;">
+       style="background:#eef2ff;border:1.5px solid #bfdbfe;">
     <div class="flex-grow-1">
       <div class="fw-700" style="color:#1e3a8a;font-size:0.93rem;">
-        <i class="fas fa-bookmark me-2" style="color:#2563eb;"></i>Save your results — takes 30 seconds
+        <i class="fas fa-bookmark me-2" style="color:#2563eb;"></i>Save your results, takes 30 seconds
       </div>
       <div class="small text-muted mt-1">
         Create an account to save these courses, build a shortlist, track applications,
@@ -76,7 +76,7 @@
   <!-- Mentorship nudge — only for degree/KMTC views -->
   {% if not type_filter or type_filter == 'degree' or type_filter == 'KMTC' %}
   <div class="d-flex align-items-center gap-3 flex-wrap p-3 mb-4 rounded-3"
-       style="background:linear-gradient(135deg,#f0fdf4,#dcfce7);border:1.5px solid #86efac;">
+       style="background:#f0fdf4;border:1.5px solid #86efac;">
     <div class="flex-grow-1">
       <div class="fw-700" style="color:#166634;font-size:0.93rem;">
         <i class="bi bi-people-fill me-2 text-success"></i>Want to know what a course is really like?
@@ -130,7 +130,7 @@
     <div class="d-flex gap-2 flex-wrap align-items-end">
       <div style="flex:1;min-width:160px;">
         <label class="form-label small fw-600 mb-1">Search</label>
-        <input type="text" name="q" class="form-control form-control-sm"
+        <input type="text" name="q" data-suggest="courses" class="form-control form-control-sm"
                placeholder="e.g. Medicine" value="{{ query }}">
       </div>
       <div style="min-width:150px;">
@@ -171,7 +171,7 @@
     </span>
     <span>Cutoff data: {{ DATA_UPDATED }}</span>
     <span>·</span>
-    <span class="text-secondary">Not official KUCCPS —
+    <span class="text-secondary">Not official KUCCPS,
       <a href="https://kuccps.net" target="_blank" rel="noopener noreferrer" class="text-secondary">verify at kuccps.net</a>
     </span>
   </div>

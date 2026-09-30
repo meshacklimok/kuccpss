@@ -1,62 +1,12 @@
-from django.contrib import admin
+﻿from django.contrib import admin
 from django.http import HttpResponseRedirect
 from django.urls import reverse
 from .models import (
-    TVETCategory, TVETCourse, KMTCampus, KMTCourse, TTCCollege, TTCCourse,
     CareerInsight,
     CareerProfile, QuizQuestion, QuizOption, QuizSubmission, QuizAnswer,
     CareerConfig, AIKnowledgeEntry, JobMarketData, AICallLog,
     SubmissionLockConfig, CareerSubmission, AIChatCredit,
 )
-
-
-# =====================================================
-# TVET Categories & Courses
-# =====================================================
-@admin.register(TVETCategory)
-class TVETCategoryAdmin(admin.ModelAdmin):
-    list_display = ("name",)
-    search_fields = ("name",)
-
-
-@admin.register(TVETCourse)
-class TVETCourseAdmin(admin.ModelAdmin):
-    list_display = ("name", "category", "min_mean_grade")
-    search_fields = ("name",)
-    list_filter = ("category",)
-    filter_horizontal = ("required_subjects",)
-
-
-# =====================================================
-# KMTC Campuses & Courses
-# =====================================================
-@admin.register(KMTCampus)
-class KMTCampusAdmin(admin.ModelAdmin):
-    list_display = ("name", "county")
-    search_fields = ("name", "county")
-
-
-@admin.register(KMTCourse)
-class KMTCourseAdmin(admin.ModelAdmin):
-    list_display = ("name", "min_mean_grade")
-    search_fields = ("name",)
-    filter_horizontal = ("required_subjects", "campuses")
-
-
-# =====================================================
-# TTC Colleges & Courses
-# =====================================================
-@admin.register(TTCCollege)
-class TTCCollegeAdmin(admin.ModelAdmin):
-    list_display = ("name", "county")
-    search_fields = ("name", "county")
-
-
-@admin.register(TTCCourse)
-class TTCCourseAdmin(admin.ModelAdmin):
-    list_display = ("name", "min_mean_grade")
-    search_fields = ("name",)
-    filter_horizontal = ("required_subjects", "colleges")
 
 
 # =====================================================

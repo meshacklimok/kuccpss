@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Set Up Two-Factor: CareerNext{% endblock %}
+
+{% block content %}
+<div class="auth-page">
+  <div class="auth-card" style="max-width:440px;">
+
+    <div class="text-center mb-4">
+      <div style="width:56px;height:56px;border-radius:50%;background:#1e3a8a;
+                  display:flex;align-items:center;justify-content:center;margin:0 auto 1rem;">
+        <i class="fas fa-mobile-alt" style="color:#fff;font-size:1.3rem;"></i>
+      </div>
+      <h2 class="fw-bold mb-1" style="font-size:1.3rem;color:#0f172a;">Protect your staff account</h2>
+      <p class="text-muted small mb-0">
+        Staff accounts need two-factor authentication. You'll set this up once.
+      </p>
+    </div>
+
+    {% if messages %}
+      {% for message in messages %}
+      <div class="alert alert-{{ message.tags|default:'info' }} py-2 px-3 mb-3 rounded-3" style="font-size:0.83rem;">{{ message }}</div>
+      {% endfor %}
+    {% endif %}
+
+    <ol class="small ps-3 mb-3" style="color:#334155;line-height:1.6;">
+      <li>Install an authenticator app, e.g. Google Authenticator, Microsoft Authenticator or Authy.</li>
+      <li>In the app, add an account and scan this QR code.</li>
+      <li>Enter the 6-digit code the app shows.</li>
+    </ol>
+
+    <div class="text-center mb-2" style="background:#fff;border-radius:12px;padding:8px;">
+      <div style="display:inline-block;max-width:220px;width:100%;">{{ qr_svg|safe }}</div>
+    </div>
+
+    <details class="small mb-3" style="color:#475569;">
+      <summary style="cursor:pointer;">Can't scan? Enter this key instead</summary>
+      <code style="display:block;word-break:break-all;margin-top:6px;font-size:0.9rem;letter-spacing:1px;">{{ secret }}</code>
+    </details>
+
+    <form method="POST" novalidate>
+      {% csrf_token %}
+      <input type="hidden" name="next" value="{{ next }}">
+      <div class="auth-field">
+        <label for="id_code">6-digit code</label>
+        <input type="text" name="code" id="id_code" class="form-control"
+               inputmode="numeric" pattern="[0-9 ]*" maxlength="7"
+               autocomplete="one-time-code" placeholder="123 456"
+               style="font-size:16px;letter-spacing:4px;" autofocus required>
+      </div>
+      <button type="submit" class="btn-auth-submit mt-2">
+        <i class="fas fa-check me-2"></i>Turn On Two-Factor
+      </button>
+    </form>
+
+    <div class="text-center mt-3">
+      <a href="{% url 'accounts:logout' %}" class="small text-decoration-none" style="color:#64748b;">
+        Log out
+      </a>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

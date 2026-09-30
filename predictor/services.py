@@ -1,26 +1,15 @@
 """
 Cutoff prediction engine.
 
-Reads CourseOffering.cutoff_points JSON, e.g. {"2021": 34.2, "2022": 33.8, "2023": 35.1, "2024": 35.8}
-and produces a 2026 forward estimate using TWO methods.
+Reads CourseOffering.cutoff_points JSON, e.g. {"2023": 34.2, "2024": 33.8, "2025": 35.1}
+(keys are KCSE exam years exactly as labelled on the KUCCPS portal) and produces a
+forward estimate for the year after the newest key using TWO methods.
 
 CLUSTER NUMBERING
 -----------------
-KUCCPS has exactly 20 clusters numbered 1–20.
-
-The database stores three sets of Cluster rows:
-  A) Calculator clusters: numbers 101–120.  These have SubjectGroups and are used
-     by the calculator.  KUCCPS cluster number = (calc number − 100).
-     So calc 101 = KUCCPS Cluster 1 (Law), calc 113 = KUCCPS Cluster 13 (Medicine).
-
-  B) Course sub-group clusters: numbers 5–65.  These are sub-groups (A, B, C …)
-     of the 20 KUCCPS clusters.  E.g., 13A, 13B … 13G are all sub-groups of
-     Cluster 13 (Medicine).  They differ only in which subjects are accepted and
-     what minimum grades are required — they are NOT separate clusters.
-     CourseOffering.cutoff_points is stored against these sub-group rows.
-
-COURSE_TO_KUCCPS maps each sub-group cluster number (5–65) to the parent KUCCPS
-cluster number (1–20) so that predictions display correctly.
+KUCCPS has 18 clusters numbered 1–18. The DB stores them as Cluster rows 101–118
+(KUCCPS number = calc number − 100); these carry the calculator SubjectGroups and
+degree courses link to them directly (there are no sub-clusters any more).
 """
 
 from __future__ import annotations
@@ -49,74 +38,15 @@ def _get_config() -> _DefaultConfig:
         _cfg_ts = now
     return _cfg_cache  # type: ignore[return-value]
 
-# ── KUCCPS canonical cluster names (1–20) ─────────────────────────────────────
+# ── KUCCPS canonical cluster names (1–18) ─────────────────────────────────────
 
-KUCCPS_NAMES: dict[int, str] = {
-    1:  "Law, Commerce & Business",
-    2:  "Business, Management & Information",
-    3:  "Communication, Media & Social Sciences",
-    4:  "Geospatial & Earth Sciences",
-    5:  "Engineering & Applied Sciences",
-    6:  "Architecture, Real Estate & ICT",
-    7:  "Computer Science & IT",
-    8:  "Agricultural Economics",
-    9:  "Pure Sciences",
-    10: "Actuarial Science, Mathematics & Economics",
-    11: "Interior Design, Fashion & Textile",
-    12: "Sports Science & Health Promotion",
-    13: "Medicine, Health & Allied Sciences",
-    14: "History & Archaeology",
-    15: "Agriculture, Veterinary & Environment",
-    16: "Geography & Land Management",
-    17: "French & German",
-    18: "Music",
-    19: "Education",
-    20: "Religious Studies & Theology",
-}
+from clusters.constants import CALC_CLUSTER_OFFSET, KUCCPS_CLUSTER_NAMES as KUCCPS_NAMES  # noqa: E402
 
-# ── Sub-group cluster number (5–65) → KUCCPS cluster (1–20) ──────────────────
-# Letters A, B, C … are sub-groups of the same cluster with different subject
-# requirement profiles — they are NOT separate clusters.
 
-COURSE_TO_KUCCPS: dict[int, int] = {
-    38: 1,
-    40: 2,  41: 2,
-    42: 3,  43: 3,  44: 3,  45: 3,  46: 3,
-    47: 4,  48: 4,
-    49: 5,  50: 5,  51: 5,  52: 5,  53: 5,  54: 5,
-    55: 6,  56: 6,  57: 6,
-    58: 7,  59: 7,  60: 7,
-    61: 8,
-    62: 9,  63: 9,  64: 9,  65: 9,
-    5:  10, 6:  10, 7:  10,
-    8:  11,
-    9:  12,
-    10: 13, 11: 13, 12: 13, 13: 13, 14: 13, 15: 13, 16: 13,
-    17: 14,
-    18: 15, 19: 15, 20: 15, 21: 15, 22: 15, 23: 15, 24: 15,
-    25: 16,
-    26: 17,
-    27: 18,
-    28: 19, 29: 19, 30: 19, 31: 19, 32: 19, 33: 19,
-    34: 19, 35: 19, 36: 19, 37: 19,
-    39: 20,
-}
-
-# Calculator cluster (101–120) → KUCCPS cluster (1–20): simply subtract 100
+# Calculator cluster (101–118) → KUCCPS cluster (1–18): simply subtract 100
 def calc_to_kuccps(calc_num: int) -> int:
-    return calc_num - 100
+    return calc_num - CALC_CLUSTER_OFFSET
 
-# Calculator cluster (101–120) → list of sub-group cluster numbers (5–65)
-# Derived from COURSE_TO_KUCCPS
-CALC_TO_COURSE: dict[int, list[int]] = {}
-for _course_num, _kuccps_num in COURSE_TO_KUCCPS.items():
-    _calc_num = _kuccps_num + 100
-    CALC_TO_COURSE.setdefault(_calc_num, []).append(_course_num)
-
-# Reverse for views: sub-group → calculator cluster number
-COURSE_TO_CALC: dict[int, int] = {
-    c: k + 100 for c, k in COURSE_TO_KUCCPS.items()
-}
 
 # Trend display helpers
 TREND_ICON  = {"rising": "fa-arrow-trend-up",   "stable": "fa-minus", "falling": "fa-arrow-trend-down"}
@@ -132,7 +62,7 @@ TREND_TIP   = {
 
 def predict_cutoff(history: dict | None) -> dict | None:
     """
-    Predict 2026 cutoff from historical data.
+    Predict next year's cutoff (newest KCSE year + 1) from historical data.
 
     METHOD: 70% WMA + 30% Naive (latest year), plus a rising-trend floor.
     Backtested on 720 KUCCPS courses:
@@ -245,19 +175,15 @@ def eligibility(student_score: float, pred: dict) -> dict:
 def predict_offerings_for_calc_cluster(calc_cluster_number: int, student_score: float,
                                         limit: int = 20) -> list[dict]:
     """
-    calc_cluster_number: 101–120
-    Fetches all sub-group CourseOfferings for that KUCCPS cluster and returns
+    calc_cluster_number: 101–118
+    Fetches all CourseOfferings for that KUCCPS cluster and returns
     enriched rows sorted by eligibility rank then predicted cutoff.
     """
     from courses.models import CourseOffering
 
-    course_cluster_numbers = CALC_TO_COURSE.get(calc_cluster_number, [])
-    if not course_cluster_numbers:
-        return []
-
     offerings = (
         CourseOffering.objects
-        .filter(course__cluster__number__in=course_cluster_numbers)
+        .filter(course__cluster__number=calc_cluster_number)
         .select_related("course", "institution", "course__cluster",
                         "course__course_type")
         .exclude(cutoff_points__isnull=True)
@@ -290,8 +216,8 @@ def predict_offerings_for_calc_cluster(calc_cluster_number: int, student_score: 
 def predict_all_for_student(cluster_scores: dict[int, float],
                              top_per_cluster: int = 5) -> list[dict]:
     """
-    cluster_scores: {calc_cluster_number (101–120): student_score}
-    Returns grouped results per KUCCPS cluster (1–20), only clusters with matches.
+    cluster_scores: {calc_cluster_number (101–118): student_score}
+    Returns grouped results per KUCCPS cluster (1–18), only clusters with matches.
     """
     groups = []
     for calc_num in sorted(cluster_scores):

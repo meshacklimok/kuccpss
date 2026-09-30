@@ -55,6 +55,10 @@ CSRF_TRUSTED_ORIGINS = [
     'https://www.careernext.co.ke',
 ]
 
+# Requests to www.<CANONICAL_HOST> are 301'd to CANONICAL_HOST so sessions and
+# the Google OAuth callback always use one host. Set CANONICAL_HOST='' to disable.
+CANONICAL_HOST = os.environ.get('CANONICAL_HOST', '' if DEBUG else 'careernext.co.ke')
+
 # ── Maintenance mode ─────────────────────────────────────────────────────────
 # Flip MAINTENANCE_MODE=True in the host's env vars to take the site offline.
 # Staff users, /admin/, and any IP in MAINTENANCE_ALLOWED_IPS still get through
@@ -140,6 +144,7 @@ ADMIN_EMAIL = os.environ.get('ADMIN_EMAIL', 'support@careernext.co.ke')
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'kuccpss.middleware.CanonicalHostMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'kuccpss.middleware.GracefulErrorMiddleware',
     'kuccpss.middleware.HeavyEndpointRateLimitMiddleware',
@@ -153,6 +158,7 @@ MIDDLEWARE = [
     'kuccpss.middleware.PageTrackingMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'kuccpss.middleware.SuspendedUserMiddleware',
+    'kuccpss.middleware.StaffSecurityMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'allauth.account.middleware.AccountMiddleware',
     'kuccpss.middleware.ReferralMiddleware',
@@ -184,6 +190,7 @@ TEMPLATES = [
         'APP_DIRS': False,
         'OPTIONS': {
             'loaders': _template_loaders,
+            'builtins': ['kuccpss.template_filters'],  # |js_json everywhere
             'context_processors': [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
@@ -192,6 +199,7 @@ TEMPLATES = [
                 'accounts.context_processors.active_announcements',
                 'resources.context_processors.deadline_banner',
                 'resources.context_processors.social_links',
+                'payments.context_processors.payment_support',
                 'analytics.context_processors.posthog_keys',
                 'analytics.context_processors.sentry_context',
                 'analytics.context_processors.ga_context',
@@ -268,8 +276,15 @@ if _REDIS_URL:
         'KEY_PREFIX': 'cn',
     }
 
-# Serve sessions from cache first, fall back to DB — avoids a DB hit on every request
-SESSION_ENGINE = 'django.contrib.sessions.backends.cached_db'
+# Serve sessions from cache first, fall back to DB — but only with a shared
+# cache. LocMemCache is per-worker, so cached_db would let one gunicorn worker
+# read a stale copy of a session another worker just updated (this broke Google
+# login intermittently: the OAuth state saved by one worker was missing when the
+# callback landed on the other).
+SESSION_ENGINE = (
+    'django.contrib.sessions.backends.cached_db' if _REDIS_URL
+    else 'django.contrib.sessions.backends.db'
+)
 
 
 # IntaSend M-Pesa
@@ -335,6 +350,14 @@ if DEBUG:
     # cookie, logging you out here. Production keeps the default name so live
     # users aren't all logged out.
     SESSION_COOKIE_NAME = 'kuccpss_sessionid'
+
+# ── Staff account security (kuccpss.middleware.StaffSecurityMiddleware) ──────
+# Staff must use an authenticator app; set STAFF_2FA_REQUIRED=False only for
+# emergency recovery. Staff sessions end after 12h idle, and the 2FA code is
+# asked for again every 12h.
+STAFF_2FA_REQUIRED = os.environ.get('STAFF_2FA_REQUIRED', 'True') == 'True'
+STAFF_2FA_MAX_AGE = int(os.environ.get('STAFF_2FA_MAX_AGE', str(12 * 3600)))
+STAFF_SESSION_MAX_AGE = int(os.environ.get('STAFF_SESSION_MAX_AGE', str(12 * 3600)))
 
 AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',

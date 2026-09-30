@@ -7,17 +7,12 @@
     <div class="col-lg-5">
 
       <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
-        <div style="background: linear-gradient(135deg, #1e3a8a, #3b82f6); padding: 2rem; color: #fff;">
+        <div style="background: #1e3a8a; padding: 2rem; color: #fff;">
           <div class="d-flex align-items-center gap-3 mb-3">
-            {% if session.mentor.photo %}
-              <img src="{{ session.mentor.photo.url }}" class="rounded-circle object-fit-cover flex-shrink-0"
-                   width="56" height="56" alt="{{ session.mentor.display_name }}" loading="lazy">
-            {% else %}
               <div class="rounded-circle bg-white bg-opacity-25 d-flex align-items-center justify-content-center flex-shrink-0"
                    style="width:56px;height:56px;">
                 <span class="fw-bold text-white fs-5">{{ session.mentor.display_name|first|upper }}</span>
               </div>
-            {% endif %}
             <div>
               <div class="fw-bold">{{ session.mentor.display_name }}</div>
               <div class="opacity-75 small">{{ session.mentor.course }}</div>
@@ -69,7 +64,7 @@
                   style="letter-spacing: .05em;"
                 >
               </div>
-              <div class="form-text">Enter 9 digits after +254, e.g. 712 345 678 — no leading zero.</div>
+              <div class="form-text">Enter 9 digits after +254, e.g. 712 345 678, no leading zero.</div>
             </div>
 
             <button id="pay-btn" class="btn btn-success w-100 rounded-pill fw-semibold py-3" style="font-size:1.05rem;">
@@ -203,7 +198,7 @@
       });
       const data = await resp.json();
       if (data.ok) {
-        showOk(data.message || 'STK push sent — enter your PIN on your phone.');
+        showOk(data.message || 'STK push sent, enter your PIN on your phone.');
         // Poll the status endpoint every 4 seconds (max 90 sec = 22 checks)
         let checks = 0;
         const statusUrl = "{% url 'mentorship:session_status' session.token %}";
@@ -211,8 +206,10 @@
           checks++;
           if (checks > 22) {
             clearInterval(interval);
-            showErr('Payment not confirmed yet. Check your M-Pesa messages or contact support.');
+            showErr('M-Pesa hasn\'t confirmed this yet. If you entered your PIN and got an M-Pesa SMS, don\'t pay again — enter the code from that SMS below and we\'ll confirm your booking. If no SMS arrived, no money was taken and you can try again.');
             payBtn.disabled = false;
+            const manual = document.getElementById('manual-verify-section');
+            if (manual) manual.scrollIntoView({ behavior: 'smooth', block: 'center' });
             return;
           }
           try {

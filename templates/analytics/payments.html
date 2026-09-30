@@ -1,7 +1,7 @@
 {% extends "analytics/base_analytics.html" %}
 {% block analytics_title %}Payment Monitor{% endblock %}
 {% block page_title %}💳 Payment Monitor{% endblock %}
-{% block page_subtitle %}Pending, stale, and failed payments — no admin navigation needed{% endblock %}
+{% block page_subtitle %}Pending, stale, and failed payments, no admin navigation needed{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -76,12 +76,12 @@
 
 {% if very_stale %}
 <div class="alert alert-err">
-  🔴 <strong>{{ very_stale }} payment{{ very_stale|pluralize }}</strong> have been pending for over 6 hours — these may be stuck or abandoned.
+  🔴 <strong>{{ very_stale }} payment{{ very_stale|pluralize }}</strong> have been pending for over 6 hours, these may be stuck or abandoned.
 </div>
 {% endif %}
 {% if stale_pending and not very_stale %}
 <div class="alert alert-warn">
-  ⚠️ <strong>{{ stale_pending }} payment{{ stale_pending|pluralize }}</strong> have been pending for over 1 hour — worth checking.
+  ⚠️ <strong>{{ stale_pending }} payment{{ stale_pending|pluralize }}</strong> have been pending for over 1 hour, worth checking.
 </div>
 {% endif %}
 {% if with_mpesa_code %}

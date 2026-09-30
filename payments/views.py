@@ -11,11 +11,20 @@ from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 
+from datetime import timedelta
+
+from kuccpss.circuit_breaker import intasend_breaker
+
 from .models import Payment, Transaction
 from .services import (
+    REPEATABLE_FEATURES,
     initiate_stk_push,
     price_for_feature,
     fetch_intasend_status,
+    fetch_intasend_invoice,
+    has_paid_for_feature,
+    is_valid_mpesa_phone,
+    extract_mpesa_code,
     lock_submission_on_payment,
     verify_intasend_signature,
     credit_affiliate_commission,
@@ -23,11 +32,18 @@ from .services import (
 
 logger = logging.getLogger(__name__)
 
+# How far back an unconfirmed payment can still be re-checked with IntaSend / claimed
+# with an M-Pesa code. Covers "I paid on Friday and only noticed on Monday".
+RECOVERABLE_WINDOW = timedelta(days=7)
+# Brute-force guard on the M-Pesa code endpoint (per user).
+CODE_ATTEMPTS_PER_HOUR = 10
+
 
 def _generate_receipt_pdf(payment: "Payment", user_name: str, mpesa_ref: str, paid_at: str) -> bytes:
     """Render a branded one-page PDF receipt the user can download and keep."""
     import io
     from reportlab.pdfgen import canvas as pdf_canvas
+    from kuccpss.pdf_utils import enable_site_links
     from reportlab.lib.pagesizes import A4
     from reportlab.lib.units import cm
     from reportlab.lib import colors as rc
@@ -41,7 +57,7 @@ def _generate_receipt_pdf(payment: "Payment", user_name: str, mpesa_ref: str, pa
     WHITE = rc.white
 
     buf = io.BytesIO()
-    p = pdf_canvas.Canvas(buf, pagesize=A4)
+    p = enable_site_links(pdf_canvas.Canvas(buf, pagesize=A4))
     W, H = A4
 
     # Header band
@@ -239,6 +255,23 @@ def fulfil_completed_payment(payment: "Payment") -> None:
     credit_affiliate_commission(payment)
 
 
+def complete_payment(payment: "Payment", *, mpesa_code: str = "") -> bool:
+    """
+    Move a payment to 'completed' and fulfil it exactly once. The webhook, the status
+    poll, the M-Pesa-code check and the stale-payment sweep can all race on the same
+    payment; the conditional UPDATE lets only one of them run fulfilment, so AI credits
+    and receipts are never granted twice. Returns True if this call completed it.
+    """
+    fields = {"status": "completed", "updated_at": timezone.now()}
+    if mpesa_code:
+        fields["mpesa_code"] = mpesa_code
+    won = Payment.objects.filter(pk=payment.pk).exclude(status="completed").update(**fields)
+    payment.refresh_from_db()
+    if won:
+        fulfil_completed_payment(payment)
+    return bool(won)
+
+
 @login_required
 def payment_required(request):
     from django.utils.http import url_has_allowed_host_and_scheme
@@ -249,18 +282,57 @@ def payment_required(request):
         if url_has_allowed_host_and_scheme(raw_next, allowed_hosts={request.get_host()})
         else "/accounts/dashboard/"
     )
-    price = price_for_feature(feature)
+    if feature not in dict(Payment.FEATURE_CHOICES):
+        feature = ""
+    price = price_for_feature(feature) if feature else 0
+    # Already paid (one-time feature) or feature is free → nothing to pay, go straight in.
+    already_unlocked = bool(feature) and (
+        price == 0
+        or (feature not in REPEATABLE_FEATURES and has_paid_for_feature(request.user, feature))
+    )
     return render(request, "payments/payment_required.html", {
         "feature": feature,
         "price": price,
         "next_url": next_url,
+        "already_unlocked": already_unlocked,
     })
 
 
 @login_required
 def payment_history(request):
-    payments = Payment.objects.filter(user=request.user).prefetch_related("transactions")
-    return render(request, "payments/payment_history.html", {"payments": payments})
+    payments = list(
+        Payment.objects.filter(user=request.user)
+        .select_related("mentorship_session")
+        .prefetch_related("transactions")
+    )
+    recover_after = timezone.now() - RECOVERABLE_WINDOW
+    for p in payments:
+        # A pending/failed payment from the last few days can still be checked with
+        # M-Pesa — the webhook may simply never have reached us.
+        p.can_recheck = (
+            p.status in ("pending", "failed")
+            and p.created_at >= recover_after
+            and p.mentorship_session_id is None
+        )
+    return render(request, "payments/payment_history.html", {
+        "payments": payments,
+    })
+
+
+@login_required
+def payment_receipt(request, payment_id):
+    """Download the PDF receipt for a completed payment."""
+    payment = get_object_or_404(Payment, pk=payment_id, user=request.user, status="completed")
+    mpesa_ref = (
+        payment.transactions.order_by("-created_at").values_list("mpesa_ref", flat=True).first()
+        or payment.mpesa_code
+    )
+    user_name = getattr(request.user, "full_name", None) or request.user.email
+    paid_at = timezone.localtime(payment.updated_at).strftime("%d %b %Y, %I:%M %p")
+    pdf = _generate_receipt_pdf(payment, user_name, mpesa_ref, paid_at)
+    response = HttpResponse(pdf, content_type="application/pdf")
+    response["Content-Disposition"] = f'attachment; filename="CareerNext_Receipt_{payment.pk}.pdf"'
+    return response
 
 
 @login_required
@@ -282,19 +354,21 @@ def initiate_payment(request):
     if feature not in dict(Payment.FEATURE_CHOICES):
         return JsonResponse({"success": False, "message": "Unknown feature."}, status=400)
     if not phone:
-        return JsonResponse({"success": False, "message": "Phone number is required."}, status=400)
+        return JsonResponse({"success": False, "message": "Enter the M-Pesa phone number you want to pay with."}, status=400)
+    if not is_valid_mpesa_phone(phone):
+        return JsonResponse({
+            "success": False,
+            "message": "That doesn't look like a Kenyan mobile number. Use the format 0712 345 678 or 0112 345 678.",
+        }, status=400)
 
     amount = price_for_feature(feature)
     if amount == 0:
-        return JsonResponse({"success": False, "message": "This feature is free."}, status=400)
-
-    from payments.services import REPEATABLE_FEATURES
-    from datetime import timedelta
+        return JsonResponse({"success": False, "already_unlocked": True, "message": "This feature is free — no payment needed."}, status=400)
 
     # One-time features: block if already paid
     if feature not in REPEATABLE_FEATURES:
-        if Payment.objects.filter(user=request.user, feature=feature, status="completed").exists():
-            return JsonResponse({"success": False, "message": "You have already unlocked this feature."}, status=400)
+        if has_paid_for_feature(request.user, feature):
+            return JsonResponse({"success": False, "already_unlocked": True, "message": "You have already unlocked this feature."}, status=400)
 
     # All features: block if a pending payment was initiated within the last 5 minutes
     recent_pending = Payment.objects.filter(
@@ -306,7 +380,10 @@ def initiate_payment(request):
     if recent_pending:
         return JsonResponse({
             "success": False,
-            "message": "A payment for this feature is already in progress.",
+            "message": (
+                "You already have an M-Pesa request in progress. Complete it on your phone — "
+                "we're checking for it now. You can send a new one in a few minutes."
+            ),
             "payment_id": recent_pending.pk,
         }, status=409)
 
@@ -314,6 +391,18 @@ def initiate_payment(request):
         logger.error("IntaSend API keys not configured — INTASEND_SECRET_KEY / INTASEND_PUBLISHABLE_KEY missing")
         return JsonResponse(
             {"success": False, "message": "Payment system is not yet configured. Please contact support."},
+            status=503,
+        )
+
+    if intasend_breaker.is_open():
+        return JsonResponse(
+            {
+                "success": False,
+                "message": (
+                    "M-Pesa is temporarily unavailable. No money was taken. "
+                    "Please try again in a minute."
+                ),
+            },
             status=503,
         )
 
@@ -340,7 +429,13 @@ def initiate_payment(request):
         payment.status = "failed"
         payment.save(update_fields=["status"])
         return JsonResponse(
-            {"success": False, "message": "Could not reach M-Pesa. Try again."},
+            {
+                "success": False,
+                "message": (
+                    "We couldn't send the M-Pesa prompt right now. No money was taken. "
+                    "Check the number and try again in a moment."
+                ),
+            },
             status=502,
         )
 
@@ -423,17 +518,15 @@ def mpesa_webhook(request):
         raw_response=payload,
     )
 
-    # Update Payment status
+    # Update Payment status. Retried/duplicate webhooks must not re-fulfil, and a late
+    # FAILED event must never downgrade a payment that has already completed.
     if state == "COMPLETE":
-        payment.status = "completed"
+        complete_payment(payment)
     elif state == "FAILED":
-        payment.status = "failed"
+        Payment.objects.filter(pk=payment.pk, status="pending").update(
+            status="failed", updated_at=timezone.now()
+        )
     # PENDING state → leave as-is
-
-    payment.save(update_fields=["status", "updated_at"])
-
-    if state == "COMPLETE":
-        fulfil_completed_payment(payment)
 
     return HttpResponse(status=200)
 
@@ -464,95 +557,265 @@ def verify_payment(request, payment_id):
         "verify_payment %s: checkout_id=%r phone=%r amount=%s created=%s",
         payment_id, payment.checkout_id, payment.phone_number, payment.amount, payment.created_at,
     )
-    remote_state = fetch_intasend_status(payment.checkout_id)
+    invoice = fetch_intasend_invoice(payment.checkout_id)
+    remote_state = invoice["state"] if invoice else None
     logger.info("verify_payment %s: IntaSend says %r", payment_id, remote_state)
 
     if remote_state == "COMPLETE":
-        payment.status = "completed"
-        payment.save(update_fields=["status", "updated_at"])
-        fulfil_completed_payment(payment)
+        _record_intasend_transaction(payment, invoice)
+        complete_payment(payment)
         return JsonResponse({"status": "completed", "feature": payment.feature, "message": "Payment confirmed!"})
     elif remote_state == "FAILED":
-        payment.status = "failed"
-        payment.save(update_fields=["status", "updated_at"])
-        return JsonResponse({"status": "failed", "feature": payment.feature, "message": "Payment failed."})
-    elif remote_state is None and not payment.checkout_id:
+        Payment.objects.filter(pk=payment.pk, status="pending").update(
+            status="failed", updated_at=timezone.now()
+        )
         return JsonResponse({
-            "status": payment.status,
+            "status": "failed",
             "feature": payment.feature,
             "message": (
-                "We could not confirm receipt of your M-Pesa prompt. "
-                "If your phone didn't ring, please try paying again. "
-                "If money was deducted, contact support with your M-Pesa SMS."
+                "M-Pesa reports this payment was cancelled or not completed, so no money was taken. "
+                "If you did receive an M-Pesa confirmation SMS, enter its code below."
+            ),
+        })
+    elif not payment.checkout_id:
+        return JsonResponse({
+            "status": "pending",
+            "feature": payment.feature,
+            "message": (
+                "We couldn't confirm that the M-Pesa prompt reached your phone. "
+                "If money left your account, enter the code from your M-Pesa SMS below. "
+                "If not, you can safely pay again."
             ),
         })
     else:
-        return JsonResponse({"status": "pending", "feature": payment.feature, "message": "Payment is still processing. Please wait a moment."})
+        return JsonResponse({
+            "status": "pending",
+            "feature": payment.feature,
+            "message": (
+                "M-Pesa hasn't confirmed this payment yet. If you entered your PIN, wait a minute and "
+                "check again, or enter the code from your M-Pesa SMS below."
+            ),
+        })
+
+
+def _record_intasend_transaction(payment: "Payment", invoice: dict | None) -> None:
+    """Log a Transaction for a payment IntaSend confirmed via polling (no webhook arrived),
+    so its M-Pesa reference shows on history/receipts and matches future code lookups."""
+    mpesa_ref = (invoice or {}).get("mpesa_ref", "")
+    if not mpesa_ref or payment.transactions.filter(mpesa_ref__iexact=mpesa_ref).exists():
+        return
+    Transaction.objects.create(
+        payment=payment,
+        mpesa_ref=mpesa_ref,
+        phone_number=payment.phone_number,
+        amount=payment.amount,
+        raw_response={"source": "intasend_status_poll", **invoice},
+    )
 
 
 @login_required
 @require_POST
 def verify_by_transaction_code(request):
     """
-    User submits their M-Pesa transaction code (e.g. RCK12345XY).
-    We look it up in the Transaction table — if it exists for this user's
-    payment, money arrived and we grant access. Otherwise reject.
+    "I already paid" recovery. The user submits their M-Pesa code (or pastes the whole
+    confirmation SMS). We try, in order:
+      1. A Transaction already logged for this user with that code (webhook arrived).
+      2. Ask IntaSend directly about the user's recent unconfirmed payments — covers the
+         common case where the webhook never reached us, so there's no Transaction yet.
+      3. Hand it to a human: the code is attached to the payment and admins are emailed,
+         so the user is told exactly what happens next instead of being dead-ended.
     Body: { feature, mpesa_code }
-    Returns: { status: 'completed'|'not_found'|'error', message }
+    Returns: { status: 'completed'|'under_review'|'not_found'|'error', message, feature? }
     """
     try:
         body = json.loads(request.body)
     except (ValueError, KeyError):
         return JsonResponse({"status": "error", "message": "Invalid request."}, status=400)
 
-    mpesa_code = body.get("mpesa_code", "").strip().upper()
+    raw = str(body.get("mpesa_code", "")).strip()
+    feature = str(body.get("feature", "")).strip()
+    if feature not in dict(Payment.FEATURE_CHOICES):
+        feature = ""
 
+    if not raw:
+        return JsonResponse({"status": "error", "message": "Enter the code from your M-Pesa confirmation SMS."})
+    mpesa_code = extract_mpesa_code(raw)
     if not mpesa_code:
-        return JsonResponse({"status": "error", "message": "Please enter your M-Pesa transaction code."})
+        return JsonResponse({
+            "status": "error",
+            "message": (
+                "That doesn't look like an M-Pesa code. It's the 10 letters and numbers at the start "
+                "of your M-Pesa SMS, e.g. TGH4ABC123. You can also paste the whole SMS."
+            ),
+        })
 
+    from django.core.cache import cache
+    attempts_key = f"pay_code_attempts_{request.user.pk}"
+    attempts = cache.get(attempts_key, 0)
+    if attempts >= CODE_ATTEMPTS_PER_HOUR:
+        return JsonResponse({
+            "status": "error",
+            "message": "Too many attempts. Please wait a while, or contact support and we'll sort it out.",
+        }, status=429)
+    cache.set(attempts_key, attempts + 1, 3600)
+
+    # A code already used by someone else can't unlock this account.
+    foreign = (
+        Transaction.objects.filter(mpesa_ref__iexact=mpesa_code).exclude(payment__user=request.user).exists()
+        or Payment.objects.filter(mpesa_code__iexact=mpesa_code, status="completed")
+        .exclude(user=request.user).exists()
+    )
+    if foreign:
+        logger.warning("M-Pesa code %s claimed by %s belongs to another account", mpesa_code, request.user.email)
+        return JsonResponse({
+            "status": "not_found",
+            "message": (
+                "That M-Pesa code is linked to a different CareerNext account. If you paid from this "
+                "account, please contact support with your M-Pesa SMS."
+            ),
+        })
+
+    # 1. Webhook already logged it.
     txn = (
         Transaction.objects.filter(mpesa_ref__iexact=mpesa_code, payment__user=request.user)
         .select_related("payment")
         .first()
     )
-
     if txn:
-        payment = txn.payment
-        already_completed = payment.status == "completed"
-        if not already_completed:
-            payment.status = "completed"
-            payment.mpesa_code = mpesa_code
-            payment.save(update_fields=["status", "mpesa_code", "updated_at"])
-            fulfil_completed_payment(payment)
-        logger.info("Transaction code verified: user=%s code=%s payment=%s", request.user.email, mpesa_code, payment.pk)
-        return JsonResponse({
-            "status": "completed",
-            "feature": payment.feature,
-            "message": "Payment verified! Unlocking your feature.",
-        })
+        complete_payment(txn.payment, mpesa_code=mpesa_code)
+        logger.info("Code verified via transaction: user=%s code=%s payment=%s", request.user.email, mpesa_code, txn.payment.pk)
+        return _code_verified(txn.payment)
 
-    logger.info("Transaction code not found in DB: user=%s code=%s", request.user.email, mpesa_code)
+    # 2. Webhook never arrived — ask IntaSend about recent unconfirmed payments.
+    candidates = Payment.objects.filter(
+        user=request.user,
+        status__in=["pending", "failed"],
+        created_at__gte=timezone.now() - RECOVERABLE_WINDOW,
+        mentorship_session__isnull=True,
+    ).exclude(checkout_id="")
+    if feature:
+        candidates = candidates.filter(feature=feature)
+    for payment in candidates.order_by("-created_at")[:5]:
+        invoice = fetch_intasend_invoice(payment.checkout_id)
+        if invoice and invoice["state"] == "COMPLETE":
+            _record_intasend_transaction(payment, invoice)
+            complete_payment(payment, mpesa_code=mpesa_code)
+            logger.info("Code verified via IntaSend: user=%s code=%s payment=%s", request.user.email, mpesa_code, payment.pk)
+            return _code_verified(payment)
+
+    # 3. Nothing automatic worked — queue for a human.
+    payment = _queue_for_manual_review(request, feature, mpesa_code)
+    if payment is None:
+        return JsonResponse({
+            "status": "not_found",
+            "message": (
+                "We couldn't match that code to a payment on your account. Check the code in your "
+                "M-Pesa SMS, or contact support and we'll help."
+            ),
+        })
     return JsonResponse({
-        "status": "not_found",
+        "status": "under_review",
         "message": (
-            "We could not find a payment matching that transaction code. "
-            "Double-check the code from your M-Pesa SMS, or contact support if you believe this is an error."
+            f"Thanks — we've received your M-Pesa code {mpesa_code}. M-Pesa hasn't confirmed it to us "
+            f"automatically, so our team will check it and unlock your access, usually within a few hours. "
+            f"We'll email {request.user.email} as soon as it's done."
         ),
     })
+
+
+def _code_verified(payment: "Payment") -> JsonResponse:
+    return JsonResponse({
+        "status": "completed",
+        "feature": payment.feature,
+        "message": "Payment verified! Unlocking your access…",
+    })
+
+
+def _queue_for_manual_review(request, feature: str, mpesa_code: str) -> "Payment | None":
+    """
+    Attach the code to the user's most recent unconfirmed payment (or open one for the
+    feature they're trying to unlock) and email the admins once per new code. Admins
+    approve with the existing "Mark as COMPLETED" action, which runs full fulfilment.
+    """
+    base = Payment.objects.filter(
+        user=request.user, status__in=["pending", "failed"], mentorship_session__isnull=True,
+    )
+    payment = (base.filter(feature=feature) if feature else base).order_by("-created_at").first()
+    if payment is None and feature:
+        price = price_for_feature(feature)
+        if price <= 0:
+            return None
+        payment = Payment.objects.create(
+            user=request.user, feature=feature, amount=price, status="pending", mpesa_code=mpesa_code,
+        )
+    elif payment is None:
+        return None
+    elif payment.mpesa_code.upper() == mpesa_code:
+        return payment  # already queued — don't email admins again
+    else:
+        payment.mpesa_code = mpesa_code
+        payment.status = "pending"
+        payment.save(update_fields=["mpesa_code", "status", "updated_at"])
+
+    try:
+        from django.urls import reverse
+        from kuccpss.email_utils import send_branded_email
+        from resources.models import SiteSetting
+        admin_to = SiteSetting.get("admin_email", default=settings.ADMIN_EMAIL)
+        send_branded_email(
+            to=admin_to,
+            subject=f"ACTION: Verify M-Pesa payment — {request.user.email}",
+            heading="Payment needs manual verification",
+            banner_label="⚠ Action Required",
+            banner_color="amber",
+            greeting="Hi Admin,",
+            body_lines=[
+                "A user says they paid but M-Pesa/IntaSend hasn't confirmed it automatically. "
+                "Check the code in the IntaSend/Safaricom portal. If it's genuine, open the payment "
+                "and set it to Completed — that unlocks the user and emails their receipt.",
+            ],
+            table_rows=[
+                {"label": "User", "value": request.user.email},
+                {"label": "Product", "value": payment.get_product_display()},
+                {"label": "Amount", "value": f"KES {int(payment.amount)}"},
+                {"label": "M-Pesa Code", "value": mpesa_code, "highlight": True},
+                {"label": "Phone", "value": payment.phone_number or "—"},
+                {"label": "Payment ID", "value": f"#{payment.pk}"},
+            ],
+            cta_url=request.build_absolute_uri(reverse("admin:payments_payment_change", args=[payment.pk])),
+            cta_label="Review payment",
+        )
+    except Exception as exc:
+        logger.error("Manual-review email failed for payment %s: %s", payment.pk, exc)
+    logger.info("Payment %s queued for manual review: user=%s code=%s", payment.pk, request.user.email, mpesa_code)
+    return payment
 
 
 @login_required
 def pending_payment_for_feature(request):
     """
-    Returns the most recent pending payment for a feature, so the frontend can
-    offer 'I already paid — verify' without making the user pay again.
+    Returns the user's most recent unconfirmed payment for a feature (pending, or failed
+    within the recovery window), so the page can offer "Already paid? Check it" instead
+    of making the user pay twice. Also reports whether a code is with our team.
     """
     feature = request.GET.get("feature", "")
     payment = (
-        Payment.objects.filter(user=request.user, feature=feature, status="pending")
+        Payment.objects.filter(
+            user=request.user,
+            feature=feature,
+            status__in=["pending", "failed"],
+            created_at__gte=timezone.now() - RECOVERABLE_WINDOW,
+        )
         .order_by("-created_at")
         .first()
     )
     if payment:
-        return JsonResponse({"found": True, "payment_id": payment.pk, "created_at": payment.created_at.isoformat()})
+        return JsonResponse({
+            "found": True,
+            "payment_id": payment.pk,
+            "status": payment.status,
+            "under_review": bool(payment.mpesa_code),
+            "mpesa_code": payment.mpesa_code,
+            "created_at": payment.created_at.isoformat(),
+        })
     return JsonResponse({"found": False})

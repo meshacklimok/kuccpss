@@ -5,6 +5,8 @@ from typing import List, Dict, Optional
 # =====================================================
 # KCSE Subjects and Grades
 # =====================================================
+from kuccpss.upload_validators import SafeImageValidator
+
 class KCSEGrade(models.Model):
     subject_name = models.CharField(max_length=50)
     grade = models.CharField(max_length=3)  # e.g., A, A-, B+, C
@@ -256,7 +258,7 @@ class CareerProfile(models.Model):
     demand_level = models.CharField(max_length=20, choices=DEMAND_CHOICES, default="medium")
     future_outlook = models.TextField(blank=True, help_text="Future growth prospects")
     icon = models.CharField(max_length=50, blank=True, help_text="FontAwesome icon class")
-    image = models.ImageField(upload_to="career_profile_images/", blank=True, null=True)
+    image = models.ImageField(upload_to="career_profile_images/", blank=True, null=True, validators=[SafeImageValidator()])
     career_tags = models.CharField(
         max_length=255, blank=True,
         help_text="Comma-separated tags used for quiz matching, e.g. science,health,biology"
@@ -270,7 +272,6 @@ class CareerProfile(models.Model):
     class Meta:
         ordering = ["title"]
         indexes = [
-            models.Index(fields=["slug"]),
             models.Index(fields=["demand_level"]),
         ]
 
@@ -483,7 +484,7 @@ def match_degree_courses(kcse_grades: Dict[str, str]) -> List[StudentCourseMatch
 
     named_points = _grades_to_points(kcse_grades)
 
-    # Compute all 20 cluster points once using the correct slot-based formula
+    # Compute all 18 cluster points once using the correct slot-based formula
     cluster_results = calculate_clusters_anonymous(named_points)
     cluster_points_map: Dict[int, float] = {r.cluster.pk: r.cluster_points for r in cluster_results}
 
@@ -524,7 +525,7 @@ def match_degree_courses(kcse_grades: Dict[str, str]) -> List[StudentCourseMatch
 def match_diploma_courses(kcse_grades: Dict[str, str]) -> List[StudentCourseMatch]:
     mean_grade = calculate_mean_grade(kcse_grades)
     matches = []
-    for course in Course.objects.filter(category__name="Diploma"):
+    for course in Course.objects.filter(category__name="Diploma").prefetch_related('cutoffs__university'):
         cutoffs = course.cutoffs.all()  # type: ignore[attr-defined]
         for cutoff in cutoffs:
             admission = predict_admission_chance(mean_grade, cutoff.cutoff_points)
@@ -640,7 +641,7 @@ def generate_ai_recommendation(matches: List[StudentCourseMatch], user=None) -> 
 
     if api_key:
         try:
-            from openai import OpenAI
+            from kuccpss.circuit_breaker import ai_breaker, get_openai_client
             prompt = (
                 "You are CareerNext AI — a Kenyan KCSE career guidance assistant. "
                 "A student's top matched courses are:\n"
@@ -650,13 +651,14 @@ def generate_ai_recommendation(matches: List[StudentCourseMatch], user=None) -> 
                 "Give one actionable next step. Address them as 'you'. No bullet points. Max 100 words."
             )
             cfg = CareerConfig.get()
-            client = OpenAI(api_key=api_key)
-            resp = client.chat.completions.create(
-                model=cfg.ai_model_name,
-                messages=[{'role': 'user', 'content': prompt}],
-                max_tokens=200,
-                temperature=cfg.ai_temperature,
-            )
+            client = get_openai_client(api_key)
+            with ai_breaker.guard():
+                resp = client.chat.completions.create(
+                    model=cfg.ai_model_name,
+                    messages=[{'role': 'user', 'content': prompt}],
+                    max_tokens=200,
+                    temperature=cfg.ai_temperature,
+                )
             text = resp.choices[0].message.content.strip()
         except Exception as exc:
             _log.error("generate_ai_recommendation OpenAI error: %s", exc)
@@ -1018,7 +1020,6 @@ class SharedResult(models.Model):
     class Meta:
         ordering = ['-created_at']
         indexes = [
-            models.Index(fields=["user"]),
             models.Index(fields=["expires_at"]),
         ]
 

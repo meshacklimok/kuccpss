@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}Withdrawal History | CareerNext{% endblock %}
+
+{% block content %}
+<div class="container py-4" style="max-width:860px;">
+  <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+    <div>
+      <h3 class="fw-bold mb-1">Withdrawal History</h3>
+      <p class="text-muted mb-0 small">Current balance: <strong class="text-success">KES {{ mentor.wallet_balance }}</strong></p>
+    </div>
+    <a href="{% url 'mentorship:dashboard' %}" class="btn btn-outline-secondary btn-sm rounded-pill">
+      <i class="bi bi-arrow-left me-1"></i>Back to Dashboard
+    </a>
+  </div>
+
+  {% include "partials/withdrawal_history_table.html" %}
+</div>
+{% endblock %}

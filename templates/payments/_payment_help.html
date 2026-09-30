@@ -1,0 +1,130 @@
+{% load static %}
+{% comment %}
+  "Paid but still locked?" recovery panel, shared by every payment surface.
+  Params: feature (required), theme ("dark" | "light", default light),
+          success_url (optional; default reloads the page), open (optional bool).
+  On success it fires a cancelable `payment:unlocked` event on document
+  (detail: {feature}); call preventDefault() to handle it yourself.
+{% endcomment %}
+<details class="pay-help pay-help--{{ theme|default:'light' }}" data-feature="{{ feature }}"
+         data-success-url="{{ success_url|default:'' }}"
+         data-url="{% url 'payments:verify_by_transaction_code' %}" data-csrf="{{ csrf_token }}"
+         {% if open %}open{% endif %}>
+    <summary>
+        <span class="pay-help-q"><i class="bi bi-life-preserver" aria-hidden="true"></i> Paid but still locked?</span>
+        <span class="pay-help-hint">Fix it here</span>
+    </summary>
+    <div class="pay-help-body">
+        <ol class="pay-help-steps">
+            <li><strong>Give it a minute.</strong> M-Pesa confirmations can take 1&ndash;2 minutes. Keep this page open.</li>
+            <li><strong>Enter your M-Pesa code.</strong> It's the 10 letters and numbers at the start of your M-Pesa SMS, e.g. <b>TGH4ABC123</b>. You can paste the whole SMS.</li>
+        </ol>
+        <form class="pay-help-form" novalidate>
+            <input type="text" class="pay-help-input" name="mpesa_code" aria-label="M-Pesa code from your SMS"
+                   placeholder="e.g. TGH4ABC123" autocomplete="off" autocapitalize="characters"
+                   spellcheck="false" enterkeyhint="done">
+            <button type="submit" class="pay-help-btn">Verify</button>
+        </form>
+        <p class="pay-help-msg" role="status" aria-live="polite"></p>
+        <div class="pay-help-contact">
+            <span>Still stuck? We'll sort it out:</span>
+            {% if payment_support.whatsapp %}
+            <a href="https://wa.me/{{ payment_support.whatsapp }}?text={{ 'Hi CareerNext, I paid but my access is still locked. My account email is '|urlencode }}{{ request.user.email|urlencode }}"
+               target="_blank" rel="noopener"><i class="bi bi-whatsapp" aria-hidden="true"></i> WhatsApp</a>
+            {% endif %}
+            {% if payment_support.email %}
+            <a href="mailto:{{ payment_support.email }}?subject={{ 'Paid but still locked'|urlencode }}&body={{ 'Account email: '|urlencode }}{{ request.user.email|urlencode }}%0AM-Pesa%20code%3A%20%0AWhat%20I%20paid%20for%3A%20"><i class="bi bi-envelope" aria-hidden="true"></i> {{ payment_support.email }}</a>
+            {% endif %}
+            <a href="{% url 'payments:payment_history' %}"><i class="bi bi-receipt" aria-hidden="true"></i> My payments</a>
+        </div>
+    </div>
+</details>
+
+<style>
+.pay-help { margin-top: 1rem; border-radius: 12px; font-size: 0.82rem; line-height: 1.5; text-align: left; }
+.pay-help summary {
+    list-style: none; cursor: pointer; display: flex; align-items: center; justify-content: space-between;
+    gap: 0.5rem; padding: 0.75rem 0.9rem; min-height: 44px; border-radius: 12px; font-weight: 700;
+}
+.pay-help summary::-webkit-details-marker { display: none; }
+.pay-help summary::after { content: "\25BE"; font-size: 0.8rem; transition: transform 0.2s; }
+.pay-help[open] summary::after { transform: rotate(180deg); }
+.pay-help-hint { margin-left: auto; font-weight: 600; font-size: 0.72rem; opacity: 0.7; }
+.pay-help-body { padding: 0 0.9rem 0.9rem; }
+.pay-help-steps { margin: 0 0 0.75rem; padding-left: 1.15rem; }
+.pay-help-steps li { margin-bottom: 0.4rem; }
+.pay-help-form { display: flex; gap: 0.5rem; }
+.pay-help-input {
+    flex: 1; min-width: 0; font-size: 16px; /* 16px stops iOS zoom-on-focus */
+    padding: 0.6rem 0.8rem; border-radius: 10px; outline: none; text-transform: uppercase; letter-spacing: 0.04em;
+}
+.pay-help-btn {
+    border: none; border-radius: 10px; padding: 0.6rem 1.1rem; min-height: 44px;
+    font-weight: 800; cursor: pointer; background: #16a34a; color: #fff; white-space: nowrap;
+}
+.pay-help-btn:disabled { opacity: 0.6; cursor: wait; }
+.pay-help-msg { margin: 0.5rem 0 0; min-height: 1.2em; font-size: 0.8rem; }
+.pay-help-msg.is-ok { color: #16a34a; } .pay-help-msg.is-err { color: #dc2626; } .pay-help-msg.is-info { color: #b45309; }
+.pay-help-contact { display: flex; flex-wrap: wrap; align-items: center; gap: 0.35rem 0.9rem; margin-top: 0.75rem; font-size: 0.78rem; }
+.pay-help-contact a { font-weight: 700; text-decoration: none; overflow-wrap: anywhere; }
+
+.pay-help--light { background: #f8fafc; border: 1px solid #e2e8f0; color: #334155; }
+.pay-help--light summary { color: #1e293b; }
+.pay-help--light .pay-help-input { background: #fff; border: 1.5px solid #cbd5e1; color: #0f172a; }
+.pay-help--light .pay-help-input:focus { border-color: #16a34a; }
+.pay-help--light .pay-help-contact a { color: #1d4ed8; }
+
+.pay-help--dark { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); color: rgba(255,255,255,0.72); }
+.pay-help--dark summary { color: #fff; }
+.pay-help--dark .pay-help-input { background: rgba(255,255,255,0.08); border: 1.5px solid rgba(255,255,255,0.18); color: #fff; }
+.pay-help--dark .pay-help-input::placeholder { color: rgba(255,255,255,0.35); }
+.pay-help--dark .pay-help-input:focus { border-color: #34d399; }
+.pay-help--dark .pay-help-contact a { color: #93c5fd; }
+.pay-help--dark .pay-help-msg.is-ok { color: #34d399; } .pay-help--dark .pay-help-msg.is-err { color: #fca5a5; } .pay-help--dark .pay-help-msg.is-info { color: #fcd34d; }
+
+body.dark .pay-help--light { background: var(--surface-2, #1e293b); border-color: var(--border, #334155); color: var(--text-2, #cbd5e1); }
+body.dark .pay-help--light summary { color: var(--text, #f1f5f9); }
+body.dark .pay-help--light .pay-help-input { background: var(--surface, #0f172a); border-color: var(--border, #334155); color: var(--text, #f1f5f9); }
+body.dark .pay-help--light .pay-help-contact a { color: #93c5fd; }
+</style>
+
+<script src="{% static 'js/payment_polling.js' %}"></script>
+<script>
+(function () {
+    document.querySelectorAll('.pay-help:not([data-bound])').forEach(function (box) {
+        box.setAttribute('data-bound', '1');
+        var form = box.querySelector('.pay-help-form');
+        var input = box.querySelector('.pay-help-input');
+        var btn = box.querySelector('.pay-help-btn');
+        var msg = box.querySelector('.pay-help-msg');
+
+        function say(text, kind) { msg.textContent = text; msg.className = 'pay-help-msg is-' + kind; }
+
+        form.addEventListener('submit', async function (e) {
+            e.preventDefault();
+            var code = (input.value || '').trim();
+            if (!code) { say('Enter the code from your M-Pesa SMS.', 'err'); input.focus(); return; }
+            btn.disabled = true;
+            say('Checking with M-Pesa…', 'info');
+            var d = await submitMpesaCode(box.dataset.url, box.dataset.csrf, box.dataset.feature, code);
+            btn.disabled = false;
+            if (d.status === 'completed') {
+                say(d.message || 'Payment verified! Unlocking…', 'ok');
+                var evt = new CustomEvent('payment:unlocked', { cancelable: true, detail: { feature: box.dataset.feature } });
+                if (document.dispatchEvent(evt)) {
+                    setTimeout(function () {
+                        if (box.dataset.successUrl) window.location.href = box.dataset.successUrl;
+                        else window.location.reload();
+                    }, 1200);
+                }
+            } else if (d.status === 'under_review') {
+                say(d.message, 'info');
+                input.disabled = true;
+                btn.disabled = true;
+            } else {
+                say(d.message || 'We could not verify that code.', 'err');
+            }
+        });
+    });
+})();
+</script>

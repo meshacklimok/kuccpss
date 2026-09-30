@@ -1,11 +1,11 @@
 {% extends "base.html" %}
-{% block title %}My Course Shortlist — KUCCPS Application Tracker Kenya | CareerNext{% endblock %}
+{% block title %}My Course Shortlist: KUCCPS Application Tracker Kenya | CareerNext{% endblock %}
 
 {% block content %}
 <style>
 /* ── Hero ── */
 .sl-hero {
-  background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 60%, #1d4ed8 100%);
+  background: #0f172a;
   padding: 2rem 0 1.5rem;
 }
 
@@ -248,9 +248,9 @@
   background: #e2e8f0; overflow: hidden; min-width: 40px;
 }
 .cutoff-bar-fill { height: 100%; border-radius: 4px; transition: width 0.4s; }
-.bar-high   { background: linear-gradient(90deg,#ef4444,#f97316); }
-.bar-medium { background: linear-gradient(90deg,#f59e0b,#eab308); }
-.bar-low    { background: linear-gradient(90deg,#22c55e,#10b981); }
+.bar-high   { background: #ef4444; }
+.bar-medium { background: #f59e0b; }
+.bar-low    { background: #22c55e; }
 
 /* Gap chip */
 .gap-chip {
@@ -520,7 +520,7 @@
         <div class="mb-2">
           <label class="sl-label d-block mb-1"><i class="fas fa-sticky-note me-1" style="color:#f59e0b;"></i>My Notes</label>
           <textarea class="notes-box" id="notes-{{ course.pk }}"
-                    placeholder="Add your thoughts — campus preference, why this course, family decision…">{{ item.notes }}</textarea>
+                    placeholder="Add your thoughts: campus preference, why this course, family decision…">{{ item.notes }}</textarea>
           <div class="d-flex align-items-center gap-2 mt-1">
             <button class="notes-save-btn" onclick="saveNotes({{ course.pk }})">
               <i class="fas fa-save me-1"></i>Save
@@ -937,7 +937,7 @@ function switchView(view) {
 // WhatsApp share
 document.getElementById('waShareBtn') && document.getElementById('waShareBtn').addEventListener('click', function() {
   const courses = [{% for item in items %}"{{ item.course.name }}"{% if not forloop.last %},{% endif %}{% endfor %}];
-  let msg = "🎓 My KCSE Course Shortlist — CareerNext\n\n";
+  let msg = "🎓 My KCSE Course Shortlist: CareerNext\n\n";
   courses.forEach((c, i) => { msg += (i+1) + ". " + c + "\n"; });
   msg += "\nThese are the top courses I saved after checking my KCSE eligibility on CareerNext!";
   msg += "\n\n👉 Find out what YOU qualify for FREE: www.careernext.co.ke 🚀";

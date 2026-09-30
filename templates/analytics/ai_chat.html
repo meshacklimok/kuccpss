@@ -1,7 +1,7 @@
 {% extends "analytics/base_analytics.html" %}
 {% block analytics_title %}AI Chat Analytics{% endblock %}
 {% block page_title %}AI Chat Analytics{% endblock %}
-{% block page_subtitle %}CareerNext AI usage — last {{ days }} days{% endblock %}
+{% block page_subtitle %}CareerNext AI usage, last {{ days }} days{% endblock %}
 
 {% block header_actions %}
 <div class="day-pills">
@@ -69,8 +69,8 @@
 <script>
 new Chart(document.getElementById('msgChart'), {
   type: 'line',
-  data: { labels: {{ chart_msg_labels|safe }},
-    datasets: [{ label:'Messages', data:{{ chart_msg_data|safe }},
+  data: { labels: {{ chart_msg_labels|js_json }},
+    datasets: [{ label:'Messages', data:{{ chart_msg_data|js_json }},
       borderColor:'#0891b2', backgroundColor:'rgba(8,145,178,.08)',
       tension:.35, fill:true, pointRadius:2 }]
   },
@@ -80,8 +80,8 @@ new Chart(document.getElementById('msgChart'), {
 });
 new Chart(document.getElementById('splitChart'), {
   type: 'doughnut',
-  data: { labels: {{ chart_split_labels|safe }},
-    datasets: [{ data:{{ chart_split_data|safe }}, backgroundColor:['#2563eb','#d97706'], borderWidth:2 }]
+  data: { labels: {{ chart_split_labels|js_json }},
+    datasets: [{ data:{{ chart_split_data|js_json }}, backgroundColor:['#2563eb','#d97706'], borderWidth:2 }]
   },
   options: { responsive:true, maintainAspectRatio:false,
     plugins:{ legend:{ position:'right' } } }

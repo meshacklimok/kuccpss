@@ -93,7 +93,7 @@ def home(request):
                     'course_type_slug': c.course_type.slug if c.course_type else '',
                     'slug': c.slug,
                     'cluster_num': c.cluster.kuccps_number if c.cluster else None,
-                    'cutoff': (off.cutoff_points or {}).get('2024') if off else None,
+                    'cutoff': off.latest_cutoff() if off else None,
                     'institution': off.institution.name if off and off.institution else '',
                     'saves': id_save_map[c.pk],
                 })
@@ -560,6 +560,9 @@ def career_profile_detail(request, slug):
         .prefetch_related('offerings__institution')
         .all()
     )
+    # Most relevant first: "Data Scientist" → Data Science before Actuarial Science
+    from courses.relevance import rank_courses
+    raw_courses = rank_courses(profile.title, raw_courses, extra_terms=tags)
     _TYPE_ORDER = ['Degree', 'Diploma', 'KMTC', 'TTC']
     bucket = defaultdict(list)
     for c in raw_courses:
@@ -592,18 +595,21 @@ def quiz_view(request):
             session_key=request.session.session_key or "",
         )
         tag_scores: Dict[str, int] = {}
+        answers = []
         for question in questions:
             option_id = request.POST.get(f"q_{question.pk}")
             if option_id:
-                try:
-                    option = question.options.get(pk=option_id)  # type: ignore[attr-defined]
-                    QuizAnswer.objects.create(
-                        submission=submission, question=question, option=option
-                    )
-                    for tag in option.get_tags_list():
-                        tag_scores[tag] = tag_scores.get(tag, 0) + 1
-                except Exception:
-                    pass
+                # Resolve against the prefetched options — no per-question query
+                option = next(
+                    (o for o in question.options.all() if str(o.pk) == option_id),  # type: ignore[attr-defined]
+                    None,
+                )
+                if option is None:
+                    continue
+                answers.append(QuizAnswer(submission=submission, question=question, option=option))
+                for tag in option.get_tags_list():
+                    tag_scores[tag] = tag_scores.get(tag, 0) + 1
+        QuizAnswer.objects.bulk_create(answers)
 
         request.session["quiz_tag_scores"] = tag_scores
         request.session["quiz_submission_id"] = submission.pk
@@ -645,14 +651,15 @@ def _generate_quiz_ai_summary(tag_scores: dict, top_career_names: list) -> str:
                 "Address the student as 'you'. Use Kenyan education terminology. No bullet points."
             )
 
-        from openai import OpenAI
-        client = OpenAI(api_key=api_key)
-        resp = client.chat.completions.create(
-            model=cfg.ai_model_name,
-            messages=[{'role': 'user', 'content': prompt}],
-            max_tokens=120,
-            temperature=cfg.ai_temperature,
-        )
+        from kuccpss.circuit_breaker import ai_breaker, get_openai_client
+        client = get_openai_client(api_key)
+        with ai_breaker.guard():
+            resp = client.chat.completions.create(
+                model=cfg.ai_model_name,
+                messages=[{'role': 'user', 'content': prompt}],
+                max_tokens=120,
+                temperature=cfg.ai_temperature,
+            )
         return (resp.choices[0].message.content or "").strip()
     except Exception as _e:
         import logging as _lg
@@ -759,7 +766,7 @@ def _build_ai_db_context(request) -> str:
 
     cluster_points_dict: dict = {}
 
-    # Include all 20 cluster points so AI can evaluate any course correctly
+    # Include all 18 cluster points so AI can evaluate any course correctly
     if pathway == 'Degree':
         cluster_points_dict = request.session.get('career_cluster_points', {})
 
@@ -792,8 +799,8 @@ def _build_ai_db_context(request) -> str:
                     pass
 
         if cluster_points_dict:
-            lines.append("\nSTUDENT'S CLUSTER POINTS (all 20 KUCCPS clusters):")
-            for cnum in range(1, 21):
+            lines.append("\nSTUDENT'S CLUSTER POINTS (all 18 KUCCPS clusters):")
+            for cnum in range(1, 19):
                 pts = cluster_points_dict.get(str(cnum))
                 if pts is not None:
                     status = "INELIGIBLE — missing required subject(s)" if float(pts) == 0.0 else f"{float(pts):.3f}/48"
@@ -840,7 +847,7 @@ def _build_ai_db_context(request) -> str:
                           .exclude(cutoff_points__isnull=True)[:100])
                     raw = []
                     for offering in qs:
-                        cutoff = offering.latest_cutoff()
+                        cutoff = offering.newest_cutoff()
                         if cutoff is None:
                             continue
                         cluster = offering.course.cluster
@@ -977,9 +984,9 @@ def _search_courses_for_message(message: str, max_courses: int = 4, max_offering
                     bits.append(f"Subject requirements: {reqs}")
             offs = []
             for o in c.offerings.all()[:max_offerings]:
-                cut = o.latest_cutoff()
+                cut = o.newest_cutoff()
                 offs.append(
-                    f"{o.institution.name} (cutoff: {cut})" if cut is not None
+                    f"{o.institution.name} ({o.newest_cutoff_year()} cutoff: {cut})" if cut is not None
                     else o.institution.name
                 )
             if offs:
@@ -1010,6 +1017,14 @@ def ajax_ai_insight(request):
     if not api_key:
         return JsonResponse({"error": "AI not configured."}, status=400)
 
+    # Check before charging a credit — an open circuit refuses the call anyway.
+    from kuccpss.circuit_breaker import CircuitOpenError, ai_breaker, get_openai_client
+    if ai_breaker.is_open():
+        return JsonResponse(
+            {"error": "CareerNext AI is busy right now. Please try again in a minute."},
+            status=503,
+        )
+
     allowed, calls_used, limit, reason = _check_and_increment_ai_calls(request)
     if not allowed:
         if reason == 'payment_required':
@@ -1025,7 +1040,6 @@ def ajax_ai_insight(request):
         )
 
     try:
-        from openai import OpenAI
         cfg = _get_career_config()
         if not getattr(cfg, 'ai_enabled', True):
             return JsonResponse({"error": "AI insight is disabled."}, status=400)
@@ -1043,16 +1057,22 @@ def ajax_ai_insight(request):
             "Be warm, specific, and address them as 'you'. No bullet points. Max 80 words."
         )
 
-        client = OpenAI(api_key=api_key)
-        resp = client.chat.completions.create(
-            model=cfg.ai_model_name,
-            messages=[{'role': 'user', 'content': prompt}],
-            max_tokens=250,
-            temperature=cfg.ai_temperature,
-        )
+        client = get_openai_client(api_key)
+        with ai_breaker.guard():
+            resp = client.chat.completions.create(
+                model=cfg.ai_model_name,
+                messages=[{'role': 'user', 'content': prompt}],
+                max_tokens=250,
+                temperature=cfg.ai_temperature,
+            )
         text = (resp.choices[0].message.content or "").strip()
         return JsonResponse({"insight": text})
 
+    except CircuitOpenError:
+        return JsonResponse(
+            {"error": "CareerNext AI is busy right now. Please try again in a minute."},
+            status=503,
+        )
     except Exception as e:
         import logging as _lg
         _lg.getLogger(__name__).error("AI insight error: %s", e)
@@ -1162,6 +1182,14 @@ def ajax_ai_chat(request):
                 status=429,
             )
 
+    # ── Circuit breaker — checked before a credit is charged ──
+    from kuccpss.circuit_breaker import CircuitOpenError, ai_breaker, get_openai_client
+    if ai_breaker.is_open():
+        return JsonResponse(
+            {"error": "CareerNext AI is busy right now. Please try again in a minute."},
+            status=503,
+        )
+
     # ── Credit / rate-limit check ────────────────────────
     allowed, calls_used, limit, reason = _check_and_increment_ai_calls(request)
     if not allowed:
@@ -1262,7 +1290,7 @@ def ajax_ai_chat(request):
 
         # ── DEGREE CLUSTER RULES ──────────────────────────────────────────
         "═══ DEGREE COURSE RULES — CRITICAL ═══",
-        "There are 20 KUCCPS clusters. Each has its own subject requirements and cluster point calculation. "
+        "There are 18 KUCCPS clusters. Each has its own subject requirements and cluster point calculation. "
         "A student's cluster points DIFFER across clusters.",
         "",
         "RULE 1 — 0.00 = Ineligible, never low:",
@@ -1589,24 +1617,26 @@ def ajax_ai_chat(request):
             pass
 
     try:
-        from openai import OpenAI
-        client = OpenAI(api_key=api_key)
+        client = get_openai_client(api_key)
 
         # ── Streaming path (chat page) — student sees the answer as it types ──
         if body.get("stream"):
             def token_stream():
                 try:
-                    stream = client.chat.completions.create(
-                        model=cfg.ai_model_name,
-                        messages=messages,  # type: ignore[arg-type]
-                        max_tokens=700,
-                        temperature=cfg.ai_temperature,
-                        stream=True,
-                    )
-                    for chunk in stream:
-                        if chunk.choices and chunk.choices[0].delta.content:
-                            yield chunk.choices[0].delta.content
+                    with ai_breaker.guard():
+                        stream = client.chat.completions.create(
+                            model=cfg.ai_model_name,
+                            messages=messages,  # type: ignore[arg-type]
+                            max_tokens=700,
+                            temperature=cfg.ai_temperature,
+                            stream=True,
+                        )
+                        for chunk in stream:
+                            if chunk.choices and chunk.choices[0].delta.content:
+                                yield chunk.choices[0].delta.content
                     _log_chat()
+                except CircuitOpenError:
+                    yield "⚠️ CareerNext AI is busy right now — please try again in a minute."
                 except Exception as exc:
                     import logging as _lg
                     _lg.getLogger(__name__).error("AI chat stream error: %s", exc)
@@ -1618,16 +1648,22 @@ def ajax_ai_chat(request):
             return response
 
         # ── Non-streaming path (dashboard / results widgets) ──
-        resp = client.chat.completions.create(
-            model=cfg.ai_model_name,
-            messages=messages,  # type: ignore[arg-type]
-            max_tokens=700,
-            temperature=cfg.ai_temperature,
-        )
+        with ai_breaker.guard():
+            resp = client.chat.completions.create(
+                model=cfg.ai_model_name,
+                messages=messages,  # type: ignore[arg-type]
+                max_tokens=700,
+                temperature=cfg.ai_temperature,
+            )
         reply = (resp.choices[0].message.content or "").strip()
         _log_chat()
         return JsonResponse({"reply": reply, "kb_used": len(kb_entries)})
 
+    except CircuitOpenError:
+        return JsonResponse(
+            {"error": "CareerNext AI is busy right now. Please try again in a minute."},
+            status=503,
+        )
     except Exception as e:
         import logging as _lg
         _lg.getLogger(__name__).error("AI chat error: %s", e)
@@ -1718,7 +1754,6 @@ PATHWAY_SLUG_TO_LABEL = {
     'kmtc':        'KMTC',
     'ttc':         'TTC',
     'artisan':     'Artisan',
-    'shortcourse': 'Short Course',
 }
 
 COURSE_TYPE_MAP = {
@@ -1727,7 +1762,6 @@ COURSE_TYPE_MAP = {
     'KMTC':         ['KMTC'],
     'TTC':          ['TTC'],
     'Artisan':      ['TVET Artisan Certificate (Level 4)', 'TVET Craft Certificate (Level 3)'],
-    'Short Course': ['TVET Short Course', 'TVET Trade Test', 'TVET Professional', 'TVET Proficiency'],
 }
 
 
@@ -1985,7 +2019,6 @@ PATHWAY_DEFAULT_MIN_GRADE = {
     'KMTC':         'C',
     'TTC':          'C-',
     'Artisan':      'D',
-    'Short Course': 'E',
 }
 
 
@@ -1994,6 +2027,7 @@ _KUCCPS_CODE_TO_NAME = {
     'eng':   'english',
     'kis':   'kiswahili',
     'mat a': 'mathematics',
+    'mat b': 'mathematics',
     'mat':   'mathematics',
     'bio':   'biology',
     'bsc':   'biology',
@@ -2001,6 +2035,7 @@ _KUCCPS_CODE_TO_NAME = {
     'phy':   'physics',
     'psc':   'physics',
     'geo':   'geography',
+    'hag':   'history and government',
     'his':   'history and government',
     'hst':   'history and government',
     'bst':   'business studies',
@@ -2013,6 +2048,7 @@ _KUCCPS_CODE_TO_NAME = {
     'ire':   'islamic religious education',
     'hre':   'hindu religious education',
     'mus':   'music',
+    'muc':   'music',
     'art':   'art and design',
     'ard':   'art and design',
     'drd':   'drawing and design',
@@ -2027,7 +2063,9 @@ _KUCCPS_CODE_TO_NAME = {
     'fre':   'french',
     'ger':   'german',
     'ara':   'arabic',
+    'arb':   'arabic',
     'avi':   'aviation technology',
+    'avt':   'aviation technology',
     'gsc':   'physics',
     'ksl':   'kenyan sign language',
 }
@@ -2480,6 +2518,14 @@ def degree_upload(request):
             messages.warning(request, 'Please select an image file to upload.')
             return render(request, 'career/degree_upload.html')
 
+        from django.core.exceptions import ValidationError as _VE
+        from kuccpss.upload_validators import SafeDocumentValidator
+        try:
+            SafeDocumentValidator()(img)
+        except _VE as e:
+            messages.error(request, e.messages[0])
+            return render(request, 'career/degree_upload.html')
+
         from django.conf import settings as _settings
         api_key = getattr(_settings, 'OPENAI_API_KEY', '')
 
@@ -2491,9 +2537,9 @@ def degree_upload(request):
             )
             return redirect('career:degree_manual')
 
+        from kuccpss.circuit_breaker import CircuitOpenError, ai_breaker, get_openai_client
         try:
             import base64, json, logging
-            from openai import OpenAI
 
             log = logging.getLogger(__name__)
             img_bytes = img.read()
@@ -2510,10 +2556,10 @@ def degree_upload(request):
                 doc.close()
 
             b64 = base64.b64encode(img_bytes).decode('utf-8')
-            client = OpenAI(api_key=api_key)
+            client = get_openai_client(api_key)
 
             prompt = """You are reading a KUCCPS cluster points document issued in Kenya.
-It contains cluster numbers (1–20) and their corresponding cluster point scores (0.0–48.0).
+It contains cluster numbers (1–18) and their corresponding cluster point scores (0.0–48.0).
 
 Extract every cluster number and its point score that you can see.
 
@@ -2521,25 +2567,26 @@ Return ONLY a JSON object in this exact format — no explanation, no extra text
 {"data": {"1": 42.5, "4": 38.2, "9": 35.0}}
 
 Rules:
-- Keys are cluster numbers as strings ("1" through "20").
+- Keys are cluster numbers as strings ("1" through "18").
 - Values are the point scores as numbers (e.g. 42.5, not "42.5").
 - Include every cluster whose score appears in the document.
 - If no cluster points are visible, return {"data": {}}."""
 
-            response = client.chat.completions.create(
-                model=_get_career_config().ai_model_name,
-                messages=[{
-                    'role': 'user',
-                    'content': [
-                        {'type': 'text', 'text': prompt},
-                        {'type': 'image_url', 'image_url': {
-                            'url': f'data:{mime};base64,{b64}',
-                            'detail': 'high',
-                        }},
-                    ],
-                }],
-                max_tokens=600,
-            )
+            with ai_breaker.guard():
+                response = client.chat.completions.create(
+                    model=_get_career_config().ai_model_name,
+                    messages=[{
+                        'role': 'user',
+                        'content': [
+                            {'type': 'text', 'text': prompt},
+                            {'type': 'image_url', 'image_url': {
+                                'url': f'data:{mime};base64,{b64}',
+                                'detail': 'high',
+                            }},
+                        ],
+                    }],
+                    max_tokens=600,
+                )
 
             raw = (response.choices[0].message.content or "").strip()
             log.info('OCR cluster points raw response: %s', raw[:400])
@@ -2557,7 +2604,7 @@ Rules:
             for k, v in data.items():
                 try:
                     num = int(str(k).strip())
-                    if not (1 <= num <= 20):
+                    if not (1 <= num <= 18):
                         continue
                     pts = max(0.0, min(48.0, float(v)))
                     cluster_points[str(num)] = pts
@@ -2566,7 +2613,7 @@ Rules:
                     continue
 
             if not cluster_points:
-                raise ValueError('No valid cluster numbers (1–20) with scores (0–48) found')
+                raise ValueError('No valid cluster numbers (1–18) with scores (0–48) found')
 
             request.session['career_pathway'] = 'Degree'
             request.session['career_degree_method'] = 'upload'
@@ -2580,6 +2627,13 @@ Rules:
             )
             return redirect('career:degree_manual')
 
+        except CircuitOpenError:
+            messages.warning(
+                request,
+                'Document scanning is temporarily unavailable. '
+                'Please enter your cluster points manually instead.'
+            )
+            return redirect('career:degree_manual')
         except Exception as e:
             import logging
             logging.getLogger(__name__).error('OCR error: %s', e, exc_info=True)
@@ -2735,7 +2789,7 @@ def degree_manual(request):
                 # Fall back to precomputed value keyed by KUCCPS group number
                 knum = grp['main_num']
                 val = float(precomputed.get(str(knum), 0)) if knum is not None else 0.0
-            # Store by KUCCPS group number (1-20) — matches career_results lookup
+            # Store by KUCCPS cluster number (1-18) — matches career_results lookup
             if grp['main_num'] is not None:
                 cluster_points[str(grp['main_num'])] = val
 
@@ -3054,7 +3108,7 @@ def career_results(request):
                 qs = qs.filter(course__name__icontains=search_q)
 
             for offering in qs:
-                cutoff = offering.latest_cutoff()
+                cutoff = offering.newest_cutoff()
                 if cutoff is None:
                     continue
 
@@ -3133,6 +3187,7 @@ def career_results(request):
                     'institution':    offering.institution,
                     'cluster':        cluster,
                     'cutoff':         cutoff,
+                    'cutoff_year':    offering.newest_cutoff_year(),
                     'student_points': round(student_pts, 1),
                     'diff':           diff,
                     'chance':         chance,
@@ -3247,7 +3302,61 @@ def career_results(request):
             if _cache_key:
                 _dc.set(_cache_key, matches, timeout=600)
 
-    if pathway == 'Degree':
+    # ── Institution / course pickers (Sort: Institution / Sort: Course Name) ──
+    # Options come from the full result set; the chosen value then narrows it.
+    from courses.relevance import relevance_score as _rel_score, is_related_name as _is_related
+    filter_inst   = request.GET.get('inst', '').strip() if sort_by == 'institution' else ''
+    filter_course = request.GET.get('course', '').strip() if sort_by == 'course' else ''
+    inst_options, course_options = [], []
+    if sort_by == 'institution':
+        _inst_map = {}
+        for m in matches:
+            inst = m['institution']
+            row = _inst_map.setdefault(inst.id, {'id': inst.id, 'name': inst.name, 'total': 0, 'qualifies': 0})
+            row['total'] += 1
+            if m.get('qualifies', True):
+                row['qualifies'] += 1
+        inst_options = sorted(_inst_map.values(), key=lambda r: r['name'])
+        if filter_inst.isdigit():
+            matches = [m for m in matches if m['institution'].id == int(filter_inst)]
+        else:
+            filter_inst = ''
+    elif sort_by == 'course':
+        course_options = sorted({m['course'].name for m in matches}, key=str.lower)
+        if filter_course:
+            _fc_lower = filter_course.lower()
+            # Exact name when one exists; otherwise anything containing the typed text
+            _has_exact = any(n.lower() == _fc_lower for n in course_options)
+            _picked = []
+            for m in matches:
+                name = m['course'].name
+                if name.lower() == _fc_lower or (not _has_exact and _fc_lower in name.lower()):
+                    m['is_related'] = False
+                elif _is_related(filter_course, name):
+                    m['is_related'] = True
+                else:
+                    continue
+                m['relevance'] = _rel_score(filter_course, name)
+                _picked.append(m)
+            matches = _picked
+    _selected_inst_name = next((r['name'] for r in inst_options if str(r['id']) == filter_inst), '')
+    pick_qs = ''
+    if filter_inst:
+        pick_qs = '&inst=' + filter_inst
+    elif filter_course:
+        from urllib.parse import quote as _quote
+        pick_qs = '&course=' + _quote(filter_course)
+
+    if filter_course:
+        # Chosen course first, then its closest namesakes; each grouped by institution.
+        matches.sort(key=lambda m: (
+            m['is_related'],
+            -m['relevance'],
+            m['course'].name.lower(),
+            0 if m.get('qualifies', True) else 1,
+            m['institution'].name,
+        ))
+    elif pathway == 'Degree':
         # Non-qualifying courses always sink to the bottom regardless of sort mode.
         def _degree_sort_key(m):
             is_disq = 0 if m.get('qualifies', True) else 1
@@ -3261,7 +3370,7 @@ def career_results(request):
                     return (is_disq, m['tier_order'], -cutoff_val)
                 return (is_disq, m['tier_order'], abs(m['diff']))
             if sort_by == 'institution':
-                return (is_disq, m['institution'].name)
+                return (is_disq, m['institution'].name, m['course'].name)
             # course
             return (is_disq, m['course'].name)
         matches.sort(key=_degree_sort_key)
@@ -3280,6 +3389,7 @@ def career_results(request):
                 0 if m['qualifies'] else 1,
                 m['institution'].name,
                 -m.get('min_pts', 0),
+                m['course'].name,
             ))
         elif sort_by == 'course':
             matches.sort(key=lambda m: (0 if m['qualifies'] else 1, m['course'].name))
@@ -3299,7 +3409,8 @@ def career_results(request):
             tier_counts[key] = tier_counts.get(key, 0) + 1
 
     # ── Persist snapshot for logged-in users (powers Personalised Dashboard) ──
-    if request.user.is_authenticated and matches and _no_active_filter and not _cache_hit:
+    if (request.user.is_authenticated and matches and _no_active_filter and not _cache_hit
+            and not filter_inst and not filter_course):
         try:
             from accounts.models import CareerSessionSnapshot
             sorted_top = sorted(matches, key=lambda m: (m['tier_order'], abs(m['diff'])))[:10]
@@ -3339,7 +3450,8 @@ def career_results(request):
 
     # ── Backup Plan (Degree only, no active filters) ──────────────────────────
     backup_plan = []
-    if pathway == 'Degree' and not filter_chance and not filter_tier and not search_q:
+    if (pathway == 'Degree' and not filter_chance and not filter_tier and not search_q
+            and not filter_inst and not filter_course):
         from collections import defaultdict
 
         qual_matches   = [m for m in matches if m['diff'] >= 0]
@@ -3458,6 +3570,14 @@ def career_results(request):
         'filter_qual':         filter_qual,
         'search_q':            search_q,
         'sort_by':             sort_by,
+        'filter_inst':         filter_inst,
+        'filter_inst_name':    _selected_inst_name,
+        'filter_course':       filter_course,
+        'inst_options':        inst_options,
+        'course_options':      course_options,
+        'pick_qs':             pick_qs,
+        'pick_qual_count':     sum(1 for m in matches if m.get('qualifies', True)),
+        'pick_disq_count':     sum(1 for m in matches if not m.get('qualifies', True)),
         'mean_grade':          mean_grade,
         'cluster_pts_single':  cluster_pts_single,
         'best_cluster_pts':    max(cluster_points_dict.values(), default=cluster_pts_single) if cluster_points_dict else cluster_pts_single,
@@ -3539,7 +3659,7 @@ def _build_career_matches(request):
                 .exclude(cutoff_points__isnull=True)
             )
             for offering in qs:
-                cutoff = offering.latest_cutoff()
+                cutoff = offering.newest_cutoff()
                 if cutoff is None:
                     continue
 
@@ -3594,6 +3714,7 @@ def _build_career_matches(request):
                     'institution':    offering.institution,
                     'cluster':        cluster,
                     'cutoff':         cutoff,
+                    'cutoff_year':    offering.newest_cutoff_year(),
                     'student_points': round(student_pts, 1),
                     'diff':           diff,
                     'chance':         chance,
@@ -3684,25 +3805,13 @@ def _build_career_matches(request):
             m['course'].name,
         ))
 
-    # Build 20-group KUCCPS cluster score table for PDF display.
-    # career_cluster_points is now keyed by KUCCPS group number (1-20 as strings).
+    # Build the 18-cluster KUCCPS score table for PDF display.
+    # career_cluster_points is keyed by KUCCPS cluster number (1-18 as strings).
     cluster_score_table = []   # list of (kuccps_num, group_name, score)
     if pathway == 'Degree' and cluster_points_dict:
         from clusters.models import Cluster as _Cluster
-        import re as _re2
-        # Build a name lookup: kuccps_num → clean group name
-        # Use sub-clusters (numbered 1-99 in DB) to get official KUCCPS group names
-        knum_to_name = {}
-        for cl in _Cluster.objects.filter(number__lt=100).exclude(number__isnull=True):
-            kn = cl.kuccps_number
-            if kn and kn not in knum_to_name:
-                clean = _re2.sub(r'\s*\(\d+[A-Za-z]*\)\s*$', '', cl.name).strip()
-                knum_to_name[kn] = clean
-        # Fallback names from master clusters if sub-cluster name not found
-        for cl in _Cluster.objects.filter(number__gte=100):
-            kn = cl.kuccps_number
-            if kn and kn not in knum_to_name:
-                knum_to_name[kn] = cl.name
+        # Name lookup: kuccps_num → official KUCCPS cluster name (rows 101–118)
+        knum_to_name = {cl.kuccps_number: cl.name for cl in _Cluster.objects.filter(number__gt=100)}
 
         for kn_str, score in sorted(cluster_points_dict.items(), key=lambda x: int(x[0]) if x[0].isdigit() else 999):
             try:
@@ -3718,6 +3827,7 @@ def _build_career_matches(request):
 def career_results_pdf_quick(request):
     """Quick summary PDF — compact landscape table of all course matches."""
     from reportlab.pdfgen import canvas
+    from kuccpss.pdf_utils import enable_site_links
     from reportlab.lib.pagesizes import A4, landscape
     from reportlab.lib.units import cm
     from reportlab.lib import colors
@@ -3740,7 +3850,7 @@ def career_results_pdf_quick(request):
     response = HttpResponse(content_type="application/pdf")
     response["Content-Disposition"] = 'attachment; filename="careernext_career_matches.pdf"'
 
-    c = canvas.Canvas(response, pagesize=landscape(A4))  # type: ignore[arg-type]
+    c = enable_site_links(canvas.Canvas(response, pagesize=landscape(A4)))  # type: ignore[arg-type]
     W, H = landscape(A4)
 
     NAVY  = colors.HexColor("#1e3a8a")
@@ -4129,6 +4239,7 @@ def career_results_pdf_quick(request):
 def career_results_pdf_detailed(request):
     """Detailed placement report PDF — cover page + per-tier grouped results."""
     from reportlab.pdfgen import canvas
+    from kuccpss.pdf_utils import enable_site_links
     from reportlab.lib.pagesizes import A4, landscape
     from reportlab.lib.units import cm
     from reportlab.lib import colors
@@ -4152,7 +4263,7 @@ def career_results_pdf_detailed(request):
     response = HttpResponse(content_type="application/pdf")
     response["Content-Disposition"] = 'attachment; filename="careernext_career_report.pdf"'
 
-    c = canvas.Canvas(response, pagesize=landscape(A4))  # type: ignore[arg-type]
+    c = enable_site_links(canvas.Canvas(response, pagesize=landscape(A4)))  # type: ignore[arg-type]
     W, H = landscape(A4)   # ~29.7 × 21 cm
 
     NAVY  = colors.HexColor("#1e3a8a")

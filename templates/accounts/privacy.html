@@ -4,7 +4,7 @@
 {% block content %}
 <style>
 .pp-hero {
-    background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 60%, #1d4ed8 100%);
+    background: #0f172a;
     color: #fff; padding: 3rem 0 2.5rem;
 }
 .pp-hero h1 { font-size: clamp(1.6rem, 3.5vw, 2.3rem); font-weight: 900; }
@@ -63,7 +63,7 @@
     </div>
     <h1 class="mb-1">Privacy Policy</h1>
     <p class="pp-updated mb-0">
-      Last updated: <strong style="color:#a5b4fc;">23 June 2026</strong>
+      Last updated: <strong style="color:#a5b4fc;">26 September 2026</strong>
       &nbsp;·&nbsp; Effective from: 23 June 2026
       &nbsp;·&nbsp; Version 2.0
     </p>
@@ -115,8 +115,10 @@
       <a href="https://students.kuccps.net/" target="_blank" rel="noopener">students.kuccps.net</a>.
     </p>
     <p>
-      For any privacy-related enquiries, contact us at:
-      <a href="mailto:support@careernext.co.ke">support@careernext.co.ke</a>
+      For any privacy-related enquiries, contact us at
+      <a href="mailto:support@careernext.co.ke">support@careernext.co.ke</a>{% if contact_phone %}
+      or call <a href="tel:{{ contact_phone }}">{{ contact_phone }}</a>{% endif %}.
+      We respond within <strong>7 working days</strong>.
     </p>
   </div>
 
@@ -146,15 +148,15 @@
 
     <h3>2.2 Information Collected Automatically</h3>
     <ul>
-      <li><strong>Log data</strong> — IP address, browser type, pages visited, timestamps (standard web server logs)</li>
-      <li><strong>Session data</strong> — login session tokens stored in encrypted cookies</li>
-      <li><strong>Usage analytics</strong> — page views, feature usage (aggregated, not linked to personal identity where possible)</li>
-      <li><strong>Device information</strong> — device type, operating system, screen size (for improving mobile experience)</li>
+      <li><strong>Log data</strong>: IP address, browser type, pages visited, timestamps (standard web server logs)</li>
+      <li><strong>Session data</strong>: login session tokens stored in encrypted cookies</li>
+      <li><strong>Usage analytics</strong>: page views, feature usage (aggregated, not linked to personal identity where possible)</li>
+      <li><strong>Device information</strong>: device type, operating system, screen size (for improving mobile experience)</li>
     </ul>
 
     <h3>2.3 Information from Third Parties</h3>
     <ul>
-      <li><strong>Google OAuth</strong> — if you sign in with Google, we receive your Google account email, name, and profile picture. We do not receive your Google password.</li>
+      <li><strong>Google OAuth</strong>: if you sign in with Google, we receive your Google account email, name, and profile picture. We do not receive your Google password.</li>
     </ul>
   </div>
 
@@ -188,10 +190,10 @@
     <h2>4. Legal Basis for Processing</h2>
     <p>We process your personal data on the following bases:</p>
     <ul>
-      <li><strong>Contract performance</strong> — processing necessary to provide the services you signed up for (e.g. storing your grades to calculate cluster points).</li>
-      <li><strong>Legitimate interests</strong> — improving platform security, preventing abuse, and improving our services through aggregated analytics.</li>
-      <li><strong>Consent</strong> — for optional features such as uploading a result slip photo for OCR. You may withdraw consent at any time by not using the feature.</li>
-      <li><strong>Legal obligation</strong> — where we are required by law to retain certain records.</li>
+      <li><strong>Contract performance</strong>: processing necessary to provide the services you signed up for (e.g. storing your grades to calculate cluster points).</li>
+      <li><strong>Legitimate interests</strong>: improving platform security, preventing abuse, and improving our services through aggregated analytics.</li>
+      <li><strong>Consent</strong>: for optional features such as uploading a result slip photo for OCR. You may withdraw consent at any time by not using the feature.</li>
+      <li><strong>Legal obligation</strong>: where we are required by law to retain certain records.</li>
     </ul>
   </div>
 
@@ -200,11 +202,11 @@
     <h2>5. Who We Share Your Data With</h2>
     <p>We <strong>do not sell</strong> your personal data. We share it only in these limited circumstances:</p>
     <ul>
-      <li><strong>OpenAI (USA)</strong> — KCSE grade data and career preferences are sent to the OpenAI API to power the Career Engine recommendations and OCR result-slip reading. OpenAI processes this data under their API data usage policy and does not use API data to train their models by default.</li>
-      <li><strong>Tawk.to (USA)</strong> — If you use the live chat widget, your chat messages and optionally your name/email are processed by Tawk.to.</li>
-      <li><strong>Google (USA)</strong> — If you use Google OAuth login, authentication is handled by Google's identity services.</li>
-      <li><strong>Hosting / infrastructure providers</strong> — Our servers and database are hosted with a cloud provider. They access data only to provide infrastructure services and are bound by data processing agreements.</li>
-      <li><strong>Legal requirements</strong> — We may disclose data if required by Kenyan law or a valid court order.</li>
+      <li><strong>OpenAI (USA)</strong>: KCSE grade data and career preferences are sent to the OpenAI API to power the Career Engine recommendations and OCR result-slip reading. OpenAI processes this data under their API data usage policy and does not use API data to train their models by default.</li>
+      <li><strong>Tawk.to (USA)</strong>: If you use the live chat widget, your chat messages and optionally your name/email are processed by Tawk.to.</li>
+      <li><strong>Google (USA)</strong>: If you use Google OAuth login, authentication is handled by Google's identity services.</li>
+      <li><strong>Hosting / infrastructure providers</strong>: Our servers and database are hosted with a cloud provider. They access data only to provide infrastructure services and are bound by data processing agreements.</li>
+      <li><strong>Legal requirements</strong>: We may disclose data if required by Kenyan law or a valid court order.</li>
     </ul>
   </div>
 
@@ -257,7 +259,7 @@
       <tbody>
         <tr><td>sessionid</td><td>Essential</td><td>Keeps you logged in during a session</td><td>Browser session</td></tr>
         <tr><td>csrftoken</td><td>Essential</td><td>Protects against cross-site request forgery</td><td>1 year</td></tr>
-        <tr><td>remember_token</td><td>Functional</td><td>"Remember me" — persistent login</td><td>72 hours</td></tr>
+        <tr><td>remember_token</td><td>Functional</td><td>"Remember me" persistent login</td><td>72 hours</td></tr>
         <tr><td>dark_mode</td><td>Functional</td><td>Saves your dark/light mode preference</td><td>Persistent (localStorage)</td></tr>
         <tr><td>Tawk.to cookies</td><td>Third-party</td><td>Live chat session</td><td>Session / persistent</td></tr>
       </tbody>
@@ -273,12 +275,12 @@
   <div class="pp-section" id="data-retention">
     <h2>8. How Long We Keep Your Data</h2>
     <ul>
-      <li><strong>Account data</strong> — kept for as long as your account is active. Deleted within 30 days of account deletion request.</li>
-      <li><strong>KCSE grades / cluster results</strong> — kept linked to your account until you delete them or your account is deleted.</li>
-      <li><strong>Uploaded result slip images (OCR)</strong> — sent to OpenAI for processing and <strong>not stored</strong> on our servers after the OCR result is returned.</li>
-      <li><strong>Career Engine snapshots</strong> — kept linked to your account; overwritten each time you re-run the engine for the same pathway.</li>
-      <li><strong>Server logs</strong> — retained for up to 90 days for security and debugging purposes, then deleted.</li>
-      <li><strong>Chat transcripts (Tawk.to)</strong> — retained by Tawk.to per their policy.</li>
+      <li><strong>Account data</strong>: kept for as long as your account is active. Personal details are removed as soon as you delete your account, or within 7 working days of a deletion request made by email or phone.</li>
+      <li><strong>KCSE grades / cluster results</strong>: kept linked to your account until you delete them or your account is deleted.</li>
+      <li><strong>Uploaded result slip images (OCR)</strong>: sent to OpenAI for processing and <strong>not stored</strong> on our servers after the OCR result is returned.</li>
+      <li><strong>Career Engine snapshots</strong>: kept linked to your account; overwritten each time you re-run the engine for the same pathway.</li>
+      <li><strong>Server logs</strong>: retained for up to 90 days for security and debugging purposes, then deleted.</li>
+      <li><strong>Chat transcripts (Tawk.to)</strong>: retained by Tawk.to per their policy.</li>
     </ul>
   </div>
 
@@ -287,14 +289,14 @@
     <h2>9. Your Rights</h2>
     <p>You have the following rights regarding your personal data:</p>
     <ul>
-      <li><strong>Access</strong> — You can view the personal information we hold about you by visiting your Profile page.</li>
-      <li><strong>Correction</strong> — You can update your name, county, KCSE year, and other profile details at any time.</li>
-      <li><strong>Deletion</strong> — You can request deletion of your account and all associated data by emailing <a href="mailto:support@careernext.co.ke">support@careernext.co.ke</a>. We will process deletion requests within 30 days.</li>
-      <li><strong>Data portability</strong> — You can request a copy of your personal data in a readable format by emailing us.</li>
-      <li><strong>Withdraw consent</strong> — You can stop using optional features (e.g. OCR upload, career engine) at any time. This does not affect data already processed.</li>
-      <li><strong>Object to processing</strong> — You may object to certain processing activities by contacting us.</li>
+      <li><strong>Access</strong>: You can view the personal information we hold about you by visiting your Profile page.</li>
+      <li><strong>Correction</strong>: You can update your name, county, KCSE year, and other profile details at any time.</li>
+      <li><strong>Deletion</strong>: You can delete your account yourself at any time from your {% if user.is_authenticated %}<a href="{% url 'accounts:delete_account' %}">Profile page</a>{% else %}Profile page{% endif %}, your personal details are removed immediately. You can also request deletion by contacting us and we will process it within 7 working days.</li>
+      <li><strong>Data portability</strong>: You can request a copy of your personal data in a readable format by emailing us.</li>
+      <li><strong>Withdraw consent</strong>: You can stop using optional features (e.g. OCR upload, career engine) at any time. This does not affect data already processed.</li>
+      <li><strong>Object to processing</strong>: You may object to certain processing activities by contacting us.</li>
     </ul>
-    <p>To exercise any of these rights, email us at <a href="mailto:support@careernext.co.ke">support@careernext.co.ke</a>. We will respond within 14 days.</p>
+    <p>To exercise any of these rights, email us at <a href="mailto:support@careernext.co.ke">support@careernext.co.ke</a>{% if contact_phone %} or call <a href="tel:{{ contact_phone }}">{{ contact_phone }}</a>{% endif %}. We will respond within <strong>7 working days</strong>.</p>
   </div>
 
   <!-- 10 -->
@@ -320,7 +322,7 @@
     <h2>11. Security</h2>
     <p>We take reasonable technical and organisational measures to protect your data, including:</p>
     <ul>
-      <li>Passwords are hashed using Django's PBKDF2 algorithm — we never store plain-text passwords</li>
+      <li>Passwords are hashed using Django's PBKDF2 algorithm; we never store plain-text passwords</li>
       <li>All connections to our site use HTTPS (TLS encryption)</li>
       <li>CSRF protection on all forms</li>
       <li>Rate limiting on login and registration to prevent brute-force attacks</li>
@@ -352,10 +354,10 @@
     <h2>13. Mentorship Programme Data</h2>
     <p>When you use the Mentorship Programme, we collect and process:</p>
     <ul>
-      <li><strong>Session bookings</strong> — date, time, mentor, and session format (video/chat) stored linked to your account</li>
-      <li><strong>Session notes</strong> — if a mentor adds notes after a session, these are stored on your profile and accessible by you and the mentor only</li>
-      <li><strong>Payment records</strong> — M-Pesa transaction codes for session payments, retained for 7 years for financial compliance</li>
-      <li><strong>Google Meet links</strong> — generated for video sessions; not stored after the session window expires</li>
+      <li><strong>Session bookings</strong>: date, time, mentor, and session format (video/chat) stored linked to your account</li>
+      <li><strong>Session notes</strong>: if a mentor adds notes after a session, these are stored on your profile and accessible by you and the mentor only</li>
+      <li><strong>Payment records</strong>: M-Pesa transaction codes for session payments, retained for 7 years for financial compliance</li>
+      <li><strong>Google Meet links</strong>: generated for video sessions; not stored after the session window expires</li>
     </ul>
     <p>
       Mentors see only your display name, your booked session time, and any notes from past sessions.
@@ -374,6 +376,10 @@
     <div class="pp-highlight" style="background:#f0fdf4;border-color:#bbf7d0;color:#14532d;">
       <i class="fas fa-envelope" style="color:#16a34a;"></i>
       <strong>Email:</strong> <a href="mailto:support@careernext.co.ke" style="color:#15803d;">support@careernext.co.ke</a><br>
+      {% if contact_phone %}<i class="fas fa-phone" style="color:#16a34a;"></i>
+      <strong>Phone:</strong> <a href="tel:{{ contact_phone }}" style="color:#15803d;">{{ contact_phone }}</a><br>{% endif %}
+      <i class="fas fa-clock" style="color:#16a34a;"></i>
+      <strong>Response time:</strong> within 7 working days<br>
       <i class="fas fa-globe" style="color:#16a34a;"></i>
       <strong>Website:</strong> careernext.co.ke<br>
       <i class="fas fa-map-marker-alt" style="color:#16a34a;"></i>
@@ -388,7 +394,7 @@
 
   <hr style="border-color:#e2e8f0;margin:2rem 0 1.5rem;">
   <div class="d-flex flex-wrap gap-3 justify-content-between align-items-center">
-    <span class="pp-updated">CareerNext Privacy Policy · Last updated June 2026</span>
+    <span class="pp-updated">CareerNext Privacy Policy · Last updated September 2026</span>
     <div class="d-flex gap-3 flex-wrap">
       <a href="{% url 'accounts:terms' %}" class="btn btn-sm btn-outline-secondary">Terms &amp; Conditions</a>
       <a href="{% url 'accounts:about' %}" class="btn btn-sm btn-outline-primary">About Us</a>

@@ -1,0 +1,31 @@
+{# One programme variation on the course detail page. Expects `v` (Course with n_institutions + var_offerings). Styles: .pv-* in course_detail.html #}
+<div class="pv-item">
+  <div class="pv-item-head">
+    <div>
+      <a href="{{ v.get_absolute_url }}" class="pv-name">{{ v.name }}</a>
+      <div class="pv-sub">
+        <i class="fas fa-university me-1"></i>{{ v.n_institutions }} institution{{ v.n_institutions|pluralize }}
+        {% if v.minimum_mean_grade %}&middot; min. grade {{ v.minimum_mean_grade }}{% endif %}
+      </div>
+    </div>
+    <a href="{{ v.get_absolute_url }}" class="pv-view" aria-label="View {{ v.name }}">View <i class="fas fa-arrow-right ms-1"></i></a>
+  </div>
+  {% if v.var_offerings %}
+  <ul class="pv-insts">
+    {% for o in v.var_offerings %}
+    <li class="pv-inst">
+      <div class="pv-inst-main">
+        <a href="{% url 'institutions:institution_detail' type_slug=o.institution.institution_type.slug institution_slug=o.institution.slug %}"
+           title="{{ o.institution.name }}">{{ o.institution.name }}</a>
+        {% if o.institution.location %}<small><i class="fas fa-map-marker-alt me-1"></i>{{ o.institution.location }}</small>{% endif %}
+      </div>
+      {% with lc=o.latest_cutoff %}
+      {% if lc %}<span class="pv-cut" title="Latest KUCCPS cut-off">{{ lc }} <small>pts</small></span>{% endif %}
+      {% endwith %}
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p class="pv-empty"><i class="fas fa-database me-1"></i>No institution data yet.</p>
+  {% endif %}
+</div>

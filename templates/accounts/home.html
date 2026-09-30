@@ -1,15 +1,15 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block title %}CareerNext — Kenya's #1 KCSE Career Guidance Platform{% endblock %}
+{% block title %}CareerNext: Kenya's #1 KCSE Career Guidance Platform{% endblock %}
 
 {% block meta %}<meta name="description" content="Kenya's free KCSE cluster points calculator and career guidance platform. Calculate your cluster points and discover university, KMTC, TVET and TTC courses you qualify for via KUCCPS.">{% endblock %}
 {% block og_meta %}
-<meta property="og:title" content="CareerNext — Kenya's #1 KCSE Career Guidance Platform">
+<meta property="og:title" content="CareerNext: Kenya's #1 KCSE Career Guidance Platform">
 <meta property="og:description" content="Free cluster points calculator. Find university, KMTC, TVET and TTC courses you qualify for via KUCCPS. Used by thousands of Kenyan students.">
 {% endblock %}
 {% block twitter_meta %}
-<meta name="twitter:title" content="CareerNext — Free KCSE Cluster Points Calculator">
+<meta name="twitter:title" content="CareerNext: Free KCSE Cluster Points Calculator">
 <meta name="twitter:description" content="Calculate your KCSE cluster points and find courses you qualify for. Free, instant, and accurate.">
 {% endblock %}
 
@@ -126,11 +126,11 @@ body.dark .step-card          { background: var(--surface); border-color: var(--
 
         <h1 class="mb-3">
           Find Your Perfect Course After
-          <span style="background:linear-gradient(90deg,#93c5fd,#c4b5fd);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">KCSE</span>
+          <span style="background:#93c5fd;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">KCSE</span>
         </h1>
 
         <p class="lead mb-4" style="color:rgba(255,255,255,0.85);">
-          Calculate your cluster points, discover courses you qualify for, and explore career paths — all in one place.
+          Calculate your cluster points, discover courses you qualify for, and explore career paths, all in one place.
         </p>
 
         <div class="d-flex flex-wrap gap-3 mb-3">
@@ -467,7 +467,7 @@ body.dark .step-card          { background: var(--surface); border-color: var(--
           <img src="{{ article.thumbnail.url }}" alt="{{ article.title }}" loading="lazy"
                style="width:100%;height:160px;object-fit:cover;">
           {% else %}
-          <div style="height:100px;background:linear-gradient(135deg,#1e3a8a,#4f46e5);
+          <div style="height:100px;background:#1e3a8a;
                       display:flex;align-items:center;justify-content:center;">
             <i class="fas fa-file-alt" style="font-size:2rem;color:rgba(255,255,255,0.5);"></i>
           </div>
@@ -534,7 +534,7 @@ body.dark .step-card          { background: var(--surface); border-color: var(--
            style="background:var(--surface);border:1.5px solid var(--border);box-shadow:var(--shadow-sm);transition:box-shadow 0.2s,transform 0.2s,border-color 0.2s;"
            onmouseover="this.style.boxShadow='0 8px 28px rgba(0,0,0,0.1)';this.style.transform='translateY(-3px)';this.style.borderColor='#fde68a'"
            onmouseout="this.style.boxShadow='';this.style.transform='';this.style.borderColor=''">
-          <div style="height:4px;background:linear-gradient(90deg,#d97706,#fbbf24);"></div>
+          <div style="height:4px;background:#d97706;"></div>
           <div class="p-4 d-flex flex-column flex-grow-1">
             <div class="d-flex align-items-center gap-3 mb-3">
               {% if inst.logo %}
@@ -646,7 +646,7 @@ body.dark .step-card          { background: var(--surface); border-color: var(--
 <section class="py-5" style="background:var(--surface-2);border-top:1px solid var(--border);">
   <div class="container">
     <div class="card p-5 text-center reveal"
-         style="background:linear-gradient(135deg,var(--primary-dark) 0%,var(--primary) 60%,#6366f1 100%);border:none;color:white;border-radius:var(--radius-xl);">
+         style="background:var(--primary-dark);border:none;color:white;border-radius:var(--radius-xl);">
       <div class="mb-3">
         <span style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);color:white;padding:4px 14px;border-radius:999px;font-size:0.78rem;font-weight:600;">
           <i class="fas fa-star" style="color:#fbbf24;"></i>Fully Accessible

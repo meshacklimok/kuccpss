@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}User Actions — CareerNext Staff{% endblock %}
+{% block title %}User Actions | CareerNext Staff{% endblock %}
 
 {% block content %}
 <style>
@@ -54,7 +54,7 @@ body{background:var(--bg);}
   <div class="an-topbar">
     <div>
       <h1>User Actions</h1>
-      <p>Logins, shortlists, quiz completions, AI chats — last {{ days }} days</p>
+      <p>Logins, shortlists, quiz completions, AI chats, last {{ days }} days</p>
     </div>
     <div class="an-topbar-right">
       <div class="day-pills">
@@ -138,10 +138,10 @@ body{background:var(--bg);}
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
 <script>
-const labels = {{ chart_labels|safe }};
+const labels = {{ chart_labels|js_json }};
 new Chart(document.getElementById('actionChart'), {
   type: 'bar',
-  data: { labels, datasets: [{ label:'Actions', data:{{ chart_actions|safe }},
+  data: { labels, datasets: [{ label:'Actions', data:{{ chart_actions|js_json }},
     backgroundColor:'rgba(37,99,235,.7)', borderRadius:4 }]
   },
   options:{ responsive:true, maintainAspectRatio:false,
@@ -149,7 +149,7 @@ new Chart(document.getElementById('actionChart'), {
 });
 new Chart(document.getElementById('loginChart'), {
   type:'line',
-  data:{ labels, datasets:[{ label:'Logins', data:{{ chart_logins|safe }},
+  data:{ labels, datasets:[{ label:'Logins', data:{{ chart_logins|js_json }},
     borderColor:'#16a34a', backgroundColor:'rgba(22,163,74,.08)', tension:.35, fill:true, pointRadius:2 }]
   },
   options:{ responsive:true, maintainAspectRatio:false,
@@ -158,8 +158,8 @@ new Chart(document.getElementById('loginChart'), {
 const COLORS = ['#2563eb','#16a34a','#d97706','#7c3aed','#0891b2','#dc2626','#64748b','#f59e0b'];
 new Chart(document.getElementById('actPieChart'), {
   type:'doughnut',
-  data:{ labels:{{ chart_act_labels|safe }},
-    datasets:[{ data:{{ chart_act_data|safe }}, backgroundColor:COLORS, borderWidth:2 }]
+  data:{ labels:{{ chart_act_labels|js_json }},
+    datasets:[{ data:{{ chart_act_data|js_json }}, backgroundColor:COLORS, borderWidth:2 }]
   },
   options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'right'}} }
 });

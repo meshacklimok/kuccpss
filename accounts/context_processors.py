@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.core.cache import cache
+from datetime import timedelta
 from django.utils import timezone
 from .models import Notification
 
@@ -10,7 +11,10 @@ def unread_notifications(request):
         cache_key = f'notif_unread:{request.user.pk}'
         count = cache.get(cache_key)
         if count is None:
-            count = Notification.objects.filter(user=request.user, is_read=False).count()
+            cutoff = timezone.now() - timedelta(days=Notification.RETENTION_DAYS)
+            count = Notification.objects.filter(
+                user=request.user, is_read=False, created_at__gte=cutoff
+            ).count()
             cache.set(cache_key, count, 60)
     return {
         "unread_notification_count": count,

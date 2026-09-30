@@ -10,7 +10,7 @@
         <!-- Status bar -->
         {% if session.status == "confirmed" %}
           <div class="p-3 text-center fw-semibold text-white"
-               style="background: linear-gradient(90deg, #16a34a, #22c55e);">
+               style="background: #16a34a;">
             <i class="bi bi-check-circle me-2"></i>Session Confirmed
           </div>
         {% elif session.status == "completed" %}
@@ -31,15 +31,10 @@
 
           <!-- Mentor info -->
           <div class="d-flex align-items-center gap-3 mb-4">
-            {% if session.mentor.photo %}
-              <img src="{{ session.mentor.photo.url }}" class="rounded-circle object-fit-cover flex-shrink-0"
-                   width="60" height="60" alt="{{ session.mentor.display_name }}" loading="lazy">
-            {% else %}
               <div class="rounded-circle bg-primary bg-opacity-10 d-flex align-items-center justify-content-center flex-shrink-0"
                    style="width:60px;height:60px;">
                 <span class="fw-bold text-primary fs-4">{{ session.mentor.display_name|first|upper }}</span>
               </div>
-            {% endif %}
             <div>
               <div class="fw-bold">{{ session.mentor.display_name }}</div>
               <div class="text-muted small">{{ session.mentor.course }}</div>

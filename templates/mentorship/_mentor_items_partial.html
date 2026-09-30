@@ -5,13 +5,7 @@
     <!-- Card header with gradient + avatar -->
     <div class="mc-header">
       <div class="mc-avatar-wrap">
-        {% if mentor.photo %}
-          <img src="{{ mentor.photo.url }}"
-               class="mc-avatar object-fit-cover"
-               alt="{{ mentor.display_name }}" loading="lazy">
-        {% else %}
           <div class="mc-avatar mc-avatar-initials">{{ mentor.display_name|first|upper }}</div>
-        {% endif %}
         {% with slots=mentor.available_slots_count %}
           <span class="mc-dot {% if slots > 0 %}mc-dot-open{% else %}mc-dot-closed{% endif %}"></span>
         {% endwith %}

@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block title %}{{ article.title }} — CareerNext{% endblock %}
+{% block title %}{{ article.title }} | CareerNext{% endblock %}
 {% block og_type %}article{% endblock %}
 {% block canonical %}<link rel="canonical" href="{{ request.build_absolute_uri }}">{% endblock %}
 {% block keywords %}<meta name="keywords" content="{% for tag in article.get_tags_list %}{{ tag }}{% if not forloop.last %}, {% endif %}{% endfor %}, KUCCPS Kenya, KCSE cluster points, university placement Kenya">{% endblock %}
@@ -9,7 +9,7 @@
 {% block meta %}<meta name="description" content="{{ article.excerpt|default:article.title|truncatechars:160 }}">{% endblock %}
 
 {% block og_meta %}
-<meta property="og:title" content="{{ article.title }} — CareerNext">
+<meta property="og:title" content="{{ article.title }} | CareerNext">
 <meta property="og:description" content="{{ article.excerpt|default:article.title|truncatechars:200 }}">
 {% if article.thumbnail %}
 <meta property="og:image" content="{{ request.scheme }}://{{ request.get_host }}{{ article.thumbnail.url }}">
@@ -69,7 +69,7 @@
 {% endblock %}
 
 {% block twitter_meta %}
-<meta name="twitter:title" content="{{ article.title }} — CareerNext">
+<meta name="twitter:title" content="{{ article.title }} | CareerNext">
 <meta name="twitter:description" content="{{ article.excerpt|default:article.title|truncatechars:200 }}">
 {% if article.thumbnail %}
 <meta name="twitter:image" content="{{ request.scheme }}://{{ request.get_host }}{{ article.thumbnail.url }}">
@@ -174,7 +174,7 @@
 }
 .related-placeholder {
   width: 64px; height: 64px; border-radius: 6px; flex-shrink: 0;
-  background: linear-gradient(135deg, #1e3a8a, #16a34a);
+  background: #1e3a8a;
   display: flex; align-items: center; justify-content: center;
 }
 .related-title { font-size: .88rem; font-weight: 600; line-height: 1.35; }
@@ -188,7 +188,7 @@
 }
 .author-avatar {
   width: 38px; height: 38px; border-radius: 50%;
-  background: linear-gradient(135deg, #1e3a8a, #16a34a);
+  background: #1e3a8a;
   display: flex; align-items: center; justify-content: center;
   color: #fff; font-weight: 700; font-size: .9rem; flex-shrink: 0;
 }
@@ -319,7 +319,7 @@
       {% endif %}
 
       <!-- Calculator CTA -->
-      <div class="card p-4" style="background:linear-gradient(135deg,#1e3a8a,#2563eb);">
+      <div class="card p-4" style="background:#1e3a8a;">
         <h6 class="text-white fw-bold mb-2">
           <i class="fas fa-calculator me-1"></i>Know Your Points
         </h6>

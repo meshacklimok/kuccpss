@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block title %}Enter Cluster Points — Find KUCCPS Eligible Courses in Kenya | CareerNext{% endblock %}
+{% block title %}Enter Cluster Points: Find KUCCPS Eligible Courses in Kenya | CareerNext{% endblock %}
 
 {% block content %}
 
@@ -78,7 +78,7 @@ form:nth-of-type(4) .opt-card { animation-delay: 0.33s; }
 .opt-card:active { transform: translateY(-2px) scale(0.99); transition-duration: 0.1s; }
 
 /* per-card accent tokens */
-.opt-card.primary { --accent:#4f46e5; --accent-border:#c7d2fe; --ring:rgba(79,70,229,0.35); --shadow:rgba(79,70,229,0.16); background:linear-gradient(135deg,#f5f3ff 0%,#eef2ff 100%); }
+.opt-card.primary { --accent:#4f46e5; --accent-border:#c7d2fe; --ring:rgba(79,70,229,0.35); --shadow:rgba(79,70,229,0.16); background:#f5f3ff; }
 .opt-card.upload  { --accent:#0891b2; --accent-border:#a5f3fc; --ring:rgba(8,145,178,0.35);  --shadow:rgba(8,145,178,0.14); }
 .opt-card.paste   { --accent:#059669; --accent-border:#6ee7b7; --ring:rgba(5,150,105,0.35);  --shadow:rgba(5,150,105,0.14); }
 .opt-card.manual  { --accent:#d97706; --accent-border:#fde68a; --ring:rgba(217,119,6,0.35);  --shadow:rgba(217,119,6,0.14); }
@@ -122,8 +122,8 @@ body.dark .opt-card {
     background: var(--surface);
     --accent-border: rgba(255, 255, 255, 0.09);
 }
-body.dark .opt-card.primary { background: linear-gradient(135deg, rgba(79,70,229,0.16) 0%, rgba(99,102,241,0.1) 100%); --accent-border: rgba(99,102,241,0.35); }
-body.dark .opt-card::before { background: linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.06) 50%, transparent 60%); }
+body.dark .opt-card.primary { background: rgba(79,70,229,0.16); --accent-border: rgba(99,102,241,0.35); }
+body.dark .opt-card::before { background: rgba(255,255,255,0.06); }
 body.dark .opt-title { color: var(--text); }
 body.dark .opt-card.primary .opt-title { color: #a5b4fc; }
 body.dark .opt-desc  { color: var(--text-2); }
@@ -150,7 +150,7 @@ body.dark .options-wrap p.text-muted { color: var(--text-2) !important; }
     {% if has_grades %}
     <div class="step-badge">
         <i class="bi bi-check-circle-fill"></i>
-        Grades saved — subject requirements will be applied to your results
+        Grades saved, subject requirements will be applied to your results
     </div>
     {% endif %}
 
@@ -181,7 +181,7 @@ body.dark .options-wrap p.text-muted { color: var(--text-2) !important; }
             <div class="opt-icon"><i class="bi bi-image-fill"></i></div>
             <div>
                 <div class="opt-title">Upload Cluster Points Screenshot</div>
-                <div class="opt-desc">Take a screenshot or photo of your KUCCPS cluster points — we'll read the values automatically.</div>
+                <div class="opt-desc">Take a screenshot or photo of your KUCCPS cluster points, we'll read the values automatically.</div>
             </div>
             <i class="bi bi-arrow-right opt-arrow"></i>
         </button>

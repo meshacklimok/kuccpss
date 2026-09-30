@@ -3,7 +3,7 @@ from django.http import JsonResponse
 from django.core.paginator import Paginator
 from django.utils import timezone
 from django.views.decorators.http import require_POST
-from .models import ResourceCategory, Resource, Article, SiteFeedback
+from .models import ResourceCategory, Resource, Article, SiteFeedback, SiteSetting, CalendarCycle
 
 
 def resource_list(request):
@@ -113,7 +113,14 @@ def article_detail(request, slug):
 
 
 def kuccps_calendar(request):
-    return render(request, "resources/calendar.html")
+    cycles = list(CalendarCycle.objects.filter(is_active=True).prefetch_related("events"))
+    current = next((c for c in cycles if c.is_current), None) or (cycles[0] if cycles else None)
+    return render(request, "resources/calendar.html", {
+        "cycles": cycles,
+        "current_cycle": current,
+        "calendar_intro": SiteSetting.get("calendar_intro"),
+        "calendar_notice": SiteSetting.get("calendar_notice"),
+    })
 
 
 def how_to_guides(request):

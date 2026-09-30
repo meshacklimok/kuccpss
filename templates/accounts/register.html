@@ -3,7 +3,7 @@
 {% load static %}
 {% load socialaccount %}
 
-{% block title %}Create Free Account — Kenya KCSE Cluster Points Calculator & KUCCPS Course Finder | CareerNext{% endblock %}
+{% block title %}Create Free Account: Kenya KCSE Cluster Points Calculator & KUCCPS Course Finder | CareerNext{% endblock %}
 
 {% block meta %}<meta name="description" content="Create a free CareerNext account to save your KCSE grades, calculate cluster points, shortlist KUCCPS courses and get career guidance matched to your results.">{% endblock %}
 
@@ -27,7 +27,7 @@
       <ul class="auth-panel-features">
         <li>
           <div class="auth-feat-icon"><i class="fas fa-bolt"></i></div>
-          <span>Get your cluster points in 60 seconds — no maths needed</span>
+          <span>Get your cluster points in 60 seconds, no maths needed</span>
         </li>
         <li>
           <div class="auth-feat-icon"><i class="fas fa-search"></i></div>
@@ -54,6 +54,7 @@
       <p class="auth-panel-sub-text">Join thousands of KCSE students choosing smarter</p>
 
       {% if GOOGLE_OAUTH_AVAILABLE %}
+      {% include "accounts/_inapp_browser_notice.html" %}
       <a href="/accounts/google/login/?process=signup{% if request.GET.next %}&next={{ request.GET.next|urlencode }}{% endif %}"
          class="btn-google" role="button"
          style="background:#ffffff;color:#1f2937;border:1.5px solid #d1d5db;">

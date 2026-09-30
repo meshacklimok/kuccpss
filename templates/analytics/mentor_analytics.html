@@ -174,11 +174,11 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
 <script>
 (function () {
-  const monthlyLabels  = {{ chart_monthly_labels|safe }};
-  const monthlyCounts  = {{ chart_monthly_counts|safe }};
-  const monthlyPayouts = {{ chart_monthly_payouts|safe }};
-  const ratingLabels   = {{ chart_rating_labels|safe }};
-  const ratingData     = {{ chart_rating_data|safe }};
+  const monthlyLabels  = {{ chart_monthly_labels|js_json }};
+  const monthlyCounts  = {{ chart_monthly_counts|js_json }};
+  const monthlyPayouts = {{ chart_monthly_payouts|js_json }};
+  const ratingLabels   = {{ chart_rating_labels|js_json }};
+  const ratingData     = {{ chart_rating_data|js_json }};
 
   const monthlyCtx = document.getElementById('monthlyChart');
   if (monthlyCtx) {

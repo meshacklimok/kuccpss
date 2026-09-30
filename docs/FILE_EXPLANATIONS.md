@@ -351,7 +351,7 @@ Seeds all 31 official KCSE subjects and the **20 KUCCPS master calculation clust
 The **newer, unified** course system — linked to `institutions` and `clusters`. Separate from `career/models.py`'s legacy Course/TVETCourse/KMTCourse/TTCCourse (see canonical rules above).
 
 ### `courses/models.py`
-- `CourseType` — top-level type (Degree, Diploma, KMTC, TTC, TVET levels, Short Courses, Artisan Certificate).
+- `CourseType` — top-level type (Degree, Diploma, KMTC, TTC, TVET Diploma L6 / Certificate L5 / Artisan L4 / Craft L3).
 - `CourseCategory` — subcategory under a `CourseType`; `unique_together=('name','course_type')`.
 - **`Course`** — `name`, `slug` (auto, collision-safe), `course_type` FK, `category` FK (`SET_NULL`), **`institutions`** (M2M → `institutions.Institution`, `through='CourseOffering'`), **`cluster`** (FK → `clusters.Cluster`, `SET_NULL`, "Only for university courses" — only populated for degree courses), `core_subjects` (M2M → `clusters.Subject`), `cutoff_points` (JSONField — legacy/summary field; the authoritative per-institution data lives on `CourseOffering.cutoff_points`, nothing in the reviewed code reads `Course.cutoff_points` directly), `minimum_mean_grade` (non-degree eligibility only), `subject_requirements` (JSONField, degree only), `duration`, `career_outcomes`, `pdf_file`. `is_university_course()` returns `self.cluster is not None`. `get_absolute_url()`.
 - **`CourseOffering`** — through-model for `Course`↔`Institution`; `programme_code`, `cutoff_points` (JSONField, per-institution, e.g. `{"2024": 78.5}`); `unique_together=('course','institution')`; `latest_cutoff()`.

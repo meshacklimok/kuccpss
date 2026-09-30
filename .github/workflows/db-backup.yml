@@ -1,0 +1,76 @@
+name: Database backup
+
+# Daily off-site logical backup of the production Postgres database.
+#
+# Required repository secrets (Settings → Secrets and variables → Actions):
+#   BACKUP_DATABASE_URL  — the production DATABASE_URL (pooled or direct; the
+#                          "-pooler" host suffix is stripped because pg_dump
+#                          must not run through PgBouncer transaction mode)
+#   BACKUP_PASSPHRASE    — long random passphrase; dumps contain user PII, so
+#                          they are AES-256 encrypted before upload
+#
+# Backups are kept as workflow artifacts for 30 days.
+# Restore:
+#   gpg --decrypt db-YYYYmmdd-HHMM.dump.gpg > db.dump
+#   pg_restore --no-owner --no-privileges --clean --if-exists -d "$DATABASE_URL" db.dump
+
+on:
+  schedule:
+    - cron: '30 0 * * *'  # daily 00:30 UTC (03:30 EAT)
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+concurrency:
+  group: db-backup
+  cancel-in-progress: false
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Install PostgreSQL client
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq postgresql-common
+          sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y
+          # pg_dump can dump any server version up to its own — use a recent one.
+          sudo apt-get install -y -qq postgresql-client-18
+
+      - name: Dump database
+        env:
+          DATABASE_URL: ${{ secrets.BACKUP_DATABASE_URL }}
+        run: |
+          set -euo pipefail
+          if [ -z "${DATABASE_URL}" ]; then
+            echo "::error::BACKUP_DATABASE_URL secret is not set"; exit 1
+          fi
+          url="${DATABASE_URL/-pooler/}"
+          /usr/lib/postgresql/18/bin/pg_dump \
+            --no-owner --no-privileges --format=custom \
+            --dbname="$url" --file=db.dump
+          ls -lh db.dump
+
+      - name: Encrypt dump
+        env:
+          PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+        run: |
+          set -euo pipefail
+          if [ -z "${PASSPHRASE}" ]; then
+            echo "::error::BACKUP_PASSPHRASE secret is not set"; exit 1
+          fi
+          out="db-$(date -u +%Y%m%d-%H%M).dump.gpg"
+          printf '%s' "$PASSPHRASE" | gpg --batch --yes --pinentry-mode loopback \
+            --passphrase-fd 0 --symmetric --cipher-algo AES256 -o "$out" db.dump
+          rm db.dump
+          ls -lh "$out"
+
+      - name: Upload backup
+        uses: actions/upload-artifact@v4
+        with:
+          name: db-backup-${{ github.run_id }}
+          path: '*.dump.gpg'
+          retention-days: 30
+          if-no-files-found: error

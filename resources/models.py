@@ -5,6 +5,8 @@ from django.utils.text import slugify
 # ──────────────────────────────────────────────────────
 # Site-wide key-value settings (contact info, hero text, social links …)
 # ──────────────────────────────────────────────────────
+from kuccpss.upload_validators import SafeImageValidator, SafePDFValidator
+
 class SiteSetting(models.Model):
     TYPE_CHOICES = [
         ('text',     'Short Text'),
@@ -34,12 +36,33 @@ class SiteSetting(models.Model):
     def __str__(self):
         return f"{self.label} ({self.key})"
 
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        # Context processors cache some settings under their key (e.g.
+        # whatsapp_group_url) — drop it so admin edits show immediately.
+        from django.core.cache import cache
+        cache.delete_many([self.key, self._cache_key(self.key)])
+
+    def delete(self, *args, **kwargs):
+        from django.core.cache import cache
+        cache.delete_many([self.key, self._cache_key(self.key)])
+        return super().delete(*args, **kwargs)
+
+    @staticmethod
+    def _cache_key(key):
+        return f'sitesetting:{key}'
+
     @classmethod
     def get(cls, key, default=''):
-        try:
-            return cls.objects.get(key=key).value
-        except cls.DoesNotExist:
-            return default
+        # Read on list pages (e.g. courses_per_page) — cache so it isn't a DB hit per request.
+        from django.core.cache import cache
+        value = cache.get(cls._cache_key(key))
+        if value is None:
+            value = cls.objects.filter(key=key).values_list('value', flat=True).first()
+            if value is None:
+                return default  # missing rows aren't cached; they stay rare and cheap to add
+            cache.set(cls._cache_key(key), value, 300)
+        return value
 
 
 # ──────────────────────────────────────────────────────
@@ -157,9 +180,9 @@ class Resource(models.Model):
     )
     resource_type = models.CharField(max_length=10, choices=TYPE_CHOICES, default="pdf")
     description = models.TextField(blank=True)
-    pdf_file = models.FileField(upload_to="resources/pdfs/", blank=True, null=True)
+    pdf_file = models.FileField(upload_to="resources/pdfs/", blank=True, null=True, validators=[SafePDFValidator()])
     external_url = models.URLField(blank=True, null=True)
-    thumbnail = models.ImageField(upload_to="resources/thumbnails/", blank=True, null=True)
+    thumbnail = models.ImageField(upload_to="resources/thumbnails/", blank=True, null=True, validators=[SafeImageValidator()])
     is_free = models.BooleanField(default=True)
     download_count = models.PositiveIntegerField(default=0, editable=False)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -169,7 +192,6 @@ class Resource(models.Model):
         ordering = ["-created_at"]
         indexes = [
             models.Index(fields=["resource_type", "is_free"]),
-            models.Index(fields=["category"]),
         ]
 
     def save(self, *args, **kwargs):
@@ -196,7 +218,7 @@ class Article(models.Model):
     author = models.CharField(max_length=100, blank=True)
     excerpt = models.CharField(max_length=300, blank=True)
     content = models.TextField()
-    thumbnail = models.ImageField(upload_to="articles/thumbnails/", blank=True, null=True)
+    thumbnail = models.ImageField(upload_to="articles/thumbnails/", blank=True, null=True, validators=[SafeImageValidator()])
     tags = models.CharField(
         max_length=255, blank=True,
         help_text="Comma-separated tags, e.g. career,university,tips"
@@ -335,3 +357,98 @@ class SiteFeedback(models.Model):
 
     def __str__(self):
         return f"[{self.get_feedback_type_display()}] {self.message[:60]}"
+
+
+# ──────────────────────────────────────────────────────
+# KUCCPS application calendar (public /resources/kuccps-calendar/ page)
+# ──────────────────────────────────────────────────────
+class CalendarCycle(models.Model):
+    title       = models.CharField(max_length=120, help_text='e.g. "KCSE 2025 Cycle"')
+    tab_label   = models.CharField(max_length=120, help_text='Hero tab text, e.g. "KCSE 2025 Cycle (2026)"')
+    subtitle    = models.CharField(max_length=250, blank=True,
+                                   help_text='e.g. "For students who sat KCSE in October–November 2025"')
+    is_current  = models.BooleanField(default=False,
+                                      help_text="Highlight as the current cycle (only one should be ticked)")
+    is_completed = models.BooleanField(default=False, help_text='Show the grey "Completed" badge')
+    is_active   = models.BooleanField(default=True, help_text="Untick to hide this cycle from the page")
+    order       = models.PositiveIntegerField(default=0, help_text="Lower numbers appear first")
+
+    class Meta:
+        ordering = ['order', '-id']
+        verbose_name        = 'KUCCPS Calendar Cycle'
+        verbose_name_plural = 'KUCCPS Calendar'
+
+    def __str__(self):
+        return self.title
+
+
+class CalendarEvent(models.Model):
+    STATUS_CHOICES = [
+        ('auto',     'Auto (from dates)'),
+        ('done',     'Done'),
+        ('active',   'Open now'),
+        ('expected', 'Expected'),
+        ('upcoming', 'Upcoming'),
+        ('tba',      'TBA'),
+    ]
+    COLOR_CHOICES = [
+        ('blue',   'Blue'),
+        ('green',  'Green'),
+        ('amber',  'Amber'),
+        ('red',    'Red'),
+        ('purple', 'Purple'),
+        ('teal',   'Teal'),
+        ('gray',   'Gray'),
+    ]
+    # status → (card css class, pill css class, pill label)
+    STATUS_STYLE = {
+        'done':     ('status-done',     'pill-done',     'Done'),
+        'active':   ('status-active',   'pill-active',   'Open now'),
+        'expected': ('status-active',   'pill-active',   'Expected'),
+        'upcoming': ('status-upcoming', 'pill-upcoming', 'Upcoming'),
+        'tba':      ('status-future',   'pill-future',   'TBA'),
+    }
+
+    cycle       = models.ForeignKey(CalendarCycle, on_delete=models.CASCADE, related_name='events')
+    phase       = models.CharField(max_length=120, blank=True,
+                                   help_text='Phase heading shown above this event when it changes, '
+                                             'e.g. "Phase 3 — Applications". Leave blank for none.')
+    title       = models.CharField(max_length=200)
+    description = models.TextField(blank=True)
+    date_label  = models.CharField(max_length=80, help_text='Date text shown on the card, e.g. "April – May 2026"')
+    start_date  = models.DateField(null=True, blank=True,
+                                   help_text="Optional — used when status is Auto")
+    end_date    = models.DateField(null=True, blank=True,
+                                   help_text="Optional — used when status is Auto")
+    status      = models.CharField(max_length=10, choices=STATUS_CHOICES, default='auto')
+    icon        = models.CharField(max_length=40, default='fa-calendar',
+                                   help_text='Font Awesome icon name, e.g. "fa-pen", "fa-globe", "fa-award"')
+    color       = models.CharField(max_length=10, choices=COLOR_CHOICES, default='blue')
+    order       = models.PositiveIntegerField(default=0, help_text="Lower numbers appear first")
+
+    class Meta:
+        ordering = ['cycle', 'order', 'id']
+        verbose_name        = 'Calendar Event'
+        verbose_name_plural = 'Calendar Events'
+
+    def __str__(self):
+        return f"{self.cycle} — {self.title}"
+
+    @property
+    def resolved_status(self):
+        if self.status != 'auto':
+            return self.status
+        from django.utils import timezone
+        today = timezone.localdate()
+        end = self.end_date or self.start_date
+        if end and end < today:
+            return 'done'
+        if self.start_date and self.start_date <= today:
+            return 'active'
+        if self.start_date:
+            return 'upcoming'
+        return 'tba'
+
+    @property
+    def style(self):
+        return self.STATUS_STYLE[self.resolved_status]

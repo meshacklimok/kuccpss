@@ -1,8 +1,11 @@
 import hmac
 import hashlib
 import logging
+import re
 import requests
 from django.conf import settings
+
+from kuccpss.circuit_breaker import intasend_breaker
 
 logger = logging.getLogger(__name__)
 
@@ -66,10 +69,32 @@ def has_paid_for_current_session(user, calc_feature: str, gate_feature: str) -> 
         return True
     try:
         from career.models import CareerSubmission
-        sub = CareerSubmission.objects.get(user=user, feature=calc_feature)
-        return sub.unlocked_by_payment_id is not None
-    except Exception:
-        # No submission = no new unconfirmed calculation — allow viewing old saved results
+        from .models import Payment
+        sub = CareerSubmission.objects.filter(user=user, feature=calc_feature).first()
+        if sub is None:
+            # No submission = no new unconfirmed calculation — allow viewing old saved results
+            return True
+        if sub.unlocked_by_payment_id is not None:
+            return True
+        # Self-heal: a payment completed after this grade session started unlocks it,
+        # even if linking it at fulfilment time failed (fulfilment errors are swallowed).
+        # Resets go through save() and bump updated_at; the link itself uses .update().
+        paid = (
+            Payment.objects.filter(
+                user=user, feature=gate_feature, status="completed",
+                updated_at__gte=sub.updated_at,
+            )
+            .order_by("-updated_at")
+            .values_list("pk", flat=True)
+            .first()
+        )
+        if paid:
+            CareerSubmission.objects.filter(pk=sub.pk).update(unlocked_by_payment_id=paid)
+            logger.info("has_paid_for_current_session: healed link user=%s payment=%s", user.pk, paid)
+            return True
+        return False
+    except Exception as exc:
+        logger.warning("has_paid_for_current_session failed open for user %s: %s", getattr(user, "pk", None), exc)
         return True
 
 
@@ -77,9 +102,9 @@ def lock_submission_on_payment(payment: "Payment") -> None:
     """
     Called after any payment completion for view_cluster_points or premium_career_report.
 
-    - Links the payment to the user's CareerSubmission (unlocked_by_payment).
-    - Immediately locks the submission (status=locked, lock_at=now).
-    - Only acts when SubmissionLockConfig.lock_on_payment is True for the feature.
+    - Always links the payment to the user's CareerSubmission (unlocked_by_payment).
+    - Also locks the submission (status=locked, lock_at=now) when
+      SubmissionLockConfig.lock_on_payment is True for the feature.
     - On a repeat payment (recalculation), the submission was already reset to pending
       by the recalculate endpoint; this call locks the new session too.
     """
@@ -89,18 +114,20 @@ def lock_submission_on_payment(payment: "Payment") -> None:
     try:
         from career.models import CareerSubmission, SubmissionLockConfig
         from django.utils import timezone as _tz
+        subs = CareerSubmission.objects.filter(user=payment.user, feature=calc_feature)
         lock_cfg = SubmissionLockConfig.get_for_feature(calc_feature)
-        if not lock_cfg or not lock_cfg.lock_on_payment:
-            return
-        updated = CareerSubmission.objects.filter(
-            user=payment.user, feature=calc_feature
-        ).update(
-            status=CareerSubmission.STATUS_LOCKED,
-            unlocked_by_payment_id=payment.pk,
-            lock_at=_tz.now(),
-        )
+        # Always link the payment — has_paid_for_current_session() reads this link, so
+        # skipping it (lock config missing or lock_on_payment off) left paid users locked out.
+        if lock_cfg and lock_cfg.lock_on_payment:
+            updated = subs.update(
+                status=CareerSubmission.STATUS_LOCKED,
+                unlocked_by_payment_id=payment.pk,
+                lock_at=_tz.now(),
+            )
+        else:
+            updated = subs.update(unlocked_by_payment_id=payment.pk)
         logger.info(
-            "lock_submission_on_payment: %s row(s) locked — user=%s feature=%s payment=%s",
+            "lock_submission_on_payment: %s row(s) linked — user=%s feature=%s payment=%s",
             updated, payment.user_id, calc_feature, payment.pk,
         )
     except Exception as exc:
@@ -182,6 +209,37 @@ def normalise_phone(phone: str) -> str:
     return phone
 
 
+def is_valid_mpesa_phone(phone: str) -> bool:
+    """True for a Kenyan mobile number (07XX / 01XX) in any accepted format."""
+    return bool(re.fullmatch(r"254[17]\d{8}", normalise_phone(phone or "")))
+
+
+# M-Pesa receipts are 10 upper-case alphanumerics (e.g. RCK12345XY / TGH4ABC123).
+_MPESA_CODE_RE = re.compile(r"\b(?=[A-Z0-9]*\d)(?=[A-Z0-9]*[A-Z])[A-Z0-9]{10}\b")
+
+
+def extract_mpesa_code(text: str) -> str:
+    """
+    Pull the M-Pesa receipt code out of whatever the user pasted — the bare code or the
+    whole confirmation SMS ("RCK12345XY Confirmed. Ksh50.00 sent to ..."). Returns '' if none.
+    """
+    match = _MPESA_CODE_RE.search((text or "").upper())
+    return match.group(0) if match else ""
+
+
+def payment_support_contacts() -> dict:
+    """Where a user who paid but can't get in should reach us (admin-editable SiteSettings)."""
+    try:
+        from resources.models import SiteSetting
+        email = SiteSetting.get("contact_email", default="") or settings.ADMIN_EMAIL
+        whatsapp = re.sub(r"\D", "", SiteSetting.get("whatsapp_number", default="") or "")
+    except Exception:
+        email, whatsapp = getattr(settings, "ADMIN_EMAIL", ""), ""
+    if whatsapp in ("", "254700000000"):  # unset / seed placeholder
+        whatsapp = ""
+    return {"email": email, "whatsapp": whatsapp}
+
+
 def initiate_stk_push(phone_number: str, amount: int, payment_ref: str, email: str = "", narrative: str = "CareerNext") -> str:
     """
     Fire an M-Pesa STK push via IntaSend.
@@ -202,9 +260,10 @@ def initiate_stk_push(phone_number: str, amount: int, payment_ref: str, email: s
         "api_ref": payment_ref,
     }
     logger.info("IntaSend STK push → %s | payload: %s", url, payload)
-    response = requests.post(url, json=payload, headers=headers, timeout=15)
-    logger.info("IntaSend response %s: %s", response.status_code, response.text[:500])
-    response.raise_for_status()
+    with intasend_breaker.guard():
+        response = requests.post(url, json=payload, headers=headers, timeout=15)
+        logger.info("IntaSend response %s: %s", response.status_code, response.text[:500])
+        response.raise_for_status()
     data = response.json()
     # IntaSend STK push response nests the ID at invoice.invoice_id
     invoice = data.get("invoice") or {}
@@ -216,10 +275,10 @@ def initiate_stk_push(phone_number: str, amount: int, payment_ref: str, email: s
     )
 
 
-def fetch_intasend_status(checkout_id: str) -> str | None:
+def fetch_intasend_invoice(checkout_id: str) -> dict | None:
     """
-    Pull the current payment state directly from IntaSend.
-    Returns 'COMPLETE', 'FAILED', 'PENDING', or None on error.
+    Pull the current payment record directly from IntaSend.
+    Returns {"state": 'COMPLETE'|'FAILED'|'PENDING'|..., "mpesa_ref": str} or None on error.
     """
     if not checkout_id:
         return None
@@ -230,14 +289,26 @@ def fetch_intasend_status(checkout_id: str) -> str | None:
         "Content-Type": "application/json",
     }
     try:
-        response = requests.get(url, headers=headers, timeout=10)
-        response.raise_for_status()
+        with intasend_breaker.guard():
+            response = requests.get(url, headers=headers, timeout=10)
+            response.raise_for_status()
         data = response.json()
-        # Response is a single invoice object with a "state" field
-        return (data.get("state") or "").upper() or None
     except Exception as exc:
         logger.warning("IntaSend status fetch failed for %s: %s", checkout_id, exc)
         return None
+    # The state lives on the invoice object; some responses nest it under "invoice"
+    invoice = data.get("invoice") if isinstance(data.get("invoice"), dict) else {}
+    state = (data.get("state") or invoice.get("state") or "").upper()
+    if not state:
+        return None
+    mpesa_ref = data.get("mpesa_reference") or invoice.get("mpesa_reference") or ""
+    return {"state": state, "mpesa_ref": mpesa_ref}
+
+
+def fetch_intasend_status(checkout_id: str) -> str | None:
+    """Returns 'COMPLETE', 'FAILED', 'PENDING', or None on error."""
+    invoice = fetch_intasend_invoice(checkout_id)
+    return invoice["state"] if invoice else None
 
 
 def send_mentor_payout(phone: str, amount: int, mentor_name: str, ref: str = "") -> dict:

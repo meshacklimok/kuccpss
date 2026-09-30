@@ -1,6 +1,6 @@
 import csv
 import json
-from datetime import date, timedelta
+from datetime import date, datetime, time, timedelta
 from decimal import Decimal
 
 from django.conf import settings
@@ -18,6 +18,15 @@ from kuccpss.ip_utils import get_client_ip
 staff_only = user_passes_test(lambda u: u.is_active and u.is_staff, login_url='/accounts/login/')
 
 VALID_DAYS = {1, 7, 30, 90, 180, 365}
+
+
+def _day_start(d):
+    """
+    Aware midnight of date `d` in TIME_ZONE. Filtering `field__gte=_day_start(d)`
+    matches `field__date__gte=d` but can use the column's index — the __date
+    lookup wraps the column in a timezone cast, forcing a full table scan.
+    """
+    return timezone.make_aware(datetime.combine(d, time.min))
 
 
 def _parse_days(request):
@@ -71,6 +80,16 @@ def pwa_install(request):
 
     ip = get_client_ip(request)
 
+    # Unauthenticated + CSRF-exempt: cap DB writes so it can't be used to spam rows.
+    from django.core.cache import cache
+    rl_key = f"pwa_install:{ip}"
+    cache.add(rl_key, 0, 3600)
+    try:
+        if cache.incr(rl_key) > 5:
+            return JsonResponse({'ok': True})  # silently drop; nothing to tell a spammer
+    except ValueError:
+        pass
+
     PWAInstallLog.objects.create(
         platform=platform,
         user=request.user if request.user.is_authenticated else None,
@@ -95,9 +114,9 @@ def analytics_dashboard(request):
 
     # ── User metrics ──────────────────────────────────────────────────────────
     total_users   = User.objects.count()
-    new_users     = User.objects.filter(created_at__date__gte=ago).count()
-    prev_new      = User.objects.filter(created_at__date__gte=prev_ago, created_at__date__lt=ago).count()
-    new_today     = User.objects.filter(created_at__date=today).count()
+    new_users     = User.objects.filter(created_at__gte=_day_start(ago)).count()
+    prev_new      = User.objects.filter(created_at__gte=_day_start(prev_ago), created_at__lt=_day_start(ago)).count()
+    new_today     = User.objects.filter(created_at__gte=_day_start(today), created_at__lt=_day_start(today + timedelta(days=1))).count()
     google_users  = User.objects.filter(is_google_user=True).count()
     verified      = User.objects.filter(is_verified=True).count()
     verified_pct  = round(verified / max(total_users, 1) * 100)
@@ -105,41 +124,41 @@ def analytics_dashboard(request):
     trend_users   = _trend(new_users, prev_new)
 
     # ── Search metrics ────────────────────────────────────────────────────────
-    total_searches = SearchLog.objects.filter(created_at__date__gte=ago).count()
-    prev_searches  = SearchLog.objects.filter(created_at__date__gte=prev_ago, created_at__date__lt=ago).count()
-    searches_today = SearchLog.objects.filter(created_at__date=today).count()
-    zero_result    = SearchLog.objects.filter(created_at__date__gte=ago, result_count=0).count()
+    total_searches = SearchLog.objects.filter(created_at__gte=_day_start(ago)).count()
+    prev_searches  = SearchLog.objects.filter(created_at__gte=_day_start(prev_ago), created_at__lt=_day_start(ago)).count()
+    searches_today = SearchLog.objects.filter(created_at__gte=_day_start(today), created_at__lt=_day_start(today + timedelta(days=1))).count()
+    zero_result    = SearchLog.objects.filter(created_at__gte=_day_start(ago), result_count=0).count()
     zero_pct       = round(zero_result / max(total_searches, 1) * 100, 1)
     trend_searches = _trend(total_searches, prev_searches)
 
     # ── View metrics ──────────────────────────────────────────────────────────
-    total_views  = ViewLog.objects.filter(created_at__date__gte=ago).count()
-    prev_views   = ViewLog.objects.filter(created_at__date__gte=prev_ago, created_at__date__lt=ago).count()
-    views_today  = ViewLog.objects.filter(created_at__date=today).count()
+    total_views  = ViewLog.objects.filter(created_at__gte=_day_start(ago)).count()
+    prev_views   = ViewLog.objects.filter(created_at__gte=_day_start(prev_ago), created_at__lt=_day_start(ago)).count()
+    views_today  = ViewLog.objects.filter(created_at__gte=_day_start(today), created_at__lt=_day_start(today + timedelta(days=1))).count()
     trend_views  = _trend(total_views, prev_views)
 
     # ── Career engine metrics ─────────────────────────────────────────────────
-    total_engine = CareerEngineLog.objects.filter(created_at__date__gte=ago).count()
-    prev_engine  = CareerEngineLog.objects.filter(created_at__date__gte=prev_ago, created_at__date__lt=ago).count()
-    engine_today = CareerEngineLog.objects.filter(created_at__date=today).count()
-    avg_results  = CareerEngineLog.objects.filter(created_at__date__gte=ago).aggregate(a=Avg('result_count'))['a'] or 0
+    total_engine = CareerEngineLog.objects.filter(created_at__gte=_day_start(ago)).count()
+    prev_engine  = CareerEngineLog.objects.filter(created_at__gte=_day_start(prev_ago), created_at__lt=_day_start(ago)).count()
+    engine_today = CareerEngineLog.objects.filter(created_at__gte=_day_start(today), created_at__lt=_day_start(today + timedelta(days=1))).count()
+    avg_results  = CareerEngineLog.objects.filter(created_at__gte=_day_start(ago)).aggregate(a=Avg('result_count'))['a'] or 0
     trend_engine = _trend(total_engine, prev_engine)
 
     # ── Downloads ─────────────────────────────────────────────────────────────
-    total_downloads = DownloadLog.objects.filter(created_at__date__gte=ago).count()
-    prev_downloads  = DownloadLog.objects.filter(created_at__date__gte=prev_ago, created_at__date__lt=ago).count()
+    total_downloads = DownloadLog.objects.filter(created_at__gte=_day_start(ago)).count()
+    prev_downloads  = DownloadLog.objects.filter(created_at__gte=_day_start(prev_ago), created_at__lt=_day_start(ago)).count()
     trend_downloads = _trend(total_downloads, prev_downloads)
 
     # ── PWA installs ──────────────────────────────────────────────────────────
     total_pwa_installs  = PWAInstallLog.objects.count()
-    pwa_installs_period = PWAInstallLog.objects.filter(created_at__date__gte=ago).count()
-    prev_pwa_installs   = PWAInstallLog.objects.filter(created_at__date__gte=prev_ago, created_at__date__lt=ago).count()
+    pwa_installs_period = PWAInstallLog.objects.filter(created_at__gte=_day_start(ago)).count()
+    prev_pwa_installs   = PWAInstallLog.objects.filter(created_at__gte=_day_start(prev_ago), created_at__lt=_day_start(ago)).count()
     trend_pwa           = _trend(pwa_installs_period, prev_pwa_installs)
     pwa_by_platform     = list(
         PWAInstallLog.objects.values('platform').annotate(n=Count('id')).order_by('-n')
     )
     pwa_series = _fill_series(
-        PWAInstallLog.objects.filter(created_at__date__gte=ago)
+        PWAInstallLog.objects.filter(created_at__gte=_day_start(ago))
         .annotate(day=TruncDate('created_at')).values('day').annotate(n=Count('id')).order_by('day'),
         labels,
     )
@@ -148,7 +167,7 @@ def analytics_dashboard(request):
     total_saves = SavedCourse.objects.count()
 
     # ── Payment metrics ───────────────────────────────────────────────────────
-    pay_qs         = Payment.objects.filter(created_at__date__gte=ago)
+    pay_qs         = Payment.objects.filter(created_at__gte=_day_start(ago))
     pay_initiated  = pay_qs.count()
     pay_completed  = pay_qs.filter(status='completed').count()
     pay_failed     = pay_qs.filter(status='failed').count()
@@ -156,7 +175,7 @@ def analytics_dashboard(request):
     revenue        = pay_qs.filter(status='completed').aggregate(t=Sum('amount'))['t'] or Decimal('0')
     success_rate   = round(pay_completed / max(pay_initiated, 1) * 100)
     prev_revenue   = (Payment.objects.filter(
-        created_at__date__gte=prev_ago, created_at__date__lt=ago, status='completed'
+        created_at__gte=_day_start(prev_ago), created_at__lt=_day_start(ago), status='completed'
     ).aggregate(t=Sum('amount'))['t'] or Decimal('0'))
     trend_revenue  = _trend(float(revenue), float(prev_revenue))
 
@@ -171,26 +190,26 @@ def analytics_dashboard(request):
     )
 
     # ── Auth split ────────────────────────────────────────────────────────────
-    auth_searches = SearchLog.objects.filter(created_at__date__gte=ago, user__isnull=False).count()
-    auth_engine   = CareerEngineLog.objects.filter(created_at__date__gte=ago, user__isnull=False).count()
+    auth_searches = SearchLog.objects.filter(created_at__gte=_day_start(ago), user__isnull=False).count()
+    auth_engine   = CareerEngineLog.objects.filter(created_at__gte=_day_start(ago), user__isnull=False).count()
     auth_searches_pct = round(auth_searches / max(total_searches, 1) * 100)
 
     # ── Top content ───────────────────────────────────────────────────────────
     top_queries = list(
-        SearchLog.objects.filter(created_at__date__gte=ago)
+        SearchLog.objects.filter(created_at__gte=_day_start(ago))
         .values('query').annotate(n=Count('id'), zeros=Count('id', filter=Q(result_count=0)))
         .order_by('-n')[:20]
     )
     zero_queries = list(
-        SearchLog.objects.filter(created_at__date__gte=ago, result_count=0)
+        SearchLog.objects.filter(created_at__gte=_day_start(ago), result_count=0)
         .values('query').annotate(n=Count('id')).order_by('-n')[:15]
     )
     top_courses  = list(
-        ViewLog.objects.filter(created_at__date__gte=ago, content_type='course')
+        ViewLog.objects.filter(created_at__gte=_day_start(ago), content_type='course')
         .values('object_name').annotate(n=Count('id')).order_by('-n')[:10]
     )
     top_insts    = list(
-        ViewLog.objects.filter(created_at__date__gte=ago, content_type='institution')
+        ViewLog.objects.filter(created_at__gte=_day_start(ago), content_type='institution')
         .values('object_name').annotate(n=Count('id')).order_by('-n')[:10]
     )
     top_saved    = list(
@@ -198,17 +217,17 @@ def analytics_dashboard(request):
         .annotate(n=Count('id')).order_by('-n')[:10]
     )
     top_downloads = list(
-        DownloadLog.objects.filter(created_at__date__gte=ago)
+        DownloadLog.objects.filter(created_at__gte=_day_start(ago))
         .values('object_name', 'content_type').annotate(n=Count('id')).order_by('-n')[:12]
     )
 
     # ── Career engine detail ──────────────────────────────────────────────────
     pathway_dist = list(
-        CareerEngineLog.objects.filter(created_at__date__gte=ago)
+        CareerEngineLog.objects.filter(created_at__gte=_day_start(ago))
         .values('pathway').annotate(n=Count('id')).order_by('-n')
     )
     top_grades = list(
-        CareerEngineLog.objects.filter(created_at__date__gte=ago).exclude(mean_grade='')
+        CareerEngineLog.objects.filter(created_at__gte=_day_start(ago)).exclude(mean_grade='')
         .values('mean_grade').annotate(n=Count('id')).order_by('-n')[:10]
     )
 
@@ -238,27 +257,27 @@ def analytics_dashboard(request):
 
     # ── Time-series (charts) ──────────────────────────────────────────────────
     reg_series = _fill_series(
-        User.objects.filter(created_at__date__gte=ago)
+        User.objects.filter(created_at__gte=_day_start(ago))
         .annotate(day=TruncDate('created_at')).values('day').annotate(n=Count('id')).order_by('day'),
         labels,
     )
     search_series = _fill_series(
-        SearchLog.objects.filter(created_at__date__gte=ago)
+        SearchLog.objects.filter(created_at__gte=_day_start(ago))
         .annotate(day=TruncDate('created_at')).values('day').annotate(n=Count('id')).order_by('day'),
         labels,
     )
     engine_series = _fill_series(
-        CareerEngineLog.objects.filter(created_at__date__gte=ago)
+        CareerEngineLog.objects.filter(created_at__gte=_day_start(ago))
         .annotate(day=TruncDate('created_at')).values('day').annotate(n=Count('id')).order_by('day'),
         labels,
     )
     views_series = _fill_series(
-        ViewLog.objects.filter(created_at__date__gte=ago)
+        ViewLog.objects.filter(created_at__gte=_day_start(ago))
         .annotate(day=TruncDate('created_at')).values('day').annotate(n=Count('id')).order_by('day'),
         labels,
     )
     payment_series = _fill_series(
-        Payment.objects.filter(created_at__date__gte=ago, status='completed')
+        Payment.objects.filter(created_at__gte=_day_start(ago), status='completed')
         .annotate(day=TruncDate('created_at')).values('day').annotate(n=Count('id')).order_by('day'),
         labels,
     )
@@ -280,7 +299,7 @@ def analytics_dashboard(request):
     from resources.models import SiteFeedback
     feedback_new       = SiteFeedback.objects.filter(status='new').count()
     feedback_total     = SiteFeedback.objects.count()
-    feedback_period    = SiteFeedback.objects.filter(created_at__date__gte=ago).count()
+    feedback_period    = SiteFeedback.objects.filter(created_at__gte=_day_start(ago)).count()
     feedback_by_type   = list(
         SiteFeedback.objects.values('feedback_type').annotate(n=Count('id')).order_by('-n')
     )
@@ -383,7 +402,7 @@ def export_csv(request):
 
     w.writerow(['=== USER REGISTRATIONS BY DAY ==='])
     w.writerow(['Date', 'New Registrations'])
-    for row in (User.objects.filter(created_at__date__gte=ago)
+    for row in (User.objects.filter(created_at__gte=_day_start(ago))
                 .annotate(day=TruncDate('created_at'))
                 .values('day').annotate(n=Count('id')).order_by('day')):
         w.writerow([row['day'], row['n']])
@@ -391,7 +410,7 @@ def export_csv(request):
 
     w.writerow(['=== TOP SEARCH QUERIES ==='])
     w.writerow(['Query', 'Count', 'Zero-Result Count'])
-    for row in (SearchLog.objects.filter(created_at__date__gte=ago)
+    for row in (SearchLog.objects.filter(created_at__gte=_day_start(ago))
                 .values('query')
                 .annotate(n=Count('id'), zeros=Count('id', filter=Q(result_count=0)))
                 .order_by('-n')[:50]):
@@ -400,21 +419,21 @@ def export_csv(request):
 
     w.writerow(['=== TOP COURSES VIEWED ==='])
     w.writerow(['Course', 'Views'])
-    for row in (ViewLog.objects.filter(created_at__date__gte=ago, content_type='course')
+    for row in (ViewLog.objects.filter(created_at__gte=_day_start(ago), content_type='course')
                 .values('object_name').annotate(n=Count('id')).order_by('-n')[:30]):
         w.writerow([row['object_name'], row['n']])
     w.writerow([])
 
     w.writerow(['=== CAREER ENGINE PATHWAY DISTRIBUTION ==='])
     w.writerow(['Pathway', 'Uses'])
-    for row in (CareerEngineLog.objects.filter(created_at__date__gte=ago)
+    for row in (CareerEngineLog.objects.filter(created_at__gte=_day_start(ago))
                 .values('pathway').annotate(n=Count('id')).order_by('-n')):
         w.writerow([row['pathway'].title(), row['n']])
     w.writerow([])
 
     w.writerow(['=== PAYMENT SUMMARY ==='])
     w.writerow(['Feature', 'Completed Payments', 'Revenue (KES)'])
-    for row in (Payment.objects.filter(created_at__date__gte=ago, status='completed')
+    for row in (Payment.objects.filter(created_at__gte=_day_start(ago), status='completed')
                 .values('feature').annotate(n=Count('id'), total=Sum('amount')).order_by('-total')):
         w.writerow([row['feature'], row['n'], row['total']])
 
@@ -492,9 +511,10 @@ def mentor_analytics(request):
     monthly_payouts = [float(row['payout'] or 0) for row in monthly_qs]
 
     # ── Rating distribution ───────────────────────────────────────────────────
-    rating_dist = {}
-    for star in range(1, 6):
-        rating_dist[star] = MentorshipSession.objects.filter(rating=star).count()
+    rating_dist = {star: 0 for star in range(1, 6)}
+    for row in (MentorshipSession.objects.filter(rating__in=rating_dist)
+                .values('rating').annotate(n=Count('id'))):
+        rating_dist[row['rating']] = row['n']
 
     context = {
         'sort': sort,
@@ -633,16 +653,16 @@ def pages_analytics(request):
     today = date.today()
     ago   = today - timedelta(days=days)
 
-    total_hits  = PageViewLog.objects.filter(created_at__date__gte=ago).count()
-    human_hits  = PageViewLog.objects.filter(created_at__date__gte=ago).exclude(device='bot').count()
+    total_hits  = PageViewLog.objects.filter(created_at__gte=_day_start(ago)).count()
+    human_hits  = PageViewLog.objects.filter(created_at__gte=_day_start(ago)).exclude(device='bot').count()
     bot_hits    = total_hits - human_hits
-    errors_4xx  = PageViewLog.objects.filter(created_at__date__gte=ago, status_code__gte=400, status_code__lt=500).count()
-    errors_5xx  = PageViewLog.objects.filter(created_at__date__gte=ago, status_code__gte=500).count()
-    hits_today  = PageViewLog.objects.filter(created_at__date=today).count()
-    avg_ms      = PageViewLog.objects.filter(created_at__date__gte=ago).exclude(device='bot').aggregate(a=Avg('response_time_ms'))['a'] or 0
+    errors_4xx  = PageViewLog.objects.filter(created_at__gte=_day_start(ago), status_code__gte=400, status_code__lt=500).count()
+    errors_5xx  = PageViewLog.objects.filter(created_at__gte=_day_start(ago), status_code__gte=500).count()
+    hits_today  = PageViewLog.objects.filter(created_at__gte=_day_start(today), created_at__lt=_day_start(today + timedelta(days=1))).count()
+    avg_ms      = PageViewLog.objects.filter(created_at__gte=_day_start(ago)).exclude(device='bot').aggregate(a=Avg('response_time_ms'))['a'] or 0
 
     # ── Session duration ──────────────────────────────────────────────────────
-    session_qs = SessionLog.objects.filter(created_at__date__gte=ago).exclude(device='bot')
+    session_qs = SessionLog.objects.filter(created_at__gte=_day_start(ago)).exclude(device='bot')
     total_sessions   = session_qs.count()
     bounce_sessions  = session_qs.filter(page_count=1).count()
     engaged_sessions = session_qs.filter(page_count__gte=5).count()
@@ -686,7 +706,7 @@ def pages_analytics(request):
     total_geo      = geo_qs.count()
 
     top_pages = list(
-        PageViewLog.objects.filter(created_at__date__gte=ago).exclude(device='bot')
+        PageViewLog.objects.filter(created_at__gte=_day_start(ago)).exclude(device='bot')
         .values('path').annotate(
             hits=Count('id'),
             unique_sessions=Count('session_key', distinct=True),
@@ -696,35 +716,35 @@ def pages_analytics(request):
     )
 
     device_dist = list(
-        PageViewLog.objects.filter(created_at__date__gte=ago)
+        PageViewLog.objects.filter(created_at__gte=_day_start(ago))
         .values('device').annotate(n=Count('id')).order_by('-n')
     )
 
     status_dist = list(
-        PageViewLog.objects.filter(created_at__date__gte=ago)
+        PageViewLog.objects.filter(created_at__gte=_day_start(ago))
         .values('status_code').annotate(n=Count('id')).order_by('status_code')
     )
 
     slow_pages = list(
-        PageViewLog.objects.filter(created_at__date__gte=ago, response_time_ms__gt=2000).exclude(device='bot')
+        PageViewLog.objects.filter(created_at__gte=_day_start(ago), response_time_ms__gt=2000).exclude(device='bot')
         .values('path').annotate(n=Count('id'), avg_ms=Avg('response_time_ms'))
         .order_by('-avg_ms')[:20]
     )
 
     error_pages = list(
-        PageViewLog.objects.filter(created_at__date__gte=ago, status_code__gte=400)
+        PageViewLog.objects.filter(created_at__gte=_day_start(ago), status_code__gte=400)
         .values('path', 'status_code').annotate(n=Count('id')).order_by('-n')[:30]
     )
 
     recent_errors = list(
-        PageViewLog.objects.filter(created_at__date__gte=ago, status_code__gte=400)
+        PageViewLog.objects.filter(created_at__gte=_day_start(ago), status_code__gte=400)
         .order_by('-created_at')[:40]
         .values('path', 'status_code', 'method', 'referrer', 'ip', 'created_at')
     )
 
     labels     = _date_labels(days, ago)
     hit_series = _fill_series(
-        PageViewLog.objects.filter(created_at__date__gte=ago).exclude(device='bot')
+        PageViewLog.objects.filter(created_at__gte=_day_start(ago)).exclude(device='bot')
         .annotate(day=TruncDate('created_at')).values('day').annotate(n=Count('id')).order_by('day'),
         labels,
     )
@@ -771,35 +791,35 @@ def actions_analytics(request):
     today = date.today()
     ago   = today - timedelta(days=days)
 
-    total_actions  = UserActionLog.objects.filter(created_at__date__gte=ago).count()
-    actions_today  = UserActionLog.objects.filter(created_at__date=today).count()
+    total_actions  = UserActionLog.objects.filter(created_at__gte=_day_start(ago)).count()
+    actions_today  = UserActionLog.objects.filter(created_at__gte=_day_start(today), created_at__lt=_day_start(today + timedelta(days=1))).count()
 
     action_dist = list(
-        UserActionLog.objects.filter(created_at__date__gte=ago)
+        UserActionLog.objects.filter(created_at__gte=_day_start(ago))
         .values('action').annotate(n=Count('id')).order_by('-n')
     )
 
-    logins_ok   = UserActionLog.objects.filter(created_at__date__gte=ago, action='login').count()
-    logins_fail = UserActionLog.objects.filter(created_at__date__gte=ago, action='login_failed').count()
-    logouts     = UserActionLog.objects.filter(created_at__date__gte=ago, action='logout').count()
-    shortlists  = UserActionLog.objects.filter(created_at__date__gte=ago, action='shortlist_add').count()
-    ai_chats    = UserActionLog.objects.filter(created_at__date__gte=ago, action='ai_chat').count()
-    quiz_done   = UserActionLog.objects.filter(created_at__date__gte=ago, action='quiz_complete').count()
+    logins_ok   = UserActionLog.objects.filter(created_at__gte=_day_start(ago), action='login').count()
+    logins_fail = UserActionLog.objects.filter(created_at__gte=_day_start(ago), action='login_failed').count()
+    logouts     = UserActionLog.objects.filter(created_at__gte=_day_start(ago), action='logout').count()
+    shortlists  = UserActionLog.objects.filter(created_at__gte=_day_start(ago), action='shortlist_add').count()
+    ai_chats    = UserActionLog.objects.filter(created_at__gte=_day_start(ago), action='ai_chat').count()
+    quiz_done   = UserActionLog.objects.filter(created_at__gte=_day_start(ago), action='quiz_complete').count()
 
     recent_actions = list(
-        UserActionLog.objects.filter(created_at__date__gte=ago)
+        UserActionLog.objects.filter(created_at__gte=_day_start(ago))
         .select_related('user').order_by('-created_at')[:60]
         .values('action', 'user__email', 'ip', 'properties', 'created_at')
     )
 
     labels         = _date_labels(days, ago)
     action_series  = _fill_series(
-        UserActionLog.objects.filter(created_at__date__gte=ago)
+        UserActionLog.objects.filter(created_at__gte=_day_start(ago))
         .annotate(day=TruncDate('created_at')).values('day').annotate(n=Count('id')).order_by('day'),
         labels,
     )
     login_series   = _fill_series(
-        UserActionLog.objects.filter(created_at__date__gte=ago, action='login')
+        UserActionLog.objects.filter(created_at__gte=_day_start(ago), action='login')
         .annotate(day=TruncDate('created_at')).values('day').annotate(n=Count('id')).order_by('day'),
         labels,
     )
@@ -838,40 +858,40 @@ def user_timeline(request, user_pk):
 
     events = []
 
-    for r in PageViewLog.objects.filter(user=target, created_at__date__gte=ago).order_by('-created_at')[:150]:
+    for r in PageViewLog.objects.filter(user=target, created_at__gte=_day_start(ago)).order_by('-created_at')[:150]:
         events.append({'type': 'page', 'icon': '🌐',
                        'label': f'{r.method} {r.path}',
                        'sub': f'HTTP {r.status_code} — {r.response_time_ms} ms',
                        'ts': r.created_at})
 
-    for r in SearchLog.objects.filter(user=target, created_at__date__gte=ago).order_by('-created_at')[:80]:
+    for r in SearchLog.objects.filter(user=target, created_at__gte=_day_start(ago)).order_by('-created_at')[:80]:
         events.append({'type': 'search', 'icon': '🔍',
                        'label': f'Search: "{r.query}"',
                        'sub': f'{r.result_count} results', 'ts': r.created_at})
 
-    for r in ViewLog.objects.filter(user=target, created_at__date__gte=ago).order_by('-created_at')[:80]:
+    for r in ViewLog.objects.filter(user=target, created_at__gte=_day_start(ago)).order_by('-created_at')[:80]:
         events.append({'type': 'view', 'icon': '👁',
                        'label': f'Viewed {r.content_type}: {r.object_name}',
                        'sub': '', 'ts': r.created_at})
 
-    for r in CareerEngineLog.objects.filter(user=target, created_at__date__gte=ago).order_by('-created_at')[:60]:
+    for r in CareerEngineLog.objects.filter(user=target, created_at__gte=_day_start(ago)).order_by('-created_at')[:60]:
         events.append({'type': 'career', 'icon': '🎯',
                        'label': f'Career Engine — {r.pathway.title()} path',
                        'sub': f'{r.result_count} matches, grade {r.mean_grade}',
                        'ts': r.created_at})
 
-    for r in UserActionLog.objects.filter(user=target, created_at__date__gte=ago).order_by('-created_at')[:80]:
+    for r in UserActionLog.objects.filter(user=target, created_at__gte=_day_start(ago)).order_by('-created_at')[:80]:
         props = ', '.join(f'{k}={v}' for k, v in r.properties.items())[:80]
         events.append({'type': 'action', 'icon': '⚡',
                        'label': r.get_action_display(),
                        'sub': props, 'ts': r.created_at})
 
-    for r in DownloadLog.objects.filter(user=target, created_at__date__gte=ago).order_by('-created_at')[:40]:
+    for r in DownloadLog.objects.filter(user=target, created_at__gte=_day_start(ago)).order_by('-created_at')[:40]:
         events.append({'type': 'download', 'icon': '⬇',
                        'label': f'Downloaded {r.content_type}: {r.object_name}',
                        'sub': '', 'ts': r.created_at})
 
-    for r in EventLog.objects.filter(user=target, created_at__date__gte=ago).order_by('-created_at')[:40]:
+    for r in EventLog.objects.filter(user=target, created_at__gte=_day_start(ago)).order_by('-created_at')[:40]:
         events.append({'type': 'event', 'icon': '📌',
                        'label': r.name.replace('_', ' ').title(),
                        'sub': '', 'ts': r.created_at})
@@ -900,7 +920,7 @@ def insights_dashboard(request):
 
     # ── 1. Peak hours heatmap (UTC → EAT = UTC+3) ────────────────────────────
     heatmap_raw = list(
-        PageViewLog.objects.filter(created_at__date__gte=ago).exclude(device='bot')
+        PageViewLog.objects.filter(created_at__gte=_day_start(ago)).exclude(device='bot')
         .annotate(utc_h=ExtractHour('created_at'), utc_dow=ExtractWeekDay('created_at'))
         .values('utc_h', 'utc_dow').annotate(n=Count('id'))
     )
@@ -931,7 +951,7 @@ def insights_dashboard(request):
     # ── 2. Referral sources ───────────────────────────────────────────────────
     OWN = {'careernext.co.ke', 'www.careernext.co.ke', 'localhost', '127.0.0.1', ''}
     referrer_raw = list(
-        PageViewLog.objects.filter(created_at__date__gte=ago).exclude(referrer='')
+        PageViewLog.objects.filter(created_at__gte=_day_start(ago)).exclude(referrer='')
         .values('referrer').annotate(n=Count('id')).order_by('-n')
     )
     domain_counts: dict[str, int] = {}
@@ -944,7 +964,7 @@ def insights_dashboard(request):
             domain_counts[domain] = domain_counts.get(domain, 0) + row['n']
 
     top_referrers = sorted(domain_counts.items(), key=lambda x: -x[1])[:20]
-    human_qs      = PageViewLog.objects.filter(created_at__date__gte=ago).exclude(device='bot')
+    human_qs      = PageViewLog.objects.filter(created_at__gte=_day_start(ago)).exclude(device='bot')
     direct_hits   = human_qs.filter(referrer='').count()
     referred_hits = human_qs.exclude(referrer='').count()
     total_classified = direct_hits + referred_hits
@@ -952,9 +972,9 @@ def insights_dashboard(request):
     referred_pct  = 100 - direct_pct
 
     # ── 3. Returning vs new visitors ──────────────────────────────────────────
-    active_sessions = SessionLog.objects.filter(created_at__date__gte=ago, user__isnull=False)
+    active_sessions = SessionLog.objects.filter(created_at__gte=_day_start(ago), user__isnull=False)
     prior_user_ids  = set(
-        SessionLog.objects.filter(created_at__date__lt=ago, user__isnull=False)
+        SessionLog.objects.filter(created_at__lt=_day_start(ago), user__isnull=False)
         .values_list('user_id', flat=True)
     )
     active_user_ids = set(active_sessions.values_list('user_id', flat=True))
@@ -966,7 +986,7 @@ def insights_dashboard(request):
     # Avg sessions per authenticated user
     from django.db.models import FloatField
     sessions_per_user = round(
-        (SessionLog.objects.filter(created_at__date__gte=ago, user__isnull=False).count()
+        (SessionLog.objects.filter(created_at__gte=_day_start(ago), user__isnull=False).count()
          / max(len(active_user_ids), 1)),
         1,
     )
@@ -975,12 +995,12 @@ def insights_dashboard(request):
     from accounts.models import User, SavedCourse
     from payments.models import Payment
 
-    reg_qs    = User.objects.filter(created_at__date__gte=ago)
+    reg_qs    = User.objects.filter(created_at__gte=_day_start(ago))
     total_reg = reg_qs.count()
     verified  = reg_qs.filter(is_verified=True).count()
     google_reg = reg_qs.filter(is_google_user=True).count()
     paid_new  = User.objects.filter(
-        created_at__date__gte=ago,
+        created_at__gte=_day_start(ago),
         payments__status='completed',
     ).distinct().count()
     email_funnel = [
@@ -991,10 +1011,10 @@ def insights_dashboard(request):
 
     # ── 5. Search → view → shortlist funnel ──────────────────────────────────
     from .models import SearchLog, ViewLog, CareerEngineLog
-    searches     = SearchLog.objects.filter(created_at__date__gte=ago).count()
-    engine_uses  = CareerEngineLog.objects.filter(created_at__date__gte=ago).count()
-    course_views = ViewLog.objects.filter(created_at__date__gte=ago, content_type='course').count()
-    saves        = SavedCourse.objects.filter(saved_at__date__gte=ago).count()
+    searches     = SearchLog.objects.filter(created_at__gte=_day_start(ago)).count()
+    engine_uses  = CareerEngineLog.objects.filter(created_at__gte=_day_start(ago)).count()
+    course_views = ViewLog.objects.filter(created_at__gte=_day_start(ago), content_type='course').count()
+    saves        = SavedCourse.objects.filter(saved_at__gte=_day_start(ago)).count()
     funnel_max   = max(searches, engine_uses, course_views, saves, 1)
     search_funnel = [
         {'label': 'Searches',      'n': searches,     'pct': round(searches     / funnel_max * 100), 'icon': '🔍'},
@@ -1003,7 +1023,7 @@ def insights_dashboard(request):
         {'label': 'Shortlisted',   'n': saves,        'pct': round(saves        / funnel_max * 100), 'icon': '❤️'},
     ]
     zero_result_pct = round(
-        SearchLog.objects.filter(created_at__date__gte=ago, result_count=0).count()
+        SearchLog.objects.filter(created_at__gte=_day_start(ago), result_count=0).count()
         / max(searches, 1) * 100, 1
     )
 
@@ -1011,12 +1031,12 @@ def insights_dashboard(request):
     try:
         from mentorship.models import MentorshipSession
         mentor_page_hits = PageViewLog.objects.filter(
-            created_at__date__gte=ago, path__contains='/mentorship/'
+            created_at__gte=_day_start(ago), path__contains='/mentorship/'
         ).exclude(device='bot').count()
-        bookings   = MentorshipSession.objects.filter(created_at__date__gte=ago).count()
-        confirmed  = MentorshipSession.objects.filter(created_at__date__gte=ago, status='confirmed').count()
-        m_completed = MentorshipSession.objects.filter(created_at__date__gte=ago, status='completed').count()
-        cancelled  = MentorshipSession.objects.filter(created_at__date__gte=ago, status='cancelled').count()
+        bookings   = MentorshipSession.objects.filter(created_at__gte=_day_start(ago)).count()
+        confirmed  = MentorshipSession.objects.filter(created_at__gte=_day_start(ago), status='confirmed').count()
+        m_completed = MentorshipSession.objects.filter(created_at__gte=_day_start(ago), status='completed').count()
+        cancelled  = MentorshipSession.objects.filter(created_at__gte=_day_start(ago), status='cancelled').count()
         m_funnel_max = max(mentor_page_hits, bookings, confirmed, m_completed, 1)
         mentor_funnel = [
             {'label': 'Mentorship Page Hits', 'n': mentor_page_hits, 'pct': round(mentor_page_hits / m_funnel_max * 100), 'icon': '🌐'},
@@ -1034,7 +1054,7 @@ def insights_dashboard(request):
     from .models import EventLog
     from .events import CALCULATOR_RUN
     grade_dist = list(
-        EventLog.objects.filter(name=CALCULATOR_RUN, created_at__date__gte=ago)
+        EventLog.objects.filter(name=CALCULATOR_RUN, created_at__gte=_day_start(ago))
         .values('properties__mean_grade')
         .annotate(n=Count('id'))
         .order_by('-n')
@@ -1098,8 +1118,8 @@ def payments_overview(request):
     stale_pending    = Payment.objects.filter(status='pending', created_at__lte=stale_cutoff).count()
     very_stale       = Payment.objects.filter(status='pending', created_at__lte=now - timedelta(hours=6)).count()
     total_failed     = Payment.objects.filter(status='failed').count()
-    completed_today  = Payment.objects.filter(status='completed', created_at__date=today).count()
-    revenue_today    = Payment.objects.filter(status='completed', created_at__date=today).aggregate(
+    completed_today  = Payment.objects.filter(status='completed', created_at__gte=_day_start(today), created_at__lt=_day_start(today + timedelta(days=1))).count()
+    revenue_today    = Payment.objects.filter(status='completed', created_at__gte=_day_start(today), created_at__lt=_day_start(today + timedelta(days=1))).aggregate(
         t=Sum('amount'))['t'] or 0
     with_mpesa_code  = Payment.objects.filter(status='pending').exclude(mpesa_code='').count()
 
@@ -1213,10 +1233,10 @@ def calculator_analytics(request):
     ago   = today - timedelta(days=days)
     prev_ago = ago - timedelta(days=days)
 
-    runs_qs = EventLog.objects.filter(name=CALCULATOR_RUN, created_at__date__gte=ago)
+    runs_qs = EventLog.objects.filter(name=CALCULATOR_RUN, created_at__gte=_day_start(ago))
     total_runs = runs_qs.count()
     prev_runs = EventLog.objects.filter(
-        name=CALCULATOR_RUN, created_at__date__gte=prev_ago, created_at__date__lt=ago
+        name=CALCULATOR_RUN, created_at__gte=_day_start(prev_ago), created_at__lt=_day_start(ago)
     ).count()
     runs_trend = _trend(total_runs, prev_runs)
 
@@ -1224,9 +1244,9 @@ def calculator_analytics(request):
     auth_runs = runs_qs.filter(properties__auth=True).count()
 
     pdf_exports = DownloadLog.objects.filter(
-        content_type=DOWNLOAD_CLUSTER_PDF, created_at__date__gte=ago
+        content_type=DOWNLOAD_CLUSTER_PDF, created_at__gte=_day_start(ago)
     ).count()
-    shares = EventLog.objects.filter(name=CALCULATOR_SHARE, created_at__date__gte=ago).count()
+    shares = EventLog.objects.filter(name=CALCULATOR_SHARE, created_at__gte=_day_start(ago)).count()
 
     # Daily run trend
     date_labels = _date_labels(days, ago)
@@ -1244,7 +1264,7 @@ def calculator_analytics(request):
 
     # Average cluster points per cluster
     cluster_stats = list(
-        ClusterCalculationResult.objects.filter(created_at__date__gte=ago)
+        ClusterCalculationResult.objects.filter(created_at__gte=_day_start(ago))
         .values('cluster__name', 'cluster__number')
         .annotate(avg_points=Avg('cluster_points'), n=Count('id'))
         .order_by('-avg_points')
@@ -1302,12 +1322,12 @@ def career_engine_analytics(request):
     ago      = today - timedelta(days=days)
     prev_ago = today - timedelta(days=days * 2)
 
-    uses_qs      = CareerEngineLog.objects.filter(created_at__date__gte=ago)
+    uses_qs      = CareerEngineLog.objects.filter(created_at__gte=_day_start(ago))
     total_uses   = uses_qs.count()
     prev_uses    = CareerEngineLog.objects.filter(
-        created_at__date__gte=prev_ago, created_at__date__lt=ago
+        created_at__gte=_day_start(prev_ago), created_at__lt=_day_start(ago)
     ).count()
-    uses_today   = CareerEngineLog.objects.filter(created_at__date=today).count()
+    uses_today   = CareerEngineLog.objects.filter(created_at__gte=_day_start(today), created_at__lt=_day_start(today + timedelta(days=1))).count()
     uses_trend   = _trend(total_uses, prev_uses)
 
     auth_uses    = uses_qs.filter(user__isnull=False).count()
@@ -1366,9 +1386,9 @@ def conversion_analytics(request):
     today = date.today()
     ago   = today - timedelta(days=days)
 
-    course_views_qs = ViewLog.objects.filter(content_type='course', created_at__date__gte=ago)
+    course_views_qs = ViewLog.objects.filter(content_type='course', created_at__gte=_day_start(ago))
     total_views = course_views_qs.count()
-    total_saves = SavedCourse.objects.filter(saved_at__date__gte=ago).count()
+    total_saves = SavedCourse.objects.filter(saved_at__gte=_day_start(ago)).count()
 
     funnel_max = max(total_views, total_saves, 1)
     funnel = [
@@ -1383,7 +1403,7 @@ def conversion_analytics(request):
     )
     view_map = {r['object_id']: r['n'] for r in view_counts}
     save_counts = list(
-        SavedCourse.objects.filter(saved_at__date__gte=ago).values('course_id').annotate(n=Count('id'))
+        SavedCourse.objects.filter(saved_at__gte=_day_start(ago)).values('course_id').annotate(n=Count('id'))
     )
     save_map = {r['course_id']: r['n'] for r in save_counts}
 
@@ -1467,9 +1487,9 @@ def retention_analytics(request):
     ago   = today - timedelta(days=days)
 
     # Returning vs new (reused from insights_dashboard)
-    active_sessions = SessionLog.objects.filter(created_at__date__gte=ago, user__isnull=False)
+    active_sessions = SessionLog.objects.filter(created_at__gte=_day_start(ago), user__isnull=False)
     prior_user_ids  = set(
-        SessionLog.objects.filter(created_at__date__lt=ago, user__isnull=False)
+        SessionLog.objects.filter(created_at__lt=_day_start(ago), user__isnull=False)
         .values_list('user_id', flat=True)
     )
     active_user_ids = set(active_sessions.values_list('user_id', flat=True))
@@ -1484,7 +1504,7 @@ def retention_analytics(request):
     # Weekly cohort grid — cap at 12 weeks
     WEEKS = 12
     cohort_start = today - timedelta(weeks=WEEKS)
-    cohorts = User.objects.filter(created_at__date__gte=cohort_start).values('id', 'created_at')
+    cohorts = User.objects.filter(created_at__gte=_day_start(cohort_start)).values('id', 'created_at')
 
     def _week_of(dt):
         return dt.isocalendar()[1], dt.isocalendar()[0]
@@ -1496,7 +1516,7 @@ def retention_analytics(request):
 
     active_by_user_week: dict[int, set] = {}
     sessions = SessionLog.objects.filter(
-        created_at__date__gte=cohort_start, user__isnull=False
+        created_at__gte=_day_start(cohort_start), user__isnull=False
     ).values_list('user_id', 'created_at')
     for uid, dt in sessions:
         wk = (dt.isocalendar()[0], dt.isocalendar()[1])
@@ -1551,10 +1571,10 @@ def ai_chat_analytics(request):
     ago   = today - timedelta(days=days)
     prev_ago = ago - timedelta(days=days)
 
-    msgs_qs = EventLog.objects.filter(name=AI_CHAT_MESSAGE, created_at__date__gte=ago)
+    msgs_qs = EventLog.objects.filter(name=AI_CHAT_MESSAGE, created_at__gte=_day_start(ago))
     total_messages = msgs_qs.count()
     prev_messages = EventLog.objects.filter(
-        name=AI_CHAT_MESSAGE, created_at__date__gte=prev_ago, created_at__date__lt=ago
+        name=AI_CHAT_MESSAGE, created_at__gte=_day_start(prev_ago), created_at__lt=_day_start(ago)
     ).count()
     messages_trend = _trend(total_messages, prev_messages)
 
@@ -1567,7 +1587,7 @@ def ai_chat_analytics(request):
     kb_hit_rate = round(kb_hits / max(total_messages, 1) * 100, 1)
 
     paywall_hits = EventLog.objects.filter(
-        name=AI_CHAT_PAYWALL_HIT, created_at__date__gte=ago
+        name=AI_CHAT_PAYWALL_HIT, created_at__gte=_day_start(ago)
     ).count()
 
     # Daily message volume
@@ -1592,7 +1612,7 @@ def ai_chat_analytics(request):
     try:
         from payments.models import Payment
         ai_revenue = Payment.objects.filter(
-            feature='ai_chat_access', status='completed', created_at__date__gte=ago
+            feature='ai_chat_access', status='completed', created_at__gte=_day_start(ago)
         ).aggregate(total=Sum('amount'))['total'] or 0
     except Exception:
         ai_revenue = 0

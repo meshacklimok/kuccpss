@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% block title %}Degree Programme Clusters — CareerNext{% endblock %}
+{% block title %}Degree Programme Clusters | CareerNext{% endblock %}
 
 {% block content %}
 
@@ -20,7 +20,7 @@
   </div>
 
   {% else %}
-  <!-- Grid of 20 cluster group cards -->
+  <!-- Grid of 18 KUCCPS cluster cards -->
   <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-4 g-4">
     {% for group in cluster_groups %}
     <div class="col">
@@ -32,30 +32,16 @@
             <h6 class="mb-0 fw-700 lh-sm">{{ group.label }}</h6>
           </div>
 
-          <!-- Sub-cluster pills -->
-          <div class="d-flex flex-wrap gap-1 mb-3">
-            {% for sc in group.sub_clusters %}
-            <a href="{% url 'clusters:cluster_detail' sc.slug %}"
-               class="badge sub-cluster-pill text-decoration-none"
-               title="{{ sc.course_count }} programme{{ sc.course_count|pluralize }}">
-              {{ sc.code }}
-            </a>
-            {% endfor %}
-          </div>
-
           <!-- Programme count + link -->
           <div class="d-flex justify-content-between align-items-center mt-auto">
             <span class="small text-muted">
               <i class="fas fa-book-open me-1"></i>
               {{ group.total_courses }} programme{{ group.total_courses|pluralize }}
             </span>
-            <!-- Link to first sub-cluster if only one, else first -->
-            {% if group.sub_clusters %}
-            <a href="{% url 'clusters:cluster_detail' group.sub_clusters.0.slug %}"
+            <a href="{% url 'clusters:cluster_detail' group.cluster.slug %}"
                class="btn btn-sm btn-primary-custom px-3">
               View <i class="fas fa-arrow-right ms-1"></i>
             </a>
-            {% endif %}
           </div>
         </div>
       </div>
@@ -70,7 +56,7 @@
 .cluster-num-badge {
   width: 42px; height: 42px;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--primary-light), var(--primary));
+  background: var(--primary-light);
   color: #fff;
   font-size: 1.1rem;
   font-weight: 800;
@@ -79,21 +65,6 @@
 }
 .cluster-card { border-radius: 16px !important; transition: transform .2s, box-shadow .2s; }
 .cluster-card:hover { transform: translateY(-4px); box-shadow: 0 12px 32px rgba(30,58,138,.18) !important; }
-.sub-cluster-pill {
-  background: #eff6ff;
-  color: var(--primary);
-  border: 1px solid #bfdbfe;
-  border-radius: 6px;
-  font-size: .75rem;
-  font-weight: 600;
-  padding: 2px 8px;
-  transition: background .15s, color .15s;
-}
-.sub-cluster-pill:hover {
-  background: var(--primary-light);
-  color: #fff;
-  border-color: var(--primary-light);
-}
 .fw-700 { font-weight: 700; }
 </style>
 {% endblock %}

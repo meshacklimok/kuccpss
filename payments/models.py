@@ -1,4 +1,5 @@
 from django.db import models
+from django.db.models.functions import Upper
 from django.conf import settings
 
 
@@ -150,7 +151,11 @@ class Transaction(models.Model):
 
     class Meta:
         ordering = ["-created_at"]
-        indexes = [models.Index(fields=["mpesa_ref"])]
+        indexes = [
+            models.Index(fields=["mpesa_ref"]),
+            # Manual code verification looks up mpesa_ref__iexact → UPPER(mpesa_ref)
+            models.Index(Upper("mpesa_ref"), name="payments_txn_mpesa_ref_upper"),
+        ]
 
     def __str__(self):
         return f"TXN {self.mpesa_ref or self.pk} — {self.payment.feature}"

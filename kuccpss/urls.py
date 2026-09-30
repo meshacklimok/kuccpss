@@ -24,7 +24,7 @@ from django.views.generic import TemplateView
 from django.contrib.sitemaps.views import sitemap
 import os
 from accounts.views import public_home_view, email_lead_capture
-from kuccpss.search_views import api_search_suggest
+from kuccpss.search_views import api_search_suggest, api_search_terms
 from kuccpss.sitemaps import sitemaps
 
 
@@ -88,6 +88,7 @@ urlpatterns = [
     path('predictor/', include('predictor.urls', namespace='predictor')),
     path('payments/', include('payments.urls', namespace='payments')),
     path('api/search/', api_search_suggest, name='api_search_suggest'),
+    path('api/search/terms/', api_search_terms, name='api_search_terms'),
     path('api/email-lead/', email_lead_capture, name='email_lead_capture'),
     path('analytics/', include('analytics.urls', namespace='analytics')),
     path('mentorship/', include('mentorship.urls', namespace='mentorship')),

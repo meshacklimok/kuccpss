@@ -103,7 +103,7 @@
     {% if posthog_configured %}
       <span class="ao-badge ok">&#10003; Configured</span>
     {% else %}
-      <span class="ao-badge off">Not configured — set POSTHOG_API_KEY</span>
+      <span class="ao-badge off">Not configured, set POSTHOG_API_KEY</span>
     {% endif %}
   </div>
   <div class="ao-panel-body">
@@ -119,7 +119,7 @@
           <li>Click <strong>Share</strong> &rarr; enable <strong>Public sharing</strong></li>
           <li>Copy the <em>iframe src</em> URL</li>
           <li>Set env var: <code>POSTHOG_EMBED_URL=https://eu.posthog.com/embedded/...</code></li>
-          <li>Redeploy — the iframe will appear here</li>
+          <li>Redeploy, the iframe will appear here</li>
         </ol>
       </div>
       <hr class="ao-divider">
@@ -143,14 +143,14 @@
     {% if sentry_configured %}
       <span class="ao-badge ok">&#10003; Configured</span>
     {% else %}
-      <span class="ao-badge off">Not configured — set SENTRY_DSN</span>
+      <span class="ao-badge off">Not configured, set SENTRY_DSN</span>
     {% endif %}
   </div>
   <div class="ao-panel-body">
     {% if sentry_configured %}
       <p style="font-size:.85rem;color:#64748b;margin:0 0 12px;">
         Sentry does not support iframe embedding. Use the buttons below to open your dashboards directly.
-        Your DSN is active — errors from this app are being captured.
+        Your DSN is active, errors from this app are being captured.
       </p>
     {% else %}
       <div class="ao-setup">
@@ -159,7 +159,7 @@
           <li>Go to <a href="https://sentry.io" target="_blank" style="color:#1e40af;">sentry.io</a> → create a Django project</li>
           <li>Copy the <strong>DSN</strong> from Project Settings → SDK Setup</li>
           <li>Set env var: <code>SENTRY_DSN=https://xxx@oXXX.ingest.sentry.io/XXXXXX</code></li>
-          <li>Redeploy — errors will start appearing in Sentry</li>
+          <li>Redeploy, errors will start appearing in Sentry</li>
         </ol>
       </div>
     {% endif %}
@@ -182,7 +182,7 @@
     {% if ga_configured %}
       <span class="ao-badge ok">&#10003; {{ ga_measurement_id }}</span>
     {% else %}
-      <span class="ao-badge off">Not configured — set GA_MEASUREMENT_ID</span>
+      <span class="ao-badge off">Not configured, set GA_MEASUREMENT_ID</span>
     {% endif %}
   </div>
   <div class="ao-panel-body">

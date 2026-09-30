@@ -11,12 +11,12 @@ class PageViewLog(models.Model):
         ('bot',     'Bot / Crawler'),
         ('unknown', 'Unknown'),
     ]
-    path             = models.CharField(max_length=500, db_index=True)
+    path             = models.CharField(max_length=500)
     method           = models.CharField(max_length=10, default='GET')
-    status_code      = models.PositiveSmallIntegerField(default=200, db_index=True)
+    status_code      = models.PositiveSmallIntegerField(default=200)
     response_time_ms = models.PositiveIntegerField(default=0)
     referrer         = models.CharField(max_length=500, blank=True)
-    device           = models.CharField(max_length=10, choices=DEVICE_CHOICES, default='unknown', db_index=True)
+    device           = models.CharField(max_length=10, choices=DEVICE_CHOICES, default='unknown')
     user             = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True,
                                          on_delete=models.SET_NULL, related_name='+')
     session_key      = models.CharField(max_length=40, blank=True)
@@ -55,7 +55,7 @@ class UserActionLog(models.Model):
         ('email_verified',   'Email Verified'),
         ('password_reset',   'Password Reset'),
     ]
-    action      = models.CharField(max_length=30, choices=ACTION_CHOICES, db_index=True)
+    action      = models.CharField(max_length=30, choices=ACTION_CHOICES)
     properties  = models.JSONField(default=dict, blank=True)
     user        = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True,
                                     on_delete=models.SET_NULL, related_name='+')
@@ -67,7 +67,6 @@ class UserActionLog(models.Model):
         ordering = ['-created_at']
         indexes = [
             models.Index(fields=['action', 'created_at']),
-            models.Index(fields=['created_at']),
         ]
 
     def __str__(self):
@@ -94,7 +93,6 @@ class SessionLog(models.Model):
 
     class Meta:
         ordering = ['-created_at']
-        indexes  = [models.Index(fields=['created_at'])]
 
     def __str__(self):
         return f'Session {self.session_key[:8]}… — {self.page_count} pages'
@@ -115,8 +113,6 @@ class SearchLog(models.Model):
     class Meta:
         ordering = ['-created_at']
         indexes  = [
-            models.Index(fields=['query']),
-            models.Index(fields=['created_at']),
             models.Index(fields=['session_key']),
         ]
 
@@ -145,7 +141,6 @@ class ViewLog(models.Model):
         ordering = ['-created_at']
         indexes  = [
             models.Index(fields=['content_type', 'object_id']),
-            models.Index(fields=['created_at']),
         ]
 
     def __str__(self):
@@ -170,7 +165,6 @@ class DownloadLog(models.Model):
 
     class Meta:
         ordering = ['-created_at']
-        indexes  = [models.Index(fields=['content_type']), models.Index(fields=['created_at'])]
 
     def __str__(self):
         return f'{self.content_type}: {self.object_name}'
@@ -178,7 +172,7 @@ class DownloadLog(models.Model):
 
 class EventLog(models.Model):
     """Generic server-side event store for anything not covered by specialised logs."""
-    name        = models.CharField(max_length=80, db_index=True)
+    name        = models.CharField(max_length=80)
     properties  = models.JSONField(default=dict, blank=True)
     user        = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True,
                                     on_delete=models.SET_NULL, related_name='+')
@@ -190,7 +184,6 @@ class EventLog(models.Model):
         ordering = ['-created_at']
         indexes  = [
             models.Index(fields=['name', 'created_at']),
-            models.Index(fields=['created_at']),
         ]
 
     def __str__(self):

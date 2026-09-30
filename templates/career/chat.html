@@ -2,7 +2,7 @@
 {% load static %}
 {% load custom_filters %}
 
-{% block title %}CareerNext AI — Ask Anything About Courses, Careers & KUCCPS | CareerNext{% endblock %}
+{% block title %}CareerNext AI: Ask Anything About Courses, Careers & KUCCPS | CareerNext{% endblock %}
 
 {% block meta %}<meta name="description" content="Chat with CareerNext AI about your future. It already knows your saved KCSE results, so ask 'what courses do I qualify for?' or 'can I do nursing?' and get answers based on your actual grades and real KUCCPS course data.">{% endblock %}
 
@@ -110,7 +110,7 @@
 
 /* Paywall bubble */
 .bubble.paywall-bubble {
-    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+    background: #fef3c7;
     border: 1.5px solid #fbbf24;
     color: #78350f;
     border-bottom-left-radius: 4px;
@@ -227,6 +227,20 @@
 .pm-step { display: none; }
 .pm-step.active { display: block; }
 
+.pm-how { font-size: 0.8rem; color: #475569; padding-left: 1.1rem; margin: 0 0 0.9rem; }
+.pm-how li { margin-bottom: 0.2rem; }
+.pm-phone { font-size: 16px; }
+.pm-pay-btn, .pm-body .btn-sm { min-height: 44px; }
+.pm-tips { text-align: left; font-size: 0.78rem; color: #475569; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 0.7rem 0.85rem; margin-top: 0.75rem; }
+body.dark .pm-tips { background: var(--surface-2, #1e293b); border-color: var(--border, #334155); color: var(--text-2, #cbd5e1); }
+body.dark .pm-how { color: var(--text-2, #cbd5e1); }
+@media (max-width: 480px) {
+    .paywall-modal-overlay { align-items: flex-end; padding: 0; }
+    .paywall-modal { max-width: 100%; border-radius: 18px 18px 0 0; max-height: 94vh; }
+    .pm-header { padding: 1rem 1rem 0; }
+    .pm-body { padding: 0.75rem 1rem 1.25rem; }
+}
+
 .pm-features li {
     padding: 4px 0;
     font-size: 0.85rem;
@@ -302,7 +316,7 @@
             <div class="avatar"><i class="bi bi-stars"></i></div>
             <div class="bubble">
                 Hi! I'm <strong>CareerNext AI</strong>. I can help you choose courses and careers based on your KCSE results, cluster points, and interests.<br><br>
-                Ask me anything — like <em>"I got C+, what can I study?"</em> or <em>"Do I qualify for Computer Science?"</em>
+                Ask me anything, like <em>"I got C+, what can I study?"</em> or <em>"Do I qualify for Computer Science?"</em>
                 {% if credit_info and credit_info.free_limit %}
                 <br><br><span style="font-size:0.82rem;color:#64748b;">
                     <i class="bi bi-info-circle me-1"></i>You have {{ credit_info.free_limit }} free messages. After that, a small top-up unlocks more.
@@ -379,16 +393,21 @@
 
             <!-- ── Step: phone entry ── -->
             <div class="pm-step active" id="pmStepPhone">
-                <label class="form-label fw-bold small mb-1">Your M-Pesa Number</label>
+                <ol class="pm-how">
+                    <li>Enter your M-Pesa number and tap Pay</li>
+                    <li>Enter your M-Pesa PIN on the prompt that pops up on your phone</li>
+                    <li>Your messages are added here automatically</li>
+                </ol>
+                <label class="form-label fw-bold small mb-1" for="pmPhone">Your M-Pesa Number</label>
                 <div class="input-group mb-2">
                     <span class="input-group-text">+254</span>
-                    <input type="tel" id="pmPhone" class="form-control"
-                           placeholder="712 345 678" maxlength="9" pattern="[0-9]{9}"
-                           oninput="this.value=this.value.replace(/\D/g,'')">
+                    <input type="tel" id="pmPhone" class="form-control pm-phone"
+                           placeholder="712 345 678" maxlength="16" inputmode="tel" autocomplete="tel-national"
+                           value="{{ request.user.phone_number|default:'' }}">
                 </div>
-                <div class="form-text mb-3">Enter your 9-digit number without the leading 0 or +254.</div>
-                <div id="pmPhoneError" class="alert alert-danger d-none small py-2 mb-2"></div>
-                <button class="btn btn-success w-100 fw-bold py-2" onclick="pmInitiatePayment()">
+                <div class="form-text mb-3">Typing 0712&hellip; or 0112&hellip; works too.</div>
+                <div id="pmPhoneError" class="alert alert-danger d-none small py-2 mb-2" role="alert"></div>
+                <button class="btn btn-success w-100 fw-bold py-2 pm-pay-btn" id="pmPayBtn" onclick="pmInitiatePayment()">
                     <i class="bi bi-phone-fill me-2"></i>
                     Pay KES {% if credit_info %}{{ credit_info.price_kes }}{% else %}—{% endif %} via M-Pesa
                 </button>
@@ -406,8 +425,13 @@
                         <div class="spinner-border text-success" style="width:3rem;height:3rem;"></div>
                     </div>
                     <h6 class="fw-bold">Check your phone!</h6>
-                    <p class="text-muted small mb-0">An M-Pesa STK prompt has been sent to your phone.<br>Enter your PIN to complete payment.</p>
+                    <p class="text-muted small mb-0">An M-Pesa prompt was sent to <strong id="pmSentTo"></strong>.<br>Enter your PIN to complete payment.</p>
                     <p class="text-muted small mt-2">Waiting for confirmation<span id="pmDots">...</span></p>
+                    <div class="pm-tips">
+                        <strong>No prompt?</strong> Make sure your phone is on and unlocked. The prompt expires after about a minute &mdash;
+                        <a href="#" onclick="pmResend(event)">send a new one</a>.<br>
+                        <span class="text-warning-emphasis">Already entered your PIN? Just wait &mdash; this updates by itself. Don't pay twice.</span>
+                    </div>
                 </div>
             </div>
 
@@ -430,7 +454,7 @@
                 <div class="text-center py-2">
                     <div class="mb-3" style="font-size:3rem;">❌</div>
                     <h6 class="fw-bold text-danger">Payment Not Completed</h6>
-                    <p class="text-muted small">The M-Pesa payment was cancelled or failed. No money was deducted.</p>
+                    <p class="text-muted small" id="pmFailedMsg">The M-Pesa prompt was cancelled, timed out, or the PIN wasn't entered. No money was taken.</p>
                     <div class="d-flex gap-2 justify-content-center flex-wrap mt-2">
                         <button class="btn btn-success btn-sm" onclick="pmShowStep('phone')">Try Again</button>
                         <button class="btn btn-outline-secondary btn-sm" onclick="closePaywall()">Cancel</button>
@@ -445,13 +469,11 @@
                     <h6 class="fw-bold text-warning">Still Processing…</h6>
                     <p class="text-muted small" id="pmTimeoutMsg">
                         If you entered your M-Pesa PIN, payment may have gone through but confirmation is delayed.
+                        Tap Check Status, or enter the code from your M-Pesa SMS below.
                     </p>
                     <div class="d-flex flex-wrap gap-2 justify-content-center mt-2">
                         <button class="btn btn-success btn-sm" onclick="pmVerifyStatus()">
                             <i class="bi bi-arrow-repeat me-1"></i>Check Status
-                        </button>
-                        <button class="btn btn-outline-primary btn-sm" onclick="pmShowStep('code')">
-                            <i class="bi bi-keyboard me-1"></i>Enter M-Pesa Code
                         </button>
                         <button class="btn btn-outline-secondary btn-sm" onclick="pmShowStep('phone')">Pay Again</button>
                     </div>
@@ -466,22 +488,8 @@
                 </div>
             </div>
 
-            <!-- ── Step: enter M-Pesa code ── -->
-            <div class="pm-step" id="pmStepCode">
-                <h6 class="fw-bold mb-1"><i class="bi bi-receipt me-2 text-primary"></i>Enter M-Pesa Transaction Code</h6>
-                <p class="text-muted small mb-3">
-                    Find the code in your M-Pesa confirmation SMS, e.g. <strong>RCK12345XY</strong>.
-                </p>
-                <input type="text" id="pmCodeInput" class="form-control text-uppercase mb-2"
-                       placeholder="e.g. RCK12345XY" maxlength="20" autocomplete="off"
-                       oninput="this.value=this.value.toUpperCase()">
-                <div id="pmCodeError" class="alert alert-danger d-none small py-2 mb-2"></div>
-                <div class="d-flex gap-2">
-                    <button class="btn btn-primary flex-fill" onclick="pmSubmitCode()">
-                        <i class="bi bi-check-lg me-1"></i>Verify
-                    </button>
-                    <button class="btn btn-outline-secondary" onclick="pmShowStep('timeout')">Back</button>
-                </div>
+            <div id="pmHelp">
+                {% include "payments/_payment_help.html" with feature="ai_chat_access" theme="light" %}
             </div>
 
         </div><!-- /pm-body -->
@@ -490,6 +498,7 @@
 
 
 {% block extra_js %}
+<script src="{% static 'js/payment_polling.js' %}"></script>
 <script>
 const CHAT_URL     = "{% url 'career:ajax_ai_chat' %}";
 const CSRF         = "{{ csrf_token }}";
@@ -508,11 +517,7 @@ let paidLeft    = null;
 {% endif %}
 
 let history         = [];   // [{role, content}, ...]
-let pmPaymentId     = null;
-let pmPollTimer     = null;
-let pmDotsTimer     = null;
-let pmPollAttempts  = 0;
-const PM_MAX_POLLS  = 40;
+let pmUnlocked      = false;   // guards pmOnSuccess against running twice
 
 /* ─── Credit badge ─────────────────────────────────── */
 function updateCreditBadge() {
@@ -698,7 +703,7 @@ async function send() {
         }
     } catch {
         typing.remove();
-        appendMsg('bot', '<span style="color:#dc2626"><i class="bi bi-wifi-off me-1"></i>Network error — please try again.</span>');
+        appendMsg('bot', '<span style="color:#dc2626"><i class="bi bi-wifi-off me-1"></i>Network error, please try again.</span>');
         btn.disabled = false;
     }
 
@@ -713,6 +718,7 @@ document.getElementById('sendBtn').addEventListener('click', send);
 /* ═══════════════════════════════════════════════════ */
 
 function openPaywall() {
+    pmUnlocked = false;
     document.getElementById('paywallOverlay').classList.add('open');
     pmShowStep('phone');
 }
@@ -732,132 +738,113 @@ function pmShowStep(name) {
     if (el) el.classList.add('active');
 }
 
+const pmPoller = createPaymentPoller({
+    feature: AI_FEATURE,
+    initiateUrl: INITIATE_URL,
+    csrfToken: CSRF,
+    state: function (s) { pmShowStep(s); },
+    onDots: function () {
+        const el = document.getElementById('pmDots');
+        if (el) el.textContent = el.textContent.length >= 3 ? '.' : el.textContent + '.';
+    },
+    onSuccess: function () { pmOnSuccess(); },
+});
+
+(function () {
+    const phoneEl = document.getElementById('pmPhone');
+    phoneEl.value = pmPoller.normalizePhone(phoneEl.value) || '';
+    phoneEl.addEventListener('keydown', function (e) { if (e.key === 'Enter') pmInitiatePayment(); });
+})();
+
 function pmClearTimers() {
-    if (pmPollTimer)  clearInterval(pmPollTimer);
-    if (pmDotsTimer)  clearInterval(pmDotsTimer);
-    pmPollTimer = pmDotsTimer = null;
-    pmPollAttempts = 0;
+    pmPoller.clear();
+}
+
+function pmResetPayBtn() {
+    const btn = document.getElementById('pmPayBtn');
+    btn.disabled = false;
+    btn.innerHTML = '<i class="bi bi-phone-fill me-2"></i>Pay KES {% if credit_info %}{{ credit_info.price_kes }}{% else %}—{% endif %} via M-Pesa';
 }
 
 async function pmInitiatePayment() {
-    const rawPhone = document.getElementById('pmPhone').value.trim().replace(/\s/g,'');
     const errEl = document.getElementById('pmPhoneError');
+    const btn = document.getElementById('pmPayBtn');
+    const phoneVal = document.getElementById('pmPhone').value;
+    const nine = pmPoller.normalizePhone(phoneVal);
+    if (nine) document.getElementById('pmSentTo').textContent = '0' + nine.slice(0,3) + ' ' + nine.slice(3,6) + ' ' + nine.slice(6);
     errEl.classList.add('d-none');
-
-    if (!/^\d{9}$/.test(rawPhone)) {
-        errEl.textContent = 'Enter a valid 9-digit Safaricom number (e.g. 712345678).';
-        errEl.classList.remove('d-none');
-        return;
-    }
-
-    try {
-        const res = await fetch(INITIATE_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF },
-            body: JSON.stringify({ feature: AI_FEATURE, phone: '0' + rawPhone }),
-        });
-        const data = await res.json();
-
-        if (data.success) {
-            pmPaymentId = data.payment_id;
-            pmShowStep('waiting');
-            pmStartPolling(data.payment_id);
-        } else {
-            errEl.textContent = data.message || 'Something went wrong. Please try again.';
+    await pmPoller.pay(phoneVal, {
+        onInvalidPhone: function () {
+            errEl.textContent = "That number doesn't look right. Enter a Safaricom number like 0712 345 678 or 0112 345 678.";
             errEl.classList.remove('d-none');
-        }
-    } catch {
-        errEl.textContent = 'Network error. Please check your connection.';
-        errEl.classList.remove('d-none');
-    }
+        },
+        onSending: function () {
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Sending M-Pesa prompt…';
+        },
+        onInitiated: pmResetPayBtn,
+        onResumePending: pmResetPayBtn,
+        onAlreadyUnlocked: function () { window.location.reload(); },
+        onError: function (message) {
+            pmResetPayBtn();
+            pmShowStep('phone');
+            errEl.textContent = message;
+            errEl.classList.remove('d-none');
+        },
+    });
 }
 
-function pmStartPolling(paymentId) {
-    pmDotsTimer = setInterval(() => {
-        const el = document.getElementById('pmDots');
-        if (el) el.textContent = el.textContent.length >= 3 ? '.' : el.textContent + '.';
-    }, 500);
-
-    pmPollTimer = setInterval(async () => {
-        pmPollAttempts++;
-        try {
-            const res  = await fetch(`/payments/status/${paymentId}/`);
-            const data = await res.json();
-
-            if (data.status === 'completed') {
-                pmClearTimers();
-                pmOnSuccess();
-            } else if (data.status === 'failed') {
-                pmClearTimers();
-                pmShowStep('failed');
-            } else if (pmPollAttempts >= PM_MAX_POLLS) {
-                pmClearTimers();
-                pmShowStep('timeout');
-            }
-        } catch {
-            if (pmPollAttempts >= PM_MAX_POLLS) { pmClearTimers(); pmShowStep('timeout'); }
-        }
-    }, 3000);
+function pmResend(e) {
+    e.preventDefault();
+    pmClearTimers();
+    pmShowStep('phone');
+    pmInitiatePayment();
 }
 
 async function pmVerifyStatus() {
-    if (!pmPaymentId) { pmShowStep('timeout'); return; }
-    pmShowStep('checking');
-    try {
-        const res  = await fetch(`/payments/verify/${pmPaymentId}/`);
-        const data = await res.json();
-        if (data.status === 'completed') {
-            pmOnSuccess();
-        } else if (data.status === 'failed') {
-            pmShowStep('failed');
-        } else {
+    const id = pmPoller.getCurrentPaymentId();
+    if (!id) { pmShowStep('timeout'); return; }
+    await pmPoller.verifyById(id, {
+        onStillPending: function (message) {
             document.getElementById('pmTimeoutMsg').textContent =
-                data.message || 'Payment still processing. Wait a few minutes then check again.';
-            pmShowStep('timeout');
-        }
-    } catch {
-        document.getElementById('pmTimeoutMsg').textContent =
-            'Could not reach the server. Please check your internet.';
-        pmShowStep('timeout');
-    }
+                message || 'Payment still processing. Wait a few minutes then check again, or enter your M-Pesa code below.';
+        },
+        onFailedMessage: function (message) {
+            if (message) document.getElementById('pmFailedMsg').textContent = message;
+        },
+        onNetworkError: function () {
+            document.getElementById('pmTimeoutMsg').textContent =
+                'Could not reach the server. Please check your internet.';
+        },
+    });
 }
 
-async function pmSubmitCode() {
-    const code  = document.getElementById('pmCodeInput').value.trim().toUpperCase();
-    const errEl = document.getElementById('pmCodeError');
-    errEl.classList.add('d-none');
+// Hide the "Paid but still locked?" panel where it doesn't make sense
+const _pmShowStepBase = pmShowStep;
+pmShowStep = function (name) {
+    _pmShowStepBase(name);
+    const help = document.getElementById('pmHelp');
+    if (help) help.style.display = (name === 'success' || name === 'checking') ? 'none' : '';
+    const details = help && help.querySelector('.pay-help');
+    if (details && name === 'timeout') details.open = true;
+};
 
-    if (!/^[A-Z0-9]{6,20}$/.test(code)) {
-        errEl.textContent = 'Enter a valid M-Pesa transaction code.';
-        errEl.classList.remove('d-none');
-        return;
-    }
-    try {
-        const res  = await fetch(VERIFY_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF },
-            body: JSON.stringify({ feature: AI_FEATURE, mpesa_code: code }),
-        });
-        const data = await res.json();
-        if (data.status === 'completed') {
-            pmOnSuccess();
-        } else {
-            errEl.textContent = data.message || 'Transaction code not found. Check your M-Pesa SMS.';
-            errEl.classList.remove('d-none');
-        }
-    } catch {
-        errEl.textContent = 'Network error. Please check your connection.';
-        errEl.classList.remove('d-none');
-    }
-}
+// The help panel verified an M-Pesa code — handle it in-place (no reload)
+document.addEventListener('payment:unlocked', function (e) {
+    e.preventDefault();
+    pmClearTimers();
+    pmOnSuccess();
+});
 
 function pmOnSuccess() {
+    if (pmUnlocked) return;
+    pmUnlocked = true;
     pmShowStep('success');
     /* Re-enable the chat input */
     document.getElementById('chatInput').disabled  = false;
     document.getElementById('sendBtn').disabled = false;
-    /* Update counters (we don't know the exact top-up without a request, reload will fix badge) */
-    paidLeft = paidLeft + {% if credit_info %}{{ credit_info.paid_topup }}{% else %}200{% endif %};
+    /* Update counters (exact figure is refreshed on next page load) */
+    paidLeft = (paidLeft || 0) + {% if credit_info %}{{ credit_info.paid_topup }}{% else %}200{% endif %};
     updateCreditBadge();
     /* Show success message in chat */
     appendMsg('bot',

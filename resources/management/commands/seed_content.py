@@ -33,8 +33,8 @@ FAQ_DATA = [
     ("cluster", "What is the KCSE aggregate (total)?",
      "The aggregate is your best 7 subjects scored as follows:\n\nMathematics + best of (English or Kiswahili) + your next 5 best subjects. The maximum aggregate is 84 points (7 subjects × A = 12 each)."),
 
-    ("cluster", "What are the 20 KUCCPS clusters?",
-     "KUCCPS has 20 subject clusters (C1–C20), each grouping 4 subjects relevant to a field of study. For example, Cluster 1 (Medicine) includes Biology, Chemistry, Mathematics, and Physics. Visit the Clusters page to view all 20 clusters and their subject compositions."),
+    ("cluster", "What are the 18 KUCCPS clusters?",
+     "KUCCPS groups degree programmes into 18 clusters (C1–C18). Each cluster uses 4 cluster subjects relevant to its field. For example, Cluster 13 (Medicine, Nursing, Health Sciences) uses Biology, Chemistry, Mathematics or Physics, and one other subject. You can view all 18 clusters and their subject compositions on the Clusters page."),
 
     ("cluster", "My cluster points seem lower than expected — why?",
      "A few common reasons:\n\n• Weak cluster subjects — the formula weights your performance in the specific 4 cluster subjects heavily. A weak subject in the cluster drags the score down even if your overall grades are good.\n• Low aggregate — the aggregate (all 7 best subjects) also factors in.\n• Grade entry error — double-check you entered the correct grade for each subject, especially distinguishing A (12) from A- (11), etc."),

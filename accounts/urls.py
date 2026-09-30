@@ -1,5 +1,5 @@
 from django.urls import path, include
-from . import views
+from . import staff_2fa, views
 
 app_name = "accounts"
 
@@ -17,6 +17,7 @@ urlpatterns = [
     # Password change & re-authentication
     path("change-password/", views.change_password_view, name="change_password"),
     path("re-auth/", views.re_auth_view, name="re_auth"),
+    path("delete-account/", views.delete_account_view, name="delete_account"),
 
     # Dashboard / Profile
     path("dashboard/", views.dashboard_view, name="dashboard"),
@@ -44,6 +45,10 @@ urlpatterns = [
     # Staff & admin directory
     path("staff/team/", views.staff_team_view, name="staff_team"),
 
+    # Staff two-factor (enforced by kuccpss.middleware.StaffSecurityMiddleware)
+    path("staff/2fa/setup/",  staff_2fa.setup_view,  name="staff_2fa_setup"),
+    path("staff/2fa/verify/", staff_2fa.verify_view, name="staff_2fa_verify"),
+
     # ==============================
     # Allauth URLs (Google OAuth + built-in email/password)
     # ==============================
@@ -58,6 +63,7 @@ urlpatterns = [
     path("referral/",                    views.referral_view,            name="referral"),
     path("affiliate/",                   views.affiliate_dashboard,      name="affiliate_dashboard"),
     path("affiliate/withdraw/",          views.request_affiliate_payout, name="affiliate_withdraw"),
+    path("affiliate/withdrawals/",       views.affiliate_withdrawal_history, name="affiliate_withdrawal_history"),
 
     # Application tracker
     path("applications/",                views.applications_view,        name="applications"),

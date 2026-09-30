@@ -16,6 +16,7 @@ pymupdf>=1.24
 gunicorn[gthread]>=21.2
 whitenoise>=6.7
 dj-database-url>=2.1
+redis>=5.0          # required by RedisCache + django-q when REDIS_URL is set
 pywebpush>=2.0
 dnspython>=2.4
 sentry-sdk[django]>=2.0
@@ -24,3 +25,4 @@ cloudinary>=1.40
 django-cloudinary-storage>=0.3
 
 geoip2>=4.8
+segno>=1.6          # QR code (SVG) for staff 2FA enrolment

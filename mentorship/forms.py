@@ -31,7 +31,7 @@ class MentorRegistrationForm(forms.ModelForm):
     class Meta:
         model = MentorProfile
         fields = [
-            "course", "institution", "year_of_study", "bio", "whatsapp", "photo",
+            "course", "institution", "year_of_study", "bio", "whatsapp",
             "student_id_upload", "portal_screenshot", "university_email",
         ]
         widgets = {
@@ -51,7 +51,6 @@ class MentorRegistrationForm(forms.ModelForm):
             "course": forms.Select(attrs={"class": "form-select"}),
             "institution": forms.Select(attrs={"class": "form-select"}),
             "year_of_study": forms.Select(attrs={"class": "form-select"}),
-            "photo": forms.FileInput(attrs={"class": "form-control", "accept": "image/*"}),
             "student_id_upload": forms.FileInput(attrs={
                 "class": "form-control",
                 "accept": "image/*,.pdf",
@@ -68,7 +67,6 @@ class MentorRegistrationForm(forms.ModelForm):
         labels = {
             "whatsapp": "WhatsApp Number",
             "bio": "About You",
-            "photo": "Profile Photo (optional)",
             "student_id_upload": "Student ID Card",
             "portal_screenshot": "University Portal Screenshot",
             "university_email": "Institutional Email (optional)",

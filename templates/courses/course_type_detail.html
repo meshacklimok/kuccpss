@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
-{% block title %}{{ course_type.name }} Courses in Kenya — KUCCPS Cluster Points & Cutoffs | CareerNext{% endblock %}
+{% block title %}{{ course_type.name }} Courses in Kenya: KUCCPS Cluster Points & Cutoffs | CareerNext{% endblock %}
 
-{% block meta %}<meta name="description" content="All {{ course_type.name }} courses in Kenya with cutoff points, entry requirements and the institutions that offer them — check which ones your KCSE grades qualify you for.">{% endblock %}
+{% block meta %}<meta name="description" content="All {{ course_type.name }} courses in Kenya with cutoff points, entry requirements and the institutions that offer them. Check which ones your KCSE grades qualify you for.">{% endblock %}
 
 {% block content %}
 <style>
@@ -9,14 +9,14 @@ body { background: #f8fafc; }
 
 /* ── HEADER ── */
 .cpage-header {
-  background: linear-gradient(135deg, #0a0f2c 0%, #1a237e 55%, #0d47a1 100%);
+  background: #0a0f2c;
   padding: 1.5rem 0 2rem;
   position: relative; overflow: hidden;
 }
 .cpage-header::before {
   content: '';
   position: absolute; inset: 0;
-  background-image: radial-gradient(circle at 20% 50%, rgba(255,255,255,0.03) 1px, transparent 1px);
+  background-image: rgba(255,255,255,0.03);
   background-size: 24px 24px;
   pointer-events: none;
 }
@@ -24,7 +24,7 @@ body { background: #f8fafc; }
   content: '';
   position: absolute;
   width: 380px; height: 380px; border-radius: 50%;
-  background: radial-gradient(circle, rgba(99,102,241,0.22) 0%, transparent 70%);
+  background: rgba(99,102,241,0.22);
   top: -140px; right: -80px;
   pointer-events: none;
 }
@@ -42,7 +42,7 @@ body { background: #f8fafc; }
 .cpage-hero-row { display: flex; align-items: center; gap: 1rem; position: relative; z-index: 1; }
 .cpage-icon-badge {
   width: 56px; height: 56px; border-radius: 16px; flex-shrink: 0;
-  background: linear-gradient(135deg, rgba(255,255,255,0.22) 0%, rgba(255,255,255,0.08) 100%);
+  background: rgba(255,255,255,0.22);
   border: 1px solid rgba(255,255,255,0.18);
   backdrop-filter: blur(10px);
   display: flex; align-items: center; justify-content: center;
@@ -177,6 +177,7 @@ body { background: #f8fafc; }
     <div class="cpage-search-inner">
       <i class="fas fa-search"></i>
       <input type="text" name="q" id="course-search" value="{{ q }}"
+             data-suggest="courses" data-suggest-params="type={{ course_type.slug|urlencode }}"
              placeholder="Search {{ course_type.name }} courses…"
              autocomplete="off"
              hx-get="."

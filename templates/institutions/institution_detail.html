@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
-{% block title %}{{ institution.name }} — Courses, Cutoff Points & KUCCPS Placement | CareerNext{% endblock %}
+{% block title %}{{ institution.name }}: Courses, Cutoff Points & KUCCPS Placement | CareerNext{% endblock %}
 
-{% block meta %}<meta name="description" content="{{ institution.name }}: every course offered, KUCCPS cutoff points and entry requirements — check which programmes your KCSE grades qualify you for.">{% endblock %}
+{% block meta %}<meta name="description" content="{{ institution.name }}: every course offered, KUCCPS cutoff points and entry requirements. Check which programmes your KCSE grades qualify you for.">{% endblock %}
 
 {% block content %}
 <div class="page-hero">
@@ -95,11 +95,14 @@
                   {% endif %}
                 </div>
                 {% with lc=offering.latest_cutoff %}
-                {% if lc %}
+                {% if lc is not None %}
                 <span class="badge rounded-pill ms-2"
                       style="background:{% if lc >= 70 %}#dcfce7;color:#16a34a{% elif lc >= 55 %}#fef3c7;color:#d97706{% else %}#fee2e2;color:#dc2626{% endif %};font-size:0.75rem;white-space:nowrap;">
                   {{ lc }} pts
                 </span>
+                {% elif offering.cutoff_points %}
+                <span class="badge rounded-pill ms-2 text-muted" style="background:#f1f5f9;font-size:0.75rem;"
+                      title="No {{ LATEST_CUTOFF_YEAR }} cutoff published">—</span>
                 {% elif offering.course.minimum_mean_grade %}
                 <span class="badge rounded-pill ms-2" style="background:#fee2e2;color:#dc2626;font-size:0.75rem;">
                   Min {{ offering.course.minimum_mean_grade }}

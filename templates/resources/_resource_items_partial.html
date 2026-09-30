@@ -5,7 +5,7 @@
     <img src="{{ resource.thumbnail.url }}" class="card-img-top" style="height:140px;object-fit:cover;" alt="{{ resource.title }}" loading="lazy">
     {% else %}
     <div class="d-flex align-items-center justify-content-center"
-         style="height:140px;background:linear-gradient(135deg,#1e3a8a,#2563eb);">
+         style="height:140px;background:#1e3a8a;">
       <i class="fas fa-{% if resource.resource_type == 'pdf' %}file-pdf{% elif resource.resource_type == 'video' %}play-circle{% else %}link{% endif %} fa-3x text-white opacity-75"></i>
     </div>
     {% endif %}

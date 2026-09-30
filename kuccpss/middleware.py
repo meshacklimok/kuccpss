@@ -48,12 +48,30 @@ class ContentSecurityPolicyMiddleware:
         "form-action 'self' https://accounts.google.com",
     ])
 
+    # Enforced subset: directives that cannot affect which scripts, styles,
+    # images or connections load, so they are safe to enforce without a
+    # browser check. Blocks plugin/<embed> injection, <base> hijacking of
+    # relative URLs, and framing by other sites (clickjacking).
+    ENFORCED_POLICY = "; ".join([
+        "object-src 'none'",
+        "base-uri 'self'",
+        "frame-ancestors 'self'",
+    ])
+
+    # The site uses none of these browser features.
+    PERMISSIONS_POLICY = (
+        "camera=(), microphone=(), geolocation=(), payment=(), usb=(), "
+        "magnetometer=(), gyroscope=(), accelerometer=(), interest-cohort=()"
+    )
+
     def __init__(self, get_response):
         self.get_response = get_response
 
     def __call__(self, request):
         response = self.get_response(request)
+        response['Content-Security-Policy'] = self.ENFORCED_POLICY
         response['Content-Security-Policy-Report-Only'] = self.POLICY
+        response.setdefault('Permissions-Policy', self.PERMISSIONS_POLICY)
         return response
 
 
@@ -94,6 +112,85 @@ class SuspendedUserMiddleware:
             logout(request)
             messages.error(request, "Your account is inactive or suspended. Contact support if you think this is a mistake.")
             return redirect('accounts:login')
+        return self.get_response(request)
+
+
+class StaffSecurityMiddleware:
+    """
+    Extra protection for staff accounts (they can mark payments completed,
+    broadcast emails and approve payouts):
+
+    1. Two-factor: every request from a staff user is sent to set up or enter
+       an authenticator code (accounts/staff_2fa.py) until the session has
+       passed 2FA within STAFF_2FA_MAX_AGE. Applies however they logged in.
+    2. Short sessions: staff sessions expire after STAFF_SESSION_MAX_AGE of
+       inactivity instead of the 90-day student default.
+
+    Must sit after AuthenticationMiddleware and MessageMiddleware.
+    """
+    EXEMPT_PREFIXES = (
+        '/accounts/staff/2fa/', '/accounts/logout/', '/static/', '/media/',
+        '/health/', '/sw.js', '/favicon', '/manifest.json', '/offline/',
+    )
+
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        user = getattr(request, 'user', None)
+        if user is None or not user.is_authenticated or not user.is_staff:
+            return self.get_response(request)
+
+        from django.conf import settings
+        request.session.set_expiry(getattr(settings, 'STAFF_SESSION_MAX_AGE', 12 * 3600))
+
+        if request.path.startswith(self.EXEMPT_PREFIXES):
+            return self.get_response(request)
+
+        from accounts import staff_2fa
+        if not staff_2fa.is_required() or staff_2fa.session_is_verified(request):
+            return self.get_response(request)
+
+        wants_json = (
+            request.headers.get('x-requested-with') == 'XMLHttpRequest'
+            or 'application/json' in request.headers.get('accept', '')
+        )
+        if wants_json:
+            return JsonResponse({'error': 'staff_2fa_required'}, status=403)
+
+        from urllib.parse import urlencode
+        from django.shortcuts import redirect
+        from django.urls import reverse
+        name = ('accounts:staff_2fa_verify' if staff_2fa.has_confirmed_device(user)
+                else 'accounts:staff_2fa_setup')
+        next_url = request.get_full_path() if request.method == 'GET' else '/cn-staff/'
+        return redirect(f"{reverse(name)}?{urlencode({'next': next_url})}")
+
+
+class CanonicalHostMiddleware:
+    """
+    Redirects www.<CANONICAL_HOST> to <CANONICAL_HOST>.
+
+    Session cookies are host-only and allauth builds the Google callback URL
+    from the request host, so serving both hosts split sessions and sent
+    Google a redirect_uri it might not have registered. Other hosts (e.g.
+    *.onrender.com health checks) pass through untouched.
+    """
+    def __init__(self, get_response):
+        from django.conf import settings
+        self.get_response = get_response
+        canonical = getattr(settings, 'CANONICAL_HOST', '')
+        self.canonical = canonical
+        self.alias = f'www.{canonical}' if canonical else ''
+
+    def __call__(self, request):
+        if self.alias and request.get_host().split(':')[0] == self.alias:
+            from django.http import HttpResponsePermanentRedirect
+            url = f'https://{self.canonical}{request.get_full_path()}'
+            response = HttpResponsePermanentRedirect(url)
+            if request.method not in ('GET', 'HEAD'):
+                response.status_code = 308  # keep method + body
+            return response
         return self.get_response(request)
 
 

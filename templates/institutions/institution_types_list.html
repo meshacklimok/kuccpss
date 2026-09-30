@@ -3,7 +3,7 @@
 
 {% block meta %}<meta name="description" content="Explore all Kenyan universities, KMTC campuses, TVET institutes, and TTCs. Find admissions details, courses offered, and cutoff points for each institution.">{% endblock %}
 {% block og_meta %}
-<meta property="og:title" content="Kenyan Institutions Directory — CareerNext">
+<meta property="og:title" content="Kenyan Institutions Directory | CareerNext">
 <meta property="og:description" content="Universities, KMTC campuses, TVET institutes, and TTCs in Kenya. All in one searchable directory.">
 {% endblock %}
 
@@ -13,21 +13,21 @@ body { background: #f8fafc; }
 
 /* ── HEADER ── */
 .itl-header {
-  background: linear-gradient(135deg, #0a0f2c 0%, #1a237e 55%, #0d47a1 100%);
+  background: #0a0f2c;
   padding: 2rem 0 2.5rem;
   position: relative; overflow: hidden;
 }
 .itl-header::before {
   content: '';
   position: absolute; inset: 0;
-  background-image: radial-gradient(circle at 20% 50%, rgba(255,255,255,0.03) 1px, transparent 1px);
+  background-image: rgba(255,255,255,0.03);
   background-size: 24px 24px; pointer-events: none;
 }
 .itl-header::after {
   content: '';
   position: absolute;
   width: 420px; height: 420px; border-radius: 50%;
-  background: radial-gradient(circle, rgba(99,102,241,0.22) 0%, transparent 70%);
+  background: rgba(99,102,241,0.22);
   top: -160px; right: -100px; pointer-events: none;
 }
 .itl-eyebrow {
@@ -64,15 +64,15 @@ body { background: #f8fafc; }
 @media (min-width: 720px) { .itl-grid { grid-template-columns: repeat(3, 1fr); } }
 @media (min-width: 900px) { .itl-grid { grid-template-columns: repeat(4, 1fr); } }
 
-/* per-type colour tokens */
-.ct-public-university  { --acc:#1e3a8a; --acb:#eff6ff; --acs:rgba(30,58,138,0.12); }
-.ct-private-university { --acc:#7c3aed; --acb:#f5f3ff; --acs:rgba(124,58,237,0.12); }
-.ct-kmtc               { --acc:#dc2626; --acb:#fef2f2; --acs:rgba(220,38,38,0.12); }
-.ct-public-tvet        { --acc:#059669; --acb:#ecfdf5; --acs:rgba(5,150,105,0.12); }
-.ct-private-tvet       { --acc:#0891b2; --acb:#ecfeff; --acs:rgba(8,145,178,0.12); }
-.ct-ttc                { --acc:#d97706; --acb:#fffbeb; --acs:rgba(217,119,6,0.12); }
-.ct-tvet               { --acc:#059669; --acb:#ecfdf5; --acs:rgba(5,150,105,0.12); }
-.ct-specialized        { --acc:#0f766e; --acb:#f0fdfa; --acs:rgba(15,118,110,0.12); }
+/* per-type colour tokens + a real photo for the avatar */
+.ct-public-university  { --acc:#1e3a8a; --acb:#eff6ff; --acs:rgba(30,58,138,0.12); --img: url('https://images.unsplash.com/photo-1740065592671-9cb593ee9b78?w=200&q=70&auto=format&fit=crop'); }
+.ct-private-university { --acc:#7c3aed; --acb:#f5f3ff; --acs:rgba(124,58,237,0.12); --img: url('https://images.unsplash.com/photo-1740065592671-9cb593ee9b78?w=200&q=70&auto=format&fit=crop'); }
+.ct-kmtc               { --acc:#dc2626; --acb:#fef2f2; --acs:rgba(220,38,38,0.12); --img: url('https://images.unsplash.com/photo-1516841273335-e39b37888115?w=200&q=70&auto=format&fit=crop'); }
+.ct-public-tvet        { --acc:#059669; --acb:#ecfdf5; --acs:rgba(5,150,105,0.12); --img: url('https://images.unsplash.com/photo-1644522248824-ed975fd9ee81?w=200&q=70&auto=format&fit=crop'); }
+.ct-private-tvet       { --acc:#0891b2; --acb:#ecfeff; --acs:rgba(8,145,178,0.12); --img: url('https://images.unsplash.com/photo-1644522248824-ed975fd9ee81?w=200&q=70&auto=format&fit=crop'); }
+.ct-ttc                { --acc:#d97706; --acb:#fffbeb; --acs:rgba(217,119,6,0.12); --img: url('https://images.unsplash.com/photo-1758270705031-ebd46917a454?w=200&q=70&auto=format&fit=crop'); }
+.ct-tvet               { --acc:#059669; --acb:#ecfdf5; --acs:rgba(5,150,105,0.12); --img: url('https://images.unsplash.com/photo-1644522248824-ed975fd9ee81?w=200&q=70&auto=format&fit=crop'); }
+.ct-specialized        { --acc:#0f766e; --acb:#f0fdfa; --acs:rgba(15,118,110,0.12); --img: url('https://images.unsplash.com/photo-1740065592671-9cb593ee9b78?w=200&q=70&auto=format&fit=crop'); }
 
 .type-card {
   background: #fff; border-radius: 16px;
@@ -100,13 +100,22 @@ body { background: #f8fafc; }
 
 .type-icon {
   width: 54px; height: 54px; border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 1.4rem;
-  background: var(--acb, #eff6ff);
-  color: var(--acc, #1e3a8a);
+  position: relative;
+  background-color: var(--acb, #eff6ff);
+  background-image: var(--img);
+  background-size: cover;
+  background-position: center;
   transition: transform 0.26s cubic-bezier(0.34,1.56,0.64,1);
 }
 .type-card:hover .type-icon { transform: scale(1.14); }
+.type-icon-badge {
+  position: absolute; bottom: -3px; right: -3px;
+  width: 22px; height: 22px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.65rem; color: #fff;
+  background: var(--acc, #1e3a8a);
+  border: 2px solid #fff;
+}
 
 .type-title { font-size: 0.88rem; font-weight: 800; color: #1e293b; line-height: 1.3; }
 .type-count { font-size: 0.73rem; font-weight: 600; color: #94a3b8; }
@@ -116,7 +125,7 @@ body { background: #f8fafc; }
   <div class="container">
     <div class="itl-eyebrow"><i class="fas fa-university me-1"></i>Kenya Institutions</div>
     <h1 class="itl-title">Browse Institutions</h1>
-    <p class="itl-subtitle">Universities, KMTCs, TVETs, and TTCs — find the right fit for your pathway.</p>
+    <p class="itl-subtitle">Universities, KMTCs, TVETs, and TTCs. Find the right fit for your pathway.</p>
   </div>
 </div>
 
@@ -142,6 +151,7 @@ body { background: #f8fafc; }
          {% elif 'special' in sl %}ct-specialized
          {% endif %}">
       <div class="type-icon">
+        <span class="type-icon-badge">
         {% if 'public-university' in sl or 'public university' in sl %}<i class="fas fa-university"></i>
         {% elif 'private-university' in sl or 'private university' in sl %}<i class="fas fa-building"></i>
         {% elif 'kmtc' in sl %}<i class="fas fa-hospital-alt"></i>
@@ -152,6 +162,7 @@ body { background: #f8fafc; }
         {% elif 'special' in sl %}<i class="fas fa-star"></i>
         {% else %}<i class="fas fa-school"></i>
         {% endif %}
+        </span>
       </div>
       <div class="type-title">{{ type.name }}</div>
       {% if type.inst_count is not None %}

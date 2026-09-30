@@ -4,7 +4,7 @@
 {% block content %}
 
 <!-- Hero -->
-<div style="background: linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 60%, #2563eb 100%);" class="text-white py-5 mb-0">
+<div style="background: #1e3a8a;" class="text-white py-5 mb-0">
   <div class="container py-3">
     <div class="row align-items-center g-5">
       <div class="col-lg-7">
@@ -17,7 +17,7 @@
           <span style="color:#93c5fd;">Earn While You Study.</span>
         </h1>
         <p class="lead mb-4" style="color:#bfdbfe;line-height:1.75;">
-          Guide the next generation of Kenyan students — answer their questions about your
+          Guide the next generation of Kenyan students, answer their questions about your
           course, campus life, and career prospects in a focused 15-minute WhatsApp call.
           You earn <strong class="text-white">KES 70</strong> for every session you complete.
         </p>
@@ -105,7 +105,7 @@
         <div class="p-4 border-bottom" style="background:#f8fafc;">
           <div class="d-flex align-items-center gap-3">
             <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
-                 style="width:48px;height:48px;background:linear-gradient(135deg,#1e3a8a,#2563eb);">
+                 style="width:48px;height:48px;background:#1e3a8a;">
               <i class="bi bi-person-badge-fill text-white fs-5"></i>
             </div>
             <div>
@@ -158,7 +158,7 @@
                          placeholder="Type to filter courses…" autocomplete="off">
                 </div>
                 <select name="course" id="id_course" class="form-select" required>
-                  <option value="">— Select your institution first —</option>
+                  <option value="">Select your institution first</option>
                   {% for opt in form.course %}{{ opt }}{% endfor %}
                 </select>
                 {% if form.course.errors %}
@@ -206,19 +206,10 @@
               <div class="form-text">
                 Tell students what you study, what you enjoy, challenges you've overcome,
                 and what you can genuinely help with in 15 minutes. Max 600 characters.
-                <strong>Be honest — students choose mentors based on this.</strong>
+                <strong>Be honest, students choose mentors based on this.</strong>
               </div>
             </div>
 
-            <!-- Photo -->
-            <div class="mb-4">
-              <label class="form-label fw-semibold small">{{ form.photo.label }}</label>
-              {{ form.photo }}
-              {% if form.photo.errors %}
-                <div class="text-danger small mt-1">{{ form.photo.errors }}</div>
-              {% endif %}
-              <div class="form-text">A clear, recent headshot significantly increases your booking rate.</div>
-            </div>
 
             <hr class="my-4">
 
@@ -230,7 +221,7 @@
             </div>
             <p class="text-muted small mb-4">
               We verify every applicant before approval. These documents are
-              <strong>strictly confidential</strong> — seen only by CareerNext staff
+              <strong>strictly confidential</strong>, seen only by CareerNext staff
               during the review process and never shared or published.
               Providing false documents will result in immediate and permanent removal.
             </p>
@@ -287,8 +278,8 @@
               {% endif %}
               <div class="form-text">
                 Your official institutional email (e.g. <em>jm001@students.jkuat.ac.ke</em>)
-                is not required but <strong>significantly strengthens your application</strong>
-                — it provides instant, independent proof of active enrolment.
+                is not required but <strong>significantly strengthens your application</strong>,
+                it provides instant, independent proof of active enrolment.
               </div>
             </div>
 
@@ -327,7 +318,7 @@
             </div>
 
             <button type="submit" class="btn btn-primary w-100 rounded-pill fw-semibold py-3"
-                    style="background:linear-gradient(135deg,#1e3a8a,#2563eb);border:none;font-size:1.05rem;">
+                    style="background:#1e3a8a;border:none;font-size:1.05rem;">
               <i class="bi bi-send-check me-2"></i>Submit Mentor Application
             </button>
             <div class="text-center text-muted mt-3" style="font-size:.8rem;">
@@ -357,7 +348,7 @@
             <li>Our team verifies your enrolment (within 24 h).</li>
             <li>On approval, your profile goes live on the directory.</li>
             <li>Add your available time slots to your dashboard.</li>
-            <li>Students book and pay KES 100 — you receive KES 70.</li>
+            <li>Students book and pay KES 100, you receive KES 70.</li>
             <li>Conduct the 15-minute WhatsApp call at the booked time.</li>
             <li>Withdraw your earnings anytime via M-Pesa.</li>
           </ol>
@@ -373,7 +364,7 @@
           <div class="text-muted" style="font-size:.88rem;line-height:1.8;">
             <p class="mb-2">
               We take mentor quality seriously. Every application is reviewed by a
-              human before approval — we do not auto-approve.
+              human before approval, we do not auto-approve.
             </p>
             <p class="mb-2">
               Our team cross-checks your student ID, portal screenshot, and (where
@@ -442,7 +433,7 @@
   function _rebuildOptions(filter, selectedId) {
     var q = (filter || '').toLowerCase();
     var prev = courseSel.value;
-    courseSel.innerHTML = '<option value="">— Select your course —</option>';
+    courseSel.innerHTML = '<option value="">Select your course</option>';
     var count = 0;
     _allCourses.forEach(function (c) {
       if (q && c.name.toLowerCase().indexOf(q) === -1) return;
@@ -466,7 +457,7 @@
     _allCourses = [];
 
     if (!institutionId) {
-      courseSel.innerHTML = '<option value="">— Select your institution first —</option>';
+      courseSel.innerHTML = '<option value="">Select your institution first</option>';
       courseSel.disabled = false;
       if (hint) hint.textContent = 'Select your institution above to see available courses.';
       return;
@@ -476,7 +467,7 @@
       .then(function (data) {
         if (data.courses.length === 0) {
           courseSel.innerHTML = '<option value="">No courses found for this institution</option>';
-          if (hint) hint.textContent = 'No courses linked to this institution yet — contact support.';
+          if (hint) hint.textContent = 'No courses linked to this institution yet, contact support.';
         } else {
           _allCourses = data.courses;
           _rebuildOptions('', selectedId);
@@ -485,7 +476,7 @@
         courseSel.disabled = false;
       })
       .catch(function () {
-        courseSel.innerHTML = '<option value="">Error loading courses — try refreshing</option>';
+        courseSel.innerHTML = '<option value="">Error loading courses, try refreshing</option>';
         courseSel.disabled = false;
       });
   }

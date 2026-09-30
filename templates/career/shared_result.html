@@ -1,20 +1,20 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block title %}{% if sr.pathway == 'Calculator' %}{{ sr.user.full_name|default:"A student" }}'s KCSE Cluster Points — CareerNext{% else %}{{ sr.user.full_name|default:"A student" }}'s KCSE Career Matches — CareerNext{% endif %}{% endblock %}
+{% block title %}{% if sr.pathway == 'Calculator' %}{{ sr.user.full_name|default:"A student" }}'s KCSE Cluster Points: CareerNext{% else %}{{ sr.user.full_name|default:"A student" }}'s KCSE Career Matches: CareerNext{% endif %}{% endblock %}
 
 {% block meta %}
 {% if sr.pathway == 'Calculator' %}
 <meta name="description" content="{{ sr.user.full_name|default:'A student' }} scored {{ sr.cluster_pts_single|floatformat:1 }}/48 cluster points (Aggregate {{ sr.total_matches }}/84) on CareerNext KCSE Calculator. Calculate yours free.">
 {% else %}
-<meta name="description" content="{{ sr.user.full_name|default:'A student' }} found {{ sr.total_matches }} courses they qualify for via KUCCPS — {{ sr.pathway }} pathway. See their results and check yours free on CareerNext.">
+<meta name="description" content="{{ sr.user.full_name|default:'A student' }} found {{ sr.total_matches }} courses they qualify for via KUCCPS, {{ sr.pathway }} pathway. See their results and check yours free on CareerNext.">
 {% endif %}
 <meta property="og:url" content="{{ share_url }}">
 {% endblock %}
 
 {% block og_meta %}
 {% if sr.pathway == 'Calculator' %}
-<meta property="og:title" content="{{ sr.user.full_name|default:'A student' }}'s KCSE Cluster Points — {{ sr.cluster_pts_single|floatformat:1 }}/48">
+<meta property="og:title" content="{{ sr.user.full_name|default:'A student' }}'s KCSE Cluster Points: {{ sr.cluster_pts_single|floatformat:1 }}/48">
 <meta property="og:description" content="Aggregate {{ sr.total_matches }}/84 · Best cluster score {{ sr.cluster_pts_single|floatformat:1 }}/48. Calculate YOUR cluster points free on CareerNext.">
 {% else %}
 <meta property="og:title" content="{{ sr.user.full_name|default:'A student' }} qualifies for {{ sr.total_matches }} courses via KUCCPS">
@@ -39,7 +39,7 @@
 
 <style>
 .share-hero {
-    background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%);
+    background: #1e3a8a;
     color: white; padding: 2.5rem 0 2rem;
 }
 .snap-card {
@@ -51,7 +51,7 @@
     width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; margin-top: 5px;
 }
 .cta-box {
-    background: linear-gradient(135deg, #f0fdf4 0%, #eff6ff 100%);
+    background: #f0fdf4;
     border: 1.5px solid #bbf7d0; border-radius: 16px;
     padding: 2rem; text-align: center; margin: 2rem 0;
 }
@@ -145,7 +145,7 @@
             {% empty %}
             <p class="text-muted">No cluster score data available for this shared result.</p>
             {% endfor %}
-            <p class="text-muted small mt-2"><i class="bi bi-info-circle me-1"></i>Showing top 5 clusters. Sign up to calculate all 20 clusters and find matching courses.</p>
+            <p class="text-muted small mt-2"><i class="bi bi-info-circle me-1"></i>Showing top 5 clusters. Sign up to calculate all 18 clusters and find matching courses.</p>
 
             {% else %}
             <!-- Top 5 courses snapshot -->
@@ -200,12 +200,12 @@
                 <div style="font-size:2.5rem;margin-bottom:0.5rem;">🎓</div>
                 {% if sr.pathway == 'Calculator' %}
                 <h5 class="fw-bold mb-2">Calculate YOUR Cluster Points</h5>
-                <p class="text-muted small mb-3">Enter your KCSE grades and instantly get all 20 cluster scores plus every course you qualify for.</p>
+                <p class="text-muted small mb-3">Enter your KCSE grades and instantly get all 18 cluster scores plus every course you qualify for.</p>
                 <a href="{% url 'clusterpoints:calculator' %}" class="btn btn-primary w-100 fw-bold mb-2">Calculate Free</a>
                 <a href="{% url 'accounts:register' %}" class="btn btn-outline-secondary w-100 btn-sm">Create Account</a>
                 {% else %}
                 <h5 class="fw-bold mb-2">Find YOUR courses</h5>
-                <p class="text-muted small mb-3">Enter your own KCSE results and discover all the courses you qualify for — instant and accurate.</p>
+                <p class="text-muted small mb-3">Enter your own KCSE results and discover all the courses you qualify for, instant and accurate.</p>
                 <a href="{% url 'accounts:register' %}" class="btn btn-primary w-100 fw-bold mb-2">Create Account</a>
                 <a href="{% url 'career:home' %}" class="btn btn-outline-secondary w-100 btn-sm">Try Without Account</a>
                 {% endif %}

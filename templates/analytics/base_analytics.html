@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}{% block analytics_title %}Analytics{% endblock %} — CareerNext Staff{% endblock %}
+{% block title %}{% block analytics_title %}Analytics{% endblock %} | CareerNext Staff{% endblock %}
 
 {% block extra_head %}
 <style>
@@ -321,7 +321,7 @@ body { background: var(--bg); }
 .funnel-track { flex: 1; height: 28px; background: #f1f5f9; border-radius: 6px; overflow: hidden; }
 .funnel-fill  {
   height: 100%; border-radius: 6px;
-  background: linear-gradient(90deg, var(--navy), var(--blue));
+  background: var(--navy);
   display: flex; align-items: center; padding: 0 10px;
   transition: width .5s cubic-bezier(.4,0,.2,1);
 }

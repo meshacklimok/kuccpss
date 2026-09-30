@@ -30,6 +30,8 @@ def default_remember_token_expiry():
 # CUSTOM USER MANAGER
 # =====================================================
 
+from kuccpss.upload_validators import SafeImageValidator
+
 class UserManager(BaseUserManager):
 
     def create_user(self, email, password=None, **extra_fields):
@@ -90,7 +92,8 @@ class User(AbstractBaseUser, PermissionsMixin):
     county = models.CharField(max_length=100, blank=True)
     kcse_year = models.PositiveIntegerField(null=True, blank=True)
     profile_picture = models.ImageField(
-        upload_to='profile_pics/', null=True, blank=True
+        upload_to='profile_pics/', null=True, blank=True,
+        validators=[SafeImageValidator()],
     )
 
     email_notifications = models.BooleanField(default=True)
@@ -107,7 +110,6 @@ class User(AbstractBaseUser, PermissionsMixin):
     class Meta(AbstractBaseUser.Meta, PermissionsMixin.Meta):
         ordering = ["-created_at"]
         indexes = [
-            models.Index(fields=["email"]),
             models.Index(fields=["is_active", "is_verified"]),
             models.Index(fields=["deleted_at"]),
         ]
@@ -179,6 +181,30 @@ class DeviceSession(models.Model):
             models.Index(fields=["user", "is_active"]),
             models.Index(fields=["session_key"]),
         ]
+
+
+# =====================================================
+# STAFF TWO-FACTOR (TOTP)
+# =====================================================
+
+class StaffTOTPDevice(models.Model):
+    """
+    Authenticator-app secret for a staff account. Required before any staff
+    user can use the site (see kuccpss.middleware.StaffSecurityMiddleware).
+    The secret is Fernet-encrypted with a key derived from SECRET_KEY; logic
+    lives in accounts/staff_2fa.py. Delete the row to force re-enrolment.
+    """
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="staff_totp")
+    secret_encrypted = models.TextField()
+    confirmed_at = models.DateTimeField(null=True, blank=True)
+    last_used_step = models.BigIntegerField(default=0)  # replay protection
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "staff 2FA device"
+
+    def __str__(self):
+        return f"2FA for {self.user.email} ({'active' if self.confirmed_at else 'pending'})"
 
 
 # =====================================================
@@ -358,7 +384,8 @@ class Notification(models.Model):
     class Meta:
         ordering = ["-created_at"]
         indexes = [
-            models.Index(fields=["user", "is_read"]),
+            # Covers the per-request unread count: user + is_read + created_at window
+            models.Index(fields=["user", "is_read", "created_at"]),
         ]
 
     def __str__(self):
@@ -420,7 +447,6 @@ class Referral(models.Model):
 
     class Meta:
         ordering = ['-created_at']
-        indexes = [models.Index(fields=['code']), models.Index(fields=['referrer'])]
 
     def __str__(self):
         return f"{self.referrer.email} → {self.code}"

@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}{{ mentor.display_name }} — Mentor Profile | CareerNext{% endblock %}
+{% block title %}{{ mentor.display_name }}: Mentor Profile | CareerNext{% endblock %}
 
 {% block content %}
 <div class="container py-5">
@@ -8,19 +8,14 @@
     <!-- LEFT: Mentor info -->
     <div class="col-lg-4">
       <div class="card border-0 shadow-sm rounded-4 overflow-hidden sticky-top" style="top: 80px;">
-        <div style="height: 6px; background: linear-gradient(90deg, #1e3a8a, #3b82f6);"></div>
+        <div style="height: 6px; background: #1e3a8a;"></div>
         <div class="card-body p-4 text-center">
           <!-- Photo -->
-          {% if mentor.photo %}
-            <img src="{{ mentor.photo.url }}" class="rounded-circle object-fit-cover mb-3 shadow-sm"
-                 width="100" height="100" alt="{{ mentor.display_name }}" loading="lazy">
-          {% else %}
             <div class="rounded-circle bg-primary bg-opacity-10 d-flex align-items-center
                         justify-content-center mx-auto mb-3 shadow-sm"
                  style="width:100px;height:100px;">
               <span class="fw-bold text-primary" style="font-size:2.2rem;">{{ mentor.display_name|first|upper }}</span>
             </div>
-          {% endif %}
 
           <h3 class="fw-bold mb-1">{{ mentor.display_name }}</h3>
           <div class="text-muted small mb-2">{{ mentor.get_year_of_study_display }}</div>
@@ -66,7 +61,7 @@
               {% else %}
                 <a href="{% url 'mentorship:book_session' mentor.pk %}"
                    class="btn btn-primary w-100 rounded-pill fw-semibold py-3">
-                  <i class="bi bi-calendar-plus me-2"></i>Book a 15-min Call — KES {{ session_price }}
+                  <i class="bi bi-calendar-plus me-2"></i>Book a 15-min Call, KES {{ session_price }}
                 </a>
               {% endif %}
             {% else %}
@@ -105,10 +100,10 @@
           <h5 class="fw-bold mb-3"><i class="bi bi-info-circle text-primary me-2"></i>How a session works</h5>
           <ol class="text-muted mb-0 ps-3" style="line-height: 2.0;">
             <li>Choose an available time slot and describe what you want to discuss.</li>
-            <li>Pay KES {{ session_price }} via M-Pesa — you'll receive an STK push on your phone.</li>
+            <li>Pay KES {{ session_price }} via M-Pesa, you'll receive an STK push on your phone.</li>
             <li>Get the mentor's WhatsApp number by email instantly after payment.</li>
             <li>WhatsApp the mentor to confirm, then join the 15-minute call.</li>
-            <li>Rate your session after — helps future students find the best mentors.</li>
+            <li>Rate your session after, helps future students find the best mentors.</li>
           </ol>
         </div>
       </div>
@@ -143,7 +138,7 @@
                 {% else %}
                   <a href="{% url 'mentorship:book_session' mentor.pk %}"
                      class="btn btn-primary rounded-pill fw-semibold px-4">
-                    <i class="bi bi-calendar-plus me-1"></i>Book a Slot — KES {{ session_price }}
+                    <i class="bi bi-calendar-plus me-1"></i>Book a Slot, KES {{ session_price }}
                   </a>
                 {% endif %}
               {% else %}

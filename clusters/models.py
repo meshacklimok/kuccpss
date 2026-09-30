@@ -8,6 +8,8 @@ from django.utils import timezone
 # ABSTRACT BASE MODEL (Reusable Timestamp Model)
 # ============================================================
 
+from kuccpss.upload_validators import SafeImageValidator
+
 class TimeStampedModel(models.Model):
     """
     Abstract base model that provides:
@@ -72,7 +74,6 @@ class Subject(TimeStampedModel):
         verbose_name = "Subject"
         verbose_name_plural = "Subjects"
         indexes = [
-            models.Index(fields=['name']),
             models.Index(fields=['group']),
         ]
 
@@ -101,7 +102,7 @@ class Cluster(TimeStampedModel):
 
     color_code = models.CharField(max_length=7, blank=True, null=True)
     icon = models.CharField(max_length=50, blank=True, null=True)
-    image = models.ImageField(upload_to='cluster_images/', blank=True, null=True)
+    image = models.ImageField(upload_to='cluster_images/', blank=True, null=True, validators=[SafeImageValidator()])
 
     number = models.PositiveIntegerField(
         unique=True,
@@ -114,21 +115,16 @@ class Cluster(TimeStampedModel):
         ordering = ['number', 'name']
         verbose_name = "Cluster"
         verbose_name_plural = "Clusters"
-        indexes = [
-            models.Index(fields=['name']),
-            models.Index(fields=['slug']),
-            models.Index(fields=['number']),
-        ]
 
     # Auto-generate slug & number
     @property
     def kuccps_number(self):
         """
-        Return the KUCCPS group number (1-20) for this cluster.
-        Master clusters (number 101-120): kuccps_group = number - 100.
-        Sub-clusters: parse from name pattern like 'Medicine (13A)' → 13.
+        Return the KUCCPS cluster number (1-18) for this cluster.
+        Clusters 101-118: kuccps_number = number - 100 (see clusters/constants.py).
+        Legacy fallback: parse a name like 'Medicine (13A)' → 13.
         """
-        if self.number and 101 <= self.number <= 120:
+        if self.number and self.number > 100:
             return self.number - 100
         import re
         m = re.search(r'\((\d+)[A-Za-z]*\)', self.name)

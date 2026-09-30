@@ -1,0 +1,29 @@
+{# Google blocks OAuth inside in-app browsers (Error 403: disallowed_useragent). #}
+<div id="inapp-browser-notice" class="alert alert-warning py-2 px-3 mb-3" role="alert"
+     style="display:none;font-size:0.82rem;border-radius:8px;">
+  <i class="fas fa-triangle-exclamation me-2"></i>
+  Google sign-in doesn't work inside WhatsApp, Instagram, Facebook or TikTok.
+  Tap <strong>&#8942;</strong> and choose <strong>Open in browser</strong> (Chrome or Safari),
+  or sign in with your email below.
+  <button type="button" id="inapp-copy-link" class="btn btn-sm btn-outline-dark mt-2 d-block">
+    <i class="fas fa-link me-1"></i>Copy link
+  </button>
+</div>
+<script>
+(function () {
+  var ua = navigator.userAgent || '';
+  var inApp = /FBAN|FBAV|FB_IAB|Instagram|WhatsApp|musical_ly|BytedanceWebview|TikTok|Snapchat|Twitter|LinkedInApp|Line\/|; wv\)/i.test(ua);
+  if (!inApp) return;
+  var notice = document.getElementById('inapp-browser-notice');
+  notice.style.display = 'block';
+  document.getElementById('inapp-copy-link').addEventListener('click', function () {
+    var btn = this;
+    var done = function () { btn.innerHTML = '<i class="fas fa-check me-1"></i>Copied, paste it in Chrome'; };
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(location.href).then(done, function () { prompt('Copy this link:', location.href); });
+    } else {
+      prompt('Copy this link:', location.href);
+    }
+  });
+})();
+</script>

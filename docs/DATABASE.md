@@ -21,10 +21,9 @@ local dev.
 | slug | SlugField, unique | auto-generated |
 | description | TextField, blank | |
 | color_code / icon / image | display metadata | |
-| number | PositiveIntegerField, unique | 101–120 = the 20 master calculation clusters; <100 = ~61 programme sub-clusters (1A–20F) |
+| number | PositiveIntegerField, unique | 101–118 = the 18 KUCCPS clusters (sub-clusters removed Sept 2026) |
 
-`kuccps_number` property: for numbers 101–120 returns `number-100`; else parses trailing
-`(\d+)[A-Za-z]*` from the name. `save()` auto-slugs and auto-assigns `number`.
+`kuccps_number` property: for numbers above 100 returns `number-100`. `save()` auto-slugs and auto-assigns `number`.
 
 ### `SubjectGroup`
 | Field | Type | Notes |
@@ -35,8 +34,8 @@ local dev.
 | required | BooleanField, default True | |
 | priority | PositiveIntegerField, default 1 | lower = filled first |
 
-Each master cluster (101–120) has **exactly 4 `SubjectGroup` slots** (seeded by
-`clusters/management/commands/seed_clusters.py`) — this is the data structure the cluster-points
+Each cluster (101–118) has **exactly 4 `SubjectGroup` slots** (from the KUCCPS portal's minimum entry
+requirements, via `import_kuccps_portal` / `seed_clusters`) — this is the data structure the cluster-points
 algorithm iterates over.
 
 ```mermaid
@@ -95,7 +94,7 @@ erDiagram
 
 ### `CourseType` / `CourseCategory` ([courses/models.py](../courses/models.py))
 `CourseType`: name/slug (unique), description, icon, color_code (Degree, Diploma, KMTC, TTC,
-various "TVET ..." levels, Short Courses, Artisan Certificate). `CourseCategory`: name/slug,
+TVET Diploma L6, Certificate L5, Artisan L4, Craft L3). `CourseCategory`: name/slug,
 FK → CourseType (CASCADE, related_name `categories`), `unique_together=(name, course_type)`.
 
 ### `Course`

@@ -481,8 +481,15 @@ def initiate_payment(request, token):
 
     from payments.models import Payment
     from payments.services import initiate_stk_push, normalise_phone
+    from kuccpss.circuit_breaker import intasend_breaker
 
-    payment, _ = Payment.objects.update_or_create(
+    if intasend_breaker.is_open():
+        return JsonResponse(
+            {"ok": False, "error": "M-Pesa is temporarily unavailable. Please try again in a minute."},
+            status=503,
+        )
+
+    payment, _ =Payment.objects.update_or_create(
         mentorship_session=session,
         defaults={
             "user": request.user,

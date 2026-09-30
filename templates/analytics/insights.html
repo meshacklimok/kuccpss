@@ -1,7 +1,7 @@
 {% extends "analytics/base_analytics.html" %}
 {% block analytics_title %}Insights{% endblock %}
 {% block page_title %}Insights{% endblock %}
-{% block page_subtitle %}Peak hours · Referrals · Retention · Funnels · Grade distribution — last {{ days }} days{% endblock %}
+{% block page_subtitle %}Peak hours · Referrals · Retention · Funnels · Grade distribution, last {{ days }} days{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -141,13 +141,13 @@
       </tbody>
     </table>
     {% else %}
-    <p style="color:var(--muted);font-size:.82rem;">No referral data yet — data builds up from incoming traffic.</p>
+    <p style="color:var(--muted);font-size:.82rem;">No referral data yet, data builds up from incoming traffic.</p>
     {% endif %}
   </div>
 </div>
 
 <!-- 3. RETURNING VS NEW -->
-<div class="section-head">🔄 Retention — Returning vs New <span class="section-badge">High Priority</span></div>
+<div class="section-head">🔄 Retention: Returning vs New <span class="section-badge">High Priority</span></div>
 <div class="two-col">
   <div class="card">
     <div class="card-title">Authenticated User Sessions</div>
@@ -173,13 +173,13 @@
   <div class="card">
     <div class="card-title">What This Means</div>
     <p style="font-size:.82rem;color:var(--text);line-height:1.6;">
-      <strong>{{ returning_pct }}%</strong> of active authenticated users have visited before the selected period —
+      <strong>{{ returning_pct }}%</strong> of active authenticated users have visited before the selected period:
       {% if returning_pct >= 40 %}
       strong retention, users are coming back regularly. ✅
       {% elif returning_pct >= 20 %}
       moderate retention, consider push notifications or weekly email digests to bring users back.
       {% else %}
-      low retention — most users don't return. Consider an email re-engagement campaign or push notifications.
+      low retention. Most users don't return. Consider an email re-engagement campaign or push notifications.
       {% endif %}
     </p>
     <p style="font-size:.82rem;color:var(--text);line-height:1.6;margin-top:.75rem;">
@@ -187,7 +187,7 @@
       {% if sessions_per_user >= 3 %}Highly engaged audience. ✅{% elif sessions_per_user >= 1.5 %}Moderate engagement.{% else %}Low repeat visits.{% endif %}
     </p>
     <p style="font-size:.75rem;color:var(--muted);margin-top:.75rem;">
-      Note: anonymous visitors (not logged in) cannot be counted as returning accurately — this metric covers authenticated users only.
+      Note: anonymous visitors (not logged in) cannot be counted as returning accurately. This metric covers authenticated users only.
     </p>
   </div>
 </div>
@@ -274,7 +274,7 @@
       {% endif %}{% endfor %}
       <div style="margin-top:.75rem;padding:.6rem .75rem;background:{% if zero_result_pct > 20 %}var(--red-lt){% else %}var(--green-lt){% endif %};border-radius:8px;font-size:.78rem;">
         <strong>{{ zero_result_pct }}%</strong> of searches return zero results
-        {% if zero_result_pct > 20 %}— high, review missing courses ⚠️{% else %}— healthy ✅{% endif %}
+        {% if zero_result_pct > 20 %}, high, review missing courses ⚠️{% else %}, healthy ✅{% endif %}
       </div>
     </div>
   </div>
@@ -328,7 +328,7 @@
       {% endfor %}
     </div>
     {% else %}
-    <p style="color:var(--muted);font-size:.82rem;">No calculator runs tracked yet — data will appear after students use the calculator.</p>
+    <p style="color:var(--muted);font-size:.82rem;">No calculator runs tracked yet, data will appear after students use the calculator.</p>
     {% endif %}
   </div>
   <div class="card">
@@ -358,7 +358,7 @@ new Chart(document.getElementById('retentionChart'), {
   type: 'doughnut',
   data: {
     labels: ['Returning', 'First-time'],
-    datasets: [{ data: {{ chart_ret_data|safe }},
+    datasets: [{ data: {{ chart_ret_data|js_json }},
       backgroundColor: ['#16a34a', '#2563eb'], borderWidth: 2 }]
   },
   options: { responsive:true, maintainAspectRatio:false,
@@ -371,12 +371,12 @@ const GRADE_COLORS = {
   'C+':'#fbbf24','C':'#f59e0b','C-':'#d97706','D+':'#f97316','D':'#ef4444',
   'D-':'#dc2626','E':'#7f1d1d'
 };
-const gLabels = {{ chart_grade_labels|safe }};
+const gLabels = {{ chart_grade_labels|js_json }};
 new Chart(document.getElementById('gradeChart'), {
   type: 'bar',
   data: {
     labels: gLabels,
-    datasets: [{ label:'Students', data:{{ chart_grade_data|safe }},
+    datasets: [{ label:'Students', data:{{ chart_grade_data|js_json }},
       backgroundColor: gLabels.map(g => GRADE_COLORS[g] || '#64748b'),
       borderRadius: 5 }]
   },

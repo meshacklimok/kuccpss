@@ -1,7 +1,7 @@
 {% extends "analytics/base_analytics.html" %}
 {% block analytics_title %}Retention Analytics{% endblock %}
 {% block page_title %}Retention Analytics{% endblock %}
-{% block page_subtitle %}Weekly cohort retention — last {{ days }} days KPI window, 12-week cohort grid{% endblock %}
+{% block page_subtitle %}Weekly cohort retention, last {{ days }} days KPI window, 12-week cohort grid{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -94,8 +94,8 @@
 <script>
 new Chart(document.getElementById('retChart'), {
   type: 'doughnut',
-  data: { labels: {{ chart_ret_labels|safe }},
-    datasets: [{ data: {{ chart_ret_data|safe }}, backgroundColor:['#16a34a','#2563eb'], borderWidth:2 }]
+  data: { labels: {{ chart_ret_labels|js_json }},
+    datasets: [{ data: {{ chart_ret_data|js_json }}, backgroundColor:['#16a34a','#2563eb'], borderWidth:2 }]
   },
   options: { responsive:true, maintainAspectRatio:false,
     plugins:{ legend:{ position:'right' } } }

@@ -32,11 +32,13 @@ concrete, code-verified detail rather than repeating the summary table.
 
 ## 🚧 Incomplete / data gaps (logic is correct, data is not)
 
-- **All 61 KUCCPS sub-clusters (numbers < 100) have zero `SubjectGroup` rows.** Only the 20
-  master calculation clusters (101–120) are seeded by `clusters/management/commands/seed_clusters.py`.
-  Course-matching/requirements display for sub-clusters may be relying on a top-4-subjects
-  fallback rather than true per-cluster slots. See [DATABASE.md](DATABASE.md) and
-  [FEATURES.md](FEATURES.md) §2.
+- ~~Sub-cluster data gap~~ — resolved Sept 2026: sub-clusters removed; all degree courses sit in
+  the 18 KUCCPS clusters (101–118) with portal entry/subject requirements.
+- **Degree eligibility on `clusterpoints` "eligible courses" does not check `subject_requirements`**
+  (only cutoffs); the career degree flow does. Old `CareerSessionSnapshot`s keyed on the 20-cluster
+  numbering are not migrated.
+- **Degree courses not on the 2025 KUCCPS portal** kept their old data and were moved to a cluster
+  by renumbering only (see [KUCCPS_2025_CLUSTER_MOVES.md](KUCCPS_2025_CLUSTER_MOVES.md)).
 - **TVET/TTC cutoff points and subject requirements** are largely unsourced — `Course.minimum_mean_grade`/
   `subject_requirements` rows are blank for most non-KMTC non-degree courses. Eligibility *logic*
   is correct; results will simply be less precise until this data-entry work is done.

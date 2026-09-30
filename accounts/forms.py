@@ -161,7 +161,7 @@ class UserLoginForm(forms.Form):
 class UserProfileForm(forms.ModelForm):
     class Meta:
         model = User
-        fields = ['full_name', 'phone_number', 'county', 'kcse_year', 'profile_picture']
+        fields = ['full_name', 'phone_number', 'county', 'kcse_year']
         widgets = {
             'full_name': forms.TextInput(attrs={'placeholder': 'Your full name'}),
             'phone_number': forms.TextInput(attrs={'placeholder': 'e.g. 0712 345 678'}),

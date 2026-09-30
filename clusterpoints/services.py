@@ -2,6 +2,7 @@
 from math import sqrt
 from types import SimpleNamespace
 from django.db import transaction
+from django.utils import timezone
 from clusters.models import Cluster, Subject
 from .models import ClusterCalculationResult, UserKCSEResult, SubjectResult
 
@@ -114,7 +115,7 @@ def calculate_clusters_anonymous(named_points: dict[str, int]) -> list:
 
 def calculate_all_clusters(kcse_result: UserKCSEResult):
     """
-    Calculate cluster points for all 20 master calculation clusters.
+    Calculate cluster points for all 18 KUCCPS clusters (rows 101–118).
 
     Algorithm:
     1. Aggregate total = Mathematics + best(English/Kiswahili) + next 5 best subjects (max 84)
@@ -149,6 +150,17 @@ def calculate_all_clusters(kcse_result: UserKCSEResult):
     )
 
     cluster_results = []
+
+    # Upsert all 18 results in a handful of bulk queries instead of an
+    # update_or_create + M2M .set() round-trip per cluster (~90 queries).
+    existing = {
+        r.cluster_id: r
+        for r in ClusterCalculationResult.objects.filter(
+            user=kcse_result.user, kcse_result=kcse_result,
+        )
+    }
+    to_create, to_update, subjects_by_result = [], [], []
+    now = timezone.now()
 
     with transaction.atomic():
         for cluster in clusters:
@@ -190,22 +202,41 @@ def calculate_all_clusters(kcse_result: UserKCSEResult):
             else:
                 weighted = _weighted_cp(core_points[:4], aggregate_total)
 
-            result, _ = ClusterCalculationResult.objects.update_or_create(
-                user=kcse_result.user,
-                kcse_result=kcse_result,
-                cluster=cluster,
-                defaults={
-                    'cluster_points':      weighted,
-                    'core_subject_total':  raw_core_total,
-                    'aggregate_total':     aggregate_total,
-                    'weighted_calculation': weighted,
-                }
-            )
+            result = existing.get(cluster.pk)
+            if result is None:
+                result = ClusterCalculationResult(user=kcse_result.user, kcse_result=kcse_result)
+                to_create.append(result)
+            else:
+                to_update.append(result)
+            result.cluster = cluster  # reuse loaded instance — avoids a lazy fetch in the sort below
+            result.cluster_points = weighted
+            result.core_subject_total = raw_core_total
+            result.aggregate_total = aggregate_total
+            result.weighted_calculation = weighted
+            result.updated_at = now  # bulk_update skips auto_now
 
             subj_objs = [all_subjects_by_name[n] for n in subjects_used if n in all_subjects_by_name]
-            result.subjects_used.set(subj_objs)
+            subjects_by_result.append((result, subj_objs))
 
             cluster_results.append(result)
+
+        if to_update:
+            ClusterCalculationResult.objects.bulk_update(
+                to_update,
+                ['cluster_points', 'core_subject_total', 'aggregate_total',
+                 'weighted_calculation', 'updated_at'],
+            )
+        if to_create:
+            ClusterCalculationResult.objects.bulk_create(to_create)  # Postgres returns PKs
+
+        Through = ClusterCalculationResult.subjects_used.through
+        Through.objects.filter(
+            clustercalculationresult_id__in=[r.pk for r in cluster_results]
+        ).delete()
+        Through.objects.bulk_create([
+            Through(clustercalculationresult_id=r.pk, subject_id=s.pk)
+            for r, subjs in subjects_by_result for s in subjs
+        ])
 
     cluster_results.sort(key=lambda r: r.cluster.number or 0)
     return cluster_results

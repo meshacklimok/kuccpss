@@ -4,11 +4,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}CareerNext — Kenya Career Guidance{% endblock %}</title>
+    <title>{% block title %}CareerNext: Kenya Career Guidance{% endblock %}</title>
 
     <!-- SEO -->
     {% block meta %}
-    <meta name="description" content="CareerNext answers 'what course can I do with my KCSE grades?' — free cluster points calculator plus a course-match engine that shows every university, KMTC, TVET and TTC course you qualify for via KUCCPS.">
+    <meta name="description" content="CareerNext answers 'what course can I do with my KCSE grades?': free cluster points calculator plus a course-match engine that shows every university, KMTC, TVET and TTC course you qualify for via KUCCPS.">
     {% endblock %}
     {% block keywords %}<meta name="keywords" content="KUCCPS, KCSE cluster points calculator, Kenya university placement, KMTC courses, TVET courses, cluster points, KCSE results 2024 2025">{% endblock %}
     <meta name="robots" content="index, follow">
@@ -20,8 +20,8 @@
     <meta property="og:site_name" content="CareerNext">
     <meta property="og:url" content="{{ request.build_absolute_uri }}">
     {% block og_meta %}
-    <meta property="og:title" content="CareerNext — Your next step after KCSE starts here">
-    <meta property="og:description" content="Enter your KCSE grades once — get your cluster points and every university, KMTC, TVET and TTC course you qualify for via KUCCPS. Free.">
+    <meta property="og:title" content="CareerNext: Your next step after KCSE starts here">
+    <meta property="og:description" content="Enter your KCSE grades once and get your cluster points and every university, KMTC, TVET and TTC course you qualify for via KUCCPS. Free.">
     {% endblock %}
     <meta property="og:image" content="{% static 'images/logo-og.png' %}">
     <meta property="og:image:width" content="1200">
@@ -31,7 +31,7 @@
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:site" content="@careernext_ke">
     {% block twitter_meta %}
-    <meta name="twitter:title" content="CareerNext — Your next step after KCSE starts here">
+    <meta name="twitter:title" content="CareerNext: Your next step after KCSE starts here">
     <meta name="twitter:description" content="Free KCSE cluster points calculator. Discover courses you qualify for via KUCCPS.">
     {% endblock %}
     <meta name="twitter:image" content="{% static 'images/logo-og.png' %}">
@@ -155,7 +155,7 @@
 /* ── Splash overlay ── */
 #pwa-splash {
   position: fixed; inset: 0; z-index: 99999; overflow: hidden;
-  background: linear-gradient(150deg, #0a1628 0%, #0f2752 45%, #1a3a8a 100%);
+  background: #0a1628;
 }
 .splash-content {
   position: relative; z-index: 2;
@@ -188,7 +188,7 @@
 }
 .cap-halo {
   position: absolute; inset: -12px; border-radius: 50%;
-  background: radial-gradient(circle, rgba(147,197,253,0.28) 0%, transparent 70%);
+  background: rgba(147,197,253,0.28);
   animation: haloPulse 1.2s 0.8s ease-in-out infinite alternate;
 }
 @keyframes haloPulse {
@@ -204,7 +204,7 @@
 .splash-logo {
   font-size: clamp(2.2rem, 9vw, 3.6rem);
   font-weight: 900; letter-spacing: -1.5px;
-  background: linear-gradient(135deg, #ffffff 0%, #bfdbfe 40%, #93c5fd 70%, #60a5fa 100%);
+  background: #ffffff;
   -webkit-background-clip: text; -webkit-text-fill-color: transparent;
   background-clip: text; display: block;
 }
@@ -245,7 +245,7 @@
 }
 .splash-bar {
   height: 100%; width: 0; border-radius: 99px;
-  background: linear-gradient(90deg, #3b82f6, #818cf8, #a78bfa);
+  background: #3b82f6;
   animation: barFill 1.8s 0.75s cubic-bezier(0.4,0,0.2,1) forwards;
 }
 @keyframes barFill { to { width: 100%; } }
@@ -422,6 +422,10 @@
                             <li><a class="dropdown-item" href="{% url 'accounts:how_it_works' %}">
                                 <i class="fas fa-circle-play me-2 text-success"></i>How It Works
                             </a></li>
+                            <li class="pwa-install-menu-item"><hr class="dropdown-divider"></li>
+                            <li class="pwa-install-menu-item"><a class="dropdown-item fw-semibold" href="#" id="pwa-menu-install">
+                                <i class="fas fa-mobile-screen-button me-2 text-primary"></i>Install App
+                            </a></li>
                         </ul>
                     </li>
                 </ul>
@@ -459,15 +463,10 @@
                     {% if user.is_authenticated %}
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle d-flex align-items-center gap-2" href="#" data-bs-toggle="dropdown">
-                            {% if user.profile_picture %}
-                            <img src="{{ user.profile_picture.url }}" width="30" height="30"
-                                 class="rounded-circle border border-white" style="object-fit:cover;" alt="Profile" loading="lazy">
-                            {% else %}
                             <div class="rounded-circle bg-white d-flex align-items-center justify-content-center"
                                  style="width:30px;height:30px;font-size:0.8rem;color:var(--primary);font-weight:700;">
                                 {{ user.full_name|first|upper|default:user.email|first|upper }}
                             </div>
-                            {% endif %}
                             </a>
                         <ul class="dropdown-menu dropdown-menu-end">
                             <li class="px-3 py-2 border-bottom mb-1">
@@ -519,7 +518,7 @@
 
     <!-- ── KUCCPS DEADLINE COUNTDOWN ── -->
     {% if deadline_banner %}
-    <div id="deadlineBar" style="display:none;background:linear-gradient(90deg,#dc2626,#b91c1c);color:white;font-size:0.8rem;padding:7px 0;position:relative;z-index:999;">
+    <div id="deadlineBar" style="display:none;background:#dc2626;color:white;font-size:0.8rem;padding:7px 0;position:relative;z-index:999;">
         <div class="container d-flex align-items-center justify-content-between gap-2 flex-wrap">
             <div class="d-flex align-items-center gap-2 flex-wrap">
                 <span style="font-weight:800;letter-spacing:0.04em;">{{ deadline_banner.heading_text }}</span>
@@ -560,6 +559,7 @@
             <a href="#" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
             <a href="#" aria-label="Twitter/X"><i class="fab fa-x-twitter"></i></a>
             <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+            {% if whatsapp_group_url %}<a href="{{ whatsapp_group_url }}" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp Group"><i class="fab fa-whatsapp"></i></a>{% endif %}
           </div>
         </div>
 
@@ -636,6 +636,7 @@
               <a href="#" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
               <a href="#" aria-label="Twitter/X"><i class="fab fa-x-twitter"></i></a>
               <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+              {% if whatsapp_group_url %}<a href="{{ whatsapp_group_url }}" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp Group"><i class="fab fa-whatsapp"></i></a>{% endif %}
             </div>
           </div>
 
@@ -821,7 +822,7 @@
                 </div>
                 <div class="pwa-ios-step">
                     <span class="pwa-ios-num">3</span>
-                    Tap <strong>"Add"</strong> — done!
+                    Tap <strong>"Add"</strong>, done!
                 </div>
             </div>
             <div class="pwa-ios-arrow-down">↓ tap Share below</div>
@@ -843,6 +844,7 @@
     <!-- HTMX: replaces content without full page reload (search, filters, save buttons) -->
     <script src="https://unpkg.com/htmx.org@1.9.12/dist/htmx.min.js" defer></script>
     <script src="{% static 'js/main.js' %}" defer></script>
+    <script src="{% static 'js/search_suggest.js' %}" defer></script>
     <script>
     /* Auto-dismiss flash messages after 5s */
     (function(){
@@ -997,7 +999,7 @@
     document.body.addEventListener('htmx:responseError', function (e) {
         var status = e.detail && e.detail.xhr && e.detail.xhr.status;
         var msg = 'We couldn\'t load results. Please try again.';
-        if (status === 429) msg = 'Too many requests — please wait a moment, then try again.';
+        if (status === 429) msg = 'Too many requests, please wait a moment, then try again.';
         else if (status === 503 || status === 502) msg = 'Service is temporarily unavailable. Please try in a few seconds.';
         else if (status >= 500) msg = 'A server error occurred. Our team has been notified. Please try again.';
         showToast(msg);
@@ -1088,7 +1090,7 @@
         }
 
         if (!html) {
-            html = '<div class="nsd-empty"><i class="fas fa-search-minus me-1"></i>No results — try different spelling or an acronym (e.g. "UoN", "KMTC")</div>';
+            html = '<div class="nsd-empty"><i class="fas fa-search-minus me-1"></i>No results, try different spelling or an acronym (e.g. "UoN", "KMTC")</div>';
         } else {
             var more = (data.more_courses || 0);
             var seeAll = data.search_url ? '<a href="' + esc(data.search_url) + '" class="nsd-see-all">See all results' + (more > 0 ? ' (+' + more + ' more)' : '') + ' <i class="fas fa-arrow-right ms-1"></i></a>' : '';
@@ -1303,7 +1305,11 @@ window._ph = function (name, props) {
     ];
 
     const DISMISS_KEY = 'cn_deadline_dismissed_v3';
-    if (sessionStorage.getItem(DISMISS_KEY)) return;
+    const DISMISS_MS = 48 * 60 * 60 * 1000;  // reappear 48h after dismissal
+    try {
+        const dismissedAt = parseInt(localStorage.getItem(DISMISS_KEY), 10);
+        if (dismissedAt && Date.now() - dismissedAt < DISMISS_MS) return;
+    } catch (e) {}
 
     const now = new Date();
     // Find the next upcoming deadline
@@ -1346,16 +1352,16 @@ window._ph = function (name, props) {
 
     // Make bar red/amber based on urgency + proximity
     if (diffDays <= 7) {
-        bar.style.background = 'linear-gradient(90deg,#dc2626,#b91c1c)';
+        bar.style.background = '#dc2626';
     } else if (diffDays <= 21) {
-        bar.style.background = 'linear-gradient(90deg,#d97706,#b45309)';
+        bar.style.background = '#d97706';
     } else {
-        bar.style.background = 'linear-gradient(90deg,#1e3a8a,#2563eb)';
+        bar.style.background = '#1e3a8a';
     }
 
     window.dismissDeadlineBar = function () {
         bar.style.display = 'none';
-        sessionStorage.setItem(DISMISS_KEY, '1');
+        try { localStorage.setItem(DISMISS_KEY, String(Date.now())); } catch (e) {}
     };
 }());
 </script>
@@ -1371,7 +1377,7 @@ window._ph = function (name, props) {
   color:{% if ann.kind == 'info' %}#1e40af{% elif ann.kind == 'success' %}#15803d{% elif ann.kind == 'warning' %}#92400e{% else %}#991b1b{% endif %};
   padding:0.55rem 1rem;font-size:0.84rem;display:flex;align-items:center;gap:0.75rem;
   font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
-  <span style="font-weight:700;flex:1;">{{ ann.title }}{% if ann.body %} — {{ ann.body }}{% endif %}</span>
+  <span style="font-weight:700;flex:1;">{{ ann.title }}{% if ann.body %}: {{ ann.body }}{% endif %}</span>
   {% if ann.link_url %}<a href="{{ ann.link_url }}" style="text-decoration:underline;font-weight:700;white-space:nowrap;">{{ ann.link_label|default:"Learn more" }}</a>{% endif %}
   <button onclick="document.getElementById('ann-{{ ann.pk }}').remove()" aria-label="Dismiss"
     style="background:none;border:none;cursor:pointer;font-size:1rem;line-height:1;opacity:0.6;padding:0 4px;">&times;</button>
@@ -1383,8 +1389,8 @@ window._ph = function (name, props) {
 <!-- ── FEEDBACK BUTTON & MODAL ── -->
 <button id="fb-trigger" onclick="document.getElementById('fb-modal').style.display='flex'"
   title="Send feedback"
-  style="position:fixed;bottom:1.5rem;right:1.5rem;z-index:9000;
-         background:linear-gradient(135deg,#1e3a8a,#2563eb);color:#fff;
+  style="position:fixed;bottom:1.5rem;left:1.5rem;z-index:9000;
+         background:#1e3a8a;color:#fff;
          border:none;border-radius:50px;padding:0.55rem 1.1rem;
          font-size:0.82rem;font-weight:700;cursor:pointer;
          box-shadow:0 4px 16px rgba(30,58,138,0.4);
@@ -1393,11 +1399,11 @@ window._ph = function (name, props) {
   Feedback
 </button>
 
-<div id="fb-modal" style="display:none;position:fixed;inset:0;z-index:10000;align-items:flex-end;justify-content:flex-end;padding:1.5rem;">
+<div id="fb-modal" style="display:none;position:fixed;inset:0;z-index:10000;align-items:flex-end;justify-content:flex-start;padding:1.5rem;">
   <div style="position:absolute;inset:0;" onclick="document.getElementById('fb-modal').style.display='none'"></div>
   <div style="position:relative;z-index:1;width:min(380px,96vw);background:#fff;border-radius:20px;
               box-shadow:0 24px 64px rgba(0,0,0,0.35);overflow:hidden;">
-    <div style="background:linear-gradient(135deg,#1e3a8a,#2563eb);padding:1rem 1.25rem;
+    <div style="background:#1e3a8a;padding:1rem 1.25rem;
                 display:flex;align-items:center;justify-content:space-between;">
       <span style="color:#fff;font-weight:800;font-size:0.95rem;">Send Feedback</span>
       <button onclick="document.getElementById('fb-modal').style.display='none'"
@@ -1419,7 +1425,7 @@ window._ph = function (name, props) {
       <input type="email" name="email" placeholder="Your email (optional, for follow-up)"
         style="border:1.5px solid #e2e8f0;border-radius:10px;padding:0.55rem 0.75rem;font-size:0.85rem;outline:none;">
       <div id="fb-status" style="display:none;font-size:0.82rem;font-weight:600;text-align:center;padding:0.4rem;border-radius:8px;"></div>
-      <button type="submit" style="background:linear-gradient(135deg,#1e3a8a,#2563eb);color:#fff;border:none;
+      <button type="submit" style="background:#1e3a8a;color:#fff;border:none;
                                     border-radius:12px;padding:0.7rem;font-weight:800;font-size:0.88rem;cursor:pointer;">
         Submit Feedback
       </button>

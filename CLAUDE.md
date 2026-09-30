@@ -55,14 +55,16 @@ Auth uses `accounts.User` (UUID primary key, email-based login). Never switch to
 ### 4. Career Engine
 `career/engine.py` now dispatches to real pathway functions (`match_degree_courses`, etc.) — it is no longer a stub. AI chat (CareerNext AI) uses `OPENAI_API_KEY` or `ANTHROPIC_API_KEY`. See [docs/API_NOTES.md](docs/API_NOTES.md) before touching the engine.
 
-### 5. Two Separate Course Systems
+### 5. 18 KUCCPS Clusters (no sub-clusters)
+Degree clusters are the 18 on the KUCCPS portal, stored as `Cluster` rows 101–118 (`kuccps_number = number − 100`; names in [clusters/constants.py](clusters/constants.py)). Sub-clusters were removed in Sept 2026. Every degree `Course` links to one of these, with `entry_requirements` (4 cluster-subject slots) and `subject_requirements` from the portal. Cutoff years are the portal's KCSE-year labels — never shift them. Refresh with `scripts/scrape_kuccps_portal.py` then `manage.py import_kuccps_portal --dry-run` / without `--dry-run`.
+
+### 6. Two Separate Course Systems
 - `career/models.py` — older course models used by the career engine (Course, TVETCourse, KMTCourse, TTCCourse)
 - `courses/models.py` — newer unified Course model linked to `institutions` and `clusters`
 These are not yet merged. Do not conflate them without explicit instruction.
 
 ## Known Issues
 Full detail in [docs/IMPLEMENTATION_STATUS.md](docs/IMPLEMENTATION_STATUS.md). Headline items:
-- **Sub-cluster data gap**: all 61 KUCCPS sub-clusters (numbers < 100) have zero `SubjectGroup` rows — only the 20 master calculation clusters (101–120) are seeded.
 - **`career/models.py::generate_ai_recommendation()`** still returns placeholder text (known stub, see [docs/API_NOTES.md](docs/API_NOTES.md)).
 - **Duplicate dispatcher**: `career/models.py` defines its own unused `career_guidance_engine()` alongside the real one in `career/engine.py` — don't confuse the two.
 - TVET/TTC cutoff points and subject requirements are largely unsourced (logic is correct, data entry is incomplete).

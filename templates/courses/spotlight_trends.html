@@ -4,7 +4,7 @@
 <style>
 /* ── Section shell ── */
 .st-section {
-    background: linear-gradient(160deg, #0f172a 0%, #1e1b4b 55%, #0f172a 100%);
+    background: #0f172a;
     padding: 5rem 0 5.5rem;
     position: relative;
     overflow: hidden;
@@ -13,8 +13,8 @@
     content: '';
     position: absolute; inset: 0;
     background:
-        radial-gradient(ellipse 60% 55% at 10% 20%, rgba(99,102,241,0.18) 0%, transparent 60%),
-        radial-gradient(ellipse 45% 40% at 90% 80%, rgba(16,185,129,0.10) 0%, transparent 60%);
+        rgba(99,102,241,0.18),
+        rgba(16,185,129,0.10);
     pointer-events: none;
 }
 .st-section .container { position: relative; }
@@ -74,7 +74,7 @@
 }
 .st-hero-placeholder {
     height: 200px;
-    background: linear-gradient(135deg, #1e3a8a 0%, #4f46e5 50%, #7c3aed 100%);
+    background: #1e3a8a;
     display: flex; align-items: center; justify-content: center;
     font-size: 3.5rem;
     position: relative; overflow: hidden;
@@ -90,7 +90,7 @@
 
 .st-week-badge {
     display: inline-flex; align-items: center; gap: 0.35rem;
-    background: linear-gradient(90deg, #f59e0b, #ef4444);
+    background: #f59e0b;
     border-radius: 6px; padding: 3px 10px;
     font-size: 0.65rem; font-weight: 800; letter-spacing: 0.08em;
     text-transform: uppercase; color: #fff;
@@ -152,7 +152,7 @@
 /* CTA */
 .st-cta {
     display: inline-flex; align-items: center; gap: 0.5rem;
-    background: linear-gradient(135deg, #4f46e5, #7c3aed);
+    background: #4f46e5;
     color: #fff; font-size: 0.85rem; font-weight: 700;
     padding: 10px 20px; border-radius: 10px;
     text-decoration: none;
@@ -242,7 +242,7 @@
     display: flex; align-items: center; justify-content: center;
     font-size: 0.72rem; font-weight: 900;
 }
-.st-rank-num.rank-1 { background: linear-gradient(135deg, #f59e0b, #fbbf24); color: #78350f; }
+.st-rank-num.rank-1 { background: #f59e0b; color: #78350f; }
 .st-rank-num.rank-2 { background: rgba(148,163,184,0.2); color: #94a3b8; border: 1px solid rgba(148,163,184,0.25); }
 .st-rank-num.rank-3 { background: rgba(180,83,9,0.18); color: #d97706; border: 1px solid rgba(180,83,9,0.25); }
 .st-rank-num.rank-other { background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.3); font-size: 0.68rem; }
@@ -385,7 +385,7 @@
                     {% empty %}
                     <div class="st-panel-empty">
                         <i class="fas fa-eye-slash" style="font-size:1.5rem;display:block;margin-bottom:0.5rem;"></i>
-                        No view data yet — check back soon.
+                        No view data yet, check back soon.
                     </div>
                     {% endfor %}
                 </div>
@@ -460,7 +460,7 @@
                     {% empty %}
                     <div class="st-panel-empty">
                         <i class="fas fa-star" style="font-size:1.5rem;display:block;margin-bottom:0.5rem;"></i>
-                        No reviews yet — be the first!
+                        No reviews yet, be the first!
                     </div>
                     {% endfor %}
                 </div>
@@ -532,8 +532,10 @@
                             {% with lc=off.latest_cutoff %}
                             <div class="st-uni-row">
                                 <span class="st-uni-name">{{ off.institution.name }}</span>
-                                {% if lc %}
+                                {% if lc is not None %}
                                 <span class="st-uni-cut">{{ lc }} pts</span>
+                                {% else %}
+                                <span class="st-uni-cut">—</span>
                                 {% endif %}
                             </div>
                             {% endwith %}

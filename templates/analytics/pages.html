@@ -1,7 +1,7 @@
 {% extends "analytics/base_analytics.html" %}
 {% block analytics_title %}Page Analytics{% endblock %}
 {% block page_title %}Page Analytics{% endblock %}
-{% block page_subtitle %}Every page hit tracked by the server — last {{ days }} days{% endblock %}
+{% block page_subtitle %}Every page hit tracked by the server, last {{ days }} days{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -22,7 +22,7 @@
 {% block analytics_content %}
 
 <!-- Session / time-on-site hero card -->
-<div class="card" style="background:linear-gradient(135deg,#1e3a8a 0%,#2563eb 100%);color:#fff;margin-bottom:1.25rem;">
+<div class="card" style="background:#1e3a8a;color:#fff;margin-bottom:1.25rem;">
   <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;">
     <div>
       <div style="font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;opacity:.75;margin-bottom:.3rem;">Avg Time on Site</div>
@@ -159,7 +159,7 @@
       </table>
     </div>
     {% else %}
-    <p style="color:var(--muted);font-size:.82rem;padding:1rem 0;">No Kenya county data yet — install the GeoLite2-City database to enable this.</p>
+    <p style="color:var(--muted);font-size:.82rem;padding:1rem 0;">No Kenya county data yet, install the GeoLite2-City database to enable this.</p>
     {% endif %}
   </div>
 
@@ -179,7 +179,7 @@
       </tbody>
     </table>
     {% else %}
-    <p style="color:var(--muted);font-size:.82rem;padding:1rem 0;">No geo data yet — install the GeoLite2-City database to enable this.</p>
+    <p style="color:var(--muted);font-size:.82rem;padding:1rem 0;">No geo data yet, install the GeoLite2-City database to enable this.</p>
     {% endif %}
 
     {% if not total_geo %}
@@ -274,11 +274,11 @@
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
 <script>
-const labels = {{ chart_labels|safe }};
+const labels = {{ chart_labels|js_json }};
 new Chart(document.getElementById('hitChart'), {
   type: 'line',
   data: { labels,
-    datasets: [{ label: 'Hits', data: {{ chart_hits|safe }},
+    datasets: [{ label: 'Hits', data: {{ chart_hits|js_json }},
       borderColor:'#2563eb', backgroundColor:'rgba(37,99,235,.08)',
       tension:.35, fill:true, pointRadius:2 }]
   },
@@ -287,8 +287,8 @@ new Chart(document.getElementById('hitChart'), {
     scales:{ y:{ beginAtZero:true, ticks:{ precision:0 } } } }
 });
 
-const deviceLabels = {{ chart_device_labels|safe }};
-const deviceData   = {{ chart_device_data|safe }};
+const deviceLabels = {{ chart_device_labels|js_json }};
+const deviceData   = {{ chart_device_data|js_json }};
 const COLORS = ['#2563eb','#16a34a','#d97706','#7c3aed','#0891b2','#dc2626'];
 new Chart(document.getElementById('deviceChart'), {
   type: 'doughnut',
@@ -305,8 +305,8 @@ if (countyEl) {
   new Chart(countyEl, {
     type: 'bar',
     data: {
-      labels: {{ chart_county_labels|safe }},
-      datasets: [{ label:'Sessions', data:{{ chart_county_data|safe }},
+      labels: {{ chart_county_labels|js_json }},
+      datasets: [{ label:'Sessions', data:{{ chart_county_data|js_json }},
         backgroundColor:'rgba(37,99,235,.75)', borderRadius:4 }]
     },
     options: {
@@ -321,8 +321,8 @@ if (countyEl) {
 
 new Chart(document.getElementById('durChart'), {
   type: 'bar',
-  data: { labels: {{ chart_dur_labels|safe }},
-    datasets: [{ label:'Sessions', data:{{ chart_dur_data|safe }},
+  data: { labels: {{ chart_dur_labels|js_json }},
+    datasets: [{ label:'Sessions', data:{{ chart_dur_data|js_json }},
       backgroundColor:['#94a3b8','#60a5fa','#34d399','#a78bfa','#f59e0b'],
       borderRadius:6 }]
   },

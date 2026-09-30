@@ -8,6 +8,7 @@ from django.http import HttpResponse
 from django.utils import timezone
 
 from reportlab.pdfgen import canvas
+from kuccpss.pdf_utils import enable_site_links
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import cm
 
@@ -84,7 +85,7 @@ def dashboard(request):
     cluster_results = []
 
     if kcse_result:
-        cluster_results = kcse_result.cluster_results.select_related("cluster").order_by("-cluster_points")  # type: ignore[attr-defined]
+        cluster_results = kcse_result.cluster_results.select_related("cluster").order_by("cluster__number")  # type: ignore[attr-defined]
 
     return render(request, "clusterpoints/dashboard.html", {
         "kcse_result": kcse_result,
@@ -175,7 +176,7 @@ def kcse_calculator_view(request):
         if _saved:
             kcse_result = _saved
             total_points = kcse_result.total_points
-            results = list(kcse_result.cluster_results.select_related('cluster').order_by('-cluster_points'))  # type: ignore[attr-defined]
+            results = list(kcse_result.cluster_results.select_related('cluster').order_by('cluster__number'))  # type: ignore[attr-defined]
             if results:
                 _cs = {r.cluster.number: float(r.cluster_points) for r in results if r.cluster and r.cluster.number}
                 if _cs:
@@ -392,7 +393,7 @@ def kcse_calculator_view(request):
 # =====================================================
 @login_required
 def export_cluster_pdf(request):
-    """Export all 20 cluster results for user's latest KCSE result — styled report."""
+    """Export all 18 cluster results for user's latest KCSE result — styled report."""
     from reportlab.lib import colors as rc
     from .pdf_palette import NAVY, TEAL, EMERALD, AMBER, PURPLE, SLATE, LIGHT, WHITE
 
@@ -418,7 +419,7 @@ def export_cluster_pdf(request):
     response = HttpResponse(content_type='application/pdf')
     response['Content-Disposition'] = 'attachment; filename="careernext_cluster_points_quick.pdf"'
 
-    p = canvas.Canvas(response, pagesize=A4)  # type: ignore[arg-type]
+    p = enable_site_links(canvas.Canvas(response, pagesize=A4))  # type: ignore[arg-type]
     W, H = A4
 
     page_num = [0]
@@ -501,7 +502,7 @@ def export_cluster_pdf(request):
     # ── Section heading ──────────────────────────────────────────────────────
     p.setFillColor(NAVY)
     p.setFont("Helvetica-Bold", 9.5)
-    p.drawString(1.5*cm, y, "ALL 20 KUCCPS CLUSTER SCORES")
+    p.drawString(1.5*cm, y, "ALL 18 KUCCPS CLUSTER SCORES")
     p.setFillColor(SLATE)
     p.setFont("Helvetica", 7.5)
     p.drawString(1.5*cm, y - 0.4*cm,
@@ -634,7 +635,7 @@ def export_full_results_pdf(request):
     response = HttpResponse(content_type='application/pdf')
     response['Content-Disposition'] = 'attachment; filename="careernext_full_report.pdf"'
 
-    p = canvas.Canvas(response, pagesize=A4)  # type: ignore[arg-type]
+    p = enable_site_links(canvas.Canvas(response, pagesize=A4))  # type: ignore[arg-type]
     W, H = A4
 
     page_num = [0]
@@ -869,7 +870,7 @@ def export_full_results_pdf(request):
     if not eligible and not nearly:
         p.setFillColor(SLATE)
         p.setFont("Helvetica", 9)
-        p.drawString(1.5*cm, y, "No matching degree courses found based on 2024 cutoff data.")
+        p.drawString(1.5*cm, y, "No matching degree courses found based on the latest KUCCPS cutoff data.")
 
     # ── Next steps ────────────────────────────────────────────────────────────
     if y < 6.5*cm:
@@ -998,7 +999,8 @@ def eligible_courses_view(request):
         kcse_result = None if is_guest else UserKCSEResult.objects.filter(user=request.user).order_by("-created_at").first()
         total_points = kcse_result.total_points if kcse_result else None
 
-        cache_key = f"elig_nd_{career_pathway}_{mean_grade}_{'g' if is_guest else request.user.pk}"
+        # Result depends only on pathway + grade, so all users share one entry.
+        cache_key = f"elig_nd_{career_pathway}_{mean_grade}"
         all_results = cache.get(cache_key)
         if all_results is None:
             try:

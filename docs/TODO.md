@@ -193,7 +193,7 @@ Copy every variable from your Render dashboard into Railway → Variables:
 - [x] **Admin Analytics Dashboard** — `/analytics/` plus pages/actions/insights/calculator/conversion/retention/ai-chat/mentor/affiliate/payments sub-dashboards; built on `SearchLog`, `ViewLog`, `DownloadLog`, `PageViewLog`, `UserActionLog`, `SessionLog`, `EventLog`, `CareerEngineLog`
 - [ ] **Placement Trends Dashboard** — public page: most applied courses this season, fastest-growing careers, most competitive programmes
 - [ ] **Competition Pressure Indicator** — per-course badge: Low / Medium / High / Extreme 🔥, from applicants vs intake capacity
-- [ ] **Cutoff Trend Chart** — year-on-year cutoff chart per course/university (Chart.js line graph using `cutoff_points` JSONField)
+- [x] **Cutoff Trend Chart** — year-on-year cutoff chart per course/university on degree course detail pages (Chart.js; top 6 institutions + average; picker to add any other institution; table view)
 - [ ] **Admission Shock Predictor** — warn on course card "This cutoff has risen 3 pts in 2 years — you may not qualify next year"
 
 ---
@@ -300,6 +300,37 @@ To check: log into your IntaSend dashboard → Send Money → if it says "contac
 - [ ] Set `REDIS_URL` in production (Render) — settings auto-upgrade the cache backend to Redis; cache then survives worker restarts/deploys instead of dying with each LocMemCache process
 
 
---- back button in big screens
----- kuccps 2026 application portal closes ,check eligibility,apply on kuccps when one cancels  let it appear after 48 hrs
----- soft delete dont delete completely like  a user
+1.back button in big screens
+2. the dedline banner ...kuccps 2026 application portal closes ,check eligibility,apply on kuccps when one cancels  let it appear after 48 hrs
+3.soft delete dont delete completely like  a user
+4.email broadcast--when you click send now there is an error in admin dashboard
+5.email verification  - - [09/Aug/2026:23:04:21 +0300] "GET /sw.js HTTP/1.1" 200 2645 89440μs
+127.0.0.1 - - [09/Aug/2026:23:04:22 +0300] "GET /accounts/verify-email/g8ygkWTv9JEmAAOT87iXbDAxpA-4CxKsbPMFh2BEwSY/ HTTP/1.1" 404 67922 136655μs
+127.0.0.1 - - [09/Aug/2026:23:04:22 +0300] "POST /analytics/heartbeat/ HTTP/1.1" 200 12 119141μs
+127.0.0.1 - - [09/Aug/2026:23:04:25 +0300] "POST /analytics/heartbeat/ HTTP/1.1" 200 12 103402μs
+127.0.0.1 - - [09/Aug/2026:23:04:25 +0300] "GET /static/manifest.json HTTP/1.1" 304 0 1291μs
+127.0.0.1 - - [09/Aug/2026:23:04:27 +0300] "GET /sw.js HTTP/1.1" 200 2645 38302μs
+6.mentee not received an emaail after manual verification
+7.verify tokens turned on and off
+8.~~CAREEER NEXT AI IN CAREER ENGINE~~ ✅ (results-page widget: greets only when opened so no credit is burned on page load, escapes/formats replies, handles paywall + login, links to full /career/chat/)
+9.REMOVE UNUSEFUL THINGS IN ADMIN LIKE KMT COURSES AND CAMPUSS SAME TO TTC ,tvet categories,courses SINCE WE HAVE A DB THAT DOES THOSE THINGS
+10.careernext ai customiseX
+11.~~whatsapp group link be editable in admin~~ ✅ (Admin → Resources → Site Settings → "WhatsApp Group Link"; blank hides the footer icon)
+12. notifications remain for 1 month in ones notification panel and admin can delete certain notifications after sometime for evryone also edit
+13.check it does not alloqw connection via http
+14.form serialisation---check what users submit deny unacceptable Audit CareerNext’s file-upload system and securely prevent uploaded JavaScript or other executable files from being stored/executed in a way that could create XSS, code execution, or other security vulnerabilities; implement the safest production-ready solution without breaking legitimate uploads.”
+14.contact us recapture simple
+15.Rate limiting-allow certain nomber of requests per unit time
+16.~~Kuccps calendar editable in admin~~ ✅ (Admin → Resources → KUCCPS Calendar)
+17.~~MOVE FEEDBBACK BUTTON TO LEFT~~ ✅
+18.~~More how to guides~~ ✅ (6 new guides on /resources/how-to-guides/)
+19.insert a video space short videeo on how to paste your cluster points 
+20.on the linked courses in career profiles let the courses appear in order that is for thet exact course for example if its a data science course let number one be  data science or with analytics rather than applied statistics and others which do not relate well such as acturial sience
+21.on career engine on sort by institution add one can choose an instition in that category and show the courses he qualifies and not and the rest in that institiom then on course name he can chooose a course or search and show that particular course and its related names and there instituions respectively
+22.on search button when searching let there be suggestions 
+23.contact support form
+24.remve that part that one can upload profile photo let it be like if ones email starts with the letter of email or name
+25.~~withdraw to alert admin ...withdrawal histrory~~ ✅ (admin emailed on every mentor/affiliate withdrawal; full history at /mentorship/dashboard/withdrawals/ and /accounts/affiliate/withdrawals/)
+26.~~once one scrolls on the 3 horizontal lines it should close~~ ✅ (open mobile ☰ menu collapses after ~40px of page scroll — static/js/main.js)
+27.~~Delete account~~ ✅ (Profile → Delete Account; soft-delete + personal data scrubbed)
+28.~~privacy policy number contact 7 working days~~ ✅ (phone editable: Admin → Site Settings → contact_phone)

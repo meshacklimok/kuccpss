@@ -5,6 +5,10 @@ from clusters.models import Cluster
 from institutions.models import Institution
 
 
+# KCSE years (portal labels) editable via admin / CSV import, newest first
+CUTOFF_YEARS = ('2025', '2024', '2023', '2022', '2021')
+
+
 class CourseResource(resources.ModelResource):
     """
     Import/export basic course metadata (name, type, category, cluster, description).
@@ -43,18 +47,19 @@ class CourseOfferingResource(resources.ModelResource):
     Import cutoff points per institution from a CSV that mirrors the KUCCPS PDF format.
 
     CSV columns:
-        course_name, course_type, institution, cutoff_2024, cutoff_2023, cutoff_2022, cutoff_2021
+        course_name, course_type, institution, cutoff_2025, cutoff_2024, cutoff_2023, cutoff_2022, cutoff_2021
 
     - course_name  : programme name (created automatically if missing)
     - course_type  : e.g. "Degree", "Diploma", "KMTC"  (created automatically if missing)
     - institution  : exact institution name as stored in the database
-    - cutoff_YEAR  : numeric cutoff; leave blank if unknown
+    - cutoff_YEAR  : numeric cutoff (0–48); leave blank to keep the stored value
     """
 
     # All columns read directly from CSV — no FK widget magic
     course_name     = fields.Field(column_name='course_name', attribute=None)
     course_type_col = fields.Field(column_name='course_type', attribute=None)
     institution_col = fields.Field(column_name='institution', attribute=None)
+    cutoff_2025     = fields.Field(column_name='cutoff_2025', attribute=None)
     cutoff_2024     = fields.Field(column_name='cutoff_2024', attribute=None)
     cutoff_2023     = fields.Field(column_name='cutoff_2023', attribute=None)
     cutoff_2022     = fields.Field(column_name='cutoff_2022', attribute=None)
@@ -63,7 +68,7 @@ class CourseOfferingResource(resources.ModelResource):
     class Meta:
         model = CourseOffering
         fields = ('course_name', 'course_type_col', 'institution_col',
-                  'cutoff_2024', 'cutoff_2023', 'cutoff_2022', 'cutoff_2021')
+                  'cutoff_2025', 'cutoff_2024', 'cutoff_2023', 'cutoff_2022', 'cutoff_2021')
         import_id_fields = ['course_name']
         skip_unchanged = False
         report_skipped = False
@@ -100,8 +105,8 @@ class CourseOfferingResource(resources.ModelResource):
             raise Exception(
                 f"Skipping row — institution not found: {row.get('institution', '')!r}"
             )
-        cutoffs = {}
-        for year in ('2024', '2023', '2022', '2021'):
+        cutoffs = dict(instance.cutoff_points or {})
+        for year in CUTOFF_YEARS:
             val = str(row.get(f'cutoff_{year}') or '').strip()
             if val:
                 try:
@@ -122,6 +127,9 @@ class CourseOfferingResource(resources.ModelResource):
 
     def dehydrate_institution_col(self, obj):
         return obj.institution.name if obj.institution else ''
+
+    def dehydrate_cutoff_2025(self, obj):
+        return (obj.cutoff_points or {}).get('2025', '')
 
     def dehydrate_cutoff_2024(self, obj):
         return (obj.cutoff_points or {}).get('2024', '')

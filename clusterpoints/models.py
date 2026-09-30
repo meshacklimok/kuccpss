@@ -144,7 +144,6 @@ class ClusterCalculationResult(TimeStampedModel):
         ordering = ['cluster__number']
         indexes = [
             models.Index(fields=["user", "cluster"]),
-            models.Index(fields=["kcse_result"]),
         ]
 
     def __str__(self):

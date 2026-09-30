@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 {% load custom_filters %}
-{% block title %}{{ course.name }} | {{ course.course_type.name }} in Kenya — CareerNext{% endblock %}
+{% block title %}{{ course.name }} | {{ course.course_type.name }} in Kenya | CareerNext{% endblock %}
 
 {% block meta %}
 <meta name="description" content="{% if course.description %}{{ course.description|truncatechars:155 }}{% else %}Explore {{ course.name }} offered at Kenyan universities and colleges. Check minimum cluster points, subject requirements and institutions via KUCCPS.{% endif %}">
@@ -9,7 +9,7 @@
 {% block canonical %}<link rel="canonical" href="{{ request.build_absolute_uri }}">{% endblock %}
 
 {% block og_meta %}
-<meta property="og:title" content="{{ course.name }} — {{ course.course_type.name }} in Kenya | CareerNext">
+<meta property="og:title" content="{{ course.name }}: {{ course.course_type.name }} in Kenya | CareerNext">
 <meta property="og:description" content="Explore {{ course.name }} offered in Kenya. Minimum cluster points: {{ course.cutoff_points|default:'check eligibility' }}. Find institutions via KUCCPS.">
 {% endblock %}
 
@@ -60,6 +60,64 @@
 .trend-tab.active {
   background: #1e3a8a; border-color: #1e3a8a; color: #fff;
 }
+/* ── Programme variations ── */
+.pv-card { --pv-accent: var(--primary); }
+.pv-head { display: flex; gap: .85rem; align-items: center; }
+.pv-head-icon {
+  width: 42px; height: 42px; border-radius: var(--radius); flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: color-mix(in srgb, var(--primary) 12%, transparent); color: var(--primary);
+}
+.pv-summary { font-size: .8rem; color: var(--text-2); font-weight: 500; }
+.pv-intro { font-size: .83rem; color: var(--text-2); margin: .85rem 0 1.1rem; }
+.pv-section + .pv-section { margin-top: 1.4rem; }
+.pv-related { --pv-accent: var(--purple); }
+.pv-label {
+  display: flex; align-items: center; gap: .35rem;
+  font-size: .72rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+  color: var(--pv-accent); margin-bottom: .6rem;
+}
+.pv-count {
+  font-size: .68rem; padding: .05rem .45rem; border-radius: 999px; letter-spacing: 0;
+  background: color-mix(in srgb, var(--pv-accent) 12%, transparent);
+}
+.pv-item {
+  border: 1px solid var(--border-soft); border-left: 3px solid var(--pv-accent);
+  border-radius: var(--radius-sm); padding: .75rem .9rem; margin-bottom: .6rem;
+  background: var(--surface); transition: box-shadow .18s, border-color .18s;
+}
+.pv-item:hover { box-shadow: var(--shadow-xs); border-color: var(--border); border-left-color: var(--pv-accent); }
+.pv-item-head { display: flex; justify-content: space-between; align-items: flex-start; gap: .75rem; }
+.pv-name { font-weight: 700; font-size: .9rem; color: var(--text); text-decoration: none; line-height: 1.35; }
+.pv-name:hover { color: var(--primary); }
+.pv-sub { font-size: .75rem; color: var(--text-3); margin-top: .15rem; }
+.pv-view {
+  font-size: .75rem; font-weight: 700; color: var(--primary); text-decoration: none;
+  white-space: nowrap; padding: .25rem .6rem; border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--primary) 8%, transparent);
+}
+.pv-view:hover { background: var(--primary); color: #fff; }
+.pv-insts {
+  list-style: none; padding: 0; margin: .65rem 0 0;
+  display: grid; grid-template-columns: 1fr; gap: .35rem;
+}
+@media (min-width: 768px) { .pv-insts { grid-template-columns: 1fr 1fr; } }
+.pv-inst {
+  display: flex; align-items: center; justify-content: space-between; gap: .5rem;
+  padding: .4rem .6rem; border-radius: var(--radius-sm); background: var(--surface-2); min-width: 0;
+}
+.pv-inst-main { min-width: 0; }
+.pv-inst a {
+  display: block; font-size: .82rem; font-weight: 600; color: var(--text); text-decoration: none; line-height: 1.3;
+}
+.pv-inst a:hover { color: var(--primary); }
+.pv-inst-main small { display: block; font-size: .7rem; color: var(--text-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pv-cut small { font-weight: 600; opacity: .75; }
+.pv-cut {
+  flex-shrink: 0; white-space: nowrap; font-size: .72rem; font-weight: 700; padding: .15rem .5rem; border-radius: 999px;
+  background: color-mix(in srgb, var(--primary) 12%, transparent); color: var(--primary);
+}
+.pv-empty { font-size: .8rem; color: var(--text-3); margin: .5rem 0 0; }
 </style>
 {% endblock %}
 
@@ -326,8 +384,14 @@
 
         <!-- Chart view -->
         <div id="trendChartView">
-          <div style="position:relative; height:260px;">
-            <canvas id="cutoffTrendChart"></canvas>
+          <div id="trendPickWrap" class="mb-2" style="display:none;">
+            <label for="trendPick" class="form-label small text-muted mb-1">Add another institution</label>
+            <select id="trendPick" class="form-select form-select-sm" style="max-width:360px;">
+              <option value="">— Choose an institution —</option>
+            </select>
+          </div>
+          <div style="position:relative; height:280px;">
+            <canvas id="cutoffTrendChart" role="img" aria-label="Line chart of cluster cut-off points per year for each institution offering this course"></canvas>
           </div>
           <p class="text-muted mt-2 mb-0" style="font-size:0.78rem;">
             <i class="fas fa-info-circle me-1"></i>
@@ -342,37 +406,30 @@
               <thead class="table-light">
                 <tr>
                   <th>Institution</th>
-                  <th class="text-center">2024</th>
-                  <th class="text-center">2023</th>
-                  <th class="text-center">2022</th>
-                  <th class="text-center">2021</th>
+                  {% for year in trend_years %}<th class="text-center">{{ year }}</th>{% endfor %}
                 </tr>
               </thead>
               <tbody>
-                {% for offering in offerings %}
-                {% if offering.cutoff_points %}
+                {% for offering, values in trend_rows %}
                 <tr>
                   <td>
                     <a href="{% url 'institutions:institution_detail' type_slug=offering.institution.institution_type.slug institution_slug=offering.institution.slug %}"
                        class="fw-semibold text-dark text-decoration-none">{{ offering.institution.name }}</a>
                     <small class="text-muted d-block">{{ offering.institution.institution_type }}</small>
                   </td>
-                  {% for year in '2024,2023,2022,2021'|split:',' %}
+                  {% for val in values %}
                   <td class="text-center">
-                    {% with val=offering.cutoff_points|get_item:year %}
-                      {% if val %}
-                      <span class="badge rounded-pill fw-semibold"
-                            style="background:{% if val >= 35 %}#dcfce7;color:#16a34a{% elif val >= 25 %}#fef9c3;color:#ca8a04{% else %}#fee2e2;color:#dc2626{% endif %};font-size:0.8rem;padding:4px 10px;border:1px solid currentColor;">
-                        {{ val }}
-                      </span>
-                      {% else %}
-                      <span class="text-muted">—</span>
-                      {% endif %}
-                    {% endwith %}
+                    {% if val %}
+                    <span class="badge rounded-pill fw-semibold"
+                          style="background:{% if val >= 35 %}#dcfce7;color:#16a34a{% elif val >= 25 %}#fef9c3;color:#ca8a04{% else %}#fee2e2;color:#dc2626{% endif %};font-size:0.8rem;padding:4px 10px;border:1px solid currentColor;">
+                      {{ val }}
+                    </span>
+                    {% else %}
+                    <span class="text-muted">—</span>
+                    {% endif %}
                   </td>
                   {% endfor %}
                 </tr>
-                {% endif %}
                 {% endfor %}
               </tbody>
             </table>
@@ -392,13 +449,12 @@
             <thead class="table-light">
               <tr>
                 <th>Institution</th>
-                <th class="text-center">Latest Cutoff</th>
+                <th class="text-center">{{ LATEST_CUTOFF_YEAR }} Cutoff</th>
               </tr>
             </thead>
             <tbody>
               {% for offering in offerings %}
               {% with lc=offering.latest_cutoff %}
-              {% if lc %}
               <tr>
                 <td>
                   <a href="{% url 'institutions:institution_detail' type_slug=offering.institution.institution_type.slug institution_slug=offering.institution.slug %}"
@@ -406,13 +462,16 @@
                   <small class="text-muted d-block">{{ offering.institution.institution_type }}</small>
                 </td>
                 <td class="text-center">
+                  {% if lc is not None %}
                   <span class="badge rounded-pill fw-semibold"
                         style="background:#eff6ff;color:#1e3a8a;border:1px solid #bfdbfe;font-size:0.82rem;padding:5px 12px;">
                     {{ lc }}
                   </span>
+                  {% else %}
+                  <span class="text-muted">—</span>
+                  {% endif %}
                 </td>
               </tr>
-              {% endif %}
               {% endwith %}
               {% endfor %}
             </tbody>
@@ -429,6 +488,36 @@
       </div>
       {% endif %}
 
+      {% endif %}
+
+      <!-- Programme variations: same programme under other names + related programmes -->
+      {% if variations.same or variations.related %}
+      <div class="card p-4 mb-4 pv-card" id="variations">
+        <div class="pv-head">
+          <span class="pv-head-icon"><i class="fas fa-code-branch"></i></span>
+          <div>
+            <h5 class="fw-bold mb-1">Variations of {{ variations.title }}</h5>
+            <p class="pv-summary mb-0">
+              {% if variations.same %}{{ variations.same|length }} other name{{ variations.same|length|pluralize }}{% endif %}{% if variations.same and variations.related %} &middot; {% endif %}{% if variations.related %}{{ variations.related|length }} related programme{{ variations.related|length|pluralize }}{% endif %}
+              &middot; {{ variations.n_institutions }} institution{{ variations.n_institutions|pluralize }}
+            </p>
+          </div>
+        </div>
+        <p class="pv-intro">KUCCPS lists programmes under slightly different names at different institutions. Here are all of them, with where each is offered.</p>
+
+        {% if variations.same %}
+        <div class="pv-section pv-same">
+          <div class="pv-label"><i class="fas fa-equals me-1"></i>Same programme, different name <span class="pv-count">{{ variations.same|length }}</span></div>
+          {% for v in variations.same %}{% include 'courses/_variation_item.html' %}{% endfor %}
+        </div>
+        {% endif %}
+        {% if variations.related %}
+        <div class="pv-section pv-related">
+          <div class="pv-label"><i class="fas fa-link me-1"></i>Related programmes <span class="pv-count">{{ variations.related|length }}</span></div>
+          {% for v in variations.related %}{% include 'courses/_variation_item.html' %}{% endfor %}
+        </div>
+        {% endif %}
+      </div>
       {% endif %}
 
       <!-- Core Subjects -->
@@ -452,7 +541,7 @@
 
       <!-- Action buttons -->
       {% if request.user.is_authenticated %}
-      <div class="card p-3 mb-4 border-0" style="background:linear-gradient(135deg,#1e3a8a,#1d4ed8);">
+      <div class="card p-3 mb-4 border-0" style="background:#1e3a8a;">
         <div class="d-flex flex-column gap-2">
           <button id="shortlistBtn" data-course-id="{{ course.pk }}"
                   class="btn fw-700 rounded-pill {% if is_shortlisted %}btn-warning{% else %}btn-light{% endif %}"
@@ -518,8 +607,10 @@
             <a href="{% url 'institutions:institution_detail' type_slug=offering.institution.institution_type.slug institution_slug=offering.institution.slug %}"
                class="fw-semibold text-dark text-decoration-none" style="font-size:0.9rem;">{{ offering.institution.name }}</a>
             {% with lc=offering.latest_cutoff %}
-            {% if lc %}
-            <small class="text-muted">Latest cutoff: <strong>{{ lc }}</strong> pts</small>
+            {% if lc is not None %}
+            <small class="text-muted">Latest cutoff ({{ LATEST_CUTOFF_YEAR }}): <strong>{{ lc }}</strong> pts</small>
+            {% elif offering.cutoff_points %}
+            <small class="text-muted">Latest cutoff ({{ LATEST_CUTOFF_YEAR }}): <strong>—</strong></small>
             {% endif %}
             {% endwith %}
           </li>
@@ -530,7 +621,7 @@
 
       <!-- Job Market Intelligence -->
       {% if job_market %}
-      <div class="card p-4 mb-4 border-0" style="background:linear-gradient(135deg,#f0fdf4,#dcfce7);border-left:4px solid #16a34a!important;border-left-style:solid!important;">
+      <div class="card p-4 mb-4 border-0" style="background:#f0fdf4;border-left:4px solid #16a34a!important;border-left-style:solid!important;">
         <h6 class="fw-bold mb-3" style="color:#166534;"><i class="fas fa-chart-line me-2"></i>Career Market Snapshot</h6>
         <div class="fw-bold mb-1" style="font-size:0.95rem;color:#14532d;">{{ job_market.career_name }}</div>
         <div class="d-flex align-items-center gap-2 mb-2 flex-wrap">
@@ -564,14 +655,14 @@
 
       <!-- Mentorship CTA — only for Degree & KMTC courses -->
       {% if course.course_type.slug == 'degree' or course.course_type.slug == 'KMTC' %}
-      <div class="card p-4 border-0 shadow-sm rounded-4" style="background: linear-gradient(135deg, #f0f9ff, #e0f2fe);">
+      <div class="card p-4 border-0 shadow-sm rounded-4" style="background: #f0f9ff;">
         <div class="d-flex align-items-start gap-3">
           <div class="rounded-circle bg-primary bg-opacity-10 d-flex align-items-center justify-content-center flex-shrink-0" style="width:44px;height:44px;">
             <i class="bi bi-people-fill text-primary"></i>
           </div>
           <div>
             <h6 class="fw-bold mb-1">Talk to a Student in This Course</h6>
-            <p class="text-muted small mb-3">Get real insights from someone currently studying this — KES 100 for 15 min.</p>
+            <p class="text-muted small mb-3">Get real insights from someone currently studying this, KES 100 for 15 min.</p>
             <a href="{% url 'mentorship:directory' %}?q={{ course.name|urlencode }}"
                class="btn btn-primary btn-sm rounded-pill px-3 fw-semibold">
               <i class="bi bi-calendar-plus me-1"></i>Find a Mentor
@@ -603,43 +694,105 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
 (function(){
-  var raw = {{ chart_json|safe }};
+  var raw = {{ chart_json|js_json }};
+  // Validated categorical slots — light steps for the white card, dark steps
+  // for the navy card (body.dark). Same hues, same order.
+  var THEMES = {
+    light: { series: ['#2a78d6','#eb6834','#1baf7a','#eda100','#e87ba4','#008300'],
+             pick: '#0f172a', avg: '#94a3b8', ink: '#475569', grid: '#f1f5f9' },
+    dark:  { series: ['#3987e5','#d95926','#199e70','#c98500','#d55181','#008300'],
+             pick: '#f8fafc', avg: '#6b86a0', ink: '#9baec4', grid: '#2e4466' }
+  };
+  function theme(){ return THEMES[document.body.classList.contains('dark') ? 'dark' : 'light']; }
+  function styleDataset(ds){
+    var t = theme();
+    var c = ds.role === 'avg' ? t.avg : ds.role === 'pick' ? t.pick : t.series[ds.role];
+    ds.borderColor = ds.backgroundColor = c;
+    ds.pointBorderColor = c;
+    ds.borderWidth = ds.role === 'pick' ? 3 : 2;
+    ds.pointRadius = ds.role === 'avg' ? 3 : 4;
+    ds.pointHoverRadius = ds.pointRadius + 2;
+    ds.borderDash = ds.role === 'avg' ? [6, 4] : [];
+    ds.tension = 0;
+    return ds;
+  }
+  raw.datasets.forEach(styleDataset);
+  var ink = theme().ink, grid = theme().grid;
 
   var ctx = document.getElementById('cutoffTrendChart');
+  var chart = null;
   if (ctx && raw.datasets.length) {
-    new Chart(ctx, {
+    chart = new Chart(ctx, {
       type: 'line',
-      data: raw,
+      data: { labels: raw.labels, datasets: raw.datasets },
       options: {
         responsive: true,
         maintainAspectRatio: false,
+        spanGaps: true,
         interaction: { mode: 'index', intersect: false },
         plugins: {
           legend: {
             position: 'bottom',
-            labels: { boxWidth: 12, font: { size: 11 }, padding: 14 },
+            labels: { usePointStyle: true, pointStyle: 'circle', boxWidth: 8, color: ink, font: { size: 11 }, padding: 14 },
           },
           tooltip: {
+            itemSort: function(a, b){ return (b.parsed.y || 0) - (a.parsed.y || 0); },
             callbacks: {
+              title: function(items){ return 'KCSE ' + items[0].label; },
               label: function(c){
                 var v = c.parsed.y;
-                return v == null ? c.dataset.label + ': —' : c.dataset.label + ': ' + v + ' pts';
+                return ' ' + c.dataset.label + ': ' + (v == null ? '—' : v.toFixed(3) + ' pts');
               }
             }
           }
         },
         scales: {
-          x: { grid: { display: false }, ticks: { font: { size: 11 } } },
+          x: { grid: { display: false }, ticks: { color: ink, font: { size: 11 } } },
           y: {
-            beginAtZero: false,
-            suggestedMin: 0,
-            suggestedMax: 48,
-            ticks: { font: { size: 11 }, callback: function(v){ return v + ' pts'; } },
-            grid: { color: '#f1f5f9' },
+            grace: '10%',
+            ticks: { color: ink, font: { size: 11 }, callback: function(v){ return v + ' pts'; } },
+            grid: { color: grid },
+            border: { display: false },
           }
         }
       }
     });
+  }
+
+  // Institutions beyond the top six — let the student plot the one they care about.
+  var pick = document.getElementById('trendPick');
+  if (chart && pick && raw.extra && raw.extra.length) {
+    raw.extra
+      .slice()
+      .sort(function(a, b){ return a.name.localeCompare(b.name); })
+      .forEach(function(e){
+        var opt = document.createElement('option');
+        opt.value = raw.extra.indexOf(e);
+        opt.textContent = e.name;
+        pick.appendChild(opt);
+      });
+    document.getElementById('trendPickWrap').style.display = '';
+    pick.addEventListener('change', function(){
+      chart.data.datasets = chart.data.datasets.filter(function(d){ return !d._picked; });
+      if (pick.value !== '') {
+        var ds = styleDataset(Object.assign({ _picked: true }, raw.extra[+pick.value].dataset));
+        chart.data.datasets.unshift(ds);
+      }
+      chart.update();
+    });
+  }
+
+  // Re-colour when the site's dark-mode toggle flips body.dark.
+  if (chart) {
+    new MutationObserver(function(){
+      var t = theme();
+      chart.data.datasets.forEach(styleDataset);
+      chart.options.plugins.legend.labels.color = t.ink;
+      chart.options.scales.x.ticks.color = t.ink;
+      chart.options.scales.y.ticks.color = t.ink;
+      chart.options.scales.y.grid.color = t.grid;
+      chart.update('none');
+    }).observe(document.body, { attributes: true, attributeFilter: ['class'] });
   }
 
   document.querySelectorAll('.trend-tab').forEach(function(btn){

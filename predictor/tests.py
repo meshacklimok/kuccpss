@@ -75,6 +75,11 @@ class ClusterMappingTests(TestCase):
     def test_calc_to_kuccps_subtracts_100(self):
         self.assertEqual(calc_to_kuccps(113), 13)
         self.assertEqual(calc_to_kuccps(101), 1)
+        self.assertEqual(calc_to_kuccps(118), 18)
+
+    def test_eighteen_kuccps_clusters(self):
+        from predictor.services import KUCCPS_NAMES
+        self.assertEqual(sorted(KUCCPS_NAMES), list(range(1, 19)))
 
 
 class PredictionConfigTests(TestCase):

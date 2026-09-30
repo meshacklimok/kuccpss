@@ -1,13 +1,13 @@
 {% extends 'base.html' %}
 {% load static %}
-{% block title %}{{ cluster.name }} — All Courses — CareerNext{% endblock %}
+{% block title %}{{ cluster.name }}: All Courses | CareerNext{% endblock %}
 
-{% block meta %}<meta name="description" content="Every degree course under {{ cluster.name }} in the KUCCPS system, with minimum cluster points — see which ones your KCSE results qualify you for.">{% endblock %}
+{% block meta %}<meta name="description" content="Every degree course under {{ cluster.name }} in the KUCCPS system, with minimum cluster points. See which ones your KCSE results qualify you for.">{% endblock %}
 
 {% block extra_head %}
 <style>
 .cc-hero {
-    background: linear-gradient(135deg,#1e3a8a 0%,#2563eb 60%,#0891b2 100%);
+    background: #1e3a8a;
     color:#fff; padding:2.5rem 0 1.5rem;
 }
 .cc-hero h1 { font-size:clamp(1.3rem,4vw,1.8rem); font-weight:900; margin-bottom:0.3rem; }
@@ -31,7 +31,7 @@
     padding:2px 8px; font-size:0.7rem; font-weight:700; flex-shrink:0;
 }
 .cc-lock-section {
-    background:linear-gradient(to bottom,rgba(255,255,255,0) 0%,#fff 35%);
+    background:rgba(255,255,255,0);
     padding-top:2rem; text-align:center; position:relative;
 }
 .cc-lock-card {
@@ -40,14 +40,14 @@
 }
 .cc-lock-icon {
     width:64px; height:64px; border-radius:50%;
-    background:linear-gradient(135deg,#7c3aed,#4f46e5);
+    background:#7c3aed;
     display:flex; align-items:center; justify-content:center;
     font-size:1.5rem; color:#fff; margin:0 auto 1rem;
     box-shadow:0 0 0 10px rgba(124,58,237,0.1);
 }
 .cc-unlock-btn {
     display:block; width:100%;
-    background:linear-gradient(135deg,#1e3a8a,#2563eb);
+    background:#1e3a8a;
     color:#fff; border:none; border-radius:12px;
     padding:0.85rem; font-weight:800; font-size:0.95rem;
     text-decoration:none; text-align:center;
@@ -136,16 +136,16 @@
             {{ paid_courses|length }} More Course{{ paid_courses|length|pluralize }} Locked
           </div>
           <p style="font-size:0.82rem;color:#64748b;margin-bottom:1.2rem;">
-            Unlock all {{ total_count }} courses in this cluster — and every other cluster — with a single one-time payment.
+            Unlock all {{ total_count }} courses in this cluster (and every other cluster) with a single one-time payment.
           </p>
           <div style="background:#f8fafc;border-radius:10px;padding:0.7rem 1rem;margin-bottom:1rem;font-size:0.8rem;color:#475569;">
-            <div class="d-flex justify-content-between"><span>All 20 cluster full course lists</span><i class="fas fa-check text-success"></i></div>
+            <div class="d-flex justify-content-between"><span>All 18 cluster full course lists</span><i class="fas fa-check text-success"></i></div>
             <div class="d-flex justify-content-between mt-1"><span>Eligibility status per course</span><i class="fas fa-check text-success"></i></div>
             <div class="d-flex justify-content-between mt-1"><span>Institution details & cutoff points</span><i class="fas fa-check text-success"></i></div>
           </div>
           <a href="{% url 'payments:payment_required' %}?feature=view_eligible_courses&next={{ request.path }}"
              class="cc-unlock-btn">
-            <i class="fas fa-lock-open me-2"></i>Unlock All — KES {{ gate_price }}
+            <i class="fas fa-lock-open me-2"></i>Unlock All, KES {{ gate_price }}
           </a>
           <div style="font-size:0.7rem;color:#94a3b8;margin-top:0.6rem;text-align:center;">One-time · Lifetime access · Secure M-Pesa</div>
         </div>

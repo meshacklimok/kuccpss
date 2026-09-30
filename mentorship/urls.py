@@ -27,5 +27,6 @@ urlpatterns = [
     path("my-sessions/", views.my_sessions, name="my_sessions"),
     path("session/<uuid:token>/calendar.ics", views.download_ics, name="download_ics"),
     path("dashboard/withdraw/", views.request_withdrawal, name="request_withdrawal"),
+    path("dashboard/withdrawals/", views.withdrawal_history, name="withdrawal_history"),
     path("dashboard/withdraw-application/", views.withdraw_application, name="withdraw_application"),
 ]

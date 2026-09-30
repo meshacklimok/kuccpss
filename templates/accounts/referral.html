@@ -1,14 +1,14 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block title %}Refer Friends — CareerNext{% endblock %}
+{% block title %}Refer Friends: CareerNext{% endblock %}
 
 {% block content %}
 
 
 <style>
 .ref-hero {
-    background: linear-gradient(135deg, #1e3a8a 0%, #7c3aed 100%);
+    background: #1e3a8a;
     color: white; padding: 3rem 0 2.5rem;
 }
 .ref-code-box {
@@ -42,7 +42,7 @@
 .how-step:last-child { border-bottom: none; }
 .step-num {
     width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0;
-    background: linear-gradient(135deg, var(--primary-light), var(--primary));
+    background: var(--primary-light);
     color: white; font-weight: 800; font-size: 0.9rem;
     display: flex; align-items: center; justify-content: center;
 }
@@ -74,7 +74,7 @@
                 </span>
                 <h1 class="fw-bold mb-2" style="font-size:1.9rem;">Invite Friends to CareerNext</h1>
                 <p style="opacity:0.85;font-size:1rem;max-width:480px;">
-                    Share your unique link. When a friend signs up through it, they get a head-start on their career guidance journey — and you get credit for growing the community.
+                    Share your unique link. When a friend signs up through it, they get a head-start on their career guidance journey, and you get credit for growing the community.
                 </p>
             </div>
         </div>
@@ -171,7 +171,7 @@
                     {% else %}
                     <div class="empty-state py-4">
                         <i class="bi bi-person-plus" style="font-size:2.5rem;opacity:0.3;display:block;text-align:center;margin-bottom:0.75rem;"></i>
-                        <p class="text-muted small text-center mb-0">No referrals yet — share your link above to invite friends!</p>
+                        <p class="text-muted small text-center mb-0">No referrals yet, share your link above to invite friends!</p>
                     </div>
                     {% endif %}
                 </div>
@@ -261,7 +261,7 @@ function copySuggestedMsg() {
 function nativeShare() {
     if (navigator.share) {
         navigator.share({
-            title: 'CareerNext — Kenya\'s #1 KCSE Career Guide',
+            title: 'CareerNext: Kenya\'s #1 KCSE Career Guide',
             text: SUGGESTED_MSG,
             url: refUrl,
         }).catch(() => {});

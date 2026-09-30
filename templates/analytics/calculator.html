@@ -1,7 +1,7 @@
 {% extends "analytics/base_analytics.html" %}
 {% block analytics_title %}Calculator Analytics{% endblock %}
 {% block page_title %}Calculator Analytics{% endblock %}
-{% block page_subtitle %}Cluster-points calculator usage — last {{ days }} days{% endblock %}
+{% block page_subtitle %}Cluster-points calculator usage, last {{ days }} days{% endblock %}
 
 {% block header_actions %}
 <div class="day-pills">
@@ -93,8 +93,8 @@
 <script>
 new Chart(document.getElementById('runChart'), {
   type: 'line',
-  data: { labels: {{ chart_run_labels|safe }},
-    datasets: [{ label:'Runs', data:{{ chart_run_data|safe }},
+  data: { labels: {{ chart_run_labels|js_json }},
+    datasets: [{ label:'Runs', data:{{ chart_run_data|js_json }},
       borderColor:'#2563eb', backgroundColor:'rgba(37,99,235,.08)',
       tension:.35, fill:true, pointRadius:2 }]
   },
@@ -104,8 +104,8 @@ new Chart(document.getElementById('runChart'), {
 });
 new Chart(document.getElementById('gradeChart'), {
   type: 'bar',
-  data: { labels: {{ chart_grade_labels|safe }},
-    datasets: [{ label:'Runs', data:{{ chart_grade_data|safe }},
+  data: { labels: {{ chart_grade_labels|js_json }},
+    datasets: [{ label:'Runs', data:{{ chart_grade_data|js_json }},
       backgroundColor:'rgba(124,58,237,.75)', borderRadius:6 }]
   },
   options: { responsive:true, maintainAspectRatio:false,
@@ -114,8 +114,8 @@ new Chart(document.getElementById('gradeChart'), {
 });
 new Chart(document.getElementById('pathwayChart'), {
   type: 'doughnut',
-  data: { labels: {{ chart_pathway_labels|safe }},
-    datasets: [{ data:{{ chart_pathway_data|safe }},
+  data: { labels: {{ chart_pathway_labels|js_json }},
+    datasets: [{ data:{{ chart_pathway_data|js_json }},
       backgroundColor:['#1e3a8a','#2563eb','#16a34a','#d97706'], borderWidth:2 }]
   },
   options: { responsive:true, maintainAspectRatio:false,

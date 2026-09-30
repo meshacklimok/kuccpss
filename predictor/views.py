@@ -7,14 +7,14 @@ from courses.models import CourseOffering, CourseType
 from .services import (
     predict_cutoff, eligibility,
     TREND_ICON, TREND_COLOR, TREND_TIP,
-    COURSE_TO_CALC, COURSE_TO_KUCCPS, KUCCPS_NAMES,
+    KUCCPS_NAMES, calc_to_kuccps,
 )
 
 
 # ── helpers ───────────────────────────────────────────────────────────────────
 
 def _cluster_scores_from_request(request) -> dict[int, float]:
-    """Pull cluster scores (calc numbers 101–120) from DB (auth) or session (guest)."""
+    """Pull cluster scores (calc numbers 101–118) from DB (auth) or session (guest)."""
     scores = {}
 
     if request.user.is_authenticated:
@@ -51,13 +51,7 @@ def _all_offerings_with_pred(query="", kuccps_cluster=None, course_type_slug="",
     if query:
         qs = qs.filter(course__name__icontains=query)
     if kuccps_cluster:
-        # filter by sub-group cluster numbers that map to this KUCCPS cluster
-        from .services import CALC_TO_COURSE
-        course_cluster_nums = CALC_TO_COURSE.get(kuccps_cluster + 100, [])
-        if course_cluster_nums:
-            qs = qs.filter(course__cluster__number__in=course_cluster_nums)
-        else:
-            return []
+        qs = qs.filter(course__cluster__number=kuccps_cluster + 100)
     if course_type_slug:
         qs = qs.filter(course__course_type__slug=course_type_slug)
 
@@ -67,16 +61,15 @@ def _all_offerings_with_pred(query="", kuccps_cluster=None, course_type_slug="",
         if pred is None:
             continue
 
-        # Resolve KUCCPS cluster number (1–20) from sub-group cluster number
-        course_cluster_num = o.course.cluster.number if o.course.cluster else None
-        kuccps_num = COURSE_TO_KUCCPS.get(course_cluster_num) if course_cluster_num else None
+        # Courses link straight to calculator clusters 101–118 (KUCCPS 1–18)
+        calc_num = o.course.cluster.number if o.course.cluster else None
+        kuccps_num = calc_to_kuccps(calc_num) if calc_num else None
         kuccps_name = KUCCPS_NAMES.get(kuccps_num, "") if kuccps_num else ""
 
         score = None
         elig  = None
-        if student_scores and o.course.cluster:
-            calc_num = COURSE_TO_CALC.get(o.course.cluster.number)
-            if calc_num and calc_num in student_scores:
+        if student_scores and calc_num:
+            if calc_num in student_scores:
                 score = student_scores[calc_num]
                 elig  = eligibility(score, pred)
 
@@ -141,8 +134,8 @@ def predictor_index(request):
     paginator = Paginator(rows, 30)
     page_obj  = paginator.get_page(request.GET.get("page", 1))
 
-    # Build 20-cluster list for dropdown
-    kuccps_clusters = [{"number": n, "name": KUCCPS_NAMES[n]} for n in range(1, 21)]
+    # Build 18-cluster list for dropdown
+    kuccps_clusters = [{"number": n, "name": name} for n, name in KUCCPS_NAMES.items()]
     course_types    = CourseType.objects.all()
     has_scores   = bool(student_scores)
     _key_to_label = {

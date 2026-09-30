@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block title %}{{ pathway_label }} — Enter KCSE Grades for KUCCPS Placement | CareerNext{% endblock %}
+{% block title %}{{ pathway_label }}: Enter KCSE Grades for KUCCPS Placement | CareerNext{% endblock %}
 
 {% block meta %}<meta name="description" content="Enter your KCSE grades for the {{ pathway_label }} pathway and see which courses your results qualify you for through KUCCPS placement in Kenya.">{% endblock %}
 
@@ -54,7 +54,7 @@
 }
 .sb-counter.ready { border-color: #86efac; color: #16a34a; background: #f0fdf4; }
 .sb-progress { height: 3px; background: #e2e8f0; }
-.sb-progress-fill { height: 100%; width: 0%; background: linear-gradient(90deg, var(--pw), #0891b2, #16a34a); transition: width 0.4s ease; }
+.sb-progress-fill { height: 100%; width: 0%; background: var(--pw); transition: width 0.4s ease; }
 
 /* ── page ── */
 .lce-page { max-width: 760px; margin: 0 auto; padding: 1.5rem 1rem 6rem; }
@@ -228,7 +228,7 @@
 }
 .lce-btn-back:hover { color: #1e293b; border-color: #94a3b8; background: #f1f5f9; text-decoration: none; }
 .lce-btn-continue {
-    background: linear-gradient(135deg, var(--pw), #2563eb);
+    background: var(--pw);
     color: #fff; border: none; border-radius: 12px; padding: 0.7rem 1.75rem;
     font-weight: 800; font-size: 0.92rem; cursor: pointer; transition: all 0.2s;
     flex-shrink: 0; display: flex; align-items: center; gap: 0.5rem;
@@ -522,7 +522,7 @@ function updateMeanReady() {
     } else if (!catsOk()) {
         note.innerHTML = 'Select a <strong>course category</strong> to proceed';
     } else {
-        note.innerHTML = 'Mean grade: <strong>' + grade + '</strong> — ready to proceed!';
+        note.innerHTML = 'Mean grade: <strong>' + grade + '</strong>, ready to proceed!';
     }
 }
 {% endif %}
@@ -588,7 +588,7 @@ function updateGlobal() {
     } else if (!catsOk()) {
         note.innerHTML = 'Select a <strong>course category</strong> to proceed';
     } else {
-        note.innerHTML = '<strong>' + all + ' subjects entered</strong> — ready to proceed!';
+        note.innerHTML = '<strong>' + all + ' subjects entered</strong>, ready to proceed!';
     }
 }
 

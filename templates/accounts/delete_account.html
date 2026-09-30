@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Delete Account: CareerNext{% endblock %}
+
+{% block content %}
+<div class="auth-page">
+  <div class="auth-card" style="max-width:460px;">
+
+    <div class="text-center mb-4">
+      <div style="width:56px;height:56px;border-radius:50%;background:#991b1b;
+                  display:flex;align-items:center;justify-content:center;margin:0 auto 1rem;">
+        <i class="fas fa-trash-alt" style="color:#fff;font-size:1.3rem;"></i>
+      </div>
+      <h2 class="fw-bold mb-1" style="font-size:1.3rem;color:#0f172a;">Delete your account</h2>
+      <p class="text-muted small mb-0">This can't be undone.</p>
+    </div>
+
+    {% if messages %}
+      {% for message in messages %}
+      <div class="alert alert-{{ message.tags|default:'info' }} py-2 px-3 mb-3 rounded-3" style="font-size:0.83rem;">{{ message }}</div>
+      {% endfor %}
+    {% endif %}
+
+    <div class="alert py-2 px-3 mb-3 rounded-3" style="font-size:0.83rem;background:#fef2f2;border:1px solid #fecaca;color:#7f1d1d;">
+      When you delete your account:
+      <ul class="mb-0 mt-1 ps-3">
+        <li>You'll be logged out and won't be able to log in again.</li>
+        <li>Your name, email, phone number and photo are removed.</li>
+        <li>Saved courses, shortlist and results are no longer linked to you.</li>
+        <li>Unused AI chat credits, affiliate earnings and mentor balances are forfeited; withdraw them first.</li>
+        <li>Payment records are kept anonymously, as required for accounting.</li>
+      </ul>
+    </div>
+
+    <form method="POST" novalidate>
+      {% csrf_token %}
+
+      {% if needs_password %}
+      <div class="auth-field">
+        <label for="id_password">Password</label>
+        <input type="password" name="password" id="id_password" class="form-control"
+               placeholder="Enter your current password" autocomplete="current-password" required>
+      </div>
+      {% endif %}
+
+      <div class="auth-field">
+        <label for="id_confirm">Type <strong>DELETE</strong> to confirm</label>
+        <input type="text" name="confirm" id="id_confirm" class="form-control"
+               placeholder="DELETE" autocomplete="off" required>
+      </div>
+
+      <button type="submit" class="btn btn-danger w-100 mt-2 fw-bold" style="border-radius:12px;padding:0.7rem;">
+        <i class="fas fa-trash-alt me-2"></i>Permanently delete my account
+      </button>
+    </form>
+
+    <div class="text-center mt-3">
+      <a href="{% url 'accounts:profile' %}" class="small text-decoration-none" style="color:#64748b;">
+        <i class="fas fa-arrow-left me-1"></i>Cancel, keep my account
+      </a>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

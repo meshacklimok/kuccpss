@@ -26,13 +26,31 @@ from .models import (
 )
 
 
+def _incr_counter(key: str, window: int) -> int:
+    """Atomically increment a cache counter that expires `window`s after first hit."""
+    cache.add(key, 0, window)
+    try:
+        return cache.incr(key)
+    except ValueError:  # expired between add() and incr()
+        cache.set(key, 1, window)
+        return 1
+
+
 def _is_rate_limited(key: str, limit: int, window: int) -> bool:
     """Increment hit counter; return True if over the limit."""
-    count = cache.get(key, 0)
-    if count >= limit:
-        return True
-    cache.set(key, count + 1, window)
-    return False
+    return _incr_counter(key, window) > limit
+
+
+# Failed-login throttles. Per-IP stops one machine guessing many accounts;
+# per-account stops a botnet spreading guesses for one account across IPs.
+LOGIN_FAIL_WINDOW = 900          # 15 minutes
+LOGIN_FAIL_LIMIT_IP = 10
+LOGIN_FAIL_LIMIT_ACCOUNT = 8
+
+
+def _login_fail_keys(request: HttpRequest) -> tuple[str, str]:
+    email = (request.POST.get("email") or request.POST.get("username") or "").strip().lower()
+    return f"login_fail:{get_client_ip(request)}", f"login_fail_acct:{email}"
 
 
 # =====================================================
@@ -148,11 +166,12 @@ class LoginView(View):
         return render(request, self.template_name, {"form": form})
 
     def post(self, request: HttpRequest) -> HttpResponse:
-        ip = get_client_ip(request)
-        rl_key = f"login_fail:{ip}"
+        ip_key, acct_key = _login_fail_keys(request)
 
-        # Block IP after 10 failed credential attempts within 15 minutes
-        if cache.get(rl_key, 0) >= 10:
+        # Checked before the password is even tried, so a locked account
+        # gives no signal about whether a guess was right.
+        if (cache.get(ip_key, 0) >= LOGIN_FAIL_LIMIT_IP
+                or cache.get(acct_key, 0) >= LOGIN_FAIL_LIMIT_ACCOUNT):
             messages.error(request, "Too many failed login attempts. Please wait 15 minutes and try again.")
             return render(request, self.template_name, {"form": UserLoginForm()})
 
@@ -168,13 +187,14 @@ class LoginView(View):
                 messages.error(request, "Your account is suspended.")
                 return redirect("accounts:login")
 
-            cache.delete(rl_key)  # Clear fail counter on successful login
+            cache.delete_many([ip_key, acct_key])  # Clear fail counters on successful login
             login(request, user)
 
             # Mark as recently verified (re-auth window starts from login)
             request.session['_auth_verified_at'] = time.time()
 
-            # Keep all users logged in for 90 days
+            # Students stay logged in for 90 days; staff sessions are capped
+            # by StaffSecurityMiddleware (STAFF_SESSION_MAX_AGE).
             request.session.set_expiry(90 * 24 * 3600)
 
             messages.success(
@@ -182,9 +202,9 @@ class LoginView(View):
             )
             return redirect("accounts:dashboard")
 
-        # Bad credentials — count this failure toward the rate limit
-        fails = cache.get(rl_key, 0) + 1
-        cache.set(rl_key, fails, 900)  # 15-minute window
+        # Bad credentials — count this failure toward both limits
+        _incr_counter(ip_key, LOGIN_FAIL_WINDOW)
+        _incr_counter(acct_key, LOGIN_FAIL_WINDOW)
         return render(request, self.template_name, {"form": form})
 
 
@@ -838,8 +858,8 @@ def change_password_view(request: HttpRequest) -> HttpResponse:
         password2 = request.POST.get("password2", "")
         if not password1:
             error = "Please enter a new password."
-        elif len(password1) < 4:
-            error = "Password must be at least 4 characters."
+        elif len(password1) < 8:  # same rule as forms.validate_password_strength
+            error = "Password must be at least 8 characters."
         elif password1 != password2:
             error = "Passwords do not match."
         else:
@@ -1564,6 +1584,7 @@ def shortlist_set_rank(request: HttpRequest, course_id: int) -> HttpResponse:
 def export_shortlist_pdf(request: HttpRequest) -> HttpResponse:
     from .models import CourseShortlist
     from reportlab.pdfgen import canvas
+    from kuccpss.pdf_utils import enable_site_links
     from reportlab.lib.pagesizes import A4
     from reportlab.lib.units import cm
     from reportlab.lib import colors
@@ -1580,7 +1601,7 @@ def export_shortlist_pdf(request: HttpRequest) -> HttpResponse:
     response = HttpResponse(content_type='application/pdf')
     response['Content-Disposition'] = 'attachment; filename="my_shortlist.pdf"'
 
-    p = canvas.Canvas(response, pagesize=A4)
+    p = enable_site_links(canvas.Canvas(response, pagesize=A4))
     w, h = A4
 
     NAVY    = colors.HexColor('#1e3a8a')

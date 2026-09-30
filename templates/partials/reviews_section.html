@@ -13,7 +13,7 @@
         <span class="text-muted fw-normal ms-1" style="font-size:0.82rem;">({{ review_count }} review{{ review_count|pluralize }})</span>
       {% else %}
         Reviews
-        <span class="text-muted fw-normal ms-1" style="font-size:0.82rem;">No reviews yet — be first!</span>
+        <span class="text-muted fw-normal ms-1" style="font-size:0.82rem;">No reviews yet, be first!</span>
       {% endif %}
     </span>
     <i class="fas fa-chevron-down" id="reviewsChevron" style="color:#94a3b8;transition:transform 0.2s;"></i>
@@ -58,7 +58,7 @@
             {% endfor %}
           </div>
           <input type="hidden" name="rating" id="ratingInput" value="{{ user_review.rating|default:'' }}">
-          <textarea name="body" id="reviewBody" maxlength="280" rows="2" placeholder="Optional — share what you know about this {{ target_type }} (max 280 chars)"
+          <textarea name="body" id="reviewBody" maxlength="280" rows="2" placeholder="Optional, share what you know about this {{ target_type }} (max 280 chars)"
                     class="form-control form-control-sm mb-2"
                     style="font-size:0.84rem;resize:none;border-radius:8px;">{{ user_review.body|default:'' }}</textarea>
           <div class="d-flex align-items-center justify-content-between">

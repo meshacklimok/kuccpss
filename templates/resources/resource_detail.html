@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}{{ resource.title }} — CareerNext{% endblock %}
+{% block title %}{{ resource.title }} | CareerNext{% endblock %}
 
 {% block content %}
 <div class="page-hero">
@@ -53,11 +53,11 @@
 
       <!-- Download / View CTA -->
       <div class="card p-4 text-center"
-           style="background:linear-gradient(135deg,#1e3a8a,#2563eb);">
+           style="background:#1e3a8a;">
         {% if resource.resource_type == 'pdf' and resource.pdf_file %}
         <i class="fas fa-file-pdf fa-3x text-white mb-3 opacity-75"></i>
         <h5 class="text-white mb-2">Download PDF</h5>
-        <p class="text-white-50 small mb-3">Free download — {{ resource.download_count }} downloads so far</p>
+        <p class="text-white-50 small mb-3">Free download, {{ resource.download_count }} downloads so far</p>
         <a href="{{ resource.pdf_file.url }}" class="btn btn-light fw-bold px-5" download>
           <i class="fas fa-download me-2"></i>Download Now
         </a>

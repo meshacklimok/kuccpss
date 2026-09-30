@@ -5,6 +5,15 @@ pip install -r requirements.txt
 python manage.py collectstatic --no-input
 python manage.py migrate
 
+# Purge old analytics logs. Also scheduled weekly via django-q, but no qcluster
+# worker runs on Render, so do it on each deploy too.
+python manage.py shell -c "from analytics.tasks import purge_old_logs; purge_old_logs()" \
+  || echo "Analytics log purge skipped"
+
+# Django never deletes expired sessions on its own — django_session grows forever
+python manage.py clearsessions || echo "Session cleanup skipped"
+python manage.py purge_notifications || echo "Notification purge skipped"
+
 # Seed payment feature prices (idempotent — skips existing rows)
 python manage.py seed_payment_features
 

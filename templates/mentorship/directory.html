@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Mentorship — Talk to a Real Student | CareerNext{% endblock %}
+{% block title %}Mentorship: Talk to a Real Student | CareerNext{% endblock %}
 
 {% block meta %}<meta name="description" content="Talk to real students and graduates already studying the course you want. Book affordable one-on-one mentorship sessions and get honest answers before you choose.">{% endblock %}
 
@@ -89,7 +89,7 @@
                   <i class="bi bi-search text-muted"></i>
                 </span>
                 <input
-                  type="text" name="q" value="{{ query }}"
+                  type="text" name="q" value="{{ query }}" data-suggest="mentors"
                   class="form-control border-start-0 rounded-end-pill pe-4"
                   style="box-shadow:none;"
                   placeholder="Search by course, university, or name…"
@@ -169,7 +169,7 @@
         <a href="{% url 'mentorship:directory' %}" class="btn btn-outline-primary rounded-pill px-4">Clear search</a>
       {% else %}
         <h5 class="fw-700 mb-2">No mentors with open slots right now</h5>
-        <p class="text-muted small mb-4">Check back soon{% if mentor_signup_enabled %} — or be the first mentor in your course!{% endif %}</p>
+        <p class="text-muted small mb-4">Check back soon{% if mentor_signup_enabled %}, or be the first mentor in your course!{% endif %}</p>
         {% if mentor_signup_enabled %}
         <a href="{% url 'mentorship:become_mentor' %}" class="btn btn-primary rounded-pill px-4 fw-semibold">Become a Mentor</a>
         {% endif %}
@@ -182,7 +182,7 @@
 <style>
 /* ── Hero ── */
 .mentor-hero {
-  background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 60%, #06b6d4 100%);
+  background: #1e3a8a;
   position: relative;
   overflow: hidden;
 }
@@ -264,7 +264,7 @@
 
 /* Header */
 .mc-header {
-  background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 55%, #0891b2 100%);
+  background: #1e3a8a;
   padding: 1.1rem 1.25rem .9rem;
   display: flex;
   align-items: flex-start;

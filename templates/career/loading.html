@@ -20,7 +20,7 @@ body {
 }
 .l-bg {
     position: fixed; inset: 0; z-index: 0;
-    background: linear-gradient(-45deg, #06091a, #0d1630, #10063a, #060d1a);
+    background: #06091a;
     background-size: 400% 400%;
     animation: bgShift 20s ease infinite;
 }
@@ -37,17 +37,17 @@ body {
 }
 .l-orb-1 {
     width: 600px; height: 600px; top: -200px; left: -150px;
-    background: radial-gradient(circle, rgba(79,70,229,0.14), transparent 70%);
+    background: rgba(79,70,229,0.14);
     animation: orbA 25s ease-in-out infinite;
 }
 .l-orb-2 {
     width: 500px; height: 500px; bottom: -200px; right: -100px;
-    background: radial-gradient(circle, rgba(6,182,212,0.12), transparent 70%);
+    background: rgba(6,182,212,0.12);
     animation: orbB 20s ease-in-out infinite;
 }
 .l-orb-3 {
     width: 350px; height: 350px; top: 40%; right: 20%;
-    background: radial-gradient(circle, rgba(139,92,246,0.09), transparent 70%);
+    background: rgba(139,92,246,0.09);
     animation: orbC 30s ease-in-out infinite;
 }
 @keyframes orbA { 0%,100%{transform:translate(0,0) scale(1)} 33%{transform:translate(60px,40px) scale(1.05)} 66%{transform:translate(-30px,60px) scale(0.95)} }
@@ -91,7 +91,7 @@ body {
     margin: 0 0 0.35rem; letter-spacing: -0.02em; line-height: 1.2;
 }
 .l-main-title .hl {
-    background: linear-gradient(90deg, #818cf8, #22d3ee);
+    background: #818cf8;
     -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
 }
 .l-subtitle { font-size: 0.85rem; color: rgba(255,255,255,0.45); margin: 0; }
@@ -114,7 +114,7 @@ body {
 /* ── Tier 1: Ring panel ── */
 .l-tier1 {
     padding: 2.5rem 1.75rem 2rem;
-    background: linear-gradient(160deg, rgba(30,42,120,0.5) 0%, transparent 100%);
+    background: rgba(30,42,120,0.5);
     display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1rem;
     border-bottom: 1px solid rgba(255,255,255,0.05);
 }
@@ -181,7 +181,7 @@ body {
 .ring-pct {
     font-size: 2.5rem; font-weight: 900; color: #fff; line-height: 1;
     letter-spacing: -0.03em;
-    background: linear-gradient(135deg, #fff 60%, rgba(255,255,255,0.7));
+    background: #fff;
     -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
 }
 @media (max-width: 699px) { .ring-pct { font-size: 2rem; } }
@@ -295,8 +295,8 @@ body {
     position: absolute; inset: 0;
     border-radius: 12px;
     padding: 1px;
-    background: linear-gradient(135deg, rgba(99,102,241,0.5), rgba(6,182,212,0.3), rgba(139,92,246,0.4));
-    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    background: rgba(99,102,241,0.5);
+    -webkit-mask: #fff content-box, #fff;
     -webkit-mask-composite: xor;
     mask-composite: exclude;
     pointer-events: none;
@@ -389,7 +389,7 @@ body {
             {% elif pathway == 'ttc' %}Finding Your <span>TTC Programmes</span>
             {% else %}Finding Your <span>Course Matches</span>{% endif %}
         </h2>
-        <p class="l-subtitle">Stay on this page — your personalised results are being prepared</p>
+        <p class="l-subtitle">Stay on this page; your personalised results are being prepared</p>
     </div>
 
     <!-- Main card -->
@@ -549,20 +549,20 @@ const STATUS_MSGS = [
     "Cross-referencing course database...",
     "Checking entry requirements...",
     "Ranking your best matches...",
-    "Almost done — building your list!",
+    "Almost done, building your list!",
 ];
 
 const FACTS = [
     "KUCCPS places students in universities, KMTCs, TVETs and TTCs through a centralised portal.",
     "Kenya has over 60 public and private universities offering KUCCPS-linked degree programmes.",
-    "Your cluster points are computed from 4 subjects — the best-weighted combination per cluster.",
+    "Your cluster points are computed from 4 subjects: the best-weighted combination per cluster.",
     "KMTC offers over 60 medical and paramedical programmes across 50+ campuses countrywide.",
-    "The maximum cluster points score is 48 — achieved with four A grades in the right subjects.",
+    "The maximum cluster points score is 48, achieved with four A grades in the right subjects.",
     "Over 400,000 KCSE candidates apply for placement through KUCCPS each year.",
     "Technical universities require Physics and Maths for most engineering programmes.",
     "Agriculture courses often require Biology and Chemistry as mandatory subjects.",
     "Diploma programmes typically require a minimum mean grade of C– (minus).",
-    "KUCCPS uses previous-year cut-off points as a guide — not a guarantee of placement.",
+    "KUCCPS uses previous-year cut-off points as a guide, not a guarantee of placement.",
 ];
 
 /* ── Ring setup ── */
@@ -682,10 +682,10 @@ function runStep(i) {
                 setPct(100);
                 ringEl.classList.add('complete');
                 iconEl.classList.add('visible');
-                pctEl.style.cssText = 'background:linear-gradient(135deg,#4ade80,#22c55e);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;';
+                pctEl.style.cssText = 'background:#4ade80;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;';
                 document.getElementById('mainCard').classList.add('complete');
                 setStatus("Done! Loading your results...");
-                labelEl.textContent = "Analysis complete — redirecting now";
+                labelEl.textContent = "Analysis complete, redirecting now";
                 setTimeout(() => { window.location.href = REDIRECT; }, 800);
             }
         }

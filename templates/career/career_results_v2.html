@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block title %}{{ pathway }} Course Matches — KUCCPS Eligible Courses Kenya | CareerNext{% endblock %}
+{% block title %}{{ pathway }} Course Matches | KUCCPS Eligible Courses Kenya | CareerNext{% endblock %}
 
 {% block content %}
 {% if guest_locked %}{% include "payments/signup_gate_overlay.html" %}
@@ -9,8 +9,17 @@
 
 
 <style>
+/* Institution / course pickers (sort by institution / course name) */
+.pick-row { padding-top:.5rem; border-top:1px dashed #e2e8f0; }
+.pick-label { font-size:.78rem; font-weight:700; color:#475569; white-space:nowrap; margin:0; }
+.pick-control { width:auto; min-width:220px; max-width:420px; flex:1; border-radius:8px; font-size:.8rem; }
+.pick-summary { font-size:.78rem; color:#475569; }
+.pick-group-head { font-weight:700; font-size:.92rem; color:#1e293b; margin-top:.5rem; display:flex; align-items:center; gap:.5rem; }
+.pick-exact-badge, .pick-related-badge { font-size:.68rem; font-weight:700; padding:2px 8px; border-radius:50px; text-transform:uppercase; letter-spacing:.03em; }
+.pick-exact-badge { background:#dcfce7; color:#166534; }
+.pick-related-badge { background:#e0e7ff; color:#3730a3; }
 .results-hero {
-    background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%);
+    background: #1e3a8a;
     color: #fff;
     padding: 2rem 0 1.5rem;
     margin-bottom: 0;
@@ -271,13 +280,13 @@
 
 /* ── Backup Plan ── */
 .bp-header { display:flex; align-items:flex-start; gap:1rem; margin-bottom:1.5rem; padding-top:.25rem; }
-.bp-icon { width:44px; height:44px; background:linear-gradient(135deg,#7c3aed,#4f46e5); border-radius:12px; display:flex; align-items:center; justify-content:center; color:#fff; font-size:1.1rem; flex-shrink:0; }
+.bp-icon { width:44px; height:44px; background:#7c3aed; border-radius:12px; display:flex; align-items:center; justify-content:center; color:#fff; font-size:1.1rem; flex-shrink:0; }
 .bp-title { font-size:1.25rem; font-weight:800; color:#1e293b; margin:0 0 .2rem; }
 .bp-sub { font-size:.875rem; color:#64748b; margin:0; }
 .bp-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:1.1rem; margin-bottom:1rem; }
 .bp-card { background:#fff; border:1.5px solid #e2e8f0; border-radius:14px; overflow:hidden; box-shadow:0 2px 12px rgba(30,58,138,0.06); transition:border-color .18s,box-shadow .18s; }
 .bp-card:hover { border-color:#c4b5fd; box-shadow:0 4px 20px rgba(124,58,237,0.12); }
-.bp-cluster-head { background:linear-gradient(135deg,#7c3aed,#4f46e5); padding:.75rem 1.1rem; display:flex; align-items:center; gap:.6rem; }
+.bp-cluster-head { background:#7c3aed; padding:.75rem 1.1rem; display:flex; align-items:center; gap:.6rem; }
 .bp-cluster-pill { background:rgba(255,255,255,0.2); color:#fff; font-size:.72rem; font-weight:700; padding:.25rem .65rem; border-radius:20px; letter-spacing:.04em; white-space:nowrap; }
 .bp-cluster-name { color:#fff; font-size:.82rem; font-weight:600; opacity:.92; }
 .bp-aspiration { padding:.85rem 1.1rem .65rem; border-bottom:1px dashed #e2e8f0; }
@@ -472,10 +481,12 @@
             <form method="get" class="d-flex" style="flex:1;min-width:180px;max-width:300px;">
                 {% if filter_chance %}<input type="hidden" name="chance" value="{{ filter_chance }}">{% endif %}
                 {% if sort_by %}<input type="hidden" name="sort" value="{{ sort_by }}">{% endif %}
+                {% if filter_inst %}<input type="hidden" name="inst" value="{{ filter_inst }}">{% endif %}
+                {% if filter_course %}<input type="hidden" name="course" value="{{ filter_course }}">{% endif %}
                 <div class="input-group input-group-sm">
                     <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-muted"></i></span>
                     <input type="text" name="q" class="form-control border-start-0"
-                           placeholder="Search courses..." value="{{ search_q }}"
+                           placeholder="Search courses..." value="{{ search_q }}" data-suggest="career"
                            style="border-radius:0 8px 8px 0;">
                 </div>
             </form>
@@ -484,48 +495,48 @@
             <div class="d-flex gap-1 flex-wrap">
                 {% if pathway == 'Degree' %}
                 {# ── Degree: five academic-fit tiers ── #}
-                <a href="?sort={{ sort_by }}{% if search_q %}&q={{ search_q }}{% endif %}"
+                <a href="?sort={{ sort_by }}{% if search_q %}&q={{ search_q }}{% endif %}{{ pick_qs }}"
                    class="filter-chip {% if not filter_tier and not filter_chance %}active{% endif %}">All</a>
-                <a href="?tier=Best+Match&sort={{ sort_by }}{% if search_q %}&q={{ search_q }}{% endif %}"
+                <a href="?tier=Best+Match&sort={{ sort_by }}{% if search_q %}&q={{ search_q }}{% endif %}{{ pick_qs }}"
                    class="filter-chip {% if filter_tier == 'Best Match' %}tier-active-best{% endif %}">
                     <span style="width:8px;height:8px;border-radius:50%;background:#059669;display:inline-block;"></span>
                     Best Match{% if tier_counts.BestMatch %} ({{ tier_counts.BestMatch }}){% endif %}
                 </a>
-                <a href="?tier=Stretch&sort={{ sort_by }}{% if search_q %}&q={{ search_q }}{% endif %}"
+                <a href="?tier=Stretch&sort={{ sort_by }}{% if search_q %}&q={{ search_q }}{% endif %}{{ pick_qs }}"
                    class="filter-chip {% if filter_tier == 'Stretch' %}tier-active-stretch{% endif %}">
                     <span style="width:8px;height:8px;border-radius:50%;background:#d97706;display:inline-block;"></span>
                     Stretch{% if tier_counts.Stretch %} ({{ tier_counts.Stretch }}){% endif %}
                 </a>
-                <a href="?tier=Safe+Option&sort={{ sort_by }}{% if search_q %}&q={{ search_q }}{% endif %}"
+                <a href="?tier=Safe+Option&sort={{ sort_by }}{% if search_q %}&q={{ search_q }}{% endif %}{{ pick_qs }}"
                    class="filter-chip {% if filter_tier == 'Safe Option' %}tier-active-safe{% endif %}">
                     <span style="width:8px;height:8px;border-radius:50%;background:#2563eb;display:inline-block;"></span>
                     Safe Option{% if tier_counts.SafeOption %} ({{ tier_counts.SafeOption }}){% endif %}
                 </a>
-                <a href="?tier=Easy+Admission&sort={{ sort_by }}{% if search_q %}&q={{ search_q }}{% endif %}"
+                <a href="?tier=Easy+Admission&sort={{ sort_by }}{% if search_q %}&q={{ search_q }}{% endif %}{{ pick_qs }}"
                    class="filter-chip {% if filter_tier == 'Easy Admission' %}tier-active-easy{% endif %}">
                     <span style="width:8px;height:8px;border-radius:50%;background:#64748b;display:inline-block;"></span>
                     Easy Admission{% if tier_counts.EasyAdmission %} ({{ tier_counts.EasyAdmission }}){% endif %}
                 </a>
-                <a href="?tier=Long+Shot&sort={{ sort_by }}{% if search_q %}&q={{ search_q }}{% endif %}"
+                <a href="?tier=Long+Shot&sort={{ sort_by }}{% if search_q %}&q={{ search_q }}{% endif %}{{ pick_qs }}"
                    class="filter-chip {% if filter_tier == 'Long Shot' %}tier-active-longshot{% endif %}">
                     <span style="width:8px;height:8px;border-radius:50%;background:#dc2626;display:inline-block;"></span>
                     Long Shot{% if tier_counts.LongShot %} ({{ tier_counts.LongShot }}){% endif %}
                 </a>
-                <a href="?tier=Does+Not+Qualify&sort={{ sort_by }}{% if search_q %}&q={{ search_q }}{% endif %}"
+                <a href="?tier=Does+Not+Qualify&sort={{ sort_by }}{% if search_q %}&q={{ search_q }}{% endif %}{{ pick_qs }}"
                    class="filter-chip {% if filter_tier == 'Does Not Qualify' %}tier-active-disqualified{% endif %}">
                     <span style="width:8px;height:8px;border-radius:50%;background:#991b1b;display:inline-block;"></span>
                     Does Not Qualify{% if tier_counts.DoesNotQualify %} ({{ tier_counts.DoesNotQualify }}){% endif %}
                 </a>
                 {% else %}
                 {# ── Non-degree: binary Qualifies / Does Not Qualify ── #}
-                <a href="?sort={{ sort_by }}{% if search_q %}&q={{ search_q }}{% endif %}"
+                <a href="?sort={{ sort_by }}{% if search_q %}&q={{ search_q }}{% endif %}{{ pick_qs }}"
                    class="filter-chip {% if not filter_qual %}active{% endif %}">All</a>
-                <a href="?qual=qualifies&sort={{ sort_by }}{% if search_q %}&q={{ search_q }}{% endif %}"
+                <a href="?qual=qualifies&sort={{ sort_by }}{% if search_q %}&q={{ search_q }}{% endif %}{{ pick_qs }}"
                    class="filter-chip {% if filter_qual == 'qualifies' %}qual-active-qualifies{% endif %}">
                     <span style="width:8px;height:8px;border-radius:50%;background:#16a34a;display:inline-block;"></span>
                     Qualifies{% if tier_counts.Qualifies %} ({{ tier_counts.Qualifies }}){% endif %}
                 </a>
-                <a href="?qual=does_not_qualify&sort={{ sort_by }}{% if search_q %}&q={{ search_q }}{% endif %}"
+                <a href="?qual=does_not_qualify&sort={{ sort_by }}{% if search_q %}&q={{ search_q }}{% endif %}{{ pick_qs }}"
                    class="filter-chip {% if filter_qual == 'does_not_qualify' %}qual-active-does_not_qualify{% endif %}">
                     <span style="width:8px;height:8px;border-radius:50%;background:#dc2626;display:inline-block;"></span>
                     Does Not Qualify{% if tier_counts.DoesNotQualify %} ({{ tier_counts.DoesNotQualify }}){% endif %}
@@ -565,6 +576,45 @@
                 </button>
             </div>
         </div>
+
+        {% if sort_by == 'institution' and inst_options %}
+        <!-- Institution picker: all courses at one institution, qualifying first -->
+        <div class="pick-row d-flex align-items-center gap-2 flex-wrap mt-2">
+            <label for="instPicker" class="pick-label"><i class="bi bi-building me-1"></i>Institution</label>
+            <select id="instPicker" class="form-select form-select-sm pick-control"
+                    onchange="location.href='?sort=institution'+(this.value?'&inst='+this.value:'')+'{% if pathway == 'Degree' %}{% if filter_tier %}&tier={{ filter_tier|urlencode }}{% endif %}{% else %}{% if filter_qual %}&qual={{ filter_qual }}{% endif %}{% endif %}{% if search_q %}&q={{ search_q|urlencode }}{% endif %}'">
+                <option value="">All institutions ({{ inst_options|length }})</option>
+                {% for opt in inst_options %}
+                <option value="{{ opt.id }}" {% if filter_inst == opt.id|stringformat:"s" %}selected{% endif %}>{{ opt.name }}: {{ opt.qualifies }}/{{ opt.total }} qualify</option>
+                {% endfor %}
+            </select>
+            {% if filter_inst %}
+            <span class="pick-summary">
+                Showing every {{ pathway }} course at <strong>{{ filter_inst_name }}</strong>:
+                <span class="text-success fw-semibold">{{ pick_qual_count }} you qualify for</span>
+                · <span class="text-danger fw-semibold">{{ pick_disq_count }} you don't</span>
+            </span>
+            {% endif %}
+        </div>
+        {% elif sort_by == 'course' %}
+        <!-- Course picker: one course + related names across institutions -->
+        <form method="get" class="pick-row d-flex align-items-center gap-2 flex-wrap mt-2">
+            <input type="hidden" name="sort" value="course">
+            {% if pathway == 'Degree' %}{% if filter_tier %}<input type="hidden" name="tier" value="{{ filter_tier }}">{% endif %}{% else %}{% if filter_qual %}<input type="hidden" name="qual" value="{{ filter_qual }}">{% endif %}{% endif %}
+            {% if search_q %}<input type="hidden" name="q" value="{{ search_q }}">{% endif %}
+            <label for="coursePicker" class="pick-label"><i class="bi bi-mortarboard me-1"></i>Course</label>
+            <input type="text" id="coursePicker" name="course" value="{{ filter_course }}"
+                   class="form-control form-control-sm pick-control" autocomplete="off"
+                   placeholder="Choose or type a course, e.g. Data Science"
+                   data-suggest-local="courseOptionsData" data-suggest-submit="1">
+            <button type="submit" class="btn btn-sm btn-primary" style="border-radius:8px;">Show</button>
+            {% if filter_course %}
+            <a href="?sort=course{% if search_q %}&q={{ search_q|urlencode }}{% endif %}" class="btn btn-sm btn-outline-secondary" style="border-radius:8px;">Clear</a>
+            <span class="pick-summary">{{ total_count }} offering{{ total_count|pluralize }} of <strong>{{ filter_course }}</strong> and related courses</span>
+            {% endif %}
+        </form>
+        {{ course_options|json_script:"courseOptionsData" }}
+        {% endif %}
     </div>
 </div>
 </div>
@@ -606,7 +656,7 @@
 
         <!-- Generate button (shown before link is created) -->
         <div id="generateSection">
-          <p class="text-muted small mb-3">Create a shareable snapshot of your results — anyone with the link can view your top matches without logging in.</p>
+          <p class="text-muted small mb-3">Create a shareable snapshot of your results, anyone with the link can view your top matches without logging in.</p>
           {% if user.is_authenticated %}
           <button onclick="generateShareLink()" id="generateBtn"
                   class="btn btn-primary w-100 fw-bold mb-2">
@@ -627,8 +677,8 @@
 📊 My Mean Grade: {{ mean_grade }}{% endif %}
 ✅ {{ total_count }} courses matched (University, KMTC, TVET & TTC)
 
-You should check yours too — it's 100% free and instant!
-👉 careernext.co.ke — Kenya's #1 KCSE career guide{% endfilter %}"
+You should check yours too, it's 100% free and instant!
+👉 careernext.co.ke, Kenya's #1 KCSE career guide{% endfilter %}"
                target="_blank" rel="noopener"
                class="btn btn-sm fw-bold" style="background:#25d366;color:white;">
               <i class="bi bi-whatsapp me-1"></i>WhatsApp
@@ -655,7 +705,7 @@ You should check yours too — it's 100% free and instant!
   <div class="row g-2 mb-2">
     {% for sp in sponsored_listings %}
     <div class="col-12">
-      <div class="result-card" style="border:1.5px solid #fbbf24;background:linear-gradient(135deg,#fffbeb 0%,#fff 100%);">
+      <div class="result-card" style="border:1.5px solid #fbbf24;background:#fffbeb;">
         <div class="chance-stripe" style="background:#f59e0b;"></div>
         <div class="ps-2 d-flex align-items-start justify-content-between gap-2 flex-wrap">
           <div style="min-width:0;flex:1;">
@@ -700,6 +750,12 @@ You should check yours too — it's 100% free and instant!
     {% if page_obj %}
         <div class="row g-3">
             {% for match in page_obj %}
+            {% if filter_course %}{% ifchanged match.course.name %}
+            <div class="col-12 pick-group-head">
+                {% if match.is_related %}<span class="pick-related-badge">Related</span>{% else %}<span class="pick-exact-badge">Your pick</span>{% endif %}
+                {{ match.course.name }}
+            </div>
+            {% endifchanged %}{% endif %}
             <div class="col-12">
                 <div class="result-card {% if not match.qualifies %}nd-disqualified-card{% endif %}"
                      style="cursor:pointer;"
@@ -741,7 +797,7 @@ You should check yours too — it's 100% free and instant!
                                 {% if match.is_competitive %}
                                 <span class="tier-badge tier-competitive"
                                       data-bs-toggle="tooltip" data-bs-placement="top"
-                                      title="High-demand course — cutoff is near the top of the scale">
+                                      title="High-demand course: cutoff is near the top of the scale">
                                     Competitive
                                 </span>
                                 {% endif %}
@@ -789,13 +845,13 @@ You should check yours too — it's 100% free and instant!
                                   title="{{ match.chance_desc }}">{{ match.chance }}</span>
                             {% if match.cutoff %}
                             <span class="meta-chip">
-                                <i class="bi bi-bullseye me-1"></i>Cutoff: <strong>{{ match.cutoff }}</strong>
+                                <i class="bi bi-bullseye me-1"></i>Cutoff{% if match.cutoff_year and match.cutoff_year != LATEST_CUTOFF_YEAR %} ({{ match.cutoff_year }}){% endif %}: <strong>{{ match.cutoff }}</strong>
                             </span>
                             {% endif %}
                             {% if match.pred %}
                             <span class="pred-chip {{ match.pred.trend }}"
                                   data-bs-toggle="tooltip" data-bs-placement="top"
-                                  title="2026 predicted cutoff (estimate based on 2021–2024 data). {{ match.pred.trend_tip }}">
+                                  title="2026 predicted cutoff (estimate based on 2021–2025 data). {{ match.pred.trend_tip }}">
                                 <i class="fas {{ match.pred.trend_icon }}"></i>
                                 2026 est: <strong>{{ match.pred.predicted }}</strong>
                             </span>
@@ -836,7 +892,7 @@ You should check yours too — it's 100% free and instant!
                         <div class="meta-row">
                             {% if match.cutoff %}
                             <span class="meta-chip">
-                                <i class="bi bi-bullseye me-1"></i>Cutoff: <strong>{{ match.cutoff }}</strong>
+                                <i class="bi bi-bullseye me-1"></i>Cutoff{% if match.cutoff_year and match.cutoff_year != LATEST_CUTOFF_YEAR %} ({{ match.cutoff_year }}){% endif %}: <strong>{{ match.cutoff }}</strong>
                             </span>
                             {% endif %}
                             {% if match.cluster %}
@@ -890,7 +946,7 @@ You should check yours too — it's 100% free and instant!
                             {% for req in match.course.subject_requirements %}
                             <span class="meta-chip subj-req"
                                   data-bs-toggle="tooltip" data-bs-placement="top"
-                                  title="Required subject(s): {{ req.subjects_str }} — minimum {{ req.min_grade }}">
+                                  title="Required subject(s): {{ req.subjects_str }}, minimum {{ req.min_grade }}">
                                 <i class="bi bi-journal-check me-1"></i>{{ req.subjects_str }}: <strong>{{ req.min_grade }}</strong>
                             </span>
                             {% endfor %}
@@ -949,7 +1005,7 @@ You should check yours too — it's 100% free and instant!
             <ul class="pagination justify-content-center">
                 {% if page_obj.has_previous %}
                 <li class="page-item">
-                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if pathway == 'Degree' %}{% if filter_tier %}&tier={{ filter_tier|urlencode }}{% endif %}{% if filter_chance %}&chance={{ filter_chance }}{% endif %}{% else %}{% if filter_qual %}&qual={{ filter_qual }}{% endif %}{% endif %}{% if search_q %}&q={{ search_q }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if pathway == 'Degree' %}{% if filter_tier %}&tier={{ filter_tier|urlencode }}{% endif %}{% if filter_chance %}&chance={{ filter_chance }}{% endif %}{% else %}{% if filter_qual %}&qual={{ filter_qual }}{% endif %}{% endif %}{% if search_q %}&q={{ search_q }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}{{ pick_qs }}">
                         <i class="bi bi-chevron-left"></i>
                     </a>
                 </li>
@@ -959,13 +1015,13 @@ You should check yours too — it's 100% free and instant!
                     <li class="page-item active"><span class="page-link">{{ num }}</span></li>
                     {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
                     <li class="page-item">
-                        <a class="page-link" href="?page={{ num }}{% if pathway == 'Degree' %}{% if filter_tier %}&tier={{ filter_tier|urlencode }}{% endif %}{% if filter_chance %}&chance={{ filter_chance }}{% endif %}{% else %}{% if filter_qual %}&qual={{ filter_qual }}{% endif %}{% endif %}{% if search_q %}&q={{ search_q }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}">{{ num }}</a>
+                        <a class="page-link" href="?page={{ num }}{% if pathway == 'Degree' %}{% if filter_tier %}&tier={{ filter_tier|urlencode }}{% endif %}{% if filter_chance %}&chance={{ filter_chance }}{% endif %}{% else %}{% if filter_qual %}&qual={{ filter_qual }}{% endif %}{% endif %}{% if search_q %}&q={{ search_q }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}{{ pick_qs }}">{{ num }}</a>
                     </li>
                     {% endif %}
                 {% endfor %}
                 {% if page_obj.has_next %}
                 <li class="page-item">
-                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if pathway == 'Degree' %}{% if filter_tier %}&tier={{ filter_tier|urlencode }}{% endif %}{% if filter_chance %}&chance={{ filter_chance }}{% endif %}{% else %}{% if filter_qual %}&qual={{ filter_qual }}{% endif %}{% endif %}{% if search_q %}&q={{ search_q }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if pathway == 'Degree' %}{% if filter_tier %}&tier={{ filter_tier|urlencode }}{% endif %}{% if filter_chance %}&chance={{ filter_chance }}{% endif %}{% else %}{% if filter_qual %}&qual={{ filter_qual }}{% endif %}{% endif %}{% if search_q %}&q={{ search_q }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}{{ pick_qs }}">
                         <i class="bi bi-chevron-right"></i>
                     </a>
                 </li>
@@ -986,12 +1042,12 @@ You should check yours too — it's 100% free and instant!
 <!-- ── Classmate Invite CTA ─────────────────────────────────────────────── -->
 {% if page_obj and not page_obj.has_next %}
 <div class="container pb-2">
-  <div style="background:linear-gradient(135deg,#eff6ff 0%,#f0fdf4 100%);border:1.5px solid #bfdbfe;border-radius:18px;padding:1.75rem;margin-bottom:1.5rem;">
+  <div style="background:#eff6ff;border:1.5px solid #bfdbfe;border-radius:18px;padding:1.75rem;margin-bottom:1.5rem;">
     <div class="row align-items-center g-3">
       <div class="col-md-7">
         <div style="font-size:1.6rem;margin-bottom:0.3rem;">👥</div>
         <h5 class="fw-bold mb-1">Know someone else sitting KCSE this year?</h5>
-        <p class="text-muted small mb-0">Share CareerNext with your classmates — instant, and shows every university and TVET course they qualify for. Most students don't know about it.</p>
+        <p class="text-muted small mb-0">Share CareerNext with your classmates: instant, and shows every university and TVET course they qualify for. Most students don't know about it.</p>
       </div>
       <div class="col-md-5">
         <div class="d-flex gap-2 flex-wrap justify-content-md-end">
@@ -1003,7 +1059,7 @@ You should check yours too — it's 100% free and instant!
 ✅ {{ total_count }} matches across University, KMTC, TVET & TTC
 
 You should check what YOU qualify for too! 👇
-careernext.co.ke — Kenya's #1 KCSE career guidance platform (100% free!){% endfilter %}"
+careernext.co.ke, Kenya's #1 KCSE career guidance platform (100% free!){% endfilter %}"
              target="_blank" rel="noopener"
              class="btn fw-bold" style="background:#25d366;color:white;border-radius:10px;">
              <i class="bi bi-whatsapp me-1"></i>WhatsApp Classmates
@@ -1026,7 +1082,7 @@ careernext.co.ke — Kenya's #1 KCSE career guidance platform (100% free!){% end
     <div class="bp-icon"><i class="fas fa-route"></i></div>
     <div>
       <h2 class="bp-title">Your Backup Plan</h2>
-      <p class="bp-sub">You're below cutoff in {{ backup_plan|length }} cluster{{ backup_plan|length|pluralize }}. Here are courses in the same clusters where you <em>do</em> qualify — apply to these alongside your stretch goals.</p>
+      <p class="bp-sub">You're below cutoff in {{ backup_plan|length }} cluster{{ backup_plan|length|pluralize }}. Here are courses in the same clusters where you <em>do</em> qualify, apply to these alongside your stretch goals.</p>
     </div>
   </div>
 
@@ -1091,7 +1147,7 @@ careernext.co.ke — Kenya's #1 KCSE career guidance platform (100% free!){% end
 
   <p class="bp-footnote">
     <i class="fas fa-info-circle me-1"></i>
-    Backup courses are in the same KUCCPS cluster as your aspirations — your subject requirements still apply.
+    Backup courses are in the same KUCCPS cluster as your aspirations; your subject requirements still apply.
     <a href="{% url 'career:home' %}">Try a different pathway</a> if you want to explore more options.
   </p>
 </div>
@@ -1153,6 +1209,7 @@ document.addEventListener('click', function (e) {
 // ── CareerNext AI Career Assistant — Professional Widget ───────────────
 const AI_CHAT_URL    = '{% url "career:ajax_ai_chat" %}';
 const AI_INSIGHT_URL = '{% url "career:ajax_ai_insight" %}';
+const AI_FULL_CHAT_URL = '{% url "career:career_chat" %}';
 const CSRF           = (document.cookie.match(/(?:^|;\s*)csrftoken=([^;]+)/) || [])[1] || '{{ csrf_token }}';
 const TIER_COUNTS    = '{% for k,v in tier_counts.items %}{{ k }}:{{ v }} {% endfor %}'.trim();
 const TOTAL_MATCHES  = '{{ total_count }}';
@@ -1170,14 +1227,14 @@ document.body.insertAdjacentHTML('beforeend', `
 #aiFloatBtn {
   position:fixed; bottom:28px; right:28px; z-index:1055;
   width:60px; height:60px; border-radius:50%;
-  background:linear-gradient(135deg,#4338ca,#7c3aed);
+  background:#4338ca;
   color:#fff; border:none; font-size:1.4rem;
   box-shadow:0 8px 32px rgba(79,70,229,0.5);
   cursor:pointer; transition:all 0.25s;
   display:flex; align-items:center; justify-content:center;
 }
 #aiFloatBtn:hover { transform:translateY(-3px) scale(1.05); box-shadow:0 16px 40px rgba(79,70,229,0.6); }
-#aiFloatBtn.open  { background:linear-gradient(135deg,#1e293b,#374151); }
+#aiFloatBtn.open  { background:#1e293b; }
 #aiPulse {
   position:absolute; width:60px; height:60px; border-radius:50%;
   background:rgba(99,102,241,0.35); animation:pulse-ring 2s ease-out infinite;
@@ -1209,7 +1266,7 @@ document.body.insertAdjacentHTML('beforeend', `
 
 /* ── Header ── */
 .aip-header {
-  background:linear-gradient(135deg,#1e3a8a 0%,#3730a3 60%,#4f46e5 100%);
+  background:#1e3a8a;
   padding:14px 16px 12px; flex-shrink:0;
 }
 .aip-header-top { display:flex; align-items:center; gap:10px; margin-bottom:10px; }
@@ -1259,7 +1316,7 @@ document.body.insertAdjacentHTML('beforeend', `
 .aip-row.user { flex-direction:row-reverse; }
 .aip-msg-avatar {
   width:28px; height:28px; border-radius:50%; flex-shrink:0;
-  background:linear-gradient(135deg,#4338ca,#7c3aed);
+  background:#4338ca;
   display:flex; align-items:center; justify-content:center;
   font-size:0.7rem; color:#fff;
 }
@@ -1273,7 +1330,7 @@ document.body.insertAdjacentHTML('beforeend', `
   box-shadow:0 2px 8px rgba(0,0,0,0.05);
 }
 .aip-bubble.user {
-  background:linear-gradient(135deg,#4338ca,#7c3aed); color:#fff;
+  background:#4338ca; color:#fff;
   border-bottom-right-radius:4px;
 }
 .aip-time { font-size:0.62rem; color:#94a3b8; margin-top:3px; text-align:right; }
@@ -1323,7 +1380,7 @@ document.body.insertAdjacentHTML('beforeend', `
 #aipInput:focus { border-color:#a5b4fc; background:#fff; }
 #aipSend {
   width:38px; height:38px; border-radius:50%; flex-shrink:0;
-  background:linear-gradient(135deg,#4338ca,#7c3aed);
+  background:#4338ca;
   color:#fff; border:none; cursor:pointer;
   display:flex; align-items:center; justify-content:center; font-size:0.9rem;
   transition:all 0.15s; box-shadow:0 4px 12px rgba(79,70,229,0.35);
@@ -1345,7 +1402,7 @@ document.body.insertAdjacentHTML('beforeend', `
    title="Create an account to chat with the AI Career Advisor"
    style="position:fixed;bottom:28px;right:28px;z-index:1052;
           width:56px;height:56px;border-radius:50%;
-          background:linear-gradient(135deg,#4f46e5,#7c3aed);
+          background:#4f46e5;
           color:#fff;display:flex;align-items:center;justify-content:center;
           font-size:1.3rem;box-shadow:0 4px 20px rgba(79,70,229,0.45);
           text-decoration:none;">
@@ -1371,7 +1428,7 @@ document.body.insertAdjacentHTML('beforeend', `
       </div>
       <div>
         <div class="aip-title">CareerNext AI Advisor</div>
-        <div class="aip-subtitle"><i class="fas fa-circle" style="font-size:0.45rem;color:#22c55e;"></i> Online &bull; Powered by GPT-4o-mini</div>
+        <div class="aip-subtitle"><i class="fas fa-circle" style="font-size:0.45rem;color:#22c55e;"></i> Online &bull; <a href="{% url 'career:career_chat' %}" style="color:inherit;text-decoration:underline;">Open full chat</a></div>
       </div>
       <button class="aip-close" onclick="aipToggle()"><i class="fas fa-times"></i></button>
     </div>
@@ -1411,11 +1468,12 @@ document.body.insertAdjacentHTML('beforeend', `
            maxlength="300" onkeydown="if(event.key==='Enter')aipSend()">
     <button id="aipSend" onclick="aipSend()"><i class="fas fa-paper-plane"></i></button>
   </div>
-  <div class="aip-footer">Your data stays private &bull; Results based on your KCSE input</div>
+  <div class="aip-footer">Your data stays private &bull; Results based on your KCSE input &bull; <a href="{% url 'career:career_chat' %}" style="color:#6366f1;">Full chat</a></div>
 </div>
 `);
 
 function aipToggle() {
+  if (!document.getElementById('aiFloatBtn')) return;   // guests get the register link instead
   widgetOpen = !widgetOpen;
   document.getElementById('aiChatPanel').classList.toggle('open', widgetOpen);
   document.getElementById('aiFloatBtn').classList.toggle('open', widgetOpen);
@@ -1423,6 +1481,7 @@ function aipToggle() {
   document.getElementById('aiPulse').style.display = widgetOpen ? 'none' : 'block';
   if (widgetOpen) {
     document.getElementById('aiUnreadBadge').classList.remove('show');
+    // Greet only when opened — the insight call consumes an AI credit.
     if (!greeted) { greeted = true; aipGreet(); }
     else { setTimeout(() => document.getElementById('aipInput').focus(), 300); }
   }
@@ -1432,7 +1491,27 @@ function aipTime() {
   return new Date().toLocaleTimeString('en-KE', {hour:'2-digit', minute:'2-digit'});
 }
 
-function aipAddMsg(text, role) {
+// Escape HTML, then apply light markdown (bold, bullets, numbered lists).
+function aipFmt(text) {
+  text = String(text).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+                     .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  let out = '', list = null;
+  const closeList = () => { if (list) { out += '</' + list + '>'; list = null; } };
+  for (const line of text.split('\n')) {
+    const head   = line.match(/^#{1,4}\s+(.*)/);
+    const bullet = line.match(/^\s*[•\-\*]\s+(.*)/);
+    const number = line.match(/^\s*\d+[.)]\s+(.*)/);
+    if (head) { closeList(); out += '<strong style="display:block;margin:6px 0 2px">' + head[1] + '</strong>'; }
+    else if (bullet) { if (list !== 'ul') { closeList(); out += '<ul style="margin:2px 0;padding-left:18px">'; list = 'ul'; } out += '<li>' + bullet[1] + '</li>'; }
+    else if (number) { if (list !== 'ol') { closeList(); out += '<ol style="margin:2px 0;padding-left:18px">'; list = 'ol'; } out += '<li>' + number[1] + '</li>'; }
+    else { closeList(); out += line.trim() ? line + '<br>' : '<br>'; }
+  }
+  closeList();
+  return out;
+}
+
+// `html` is trusted markup built here; plain text must go through aipFmt first.
+function aipAddHtml(html, role) {
   const body = document.getElementById('aipBody');
   msgCount++;
   const row = document.createElement('div');
@@ -1440,16 +1519,18 @@ function aipAddMsg(text, role) {
   if (role === 'bot') {
     row.innerHTML =
       '<div class="aip-msg-avatar"><i class="fas fa-robot"></i></div>' +
-      '<div><div class="aip-bubble bot">' + text.replace(/\n/g,'<br>') + '</div>' +
+      '<div><div class="aip-bubble bot">' + html + '</div>' +
       '<div class="aip-time bot-time">' + aipTime() + '</div></div>';
   } else {
     row.innerHTML =
-      '<div><div class="aip-bubble user">' + text.replace(/\n/g,'<br>') + '</div>' +
+      '<div><div class="aip-bubble user">' + html + '</div>' +
       '<div class="aip-time">' + aipTime() + '</div></div>';
   }
   body.appendChild(row);
   body.scrollTop = body.scrollHeight;
 }
+
+function aipAddMsg(text, role) { aipAddHtml(aipFmt(text), role); }
 
 function aipShowTyping() {
   const body = document.getElementById('aipBody');
@@ -1466,30 +1547,51 @@ function aipRemoveTyping() {
   if (t) t.remove();
 }
 
+function aipLock() {
+  document.getElementById('aipInput').disabled = true;
+  document.getElementById('aipSend').disabled  = true;
+  document.getElementById('aipChips').style.display = 'none';
+}
+
+// Shared handling for non-reply responses (paywall, login, limits).
+// Returns true if the response was an error that has been shown.
+function aipHandleError(data) {
+  if (data.paywall) {
+    aipAddHtml(
+      '<strong>🔒 You\'ve used all your free AI messages.</strong><br>' +
+      'Top up to keep getting course and career guidance.<br>' +
+      '<a href="' + encodeURI(data.payment_url || AI_FULL_CHAT_URL) + '" ' +
+      'style="display:inline-block;margin-top:6px;padding:4px 12px;border-radius:14px;' +
+      'background:#16a34a;color:#fff;text-decoration:none;font-weight:600;">Top up messages</a>', 'bot');
+    aipLock();
+    return true;
+  }
+  if (data.error === 'login_required') {
+    aipAddHtml('Please <a href="' + encodeURI(data.login_url || '/accounts/login/') + '">log in</a> to chat with CareerNext AI.', 'bot');
+    aipLock();
+    return true;
+  }
+  if (data.error) { aipAddMsg(data.error, 'bot'); return true; }
+  return false;
+}
+
+const AIP_FALLBACK_GREETING = 'Hi! I\'m your CareerNext AI Advisor. Ask me anything about your career results.';
+
 function aipGreet() {
   aipShowTyping();
   fetch(AI_INSIGHT_URL + '?total=' + TOTAL_MATCHES + '&tiers=' + encodeURIComponent(TIER_COUNTS))
     .then(r => r.json())
     .then(data => {
       aipRemoveTyping();
-      const msg = data.insight || 'Hi! I\'m your CareerNext AI Advisor. Ask me anything about your career results.';
+      if (data.paywall || data.error === 'login_required') { aipHandleError(data); return; }
+      const msg = data.insight || AIP_FALLBACK_GREETING;
       chatHistory.push({role:'assistant', content: msg});
       aipAddMsg(msg, 'bot');
-      if (!widgetOpen) {
-        document.getElementById('aiUnreadBadge').textContent = '1';
-        document.getElementById('aiUnreadBadge').classList.add('show');
-      }
     })
     .catch(() => {
       aipRemoveTyping();
-      aipAddMsg('Hi! I\'m your CareerNext AI Advisor. Ask me anything about your career results.', 'bot');
+      aipAddMsg(AIP_FALLBACK_GREETING, 'bot');
     });
-  // Pre-fetch greeting even if panel is closed
-  setTimeout(() => {
-    if (!greeted) return;
-    document.getElementById('aiUnreadBadge').textContent = '1';
-    document.getElementById('aiUnreadBadge').classList.add('show');
-  }, 3000);
 }
 
 function aipChip(el) {
@@ -1508,10 +1610,10 @@ function aipSend() {
 
 function aipSendText(text) {
   aipAddMsg(text, 'user');
-  chatHistory.push({role:'user', content: text});
   aipShowTyping();
   document.getElementById('aipSend').disabled = true;
 
+  // The server appends `message` itself, so `history` holds prior turns only.
   fetch(AI_CHAT_URL, {
     method:'POST',
     headers:{'Content-Type':'application/json','X-CSRFToken':CSRF},
@@ -1520,8 +1622,11 @@ function aipSendText(text) {
   .then(r => r.json())
   .then(data => {
     aipRemoveTyping();
-    const reply = data.reply || data.error || 'Sorry, I could not respond right now.';
+    if (aipHandleError(data)) return;
+    const reply = data.reply || 'Sorry, I could not respond right now.';
+    chatHistory.push({role:'user', content: text});
     chatHistory.push({role:'assistant', content: reply});
+    if (chatHistory.length > 16) chatHistory = chatHistory.slice(-16);
     aipAddMsg(reply, 'bot');
   })
   .catch(() => {
@@ -1529,13 +1634,18 @@ function aipSendText(text) {
     aipAddMsg('Connection error. Please check your internet and try again.', 'bot');
   })
   .finally(() => {
+    const inp = document.getElementById('aipInput');
+    if (inp.disabled) return;   // locked by paywall/login
     document.getElementById('aipSend').disabled = false;
-    document.getElementById('aipInput').focus();
+    inp.focus();
   });
 }
 
-// Auto-greet after 2s even if panel not opened yet
-setTimeout(() => { if (!greeted) { greeted = true; aipGreet(); } }, 2000);
+// Badge nudge only — no API call, so no credit is spent until the user opens the panel.
+setTimeout(() => {
+  const badge = document.getElementById('aiUnreadBadge');
+  if (badge && !widgetOpen && !greeted) badge.classList.add('show');
+}, 3000);
 
 // ── Share Results ──────────────────────────────────────────────────────────
 var _shareUrl = null;
@@ -1577,7 +1687,7 @@ function generateShareLink() {
             gradeInfo + '\n' +
             '✅ {{ total_count }} courses matched (University, KMTC, TVET & TTC)\n\n' +
             '👀 See my full results:\n' + _shareUrl + '\n\n' +
-            '💡 Find YOUR matches FREE at careernext.co.ke — Kenya\'s #1 KCSE career guide!';
+            '💡 Find YOUR matches FREE at careernext.co.ke, Kenya\'s #1 KCSE career guide!';
 
         document.getElementById('waShareBtn').href = 'https://wa.me/?text=' + encodeURIComponent(waMsg);
         document.getElementById('twShareBtn').href = 'https://twitter.com/intent/tweet?text=' +
@@ -1608,7 +1718,7 @@ function copyGeneratedUrl() {
 function nativeShareResult() {
     if (navigator.share && _shareUrl) {
         navigator.share({
-            title: "My KCSE Career Matches — CareerNext",
+            title: "My KCSE Career Matches: CareerNext",
             text: "I found {{ total_count }} courses I qualify for! Check my results:",
             url: _shareUrl,
         }).catch(() => {});

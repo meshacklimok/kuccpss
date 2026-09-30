@@ -28,6 +28,7 @@ from .models import (
     AffiliateWithdrawalRequest,
     EmailBroadcast,
     EmailLead,
+    StaffTOTPDevice,
 )
 from .forms import UserAdminCreationForm, UserAdminChangeForm
 from kuccpss.email_utils import send_branded_email
@@ -191,6 +192,32 @@ class RememberTokenAdmin(admin.ModelAdmin):
     list_filter = ('is_active', 'expires_at')
     search_fields = ('user__email', 'token', 'ip_address', 'user_agent')
     readonly_fields = ('created_at',)
+
+
+# =====================================================
+# STAFF 2FA DEVICE ADMIN — superusers only; delete a row to reset a lost phone
+# =====================================================
+@admin.register(StaffTOTPDevice)
+class StaffTOTPDeviceAdmin(admin.ModelAdmin):
+    list_display = ('user', 'confirmed_at', 'created_at')
+    search_fields = ('user__email',)
+    fields = ('user', 'confirmed_at', 'created_at')
+    readonly_fields = ('user', 'confirmed_at', 'created_at')  # secret never shown
+
+    def has_module_permission(self, request):
+        return request.user.is_superuser
+
+    def has_view_permission(self, request, obj=None):
+        return request.user.is_superuser
+
+    def has_delete_permission(self, request, obj=None):
+        return request.user.is_superuser
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
 
 
 # =====================================================

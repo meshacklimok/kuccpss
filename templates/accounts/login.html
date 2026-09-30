@@ -3,7 +3,7 @@
 {% load static %}
 {% load socialaccount %}
 
-{% block title %}Sign In — Kenya KCSE Cluster Points Calculator & KUCCPS Course Finder | CareerNext{% endblock %}
+{% block title %}Sign In: Kenya KCSE Cluster Points Calculator & KUCCPS Course Finder | CareerNext{% endblock %}
 
 {% block content %}
 <div class="auth-page">
@@ -25,7 +25,7 @@
       <ul class="auth-panel-features">
         <li>
           <div class="auth-feat-icon"><i class="fas fa-calculator"></i></div>
-          <span>Instant cluster point calculation for all 20 KUCCPS clusters</span>
+          <span>Instant cluster point calculation for all 18 KUCCPS clusters</span>
         </li>
         <li>
           <div class="auth-feat-icon"><i class="fas fa-graduation-cap"></i></div>
@@ -52,6 +52,7 @@
       <p class="auth-panel-sub-text">Login to continue your career journey</p>
 
       {% if GOOGLE_OAUTH_AVAILABLE %}
+      {% include "accounts/_inapp_browser_notice.html" %}
       <a href="/accounts/google/login/?next={{ request.GET.next|urlencode }}"
          class="btn-google" role="button"
          style="background:#ffffff;color:#1f2937;border:1.5px solid #d1d5db;">

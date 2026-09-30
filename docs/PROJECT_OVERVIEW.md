@@ -31,7 +31,7 @@ real application (see the footer disclaimer in [templates/base.html](../template
 
 | Feature | Summary |
 |---|---|
-| Cluster Points Calculator | Enter KCSE grades → compute weighted cluster points (0–48) for all 20 KUCCPS clusters |
+| Cluster Points Calculator | Enter KCSE grades → compute weighted cluster points (0–48) for all 18 KUCCPS clusters |
 | Eligible Courses | Cross-reference cluster points against `Course`/`CourseOffering` cutoffs to show qualifying courses |
 | Career Engine ("CareerNext AI") | Multi-pathway (Degree/Diploma/KMTC/TVET/TTC) course matching + AI-generated guidance text, AI chat assistant |
 | Career Quiz | Short interest/strength/personality/values quiz → maps to career tags → suggested career profiles |

@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block title %}Enter Cluster Points — KUCCPS Course Checker Kenya | CareerNext{% endblock %}
+{% block title %}Enter Cluster Points: KUCCPS Course Checker Kenya | CareerNext{% endblock %}
 
 {% block content %}
 
@@ -120,7 +120,7 @@
 }
 .dm-btn-clear:hover { color: #374151; border-color: #94a3b8; background: #f1f5f9; }
 .dm-btn-submit {
-    background: linear-gradient(135deg, #1e3a8a, #2563eb);
+    background: #1e3a8a;
     color: #fff; border: none; border-radius: 12px; padding: 0.7rem 1.75rem;
     font-weight: 800; font-size: 0.92rem; cursor: pointer; transition: all 0.2s;
     flex-shrink: 0; display: flex; align-items: center; gap: 0.5rem;
@@ -160,15 +160,15 @@
         </h2>
         <p>
             {% if from_ocr %}
-                Scores scanned from your document — check each value and correct any errors before continuing.
+                Scores scanned from your document, check each value and correct any errors before continuing.
             {% elif from_calculate %}
-                Pre-filled from your KCSE grades{% if calc_single %} — computed score: <strong style="color:#1d4ed8;">{{ calc_single }} / 48</strong>{% endif %}. Adjust any value if needed.
+                Pre-filled from your KCSE grades{% if calc_single %}, computed score: <strong style="color:#1d4ed8;">{{ calc_single }} / 48</strong>{% endif %}. Adjust any value if needed.
             {% else %}
                 Enter your points (0 – 48) for each of the {{ cluster_groups|length }} KUCCPS university cluster groups.
             {% endif %}
         </p>
         {% if from_ocr %}
-        <div class="auto-badge"><i class="bi bi-stars"></i>Scanned automatically — please verify</div>
+        <div class="auto-badge"><i class="bi bi-stars"></i>Scanned automatically, please verify</div>
         {% elif from_calculate %}
         <div class="auto-badge"><i class="bi bi-calculator-fill"></i>Auto-computed from your grades</div>
         {% endif %}
@@ -242,7 +242,7 @@
 
 <!-- submit loading overlay -->
 <div id="dm-loading" style="display:none;position:fixed;inset:0;z-index:9999;
-    background:linear-gradient(135deg,#0f172a 0%,#1e3a8a 50%,#0c4a6e 100%);
+    background:#0f172a;
     align-items:center;justify-content:center;">
     <div style="display:flex;flex-direction:column;align-items:center;gap:1.2rem;
         width:min(320px,90vw);padding:2rem 1.75rem;
@@ -301,7 +301,7 @@ function updateCount() {
     }
     if (note) {
         note.innerHTML = entered > 0
-            ? '<strong>' + entered + ' cluster' + (entered !== 1 ? 's' : '') + '</strong> entered — ready to search!'
+            ? '<strong>' + entered + ' cluster' + (entered !== 1 ? 's' : '') + '</strong> entered, ready to search!'
             : 'Enter at least one cluster points value to find matching courses';
     }
 }

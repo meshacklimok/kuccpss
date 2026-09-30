@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
-{% block title %}2026 Cutoff Predictor — CareerNext{% endblock %}
-{% block meta %}<meta name="description" content="Predict your 2026 KUCCPS course eligibility based on 2021–2024 historical cutoff point trends.">{% endblock %}
+{% block title %}2026 Cutoff Predictor | CareerNext{% endblock %}
+{% block meta %}<meta name="description" content="Predict your 2026 KUCCPS course eligibility based on 2021–2025 historical cutoff point trends.">{% endblock %}
 
 {% block extra_head %}
 <style>
@@ -22,7 +22,7 @@
 .cutoff-label { font-size: .62rem; color: var(--muted); letter-spacing: .04em; text-transform: uppercase; }
 
 .range-bar-wrap { height: 6px; border-radius: 3px; background: var(--bg); border: 1px solid var(--border); position: relative; overflow: visible; }
-.range-bar { height: 100%; border-radius: 3px; background: linear-gradient(90deg, var(--accent), var(--primary-light)); }
+.range-bar { height: 100%; border-radius: 3px; background: var(--accent); }
 .your-score-tick {
   position: absolute; top: -5px;
   width: 3px; height: 16px; background: #f97316; border-radius: 2px;
@@ -82,7 +82,7 @@
         <h1 class="mb-1">2026 Cutoff Predictor</h1>
         <p class="mb-0 opacity-75">
           Explore estimated 2026 course cutoff points and assess your eligibility based on available placement trends and historical data.
-          {% if has_scores %}Your scores are loaded — eligibility shown automatically.{% endif %}
+          {% if has_scores %}Your scores are loaded, eligibility shown automatically.{% endif %}
         </p>
       </div>
       <div class="col-md-5">
@@ -123,19 +123,19 @@
           <span class="input-group-text bg-transparent border-end-0">
             <i class="fas fa-search text-muted"></i>
           </span>
-          <input type="search" name="q" value="{{ query }}"
+          <input type="search" name="q" value="{{ query }}" data-suggest="courses"
                  class="form-control border-start-0"
                  placeholder="e.g. Nursing, Engineering…">
         </div>
       </div>
       <div class="col-md-3">
-        <label class="form-label small fw-semibold mb-1">KUCCPS Cluster (1–20)</label>
+        <label class="form-label small fw-semibold mb-1">KUCCPS Cluster (1–18)</label>
         <select name="cluster" class="form-select">
-          <option value="">All 20 clusters</option>
+          <option value="">All 18 clusters</option>
           {% for cl in kuccps_clusters %}
           <option value="{{ cl.number }}"
             {% if cluster_num == cl.number|stringformat:"s" %}selected{% endif %}>
-            Cluster {{ cl.number }} — {{ cl.name }}
+            Cluster {{ cl.number }}: {{ cl.name }}
           </option>
           {% endfor %}
         </select>
@@ -254,10 +254,10 @@
           <!-- Latest actual cutoff -->
           <div class="col-6 col-lg-1 text-center">
             <div class="small text-muted" style="font-size:.65rem; text-transform:uppercase; letter-spacing:.04em;">
-              {{ row.pred.latest_year }}
+              {{ LATEST_CUTOFF_YEAR }}
             </div>
             <div class="fw-bold" style="font-size:1.05rem; color:var(--dark);">
-              {{ row.pred.latest_cutoff }}
+              {% if row.pred.latest_year == LATEST_CUTOFF_YEAR %}{{ row.pred.latest_cutoff }}{% else %}—{% endif %}
             </div>
           </div>
 

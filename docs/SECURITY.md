@@ -46,27 +46,56 @@ Auth is built on `accounts.User` (`accounts/models.py`), **not** Django's defaul
 `RegisterView.post` (`accounts/views.py`) rate-limits registration attempts to 5/hour per IP
 (cache-based counter) before creating the account.
 
-### Password strength — inconsistency
-Two different password-strength rules exist in the codebase and they disagree:
-- `AUTH_PASSWORD_VALIDATORS` in `kuccpss/settings.py` only registers Django's
-  `MinimumLengthValidator` with `min_length=6`.
-- `accounts/forms.py::validate_password_strength()` — used by `UserRegistrationForm` — enforces
-  a **4-character minimum**, deliberately lower per an inline comment.
-- `accounts/views.py::change_password_view` implements its own manual validation (also a
-  4-character minimum) rather than calling Django's `validate_password()` or the `min_length=6`
-  validator.
-- A separate `PasswordChangeForm` exists in `accounts/forms.py` with the same 4-char logic but
-  appears to be unused (the view does its own inline check instead).
-
-**Net effect:** the 6-character `AUTH_PASSWORD_VALIDATORS` entry is effectively dead for the
-registration and change-password flows, since neither calls into Django's password-validation
-pipeline — both paths bypass it in favor of the custom 4-character check. This is a real
-inconsistency worth resolving (either raise the custom minimum to match, or route both flows
-through `django.contrib.auth.password_validation.validate_password`).
+### Password strength
+All password-setting paths require **at least 8 characters**:
+- `AUTH_PASSWORD_VALIDATORS` in `kuccpss/settings.py` registers `MinimumLengthValidator` with
+  `min_length=8`.
+- `accounts/forms.py::validate_password_strength()` (registration and password-reset forms)
+  applies the same 8-character minimum.
+- `accounts/views.py::change_password_view` checks the same 8-character minimum inline. Before
+  Sept 2026 it only required 4, which let users get around the registration rule.
 
 ### Login rate limiting
-`LoginView.post` rate-limits failed logins per IP (10 per 15 minutes, cache-based), independent
-of the global `HeavyEndpointRateLimitMiddleware` (see §7).
+`LoginView.post` counts failed logins in two places, using atomic cache counters
+(`_incr_counter`):
+- **Per IP:** 10 failures per 15 minutes (`LOGIN_FAIL_LIMIT_IP`).
+- **Per account (email):** 8 failures per 15 minutes (`LOGIN_FAIL_LIMIT_ACCOUNT`). This stops a
+  distributed password-guessing attack that uses a new IP for every guess.
+
+Both limits are checked before authenticating, so a locked account can't log in even with the
+correct password until the window expires. A successful login clears both counters. These limits
+are separate from the global `HeavyEndpointRateLimitMiddleware` (see §7).
+
+### Staff two-factor authentication (TOTP)
+Any user with `is_staff=True` must pass a TOTP check from an authenticator app (Google
+Authenticator, Authy, 1Password, etc.) before they can use a page while logged in.
+- **Enforcement:** `kuccpss.middleware.StaffSecurityMiddleware` runs right after
+  `SuspendedUserMiddleware`.
+  - It is enforced in middleware, not through allauth's MFA, because the custom `LoginView`
+    calls `login()` directly and would skip allauth's 2FA step.
+  - A staff user without a verified session is redirected to `/accounts/staff/2fa/setup/` (not
+    yet enrolled) or `/accounts/staff/2fa/verify/` (enrolled).
+  - AJAX/JSON requests get `403 {"error": "staff_2fa_required"}` instead of a redirect.
+  - Exempt paths are the 2FA pages themselves, logout, static/media, health checks and PWA files.
+- **Storage:** `accounts.StaffTOTPDevice` holds one row per staff user.
+  - The secret is **Fernet-encrypted at rest**, with a key derived from `SECRET_KEY`. Rotating
+    `SECRET_KEY` therefore forces every staff member to re-enrol.
+  - `last_used_step` rejects replayed codes.
+- **Verification** (`accounts/staff_2fa.py`):
+  - Allows ±30 s of clock drift.
+  - Allows 5 wrong codes per user per 5 minutes.
+  - On success it rotates the session key.
+  - The `next` redirect is checked with `url_has_allowed_host_and_scheme`.
+- **Lifetime:** a verification lasts `STAFF_2FA_MAX_AGE` (12 h), then the code is asked for
+  again.
+- **Recovery:**
+  - A superuser can delete the device in the admin ("Staff 2FA devices").
+  - Or run `python manage.py reset_staff_2fa <email>`. The user then re-enrols at their next
+    request.
+- **Kill switch:** set the env var `STAFF_2FA_REQUIRED=False`. This is for emergencies only,
+  e.g. every superuser locked out.
+
+Students and mentors (non-staff) are not affected.
 
 ### Login history / device tracking
 `accounts/signals.py` listens to `user_logged_in` / `user_login_failed` / `user_logged_out` and
@@ -110,58 +139,36 @@ differences.
 
 ---
 
-## 3. CSRF and the two payment webhooks — a real asymmetry
+## 3. CSRF and the payment webhooks
 
 Django's CSRF middleware (`django.middleware.csrf.CsrfViewMiddleware`) is enabled globally.
-Two endpoints opt out with `@csrf_exempt` because they are server-to-server webhooks from
-IntaSend (the M-Pesa payment aggregator — see [DEPENDENCIES.md](DEPENDENCIES.md)), not
-browser form posts. **The two webhooks are not equally protected:**
+Two endpoints are marked `@csrf_exempt`. They receive server-to-server webhooks from IntaSend
+(the M-Pesa payment aggregator, see [DEPENDENCIES.md](DEPENDENCIES.md)), not browser form posts.
+**Both check the webhook signature:**
 
 | Endpoint | View | Signature verification |
 |---|---|---|
-| `payments:mpesa_webhook` (`/payments/webhook/mpesa/`) | `payments.views.mpesa_webhook` | **Yes** — HMAC-SHA256 over the raw request body using `INTASEND_WEBHOOK_SECRET`, compared via `hmac.compare_digest` against the `X-IntaSend-Signature` header. Requests with a missing/invalid signature get `HTTP 403`. |
-| `mentorship:payment_webhook` (`/mentorship/webhook/payment/`) | `mentorship.views.payment_webhook` | **No signature check at all.** Any POST with a JSON body containing `state="COMPLETE"` and a matching `api_ref` (a `MentorshipSession.token` UUID) will be treated as a legitimate payment confirmation. |
+| `payments:mpesa_webhook` (`/payments/webhook/mpesa/`) | `payments.views.mpesa_webhook` | HMAC-SHA256 of the raw request body using `INTASEND_WEBHOOK_SECRET`, compared with `hmac.compare_digest` to the `X-IntaSend-Signature` header. A missing or invalid signature gets `HTTP 403`. This is the endpoint registered with IntaSend. |
+| `mentorship:payment_webhook` (`/mentorship/webhook/payment/`) | `mentorship.views.payment_webhook` | Same check, via `payments.services.verify_intasend_signature`, before the payload is parsed. It is a fallback: `payments:mpesa_webhook` already handles mentorship `api_ref`s. |
 
-Concretely, in `mentorship/views.py`:
-```python
-@csrf_exempt
-def payment_webhook(request):
-    """IntaSend webhook — called when payment completes or fails."""
-    ...
-    if state == "COMPLETE" and api_ref:
-        try:
-            session = MentorshipSession.objects.select_related(...).get(
-                token=api_ref, status="pending_payment"
-            )
-            ...
-            _confirm_session_after_payment(session)  # confirms booking, credits mentor wallet
-```
-Anyone who can guess or observe a pending session's UUID token (it is already exposed in the
-checkout URL, e.g. `/mentorship/checkout/<uuid:token>/`) can POST directly to this URL and mark
-the session `confirmed` **without ever paying** — the confirmation path credits the mentor's
-wallet (`mentor.wallet_balance += session.mentor_payout`) and can trigger an automatic payout
-via `_maybe_auto_pay_mentor` if the wallet crosses the `MENTOR_AUTO_PAY_THRESHOLD` (default
-500 KES, not currently overridden anywhere in `settings.py`).
+Before the signature check was added, anyone who knew a pending session's UUID could POST to
+the mentorship webhook and confirm the session without paying. The UUID is visible in the
+checkout URL, and a confirmation credits the mentor's wallet and can trigger an auto-payout.
+That gap is now closed.
 
-By contrast, `payments.views.mpesa_webhook` independently re-implements the same mentorship
-confirmation logic inline (see `payments/views.py` lines ~375-410) *and* verifies the HMAC
-signature first. So a `MentorshipSession` can be confirmed through either of two entry points
-with very different trust levels — this is flagged as **a real security gap**: the unsigned
-`mentorship:payment_webhook` endpoint should either be removed (since
-`payments:mpesa_webhook` already handles mentorship `api_ref`s), or it should perform the same
-HMAC verification before trusting the payload.
+Remaining drift between the two confirmation paths (these are correctness issues, not
+signature issues):
+- `payments.views.mpesa_webhook` has its own copy of the mentorship confirmation logic, and
+  that copy does **not** call `_maybe_auto_pay_mentor`. Any change to
+  `mentorship.views._confirm_session_after_payment` has to be copied into `payments/views.py`
+  by hand.
+- The fallback `verify_payment` and `verify_by_transaction_code` views don't credit affiliate
+  commission.
 
-Two further consequences of the duplication, independent of the signature gap:
-- The two implementations have drifted: `payments.views.mpesa_webhook`'s inline mentorship
-  path does **not** call `_maybe_auto_pay_mentor`, so mentor auto-payouts currently only
-  trigger via the unsigned `mentorship:payment_webhook` path or the manual-verification view.
-  Any future change to the shared confirmation logic in
-  `mentorship.views._confirm_session_after_payment` must be manually re-applied to
-  `payments/views.py` or the two paths will silently diverge further.
-- Affiliate commission logic (in `payments.views.mpesa_webhook`) only runs for the signed
-  webhook's non-mentorship branch; the fallback `verify_payment` and
-  `verify_by_transaction_code` views also skip affiliate-commission crediting, so payments
-  confirmed via those fallbacks never earn affiliate commission.
+**Circuit breaker:** outbound calls to IntaSend for STK push and invoice status go through
+`kuccpss.circuit_breaker.intasend_breaker`. After 5 service failures in 60 s (timeouts,
+connection errors, 5xx or 429), new checkouts are refused for 60 s with a friendly 503. They are
+refused before a `Payment` row is created. OpenAI calls use `ai_breaker` in the same way.
 
 CSRF cookie hardening: in production (see §6), `CSRF_COOKIE_SECURE = True` and
 `CSRF_COOKIE_HTTPONLY = True`. `CSRF_TRUSTED_ORIGINS` in `kuccpss/settings.py` is scoped to
@@ -171,15 +178,18 @@ CSRF cookie hardening: in production (see §6), `CSRF_COOKIE_SECURE = True` and
 
 ## 4. Sessions
 
-- `SESSION_ENGINE = 'django.contrib.sessions.backends.cached_db'` — reads/writes go through
-  the cache first (LocMemCache locally, Redis in production when `REDIS_URL` is set), falling
-  back to the DB, avoiding a DB hit on every request.
+- `SESSION_ENGINE` is `cached_db` only when `REDIS_URL` is set. Otherwise it is plain `db`,
+  because a per-worker LocMemCache served stale sessions across gunicorn workers.
 - `SESSION_COOKIE_AGE = 90 * 24 * 3600` (90 days), `SESSION_EXPIRE_AT_BROWSER_CLOSE = False`
   (cookie persists after the browser closes), `SESSION_SAVE_EVERY_REQUEST = True` (the 90-day
   expiry window slides forward on every request — an active user's session effectively never
   expires).
 - Production-only cookie hardening (see §6): `SESSION_COOKIE_SECURE = True`,
   `SESSION_COOKIE_HTTPONLY = True`.
+- **Staff sessions are shorter.** `StaffSecurityMiddleware` sets `STAFF_SESSION_MAX_AGE`
+  (12 h) as the expiry for any `is_staff` user. Because `SESSION_SAVE_EVERY_REQUEST` is on, this
+  is an idle timeout: the session ends after 12 h without activity. The staff 2FA verification
+  (§1) also expires after 12 h no matter how active the session is.
 - The `require_recent_auth` step-up mechanism (§2) is layered on top of the long-lived session
   — it does not shorten the session itself, it just requires a fresh password confirmation
   (tracked via `session['_auth_verified_at']`) before allowing specific sensitive actions.
@@ -205,11 +215,11 @@ if not DEBUG:
 
 This is real, confirmed hardening (read directly from `kuccpss/settings.py`, lines ~368-376):
 a production deploy (`DEBUG=False`) will refuse to boot rather than silently run with a
-guessable `SECRET_KEY` or accept unverifiable IntaSend webhooks. Note the asymmetry this
-creates with §3: the `INTASEND_WEBHOOK_SECRET` guard only protects
-`payments:mpesa_webhook` (the endpoint that actually checks the secret) — it does nothing for
-`mentorship:payment_webhook`, which has no signature check to enforce regardless of whether the
-secret is configured.
+guessable `SECRET_KEY` or accept unverifiable IntaSend webhooks. Both webhook endpoints (§3)
+use this secret.
+
+`SECRET_KEY` also derives the encryption key for staff TOTP secrets (§1). If you rotate it,
+every staff member must re-enrol their authenticator.
 
 Other secrets/keys read from the environment (all optional, all degrade gracefully to a
 disabled/no-op state when unset — see [DEPENDENCIES.md](DEPENDENCIES.md) for what each backs):
@@ -245,6 +255,28 @@ block), so it applies in development too — prevents browsers from MIME-sniffin
 All of the above is gated on `DEBUG=False`; in local development none of these apply, which is
 expected (no HTTPS locally).
 
+### Response headers (`kuccpss.middleware.ContentSecurityPolicyMiddleware`, all environments)
+- **Enforced CSP** (`Content-Security-Policy`): `object-src 'none'; base-uri 'self';
+  frame-ancestors 'self'`. This blocks plugin embeds, `<base>`-tag hijacking and framing by other
+  sites. None of these break inline scripts or third-party widgets.
+- **Report-only CSP** (`Content-Security-Policy-Report-Only`): the full source allow-list.
+  - It is not enforced yet because the templates still depend on inline `<script>` blocks and
+    `'unsafe-inline'`.
+  - To enforce it, first move the inline scripts into files or add nonces, then check the
+    browser console for violations.
+- **`Permissions-Policy`**: turns off camera, microphone, geolocation, payment, USB, the motion
+  sensors and `interest-cohort`. The site uses none of these; M-Pesa runs on the phone through
+  STK push, not the browser Payment Request API.
+
+### Data embedded in `<script>` blocks
+Templates that put server data into JavaScript (the analytics dashboards and the two
+`course_detail` pages) use the `js_json` filter from `kuccpss/template_filters.py`, registered
+as a template builtin. They no longer use `|safe`.
+- `js_json` escapes `<`, `>` and `&` the same way Django's `json_script` does. A course name or
+  search term containing `</script>` therefore can't break out of the script block.
+- Python values are JSON-encoded, and `None` becomes `null`.
+- Use `|js_json` for any new value placed inside a `<script>` tag. Never use `|safe` there.
+
 ---
 
 ## 7. Rate limiting
@@ -260,9 +292,14 @@ using the Django cache backend as a counter store:
 | `/career/` | POST | 10 | 10 min |
 
 On breach, it returns `HTTP 429` (JSON for HTMX/`Accept: application/json` requests, otherwise
-a rendered `429.html`) with a `Retry-After` header. This is separate from the two auth-specific
-rate limiters in `accounts/views.py` (registration: 5/hour/IP; failed logins: 10/15min/IP),
-which use their own inline cache-counter logic rather than this middleware.
+a rendered `429.html`) with a `Retry-After` header.
+
+These view-level limiters are separate from the middleware and each use their own cache counter:
+- **Registration:** 5 per hour per IP (`accounts/views.py`).
+- **Failed logins:** 10 per 15 min per IP, and 8 per 15 min per account (§1).
+- **Staff 2FA codes:** 5 wrong codes per 5 min per user (`accounts/staff_2fa.py`).
+- **`analytics:pwa_install`:** 5 per hour per IP. This endpoint is unauthenticated, so extra
+  requests are dropped silently so that nobody can flood the `PWAInstallLog` table.
 
 ---
 
@@ -273,60 +310,25 @@ at:
 ```python
 path('cn-staff/', admin.site.urls)
 ```
-This is obfuscation, not real access control — the admin still relies on `is_staff`/
-`is_superuser` checks for actual authorization. Several apps register custom admin sub-views
+This is obfuscation, not real access control. Actual authorization is the `is_staff` and
+`is_superuser` checks, and staff must also pass TOTP 2FA (§1). Several apps register custom admin sub-views
 under this prefix too (e.g. `analytics/admin.py`'s overview page at
 `/cn-staff/analytics/searchlog/overview/`, and `mentorship/admin.py`'s per-mentor reject-button
 endpoint).
 
 ---
 
-## 9. `get_client_ip()` — two divergent implementations
+## 9. Client IP resolution
 
-There are (at least) two functions named `get_client_ip` in the codebase, and they disagree on
-which `X-Forwarded-For` entry is the real client IP:
-
-- **`accounts/views.py::get_client_ip(request)`** — takes the **last** entry of the
-  `X-Forwarded-For` header (documented in code/research as correct for Render's trusted
-  reverse proxy, which appends the real client IP at the end of the chain).
-- **`accounts/signals.py::get_client_ip(request)`** — takes the **first** entry of the same
-  header.
-
-The same last-entry convention used in `accounts/views.py` is also what
-`kuccpss.middleware.HeavyEndpointRateLimitMiddleware._get_ip()` uses:
-```python
-@staticmethod
-def _get_ip(request):
-    xff = request.META.get('HTTP_X_FORWARDED_FOR', '')
-    # Use the last IP in the chain — set by Render's trusted edge, not the client
-    return xff.split(',')[-1].strip() if xff else request.META.get('REMOTE_ADDR', '')
-```
-while `kuccpss.middleware.PageTrackingMiddleware` (used for analytics `PageViewLog`/
-`SessionLog`) takes the **first** entry instead:
-```python
-xff = request.META.get('HTTP_X_FORWARDED_FOR', '')
-ip  = xff.split(',')[0].strip() if xff else request.META.get('REMOTE_ADDR')
-```
-
-**This is flagged as a real inconsistency worth fixing.** Since `X-Forwarded-For` can contain
-attacker-controlled values prepended before Render's edge appends the real client IP, taking
-the *first* entry (as `accounts/signals.py` and `PageTrackingMiddleware` do) is spoofable by
-any client that sets its own `X-Forwarded-For` header, whereas taking the *last* entry (as
-`accounts/views.py` and `HeavyEndpointRateLimitMiddleware` do) is the value actually set by the
-trusted edge. Because this same header-parsing logic underpins IP-based rate limiting,
-`LoginHistory`/`DeviceSession` records, and analytics geolocation
-(`analytics.geo.get_location`), the inconsistency means:
-- Rate limiting (`HeavyEndpointRateLimitMiddleware`, `accounts/views.py`'s inline limiters) is
-  keyed on the trustworthy last-entry IP.
-- Login-history IP logging (`accounts/signals.py::log_user_login`) and analytics
-  (`PageTrackingMiddleware`, `SessionLog`, geo lookups) are keyed on the spoofable first-entry
-  IP — meaning a malicious client could inject a fake `X-Forwarded-For` prefix to poison
-  `LoginHistory.ip_address` or analytics geo data, or to make login-history entries harder to
-  correlate with the rate-limiter's view of "who this really is."
-
-Recommendation (not yet implemented): consolidate on a single `get_client_ip()` helper (e.g. in
-`kuccpss/` or `accounts/utils.py`) using the last-XFF-entry convention everywhere, since that is
-the value Render's trusted edge actually controls.
+Every piece of code that needs the client IP now calls `kuccpss/ip_utils.py::get_client_ip()`:
+rate limiting, `LoginHistory`/`DeviceSession`, `PageTrackingMiddleware`, and the maintenance-mode
+IP allow-list.
+- It takes the **last** `X-Forwarded-For` entry, which is the one Render's trusted edge appends.
+  A client can prepend fake entries, so the first entry can't be trusted.
+- Earlier versions read the first entry in `accounts/signals.py` and `PageTrackingMiddleware`,
+  so login history and analytics could be spoofed. That inconsistency is resolved.
+- If the app ever sits behind more than one proxy layer (e.g. Cloudflare in front of Render),
+  this needs to become "the Nth entry from the end".
 
 ---
 
@@ -334,9 +336,15 @@ the value Render's trusted edge actually controls.
 
 - **Analytics logging is fail-silent everywhere** — every write in `analytics/utils.py`,
   `analytics/signals.py`, and `PageTrackingMiddleware` is wrapped in a broad `try/except` so a
-  broken analytics write never surfaces as a user-facing error. This is a deliberate
-  availability-over-completeness tradeoff, not a bug, but it does mean analytics/audit data
-  (including IP-based data feeding into the inconsistency in §9) can silently go missing.
+  broken analytics write never surfaces as a user-facing error. This is a deliberate choice of
+  availability over completeness, not a bug, but analytics and audit data can go missing
+  without anyone noticing.
+- **Email verification is optional.** Unverified accounts can log in and use the site. This is
+  a product decision, not an oversight. Requiring verification would block students whose
+  emails bounce or who never open the message.
+- **Mentor ID documents** are uploaded through the default media storage (Cloudinary in
+  production). Check that they are stored as `authenticated`/private assets, not public
+  `upload` URLs; this has not been verified from the code.
 - **`GracefulErrorMiddleware`** catches unhandled exceptions in production and renders a
   generic `500.html` instead of a Django debug traceback, while still logging full details to
   Sentry (when configured) — prevents accidental information disclosure (stack traces, source
@@ -352,7 +360,7 @@ the value Render's trusted edge actually controls.
   redundant enough to be worth cleaning up — extra, unused URL surface is generally worth
   minimizing.
 - **This document does not cover:** dependency vulnerability scanning (no `pip-audit`/
-  `safety`/Dependabot config was found in the reviewed files), Content-Security-Policy headers
-  (none configured), a WAF/DDoS layer in front of Render, or a formal incident-response
+  `safety`/Dependabot config was found in the reviewed files), a WAF/DDoS layer in front of
+  Render, or a formal incident-response
   process — these are out of scope of what was verified by reading the source and should not
   be assumed to exist just because they aren't mentioned.

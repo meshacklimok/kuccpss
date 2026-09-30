@@ -18,7 +18,7 @@ STATIC_STORAGES = {
 }
 
 
-@override_settings(STORAGES=STATIC_STORAGES)
+@override_settings(STORAGES=STATIC_STORAGES, STAFF_2FA_REQUIRED=False)  # 2FA covered in test_security
 class AdminSmokeTests(TestCase):
     def setUp(self):
         self.admin_user = User.objects.create_superuser(email="admin@example.com", password="pw-Admin-123")
@@ -122,7 +122,7 @@ class AdminSmokeTests(TestCase):
         self.assertTrue(any("1 affiliate withdrawal(s)" in m for m in self._messages(resp)))
 
 
-@override_settings(STORAGES=STATIC_STORAGES)
+@override_settings(STORAGES=STATIC_STORAGES, STAFF_2FA_REQUIRED=False)  # 2FA covered in test_security
 class MentorshipAdminTests(TestCase):
     def setUp(self):
         from mentorship.models import MentorProfile

@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block title %}How-To Guides — KUCCPS & KCSE Placement Help | CareerNext{% endblock %}
+{% block title %}How-To Guides: KUCCPS & KCSE Placement Help | CareerNext{% endblock %}
 
 {% block meta %}<meta name="description" content="Step-by-step guides for KCSE students: how KUCCPS cluster points work, how to apply for university, KMTC, TVET and TTC courses in Kenya. Free and accurate.">{% endblock %}
 
@@ -18,7 +18,7 @@
       "name": "How are KUCCPS cluster points calculated?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "KUCCPS cluster points are calculated using the formula: 48 × √((core subjects score / 48) × (KCSE aggregate / 84)). The aggregate is the sum of Mathematics + best of English or Kiswahili + your next 5 best subjects, maximum 84. Cluster points range from 0 to 48."
+        "text": "KUCCPS cluster points are calculated using the formula: 48 × √((core subject marks / 400) × (KCSE aggregate / 84)). Core subject marks are the midpoint raw marks of your 4 cluster subjects (e.g. A = 90.2, B = 66, C = 50). The aggregate is Mathematics + best of English or Kiswahili + your next 5 best subjects, maximum 84. Cluster points range from 0 to 48."
       }
     },
     {
@@ -61,7 +61,7 @@
 {% block content %}
 <style>
 .guides-hero {
-    background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 60%, #1d4ed8 100%);
+    background: #0f172a;
     color: #fff;
     padding: 3rem 0 2.5rem;
 }
@@ -175,7 +175,7 @@
             How-To Guides
         </h1>
         <p style="opacity:.82;max-width:600px;" class="mb-0">
-            Step-by-step answers to the questions every Kenyan KCSE student asks — how cluster points work, how to apply on KUCCPS, and how to pick the right course.
+            Step-by-step answers to the questions every Kenyan KCSE student asks: how cluster points work, how to apply on KUCCPS, and how to pick the right course.
         </p>
     </div>
 </div>
@@ -193,6 +193,13 @@
                 <a class="toc-link" href="#kmtc-tvet">Degree vs KMTC vs TVET</a>
                 <a class="toc-link" href="#revision">What is a revision window?</a>
                 <a class="toc-link" href="#helb">HELB funding basics</a>
+                <a class="toc-link" href="#no-degree">If you don't qualify for a degree</a>
+                <p class="fw-bold small text-muted text-uppercase mb-2 mt-3" style="letter-spacing:.07em;">Using CareerNext</p>
+                <a class="toc-link" href="#use-calculator">Using the calculator</a>
+                <a class="toc-link" href="#paste-cluster">Paste or upload cluster points</a>
+                <a class="toc-link" href="#shortlist">Shortlist &amp; compare courses</a>
+                <a class="toc-link" href="#mentor">Booking a mentor</a>
+                <a class="toc-link" href="#account">Managing your account</a>
                 <hr>
                 <a href="{% url 'resources:kuccps_calendar' %}" class="toc-link" style="color:#1d4ed8;">
                     <i class="fas fa-calendar-alt me-1"></i> KUCCPS Calendar
@@ -212,7 +219,7 @@
                     <div class="guide-icon icon-blue"><i class="fas fa-calculator"></i></div>
                     <div>
                         <h3 class="mb-1">How KCSE Cluster Points Are Calculated</h3>
-                        <p class="text-muted small mb-0">The official KUCCPS formula — explained simply</p>
+                        <p class="text-muted small mb-0">The official KUCCPS formula, explained simply</p>
                     </div>
                 </div>
 
@@ -234,10 +241,10 @@
                 </ol>
 
                 <div class="formula-block">
-Cluster Points = 48 × √( (core_subjects / 48) × (aggregate / 84) )
+Cluster Points = 48 × √( (core_marks / 400) × (aggregate / 84) )
                 </div>
 
-                <p class="small text-muted">Where <strong>core_subjects</strong> = sum of your 4 cluster subject scores (max 48), and <strong>aggregate</strong> = your total 7-subject aggregate (max 84).</p>
+                <p class="small text-muted">Where <strong>core_marks</strong> = the sum of the midpoint raw marks for your 4 cluster subjects (e.g. A = 90.2, B+ = 71, B = 66, C+ = 56, C = 50), and <strong>aggregate</strong> = your total 7-subject aggregate (max 84). The result is capped at 48.</p>
 
                 <div class="tip-box">
                     <i class="fas fa-lightbulb me-2"></i>
@@ -245,7 +252,7 @@ Cluster Points = 48 × √( (core_subjects / 48) × (aggregate / 84) )
                 </div>
                 <div class="info-box mt-2">
                     <i class="fas fa-calculator me-2"></i>
-                    Use our <a href="{% url 'clusterpoints:calculator' %}">free Cluster Points Calculator</a> — enter your grades and get all 20 cluster points instantly.
+                    Use our <a href="{% url 'clusterpoints:calculator' %}">free Cluster Points Calculator</a>, enter your grades and get all 18 cluster points instantly.
                 </div>
             </div>
 
@@ -274,7 +281,7 @@ Cluster Points = 48 × √( (core_subjects / 48) × (aggregate / 84) )
                     </li>
                     <li>
                         <div class="step-num">4</div>
-                        <div class="step-text"><strong>Select degree programme choices.</strong> You can pick up to <strong>6 degree programmes</strong>, ranked 1–6. Rank them in order of preference — KUCCPS places you in the highest-ranked course you qualify for.</div>
+                        <div class="step-text"><strong>Select degree programme choices.</strong> You can pick up to <strong>6 degree programmes</strong>, ranked 1–6. Rank them in order of preference. KUCCPS places you in the highest-ranked course you qualify for.</div>
                     </li>
                     <li>
                         <div class="step-num">5</div>
@@ -288,7 +295,7 @@ Cluster Points = 48 × √( (core_subjects / 48) × (aggregate / 84) )
 
                 <div class="warn-box">
                     <i class="fas fa-exclamation-triangle me-2"></i>
-                    <strong>Important:</strong> Submit within the deadline. Late applications are NOT accepted. The portal closes on the exact date announced by KUCCPS — no extensions.
+                    <strong>Important:</strong> Submit within the deadline. Late applications are NOT accepted. The portal closes on the exact date announced by KUCCPS, no extensions.
                 </div>
                 <div class="tip-box mt-2">
                     <i class="fas fa-lightbulb me-2"></i>
@@ -302,7 +309,7 @@ Cluster Points = 48 × √( (core_subjects / 48) × (aggregate / 84) )
                     <div class="guide-icon icon-purple"><i class="fas fa-compass"></i></div>
                     <div>
                         <h3 class="mb-1">How to Choose the Right Course</h3>
-                        <p class="text-muted small mb-0">Strategy for picking wisely — not just what you qualify for</p>
+                        <p class="text-muted small mb-0">Strategy for picking wisely, not just what you qualify for</p>
                     </div>
                 </div>
 
@@ -313,7 +320,7 @@ Cluster Points = 48 × √( (core_subjects / 48) × (aggregate / 84) )
                     </li>
                     <li>
                         <div class="step-num">2</div>
-                        <div class="step-text"><strong>Match interests, not just scores.</strong> Many students pick Medicine because it's competitive, not because they want to be doctors. Choose a course aligned with what you enjoy — it affects 5+ years of study.</div>
+                        <div class="step-text"><strong>Match interests, not just scores.</strong> Many students pick Medicine because it's competitive, not because they want to be doctors. Choose a course aligned with what you enjoy, it affects 5+ years of study.</div>
                     </li>
                     <li>
                         <div class="step-num">3</div>
@@ -344,7 +351,7 @@ Cluster Points = 48 × √( (core_subjects / 48) × (aggregate / 84) )
                 <div class="d-flex gap-3 align-items-start mb-3">
                     <div class="guide-icon icon-amber"><i class="fas fa-balance-scale"></i></div>
                     <div>
-                        <h3 class="mb-1">Degree vs KMTC vs TVET — Which Should You Choose?</h3>
+                        <h3 class="mb-1">Degree vs KMTC vs TVET: Which Should You Choose?</h3>
                         <p class="text-muted small mb-0">Understanding the different pathways</p>
                     </div>
                 </div>
@@ -394,7 +401,7 @@ Cluster Points = 48 × √( (core_subjects / 48) × (aggregate / 84) )
                     </li>
                     <li>
                         <div class="step-num">2</div>
-                        <div class="step-text"><strong>2nd Revision Window (June–July):</strong> The final chance to update. Changes here are binding — KUCCPS uses these choices for final placement computation.</div>
+                        <div class="step-text"><strong>2nd Revision Window (June–July):</strong> The final chance to update. Changes here are binding, KUCCPS uses these choices for final placement computation.</div>
                     </li>
                     <li>
                         <div class="step-num">3</div>
@@ -413,8 +420,8 @@ Cluster Points = 48 × √( (core_subjects / 48) × (aggregate / 84) )
                 <div class="d-flex gap-3 align-items-start mb-3">
                     <div class="guide-icon icon-green"><i class="fas fa-hand-holding-usd"></i></div>
                     <div>
-                        <h3 class="mb-1">HELB Funding — The Basics</h3>
-                        <p class="text-muted small mb-0">Higher Education Loans Board — what you need to know</p>
+                        <h3 class="mb-1">HELB Funding: The Basics</h3>
+                        <p class="text-muted small mb-0">Higher Education Loans Board, what you need to know</p>
                     </div>
                 </div>
 
@@ -429,7 +436,7 @@ Cluster Points = 48 × √( (core_subjects / 48) × (aggregate / 84) )
                     </li>
                     <li>
                         <div class="step-num">3</div>
-                        <div class="step-text"><strong>When to apply:</strong> HELB applications open around July–August each year for the new academic year. Apply at helb.co.ke immediately after placement — don't wait.</div>
+                        <div class="step-text"><strong>When to apply:</strong> HELB applications open around July–August each year for the new academic year. Apply at helb.co.ke immediately after placement, don't wait.</div>
                     </li>
                     <li>
                         <div class="step-num">4</div>
@@ -439,7 +446,211 @@ Cluster Points = 48 × √( (core_subjects / 48) × (aggregate / 84) )
 
                 <div class="info-box">
                     <i class="fas fa-info-circle me-2"></i>
-                    KMTC programmes also qualify for HELB funding. TVET programmes are partially covered under the TVET CDACC scheme — check directly with your institution.
+                    KMTC programmes also qualify for HELB funding. TVET programmes are partially covered under the TVET CDACC scheme, check directly with your institution.
+                </div>
+            </div>
+
+            <div class="guide-card" id="no-degree">
+                <div class="d-flex gap-3 align-items-start mb-3">
+                    <div class="guide-icon icon-amber"><i class="fas fa-route"></i></div>
+                    <div>
+                        <h3 class="mb-1">Didn't Qualify for a Degree? Your Options</h3>
+                        <p class="text-muted small mb-0">A C- or lower is not the end of the road</p>
+                    </div>
+                </div>
+
+                <ol class="step-list">
+                    <li>
+                        <div class="step-num">1</div>
+                        <div class="step-text"><strong>Apply for a diploma.</strong> Most diploma programmes at KMTC and TVET institutions accept a C- mean grade. Many lead to the same careers as a degree: Clinical Medicine, Nursing, ICT, Engineering.</div>
+                    </li>
+                    <li>
+                        <div class="step-num">2</div>
+                        <div class="step-text"><strong>Consider a certificate or artisan course.</strong> With a D or D+, certificate (Level 5) and artisan (Level 4) courses are open to you. They are short, practical, and get you working quickly.</div>
+                    </li>
+                    <li>
+                        <div class="step-num">3</div>
+                        <div class="step-text"><strong>Plan to upgrade later.</strong> After a diploma you can join a degree programme at many universities, often with credit for what you already studied. A certificate can lead to a diploma the same way.</div>
+                    </li>
+                    <li>
+                        <div class="step-num">4</div>
+                        <div class="step-text"><strong>Still apply through KUCCPS.</strong> Government-sponsored TVET and KMTC places are also allocated through the KUCCPS portal, with lower fees and HELB funding.</div>
+                    </li>
+                </ol>
+
+                <div class="info-box">
+                    <i class="fas fa-compass me-2"></i>
+                    Pick <strong>Diploma</strong>, <strong>Certificate</strong>, <strong>KMTC</strong> or <strong>Artisan</strong> in our <a href="{% url 'career:home' %}">Career Guidance Engine</a> to see every course your grades qualify you for.
+                </div>
+            </div>
+
+            <div class="guide-card" id="use-calculator">
+                <div class="d-flex gap-3 align-items-start mb-3">
+                    <div class="guide-icon icon-blue"><i class="fas fa-calculator"></i></div>
+                    <div>
+                        <h3 class="mb-1">How to Use the Cluster Points Calculator</h3>
+                        <p class="text-muted small mb-0">From your grades to a list of courses in under a minute</p>
+                    </div>
+                </div>
+
+                <ol class="step-list">
+                    <li>
+                        <div class="step-num">1</div>
+                        <div class="step-text"><strong>Open the <a href="{% url 'clusterpoints:calculator' %}">calculator</a></strong> and pick your grade for every subject you sat in KCSE. Mathematics, English and Kiswahili are required.</div>
+                    </li>
+                    <li>
+                        <div class="step-num">2</div>
+                        <div class="step-text"><strong>Click Calculate.</strong> You'll see your aggregate points (out of 84) and your cluster points (out of 48) for all 18 clusters.</div>
+                    </li>
+                    <li>
+                        <div class="step-num">3</div>
+                        <div class="step-text"><strong>Open Eligible Courses</strong> to see the degree courses whose past cutoff is at or below your cluster points, with the universities offering them.</div>
+                    </li>
+                    <li>
+                        <div class="step-num">4</div>
+                        <div class="step-text"><strong>Download or share.</strong> Save your results as a PDF, or create an account so they're saved for next time.</div>
+                    </li>
+                </ol>
+
+                <div class="tip-box">
+                    <i class="fas fa-lightbulb me-2"></i>
+                    You don't need an account to use the calculator. Registering just keeps your results so you don't have to enter your grades again.
+                </div>
+            </div>
+
+            <div class="guide-card" id="paste-cluster">
+                <div class="d-flex gap-3 align-items-start mb-3">
+                    <div class="guide-icon icon-purple"><i class="fas fa-paste"></i></div>
+                    <div>
+                        <h3 class="mb-1">How to Paste or Upload Your KUCCPS Cluster Points</h3>
+                        <p class="text-muted small mb-0">Already have your official cluster points? Skip the grade entry</p>
+                    </div>
+                </div>
+
+                <ol class="step-list">
+                    <li>
+                        <div class="step-num">1</div>
+                        <div class="step-text"><strong>Log in to the KUCCPS student portal</strong> and open the page that lists your cluster points.</div>
+                    </li>
+                    <li>
+                        <div class="step-num">2</div>
+                        <div class="step-text"><strong>To paste:</strong> select all the cluster rows on that page (press and hold on a phone, or drag on a computer), copy them, then open <a href="{% url 'career:degree_paste' %}">Paste Cluster Values</a> and paste into the box.</div>
+                    </li>
+                    <li>
+                        <div class="step-num">3</div>
+                        <div class="step-text"><strong>To upload:</strong> take a clear screenshot of the page instead, then use <a href="{% url 'career:degree_upload' %}">Upload Cluster Points Screenshot</a>. JPG, PNG and PDF files work.</div>
+                    </li>
+                    <li>
+                        <div class="step-num">4</div>
+                        <div class="step-text"><strong>Check the numbers</strong> we read against your portal before continuing, then view the courses you qualify for.</div>
+                    </li>
+                </ol>
+
+                <div class="warn-box">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    If the screenshot is blurry or cropped, some clusters may be missed. You can always <a href="{% url 'career:degree_manual' %}">type them in manually</a> instead.
+                </div>
+            </div>
+
+            <div class="guide-card" id="shortlist">
+                <div class="d-flex gap-3 align-items-start mb-3">
+                    <div class="guide-icon icon-green"><i class="fas fa-list-ol"></i></div>
+                    <div>
+                        <h3 class="mb-1">How to Build Your Shortlist and Compare Courses</h3>
+                        <p class="text-muted small mb-0">Get your 6 KUCCPS choices ready before the portal opens</p>
+                    </div>
+                </div>
+
+                <ol class="step-list">
+                    <li>
+                        <div class="step-num">1</div>
+                        <div class="step-text"><strong>Add courses as you browse.</strong> On any course, tap the shortlist button. Your picks are collected on <a href="{% url 'accounts:shortlist' %}">My Shortlist</a>.</div>
+                    </li>
+                    <li>
+                        <div class="step-num">2</div>
+                        <div class="step-text"><strong>Rank them.</strong> Put them in the order you'll enter them on KUCCPS, and add notes (fees, location, why you like it).</div>
+                    </li>
+                    <li>
+                        <div class="step-num">3</div>
+                        <div class="step-text"><strong>Compare side by side</strong> on the <a href="{% url 'accounts:comparison' %}">comparison page</a> to check cutoffs and institutions at a glance.</div>
+                    </li>
+                    <li>
+                        <div class="step-num">4</div>
+                        <div class="step-text"><strong>Export as PDF</strong> and keep it with you when you apply on the portal.</div>
+                    </li>
+                </ol>
+
+                <div class="tip-box">
+                    <i class="fas fa-lightbulb me-2"></i>
+                    Follow the 1-2-3-safety strategy from <a href="#choose-course">How to choose the right course</a> when ranking your shortlist.
+                </div>
+            </div>
+
+            <div class="guide-card" id="mentor">
+                <div class="d-flex gap-3 align-items-start mb-3">
+                    <div class="guide-icon icon-amber"><i class="fas fa-user-graduate"></i></div>
+                    <div>
+                        <h3 class="mb-1">How to Book a Mentor</h3>
+                        <p class="text-muted small mb-0">Talk to a student already studying the course you want</p>
+                    </div>
+                </div>
+
+                <ol class="step-list">
+                    <li>
+                        <div class="step-num">1</div>
+                        <div class="step-text"><strong>Browse the <a href="{% url 'mentorship:directory' %}">mentor directory</a></strong> and search by course or institution.</div>
+                    </li>
+                    <li>
+                        <div class="step-num">2</div>
+                        <div class="step-text"><strong>Pick a time slot</strong> that works for you from the mentor's available sessions.</div>
+                    </li>
+                    <li>
+                        <div class="step-num">3</div>
+                        <div class="step-text"><strong>Pay with M-Pesa.</strong> Enter your number, confirm the prompt on your phone, and your booking is confirmed.</div>
+                    </li>
+                    <li>
+                        <div class="step-num">4</div>
+                        <div class="step-text"><strong>Prepare your questions</strong> (about fees, workload, campus life and job prospects), then rate the session afterwards.</div>
+                    </li>
+                </ol>
+
+                <div class="info-box">
+                    <i class="fas fa-hands-helping me-2"></i>
+                    Already at university or college? <a href="{% url 'mentorship:become_mentor' %}">Become a mentor</a> and earn by helping students.
+                </div>
+            </div>
+
+            <div class="guide-card" id="account">
+                <div class="d-flex gap-3 align-items-start mb-3">
+                    <div class="guide-icon icon-blue"><i class="fas fa-user-cog"></i></div>
+                    <div>
+                        <h3 class="mb-1">Managing Your Account</h3>
+                        <p class="text-muted small mb-0">Profile, password and deleting your account</p>
+                    </div>
+                </div>
+
+                <ol class="step-list">
+                    <li>
+                        <div class="step-num">1</div>
+                        <div class="step-text"><strong>Update your details</strong> (name, county, KCSE year) on your <a href="{% url 'accounts:profile' %}">Profile page</a>.</div>
+                    </li>
+                    <li>
+                        <div class="step-num">2</div>
+                        <div class="step-text"><strong>Change your password</strong> from the Profile page. You'll be asked for your current password first.</div>
+                    </li>
+                    <li>
+                        <div class="step-num">3</div>
+                        <div class="step-text"><strong>Forgot your password?</strong> Use <a href="{% url 'account_reset_password' %}">Reset password</a> and follow the link we email you.</div>
+                    </li>
+                    <li>
+                        <div class="step-num">4</div>
+                        <div class="step-text"><strong>Delete your account</strong> from the bottom of the Profile page. Your personal details are removed straight away. Withdraw any earnings first, unused balances can't be recovered.</div>
+                    </li>
+                </ol>
+
+                <div class="info-box">
+                    <i class="fas fa-shield-alt me-2"></i>
+                    See our <a href="{% url 'accounts:privacy' %}">Privacy Policy</a> for how we handle your data. We respond to all requests within 7 working days.
                 </div>
             </div>
 

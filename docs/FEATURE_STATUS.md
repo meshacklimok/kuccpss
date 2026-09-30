@@ -84,9 +84,9 @@ Status legend: ✅ Done | 🚧 In Progress | 📋 Planned | ❌ Blocked | [-] Dr
 | KMTC subject requirements | ✅ | `subject_requirements` JSONField; shown as slot/subjects/min-grade table |
 | KMTC programme codes | ✅ | `programme_code` on CourseOffering (e.g. `5000K32`) |
 | TVET Diploma (L6) data | ✅ | 319 courses / 4,515 offerings seeded from `DIPLOMA_PROGRAMMES.pdf` |
-| TVET Certificate (L5) data | ✅ | 159 courses / 4,947 offerings seeded |
-| TVET Artisan Certificate (L4) data | ✅ | 68 courses / 2,738 offerings seeded |
-| TVET Craft Certificate (L3) data | ✅ | 77 courses / 1,801 offerings seeded |
+| TVET Certificate (L5) data | ✅ | 146 courses / 4,931 offerings |
+| TVET Artisan Certificate (L4) data | ✅ | 64 courses / 2,738 offerings |
+| TVET Craft Certificate (L3) data | ✅ | 66 courses / 1,800 offerings |
 | TTC programme data | ✅ | 83 courses / 141 offerings; 36 TTC institutions |
 | KMTC programme data | ✅ | 33 courses / 342 offerings at 88 campuses |
 | Course search | ✅ | `?q=` name filter on type and category detail pages |

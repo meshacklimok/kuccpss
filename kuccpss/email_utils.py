@@ -37,6 +37,7 @@ def send_branded_email(
     user_email="",
     attachments=None,
     fail_silently=True,
+    bcc=None,
 ):
     """
     Send a branded HTML + plain-text transactional email.
@@ -99,7 +100,8 @@ def send_branded_email(
             subject=subject,
             body=plain_body,
             from_email=settings.DEFAULT_FROM_EMAIL,
-            to=to,
+            to=to or ([settings.DEFAULT_FROM_EMAIL] if bcc else []),
+            bcc=bcc or [],
         )
         email.attach_alternative(html_body, "text/html")
 
@@ -112,3 +114,52 @@ def send_branded_email(
         logger.error("send_branded_email failed to=%s subject=%r: %s", to, subject, exc)
         if not fail_silently:
             raise
+
+
+def notify_admin_withdrawal(*, kind, name, email, amount, mpesa_number, status,
+                            balance_after=None, error="", admin_path=""):
+    """
+    Alert the site admin that a mentor/affiliate requested a withdrawal.
+
+    kind       — "Mentor" | "Affiliate"
+    status     — final status of the request ("processed", "failed", "pending")
+    admin_path — admin changelist path, e.g. "/admin/mentorship/withdrawalrequest/"
+    """
+    from resources.models import SiteSetting
+
+    admin_email = SiteSetting.get("admin_email", default=settings.ADMIN_EMAIL)
+    if not admin_email:
+        return
+
+    failed = status == "failed"
+    rows = [
+        {"label": "Amount",        "value": f"KES {amount}", "highlight": True},
+        {"label": kind,            "value": f"{name} ({email})"},
+        {"label": "M-Pesa Number", "value": mpesa_number},
+        {"label": "Status",        "value": status.title()},
+        {"label": "Requested at",  "value": timezone.localtime().strftime("%d %b %Y %H:%M")},
+    ]
+    if balance_after is not None:
+        rows.append({"label": "Wallet balance now", "value": f"KES {balance_after}"})
+    if error:
+        rows.append({"label": "Error", "value": error[:300]})
+
+    body = (
+        [f"The automatic M-Pesa payout for this {kind.lower()} withdrawal FAILED. "
+         "Please review it and pay manually or contact them."]
+        if failed else
+        [f"A {kind.lower()} has requested a withdrawal. The payout was sent automatically — "
+         "this is for your records."]
+    )
+
+    send_branded_email(
+        to=admin_email,
+        subject=f"[Admin] {kind} withdrawal {'FAILED' if failed else 'request'} — KES {amount}",
+        heading=f"{kind} Withdrawal {'Failed' if failed else 'Request'}",
+        banner_label="⚠ Action needed" if failed else "Withdrawal",
+        banner_color="red" if failed else "blue",
+        body_lines=body,
+        table_rows=rows,
+        cta_url=f"https://www.careernext.co.ke{admin_path}" if admin_path else "",
+        cta_label="Open in Admin →" if admin_path else "",
+    )

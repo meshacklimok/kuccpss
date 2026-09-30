@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block title %}KCSE Cluster Points Calculator 2026/2027 — Free KUCCPS Tool | CareerNext{% endblock %}
+{% block title %}KCSE Cluster Points Calculator 2026/2027: Free KUCCPS Tool | CareerNext{% endblock %}
 {% block meta %}<meta name="description" content="Free KCSE cluster points calculator using the official KUCCPS formula. Enter your 2025 or 2026 grades and instantly see your cluster points, eligible university, KMTC and TVET courses in Kenya.">{% endblock %}
 {% block canonical %}<link rel="canonical" href="https://careernext.co.ke/clusterpoints/">{% endblock %}
 {% block keywords %}<meta name="keywords" content="KCSE cluster points calculator, KUCCPS cluster points 2025, cluster points Kenya, KCSE grades to cluster points, KUCCPS calculator Kenya, university placement Kenya 2025 2026">{% endblock %}
@@ -74,7 +74,7 @@
 }
 .sb-counter.ready { border-color: #86efac; color: #16a34a; background: #f0fdf4; }
 .sb-progress { height: 3px; background: #e2e8f0; }
-.sb-progress-fill { height: 100%; width: 0%; background: linear-gradient(90deg,#1e3a8a,#2563eb,#16a34a); transition: width 0.4s ease; }
+.sb-progress-fill { height: 100%; width: 0%; background: #1e3a8a; transition: width 0.4s ease; }
 
 /* ── page wrapper ── */
 .lce-page { max-width: 760px; margin: 0 auto; padding: 1.5rem 1rem 6rem; }
@@ -186,7 +186,7 @@
 }
 .lce-btn-back:hover { color: #1e293b; border-color: #94a3b8; text-decoration: none; background: #f1f5f9; }
 .lce-btn-calc {
-    background: linear-gradient(135deg, #1e3a8a, #2563eb);
+    background: #1e3a8a;
     color: #fff; border: none; border-radius: 12px; padding: 0.7rem 1.75rem;
     font-weight: 800; font-size: 0.92rem; cursor: pointer; transition: all 0.2s;
     flex-shrink: 0; display: flex; align-items: center; gap: 0.5rem;
@@ -245,7 +245,7 @@
 
 /* pathway recommendation */
 .pw-rec-card {
-    background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%);
+    background: #1e3a8a;
     border-radius: 14px; padding: 1.25rem 1.5rem; margin-bottom: 1rem;
     display: flex; gap: 1rem; align-items: flex-start;
 }
@@ -295,7 +295,7 @@
 /* ── save-bar (guest save prompt, slides up above sticky footer) ── */
 .save-bar {
     position: fixed; bottom: 0; left: 0; right: 0; z-index: 299;
-    background: linear-gradient(135deg, #065f46, #059669);
+    background: #065f46;
     color: #fff; padding: 0.7rem 1.25rem;
     display: flex; align-items: center; gap: 0.75rem;
     box-shadow: 0 -4px 20px rgba(5,150,105,0.3);
@@ -324,13 +324,13 @@
     flex-shrink: 0; white-space: nowrap;
 }
 .save-bar-login:hover { color: #fff; text-decoration: underline; }
-body.dark .save-bar { background: linear-gradient(135deg, #064e3b, #047857); }
+body.dark .save-bar { background: #064e3b; }
 
 /* ── progressive loading overlay ── */
 #calc-loading {
     display:none; position:fixed; inset:0; z-index:9999;
     align-items:center; justify-content:center; overflow:hidden;
-    background:linear-gradient(135deg,#0f172a 0%,#1e3a8a 50%,#0c4a6e 100%);
+    background:#0f172a;
 }
 .cl-orb {
     position:absolute; border-radius:50%; filter:blur(70px); opacity:0.22;
@@ -378,7 +378,7 @@ body.dark .save-bar { background: linear-gradient(135deg, #064e3b, #047857); }
 .cl-prog-track { flex:1; height:6px; background:rgba(255,255,255,0.12); border-radius:99px; overflow:hidden; }
 .cl-prog-fill {
     height:100%; width:0%;
-    background:linear-gradient(90deg,#60a5fa 0%,#a78bfa 50%,#34d399 100%);
+    background:#60a5fa;
     border-radius:99px; box-shadow:0 0 12px rgba(96,165,250,0.6);
 }
 .cl-prog-pct { font-size:0.75rem; font-weight:700; color:rgba(255,255,255,0.75); min-width:32px; text-align:right; }
@@ -416,6 +416,7 @@ body.dark .save-bar { background: linear-gradient(135deg, #064e3b, #047857); }
 }
 .pg-card {
     position:relative; z-index:1; width:min(400px,92vw);
+    max-height:92vh; overflow-y:auto; overscroll-behavior:contain;
     padding:2rem 1.75rem; background:#fff; border-radius:24px; text-align:center;
     box-shadow:0 32px 80px rgba(0,0,0,0.45),0 0 0 1px rgba(0,0,0,0.04);
     animation:pg-in 0.5s cubic-bezier(0.34,1.56,0.64,1);
@@ -426,7 +427,7 @@ body.dark .save-bar { background: linear-gradient(135deg, #064e3b, #047857); }
 }
 .pg-lock {
     width:64px; height:64px; border-radius:50%;
-    background:linear-gradient(135deg,#1e3a8a,#2563eb);
+    background:#1e3a8a;
     display:flex; align-items:center; justify-content:center; margin:0 auto 1.1rem;
     box-shadow:0 8px 24px rgba(30,58,138,0.4);
     animation:pg-lock-pop 0.45s cubic-bezier(0.34,1.56,0.64,1) 0.2s both;
@@ -437,7 +438,7 @@ body.dark .save-bar { background: linear-gradient(135deg, #064e3b, #047857); }
 .pg-sub { font-size:0.82rem; color:#64748b; margin:0 0 1.2rem; line-height:1.55; }
 .pg-price {
     display:inline-flex; align-items:baseline; gap:0.3rem;
-    background:linear-gradient(135deg,#f0fdf4,#dcfce7); border:1.5px solid #86efac;
+    background:#f0fdf4; border:1.5px solid #86efac;
     border-radius:14px; padding:0.65rem 1.5rem; margin-bottom:1.1rem;
 }
 .pg-currency { font-size:0.88rem; font-weight:700; color:#16a34a; }
@@ -465,7 +466,15 @@ body.dark .save-bar { background: linear-gradient(135deg, #064e3b, #047857); }
 }
 .pg-btn-card:hover { background:#f1f5f9; border-color:#94a3b8; }
 .pg-secure { font-size:0.72rem; color:#94a3b8; margin:0; display:flex; align-items:center; justify-content:center; gap:0.35rem; }
+.pg-how { font-size:0.75rem; color:#64748b; margin:0 0 0.5rem; line-height:1.5; }
+.pg-btn-mpesa { min-height:48px; }
+@media (max-width: 420px) {
+    .pg-card { padding:1.4rem 1.1rem; border-radius:20px; }
+    .pg-features { grid-template-columns:1fr; }
+    .pg-amount { font-size:1.8rem; }
+}
 body.dark .pg-card     { background:var(--surface); box-shadow:0 32px 80px rgba(0,0,0,0.7); }
+body.dark .pg-how      { color:var(--text-2); }
 body.dark .pg-title    { color:var(--text); }
 body.dark .pg-sub      { color:var(--text-2); }
 body.dark .pg-btn-card { background:var(--surface-2); border-color:var(--border); color:var(--text-2); }
@@ -682,7 +691,7 @@ body.dark .lce-btn-calc:disabled { background: var(--surface-2); color: var(--te
             </div>
             <div class="cl-step" id="clSt3">
                 <div class="cl-step-dot"></div>
-                <span>Analysing 20 clusters</span>
+                <span>Analysing 18 clusters</span>
                 <i class="bi bi-check2 cl-step-check"></i>
             </div>
             <div class="cl-step" id="clSt4">
@@ -709,34 +718,22 @@ body.dark .lce-btn-calc:disabled { background: var(--surface-2); color: var(--te
         <div class="pg-price">
             <span class="pg-currency">KES</span>
             <span class="pg-amount">{{ gate_price }}</span>
-            <span class="pg-once">one-time</span>
+            <span class="pg-once">for these results</span>
         </div>
         <div class="pg-features">
-            <div class="pg-feat"><i class="bi bi-check-circle-fill"></i>All 20 cluster points</div>
+            <div class="pg-feat"><i class="bi bi-check-circle-fill"></i>All 18 cluster points</div>
             <div class="pg-feat"><i class="bi bi-check-circle-fill"></i>Course eligibility</div>
             <div class="pg-feat"><i class="bi bi-check-circle-fill"></i>2026 cutoff predictions</div>
             <div class="pg-feat"><i class="bi bi-check-circle-fill"></i>PDF download</div>
         </div>
         <button class="pg-btn-mpesa" onclick="handlePayment()">
             <span class="pg-mpesa-badge">M-PESA</span>
-            Pay with M-Pesa — KES {{ gate_price }}
+            Pay with M-Pesa, KES {{ gate_price }}
         </button>
 
-        <div id="pg-verify-section" style="display:none;margin-top:0.9rem;">
-            <div style="display:flex;gap:0.5rem;align-items:center;">
-                <input type="text" id="pg-mpesa-code" placeholder="M-Pesa code (e.g. RCK12345XY)"
-                       style="flex:1;background:rgba(255,255,255,0.07);border:1.5px solid rgba(255,255,255,0.15);border-radius:10px;color:#fff;padding:0.65rem 0.9rem;font-size:0.9rem;outline:none;text-transform:uppercase;">
-                <button onclick="pgSubmitCode()" style="background:linear-gradient(135deg,#10b981,#059669);border:none;border-radius:10px;color:#fff;font-weight:700;padding:0.65rem 1rem;font-size:0.85rem;cursor:pointer;white-space:nowrap;">
-                    Verify
-                </button>
-            </div>
-            <p id="pg-verify-msg" style="margin:0.5rem 0 0;font-size:0.78rem;color:rgba(255,255,255,0.45);"></p>
-        </div>
-
-        <p class="pg-secure"><i class="bi bi-shield-check-fill"></i>Secure payment · Instant unlock</p>
-        <a id="pg-already-paid" onclick="pgToggleVerify()" style="display:block;text-align:center;margin-top:0.5rem;font-size:0.75rem;color:rgba(255,255,255,0.28);cursor:pointer;text-decoration:none;">
-            I already paid — enter M-Pesa code
-        </a>
+        <p class="pg-how">You'll enter your M-Pesa number on the next screen, then approve the prompt on your phone with your PIN.</p>
+        <p class="pg-secure"><i class="bi bi-shield-check-fill"></i>Secure M-Pesa payment · Instant unlock</p>
+        {% include "payments/_payment_help.html" with feature=gate_feature theme="light" %}
     </div>
 </div>
 
@@ -797,7 +794,7 @@ body.dark .lce-btn-calc:disabled { background: var(--surface-2); color: var(--te
 
     <div class="lce-head">
         <h2><i class="fas fa-calculator me-2" style="color:#2563eb;"></i>KCSE Cluster Points Calculator</h2>
-        <p>Enter your KCSE subject grades. We'll compute your cluster points for all 20 KUCCPS clusters. Note: these are estimates — verify final results on the KUCCPS portal.</p>
+        <p>Enter your KCSE subject grades. We'll compute your cluster points for all 18 KUCCPS clusters. Note: these are estimates, verify final results on the KUCCPS portal.</p>
     </div>
 
     {% if messages %}{% for message in messages %}
@@ -992,7 +989,7 @@ body.dark .lce-btn-calc:disabled { background: var(--surface-2); color: var(--te
 
     <div class="results-divider" style="margin-top:1.25rem;">
         <div class="results-divider-line"></div>
-        <div class="results-divider-label"><i class="bi bi-grid-3x3-gap-fill me-1"></i>All 20 Cluster Points</div>
+        <div class="results-divider-label"><i class="bi bi-grid-3x3-gap-fill me-1"></i>All 18 Cluster Points</div>
         <div class="results-divider-line"></div>
     </div>
 
@@ -1003,7 +1000,7 @@ body.dark .lce-btn-calc:disabled { background: var(--surface-2); color: var(--te
         </span>
         <span>Cutoff data: {{ DATA_UPDATED }}</span>
         <span>·</span>
-        <span>Not official KUCCPS — <a href="https://kuccps.net" target="_blank" rel="noopener noreferrer" style="color:#64748b;">verify at kuccps.net</a></span>
+        <span>Not official KUCCPS, <a href="https://kuccps.net" target="_blank" rel="noopener noreferrer" style="color:#64748b;">verify at kuccps.net</a></span>
     </div>
 
     <!-- Compact score summary grid -->
@@ -1084,14 +1081,14 @@ body.dark .lce-btn-calc:disabled { background: var(--surface-2); color: var(--te
             .slice(0, 3);
 
         var clLines = topClusters
-            .map(function(c){ return "• " + c.name + " — " + parseFloat(c.pts).toFixed(1) + " / 48 pts"; })
+            .map(function(c){ return "• " + c.name + ": " + parseFloat(c.pts).toFixed(1) + " / 48 pts"; })
             .join("\n");
 
         var msg = "🎓 My KCSE Cluster Points Results\n\n";
         if (grade) msg += "📊 Mean Grade: " + grade + "\n";
         if (agg)   msg += "📈 Aggregate: " + agg + " / 84\n";
         if (clLines) msg += "\n🏆 Top Cluster Scores:\n" + clLines + "\n";
-        msg += "\nI used CareerNext to calculate my cluster points & discover every university, KMTC, TVET & TTC course I qualify for in Kenya — 100% FREE! 🚀";
+        msg += "\nI used CareerNext to calculate my cluster points & discover every university, KMTC, TVET & TTC course I qualify for in Kenya, 100% FREE! 🚀";
         msg += "\n\n👉 Calculate yours free: careernext.co.ke";
 
         var btn = document.getElementById('wa-share-btn');
@@ -1136,7 +1133,7 @@ body.dark .lce-btn-calc:disabled { background: var(--surface-2); color: var(--te
             <!-- Generate section — shown first -->
             <div id="calcGenerateSection">
               <p class="text-muted small mb-3">
-                Create a shareable snapshot of your cluster points — anyone with the link can view your scores without logging in.
+                Create a shareable snapshot of your cluster points, anyone with the link can view your scores without logging in.
               </p>
               {% if user.is_authenticated %}
               <button onclick="generateCalcShareLink()" id="calcGenerateBtn"
@@ -1249,7 +1246,7 @@ body.dark .lce-btn-calc:disabled { background: var(--surface-2); color: var(--te
         <div class="results-divider-line"></div>
     </div>
     
-    <p style="font-size:0.75rem;color:#94a3b8;text-align:center;margin-bottom:1rem;">Based on 2021–2026 data</p>
+    <p style="font-size:0.75rem;color:#94a3b8;text-align:center;margin-bottom:1rem;">Based on 2021–2025 data</p>
     <div class="info-banner">
         <i class="bi bi-exclamation-triangle-fill flex-shrink-0 mt-1" style="color:#d97706;"></i>
         <span>Predictions are estimates only. Verify all cutoffs on the official <strong>KUCCPS portal</strong> before applying.</span>
@@ -1259,11 +1256,11 @@ body.dark .lce-btn-calc:disabled { background: var(--surface-2); color: var(--te
     <div class="pred-section">
         <div class="pred-cluster-badge">
             <i class="bi bi-diagram-3-fill"></i>
-            Cluster {{ group.kuccps_num }} — {{ group.cluster_name }} &nbsp;·&nbsp; Your score: <strong>{{ group.student_score|floatformat:1 }} / 48</strong>
+            Cluster {{ group.kuccps_num }}: {{ group.cluster_name }} &nbsp;·&nbsp; Your score: <strong>{{ group.student_score|floatformat:1 }} / 48</strong>
         </div>
         <div style="overflow-x:auto;">
         <table class="pred-table">
-            <thead><tr><th>Course</th><th>Institution</th><th>Latest</th><th>2026 Pred</th><th>Range</th><th>Status</th></tr></thead>
+            <thead><tr><th>Course</th><th>Institution</th><th>{{ LATEST_CUTOFF_YEAR }}</th><th>2026 Pred</th><th>Range</th><th>Status</th></tr></thead>
             <tbody>
             {% for row in group.rows %}
             <tr>
@@ -1275,7 +1272,7 @@ body.dark .lce-btn-calc:disabled { background: var(--surface-2); color: var(--te
                   <a href="{% url 'institutions:institution_detail' type_slug=row.institution.institution_type.slug institution_slug=row.institution.slug %}"
                      class="text-secondary text-decoration-none">{{ row.institution.name|truncatechars:26 }}</a>
                 </td>
-                <td><span style="font-weight:700;color:#1e293b;">{{ row.pred.latest_cutoff }}</span><span style="font-size:.62rem;color:#94a3b8;display:block;">{{ row.pred.latest_year }}</span></td>
+                <td>{% if row.pred.latest_year == LATEST_CUTOFF_YEAR %}<span style="font-weight:700;color:#1e293b;">{{ row.pred.latest_cutoff }}</span>{% else %}<span style="color:#94a3b8;">—</span>{% endif %}</td>
                 <td><span style="font-weight:800;color:#2563eb;">{{ row.pred.predicted }}</span></td>
                 <td style="color:#64748b;font-size:.72rem;">{{ row.pred.low }}–{{ row.pred.high }}</td>
                 <td>{% with key=row.elig.key %}<span class="status-badge {% if key == 'HighLikelihood' %}s-high{% elif key == 'Likely' %}s-likely{% elif key == 'Borderline' %}s-border{% else %}s-unlik{% endif %}">{{ row.elig.label }}</span>{% endwith %}</td>
@@ -1312,7 +1309,7 @@ body.dark .lce-btn-calc:disabled { background: var(--surface-2); color: var(--te
 {% if is_guest and results %}
 <div class="save-bar" id="saveBar" role="complementary" aria-label="Save your results">
     <div class="save-bar-text">
-        <i class="bi bi-floppy-fill me-1"></i> Your results are ready — save them now.
+        <i class="bi bi-floppy-fill me-1"></i> Your results are ready, save them now.
         <span class="subtle d-none d-sm-inline"> Your grades are stored; registration takes 30 seconds.</span>
     </div>
     <a href="{% url 'accounts:register' %}" class="save-bar-reg"
@@ -1403,7 +1400,7 @@ function updateGlobal() {
     } else {
         btn.disabled = !ready;
         if (ready) {
-            note.innerHTML = '<strong>' + all + ' subjects entered</strong> — ready to calculate!';
+            note.innerHTML = '<strong>' + all + ' subjects entered</strong>, ready to calculate!';
         } else {
             note.innerHTML = notReadyNote(all, missing, 'calculate');
         }
@@ -1575,41 +1572,6 @@ function showPaymentGate() {
 function handlePayment() {
     var next = encodeURIComponent(window.location.pathname + window.location.search);
     window.location.href = '/payments/required/?feature={{ gate_feature }}&next=' + next;
-}
-
-function pgToggleVerify() {
-    var sec = document.getElementById('pg-verify-section');
-    var link = document.getElementById('pg-already-paid');
-    var showing = sec.style.display !== 'none';
-    sec.style.display = showing ? 'none' : 'block';
-    link.textContent = showing ? 'I already paid — enter M-Pesa code' : 'Cancel';
-}
-
-async function pgSubmitCode() {
-    var code = (document.getElementById('pg-mpesa-code').value || '').trim().toUpperCase();
-    var msg = document.getElementById('pg-verify-msg');
-    if (!code) { msg.style.color = '#fca5a5'; msg.textContent = 'Please enter your M-Pesa transaction code.'; return; }
-    msg.style.color = 'rgba(255,255,255,0.45)';
-    msg.textContent = 'Checking…';
-    try {
-        var r = await fetch('{% url "payments:verify_by_transaction_code" %}', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
-            body: JSON.stringify({ feature: '{{ gate_feature }}', mpesa_code: code })
-        });
-        var d = await r.json();
-        if (d.status === 'completed') {
-            msg.style.color = '#34d399';
-            msg.textContent = 'Payment verified! Unlocking your results…';
-            setTimeout(function () { location.reload(); }, 2000);
-        } else {
-            msg.style.color = '#fca5a5';
-            msg.textContent = d.message || 'Code not found. Double-check your M-Pesa SMS.';
-        }
-    } catch (e) {
-        msg.style.color = '#fca5a5';
-        msg.textContent = 'Network error. Please try again.';
-    }
 }
 
 {% else %}

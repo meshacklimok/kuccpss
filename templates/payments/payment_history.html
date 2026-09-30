@@ -1,57 +1,114 @@
 {% extends "base.html" %}
-{% block title %}Payment History — CareerNext{% endblock %}
+{% block title %}Payment History | CareerNext{% endblock %}
 
 {% block content %}
+<style>
+.ph-list { display: grid; gap: 0.75rem; }
+.ph-card {
+  display: grid; grid-template-columns: 1fr auto; gap: 0.35rem 1rem; align-items: start;
+  background: var(--surface, #fff); border: 1px solid var(--border, #e2e8f0); border-radius: 14px;
+  padding: 0.95rem 1.1rem;
+}
+.ph-title { font-weight: 700; color: var(--text, #0f172a); }
+.ph-amount { font-weight: 800; color: var(--text, #0f172a); text-align: right; white-space: nowrap; }
+.ph-meta { font-size: 0.8rem; color: var(--text-3, #64748b); display: flex; flex-wrap: wrap; gap: 0.2rem 0.9rem; }
+.ph-meta code { color: inherit; font-size: 0.8rem; }
+.ph-note { grid-column: 1 / -1; font-size: 0.8rem; color: var(--text-2, #475569); margin: 0.1rem 0 0; }
+.ph-actions { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.35rem; }
+.ph-actions .btn { min-height: 40px; display: inline-flex; align-items: center; gap: 0.35rem; }
+.ph-msg { grid-column: 1 / -1; font-size: 0.8rem; margin: 0; }
+.ph-msg:empty { display: none; }
+.ph-legend { font-size: 0.8rem; color: var(--text-3, #64748b); }
+.ph-legend dt { display: inline; font-weight: 700; color: var(--text-2, #334155); }
+.ph-legend dd { display: inline; margin: 0; }
+.ph-legend div { margin-bottom: 0.25rem; }
+@media (max-width: 480px) {
+  .ph-card { padding: 0.85rem 0.9rem; }
+  .ph-actions .btn { flex: 1 1 auto; justify-content: center; }
+}
+</style>
+
 <div class="page-hero">
   <div class="container">
     <h1><i class="fas fa-receipt me-2"></i>Payment History</h1>
-    <p class="mb-0">Your M-Pesa transactions and active unlocks.</p>
+    <p class="mb-0">Your M-Pesa payments, receipts, and what to do if something didn't unlock.</p>
   </div>
 </div>
 
 <div class="container pb-5">
   <div class="row justify-content-center">
-    <div class="col-lg-9">
+    <div class="col-lg-8">
 
       {% if payments %}
-      <div class="table-responsive">
-        <table class="table table-hover align-middle">
-          <thead class="table-light">
-            <tr>
-              <th>Product</th>
-              <th>Amount</th>
-              <th>Status</th>
-              <th>Reference</th>
-              <th>Date</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for payment in payments %}
-            <tr>
-              <td>
-                <span class="fw-semibold">{{ payment.get_product_display }}</span>
-              </td>
-              <td>KES {{ payment.amount }}</td>
-              <td>
-                <span class="badge rounded-pill
-                  {% if payment.status == 'completed' %}bg-success
-                  {% elif payment.status == 'pending' %}bg-warning text-dark
-                  {% elif payment.status == 'failed' %}bg-danger
-                  {% else %}bg-secondary{% endif %}">
-                  {{ payment.get_status_display }}
-                </span>
-              </td>
-              <td class="text-muted small">
-                {% with txn=payment.transactions.first %}
-                  {{ txn.mpesa_ref|default:"—" }}
-                {% endwith %}
-              </td>
-              <td class="text-muted small">{{ payment.created_at|date:"d M Y, H:i" }}</td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
+      <div class="ph-list">
+        {% for payment in payments %}
+        <div class="ph-card" data-payment-id="{{ payment.pk }}">
+          <div>
+            <div class="ph-title">{{ payment.get_product_display }}</div>
+            <div class="ph-meta">
+              <span>{{ payment.created_at|date:"d M Y, H:i" }}</span>
+              {% with txn=payment.transactions.first %}
+                {% if txn.mpesa_ref %}<span>M-Pesa: <code>{{ txn.mpesa_ref }}</code></span>
+                {% elif payment.mpesa_code %}<span>Your code: <code>{{ payment.mpesa_code }}</code></span>{% endif %}
+              {% endwith %}
+            </div>
+          </div>
+          <div>
+            <div class="ph-amount">KES {{ payment.amount|floatformat:0 }}</div>
+            <div class="text-end mt-1">
+              {% if payment.status == 'completed' %}
+                <span class="badge rounded-pill bg-success">Paid</span>
+              {% elif payment.status == 'pending' and payment.mpesa_code %}
+                <span class="badge rounded-pill bg-info text-dark">Under review</span>
+              {% elif payment.status == 'pending' %}
+                <span class="badge rounded-pill bg-warning text-dark">Waiting for M-Pesa</span>
+              {% elif payment.status == 'failed' %}
+                <span class="badge rounded-pill bg-danger">Not completed</span>
+              {% else %}
+                <span class="badge rounded-pill bg-secondary">{{ payment.get_status_display }}</span>
+              {% endif %}
+            </div>
+          </div>
+
+          {% if payment.status == 'pending' and payment.mpesa_code %}
+            <p class="ph-note">We have your M-Pesa code and our team is confirming it. We'll email you once it's unlocked, usually within a few hours. No need to pay again.</p>
+          {% elif payment.status == 'pending' %}
+            <p class="ph-note">M-Pesa hasn't confirmed this yet. If you entered your PIN, tap <strong>Check status</strong>.</p>
+          {% elif payment.status == 'failed' and payment.can_recheck %}
+            <p class="ph-note">Usually means the prompt was cancelled and no money was taken. If you did get an M-Pesa SMS for it, tap <strong>Check status</strong> or enter the code below.</p>
+          {% elif payment.status == 'refunded' %}
+            <p class="ph-note">This payment was refunded to your M-Pesa.</p>
+          {% endif %}
+
+          {% if payment.status == 'completed' or payment.can_recheck %}
+          <div class="ph-actions">
+            {% if payment.status == 'completed' %}
+              <a class="btn btn-sm btn-outline-secondary" href="{% url 'payments:payment_receipt' payment.pk %}">
+                <i class="fas fa-file-download"></i> Receipt (PDF)
+              </a>
+            {% elif payment.can_recheck and not payment.mpesa_code %}
+              <button type="button" class="btn btn-sm btn-success ph-recheck">
+                <i class="fas fa-sync-alt"></i> Check status
+              </button>
+            {% endif %}
+          </div>
+          <p class="ph-msg" role="status" aria-live="polite"></p>
+          {% endif %}
+        </div>
+        {% endfor %}
       </div>
+
+      {% include "payments/_payment_help.html" with feature="" theme="light" %}
+
+      <details class="mt-3 ph-legend">
+        <summary class="fw-semibold">What do these statuses mean?</summary>
+        <dl class="mt-2 mb-0">
+          <div><dt>Paid</dt> <dd>&mdash; confirmed; the feature is unlocked on your account.</dd></div>
+          <div><dt>Waiting for M-Pesa</dt> <dd>&mdash; we sent the prompt but M-Pesa hasn't confirmed it yet.</dd></div>
+          <div><dt>Under review</dt> <dd>&mdash; you sent us your M-Pesa code and our team is confirming it by hand.</dd></div>
+          <div><dt>Not completed</dt> <dd>&mdash; the prompt was cancelled, expired, or the PIN wasn't entered. No money was taken.</dd></div>
+        </dl>
+      </details>
 
       {% else %}
       <div class="text-center py-5">
@@ -61,10 +118,42 @@
         <a href="{% url 'clusterpoints:eligible_courses' %}" class="btn btn-gradient-success">
           <i class="fas fa-unlock me-1"></i>Explore Premium Features
         </a>
+        <div class="text-start mt-4">
+          <p class="small text-muted mb-0">Paid but nothing shows here? Enter the code from your M-Pesa SMS:</p>
+          {% include "payments/_payment_help.html" with feature="" theme="light" open=True %}
+        </div>
       </div>
       {% endif %}
 
     </div>
   </div>
 </div>
+
+<script>
+document.querySelectorAll('.ph-recheck').forEach(function (btn) {
+  btn.addEventListener('click', async function () {
+    var card = btn.closest('.ph-card');
+    var msg = card.querySelector('.ph-msg');
+    btn.disabled = true;
+    msg.className = 'ph-msg text-muted';
+    msg.textContent = 'Checking with M-Pesa…';
+    try {
+      var r = await fetch('/payments/verify/' + card.dataset.paymentId + '/', { credentials: 'same-origin' });
+      var d = await r.json();
+      if (d.status === 'completed') {
+        msg.className = 'ph-msg text-success fw-semibold';
+        msg.textContent = 'Payment confirmed! Your access is unlocked.';
+        setTimeout(function () { window.location.reload(); }, 1200);
+        return;
+      }
+      msg.className = 'ph-msg ' + (d.status === 'failed' ? 'text-danger' : 'text-warning-emphasis');
+      msg.textContent = d.message || 'Not confirmed yet. Please try again in a minute.';
+    } catch (e) {
+      msg.className = 'ph-msg text-danger';
+      msg.textContent = 'Network error. Check your connection and try again.';
+    }
+    btn.disabled = false;
+  });
+});
+</script>
 {% endblock %}

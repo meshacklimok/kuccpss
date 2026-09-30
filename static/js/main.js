@@ -18,6 +18,21 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   });
 
+  // Close the mobile (☰) menu once the page is scrolled while it's open
+  var mainNav = document.getElementById('mainNav');
+  if (mainNav && window.bootstrap) {
+    var openedAtY = null;
+    mainNav.addEventListener('shown.bs.collapse', function () { openedAtY = window.scrollY; });
+    mainNav.addEventListener('hidden.bs.collapse', function () { openedAtY = null; });
+    window.addEventListener('scroll', function () {
+      // 40px tolerance so a tap-induced jiggle doesn't snap it shut
+      if (openedAtY !== null && Math.abs(window.scrollY - openedAtY) > 40) {
+        openedAtY = null;
+        bootstrap.Collapse.getOrCreateInstance(mainNav, { toggle: false }).hide();
+      }
+    }, { passive: true });
+  }
+
   // Highlight active mobile bottom nav link
   document.querySelectorAll('.mobile-bottom-nav a').forEach(function (link) {
     if (link.getAttribute('href') && path.startsWith(link.getAttribute('href')) && link.getAttribute('href') !== '/') {
@@ -178,22 +193,31 @@ document.addEventListener('DOMContentLoaded', function () {
   var DISMISS_KEY   = 'cn-install-dismissed';
   var DISMISS_COUNT = 'cn-install-dismiss-count';
 
-  // Already installed (running standalone) — do nothing
-  if (window.matchMedia('(display-mode: standalone)').matches) return;
-  if (window.navigator.standalone === true) return; // iOS standalone
+  var isStandalone = window.matchMedia('(display-mode: standalone)').matches
+    || window.navigator.standalone === true; // iOS standalone
 
-  // Dismissed recently? 1st dismiss = 7 days, 2nd+ = 4 days
+  // Already installed — hide the "Install App" menu link and do nothing else
+  if (isStandalone) {
+    document.querySelectorAll('.pwa-install-menu-item').forEach(function (el) { el.remove(); });
+    return;
+  }
+
+  // Dismissed recently? 1st dismiss = 7 days, 2nd+ = 4 days (auto-popups only;
+  // the "Install App" menu link always works)
   var ts    = parseInt(localStorage.getItem(DISMISS_KEY) || '0', 10);
   var count = parseInt(localStorage.getItem(DISMISS_COUNT) || '0', 10);
   var wait  = count >= 1 ? 4 : 7;
-  if (ts && Date.now() - ts < wait * 864e5) return;
+  var snoozed = !!(ts && Date.now() - ts < wait * 864e5);
 
   var banner       = document.getElementById('pwa-install-banner');
   var installBtn   = document.getElementById('pwa-install-btn');
   var dismissBtn   = document.getElementById('pwa-dismiss-btn');
   var iosModal     = document.getElementById('pwa-ios-modal');
   var iosClose     = document.getElementById('pwa-ios-close');
+  var menuLink     = document.getElementById('pwa-menu-install');
   var deferredEvt  = null;
+  var isIos = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  var isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
 
   function dismiss() {
     var n = parseInt(localStorage.getItem(DISMISS_COUNT) || '0', 10);
@@ -207,7 +231,7 @@ document.addEventListener('DOMContentLoaded', function () {
   window.addEventListener('beforeinstallprompt', function (e) {
     e.preventDefault();
     deferredEvt = e;
-    if (!banner) return;
+    if (!banner || snoozed) return;
     setTimeout(function () { banner.hidden = false; }, 4000);
   });
 
@@ -217,32 +241,42 @@ document.addEventListener('DOMContentLoaded', function () {
     fetch('/analytics/pwa-install/', { method: 'POST', body: fd }).catch(function () {});
   }
 
-  if (installBtn) {
-    installBtn.addEventListener('click', function () {
-      if (!deferredEvt) return;
-      deferredEvt.prompt();
-      deferredEvt.userChoice.then(function (choice) {
-        if (choice.outcome === 'accepted') {
-          dismiss();
-          trackInstall(/iphone|ipad|ipod/i.test(navigator.userAgent) ? 'ios' :
-                       /android/i.test(navigator.userAgent) ? 'android' : 'desktop');
-        }
-        deferredEvt = null;
-        if (banner) banner.hidden = true;
-      });
+  function promptInstall() {
+    if (!deferredEvt) return false;
+    deferredEvt.prompt();
+    deferredEvt.userChoice.then(function (choice) {
+      if (choice.outcome === 'accepted') {
+        dismiss();
+        trackInstall(/android/i.test(navigator.userAgent) ? 'android' : 'desktop');
+      }
+      deferredEvt = null;
+      if (banner) banner.hidden = true;
     });
+    return true;
   }
 
+  if (installBtn) installBtn.addEventListener('click', promptInstall);
   if (dismissBtn) dismissBtn.addEventListener('click', dismiss);
 
-  // iOS Safari — no beforeinstallprompt, show manual modal instead
-  var isIos = /iphone|ipad|ipod/i.test(navigator.userAgent);
-  var isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-  if (isIos && isSafari && iosModal) {
-    setTimeout(function () { iosModal.hidden = false; }, 5000);
+  // iOS — no beforeinstallprompt, show manual "Add to Home Screen" modal instead
+  if (iosModal) {
     if (iosClose) iosClose.addEventListener('click', dismiss);
     iosModal.addEventListener('click', function (e) {
       if (e.target === iosModal) dismiss();
+    });
+    if (isIos && isSafari && !snoozed) {
+      setTimeout(function () { iosModal.hidden = false; }, 5000);
+    }
+  }
+
+  // "Install App" link in the More menu — on-demand install
+  if (menuLink) {
+    menuLink.addEventListener('click', function (e) {
+      e.preventDefault();
+      if (promptInstall()) return;
+      if (isIos && iosModal) { iosModal.hidden = false; return; }
+      alert('To install CareerNext, open your browser menu (⋮) and choose '
+          + '"Install app" or "Add to Home screen".');
     });
   }
 

@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Page Not Found — CareerNext{% endblock %}
+{% block title %}Page Not Found | CareerNext{% endblock %}
 
 {% block content %}
 <div class="container py-5 text-center fade-in-up">
@@ -8,7 +8,7 @@
 
       <!-- Big 404 number -->
       <div class="mb-4" style="font-size:8rem;font-weight:800;line-height:1;
-           background:linear-gradient(135deg,#1e3a8a 0%,#16a34a 100%);
+           background:#1e3a8a;
            -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">
         404
       </div>
@@ -39,7 +39,7 @@
       <div class="card p-4">
         <p class="text-muted small mb-3 fw-semibold">Or search for what you need:</p>
         <form action="{% url 'courses:course_types_list' %}" method="GET" class="d-flex gap-2">
-          <input type="text" name="q" class="form-control" placeholder="e.g. Medicine, Computer Science…">
+          <input type="text" name="q" class="form-control" data-suggest="courses" placeholder="e.g. Medicine, Computer Science…">
           <button class="btn btn-success" type="submit">
             <i class="fas fa-search"></i>
           </button>

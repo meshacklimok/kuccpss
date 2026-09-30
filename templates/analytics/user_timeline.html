@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}User Timeline — {{ target.email }}{% endblock %}
+{% block title %}User Timeline: {{ target.email }}{% endblock %}
 
 {% block content %}
 <style>
@@ -62,7 +62,7 @@ body{background:var(--bg);}
   <div class="an-topbar">
     <div>
       <h1>User Timeline</h1>
-      <p>Full activity trace for <strong>{{ target.email }}</strong> — last {{ days }} days ({{ events|length }} events shown)</p>
+      <p>Full activity trace for <strong>{{ target.email }}</strong>, last {{ days }} days ({{ events|length }} events shown)</p>
     </div>
     <div class="an-topbar-right">
       <div class="day-pills">

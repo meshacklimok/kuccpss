@@ -1,9 +1,9 @@
 {% extends 'base.html' %}
-{% block title %}Browse Courses — University, KMTC, TVET &amp; TTC | CareerNext{% endblock %}
+{% block title %}Browse Courses: University, KMTC, TVET &amp; TTC | CareerNext{% endblock %}
 
 {% block meta %}<meta name="description" content="Browse thousands of Kenyan university degree programmes, KMTC diplomas, TVET certificates, and TTC courses. Filter by cluster, cutoff points, and institution.">{% endblock %}
 {% block og_meta %}
-<meta property="og:title" content="Browse Courses — University, KMTC, TVET &amp; TTC | CareerNext">
+<meta property="og:title" content="Browse Courses: University, KMTC, TVET &amp; TTC | CareerNext">
 <meta property="og:description" content="Thousands of Kenyan courses in one place. Filter by your cluster points and find what you qualify for.">
 {% endblock %}
 
@@ -18,14 +18,14 @@ body { background: #f5f7ff; }
 
 /* ── hero ── */
 .ct-hero {
-    background: linear-gradient(145deg, #0f172a 0%, #1e3a8a 45%, #312e81 100%);
+    background: #0f172a;
     padding: 3rem 0 4rem;
     position: relative; overflow: hidden;
 }
 .ct-hero::before {
     content: ''; position: absolute;
     width: 600px; height: 600px; border-radius: 50%;
-    background: radial-gradient(circle, rgba(99,102,241,0.18) 0%, transparent 70%);
+    background: rgba(99,102,241,0.18);
     top: -200px; right: -150px; pointer-events: none;
 }
 .ct-hero-eyebrow {
@@ -127,13 +127,15 @@ body { background: #f5f7ff; }
 .ct-mc-bg {
     position: absolute; inset: 0;
     border-radius: inherit;
+    background-color: var(--g1);
+    background-image: var(--img);
+    background-size: cover;
+    background-position: center;
 }
-/* decorative circle pattern */
+/* flat scrim for text legibility over the photo */
 .ct-mc-bg::after {
-    content: ''; position: absolute;
-    width: 180px; height: 180px; border-radius: 50%;
-    bottom: -60px; right: -40px;
-    background: rgba(255,255,255,0.08);
+    content: ''; position: absolute; inset: 0;
+    background: rgba(15,23,42,0.5);
     pointer-events: none;
 }
 .ct-mc-inner {
@@ -177,13 +179,11 @@ body { background: #f5f7ff; }
 }
 .ct-main-card:hover::before { left: 130%; }
 
-/* colour themes */
-.cc-degree { --g1:#4338ca; --g2:#6366f1; }
-.cc-kmtc   { --g1:#b91c1c; --g2:#ef4444; }
-.cc-ttc    { --g1:#b45309; --g2:#f59e0b; }
-.cc-cert   { --g1:#047857; --g2:#10b981; }
-
-.ct-mc-bg { background: linear-gradient(145deg, var(--g1) 0%, var(--g2) 100%); }
+/* colour themes (fallback background while photo loads) + real photo per pathway */
+.cc-degree { --g1:#4338ca; --img: url('https://images.unsplash.com/photo-1740065592671-9cb593ee9b78?w=800&q=70&auto=format&fit=crop'); }
+.cc-kmtc   { --g1:#b91c1c; --img: url('https://images.unsplash.com/photo-1516841273335-e39b37888115?w=800&q=70&auto=format&fit=crop'); }
+.cc-ttc    { --g1:#b45309; --img: url('https://images.unsplash.com/photo-1758270705031-ebd46917a454?w=800&q=70&auto=format&fit=crop'); }
+.cc-cert   { --g1:#047857; --img: url('https://images.unsplash.com/photo-1644522248824-ed975fd9ee81?w=800&q=70&auto=format&fit=crop'); }
 
 /* ── TVET grid ── */
 .ct-tvet-wrap {
@@ -192,7 +192,7 @@ body { background: #f5f7ff; }
     box-shadow: 0 2px 16px rgba(0,0,0,0.06);
 }
 .ct-tvet-head {
-    background: linear-gradient(135deg, #064e3b 0%, #059669 100%);
+    background: #064e3b;
     padding: 1.35rem 1.6rem;
     display: flex; align-items: center; gap: 1rem;
 }
@@ -315,12 +315,13 @@ body.dark .ct-section-label-text { color: var(--text-3); }
             <i class="bi bi-mortarboard-fill"></i>All Pathways
         </div>
         <h1>Find Your Course</h1>
-        <p class="ct-hero-sub">University degrees, KMTC, TVET programmes and more — explore every pathway available through KUCCPS.</p>
+        <p class="ct-hero-sub">University degrees, KMTC, TVET programmes and more. Explore every pathway available through KUCCPS.</p>
 
         <!-- Quick course search -->
-        <form method="get" action="{% url 'courses:course_type_detail' type_slug='degree' %}" class="ct-search">
+        <form method="get" action="{% url 'courses:course_types_list' %}" class="ct-search">
             <span class="ct-search-icon"><i class="bi bi-search"></i></span>
-            <input type="text" name="q" placeholder="Search degree courses…" autocomplete="off">
+            <input type="text" name="q" placeholder="Search any course, e.g. Data Science…" autocomplete="off"
+                   data-suggest="courses">
             <button class="ct-search-btn" type="submit">Search</button>
         </form>
 
@@ -429,7 +430,7 @@ body.dark .ct-section-label-text { color: var(--text-3); }
             <div class="ct-tvet-head-icon"><i class="bi bi-tools"></i></div>
             <div>
                 <h2>TVET Programmes</h2>
-                <p>Technical &amp; Vocational Education — craft certificates to advanced diplomas</p>
+                <p>Technical &amp; Vocational Education: craft certificates to advanced diplomas</p>
             </div>
         </div>
         <div class="ct-tvet-grid">

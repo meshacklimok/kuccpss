@@ -5,7 +5,7 @@ Populates:
   - InstitutionType  : "Public TVET" and "Private TVET"
   - Institution      : 220 TVET institutions with location & abbreviation
   - CourseType       : "TVET"
-  - CourseCategory   : one per TVET level (Diploma/L6, Certificate/L5, Artisan/L4, Craft/L3, Short Course, Trade Test, Proficiency, Professional)
+  - CourseCategory   : one per TVET level (Diploma/L6, Certificate/L5, Artisan/L4, Craft/L3)
   - Course           : 118 canonical diploma programmes with trade category & subject requirements
   - CourseOffering   : 3 273 institution × programme links (from DIPLOMA_PROGRAMMES.pdf / KUCCPS)
 
@@ -15,6 +15,10 @@ Excluded: teacher-training programmes, expired / revoked institutions.
 Usage:
     py manage.py seed_tvet
     py manage.py seed_tvet --clear     # wipe all TVET data first
+
+tvet_data.json predates the KUCCPS portal institution sync and uses some old names
+(e.g. Kaiboi Technical Training Institute). After re-seeding, run
+`import_kuccps_institutions` then `merge_institutions` to restore portal names/types.
 """
 
 import json, os
@@ -278,18 +282,6 @@ TVET_COURSE_TYPES = [
     ('TVET Craft Certificate (Level 3)', 'tvet-craft-level-3',
      'Craft Certificate — KNQF Level 3. Minimum mean grade D-.',
      'bi-tools', '#7c3aed'),
-    ('TVET Short Course', 'tvet-short-course',
-     'Short skills-based TVET courses, typically under one year.',
-     'bi-clock-fill', '#dc2626'),
-    ('TVET Trade Test', 'tvet-trade-test',
-     'Trade tests for occupational competencies.',
-     'bi-clipboard2-check-fill', '#1d4ed8'),
-    ('TVET Proficiency', 'tvet-proficiency',
-     'Proficiency certificates in specific vocational skills.',
-     'bi-star-fill', '#6d28d9'),
-    ('TVET Professional', 'tvet-professional',
-     'Professional TVET qualifications.',
-     'bi-briefcase-fill', '#0f766e'),
 ]
 
 

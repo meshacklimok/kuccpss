@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% block title %}{{ cluster.name }} — KUCCPS Cluster | Courses & Requirements Kenya | CareerNext{% endblock %}
+{% block title %}{{ cluster.name }}: KUCCPS Cluster | Courses & Requirements Kenya | CareerNext{% endblock %}
 
 {% block meta %}<meta name="description" content="Everything about {{ cluster.name }} in the KUCCPS system: subject requirements, minimum cluster points, and all university degree courses available under this cluster in Kenya.">{% endblock %}
 
@@ -51,14 +51,14 @@
     <div class="col-auto">
       <div class="stat-chip">
         <i class="fas fa-book-open me-2 text-primary"></i>
-        <strong>{{ courses.count }}</strong> programme{{ courses.count|pluralize }}
+        <strong>{{ courses|length }}</strong> programme{{ courses|length|pluralize }}
       </div>
     </div>
-    {% if subject_groups.count %}
+    {% if subject_groups %}
     <div class="col-auto">
       <div class="stat-chip">
         <i class="fas fa-list-check me-2 text-success"></i>
-        <strong>{{ subject_groups.count }}</strong> subject group{{ subject_groups.count|pluralize }}
+        <strong>{{ subject_groups|length }}</strong> subject group{{ subject_groups|length|pluralize }}
       </div>
     </div>
     {% endif %}

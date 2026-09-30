@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}Withdrawal History: CareerNext{% endblock %}
+
+{% block content %}
+<div class="container py-4" style="max-width:860px;">
+  <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+    <div>
+      <h1 class="h4 fw-bold mb-0" style="color:#1e3a8a;">Withdrawal History</h1>
+      <p class="text-muted small mb-0">Current balance: <strong class="text-success">KES {{ affiliate.wallet_balance|floatformat:0 }}</strong></p>
+    </div>
+    <a href="{% url 'accounts:affiliate_dashboard' %}" class="btn btn-outline-secondary btn-sm rounded-pill">
+      <i class="bi bi-arrow-left me-1"></i>Back to Dashboard
+    </a>
+  </div>
+
+  {% include "partials/withdrawal_history_table.html" %}
+</div>
+{% endblock %}

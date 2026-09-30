@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}My Dashboard — KCSE Cluster Points & KUCCPS Courses | CareerNext{% endblock %}
+{% block title %}My Dashboard: KCSE Cluster Points & KUCCPS Courses | CareerNext{% endblock %}
 
 {% block content %}
 
@@ -17,14 +17,14 @@
 
 /* ── dashboard header ── */
 .dash-header {
-  background: linear-gradient(135deg, #0c1f5e 0%, #1e3a8a 50%, #1d4ed8 100%);
+  background: #0c1f5e;
   padding: 2rem 0 0;
   position: relative;
 }
 .dash-header::before {
   content: '';
   position: absolute; inset: 0;
-  background-image: radial-gradient(circle at 1px 1px, rgba(255,255,255,0.05) 1px, transparent 0);
+  background-image: none;
   background-size: 28px 28px;
   pointer-events: none;
 }
@@ -610,14 +610,9 @@ body.dark .helb-criteria-item    { background: rgba(22,163,74,0.12); border-colo
     {% else %}
     {# — Authenticated — #}
     <div class="d-flex align-items-center gap-3 flex-wrap pb-3">
-      {% if user.profile_picture %}
-      <img src="{{ user.profile_picture.url }}" width="56" height="56"
-           class="rounded-circle flex-shrink-0" style="object-fit:cover;border:2px solid rgba(255,255,255,0.35);" alt="" loading="lazy">
-      {% else %}
       <div class="dash-avatar">
         {{ user.full_name|first|upper|default:user.email|first|upper }}
       </div>
-      {% endif %}
 
       <div class="flex-grow-1">
         <div class="dash-name">Welcome back, {{ user.full_name|default:user.email }}</div>
@@ -637,13 +632,13 @@ body.dark .helb-criteria-item    { background: rgba(22,163,74,0.12); border-colo
         </a>
         {% if user.is_staff %}
         <a href="{% url 'analytics:dashboard' %}" class="btn-dash-action"
-           style="background:linear-gradient(120deg,#7c3aed,#4f46e5);color:#fff;border:none;">
+           style="background:#7c3aed;color:#fff;border:none;">
           <i class="fas fa-chart-line"></i>Analytics
         </a>
         {% endif %}
         {% if user.is_superuser %}
         <a href="{% url 'accounts:staff_team' %}" class="btn-dash-action"
-           style="background:linear-gradient(120deg,#1e3a8a,#2563eb);color:#fff;border:none;">
+           style="background:#1e3a8a;color:#fff;border:none;">
           <i class="bi bi-shield-lock-fill"></i>Staff & Admins
         </a>
         {% endif %}
@@ -706,7 +701,7 @@ body.dark .helb-criteria-item    { background: rgba(22,163,74,0.12); border-colo
   {% if not guest and readiness_pct < 100 %}
   <div class="dash-card reveal">
     <div class="dash-card-header-gradient"
-         style="background:linear-gradient(120deg,#312e81 0%,#4f46e5 60%,#7c3aed 100%);">
+         style="background:#312e81;">
       <div>
         <div class="fw-800" style="font-size:0.9rem;display:flex;align-items:center;gap:7px;">
           <i class="fas fa-chart-pie" style="color:#c4b5fd;"></i>Application Readiness
@@ -778,7 +773,7 @@ body.dark .helb-criteria-item    { background: rgba(22,163,74,0.12); border-colo
 
   <div class="dash-card reveal">
     <div class="dash-card-header-gradient"
-         style="background:linear-gradient(120deg,#1e3a8a 0%,#2563eb 100%);">
+         style="background:#1e3a8a;">
       <div>
         <div class="fw-800" style="font-size:0.9rem;display:flex;align-items:center;gap:7px;">
           <i class="fas fa-chart-bar" style="color:#93c5fd;"></i>Your Cluster Points
@@ -797,7 +792,7 @@ body.dark .helb-criteria-item    { background: rgba(22,163,74,0.12); border-colo
           <div class="mt-num">{{ latest_result.total_points }}<sub>/84</sub></div>
           <div class="mt-label">Aggregate</div>
         </div>
-        {% with top=cluster_results.0 %}
+        {% with top=top_cluster_result %}
         <div class="metric-tile">
           <div class="mt-num" style="{% if top.cluster_points >= 36 %}color:#16a34a;{% elif top.cluster_points >= 24 %}color:#2563eb;{% else %}color:#ea580c;{% endif %}">
             {{ top.cluster_points|floatformat:1 }}<sub>/48</sub>
@@ -899,7 +894,7 @@ body.dark .helb-criteria-item    { background: rgba(22,163,74,0.12); border-colo
     {% if snapshot and snapshot.top_matches_json %}
     {# — real data — #}
     <div class="dash-card-header-gradient"
-         style="background:linear-gradient(120deg,#1e3a8a 0%,#4f46e5 100%);">
+         style="background:#1e3a8a;">
       <div>
         <div class="fw-800" style="font-size:0.9rem;display:flex;align-items:center;gap:7px;">
           <i class="fas fa-star" style="color:#fbbf24;"></i>Recommended For You
@@ -974,7 +969,7 @@ body.dark .helb-criteria-item    { background: rgba(22,163,74,0.12); border-colo
     {% else %}
     {# — sample / no snapshot — #}
     <div class="dash-card-header-gradient"
-         style="background:linear-gradient(120deg,#1e3a8a 0%,#4f46e5 100%);">
+         style="background:#1e3a8a;">
       <div>
         <div class="fw-800" style="font-size:0.9rem;display:flex;align-items:center;gap:7px;">
           <i class="fas fa-star" style="color:#fbbf24;"></i>Recommended For You
@@ -1039,7 +1034,7 @@ body.dark .helb-criteria-item    { background: rgba(22,163,74,0.12); border-colo
     <div class="dash-card-body" style="padding:1rem 1.25rem;">
       <div class="d-flex align-items-center gap-3 flex-wrap">
         <div class="rounded-3 d-flex align-items-center justify-content-center flex-shrink-0"
-             style="width:48px;height:48px;background:linear-gradient(135deg,#fbbf24,#f59e0b);">
+             style="width:48px;height:48px;background:#fbbf24;">
           <i class="fas fa-lightbulb" style="color:#fff;font-size:1.1rem;"></i>
         </div>
         <div style="flex:1;min-width:0;">
@@ -1070,7 +1065,7 @@ body.dark .helb-criteria-item    { background: rgba(22,163,74,0.12); border-colo
   {# ── MY COURSES (tabbed: Watchlist | Shortlist) ── #}
   {% if guest %}
   <div class="dash-card reveal">
-    <div class="dash-card-header-gradient" style="background:linear-gradient(120deg,#1e3a8a 0%,#4f46e5 100%);">
+    <div class="dash-card-header-gradient" style="background:#1e3a8a;">
       <div>
         <div class="fw-800" style="font-size:0.9rem;display:flex;align-items:center;gap:7px;">
           <i class="fas fa-layer-group" style="color:#a5b4fc;"></i>My Courses
@@ -1095,7 +1090,7 @@ body.dark .helb-criteria-item    { background: rgba(22,163,74,0.12); border-colo
   {% else %}
   <div class="dash-card reveal">
     <div class="dash-card-header-gradient"
-         style="background:linear-gradient(120deg,#312e81,#4f46e5);">
+         style="background:#312e81;">
       <div>
         <div class="fw-800" style="font-size:0.9rem;display:flex;align-items:center;gap:7px;">
           <i class="fas fa-layer-group" style="color:#c7d2fe;"></i>My Courses
@@ -1248,7 +1243,7 @@ body.dark .helb-criteria-item    { background: rgba(22,163,74,0.12); border-colo
   {% if not guest and cutoff_comparisons %}
   <div class="dash-card reveal">
     <div class="dash-card-header-gradient"
-         style="background:linear-gradient(120deg,#1e1b4b 0%,#312e81 50%,#1e3a8a 100%);">
+         style="background:#1e1b4b;">
       <div>
         <div class="fw-800" style="font-size:0.9rem;display:flex;align-items:center;gap:7px;">
           <i class="fas fa-crosshairs" style="color:#a5b4fc;"></i>Cutoff Match
@@ -1344,7 +1339,7 @@ body.dark .helb-criteria-item    { background: rgba(22,163,74,0.12); border-colo
   {% if not guest and subject_req_checks %}
   <div class="dash-card reveal">
     <div class="dash-card-header-gradient"
-         style="background:linear-gradient(120deg,#7c3aed 0%,#4f46e5 100%);">
+         style="background:#7c3aed;">
       <div>
         <div class="fw-800" style="font-size:0.9rem;display:flex;align-items:center;gap:7px;">
           <i class="fas fa-clipboard-check" style="color:#c4b5fd;"></i>Subject Requirements
@@ -1404,7 +1399,7 @@ body.dark .helb-criteria-item    { background: rgba(22,163,74,0.12); border-colo
   {% if not guest and shortlist_comparison %}
   <div class="dash-card reveal">
     <div class="dash-card-header-gradient"
-         style="background:linear-gradient(120deg,#0f172a 0%,#1e3a8a 60%,#312e81 100%);">
+         style="background:#0f172a;">
       <div>
         <div class="fw-800" style="font-size:0.9rem;display:flex;align-items:center;gap:7px;">
           <i class="fas fa-table" style="color:#93c5fd;"></i>Course Comparison
@@ -1482,7 +1477,7 @@ body.dark .helb-criteria-item    { background: rgba(22,163,74,0.12); border-colo
   {% if all_clusters %}
   <div class="dash-card reveal">
     <div class="dash-card-header-gradient"
-         style="background:linear-gradient(120deg,#0f172a 0%,#1e3a8a 100%);">
+         style="background:#0f172a;">
       <div>
         <div class="fw-800" style="font-size:0.9rem;display:flex;align-items:center;gap:7px;">
           <i class="fas fa-layer-group" style="color:#93c5fd;"></i>KUCCPS Clusters
@@ -1524,7 +1519,7 @@ body.dark .helb-criteria-item    { background: rgba(22,163,74,0.12); border-colo
   {% if featured_promos %}
   <div class="dash-card reveal">
     <div class="dash-card-header-gradient"
-         style="background:linear-gradient(120deg,#78350f,#d97706);">
+         style="background:#78350f;">
       <div>
         <div class="fw-800" style="font-size:0.9rem;display:flex;align-items:center;gap:7px;">
           <i class="fas fa-handshake" style="color:#fde68a;"></i>Featured Institutions
@@ -1570,7 +1565,7 @@ body.dark .helb-criteria-item    { background: rgba(22,163,74,0.12); border-colo
   {% if recent_news %}
   <div class="dash-card reveal">
     <div class="dash-card-header-gradient"
-         style="background:linear-gradient(120deg,#0f172a 0%,#1e3a8a 100%);">
+         style="background:#0f172a;">
       <div class="fw-800" style="font-size:0.9rem;display:flex;align-items:center;gap:7px;">
         <i class="fas fa-newspaper" style="color:#93c5fd;"></i>Latest News &amp; Updates
       </div>
@@ -1617,8 +1612,8 @@ body.dark .helb-criteria-item    { background: rgba(22,163,74,0.12); border-colo
   {# ── KUCCPS TIMELINE ── #}
   <div class="sidebar-card reveal" style="overflow:hidden;">
     <div class="p-4 {% if timeline_phase != 'closed' %}text-white{% endif %}"
-         style="{% if timeline_phase == 'before_open' %}background:linear-gradient(135deg,#1e3a8a,#4f46e5);
-                {% elif timeline_phase == 'open' %}background:linear-gradient(135deg,#065f46,#16a34a);
+         style="{% if timeline_phase == 'before_open' %}background:#1e3a8a;
+                {% elif timeline_phase == 'open' %}background:#065f46;
                 {% else %}background:#f8fafc;{% endif %}">
       <div class="d-flex align-items-center gap-2 mb-3">
         <i class="fas fa-calendar-check {% if timeline_phase == 'closed' %}text-muted{% endif %}"></i>
@@ -1671,7 +1666,7 @@ body.dark .helb-criteria-item    { background: rgba(22,163,74,0.12); border-colo
   {# ── QUICK ACTIONS ── #}
   <div class="sidebar-card reveal">
     <div class="sidebar-card-header"
-         style="background:linear-gradient(120deg,#1e3a8a,#2563eb);border:none;">
+         style="background:#1e3a8a;border:none;">
       <h6 class="sidebar-card-title" style="color:#fff;">
         <i class="fas fa-bolt" style="color:#fbbf24;"></i>Quick Actions
       </h6>
@@ -1710,7 +1705,7 @@ body.dark .helb-criteria-item    { background: rgba(22,163,74,0.12); border-colo
   {% if trending_viewed or spotlight %}
   <div class="sidebar-card reveal">
     <div class="sidebar-card-header"
-         style="background:linear-gradient(120deg,#0f172a 0%,#1e1b4b 100%);border:none;">
+         style="background:#0f172a;border:none;">
       <h6 class="sidebar-card-title" style="color:#fff;">
         <i class="fas fa-fire" style="color:#f97316;"></i>Trending Now
         <span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#22c55e;
@@ -1727,7 +1722,7 @@ body.dark .helb-criteria-item    { background: rgba(22,163,74,0.12); border-colo
          style="border-bottom:1px solid #f1f5f9;transition:background 0.15s;background:#fef9c3;"
          onmouseover="this.style.background='#fef3c7'" onmouseout="this.style.background='#fef9c3'">
         <div class="rounded-2 flex-shrink-0 d-flex align-items-center justify-content-center"
-             style="width:30px;height:30px;background:linear-gradient(135deg,#f59e0b,#ef4444);color:#fff;font-size:0.6rem;font-weight:800;text-align:center;line-height:1.1;">
+             style="width:30px;height:30px;background:#f59e0b;color:#fff;font-size:0.6rem;font-weight:800;text-align:center;line-height:1.1;">
           <i class="fas fa-star" style="font-size:0.75rem;"></i>
         </div>
         <div style="min-width:0;flex:1;">
@@ -1748,7 +1743,7 @@ body.dark .helb-criteria-item    { background: rgba(22,163,74,0.12); border-colo
          onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background=''">
         <div class="rounded-2 flex-shrink-0 d-flex align-items-center justify-content-center fw-800"
              style="width:30px;height:30px;font-size:0.68rem;
-                    {% if forloop.counter == 1 %}background:linear-gradient(135deg,#f59e0b,#fbbf24);color:#78350f;
+                    {% if forloop.counter == 1 %}background:#f59e0b;color:#78350f;
                     {% elif forloop.counter == 2 %}background:rgba(148,163,184,0.2);color:#64748b;border:1px solid #cbd5e1;
                     {% elif forloop.counter == 3 %}background:rgba(180,83,9,0.1);color:#d97706;border:1px solid rgba(180,83,9,0.2);
                     {% else %}background:#f1f5f9;color:#94a3b8;{% endif %}">
@@ -1780,7 +1775,7 @@ body.dark .helb-criteria-item    { background: rgba(22,163,74,0.12); border-colo
   {% if inst_type_links %}
   <div class="sidebar-card reveal">
     <div class="sidebar-card-header"
-         style="background:linear-gradient(120deg,#78350f,#d97706);border:none;">
+         style="background:#78350f;border:none;">
       <h6 class="sidebar-card-title" style="color:#fff;">
         <i class="fas fa-university"></i>Institutions
       </h6>
@@ -1812,7 +1807,7 @@ body.dark .helb-criteria-item    { background: rgba(22,163,74,0.12); border-colo
   {# ── MENTORSHIP ── #}
   <div class="sidebar-card reveal">
     <div class="sidebar-card-header"
-         style="background:linear-gradient(120deg,#064e3b,#059669);border:none;">
+         style="background:#064e3b;border:none;">
       <h6 class="sidebar-card-title" style="color:#fff;">
         <i class="bi bi-people-fill"></i>Mentorship
         {% if next_session %}
@@ -1827,15 +1822,10 @@ body.dark .helb-criteria-item    { background: rgba(22,163,74,0.12); border-colo
       {% if next_session %}
       <div class="d-flex align-items-center gap-2 p-2 rounded-3 mb-2"
            style="background:#f0fdf4;border:1.5px solid #86efac;">
-        {% if next_session.mentor.photo %}
-        <img src="{{ next_session.mentor.photo.url }}" class="rounded-circle flex-shrink-0"
-             width="38" height="38" style="object-fit:cover;" alt="" loading="lazy">
-        {% else %}
         <div class="rounded-circle flex-shrink-0 d-flex align-items-center justify-content-center fw-bold text-success"
              style="width:38px;height:38px;background:#dcfce7;">
           {{ next_session.mentor.display_name|first|upper }}
         </div>
-        {% endif %}
         <div style="min-width:0;flex:1;">
           <div class="fw-700 small text-dark">{{ next_session.slot.datetime_display }}</div>
           <div class="text-muted" style="font-size:0.7rem;">with {{ next_session.mentor.display_name }}</div>
@@ -1852,15 +1842,10 @@ body.dark .helb-criteria-item    { background: rgba(22,163,74,0.12); border-colo
       {% for mentor in suggested_mentors %}
       <div class="d-flex align-items-center gap-2 p-2 rounded-3 mb-2"
            style="background:#f0fdf4;border:1.5px solid #bbf7d0;">
-        {% if mentor.photo %}
-        <img src="{{ mentor.photo.url }}" class="rounded-circle flex-shrink-0"
-             width="36" height="36" style="object-fit:cover;" alt="" loading="lazy">
-        {% else %}
         <div class="rounded-circle flex-shrink-0 d-flex align-items-center justify-content-center fw-bold"
              style="width:36px;height:36px;background:#dcfce7;color:#16a34a;font-size:0.9rem;">
           {{ mentor.user.full_name|first|upper|default:mentor.user.email|first|upper }}
         </div>
-        {% endif %}
         <div style="min-width:0;flex:1;">
           <div class="fw-700 text-dark" style="font-size:0.8rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
             {{ mentor.user.full_name|default:mentor.user.email }}
@@ -1945,7 +1930,7 @@ body.dark .helb-criteria-item    { background: rgba(22,163,74,0.12); border-colo
   {# ── CAREER IDEAS ── #}
   <div class="sidebar-card reveal">
     <div class="sidebar-card-header"
-         style="background:linear-gradient(120deg,#1e1b4b,#4338ca);border:none;">
+         style="background:#1e1b4b;border:none;">
       <h6 class="sidebar-card-title" style="color:#fff;">
         <i class="fas fa-compass" style="color:#a5b4fc;"></i>Career Ideas
       </h6>
@@ -2004,7 +1989,7 @@ body.dark .helb-criteria-item    { background: rgba(22,163,74,0.12); border-colo
   {% if not guest and ai_credit_info %}
   <div class="sidebar-card reveal">
     <div class="sidebar-card-header"
-         style="background:linear-gradient(120deg,#0f172a 0%,#312e81 60%,#4f46e5 100%);border:none;">
+         style="background:#0f172a;border:none;">
       <h6 class="sidebar-card-title" style="color:#fff;">
         <i class="fas fa-robot" style="color:#a5b4fc;"></i>CareerNext AI
       </h6>
@@ -2036,13 +2021,13 @@ body.dark .helb-criteria-item    { background: rgba(22,163,74,0.12); border-colo
     {% if not snapshot %}
     {# ── Locked state: user hasn't run the engine yet ── #}
     <div class="sidebar-card-body text-center" style="padding:1.5rem 1.25rem;">
-      <div style="width:54px;height:54px;border-radius:50%;background:linear-gradient(135deg,#312e81,#4f46e5);
+      <div style="width:54px;height:54px;border-radius:50%;background:#312e81;
                   display:flex;align-items:center;justify-content:center;margin:0 auto 0.85rem;">
         <i class="fas fa-lock" style="color:#c4b5fd;font-size:1.1rem;"></i>
       </div>
       <div class="fw-800 mb-1" style="font-size:0.88rem;color:#1e293b;">Unlock CareerNext AI</div>
       <p class="text-muted small mb-3" style="font-size:0.75rem;line-height:1.5;">
-        Run the <strong>Career Engine</strong> once to unlock your personal AI assistant —
+        Run the <strong>Career Engine</strong> once to unlock your personal AI assistant and
         get <strong>100 free messages</strong> to ask anything about courses, careers, and KUCCPS.
       </p>
       <a href="{% url 'career:home' %}#pathway-section"
@@ -2076,7 +2061,7 @@ body.dark .helb-criteria-item    { background: rgba(22,163,74,0.12); border-colo
       <p class="text-muted small mb-3">You've used your free messages. Top up to keep chatting.</p>
       <a href="{% url 'payments:payment_required' %}?feature=ai_chat_access"
          class="btn btn-primary btn-sm w-100 fw-700" style="border-radius:10px;">
-        <i class="fas fa-bolt me-1"></i>Get 200 Messages — KES 50
+        <i class="fas fa-bolt me-1"></i>Get 200 Messages for KES 50
       </a>
     </div>
     {% endif %}
@@ -2139,7 +2124,7 @@ body.dark .helb-criteria-item    { background: rgba(22,163,74,0.12); border-colo
   {# ── OFFICIAL LINKS ── #}
   <div class="sidebar-card reveal">
     <div class="sidebar-card-header"
-         style="background:linear-gradient(120deg,#0f172a,#1e293b);border:none;">
+         style="background:#0f172a;border:none;">
       <h6 class="sidebar-card-title" style="color:#fff;">
         <i class="fas fa-link" style="color:#94a3b8;"></i>Official Links
       </h6>
@@ -2205,7 +2190,7 @@ body.dark .helb-criteria-item    { background: rgba(22,163,74,0.12); border-colo
 
 
   {# ── WHATSAPP COMMUNITY ── #}
-  <div class="sidebar-card reveal" style="background:linear-gradient(135deg,#dcfce7,#d1fae5);border:1.5px solid #86efac !important;">
+  <div class="sidebar-card reveal" style="background:#dcfce7;border:1.5px solid #86efac !important;">
     <div class="sidebar-card-body">
       <div class="d-flex align-items-center gap-2 mb-2">
         <i class="bi bi-whatsapp" style="color:#16a34a;font-size:1.2rem;"></i>
@@ -2224,14 +2209,14 @@ body.dark .helb-criteria-item    { background: rgba(22,163,74,0.12); border-colo
 
   {# ── REFER A FRIEND ── #}
   {% if not guest %}
-  <div class="sidebar-card" style="background:linear-gradient(135deg,#fefce8,#fef9c3);border:1.5px solid #fde68a !important;">
+  <div class="sidebar-card" style="background:#fefce8;border:1.5px solid #fde68a !important;">
     <div class="sidebar-card-body">
       <div class="d-flex align-items-center gap-2 mb-2">
         <i class="bi bi-gift-fill" style="color:#ca8a04;font-size:1.2rem;"></i>
         <span class="fw-800 small" style="color:#92400e;">Invite Friends, Earn Rewards</span>
       </div>
       <p class="small mb-3" style="color:#78350f;opacity:0.85;">
-        Share your referral link — earn rewards every time a friend joins CareerNext.
+        Share your referral link and earn rewards every time a friend joins CareerNext.
       </p>
       <a href="{% url 'accounts:referral' %}"
          class="btn w-100 fw-700" style="background:#ca8a04;color:#fff;border-radius:10px;font-size:0.83rem;">
@@ -2253,7 +2238,7 @@ body.dark .helb-criteria-item    { background: rgba(22,163,74,0.12); border-colo
 <div class="modal fade" id="guestGateModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered" style="max-width:360px;">
     <div class="modal-content border-0 shadow-lg" style="border-radius:18px;overflow:hidden;">
-      <div class="p-4 text-center" style="background:linear-gradient(135deg,#0c1f5e 0%,#1e3a8a 60%,#4f46e5 100%);">
+      <div class="p-4 text-center" style="background:#0c1f5e;">
         <div class="d-flex align-items-center justify-content-center mb-3"
              style="width:54px;height:54px;border-radius:50%;background:rgba(255,255,255,0.12);border:2px solid rgba(255,255,255,0.2);margin:0 auto;">
           <i class="fas fa-lock" style="font-size:1.3rem;color:rgba(255,255,255,0.8);"></i>
@@ -2290,8 +2275,9 @@ body.dark .helb-criteria-item    { background: rgba(22,163,74,0.12); border-colo
 
 /* ── Cluster bar chart ─────────────────────────────────────── */
 {% if cluster_results %}
-const clusterLabels = [{% for r in cluster_results|slice:":8" %}"{{ r.cluster.name|truncatechars:18 }}"{% if not forloop.last %},{% endif %}{% endfor %}];
-const clusterData   = [{% for r in cluster_results|slice:":8" %}{{ r.cluster_points }}{% if not forloop.last %},{% endif %}{% endfor %}];
+const clusterLabels = [{% for r in cluster_results %}"C{{ r.cluster.kuccps_number }}"{% if not forloop.last %},{% endif %}{% endfor %}];
+const clusterNames  = [{% for r in cluster_results %}"{{ r.cluster.name|escapejs }}"{% if not forloop.last %},{% endif %}{% endfor %}];
+const clusterData   = [{% for r in cluster_results %}{{ r.cluster_points }}{% if not forloop.last %},{% endif %}{% endfor %}];
 const barColors     = clusterData.map(v => v >= 36 ? '#16a34a' : v >= 24 ? '#2563eb' : '#f97316');
 
 new Chart(document.getElementById('clusterChart'), {
@@ -2307,7 +2293,10 @@ new Chart(document.getElementById('clusterChart'), {
     responsive: true,
     plugins: {
       legend: { display: false },
-      tooltip: { callbacks: { label: ctx => ` ${ctx.parsed.y.toFixed(1)} pts` } }
+      tooltip: { callbacks: {
+        title: items => clusterNames[items[0].dataIndex],
+        label: ctx => ` ${ctx.parsed.y.toFixed(1)} pts`
+      } }
     },
     scales: {
       y: { beginAtZero: true, max: 48, grid: { color: '#f1f5f9' }, ticks: { font: { size: 10 } } },

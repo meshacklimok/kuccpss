@@ -1,9 +1,9 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block title %}Calculate KCSE Cluster Points — Free KUCCPS Calculator | CareerNext{% endblock %}
+{% block title %}Calculate KCSE Cluster Points: Free KUCCPS Calculator | CareerNext{% endblock %}
 
-{% block meta %}<meta name="description" content="Enter your KCSE grades and instantly get your cluster points for all 20 KUCCPS clusters — the same formula KUCCPS uses for university placement — then see which degree courses you qualify for.">{% endblock %}
+{% block meta %}<meta name="description" content="Enter your KCSE grades and instantly get your cluster points for all 18 KUCCPS clusters, the same formula KUCCPS uses for university placement, then see which degree courses you qualify for.">{% endblock %}
 
 {% block content %}
 
@@ -40,7 +40,7 @@
 }
 .sb-counter.ready { border-color: #86efac; color: #16a34a; background: #f0fdf4; }
 .sb-progress { height: 3px; background: #e2e8f0; }
-.sb-progress-fill { height: 100%; width: 0%; background: linear-gradient(90deg,#1e3a8a,#2563eb,#16a34a); transition: width 0.4s ease; }
+.sb-progress-fill { height: 100%; width: 0%; background: #1e3a8a; transition: width 0.4s ease; }
 
 .lce-page { max-width: 760px; margin: 0 auto; padding: 1.5rem 1rem 6rem; }
 
@@ -123,7 +123,7 @@
 }
 .lce-btn-back:hover { color: #1e293b; border-color: #94a3b8; background: #f1f5f9; text-decoration: none; }
 .lce-btn-continue {
-    background: linear-gradient(135deg, #1e3a8a, #2563eb);
+    background: #1e3a8a;
     color: #fff; border: none; border-radius: 12px;
     padding: 0.7rem 1.75rem; font-weight: 800; font-size: 0.92rem;
     cursor: pointer; transition: all 0.2s; flex-shrink: 0;
@@ -344,7 +344,7 @@ function updateGlobalCount() {
     const note = document.getElementById('footerNote');
     btn.disabled = !ready;
     if (ready) {
-        note.innerHTML = '<strong>' + allFilled + ' subjects entered</strong> — ready to continue!';
+        note.innerHTML = '<strong>' + allFilled + ' subjects entered</strong>, ready to continue!';
     } else if (missing.length) {
         const extra = MIN_SUBJECTS - allFilled - missing.length;
         note.innerHTML = 'Fill in <strong>' + missing.join(', ') + '</strong>'

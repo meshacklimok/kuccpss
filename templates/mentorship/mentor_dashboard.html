@@ -343,7 +343,7 @@
             </div>
           </div>
 
-          {% if mentor.wallet_balance >= 100 %}
+          {% if mentor.wallet_balance >= min_withdrawal %}
             <form method="post" action="{% url 'mentorship:request_withdrawal' %}" class="row g-3 align-items-end">
               {% csrf_token %}
               <div class="col-sm-4">
@@ -370,7 +370,10 @@
 
           {% if withdrawals %}
             <hr class="mt-4">
-            <h6 class="fw-semibold mb-3">Recent Requests</h6>
+            <div class="d-flex align-items-center justify-content-between mb-3">
+              <h6 class="fw-semibold mb-0">Recent Requests</h6>
+              <a href="{% url 'mentorship:withdrawal_history' %}" class="small">View full history →</a>
+            </div>
             <div class="table-responsive">
               <table class="table table-sm align-middle mb-0">
                 <thead class="table-light">
@@ -385,7 +388,7 @@
                       <td>
                         <span class="badge rounded-pill
                           {% if wr.status == 'processed' %}bg-success
-                          {% elif wr.status == 'rejected' %}bg-danger
+                          {% elif wr.status == 'rejected' or wr.status == 'failed' %}bg-danger
                           {% else %}bg-warning text-dark{% endif %}"
                           style="font-size:.7rem;">
                           {{ wr.get_status_display }}

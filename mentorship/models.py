@@ -6,6 +6,8 @@ from django.db.models import Avg
 from django.utils import timezone
 
 
+from kuccpss.upload_validators import SafeDocumentValidator, SafeImageValidator
+
 class MentorProfile(models.Model):
     YEAR_CHOICES = [
         (1, "1st Year"),
@@ -42,17 +44,17 @@ class MentorProfile(models.Model):
         max_length=20,
         help_text="Your WhatsApp number — shared only with paying students. E.g. +254712345678",
     )
-    photo = models.ImageField(upload_to="mentor_photos/", blank=True, null=True)
+    photo = models.ImageField(upload_to="mentor_photos/", blank=True, null=True, validators=[SafeImageValidator()])
 
     # Verification documents (required at signup)
     student_id_upload = models.FileField(
         upload_to="mentor_docs/student_ids/",
-        null=True, blank=True,
+        null=True, blank=True, validators=[SafeDocumentValidator()],
         help_text="Photo or scan of your student ID card.",
     )
     portal_screenshot = models.FileField(
         upload_to="mentor_docs/portal_screenshots/",
-        null=True, blank=True,
+        null=True, blank=True, validators=[SafeDocumentValidator()],
         help_text="Screenshot from your university portal showing Name, Reg No, Course, and Year/Semester.",
     )
 

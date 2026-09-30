@@ -5,7 +5,6 @@ from .models import ClusterCalculationResult, UserKCSEResult
 COURSE_CUTOFF_CACHE_KEY = 'degree_course_min_cutoffs_v1'
 COURSE_CUTOFF_CACHE_TTL = 900  # 15 min — same staleness tradeoff as courses/trends.py
 
-CURRENT_YEAR = "2024"
 NEARLY_ELIGIBLE_GAP = 5.0
 NEARLY_ELIGIBLE_GRADE_GAP = 2  # grade points below minimum still shown as "nearly"
 
@@ -20,7 +19,6 @@ PATHWAY_DEFAULT_MIN_GRADE = {
     'KMTC':         'C',
     'TTC':          'C-',
     'Artisan':      'D',
-    'Short Course': 'E',
 }
 
 COURSE_TYPE_MAP = {
@@ -29,8 +27,15 @@ COURSE_TYPE_MAP = {
     'KMTC':         ['KMTC'],
     'TTC':          ['TTC'],
     'Artisan':      ['TVET Artisan Certificate (Level 4)', 'TVET Craft Certificate (Level 3)'],
-    'Short Course': ['TVET Short Course', 'TVET Trade Test', 'TVET Professional', 'TVET Proficiency'],
 }
+
+
+def newest_cutoff(cutoff_points) -> float | None:
+    """Cutoff for the newest KCSE year that has a value, e.g. {"2024": 30.1, "2025": 31.4} -> 31.4.
+    Used for eligibility; falls back to older years when the latest year has no value."""
+    cp = cutoff_points or {}
+    year = max((k for k, v in cp.items() if v is not None), default=None)
+    return cp[year] if year else None
 
 
 def _get_course_cutoff_data() -> dict:
@@ -64,9 +69,7 @@ def _get_course_cutoff_data() -> dict:
         if not offering.cutoff_points:
             continue
         cp = offering.cutoff_points
-        cutoff_val = cp.get(CURRENT_YEAR) or cp.get(
-            max((k for k in cp if cp[k] is not None), default=None)
-        )
+        cutoff_val = newest_cutoff(cp)
         if cutoff_val is None:
             continue
 

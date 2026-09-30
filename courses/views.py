@@ -8,6 +8,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.views.decorators.cache import cache_page
 from django.views.decorators.http import require_POST
 from .models import CourseType, CourseCategory, Course, Review
+from .programmes import find_variations, group_by_programme, search_courses
 
 log = logging.getLogger(__name__)
 
@@ -22,8 +23,48 @@ def _courses_per_page() -> int:
 # ------------------------------
 # Course Types List View
 # ------------------------------
-@cache_page(60 * 15)  # 15-minute cache — course type list rarely changes
 def course_types_list(request):
+    """Course types index, or — with ?q= — programme search grouped KUCCPS-style."""
+    q = request.GET.get('q', '').strip()[:80]
+    if q:
+        return programme_search(request, q)
+    return _course_types_index(request)
+
+
+def programme_search(request, q):
+    """
+    Search across all course types. Results are grouped by programme, so
+    "data science" lists Data Science (with its name variations), then
+    Data Science and Analytics, then other programmes containing it.
+    """
+    qs = Course.objects.select_related('course_type', 'category').annotate(
+        n_institutions=Count('offerings')
+    )
+    type_slug = request.GET.get('type', '')
+    if type_slug:
+        qs = qs.filter(course_type__slug=type_slug)
+    courses = search_courses(q, qs)
+    groups = group_by_programme(q, courses)
+
+    type_counts = {}
+    for g in groups:
+        t = g['course_type']
+        type_counts.setdefault(t.slug, {'type': t, 'count': 0})['count'] += 1
+
+    from analytics.utils import log_search
+    log_search(request, q, result_count=len(courses))
+
+    return render(request, 'courses/programme_search.html', {
+        'q': q,
+        'groups': groups,
+        'course_count': len(courses),
+        'type_filter': type_slug,
+        'type_counts': sorted(type_counts.values(), key=lambda x: -x['count']),
+    })
+
+
+@cache_page(60 * 15)  # 15-minute cache — course type list rarely changes
+def _course_types_index(request):
     """
     Display all top-level course types grouped: main types (Degree, KMTC, TTC) + TVET levels.
     """
@@ -53,10 +94,6 @@ def course_types_list(request):
         'TVET Certificate (Level 5)',
         'TVET Artisan Certificate (Level 4)',
         'TVET Craft Certificate (Level 3)',
-        'TVET Short Course',
-        'TVET Trade Test',
-        'TVET Proficiency',
-        'TVET Professional',
     ]
     tvet_types.sort(key=lambda t: TVET_ORDER.index(t.name) if t.name in TVET_ORDER else len(TVET_ORDER))
 
@@ -90,14 +127,7 @@ def course_type_detail(request, type_slug):
         qs = Course.objects.filter(course_type=course_type).select_related(
             'course_type', 'category', 'cluster'
         )
-        if q:
-            from django.db.models import Q as _Q
-            f = _Q(name__icontains=q)
-            for tok in q.split():
-                if len(tok) >= 3:
-                    f |= _Q(name__icontains=tok)
-            qs = qs.filter(f)
-        qs = qs.order_by('name')
+        qs = search_courses(q, qs) if q else qs.order_by('name')
         paginator = Paginator(qs, _courses_per_page())
         page_obj = paginator.get_page(page_num)
         courses = page_obj
@@ -146,14 +176,7 @@ def course_category_detail(request, type_slug, category_slug):
     qs = Course.objects.filter(category=category).select_related(
         'course_type', 'category', 'cluster'
     )
-    if q:
-        from django.db.models import Q as _Q
-        f = _Q(name__icontains=q)
-        for tok in q.split():
-            if len(tok) >= 3:
-                f |= _Q(name__icontains=tok)
-        qs = qs.filter(f)
-    qs = qs.order_by('name')
+    qs = search_courses(q, qs) if q else qs.order_by('name')
 
     paginator = Paginator(qs, _courses_per_page())
     page_obj = paginator.get_page(page_num)
@@ -181,6 +204,67 @@ def course_category_detail(request, type_slug, category_slug):
 
 
 # ------------------------------
+# Cutoff trend chart
+# ------------------------------
+# At most this many institutions are plotted up front; colours are assigned
+# per slot in the template (light/dark palettes), so a line keeps its colour.
+_TREND_MAX_LINES = 6
+
+
+def _cutoff_trend(offerings):
+    """
+    Build the cutoff trend chart for a course from its offerings.
+
+    Plots the top institutions by newest cutoff; every institution with 2+ years
+    is sent so the page can add any one of them on demand. Returns None when no
+    offering has two years of data.
+    """
+    # Fixtures may store years as int or str — normalise to str, drop blanks.
+    normalised = [(o, {str(k): v for k, v in (o.cutoff_points or {}).items() if v is not None})
+                  for o in offerings]
+    series = [(o, cp) for o, cp in normalised if len(cp) >= 2]
+    if not series:
+        return None
+
+    years = sorted({y for _, cp in series for y in cp})
+    series.sort(key=lambda t: t[1][max(t[1])], reverse=True)  # newest cutoff first
+
+    def _line(off, cp, role):
+        return {
+            'label': off.institution.abbreviation or off.institution.name[:22],
+            'data': [cp.get(y) for y in years],
+            'role': role,
+        }
+
+    shown = series[:_TREND_MAX_LINES]
+    datasets = [_line(o, cp, i) for i, (o, cp) in enumerate(shown)]
+
+    # Average only over institutions with a value in every year, so a year with
+    # fewer published cutoffs (e.g. the latest cycle) doesn't shift the line.
+    complete = [cp for _, cp in series if all(y in cp for y in years)]
+    if len(complete) >= 2:
+        datasets.append({
+            'label': f'Average ({len(complete)} institutions)',
+            'data': [round(sum(cp[y] for cp in complete) / len(complete), 3) for y in years],
+            'role': 'avg',
+        })
+
+    extra = [
+        {'name': o.institution.name,
+         'dataset': _line(o, cp, 'pick')}
+        for o, cp in series[len(shown):]
+    ]
+
+    rows = [(o, [cp.get(y) for y in reversed(years)]) for o, cp in normalised if cp]
+
+    return {
+        'chart_json': json.dumps({'labels': years, 'datasets': datasets, 'extra': extra}),
+        'years': list(reversed(years)),
+        'rows': rows,
+    }
+
+
+# ------------------------------
 # Course Detail View
 # ------------------------------
 def course_detail(request, type_slug, category_slug=None, course_slug=None):
@@ -202,64 +286,12 @@ def course_detail(request, type_slug, category_slug=None, course_slug=None):
         return redirect('courses:course_detail_no_category', type_slug=course.course_type.slug,
                         course_slug=course_slug)
 
-    offerings = list(course.offerings.select_related('institution').order_by('institution__name'))
+    offerings = list(course.offerings.select_related('institution__institution_type').order_by('institution__name'))
 
     from analytics.utils import log_view
     log_view(request, content_type='course', object_id=course.pk, object_name=course.name)
 
-    # ── Cutoff trend chart ────────────────────────────────────────────────────
-    chart_json = None
-    _PALETTE = ['#1e3a8a', '#7c3aed', '#16a34a', '#d97706', '#dc2626', '#0891b2', '#db2777']
-
-    try:
-        # Normalize cutoff_points keys to strings — JSON fixtures may store years as int or str
-        def _norm_cp(cp):
-            return {str(k): v for k, v in cp.items()} if cp else {}
-
-        has_data = [(o, _norm_cp(o.cutoff_points)) for o in offerings
-                    if o.cutoff_points and len(o.cutoff_points) >= 2]
-        if has_data:
-            all_years = set()
-            for _, cp in has_data:
-                all_years.update(cp.keys())
-            years = sorted(all_years)
-
-            top = sorted(has_data, key=lambda t: t[0].latest_cutoff() or 0, reverse=True)[:6]
-            datasets = []
-            for i, (off, cp) in enumerate(top):
-                datasets.append({
-                    'label': off.institution.abbreviation or off.institution.name[:22],
-                    'data': [cp.get(y) for y in years],
-                    'borderColor': _PALETTE[i % len(_PALETTE)],
-                    'backgroundColor': _PALETTE[i % len(_PALETTE)] + '18',
-                    'tension': 0.38,
-                    'pointRadius': 5,
-                    'pointHoverRadius': 7,
-                    'borderWidth': 2.5,
-                    'fill': False,
-                })
-
-            if len(has_data) > 1:
-                avg = []
-                for y in years:
-                    vals = [cp.get(y) for _, cp in has_data if cp.get(y) is not None]
-                    avg.append(round(sum(vals) / len(vals), 1) if vals else None)
-                datasets.append({
-                    'label': 'Average',
-                    'data': avg,
-                    'borderColor': '#94a3b8',
-                    'backgroundColor': 'transparent',
-                    'borderDash': [6, 3],
-                    'tension': 0.38,
-                    'pointRadius': 3,
-                    'pointHoverRadius': 5,
-                    'borderWidth': 2,
-                    'fill': False,
-                })
-
-            chart_json = json.dumps({'labels': years, 'datasets': datasets})
-    except Exception:
-        chart_json = None
+    trend = _cutoff_trend(offerings)
 
     is_shortlisted = False
     shortlist_count = 0
@@ -278,10 +310,15 @@ def course_detail(request, type_slug, category_slug=None, course_slug=None):
     except Exception:
         job_market = None
 
+    variations = find_variations(course)
+
     context = {
         'course': course,
         'offerings': offerings,
-        'chart_json': chart_json,
+        'variations': variations,
+        'chart_json': trend['chart_json'] if trend else None,
+        'trend_years': trend['years'] if trend else [],
+        'trend_rows': trend['rows'] if trend else [],
         'is_shortlisted': is_shortlisted,
         'shortlist_count': shortlist_count,
         'reviews': reviews_qs[:20],

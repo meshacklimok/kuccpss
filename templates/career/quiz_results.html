@@ -1,10 +1,10 @@
 {% extends "base.html" %}
-{% block title %}Your Career Matches — KUCCPS Recommended Courses Kenya | CareerNext{% endblock %}
+{% block title %}Your Career Matches: KUCCPS Recommended Courses Kenya | CareerNext{% endblock %}
 
 {% block content %}
 <style>
 .results-hero {
-  background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 60%, #4f46e5 100%);
+  background: #0f172a;
   padding: 3rem 0 2.5rem;
   position: relative;
   overflow: hidden;
@@ -13,7 +13,7 @@
   content: '';
   position: absolute;
   inset: 0;
-  background: radial-gradient(ellipse at 80% 50%, rgba(129,140,248,0.25) 0%, transparent 60%);
+  background: rgba(129,140,248,0.25);
   pointer-events: none;
 }
 .match-card {
@@ -66,7 +66,7 @@
 
   {% if ai_summary %}
   <div class="mb-4 p-4 rounded-3 d-flex align-items-start gap-3"
-       style="background:linear-gradient(135deg,#eef2ff,#f0fdf4);border:1.5px solid #c7d2fe;">
+       style="background:#eef2ff;border:1.5px solid #c7d2fe;">
     <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
          style="width:40px;height:40px;background:#4f46e5;color:#fff;font-size:1.1rem;">
       <i class="fas fa-robot"></i>
@@ -87,7 +87,7 @@
     <div class="row g-0">
       <!-- Left coloured panel -->
       <div class="col-md-4 d-flex align-items-center justify-content-center flex-column text-white text-center p-4"
-           style="background:linear-gradient(135deg,#1e3a8a,#4f46e5);min-height:200px;">
+           style="background:#1e3a8a;min-height:200px;">
         <span class="badge rounded-pill fw-700 mb-3" style="background:rgba(251,191,36,0.25);color:#fbbf24;font-size:0.8rem;">
           <i class="fas fa-trophy me-1"></i>Your Best Match
         </span>
@@ -170,7 +170,7 @@
             </div>
             <div class="progress rounded-pill" style="height:5px;">
               <div class="progress-bar rounded-pill"
-                   style="width:{% widthratio match.score top_matches.0.score 100 %}%;background:linear-gradient(90deg,var(--primary),#818cf8);">
+                   style="width:{% widthratio match.score top_matches.0.score 100 %}%;background:var(--primary);">
               </div>
             </div>
           </div>

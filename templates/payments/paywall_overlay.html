@@ -16,7 +16,7 @@
 @keyframes pw-fade { from { opacity:0; } to { opacity:1; } }
 
 .pw-card {
-    background: linear-gradient(160deg, #0f172a 0%, #1a1040 60%, #0f172a 100%);
+    background: #0f172a;
     border: 1.5px solid rgba(139,92,246,0.3);
     border-radius: 24px;
     padding: 2rem 1.75rem 1.5rem;
@@ -35,7 +35,7 @@
 /* Top check icon */
 .pw-icon {
     width: 68px; height: 68px;
-    background: linear-gradient(135deg, #10b981, #059669);
+    background: #10b981;
     border-radius: 50%;
     display: flex; align-items: center; justify-content: center;
     margin: 0 auto 1.2rem;
@@ -49,7 +49,7 @@
     font-size: clamp(1.5rem,5vw,2.1rem);
     font-weight: 900; line-height: 1.1;
     margin-bottom: 0.4rem;
-    background: linear-gradient(90deg, #a78bfa 0%, #60a5fa 100%);
+    background: #a78bfa;
     -webkit-background-clip: text; -webkit-text-fill-color: transparent;
     background-clip: text;
 }
@@ -79,14 +79,14 @@
 .pw-item:last-child { margin-bottom: 0; }
 .pw-dot {
     width: 17px; height: 17px; flex-shrink: 0; margin-top: 1px;
-    background: linear-gradient(135deg, #10b981, #059669);
+    background: #10b981;
     border-radius: 50%; display: flex; align-items: center;
     justify-content: center; font-size: 0.55rem; color: #fff;
 }
 
 /* Price */
 .pw-price-box {
-    background: linear-gradient(135deg, rgba(79,70,229,0.25), rgba(124,58,237,0.25));
+    background: rgba(79,70,229,0.25);
     border: 1.5px solid rgba(139,92,246,0.35);
     border-radius: 14px; padding: 0.9rem;
     text-align: center; margin-bottom: 1rem;
@@ -114,7 +114,7 @@
 }
 .pw-phone-inp {
     flex: 1; background: transparent; border: none; outline: none;
-    color: #fff; font-size: 1rem; font-weight: 600; padding: 0.8rem 0.9rem;
+    color: #fff; font-size: 16px; font-weight: 600; padding: 0.8rem 0.9rem; min-width: 0;
     letter-spacing: 0.02em;
 }
 .pw-phone-inp::placeholder { color: rgba(255,255,255,0.22); font-weight: 400; }
@@ -122,7 +122,7 @@
 /* Pay button */
 .pw-btn {
     width: 100%;
-    background: linear-gradient(135deg, #7c3aed, #4f46e5);
+    background: #7c3aed;
     border: none; border-radius: 12px; color: #fff;
     font-size: 1rem; font-weight: 800; padding: 0.9rem;
     cursor: pointer; transition: transform 0.2s, box-shadow 0.2s, opacity 0.15s;
@@ -154,6 +154,30 @@
     transition: color 0.2s;
 }
 .pw-later:hover { color: rgba(255,255,255,0.5); }
+
+.pw-label { display:block; font-size:0.74rem; font-weight:700; color:rgba(255,255,255,0.55); margin-bottom:0.35rem; }
+.pw-hint { font-size:0.7rem; color:rgba(255,255,255,0.35); margin:-0.35rem 0 0.75rem; }
+.pw-how { list-style:none; margin:0 0 1rem; padding:0; display:grid; gap:0.4rem; }
+.pw-how li { display:flex; align-items:center; gap:0.55rem; font-size:0.78rem; color:rgba(255,255,255,0.68); }
+.pw-how span {
+    width:20px; height:20px; flex-shrink:0; border-radius:50%; display:inline-flex; align-items:center; justify-content:center;
+    background:rgba(139,92,246,0.25); border:1px solid rgba(139,92,246,0.45); color:#c4b5fd; font-size:0.66rem; font-weight:800;
+}
+.pw-tips { text-align:left; margin-top:0.9rem; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); border-radius:12px; padding:0.75rem 0.9rem; font-size:0.76rem; color:rgba(255,255,255,0.6); }
+.pw-tips b { color:#fff; }
+.pw-tips a { color:#93c5fd; font-weight:700; cursor:pointer; }
+.pw-resume { background:rgba(245,158,11,0.1); border:1px solid rgba(245,158,11,0.35); border-radius:12px; padding:0.7rem 0.85rem; margin-bottom:0.9rem; font-size:0.78rem; color:#fde68a; }
+.pw-resume[hidden] { display:none; }
+.pw-resume button { margin-top:0.5rem; background:rgba(245,158,11,0.2); border:1px solid rgba(245,158,11,0.45); color:#fde68a; border-radius:10px; font-weight:700; padding:0.5rem 0.9rem; min-height:40px; cursor:pointer; }
+.pw-btn-sm { max-width:220px; margin:0.9rem auto 0; font-size:0.85rem; min-height:44px; }
+.pw-later { padding:0.35rem 0; }
+@media (max-width: 420px) {
+    .pw-overlay { padding:0.5rem; align-items:flex-end; }
+    .pw-card { padding:1.4rem 1.1rem 1.1rem; border-radius:20px 20px 16px 16px; max-height:96vh; }
+    .pw-icon { width:52px; height:52px; font-size:1.35rem; margin-bottom:0.8rem; }
+    .pw-sub br { display:none; }
+    .pw-price-amount { font-size:1.6rem; }
+}
 
 /* Blur wrapper for content behind */
 .pw-blurred { filter: blur(5px) brightness(0.5); pointer-events: none; user-select: none; transition: filter 0.3s; }
@@ -189,22 +213,34 @@
 
         <!-- Price -->
         <div class="pw-price-box">
-            <div class="pw-price-label">One-time payment &nbsp;·&nbsp; Lifetime access</div>
+            <div class="pw-price-label">One payment &nbsp;·&nbsp; Unlocks these results</div>
             <div class="pw-price-amount">KES {{ gate_price }}</div>
             <div class="pw-price-note"><i class="fas fa-shield-alt" style="color:#10b981;margin-right:4px;"></i>Secure M-Pesa &nbsp;·&nbsp; No subscription, ever</div>
         </div>
 
+        <div class="pw-resume" id="pw-resume" role="status" hidden>
+            <div id="pw-resume-text">You started a payment earlier that we haven't confirmed yet.</div>
+            <button type="button" id="pw-resume-btn"><i class="fas fa-search"></i> Already paid? Check it now</button>
+        </div>
+
         <!-- Phone step -->
-        <div id="pw-step-phone">
-            <div class="pw-err" id="pw-err"></div>
+        <div class="pw-state pw-active" id="pw-step-phone" style="text-align:left;padding-top:0;">
+            <ol class="pw-how" aria-label="How payment works">
+                <li><span>1</span>Enter your M-Pesa number</li>
+                <li><span>2</span>Enter your PIN on the prompt that pops up on your phone</li>
+                <li><span>3</span>Your results unlock here automatically</li>
+            </ol>
+            <div class="pw-err" id="pw-err" role="alert"></div>
+            <label for="pw-phone" class="pw-label">M-Pesa phone number</label>
             <div class="pw-phone-row">
                 <span class="pw-prefix">+254</span>
                 <input type="tel" id="pw-phone" class="pw-phone-inp"
-                       placeholder="712 345 678" maxlength="14" inputmode="numeric"
+                       placeholder="712 345 678" maxlength="16" inputmode="tel" autocomplete="tel-national"
                        value="{{ request.user.phone_number|default:'' }}">
             </div>
+            <div class="pw-hint">Typing 0712&hellip; or 0112&hellip; works too</div>
             <button class="pw-btn" id="pw-btn">
-                <i class="fas fa-lock-open"></i> Unlock My Results &rarr;
+                <i class="fas fa-lock-open"></i> Pay KES {{ gate_price }} &amp; Unlock &rarr;
             </button>
         </div>
 
@@ -212,7 +248,12 @@
         <div class="pw-state" id="pw-step-waiting">
             <div class="pw-state-icon">📲</div>
             <div class="pw-state-title">Check Your Phone!</div>
-            <div class="pw-state-sub">An M-Pesa prompt has been sent.<br>Enter your PIN to complete payment.<br><br>Waiting for confirmation<span id="pw-dots">.</span></div>
+            <div class="pw-state-sub">An M-Pesa prompt was sent to <b id="pw-sent-to" style="color:#fff;"></b>.<br>Enter your PIN to complete payment.<br><br>Waiting for confirmation<span id="pw-dots">.</span></div>
+            <div class="pw-tips">
+                <b>No prompt?</b> Make sure your phone is on and unlocked. The prompt expires after about a minute &mdash;
+                <a id="pw-resend" role="button" tabindex="0">send a new one</a>.<br>
+                <span style="color:#fcd34d;">Already entered your PIN? Just wait &mdash; this updates by itself. Don't pay twice.</span>
+            </div>
         </div>
 
         <!-- Success step -->
@@ -226,46 +267,35 @@
         <div class="pw-state" id="pw-step-failed">
             <div class="pw-state-icon">❌</div>
             <div class="pw-state-title" style="color:#ef4444;">Payment Not Completed</div>
-            <div class="pw-state-sub">The M-Pesa PIN was not entered or the payment was cancelled.</div>
-            <button class="pw-btn" style="max-width:180px;margin:0.9rem auto 0;font-size:0.85rem;" onclick="pwReset()">
+            <div class="pw-state-sub" id="pw-failed-sub">The M-Pesa prompt was cancelled, timed out, or the PIN wasn't entered. No money was taken.</div>
+            <button class="pw-btn pw-btn-sm" onclick="pwReset()">
                 <i class="fas fa-redo"></i> Try Again
             </button>
         </div>
 
-        <!-- Timeout step (webhook didn't arrive in time) -->
+        <!-- Timeout step (confirmation didn't arrive in time) -->
         <div class="pw-state" id="pw-step-timeout">
             <div class="pw-state-icon">⏳</div>
             <div class="pw-state-title" style="color:#f59e0b;">Still Processing…</div>
-            <div class="pw-state-sub" id="pw-timeout-sub">If you entered your M-Pesa PIN, click below to verify — your payment may have gone through but confirmation is delayed.</div>
-            <button class="pw-btn" style="margin:0.9rem auto 0;font-size:0.85rem;" id="pw-verify-btn" onclick="pwVerify()">
+            <div class="pw-state-sub" id="pw-timeout-sub">If you entered your M-Pesa PIN, your payment may have gone through but confirmation is delayed. Tap Verify, or enter the code from your M-Pesa SMS below.</div>
+            <button class="pw-btn pw-btn-sm" id="pw-verify-btn" onclick="pwVerify()">
                 <i class="fas fa-search"></i> Verify My Payment
             </button>
-            <button class="pw-btn" style="max-width:180px;margin:0.6rem auto 0;font-size:0.82rem;background:rgba(255,255,255,0.08);box-shadow:none;" onclick="pwReset()">
+            <button class="pw-btn pw-btn-sm" style="margin-top:0.6rem;background:rgba(255,255,255,0.08);box-shadow:none;" onclick="pwReset()">
                 <i class="fas fa-redo"></i> Pay Again
             </button>
         </div>
 
-        <!-- Already-paid check step -->
+        <!-- Checking step -->
         <div class="pw-state" id="pw-step-checking">
             <div class="pw-state-icon">🔍</div>
             <div class="pw-state-title">Checking…</div>
             <div class="pw-state-sub">Looking up your payment with M-Pesa.</div>
         </div>
 
-        <a class="pw-later" id="pw-later">Maybe later (results will be blurred)</a>
-        <a class="pw-later" id="pw-already-paid" style="margin-top:0.2rem;color:rgba(255,255,255,0.28);">I already paid — enter M-Pesa code</a>
+        {% include "payments/_payment_help.html" with feature=gate_feature theme="dark" %}
 
-        <!-- Code entry shown when "I already paid" is clicked -->
-        <div id="pw-code-section" style="display:none;margin-top:0.9rem;">
-            <div style="display:flex;gap:0.5rem;align-items:center;">
-                <input type="text" id="pw-mpesa-code" placeholder="M-Pesa code (e.g. RCK12345XY)"
-                       style="flex:1;background:rgba(255,255,255,0.07);border:1.5px solid rgba(255,255,255,0.15);border-radius:10px;color:#fff;padding:0.65rem 0.9rem;font-size:0.9rem;outline:none;text-transform:uppercase;border-color:rgba(139,92,246,0.4);">
-                <button id="pw-code-btn" style="background:linear-gradient(135deg,#10b981,#059669);border:none;border-radius:10px;color:#fff;font-weight:700;padding:0.65rem 1rem;font-size:0.85rem;cursor:pointer;white-space:nowrap;">
-                    Verify
-                </button>
-            </div>
-            <p id="pw-code-msg" style="margin:0.5rem 0 0;font-size:0.78rem;color:rgba(255,255,255,0.45);min-height:1.2em;"></p>
-        </div>
+        <a class="pw-later" id="pw-later" role="button" tabindex="0">Maybe later (results will stay blurred)</a>
     </div>
 </div>
 
@@ -274,6 +304,15 @@
 (function(){
     var FEATURE   = "{{ gate_feature }}";
     var CSRF      = "{{ csrf_token }}";
+    var BTN_HTML  = '<i class="fas fa-lock-open"></i> Pay KES {{ gate_price }} &amp; Unlock &rarr;';
+    var done      = false;
+
+    function pwUnlocked(){
+        if(done) return;
+        done = true;
+        pwState('success');
+        setTimeout(function(){ location.reload(); }, 1500);
+    }
 
     var poller = createPaymentPoller({
         feature: FEATURE,
@@ -284,19 +323,26 @@
             var dotsEl = document.getElementById('pw-dots');
             if(dotsEl) dotsEl.textContent = dotsEl.textContent.length >= 3 ? '.' : dotsEl.textContent+'.';
         },
-        onSuccess: function(){ pwState('success'); setTimeout(function(){ location.reload(); },3000); },
+        onSuccess: pwUnlocked,
         onFailed: function(){},
         onTimeout: function(){}
     });
 
     document.getElementById('pw-btn').addEventListener('click', pwPay);
+    document.getElementById('pw-phone').addEventListener('keydown', function(e){ if(e.key === 'Enter') pwPay(); });
     document.getElementById('pw-later').addEventListener('click', function(){
         document.getElementById('pw-overlay').style.display = 'none';
         var main = document.getElementById('pw-main-content');
         if(main) main.style.filter = 'blur(3px) brightness(0.7)';
     });
-    document.getElementById('pw-already-paid').addEventListener('click', pwToggleCodeSection);
-    document.getElementById('pw-code-btn').addEventListener('click', pwSubmitCode);
+    document.getElementById('pw-resend').addEventListener('click', function(){ pwReset(); pwPay(); });
+
+    // The "Paid but still locked?" panel verified a code
+    document.addEventListener('payment:unlocked', function(e){
+        e.preventDefault();
+        poller.clear();
+        pwUnlocked();
+    });
 
     // Pre-fill from saved profile number, cleaned to the 9-digit local form
     (function(){
@@ -305,72 +351,66 @@
         phoneEl.value = clean || '';
     })();
 
+    // Earlier payment we never confirmed (tab closed, webhook late, etc.)
+    (async function(){
+        try{
+            var r = await fetch('/payments/pending/?feature='+encodeURIComponent(FEATURE), {credentials:'same-origin'});
+            var d = await r.json();
+            if(!d.found) return;
+            poller.setCurrentPaymentId(d.payment_id);
+            var box = document.getElementById('pw-resume');
+            var btn = document.getElementById('pw-resume-btn');
+            if(d.under_review){
+                document.getElementById('pw-resume-text').textContent = 'We received your M-Pesa code ' + (d.mpesa_code || '') + ' and our team is confirming it. You will get an email once your results are unlocked. No need to pay again.';
+                btn.hidden = true;
+            }
+            box.hidden = false;
+            btn.addEventListener('click', function(){ box.hidden = true; pwVerify(); });
+        }catch(e){}
+    })();
+
     async function pwPay(){
         var err = document.getElementById('pw-err');
         var btn = document.getElementById('pw-btn');
-        await poller.pay(document.getElementById('pw-phone').value, {
+        var phoneVal = document.getElementById('pw-phone').value;
+        var nine = poller.normalizePhone(phoneVal);
+        if(nine) document.getElementById('pw-sent-to').textContent = '0' + nine.slice(0,3) + ' ' + nine.slice(3,6) + ' ' + nine.slice(6);
+        await poller.pay(phoneVal, {
             onInvalidPhone: function(){
-                err.textContent = 'Enter a valid Safaricom number, e.g. 0712345678 or +254712345678';
+                err.textContent = 'That number doesn\'t look right. Enter a Safaricom number like 0712 345 678 or 0112 345 678.';
                 err.style.display = 'block';
             },
             onSending: function(){
                 err.style.display = 'none';
                 btn.disabled = true;
-                btn.innerHTML = '<span class="spinner-border spinner-border-sm" style="width:.9rem;height:.9rem;border-width:2px;"></span>&nbsp;Sending STK push&hellip;';
+                btn.innerHTML = '<span class="spinner-border spinner-border-sm" style="width:.9rem;height:.9rem;border-width:2px;"></span>&nbsp;Sending M-Pesa prompt&hellip;';
             },
-            onAlreadyUnlocked: function(){
-                // Feature is already paid — just show the results
-                location.reload();
-            },
-            onResumePending: function(){},
+            onInitiated: function(){ document.getElementById('pw-resume').hidden = true; },
+            onAlreadyUnlocked: function(){ location.reload(); },
+            onResumePending: function(){ document.getElementById('pw-resume').hidden = true; },
             onError: function(message){
+                pwState('phone');
                 err.textContent = message;
                 err.style.display = 'block';
                 btn.disabled = false;
-                btn.innerHTML = '<i class="fas fa-lock-open"></i> Unlock My Results &rarr;';
+                btn.innerHTML = BTN_HTML;
             }
         });
     }
 
-    function pwToggleCodeSection(){
-        var sec  = document.getElementById('pw-code-section');
-        var link = document.getElementById('pw-already-paid');
-        var showing = sec.style.display !== 'none';
-        sec.style.display = showing ? 'none' : 'block';
-        link.textContent  = showing ? 'I already paid — enter M-Pesa code' : 'Cancel';
-    }
-
-    async function pwSubmitCode(){
-        var code = (document.getElementById('pw-mpesa-code').value || '').trim().toUpperCase();
-        var msg  = document.getElementById('pw-code-msg');
-        if(!code){ msg.style.color='#fca5a5'; msg.textContent='Please enter your M-Pesa transaction code.'; return; }
-        msg.style.color='rgba(255,255,255,0.45)'; msg.textContent='Checking…';
-        try{
-            var r = await fetch('{% url "payments:verify_by_transaction_code" %}',{
-                method:'POST',
-                headers:{'Content-Type':'application/json','X-CSRFToken':CSRF},
-                body:JSON.stringify({feature:FEATURE, mpesa_code:code})
-            });
-            var d = await r.json();
-            if(d.status==='completed'){
-                msg.style.color='#34d399';
-                msg.textContent='Payment verified! Unlocking your results…';
-                setTimeout(function(){ location.reload(); },2000);
-            } else {
-                msg.style.color='#fca5a5';
-                msg.textContent=d.message||'Code not found. Double-check your M-Pesa SMS.';
-            }
-        }catch(e){
-            msg.style.color='#fca5a5'; msg.textContent='Network error. Please try again.';
-        }
-    }
-
     window.pwVerify = async function(){
         var paymentId = poller.getCurrentPaymentId();
-        if(!paymentId) return;
+        if(!paymentId){
+            document.getElementById('pw-timeout-sub').textContent = 'No payment found yet. If money left your M-Pesa, enter the code from your SMS in "Paid but still locked?" below.';
+            pwState('timeout');
+            return;
+        }
         await poller.verifyById(paymentId, {
             onStillPending: function(message){
                 document.getElementById('pw-timeout-sub').textContent = message || 'Payment still processing. Please wait a few minutes and try again.';
+            },
+            onFailedMessage: function(message){
+                if(message) document.getElementById('pw-failed-sub').textContent = message;
             },
             onNetworkError: function(){
                 document.getElementById('pw-timeout-sub').textContent = 'Could not reach the server. Please check your internet and try again.';
@@ -385,7 +425,18 @@
         });
         var t = document.getElementById('pw-step-'+s);
         if(t) t.classList.add('pw-active');
+        var help = document.querySelector('#pw-overlay .pay-help');
+        if(help){
+            help.style.display = (s === 'success' || s === 'checking') ? 'none' : '';
+            if(s === 'timeout' || s === 'failed') help.open = true;
+        }
     }
-    window.pwReset = function(){ poller.clear(); var btn=document.getElementById('pw-btn'); btn.disabled=false; btn.innerHTML='<i class="fas fa-lock-open"></i> Unlock My Results &rarr;'; pwState('phone'); };
+    window.pwReset = function(){
+        poller.clear();
+        var btn = document.getElementById('pw-btn');
+        btn.disabled = false;
+        btn.innerHTML = BTN_HTML;
+        pwState('phone');
+    };
 })();
 </script>

@@ -63,18 +63,6 @@
               {% if form.whatsapp.errors %}<div class="text-danger small mt-1">{{ form.whatsapp.errors }}</div>{% endif %}
             </div>
 
-            <div class="mb-4">
-              <label class="form-label fw-semibold">{{ form.photo.label }}</label>
-              {% if mentor.photo %}
-                <div class="mb-2 d-flex align-items-center gap-3">
-                  <img src="{{ mentor.photo.url }}" class="rounded-circle object-fit-cover" width="56" height="56" alt="Current photo" loading="lazy">
-                  <span class="text-muted small">Current photo</span>
-                </div>
-              {% endif %}
-              {{ form.photo }}
-              {% if form.photo.errors %}<div class="text-danger small mt-1">{{ form.photo.errors }}</div>{% endif %}
-            </div>
-
             <div class="d-flex gap-3">
               <button type="submit" class="btn btn-primary rounded-pill px-4 fw-semibold">
                 <i class="bi bi-save me-2"></i>Save Changes

@@ -1,13 +1,13 @@
 {% extends "base.html" %}
 {% load custom_filters %}
-{% block title %}{{ profile.title }} — Career Guide for Kenyan KCSE Students | CareerNext{% endblock %}
+{% block title %}{{ profile.title }}: Career Guide for Kenyan KCSE Students | CareerNext{% endblock %}
 
-{% block meta %}<meta name="description" content="What a career in {{ profile.title }} looks like in Kenya — the day-to-day work, expected salary, and the KUCCPS courses and KCSE grades that lead there.">{% endblock %}
+{% block meta %}<meta name="description" content="What a career in {{ profile.title }} looks like in Kenya: the day-to-day work, expected salary, and the KUCCPS courses and KCSE grades that lead there.">{% endblock %}
 
 {% block content %}
 <style>
 .detail-hero {
-  background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 60%, #1d4ed8 100%);
+  background: #0f172a;
   padding: 2.5rem 0;
   position: relative;
   overflow: hidden;
@@ -16,7 +16,7 @@
   content: '';
   position: absolute;
   inset: 0;
-  background: radial-gradient(ellipse at 75% 50%, rgba(99,102,241,0.3) 0%, transparent 60%);
+  background: rgba(99,102,241,0.3);
   pointer-events: none;
 }
 .hero-icon-wrap {
@@ -389,7 +389,7 @@
 
       <!-- Future Outlook -->
       {% if profile.future_outlook %}
-      <div class="section-card" style="border-left:4px solid #4f46e5;background:linear-gradient(135deg,#fafafa,#eef2ff);">
+      <div class="section-card" style="border-left:4px solid #4f46e5;background:#fafafa;">
         <h5><i class="fas fa-rocket" style="color:#4f46e5;"></i>Future Outlook in Kenya</h5>
         <p style="color:#1e293b;line-height:1.8;font-size:0.91rem;margin:0;">{{ profile.future_outlook }}</p>
       </div>
@@ -452,7 +452,7 @@
               {% elif type_name == 'TTC' %}fas fa-chalkboard-teacher
               {% else %}fas fa-graduation-cap{% endif %} me-1"></i>
             {{ type_name }}
-            <span class="ms-1 fw-500 text-muted" style="text-transform:none;letter-spacing:0;">— {{ courses|length }} course{{ courses|length|pluralize }}</span>
+            <span class="ms-1 fw-500 text-muted" style="text-transform:none;letter-spacing:0;">({{ courses|length }} course{{ courses|length|pluralize }})</span>
           </div>
 
           <div class="row g-2">
@@ -574,7 +574,7 @@
       </div>
 
       <!-- Quick Actions -->
-      <div class="section-card mb-3" style="background:linear-gradient(135deg,#0f172a,#1e3a8a);">
+      <div class="section-card mb-3" style="background:#0f172a;">
         <h6 class="text-white fw-800 mb-3" style="font-size:0.88rem;">Ready to pursue this career?</h6>
         <div class="d-flex flex-column gap-2">
           <a href="{% url 'career:home' %}" class="btn btn-light btn-sm fw-700 rounded-pill">

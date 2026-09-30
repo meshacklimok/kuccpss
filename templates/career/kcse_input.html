@@ -1,8 +1,8 @@
 {% extends "base.html" %}
 
-{% block title %}Enter KCSE Results — Find Your KUCCPS Eligible Courses | CareerNext{% endblock %}
+{% block title %}Enter KCSE Results: Find Your KUCCPS Eligible Courses | CareerNext{% endblock %}
 
-{% block meta %}<meta name="description" content="Type in your KCSE subject grades and instantly see every university, KMTC, TVET and TTC course you qualify for through KUCCPS — matched to your actual results.">{% endblock %}
+{% block meta %}<meta name="description" content="Type in your KCSE subject grades and instantly see every university, KMTC, TVET and TTC course you qualify for through KUCCPS, matched to your actual results.">{% endblock %}
 
 {% block content %}
 <div class="container mt-5">
@@ -31,7 +31,6 @@
                                 <option value="Certificate" {% if pathway == "Certificate" %}selected{% endif %}>Certificate</option>
                                 <option value="KMTC" {% if pathway == "KMTC" %}selected{% endif %}>KMTC</option>
                                 <option value="Artisan" {% if pathway == "Artisan" %}selected{% endif %}>Artisan</option>
-                                <option value="ShortCourse" {% if pathway == "ShortCourse" %}selected{% endif %}>Short Courses</option>
                             </select>
                         </div>
 

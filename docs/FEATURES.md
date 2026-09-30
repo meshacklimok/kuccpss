@@ -55,7 +55,7 @@ Read [CLAUDE.md](../CLAUDE.md) before changing any of the "Critical Rules" areas
 - `clusterpoints/urls.py` — `calculator/`, `export/`, `export/full/`, `recalculate/`, `admin-analytics/`, `eligible/`, `share/create/`
 - `clusterpoints/admin.py` — read-only admin for computed results
 - `clusters/models.py` — `Cluster`, `SubjectGroup`, `Subject` (the reference data the formula iterates over)
-- `clusters/management/commands/seed_clusters.py` — seeds the 31 official subjects and the **20 master calculation clusters** (numbers 101–120), each with exactly 4 `SubjectGroup` slots
+- `clusters/management/commands/seed_clusters.py` — seeds the official subjects and the **18 KUCCPS clusters** (numbers 101–118) from the portal data, each with exactly 4 `SubjectGroup` slots
 - Templates: `templates/clusterpoints/calculator.html` (grade entry + results, Chart.js, M-Pesa payment gate polling)
 
 **Formula (do not change — see CLAUDE.md):**
@@ -76,7 +76,6 @@ cluster_points = 48 × sqrt( (core_midpoint_marks / 400) × (aggregate_total / 8
 
 **Flagged issues:**
 - **`clusterpoints/models.py::ClusterCalculationResult.calculate_cluster_points()`** contains a **different, deprecated formula** (`weighted = 48 * sqrt((raw_core_total / 48) * (aggregate_total / 84))` — the old fraction-based approach CLAUDE.md explicitly forbids reverting to). It appears to be dead code — the live call path (`clusterpoints/views.py` → `clusterpoints/services.py`) never calls this model method — but its presence is a latent-bug risk if anything (a shell script, a future refactor, a signal) ever calls it directly.
-- **All 61 programme sub-clusters (numbers < 100) currently have zero `SubjectGroup` rows.** `seed_clusters.py` only seeds the 20 *master calculation clusters* (101–120); the sub-clusters used for course-matching/requirements display are managed separately and have not been populated with slots. Where the live calculator UI shows "top courses per cluster," this may be relying on a top-4-subjects fallback rather than true per-cluster subject-group logic — confirm against current behavior before assuming sub-cluster slots exist.
 - **At least four independent reimplementations of the aggregate algorithm** exist across the codebase: `clusterpoints/models.py::UserKCSEResult.recalc_total_points()`, `clusterpoints/services.py` (both functions, shared logic), `clusterpoints/views.py::_compute_aggregate()`, and `career/models.py::_compute_aggregate()`. They are believed consistent today but are a maintenance risk — a future bugfix applied to only one of them would silently diverge.
 - **`clusterpoints/forms.py`** lists Chemistry as "compulsory" for display (`COMPULSORY_SUBJECT_NAMES`) but does not actually enforce it as required (`REQUIRED_SUBJECT_NAMES` omits it) — intentional per an in-code comment (many students take Biology/Physics instead), but worth knowing the two lists diverge on purpose.
 - **AI knowledge base is out of sync**: `career/management/commands/seed_knowledge.py` seeds an `AIKnowledgeEntry` that restates the cluster-points formula using the **old fraction-based version** (`sum of 4 cluster subject points ÷ 48`), not the midpoint-marks version actually implemented. The CareerNext AI chat could therefore explain the formula incorrectly if it surfaces that KB entry verbatim.
@@ -97,7 +96,7 @@ cluster_points = 48 × sqrt( (core_midpoint_marks / 400) × (aggregate_total / 8
 **Flow (degree pathway):**
 `get_eligible_courses(user, kcse_result)` builds a `cluster_map` keyed by `cluster.kuccps_number` from the user's `ClusterCalculationResult` rows, compares against `_get_course_cutoff_data()` (a 15-minute cached scan of `CourseOffering` rows with non-null cutoffs where `course__course_type__name__iexact='Degree'`), and classifies each course `eligible` (gap ≥ 0), `nearly` (0 < |gap| ≤ 5.0 points), or `not_eligible`.
 
-**Flow (non-degree pathways — Diploma/Certificate/KMTC/TTC/Artisan/Short Course):**
+**Flow (non-degree pathways — Diploma/Certificate/KMTC/TTC/Artisan):**
 `get_eligible_courses_by_mean_grade(pathway, mean_grade)` filters `CourseOffering` by `course__course_type__name__in=COURSE_TYPE_MAP[pathway]`, converts the mean grade to `GRADE_POINTS`, and compares against each course's `minimum_mean_grade` (falling back to `PATHWAY_DEFAULT_MIN_GRADE` if unset). **This function never reads `cutoff_points` or `subject_requirements`** — confirmed no cluster points and no subject-requirement checks are applied to non-degree pathways, per CLAUDE.md rule.
 
 **State:** Complete for degree pathway; non-degree pathway works but its underlying cutoff/requirement *data* is incomplete (see gap below — this is a data gap, not a logic gap).
@@ -370,7 +369,7 @@ cluster_points = 48 × sqrt( (core_midpoint_marks / 400) × (aggregate_total / 8
 
 **Flagged issues:**
 - No test coverage.
-- The dual cluster-numbering scheme (calculator 101–120 vs course sub-groups 5–65) is a genuine domain complexity — any change to `clusters/management/commands/seed_clusters.py`'s cluster numbers must be mirrored in `predictor/services.py`'s static mapping tables, or predictions will silently target the wrong clusters.
+- Clusters are single-numbered since Sept 2026: `Cluster.number` 101–118 = KUCCPS cluster `number − 100`; courses link to these directly.
 
 ---
 

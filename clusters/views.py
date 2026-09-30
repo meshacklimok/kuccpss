@@ -1,4 +1,3 @@
-import re
 from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse
 from django.contrib import messages
@@ -8,64 +7,23 @@ from django.views.decorators.cache import cache_page
 from .models import Cluster, SubjectGroup, Subject
 from .forms import ClusterForm, SubjectGroupForm
 
-CLUSTER_LABELS = {
-    1:  'Law, Commerce & Business',
-    2:  'Business, Management & Information',
-    3:  'Communication, Media & Social Sciences',
-    4:  'Geospatial & Earth Sciences',
-    5:  'Engineering & Applied Sciences',
-    6:  'Architecture, Real Estate & ICT',
-    7:  'Computer Science & IT',
-    8:  'Agricultural Economics',
-    9:  'Pure Sciences',
-    10: 'Economics, Finance & Actuarial',
-    11: 'Fashion & Textile',
-    12: 'Sports & Health Promotion',
-    13: 'Medicine, Health & Allied',
-    14: 'History & Archaeology',
-    15: 'Agriculture, Veterinary & Environment',
-    16: 'Geography & Land Management',
-    17: 'French & German',
-    18: 'Music',
-    19: 'Education',
-    20: 'Religious Studies & Theology',
-}
-
-def _main_num(cluster):
-    m = re.search(r'\((\d+)[A-K]\)', cluster.name)
-    return int(m.group(1)) if m else (cluster.number or 0)
-
-
 # =====================================================
 # 1️⃣ LIST ALL CLUSTERS
 # =====================================================
 @cache_page(60 * 20)  # 20-minute cache — cluster list is static reference data
 def cluster_list(request):
+    # The 18 KUCCPS clusters (rows 101–118); degree courses link to them directly
     clusters = (
         Cluster.objects
-        .exclude(number__gte=100)          # exclude master calculation clusters (101-120)
+        .filter(number__gt=100)
         .annotate(course_count=Count('course'))
-        .order_by('number', 'name')
+        .order_by('number')
     )
-
-    groups = {}
-    for cluster in clusters:
-        num = _main_num(cluster)
-        # Attach extracted sub-cluster code (e.g. "1A") for display
-        mc = re.search(r'\((\d+[A-K])\)', cluster.name)
-        cluster.code = mc.group(1) if mc else cluster.name  # type: ignore[attr-defined]
-        if num not in groups:
-            groups[num] = {
-                'number': num,
-                'label': CLUSTER_LABELS.get(num, f'Cluster {num}'),
-                'sub_clusters': [],
-                'total_courses': 0,
-            }
-        groups[num]['sub_clusters'].append(cluster)
-        groups[num]['total_courses'] += cluster.course_count  # type: ignore[attr-defined]
-
     context = {
-        'cluster_groups': sorted(groups.values(), key=lambda g: g['number']),
+        'cluster_groups': [
+            {'number': c.kuccps_number, 'label': c.name, 'cluster': c, 'total_courses': c.course_count}  # type: ignore[attr-defined]
+            for c in clusters
+        ],
     }
     return render(request, 'clusters/cluster_list.html', context)
 
@@ -73,16 +31,6 @@ def cluster_list(request):
 # =====================================================
 # 2️⃣ CLUSTER DETAIL
 # =====================================================
-_REQ_SPLIT = re.compile(r'(?<=[+)])\s+(?=[A-Z/])')
-
-def _parse_requirements(desc):
-    """Split a raw requirements string into individual subject-grade pairs."""
-    if not desc or desc.startswith('KUCCPS sub-cluster'):
-        return []
-    parts = _REQ_SPLIT.split(desc)
-    return [p.strip() for p in parts if p.strip()]
-
-
 def cluster_detail(request, slug):
     from courses.models import Course
     cluster = get_object_or_404(Cluster, slug=slug)
@@ -94,14 +42,11 @@ def cluster_detail(request, slug):
         .order_by('name')
     )
 
-    num = _main_num(cluster)
     context = {
         'cluster': cluster,
         'subject_groups': subject_groups,
         'courses': courses,
-        'main_num': num,
-        'main_label': CLUSTER_LABELS.get(num, ''),
-        'requirements': _parse_requirements(cluster.description),
+        'main_num': cluster.kuccps_number,
     }
     return render(request, 'clusters/cluster_detail.html', context)
 
@@ -131,10 +76,8 @@ def cluster_courses(request, slug):
         and not has_paid_for_feature(request.user, 'view_eligible_courses')
     )
 
-    num = _main_num(cluster)
     return render(request, 'clusters/cluster_courses.html', {
         'cluster': cluster,
-        'main_label': CLUSTER_LABELS.get(num, ''),
         'free_courses': free_courses,
         'paid_courses': paid_courses,
         'total_count': total_count,

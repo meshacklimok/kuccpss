@@ -24,8 +24,10 @@ def ga_context(request):
 
 def data_version(request):
     """Expose KUCCPS data version/cycle to every template."""
+    from courses.models import LATEST_CUTOFF_YEAR
     return {
-        'DATA_VERSION': getattr(settings, 'DATA_VERSION', '2024'),
-        'DATA_CYCLE':   getattr(settings, 'DATA_CYCLE', '2025/2026'),
-        'DATA_UPDATED': getattr(settings, 'DATA_UPDATED', 'March 2025'),
+        'LATEST_CUTOFF_YEAR': LATEST_CUTOFF_YEAR,
+        'DATA_VERSION': getattr(settings, 'DATA_VERSION', '2025'),
+        'DATA_CYCLE':   getattr(settings, 'DATA_CYCLE', '2026/2027'),
+        'DATA_UPDATED': getattr(settings, 'DATA_UPDATED', 'September 2026'),
     }
