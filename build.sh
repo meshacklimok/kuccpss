@@ -17,31 +17,38 @@ python manage.py purge_notifications || echo "Notification purge skipped"
 # Seed payment feature prices (idempotent — skips existing rows)
 python manage.py seed_payment_features
 
-# Load initial data (clusters, institutions, courses) — skip on error if already loaded
-python manage.py loaddata data/data.json \
-  --exclude=admin \
-  --exclude=sessions \
-  --exclude=accounts \
-  --exclude=sites \
-  --exclude=socialaccount \
-  --exclude=clusterpoints.clustercalculationresult \
-  --exclude=clusterpoints.subjectresult \
-  --exclude=clusterpoints.userkcseresult \
-  --exclude=career.studentcoursematch \
-  || echo "Data load skipped (may already exist)"
+# Bulk seed data — reloading it on every deploy burns Neon compute hours even when
+# nothing changed. Set RUN_SEEDS=1 in Render env for a deploy that needs fresh seeds
+# (new database, or data/*.json / seed commands changed), then unset it.
+if [ "${RUN_SEEDS:-0}" = "1" ]; then
+  # Load initial data (clusters, institutions, courses) — skip on error if already loaded
+  python manage.py loaddata data/data.json \
+    --exclude=admin \
+    --exclude=sessions \
+    --exclude=accounts \
+    --exclude=sites \
+    --exclude=socialaccount \
+    --exclude=clusterpoints.clustercalculationresult \
+    --exclude=clusterpoints.subjectresult \
+    --exclude=clusterpoints.userkcseresult \
+    --exclude=career.studentcoursematch \
+    || echo "Data load skipped (may already exist)"
 
-# Load career profiles, quiz, articles, FAQs, success stories
-python manage.py loaddata data/seed_content.json || echo "Content seed skipped (may already exist)"
+  # Load career profiles, quiz, articles, FAQs, success stories
+  python manage.py loaddata data/seed_content.json || echo "Content seed skipped (may already exist)"
 
-# Add new career profiles and link courses to career ideas
-python manage.py seed_careers
-python manage.py expand_careers
+  # Add new career profiles and link courses to career ideas
+  python manage.py seed_careers
+  python manage.py expand_careers
 
-# Seed AI knowledge base entries
-python manage.py seed_knowledge || echo "Knowledge seed skipped"
+  # Seed AI knowledge base entries
+  python manage.py seed_knowledge || echo "Knowledge seed skipped"
 
-# Seed Kenya job market salary intelligence (87 careers — idempotent)
-python manage.py seed_job_market
+  # Seed Kenya job market salary intelligence (87 careers — idempotent)
+  python manage.py seed_job_market
+else
+  echo "RUN_SEEDS not set — skipping seed data"
+fi
 
 # Set the Site domain for django.contrib.sites + allauth
 python manage.py shell -c "
