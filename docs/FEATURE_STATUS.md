@@ -313,7 +313,7 @@ Status legend: ✅ Done | 🚧 In Progress | 📋 Planned | ❌ Blocked | [-] Dr
 | Feature | Status | Notes |
 |---|---|---|
 | Service worker | ✅ | `static/js/sw.js` (cache-v5); cache-first for `/` and `/static/`; network-first for dynamic pages |
-| Web app manifest | ✅ | `static/manifest.json`; start_url `/dashboard/`; standalone display |
+| Web app manifest | ✅ | `static/manifest.json`; start_url `/accounts/dashboard/`; standalone display |
 | Web Push notifications | ✅ | VAPID keys; push event handler in SW; notification click → opens URL |
 | PWA install prompt | ✅ | Shows on all devices; 7-day cooldown first dismiss, 4-day after |
 | Splash screen (first open only) | ✅ | Graduation cap animation + "CareerNext" shimmer; sessionStorage guard; standalone mode only |

@@ -241,6 +241,6 @@ guards every dashboard view.
    (which itself already `include()`s `allauth.urls`), once via `django.contrib.auth.urls`, and
    once again directly via `allauth.urls`. Django resolves by list order, so `accounts.urls`
    patterns win on name collisions, but the duplicate `allauth.urls` include is redundant.
-2. `/dashboard/` is registered at the project root (`dashboard_root`) in addition to
-   `/accounts/dashboard/` (`accounts:dashboard`) — both point to the same view function.
+2. `/dashboard/` is a permanent redirect to
+   `/accounts/dashboard/` (`accounts:dashboard`), kept for the old PWA `start_url` and bookmarks.
 3. Admin is served at `/cn-staff/`, not the Django default `/admin/`.

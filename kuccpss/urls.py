@@ -83,6 +83,8 @@ urlpatterns = [
     path('institutions/', include('institutions.urls', namespace='institutions')),
     path('courses/', include('courses.urls', namespace='courses')),
     path('career.html', RedirectView.as_view(url='/career/', permanent=True)),
+    # Old PWA start_url and bookmarks — installed apps keep the cached manifest.
+    path('dashboard/', RedirectView.as_view(url='/accounts/dashboard/', permanent=True, query_string=True)),
     path('career/', include('career.urls', namespace='career')),
     path('resources/', include('resources.urls', namespace='resources')),
     path('predictor/', include('predictor.urls', namespace='predictor')),
