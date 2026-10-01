@@ -169,19 +169,27 @@ class StaffSecurityMiddleware:
 
 class CanonicalHostMiddleware:
     """
-    Redirects www.<CANONICAL_HOST> to <CANONICAL_HOST>.
+    Redirects the www/apex twin of CANONICAL_HOST to CANONICAL_HOST.
 
     Session cookies are host-only and allauth builds the Google callback URL
     from the request host, so serving both hosts split sessions and sent
     Google a redirect_uri it might not have registered. Other hosts (e.g.
     *.onrender.com health checks) pass through untouched.
+
+    CANONICAL_HOST must match the host's primary domain: Render redirects the
+    non-primary domain itself, so pointing the other way loops forever.
     """
     def __init__(self, get_response):
         from django.conf import settings
         self.get_response = get_response
         canonical = getattr(settings, 'CANONICAL_HOST', '')
         self.canonical = canonical
-        self.alias = f'www.{canonical}' if canonical else ''
+        if not canonical:
+            self.alias = ''
+        elif canonical.startswith('www.'):
+            self.alias = canonical[len('www.'):]
+        else:
+            self.alias = f'www.{canonical}'
 
     def __call__(self, request):
         if self.alias and request.get_host().split(':')[0] == self.alias:

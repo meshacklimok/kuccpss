@@ -53,14 +53,16 @@ fi
 # Set the Site domain for django.contrib.sites + allauth
 python manage.py shell -c "
 import os
+from django.conf import settings
 from django.contrib.sites.models import Site
 from allauth.socialaccount.models import SocialApp
 
 site, _ = Site.objects.get_or_create(id=1)
-site.domain = 'careernext.co.ke'
+domain = settings.CANONICAL_HOST or 'www.careernext.co.ke'
+site.domain = domain
 site.name = 'CareerNext'
 site.save()
-print('Site set to careernext.co.ke')
+print(f'Site set to {domain}')
 
 # Create or update Google OAuth SocialApp from env vars
 client_id = os.environ.get('GOOGLE_CLIENT_ID', '')
@@ -71,12 +73,12 @@ if client_id and secret:
         defaults={'name': 'Google', 'client_id': client_id, 'secret': secret}
     )
     app.sites.add(site)
-    print(f'Google OAuth app {\"created\" if created else \"updated\"} and linked to careernext.co.ke')
+    print(f'Google OAuth app {\"created\" if created else \"updated\"} and linked to {domain}')
 else:
     app = SocialApp.objects.filter(provider='google').first()
     if app:
         app.sites.add(site)
-        print('Existing Google social app linked to careernext.co.ke')
+        print(f'Existing Google social app linked to {domain}')
     else:
         print('GOOGLE_CLIENT_ID / GOOGLE_SECRET not set — Google login button will be hidden')
 "

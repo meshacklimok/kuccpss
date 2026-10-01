@@ -55,9 +55,11 @@ CSRF_TRUSTED_ORIGINS = [
     'https://www.careernext.co.ke',
 ]
 
-# Requests to www.<CANONICAL_HOST> are 301'd to CANONICAL_HOST so sessions and
-# the Google OAuth callback always use one host. Set CANONICAL_HOST='' to disable.
-CANONICAL_HOST = os.environ.get('CANONICAL_HOST', '' if DEBUG else 'careernext.co.ke')
+# Requests to the www/apex twin of CANONICAL_HOST are 301'd to CANONICAL_HOST so
+# sessions and the Google OAuth callback always use one host. Must match Render's
+# primary domain (www) — Render redirects apex→www itself, so the opposite loops.
+# Set CANONICAL_HOST='' to disable.
+CANONICAL_HOST = os.environ.get('CANONICAL_HOST', '' if DEBUG else 'www.careernext.co.ke')
 
 # ── Maintenance mode ─────────────────────────────────────────────────────────
 # Flip MAINTENANCE_MODE=True in the host's env vars to take the site offline.
