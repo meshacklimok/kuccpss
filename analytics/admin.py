@@ -9,7 +9,7 @@ from django.shortcuts import render
 from django.urls import path
 
 from .models import (
-    CareerEngineLog, DownloadLog, EventLog,
+    AuditLog, CareerEngineLog, DownloadLog, EventLog,
     PageViewLog, PWAInstallLog, SearchLog,
     SessionLog, UserActionLog, ViewLog,
 )
@@ -165,3 +165,23 @@ class UserActionLogAdmin(admin.ModelAdmin):
     readonly_fields = ('created_at',)
     date_hierarchy  = 'created_at'
     actions         = [export_to_csv]
+
+
+
+@admin.register(AuditLog)
+class AuditLogAdmin(admin.ModelAdmin):
+    """Read-only: the audit trail must not be editable, even by superusers."""
+    list_display  = ('created_at', 'action', 'actor_label', 'target_type', 'target_id', 'amount', 'ip')
+    list_filter   = ('action', 'target_type')
+    search_fields = ('actor_label', 'target_id', 'action')
+    date_hierarchy = 'created_at'
+    actions = [export_to_csv]
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False

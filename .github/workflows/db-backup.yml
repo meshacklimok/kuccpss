@@ -9,7 +9,8 @@ name: Database backup
 #   BACKUP_PASSPHRASE    — long random passphrase; dumps contain user PII, so
 #                          they are AES-256 encrypted before upload
 #
-# Backups are kept as workflow artifacts for 30 days.
+# Backups are kept as workflow artifacts for 30 days. The restore-test job then
+# restores each backup into a throwaway Postgres and checks the app can use it.
 # Restore:
 #   gpg --decrypt db-YYYYmmdd-HHMM.dump.gpg > db.dump
 #   pg_restore --no-owner --no-privileges --clean --if-exists -d "$DATABASE_URL" db.dump
@@ -74,3 +75,95 @@ jobs:
           path: '*.dump.gpg'
           retention-days: 30
           if-no-files-found: error
+
+  # A backup is only as good as its last successful restore. Every run restores
+  # the dump just taken into a throwaway Postgres, then proves the app can use it:
+  # the schema matches the code's migrations and the core tables hold data.
+  restore-test:
+    needs: backup
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_USER: restore
+          POSTGRES_PASSWORD: restore
+          POSTGRES_DB: restore_test
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U restore"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      RESTORE_URL: postgresql://restore:restore@localhost:5432/restore_test
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install PostgreSQL client
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq postgresql-common
+          sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y
+          sudo apt-get install -y -qq postgresql-client-18
+
+      - name: Download backup
+        uses: actions/download-artifact@v4
+        with:
+          name: db-backup-${{ github.run_id }}
+
+      - name: Decrypt
+        env:
+          PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+        run: |
+          set -euo pipefail
+          f=$(ls *.dump.gpg | head -1)
+          printf '%s' "$PASSPHRASE" | gpg --batch --yes --pinentry-mode loopback \
+            --passphrase-fd 0 --decrypt -o db.dump "$f"
+
+      - name: Restore
+        run: |
+          set -euo pipefail
+          start=$(date +%s)
+          /usr/lib/postgresql/18/bin/pg_restore --no-owner --no-privileges \
+            --exit-on-error -d "$RESTORE_URL" db.dump
+          echo "Restore took $(( $(date +%s) - start ))s" | tee -a "$GITHUB_STEP_SUMMARY"
+          rm db.dump
+
+      - name: Sanity-check restored data
+        run: |
+          set -euo pipefail
+          psql "$RESTORE_URL" -v ON_ERROR_STOP=1 -At <<'SQL' | tee counts.txt
+          SELECT 'users='       || count(*) FROM accounts_user;
+          SELECT 'payments='    || count(*) FROM payments_payment;
+          SELECT 'courses='     || count(*) FROM courses_course;
+          SELECT 'institutions='|| count(*) FROM institutions_institution;
+          SELECT 'migrations='  || count(*) FROM django_migrations;
+          SQL
+          cat counts.txt >> "$GITHUB_STEP_SUMMARY"
+          for t in users courses institutions migrations; do
+            n=$(grep "^$t=" counts.txt | cut -d= -f2)
+            if [ "${n:-0}" -eq 0 ]; then echo "::error::restored $t table is empty"; exit 1; fi
+          done
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+
+      # Migrating forward proves the restored schema is one the current code can
+      # take over (a plain --check would flake whenever master is ahead of prod).
+      - name: App can migrate and use the restored database
+        env:
+          # DB_* rather than DATABASE_URL: the URL path forces sslmode=require,
+          # which this local service container doesn't offer.
+          DB_NAME: restore_test
+          DB_USER: restore
+          DB_PASSWORD: restore
+          DB_HOST: localhost
+          DB_PORT: '5432'
+          DJANGO_DEBUG: 'True'
+          SECRET_KEY: restore-test-only
+        run: |
+          pip install -q -r requirements.txt
+          python manage.py migrate --noinput
+          python manage.py db_health

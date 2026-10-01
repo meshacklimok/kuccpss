@@ -240,6 +240,42 @@ class SlowRequestLogMiddleware:
         return response
 
 
+class SlowQueryLogMiddleware:
+    """
+    Logs individual SQL statements slower than DB_SLOW_QUERY_MS (default 500 ms),
+    plus requests that issue more than DB_QUERY_COUNT_WARN queries (default 100,
+    a strong N+1 signal). Uses Django's execute_wrapper, so the overhead is one
+    perf_counter() pair per query.
+    """
+
+    def __init__(self, get_response):
+        from django.conf import settings
+        self.get_response = get_response
+        self.slow_ms = getattr(settings, 'DB_SLOW_QUERY_MS', 500)
+        self.count_warn = getattr(settings, 'DB_QUERY_COUNT_WARN', 100)
+
+    def __call__(self, request):
+        from django.db import connection
+        stats = {'count': 0}
+
+        def wrapper(execute, sql, params, many, context):
+            stats['count'] += 1
+            t0 = time.perf_counter()
+            try:
+                return execute(sql, params, many, context)
+            finally:
+                ms = (time.perf_counter() - t0) * 1000
+                if ms > self.slow_ms:
+                    log.warning("SLOW QUERY %.0fms  %s %s  — %s",
+                                ms, request.method, request.path, sql[:500])
+
+        with connection.execute_wrapper(wrapper):
+            response = self.get_response(request)
+        if stats['count'] > self.count_warn:
+            log.warning("HIGH QUERY COUNT %d  %s %s", stats['count'], request.method, request.path)
+        return response
+
+
 class GracefulErrorMiddleware:
     """
     Catches unhandled exceptions and returns a friendly response instead of a raw

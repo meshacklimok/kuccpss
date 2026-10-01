@@ -505,6 +505,14 @@ class AffiliateProfile(models.Model):
         verbose_name = "Affiliate Profile"
         verbose_name_plural = "Affiliate Profiles"
         ordering = ['-created_at']
+        constraints = [
+            models.CheckConstraint(condition=models.Q(wallet_balance__gte=0),
+                                   name='affiliate_wallet_non_negative'),
+            models.CheckConstraint(condition=models.Q(total_earned__gte=0),
+                                   name='affiliate_total_earned_non_negative'),
+            models.CheckConstraint(condition=models.Q(commission_rate__gte=0, commission_rate__lte=100),
+                                   name='affiliate_commission_rate_0_100'),
+        ]
 
     def __str__(self):
         status = "active" if self.is_active else "inactive"
@@ -538,6 +546,10 @@ class AffiliateCommission(models.Model):
         verbose_name_plural = "Affiliate Commissions"
         ordering = ['-created_at']
         indexes = [models.Index(fields=["affiliate", "status"])]
+        constraints = [
+            models.CheckConstraint(condition=models.Q(amount__gte=0),
+                                   name='affiliate_commission_amount_non_negative'),
+        ]
 
     def __str__(self):
         return f"{self.affiliate.user.email} — KES {self.amount} ({self.status})"
@@ -564,6 +576,13 @@ class AffiliateWithdrawalRequest(models.Model):
         verbose_name_plural = "Affiliate Withdrawals"
         ordering = ['-created_at']
         indexes = [models.Index(fields=["affiliate", "status"])]
+        constraints = [
+            models.CheckConstraint(condition=models.Q(amount__gte=0),
+                                   name='affiliate_withdrawal_amount_non_negative'),
+            # At most one in-flight payout per affiliate (see mentorship.WithdrawalRequest).
+            models.UniqueConstraint(fields=['affiliate'], condition=models.Q(status='pending'),
+                                    name='one_pending_withdrawal_per_affiliate'),
+        ]
 
     def __str__(self):
         return f"{self.affiliate.user.email} — KES {self.amount} ({self.status})"

@@ -187,6 +187,15 @@ class WithdrawalRequest(models.Model):
     class Meta:
         ordering = ["-created_at"]
         indexes = [models.Index(fields=["mentor", "status"])]
+        constraints = [
+            # At most one in-flight payout per mentor — the DB-level guard against a
+            # double-submitted withdrawal (or auto-pay racing it) paying out twice.
+            models.UniqueConstraint(
+                fields=["mentor"],
+                condition=models.Q(status="pending"),
+                name="one_pending_withdrawal_per_mentor",
+            ),
+        ]
 
     def __str__(self):
         return f"{self.mentor.display_name} — KES {self.amount} ({self.status})"

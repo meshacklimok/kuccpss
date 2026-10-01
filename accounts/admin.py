@@ -3,7 +3,7 @@ import logging
 import threading
 from django.contrib import admin, messages
 from django.db import connection, transaction
-from django.db.models import Sum
+from django.db.models import F, Sum
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -31,6 +31,7 @@ from .models import (
     StaffTOTPDevice,
 )
 from .forms import UserAdminCreationForm, UserAdminChangeForm
+from analytics.audit import record
 from kuccpss.email_utils import send_branded_email
 
 log = logging.getLogger(__name__)
@@ -401,11 +402,15 @@ class AffiliateCommissionAdmin(admin.ModelAdmin):
         for affiliate in AffiliateProfile.objects.filter(pk__in=pending.values('affiliate_id')).select_related('user'):
             commissions = pending.filter(affiliate=affiliate)
             total = commissions.aggregate(t=Sum('amount'))['t'] or 0
-            if affiliate.wallet_balance < total:
-                skipped.append(f"{affiliate.user.email} (wallet KES {affiliate.wallet_balance} < KES {total})")
-                continue
             now = timezone.now()
             with transaction.atomic():
+                # Conditional debit: never below zero even if the wallet changed since we read it.
+                if not AffiliateProfile.objects.filter(pk=affiliate.pk, wallet_balance__gte=total).update(
+                    wallet_balance=F('wallet_balance') - total
+                ):
+                    affiliate.refresh_from_db(fields=['wallet_balance'])
+                    skipped.append(f"{affiliate.user.email} (wallet KES {affiliate.wallet_balance} < KES {total})")
+                    continue
                 wr = AffiliateWithdrawalRequest.objects.create(
                     affiliate=affiliate,
                     amount=total,
@@ -415,8 +420,9 @@ class AffiliateCommissionAdmin(admin.ModelAdmin):
                     processed_at=now,
                 )
                 commissions.update(status='paid_out', paid_out_at=now)
-                affiliate.wallet_balance -= total
-                affiliate.save(update_fields=['wallet_balance'])
+                record('affiliate.wallet_debited', affiliate, request=request, amount=total,
+                       withdrawal_id=wr.pk, source='admin_mark_paid_out')
+            affiliate.refresh_from_db(fields=['wallet_balance'])
             send_branded_email(
                 to=affiliate.user.email,
                 subject="CareerNext — Your Affiliate Payout Has Been Sent",
@@ -458,17 +464,25 @@ class AffiliateWithdrawalRequestAdmin(admin.ModelAdmin):
         count, skipped = 0, []
         for wr in queryset.filter(status__in=['pending', 'failed']).select_related('affiliate__user'):
             affiliate = wr.affiliate
-            if affiliate.wallet_balance < wr.amount:
-                skipped.append(f"{affiliate.user.email} (wallet KES {affiliate.wallet_balance} < KES {wr.amount})")
-                continue
-            affiliate.wallet_balance -= wr.amount
-            affiliate.save(update_fields=['wallet_balance'])
-            AffiliateCommission.objects.filter(affiliate=affiliate, status='pending').update(
-                status='paid_out', paid_out_at=timezone.now()
-            )
-            wr.status = 'processed'
-            wr.processed_at = timezone.now()
-            wr.save(update_fields=['status', 'processed_at'])
+            with transaction.atomic():
+                if not AffiliateProfile.objects.filter(pk=affiliate.pk, wallet_balance__gte=wr.amount).update(
+                    wallet_balance=F('wallet_balance') - wr.amount
+                ):
+                    affiliate.refresh_from_db(fields=['wallet_balance'])
+                    skipped.append(f"{affiliate.user.email} (wallet KES {affiliate.wallet_balance} < KES {wr.amount})")
+                    continue
+                if not AffiliateWithdrawalRequest.objects.filter(pk=wr.pk, status__in=['pending', 'failed']).update(
+                    status='processed', processed_at=timezone.now()
+                ):
+                    transaction.set_rollback(True)
+                    continue
+                AffiliateCommission.objects.filter(affiliate=affiliate, status='pending').update(
+                    status='paid_out', paid_out_at=timezone.now()
+                )
+                record('affiliate.wallet_debited', affiliate, request=request, amount=wr.amount,
+                       withdrawal_id=wr.pk, source='admin_mark_processed')
+            affiliate.refresh_from_db(fields=['wallet_balance'])
+            wr.refresh_from_db()
             send_branded_email(
                 to=affiliate.user.email,
                 subject="CareerNext — Your Affiliate Payout Has Been Sent",

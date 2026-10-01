@@ -151,6 +151,7 @@ MIDDLEWARE = [
     'kuccpss.middleware.GracefulErrorMiddleware',
     'kuccpss.middleware.HeavyEndpointRateLimitMiddleware',
     'kuccpss.middleware.SlowRequestLogMiddleware',
+    'kuccpss.middleware.SlowQueryLogMiddleware',
     'kuccpss.middleware.DisableHttp3Middleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -234,6 +235,10 @@ DATABASES = {
         },
     }
 }
+
+# Query monitoring thresholds (see kuccpss.middleware.SlowQueryLogMiddleware).
+DB_SLOW_QUERY_MS = int(os.environ.get('DB_SLOW_QUERY_MS', '500'))
+DB_QUERY_COUNT_WARN = int(os.environ.get('DB_QUERY_COUNT_WARN', '100'))
 
 # ── Task Queue (Django-Q2) ────────────────────────────────────────────────────
 # Uses the Django ORM as the broker by default (zero extra infrastructure).
@@ -455,6 +460,15 @@ if _DATABASE_URL:
         'connect_timeout', int(os.environ.get('DB_CONNECT_TIMEOUT', '15'))
     )
 
+# Optional server-side statement timeout: kills runaway queries instead of letting
+# them hold a gunicorn worker and a DB connection. Opt-in (DB_STATEMENT_TIMEOUT_MS,
+# e.g. 30000) because one-off migrations/imports can legitimately run longer, and
+# only applied on direct connections — PgBouncer transaction mode (Neon "-pooler")
+# rejects the libpq `options` startup parameter.
+_STATEMENT_TIMEOUT_MS = int(os.environ.get('DB_STATEMENT_TIMEOUT_MS', '0'))
+if _STATEMENT_TIMEOUT_MS > 0 and not DATABASES['default'].get('DISABLE_SERVER_SIDE_CURSORS'):
+    DATABASES['default'].setdefault('OPTIONS', {})['options'] = f'-c statement_timeout={_STATEMENT_TIMEOUT_MS}'
+
 # ── Production security ───────────────────────────────────────────────────────
 if not DEBUG:
     # Crash loudly if SECRET_KEY is still the insecure fallback
@@ -518,6 +532,9 @@ LOGGING = {
         'career': {'handlers': ['console'], 'level': 'WARNING', 'propagate': False},
         'courses': {'handlers': ['console'], 'level': 'WARNING', 'propagate': False},
         'payments': {'handlers': ['console'], 'level': 'WARNING', 'propagate': False},
+        'analytics': {'handlers': ['console'], 'level': 'WARNING', 'propagate': False},
+        'mentorship': {'handlers': ['console'], 'level': 'WARNING', 'propagate': False},
+        'accounts': {'handlers': ['console'], 'level': 'WARNING', 'propagate': False},
     },
 }
 

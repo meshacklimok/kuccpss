@@ -12,6 +12,28 @@ Format: `[YYYY-MM-DD]` — description of what changed and why.
 
 ---
 
+## [2026-10-01] — Database integrity, monitoring and recovery
+- **Money race fixes:**
+  - Mentor session confirmation, cancellation and refunds, and mentor/affiliate withdrawals and admin payout actions now use conditional status updates and `F()` balance changes inside `transaction.atomic`. Concurrent requests or webhook retries can no longer double-credit or double-debit a wallet.
+  - Affiliate commission credit is now atomic: the commission row and the wallet credit commit together or not at all.
+- **DB constraints:**
+  - Money amounts must be ≥ 0, payment status must be a known value, and the affiliate commission rate must be between 0 and 100.
+  - At most one pending withdrawal per mentor or affiliate (partial unique constraint).
+  - Migrations `accounts/0018`, `mentorship/0014`, `payments/0013` and `analytics/0011` mark older duplicate pending withdrawals as `failed` before adding the constraint.
+- **Auto-payout:** a pending withdrawal row is created *before* the B2C call. A failed payout now leaves a `failed` row instead of nothing.
+- **Webhook:** retried IntaSend webhooks no longer create duplicate `Transaction` rows, and malformed amounts no longer cause a 500.
+- **Audit trail:** new read-only `analytics.AuditLog` and `analytics.audit.record()` for payments, exemptions, wallet credits/debits, withdrawals and refunds.
+- **Monitoring:**
+  - New `manage.py db_health` checks connectivity, migrations, storage, connections, long queries, cache hit ratio, unindexed FKs, unused indexes, bloat and ledger/payment consistency.
+  - `SlowQueryLogMiddleware` logs slow queries and requests that issue too many queries.
+  - `/health/` reports `db_ms`.
+  - Opt-in `DB_STATEMENT_TIMEOUT_MS` (direct connections only).
+- **Restore testing:** the backup workflow now restores each nightly dump into a throwaway Postgres, then runs `migrate` and `db_health` against it.
+- **Tests:** new `payments/test_integrity.py`, `mentorship/test_integrity.py` and `analytics/test_db_health.py`.
+- **Docs:** new runbook [DATABASE_OPERATIONS.md](DATABASE_OPERATIONS.md).
+
+---
+
 ## [2026-09-29] — Security hardening
 - **Staff TOTP 2FA:**
   - `StaffSecurityMiddleware` requires every `is_staff` user to verify a code from an authenticator app. Unenrolled staff are sent to `/accounts/staff/2fa/setup/` (QR code); enrolled staff re-verify every 12 h.

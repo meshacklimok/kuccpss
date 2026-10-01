@@ -2,9 +2,13 @@ from django.contrib import admin, messages
 from django.conf import settings
 from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404, render
+from django.db import transaction
+from django.db.models import F
+from django.db.models.functions import Greatest
 from django.utils import timezone
 from django.urls import path, reverse
 from django.utils.html import format_html, mark_safe
+from analytics.audit import record
 from kuccpss.email_utils import send_branded_email
 
 from .models import MentorProfile, TimeSlot, MentorshipSession, WithdrawalRequest, MentorshipConfig
@@ -477,18 +481,27 @@ class MentorshipSessionAdmin(admin.ModelAdmin):
         count = 0
         for session in queryset.filter(status__in=["confirmed", "pending_payment", "pending_manual_verification"]):
             was_credited = session.status == "confirmed"
+            with transaction.atomic():
+                # Conditional on the status we read, so a concurrent confirm/refund can't
+                # leave the wallet credited for a refunded session (or debited twice).
+                won = MentorshipSession.objects.filter(pk=session.pk, status=session.status).update(status="refunded")
+                if not won:
+                    continue
+                # Release the slot so it can be booked again.
+                if session.slot_id:
+                    TimeSlot.objects.filter(pk=session.slot_id).update(is_booked=False)
+                # Only confirmed sessions ever credited the mentor's wallet.
+                if was_credited:
+                    MentorProfile.objects.filter(pk=session.mentor_id).update(
+                        wallet_balance=Greatest(F("wallet_balance") - session.mentor_payout, 0),
+                        total_earned=Greatest(F("total_earned") - session.mentor_payout, 0),
+                    )
+                Payment.objects.filter(mentorship_session=session).update(
+                    status="refunded", updated_at=timezone.now()
+                )
+                record("mentor.session_refunded", session, request=request,
+                       amount=session.amount, mentor_debited=session.mentor_payout if was_credited else 0)
             session.status = "refunded"
-            session.save(update_fields=["status"])
-            # Release the slot so it can be booked again.
-            if session.slot_id:
-                TimeSlot.objects.filter(pk=session.slot_id).update(is_booked=False)
-            # Only confirmed sessions ever credited the mentor's wallet.
-            if was_credited:
-                mentor = session.mentor
-                mentor.wallet_balance = max(0, mentor.wallet_balance - session.mentor_payout)
-                mentor.total_earned = max(0, mentor.total_earned - session.mentor_payout)
-                mentor.save(update_fields=["wallet_balance", "total_earned"])
-            Payment.objects.filter(mentorship_session=session).update(status="refunded")
             send_branded_email(
                 to=session.mentee.email,
                 subject="CareerNext — Mentorship Session Refunded",
@@ -553,14 +566,24 @@ class WithdrawalRequestAdmin(admin.ModelAdmin):
         count, skipped = 0, []
         for wr in queryset.filter(status__in=["pending", "failed"]).select_related("mentor__user"):
             mentor = wr.mentor
-            if mentor.wallet_balance < wr.amount:
-                skipped.append(f"{mentor.display_name} (wallet KES {mentor.wallet_balance} < KES {wr.amount})")
-                continue
-            mentor.wallet_balance -= wr.amount
-            mentor.save(update_fields=["wallet_balance"])
-            wr.status = "processed"
-            wr.processed_at = timezone.now()
-            wr.save(update_fields=["status", "processed_at"])
+            with transaction.atomic():
+                # Conditional debit: never below zero, and never twice for one request.
+                debited = MentorProfile.objects.filter(
+                    pk=mentor.pk, wallet_balance__gte=wr.amount
+                ).update(wallet_balance=F("wallet_balance") - wr.amount)
+                if not debited:
+                    mentor.refresh_from_db(fields=["wallet_balance"])
+                    skipped.append(f"{mentor.display_name} (wallet KES {mentor.wallet_balance} < KES {wr.amount})")
+                    continue
+                if not WithdrawalRequest.objects.filter(pk=wr.pk, status__in=["pending", "failed"]).update(
+                    status="processed", processed_at=timezone.now()
+                ):
+                    transaction.set_rollback(True)
+                    continue
+                record("mentor.wallet_debited", mentor, request=request, amount=wr.amount,
+                       withdrawal_id=wr.pk, source="admin_mark_processed")
+            mentor.refresh_from_db(fields=["wallet_balance"])
+            wr.refresh_from_db()
             send_branded_email(
                 to=mentor.user.email,
                 subject="CareerNext — Withdrawal Processed",
@@ -591,9 +614,11 @@ class WithdrawalRequestAdmin(admin.ModelAdmin):
     def mark_rejected(self, request, queryset):
         count = 0
         for wr in queryset.filter(status__in=["pending", "failed"]).select_related("mentor__user"):
-            wr.status = "rejected"
-            wr.processed_at = timezone.now()
-            wr.save(update_fields=["status", "processed_at"])
+            if not WithdrawalRequest.objects.filter(pk=wr.pk, status__in=["pending", "failed"]).update(
+                status="rejected", processed_at=timezone.now()
+            ):
+                continue
+            record("mentor.withdrawal_rejected", wr, request=request, amount=wr.amount)
             mentor = wr.mentor
             body = ["Your withdrawal request could not be completed. The amount remains in your CareerNext wallet."]
             if wr.admin_note:

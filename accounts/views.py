@@ -1131,13 +1131,20 @@ def request_affiliate_payout(request):
         messages.error(request, f"Minimum payout is KES {_affiliate_min_withdrawal()}.")
         return redirect('accounts:affiliate_dashboard')
 
-    if affiliate.withdrawals.filter(status='pending').exists():
+    from django.db import IntegrityError, transaction
+    from django.db.models import F
+    from analytics.audit import record
+    # One pending withdrawal per affiliate is a DB constraint, so a double-submit
+    # can't send two M-Pesa payouts.
+    try:
+        with transaction.atomic():
+            wr = AffiliateWithdrawalRequest.objects.create(
+                affiliate=affiliate, amount=amount, mpesa_number=mpesa, status='pending'
+            )
+    except IntegrityError:
         messages.error(request, "You already have a pending withdrawal. Please wait for it to complete.")
         return redirect('accounts:affiliate_dashboard')
-
-    wr = AffiliateWithdrawalRequest.objects.create(
-        affiliate=affiliate, amount=amount, mpesa_number=mpesa, status='pending'
-    )
+    record('affiliate.withdrawal_requested', wr, request=request, amount=amount, mpesa_number=mpesa)
     try:
         from payments.services import send_affiliate_payout
         send_affiliate_payout(
@@ -1146,16 +1153,24 @@ def request_affiliate_payout(request):
             affiliate_name=request.user.full_name or request.user.email,
             ref=str(affiliate.pk)[:8],
         )
-        wr.status = 'processed'
-        wr.processed_at = timezone.now()
-        wr.save(update_fields=['status', 'processed_at'])
-
-        affiliate.wallet_balance -= amount
-        affiliate.save(update_fields=['wallet_balance'])
-
-        AffiliateCommission.objects.filter(affiliate=affiliate, status='pending').update(
-            status='paid_out', paid_out_at=timezone.now()
-        )
+        with transaction.atomic():
+            AffiliateWithdrawalRequest.objects.filter(pk=wr.pk, status='pending').update(
+                status='processed', processed_at=timezone.now()
+            )
+            debited = AffiliateProfile.objects.filter(
+                pk=affiliate.pk, wallet_balance__gte=amount
+            ).update(wallet_balance=F('wallet_balance') - amount)
+            AffiliateCommission.objects.filter(affiliate=affiliate, status='pending').update(
+                status='paid_out', paid_out_at=timezone.now()
+            )
+            record('affiliate.wallet_debited', affiliate, request=request, amount=amount,
+                   withdrawal_id=wr.pk, shortfall=not debited)
+        if not debited:
+            logging.getLogger(__name__).error(
+                "Affiliate %s paid KES %s but wallet had insufficient balance to debit (withdrawal %s)",
+                affiliate.pk, amount, wr.pk)
+        wr.refresh_from_db()
+        affiliate.refresh_from_db(fields=['wallet_balance'])
 
         send_branded_email(
             to=request.user.email,
@@ -1176,9 +1191,12 @@ def request_affiliate_payout(request):
         messages.success(request, f"KES {amount} has been sent to {mpesa} via M-Pesa!")
 
     except Exception as exc:
-        wr.status = 'failed'
-        wr.admin_note = str(exc)[:500]
-        wr.save(update_fields=['status', 'admin_note'])
+        wr.refresh_from_db()
+        if wr.status == 'pending':
+            wr.status = 'failed'
+            wr.admin_note = str(exc)[:500]
+            wr.save(update_fields=['status', 'admin_note'])
+            record('affiliate.payout_failed', wr, request=request, amount=amount, error=exc)
         logging.getLogger(__name__).error("Affiliate payout failed for %s: %s", affiliate.pk, exc)
         messages.error(request, "Payout failed — please try again or contact support.")
 

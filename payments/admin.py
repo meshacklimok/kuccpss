@@ -1,5 +1,8 @@
 from django.contrib import admin, messages
+from django.utils import timezone
 from django.utils.timezone import now
+
+from analytics.audit import record
 from .models import Payment, Transaction, PaymentFeature, PaymentExemption, PRODUCT_CHOICES
 
 
@@ -47,8 +50,15 @@ def _complete_payment(payment):
 def mark_completed(modeladmin, request, queryset):
     updated = 0
     for payment in queryset.filter(status__in=["pending", "failed"]).select_related("user", "mentorship_session"):
-        payment.status = "completed"
-        payment.save(update_fields=["status", "updated_at"])
+        # Conditional UPDATE: if the webhook completed it a moment ago, don't fulfil twice.
+        won = Payment.objects.filter(pk=payment.pk, status__in=["pending", "failed"]).update(
+            status="completed", updated_at=timezone.now()
+        )
+        if not won:
+            continue
+        payment.refresh_from_db()
+        record("payment.completed", payment, request=request, amount=payment.amount,
+               source="admin_action", feature=payment.feature)
         _complete_payment(payment)
         updated += 1
     modeladmin.message_user(
@@ -60,7 +70,12 @@ mark_completed.short_description = "Mark selected payments as COMPLETED (manual 
 
 
 def mark_failed(modeladmin, request, queryset):
-    updated = queryset.filter(status="pending").update(status="failed")
+    pks = list(queryset.filter(status="pending").values_list("pk", flat=True))
+    updated = Payment.objects.filter(pk__in=pks, status="pending").update(
+        status="failed", updated_at=timezone.now()
+    )
+    for pk in pks:
+        record("payment.failed", None, request=request, payment_id=pk, source="admin_action")
     modeladmin.message_user(request, f"{updated} payment(s) marked as failed.")
 mark_failed.short_description = "Mark selected payments as FAILED"
 
@@ -77,8 +92,12 @@ class PaymentAdmin(admin.ModelAdmin):
 
     def save_model(self, request, obj, form, change):
         # Covers both the change form and the list_editable status column.
-        was_completed = change and Payment.objects.filter(pk=obj.pk, status="completed").exists()
+        old_status = Payment.objects.filter(pk=obj.pk).values_list("status", flat=True).first() if change else None
+        was_completed = old_status == "completed"
         super().save_model(request, obj, form, change)
+        if old_status != obj.status:
+            record("payment.status_changed", obj, request=request, amount=obj.amount,
+                   source="admin_edit", old=old_status, new=obj.status)
         if obj.status == "completed" and not was_completed:
             _complete_payment(obj)
             self.message_user(request, f"Payment #{obj.pk} completed — {obj.user.email} has been unlocked and sent a receipt.")
@@ -107,6 +126,13 @@ class PaymentExemptionAdmin(admin.ModelAdmin):
         if not change:
             obj.granted_by = request.user
         super().save_model(request, obj, form, change)
+        record("payment.exemption_saved", obj, request=request,
+               user=obj.user.email, feature=obj.feature or "ALL", created=not change)
+
+    def delete_model(self, request, obj):
+        record("payment.exemption_deleted", obj, request=request,
+               user=obj.user.email, feature=obj.feature or "ALL")
+        super().delete_model(request, obj)
 
     @admin.display(description="Feature scope")
     def feature_display(self, obj):
