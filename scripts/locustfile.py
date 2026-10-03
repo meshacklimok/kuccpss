@@ -103,7 +103,7 @@ class StudentUser(HttpUser):
     @task(6)
     def view_eligible_courses(self):
         """Hits the cached eligible courses page — fast if cache warm."""
-        self.client.get('/clusterpoints/eligible-courses/', name='Eligible Courses')
+        self.client.get('/clusterpoints/eligible/', name='Eligible Courses')
 
     @task(4)
     def view_course_list(self):
@@ -151,7 +151,7 @@ class PowerUser(HttpUser):
 
     @task(3)
     def view_eligible_fast(self):
-        self.client.get('/clusterpoints/eligible-courses/', name='[Power] Eligible')
+        self.client.get('/clusterpoints/eligible/', name='[Power] Eligible')
 
     @task(2)
     def search_repeatedly(self):

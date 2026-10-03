@@ -119,7 +119,9 @@ Now resolved (previously listed as gaps): dependency vulnerability scanning
 (`kuccpss.middleware.ContentSecurityPolicyMiddleware`), and `.env.example` sync
 (`CLOUDINARY_URL`, `GOOGLE_CLIENT_ID`, `VAPID_*` now present).
 
-- No scheduled job visibly purges old analytics logs (`analytics/tasks.py::purge_old_logs` exists
-  but has no cron/management-command wiring found).
+- Periodic jobs run in-process via `kuccpss/scheduler.py` (no qcluster/cron on Render):
+  `check_pending_payments`, mentorship reminders (sent once, tracked by `reminder_sent`) and
+  auto-complete, every 10 min under a Postgres advisory lock, started per gunicorn worker by
+  `post_worker_init`. Each cycle pings `KEEPALIVE_URL/health/` so Render's free tier stays awake. Log purges run on each deploy from `build.sh`.
 - No automated cron processes `WithdrawalRequest` rows beyond the synchronous request-time call —
   `mentorship_housekeeping` only handles session reminders/completion.

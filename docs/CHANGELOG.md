@@ -12,6 +12,52 @@ Format: `[YYYY-MM-DD]` — description of what changed and why.
 
 ---
 
+## [2026-10-03] — CareerNext AI chat: database tools, site guide, identity
+- **New `career/ai_assistant.py`:** the chat brain now lives here; `ajax_ai_chat` in `career/views.py` handles only access, credits and logging.
+- **Reads the database through OpenAI tool calling.** The model can look things up while answering:
+  - `search_courses`
+  - `get_course_details`: cutoffs per institution, plus the student's eligibility computed by the server
+  - `find_courses_i_qualify_for`
+  - `search_institutions`
+  - `get_institution_courses`
+  - `search_careers`
+  - `search_help_articles`
+
+  It makes up to 4 lookup rounds, in both streaming and non-streaming modes.
+- **Student data:** taken from the session first. If that is empty, it falls back to the latest snapshot, then the saved `UserKCSEResult`, then the latest `ClusterCalculationResult`. The AI never asks for subjects.
+- **Knows itself and the site:**
+  - What CareerNext is and who built it (Meshack Limo, Francis Oduor).
+  - That it is independent from KUCCPS.
+  - A verified map of site pages, which the test `AIAssistantTests.test_site_guide_paths_resolve` checks.
+  - Example replies that give it a head start, and a personality section that allows creativity.
+- **More tools:**
+  - `compare_courses` compares 2–3 courses side by side: requirements, cutoff range, where the student qualifies, and salary.
+  - `get_salary_outlook` reads `JobMarketData`.
+  - `get_my_shortlist` reads the shortlist and saved courses, with eligibility for each.
+  - `get_course_details` now includes `predicted_next_cutoff` from `predictor.services.predict_cutoff`.
+- **Reply format:** point form with a summary first. Every reply ends with `<<FOLLOWUPS: a | b | c>>`. The chat page shows these as tap-able chips, `cnAiFormat` hides the marker everywhere, and the JSON response returns `followups` separately.
+- **Clickable links:** new `static/js/ai_format.js` (`cnAiFormat`) renders the AI's Markdown in the chat page, the results-page assistant and the dashboard widget. It only allows links to site paths and to official HTTPS domains on an allow-list.
+
+## [2026-10-02] — Course salary data: coverage and accuracy
+- **Matching fixed** (`career/job_market.py`): course names now match keywords as whole words, and the longest keyword wins. This stops false hits such as "vet" in "TVET", "ict" in "conflict" and "mechanic" in "mechanical". The broad category fallback was removed. Diploma and certificate courses now show the technician-level salary (e.g. Diploma in Electrical Engineering → Electrical Technician) instead of the degree-level one.
+- **Coverage:** 1,803 of 1,814 courses (99%) now show a salary, up from about 60%. The 11 still unmatched are generic "Bachelor of Arts/Science" and pure Philosophy, left blank on purpose.
+- **Salaries updated from 2025 CBAs:**
+  - Medical Doctor: KSh 200k–400k (KMPDU intern pay).
+  - Clinical Officer: KSh 105,900–338,010 (KUCO–CoG CBA 2025–2029).
+  - Secondary School Teacher: KSh 50k–130k (TSC CBA 2025–2029).
+- **44 new careers** (`ESTIMATED_CAREERS` in `seed_job_market.py`): criminology, public administration, international relations, theology, languages, chemistry/physics/biology, planning, project management, and technician equivalents. Each record's source name says it is a KUCCPSS estimate.
+- **Deploy:** run `python manage.py seed_job_market` on the server (or deploy with `RUN_SEEDS=1`), then restart the app so the `lru_cache` lookup reloads.
+
+## [2026-10-02] — Background jobs actually run in production
+- **In-process scheduler** (`kuccpss/scheduler.py`): Render runs no qcluster worker or cron, so the django-q Schedules never fired. A daemon thread started by the web server now runs pending-payment recovery (`check_pending_payments`) and mentorship reminders/auto-complete every 10 minutes. A Postgres advisory lock lets only one process run a cycle. Toggle with `BACKGROUND_JOBS_ENABLED` (defaults to on when `DEBUG` is off).
+- **Mentorship reminders sent once:** new `MentorshipSession.reminder_sent` flag (migration 0015). Previously, repeated runs inside the 60–120 min window re-sent the email, and windows crossing midnight were missed. The logic moved to `mentorship/tasks.py`; `mentorship_housekeeping` now calls it.
+- **Per-worker background threads:** gunicorn's `preload_app` ran `AppConfig.ready()` in the master, so the homepage cache warmer never ran in the workers that serve requests. The warmer and the scheduler now start in each worker from the `post_worker_init` hook in `gunicorn.conf.py`.
+- **Keep-awake ping:** each scheduler cycle requests `KEEPALIVE_URL/health/` (defaults to Render's `RENDER_EXTERNAL_URL`), so the free-tier service doesn't sleep after 15 idle minutes and stop running jobs.
+- **Fix:** sharing the calculator with a malformed body returns 400 instead of 500.
+- **Tests:** career pathway/quiz/AI chat/share tests, calculator share tests, mentorship task and scheduler tests (196 total).
+
+---
+
 ## [2026-10-01] — Database integrity, monitoring and recovery
 - **Money race fixes:**
   - Mentor session confirmation, cancellation and refunds, and mentor/affiliate withdrawals and admin payout actions now use conditional status updates and `F()` balance changes inside `transaction.atomic`. Concurrent requests or webhook retries can no longer double-credit or double-debit a wallet.
