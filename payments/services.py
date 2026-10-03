@@ -164,8 +164,10 @@ def credit_affiliate_commission(payment: "Payment") -> None:
     if payment.feature in AFFILIATE_EXCLUDED_FEATURES:
         return
     try:
+        from django.db import IntegrityError, transaction
         from django.db.models import F
         from accounts.models import Referral, AffiliateProfile, AffiliateCommission
+        from analytics.audit import record
         referral = Referral.objects.select_related('referrer').get(
             referred_user=payment.user, converted=True
         )
@@ -174,19 +176,28 @@ def credit_affiliate_commission(payment: "Payment") -> None:
             return
         rate = affiliate.commission_rate
         commission_amount = (rate / 100) * payment.amount
-        AffiliateCommission.objects.create(
-            affiliate=affiliate,
-            payment=payment,
-            referred_user=payment.user,
-            referral=referral,
-            amount=commission_amount,
-            rate_snapshot=rate,
-            status='pending',
-        )
-        AffiliateProfile.objects.filter(pk=affiliate.pk).update(
-            wallet_balance=F('wallet_balance') + commission_amount,
-            total_earned=F('total_earned') + commission_amount,
-        )
+        # The commission row and the wallet credit commit together or not at all,
+        # so the wallet can never drift from the sum of its commissions. The
+        # OneToOne on payment makes a racing second call fail here, not double-credit.
+        try:
+            with transaction.atomic():
+                AffiliateCommission.objects.create(
+                    affiliate=affiliate,
+                    payment=payment,
+                    referred_user=payment.user,
+                    referral=referral,
+                    amount=commission_amount,
+                    rate_snapshot=rate,
+                    status='pending',
+                )
+                AffiliateProfile.objects.filter(pk=affiliate.pk).update(
+                    wallet_balance=F('wallet_balance') + commission_amount,
+                    total_earned=F('total_earned') + commission_amount,
+                )
+                record('affiliate.commission_credited', affiliate, amount=commission_amount,
+                       payment_id=payment.pk, rate=rate)
+        except IntegrityError:
+            return  # another confirmation path already credited this payment
         logger.info("Affiliate commission KES %s awarded to %s for payment %s",
                     commission_amount, affiliate.user.email, payment.pk)
     except (Referral.DoesNotExist, AffiliateProfile.DoesNotExist):

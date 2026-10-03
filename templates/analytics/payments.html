@@ -67,7 +67,7 @@
 {% endblock %}
 
 {% block header_actions %}
-<a href="/admin/payments/payment/?status__exact=pending" target="_blank" class="btn-action amber">
+<a href="{% url 'admin:payments_payment_changelist' %}?status__exact=pending" target="_blank" class="btn-action amber">
   Open in Admin ↗
 </a>
 {% endblock %}
@@ -158,7 +158,7 @@
           <td>{% if p.mpesa_code %}<span class="code-green">{{ p.mpesa_code }}</span>{% else %}<span style="color:var(--muted);">—</span>{% endif %}</td>
           <td><span class="code">{{ p.checkout_id|default:"—" }}</span></td>
           <td>{{ p.created_at|date:"d M H:i" }}</td>
-          <td><a class="row-link" href="/admin/payments/payment/{{ p.pk }}/change/" target="_blank">Edit ↗</a></td>
+          <td><a class="row-link" href="{% url 'admin:payments_payment_change' p.pk %}" target="_blank">Edit ↗</a></td>
         </tr>
         {% empty %}
         <tr><td colspan="8" class="empty">No {{ status_filter }} payments found.</td></tr>
@@ -202,7 +202,7 @@
           </td>
           <td><span class="code">{{ row.p.checkout_id|default:"—" }}</span></td>
           <td style="white-space:nowrap;">{{ row.p.created_at|date:"d M H:i" }}</td>
-          <td><a class="row-link" href="/admin/payments/payment/{{ row.p.pk }}/change/" target="_blank">Edit ↗</a></td>
+          <td><a class="row-link" href="{% url 'admin:payments_payment_change' row.p.pk %}" target="_blank">Edit ↗</a></td>
         </tr>
         {% endfor %}
       </tbody>
@@ -237,7 +237,7 @@
           <td>KES {{ p.amount }}</td>
           <td><span class="code">{{ p.checkout_id|default:"—" }}</span></td>
           <td>{{ p.created_at|date:"d M H:i" }}</td>
-          <td><a class="row-link" href="/admin/payments/payment/{{ p.pk }}/change/" target="_blank">Edit ↗</a></td>
+          <td><a class="row-link" href="{% url 'admin:payments_payment_change' p.pk %}" target="_blank">Edit ↗</a></td>
         </tr>
         {% endfor %}
       </tbody>
@@ -272,7 +272,7 @@
           <td><strong style="color:var(--green);">KES {{ p.amount }}</strong></td>
           <td>{% if p.mpesa_code %}<span class="code-green">{{ p.mpesa_code }}</span>{% else %}—{% endif %}</td>
           <td>{{ p.updated_at|date:"d M H:i" }}</td>
-          <td><a class="row-link" href="/admin/payments/payment/{{ p.pk }}/change/" target="_blank">Edit ↗</a></td>
+          <td><a class="row-link" href="{% url 'admin:payments_payment_change' p.pk %}" target="_blank">Edit ↗</a></td>
         </tr>
         {% endfor %}
       </tbody>
@@ -301,7 +301,7 @@
           <td>{{ p.get_feature_display }}</td>
           <td>KES {{ p.amount }}</td>
           <td>{{ p.created_at|date:"d M H:i" }}</td>
-          <td><a class="row-link" href="/admin/payments/payment/{{ p.pk }}/change/" target="_blank">Edit ↗</a></td>
+          <td><a class="row-link" href="{% url 'admin:payments_payment_change' p.pk %}" target="_blank">Edit ↗</a></td>
         </tr>
         {% endfor %}
       </tbody>

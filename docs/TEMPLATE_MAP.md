@@ -39,7 +39,7 @@ dashboard (see [STATIC_FILES.md](STATIC_FILES.md) for the component-class invent
 | `register.html` | Split-panel registration (email, password, county, kcse_year, terms) | `RegisterView` |
 | `home.html` | Public marketing homepage (cached 5 min) | `public_home_view` |
 | `about.html`, `terms.html`, `privacy.html`, `faq.html`, `how_it_works.html` | Static informational pages | resp. static views |
-| `profile.html` / `profile_update.html` | View / edit profile | `profile_update_view` (GET/POST) |
+| `profile.html` | View / edit profile | `profile_update_view` (GET/POST) |
 | `saved_courses.html` | `SavedCourse` bookmarks list | `saved_courses_view` |
 | `shortlist.html` | `CourseShortlist` management (priority/deadline/rank) | `shortlist_view` |
 | `comparison.html` | Side-by-side course comparison | `course_comparison_view` |
@@ -53,7 +53,7 @@ dashboard (see [STATIC_FILES.md](STATIC_FILES.md) for the component-class invent
 | `email_confirm.html` / `email_verification_sent.html` | Email verification click-through / "check inbox" | `email_verify_view` |
 | `change_password.html` | Change password (recent-auth required) | `change_password_view` |
 | `password_reset_*.html` (4 templates) | Custom (non-allauth) password reset flow | password reset views |
-| `google_login.html` / `google_oauth_link.html` | Google login trigger / account-linking | allauth-adjacent views |
+| `google_login.html` | Google login trigger | allauth-adjacent views |
 
 ### account/ + socialaccount/ (django-allauth overrides)
 
@@ -120,7 +120,7 @@ dashboard (see [STATIC_FILES.md](STATIC_FILES.md) for the component-class invent
 | `home.html` | 6-box pathway-selection grid (Degree/Diploma/KMTC/TVET/TTC) | `home` |
 | `kcse_input.html` | Unified KCSE grade-input accordion | `kcse_input` |
 | `pathway_input.html` | Per-pathway accordion inputs (mean-grade picker for TTC/Artisan) | `pathway_input` |
-| `career_type.html`, `degree_step.html`, `diploma_step.html`, `tvet_step.html`, `artisan_step.html`, `input_form.html` | Individual pathway-selection/grade-entry step templates | various step views |
+| `career_type.html`, `degree_step.html`, `diploma_step.html`, `tvet_step.html`, `artisan_step.html` | Individual pathway-selection/grade-entry step templates | various step views |
 | `degree_entry.html`, `degree_options.html` | Degree pathway landing + 4 method-selection cards (manual/upload/paste) | `degree_entry`, `degree_options` |
 | `degree_manual.html` | Manual cluster selection (~20 clusters with real offerings) | `degree_manual` |
 | `degree_upload.html` | OCR document upload UI (GPT-4o Vision) | `degree_upload` |
@@ -137,7 +137,6 @@ dashboard (see [STATIC_FILES.md](STATIC_FILES.md) for the component-class invent
 | `quiz.html` / `quiz_results.html` | Career-assessment quiz UI / top-6 matches | `quiz_view` / `quiz_results_view` |
 | `career_profiles.html` / `career_profile_detail.html` / `_career_profile_items_partial.html` | Career profile list / detail / AJAX grid partial | `career_profiles_list` etc. |
 | `shared_result.html` / `shared_result_expired.html` | Public token-based results view / expired-token state | `shared_result_view` |
-| `floating_modal.html` | Generic floating modal partial | included where needed |
 
 ### mentorship/ (views in [mentorship/views.py](../mentorship/views.py))
 

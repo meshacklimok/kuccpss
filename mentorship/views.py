@@ -6,7 +6,8 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from kuccpss.email_utils import notify_admin_withdrawal, send_branded_email
-from django.db.models import Q
+from django.db import IntegrityError, transaction
+from django.db.models import F, Q
 from django.http import JsonResponse, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
@@ -15,6 +16,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 
 from accounts.decorators import require_recent_auth
+from analytics.audit import record
 from .forms import AddSlotsForm, AddWeekSlotsForm, BookingForm, CancelSessionForm, MentorRegistrationForm, RatingForm, WithdrawalForm, _mentor_min_withdrawal
 from .models import MentorProfile, MentorshipConfig, MentorshipSession, TimeSlot, WithdrawalRequest
 
@@ -597,6 +599,9 @@ def verify_payment_manual(request, token):
     return redirect("mentorship:checkout", token=token)
 
 
+CONFIRMABLE_STATUSES = ("pending_payment", "pending_manual_verification")
+
+
 def _confirm_session_after_payment(session: MentorshipSession, source: str = "unknown"):
     """Shared logic: mark session confirmed, credit mentor, send emails.
 
@@ -606,15 +611,31 @@ def _confirm_session_after_payment(session: MentorshipSession, source: str = "un
     logged only, to make it observable in production which path confirmed a given
     session.
     """
+    from payments.models import Payment
+    # The status flip is a conditional UPDATE so that when two paths race (webhook +
+    # manual verify, or both webhook endpoints) exactly one of them credits the mentor.
+    # Credit uses F() so a concurrent credit/debit on the same wallet isn't lost.
+    with transaction.atomic():
+        won = MentorshipSession.objects.filter(
+            pk=session.pk, status__in=CONFIRMABLE_STATUSES
+        ).update(status="confirmed")
+        if not won:
+            logger.info("Mentorship session %s already confirmed — %s skipped", session.token, source)
+            session.refresh_from_db()
+            return
+        Payment.objects.filter(mentorship_session=session).exclude(status="completed").update(
+            status="completed", updated_at=timezone.now()
+        )
+        MentorProfile.objects.filter(pk=session.mentor_id).update(
+            wallet_balance=F("wallet_balance") + session.mentor_payout,
+            total_earned=F("total_earned") + session.mentor_payout,
+        )
+        record("mentor.wallet_credited", session.mentor, amount=session.mentor_payout,
+               session=session.token, source=source)
     logger.info("Mentorship session %s confirmed via %s", session.token, source)
     session.status = "confirmed"
-    session.save(update_fields=["status"])
-    from payments.models import Payment
-    Payment.objects.filter(mentorship_session=session).exclude(status="completed").update(status="completed")
     mentor = session.mentor
-    mentor.wallet_balance += session.mentor_payout
-    mentor.total_earned += session.mentor_payout
-    mentor.save(update_fields=["wallet_balance", "total_earned"])
+    mentor.refresh_from_db(fields=["wallet_balance", "total_earned"])
     if not session.confirmation_sent:
         if _send_booking_confirmation(session):
             session.confirmation_sent = True
@@ -825,12 +846,18 @@ def _maybe_auto_pay_mentor(mentor):
         logger.warning("Auto-pay skipped for mentor %s: no WhatsApp/M-Pesa number", mentor.pk)
         return
 
-    # Guard: skip if there's already a pending auto-pay for this mentor
-    if WithdrawalRequest.objects.filter(mentor=mentor, status="pending").exists():
+    payout_amount = mentor.wallet_balance
+    # The pending row doubles as a lock: the DB allows one pending withdrawal per
+    # mentor, so a concurrent auto-pay or manual withdrawal can't send a second payout.
+    try:
+        with transaction.atomic():
+            wr = WithdrawalRequest.objects.create(
+                mentor=mentor, amount=payout_amount, mpesa_number=mentor.whatsapp, status="pending",
+            )
+    except IntegrityError:
         logger.info("Auto-pay skipped for mentor %s: pending withdrawal exists", mentor.pk)
         return
 
-    payout_amount = mentor.wallet_balance
     try:
         from payments.services import send_mentor_payout
         send_mentor_payout(
@@ -839,15 +866,15 @@ def _maybe_auto_pay_mentor(mentor):
             mentor_name=mentor.display_name,
             ref=str(mentor.pk)[:8],
         )
-        # Record for audit trail
-        WithdrawalRequest.objects.create(
-            mentor=mentor,
-            amount=payout_amount,
-            mpesa_number=mentor.whatsapp,
-            status="processed",
-        )
-        mentor.wallet_balance = 0
-        mentor.save(update_fields=["wallet_balance"])
+    except Exception as exc:
+        WithdrawalRequest.objects.filter(pk=wr.pk).update(status="failed", admin_note=f"Auto-pay: {exc}"[:500])
+        record("mentor.payout_failed", wr, amount=payout_amount, source="auto_pay", error=exc)
+        logger.error("Auto-pay failed for mentor %s: %s", mentor.pk, exc)
+        return
+
+    try:
+        _settle_mentor_withdrawal(wr, source="auto_pay")
+        mentor.refresh_from_db(fields=["wallet_balance"])
         logger.info("Auto-pay KES %s sent to mentor %s (%s)", payout_amount, mentor.display_name, mentor.whatsapp)
 
         send_branded_email(
@@ -867,7 +894,9 @@ def _maybe_auto_pay_mentor(mentor):
             user_email=mentor.user.email,
         )
     except Exception as exc:
-        logger.error("Auto-pay failed for mentor %s: %s", mentor.pk, exc)
+        # The M-Pesa payout already went out; only settlement/notification failed.
+        logger.error("Auto-pay sent but post-payout step failed for mentor %s (withdrawal %s): %s",
+                     mentor.pk, wr.pk, exc)
 
 
 def _send_booking_confirmation(session: MentorshipSession):
@@ -1049,19 +1078,21 @@ def cancel_session(request, token):
             reason = form.cleaned_data["reason"]
             cancelled_by = "mentee" if is_mentee else "mentor"
 
-            # Free the slot
-            slot = session.slot
-            slot.is_booked = False
-            slot.save(update_fields=["is_booked"])
-
-            # Debit mentor wallet if already credited
-            mentor = session.mentor
-            if mentor.wallet_balance >= session.mentor_payout:
-                mentor.wallet_balance -= session.mentor_payout
-                mentor.save(update_fields=["wallet_balance"])
-
+            # Conditional status flip: a double-submitted cancel must debit only once.
+            with transaction.atomic():
+                won = MentorshipSession.objects.filter(pk=session.pk, status="confirmed").update(status="cancelled")
+                if not won:
+                    messages.info(request, "This session has already been cancelled.")
+                    return redirect("mentorship:my_sessions") if is_mentee else redirect("mentorship:dashboard")
+                TimeSlot.objects.filter(pk=session.slot_id).update(is_booked=False)
+                # Confirmed sessions always credited the mentor; reverse that credit.
+                MentorProfile.objects.filter(
+                    pk=session.mentor_id, wallet_balance__gte=session.mentor_payout
+                ).update(wallet_balance=F("wallet_balance") - session.mentor_payout)
+                record("mentor.wallet_debited", session.mentor, request=request,
+                       amount=session.mentor_payout, session=session.token,
+                       source=f"cancelled_by_{cancelled_by}")
             session.status = "cancelled"
-            session.save(update_fields=["status"])
 
             _send_cancellation_emails(session, cancelled_by, reason)
             messages.success(request, "Session cancelled. Our team will process the refund within 24 hours.")
@@ -1145,6 +1176,26 @@ def _send_cancellation_emails(session, cancelled_by, reason):
 
 # ── Mentor Wallet Withdrawal ──────────────────────────────────────────────────
 
+def _settle_mentor_withdrawal(wr, *, source):
+    """Mark a pending withdrawal processed and debit the wallet, atomically, after
+    the M-Pesa payout has been sent. The debit is conditional on sufficient balance
+    so the wallet can never go negative; a shortfall is logged loudly for follow-up
+    rather than silently clamped."""
+    with transaction.atomic():
+        WithdrawalRequest.objects.filter(pk=wr.pk, status="pending").update(
+            status="processed", processed_at=timezone.now()
+        )
+        debited = MentorProfile.objects.filter(
+            pk=wr.mentor_id, wallet_balance__gte=wr.amount
+        ).update(wallet_balance=F("wallet_balance") - wr.amount)
+        record("mentor.wallet_debited", wr.mentor, amount=wr.amount,
+               withdrawal_id=wr.pk, source=source, shortfall=not debited)
+    if not debited:
+        logger.error("Mentor %s paid KES %s but wallet had insufficient balance to debit (withdrawal %s)",
+                     wr.mentor_id, wr.amount, wr.pk)
+    wr.refresh_from_db()
+
+
 @require_recent_auth
 @require_POST
 def request_withdrawal(request):
@@ -1159,11 +1210,15 @@ def request_withdrawal(request):
     amount = form.cleaned_data["amount"]
     mpesa  = form.cleaned_data["mpesa_number"]
 
-    if WithdrawalRequest.objects.filter(mentor=mentor, status="pending").exists():
+    # One pending withdrawal per mentor is enforced by a DB constraint, so a
+    # double-submitted form can't trigger two M-Pesa payouts.
+    try:
+        with transaction.atomic():
+            wr = WithdrawalRequest.objects.create(mentor=mentor, amount=amount, mpesa_number=mpesa, status="pending")
+    except IntegrityError:
         messages.error(request, "You already have a pending withdrawal. Please wait for it to complete.")
         return redirect("mentorship:dashboard")
-
-    wr = WithdrawalRequest.objects.create(mentor=mentor, amount=amount, mpesa_number=mpesa, status="pending")
+    record("mentor.withdrawal_requested", wr, request=request, amount=amount, mpesa_number=mpesa)
     try:
         from payments.services import send_mentor_payout
         send_mentor_payout(
@@ -1172,12 +1227,8 @@ def request_withdrawal(request):
             mentor_name=mentor.display_name,
             ref=str(mentor.pk)[:8],
         )
-        wr.status = "processed"
-        wr.processed_at = timezone.now()
-        wr.save(update_fields=["status", "processed_at"])
-
-        mentor.wallet_balance -= amount
-        mentor.save(update_fields=["wallet_balance"])
+        _settle_mentor_withdrawal(wr, source="mentor_dashboard")
+        mentor.refresh_from_db(fields=["wallet_balance"])
 
         send_branded_email(
             to=mentor.user.email,
@@ -1198,9 +1249,12 @@ def request_withdrawal(request):
         messages.success(request, f"KES {amount} has been sent to {mpesa} via M-Pesa!")
 
     except Exception as exc:
-        wr.status = "failed"
-        wr.admin_note = str(exc)[:500]
-        wr.save(update_fields=["status", "admin_note"])
+        wr.refresh_from_db()
+        if wr.status == "pending":
+            wr.status = "failed"
+            wr.admin_note = str(exc)[:500]
+            wr.save(update_fields=["status", "admin_note"])
+            record("mentor.payout_failed", wr, request=request, amount=amount, error=exc)
         logger.error("Mentor payout failed for %s: %s", mentor.pk, exc)
         messages.error(request, "Payout failed — please try again or contact support.")
 

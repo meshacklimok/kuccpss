@@ -14,6 +14,12 @@ Then try:   500 users, ramp 20/sec → find the break point
 
 Realistic peak: KUCCPS release day (October/March) — mostly mobile students
 entering grades and checking eligible courses.
+
+Watch the database while it runs (see docs/DATABASE.md → Scalability testing):
+    python manage.py db_health     # connections, long-running queries, cache hit
+    app logs: "SLOW QUERY", "HIGH QUERY COUNT", "SLOW REQUEST"
+Pass criteria: p95 < 1500 ms, errors < 1%, DB connections < 80% of max,
+no idle-in-transaction sessions.
 """
 from locust import HttpUser, task, between
 import random
@@ -97,7 +103,7 @@ class StudentUser(HttpUser):
     @task(6)
     def view_eligible_courses(self):
         """Hits the cached eligible courses page — fast if cache warm."""
-        self.client.get('/clusterpoints/eligible-courses/', name='Eligible Courses')
+        self.client.get('/clusterpoints/eligible/', name='Eligible Courses')
 
     @task(4)
     def view_course_list(self):
@@ -145,7 +151,7 @@ class PowerUser(HttpUser):
 
     @task(3)
     def view_eligible_fast(self):
-        self.client.get('/clusterpoints/eligible-courses/', name='[Power] Eligible')
+        self.client.get('/clusterpoints/eligible/', name='[Power] Eligible')
 
     @task(2)
     def search_repeatedly(self):

@@ -5,6 +5,9 @@ relationships — never Django's default `auth.User` (see [CLAUDE.md](../CLAUDE.
 Postgres is used in production (`dj_database_url` from `DATABASE_URL`), SQLite (`db.sqlite3`) in
 local dev.
 
+Constraints, backups, monitoring, disaster recovery and concurrency rules for money code:
+see [DATABASE_OPERATIONS.md](DATABASE_OPERATIONS.md).
+
 ## clusters app
 
 ### `Subject` ([clusters/models.py](../clusters/models.py))

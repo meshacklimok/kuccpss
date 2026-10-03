@@ -334,8 +334,8 @@
     <ul class="pagination justify-content-center flex-wrap">
       {% if page_obj.has_previous %}
       <li class="page-item">
-        <a class="page-link"
-           href="?page={{ page_obj.previous_page_number }}&q={{ query }}&cluster={{ cluster_num }}&type={{ course_type_slug }}&status={{ status_filter }}">
+        <a class="page-link" aria-label="Previous page"
+           href="?page={{ page_obj.previous_page_number }}&q={{ query|urlencode }}&cluster={{ cluster_num|urlencode }}&type={{ course_type_slug|urlencode }}&status={{ status_filter|urlencode }}">
           <i class="fas fa-chevron-left"></i>
         </a>
       </li>
@@ -346,7 +346,7 @@
         {% elif num == 1 or num == page_obj.paginator.num_pages or num >= page_obj.number|add:"-2" and num <= page_obj.number|add:"2" %}
         <li class="page-item">
           <a class="page-link"
-             href="?page={{ num }}&q={{ query }}&cluster={{ cluster_num }}&type={{ course_type_slug }}&status={{ status_filter }}">{{ num }}</a>
+             href="?page={{ num }}&q={{ query|urlencode }}&cluster={{ cluster_num|urlencode }}&type={{ course_type_slug|urlencode }}&status={{ status_filter|urlencode }}">{{ num }}</a>
         </li>
         {% elif num == page_obj.number|add:"-3" or num == page_obj.number|add:"3" %}
         <li class="page-item disabled"><span class="page-link">…</span></li>
@@ -354,8 +354,8 @@
       {% endfor %}
       {% if page_obj.has_next %}
       <li class="page-item">
-        <a class="page-link"
-           href="?page={{ page_obj.next_page_number }}&q={{ query }}&cluster={{ cluster_num }}&type={{ course_type_slug }}&status={{ status_filter }}">
+        <a class="page-link" aria-label="Next page"
+           href="?page={{ page_obj.next_page_number }}&q={{ query|urlencode }}&cluster={{ cluster_num|urlencode }}&type={{ course_type_slug|urlencode }}&status={{ status_filter|urlencode }}">
           <i class="fas fa-chevron-right"></i>
         </a>
       </li>

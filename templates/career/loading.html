@@ -91,8 +91,7 @@ body {
     margin: 0 0 0.35rem; letter-spacing: -0.02em; line-height: 1.2;
 }
 .l-main-title .hl {
-    background: #818cf8;
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    color: #818cf8;
 }
 .l-subtitle { font-size: 0.85rem; color: rgba(255,255,255,0.45); margin: 0; }
 
@@ -158,7 +157,7 @@ body {
 /* progress ring */
 .rf {
     fill: none;
-    stroke: url(#ringGrad);
+    stroke: #4f46e5;
     stroke-width: 10;
     stroke-linecap: round;
     stroke-dasharray: 534;
@@ -168,7 +167,7 @@ body {
 }
 /* ring glow state (updated by JS) */
 .rf.complete {
-    stroke: url(#ringGradDone);
+    stroke: #22c55e;
     filter: drop-shadow(0 0 18px rgba(34,197,94,0.8));
 }
 
@@ -181,8 +180,6 @@ body {
 .ring-pct {
     font-size: 2.5rem; font-weight: 900; color: #fff; line-height: 1;
     letter-spacing: -0.03em;
-    background: #fff;
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
 }
 @media (max-width: 699px) { .ring-pct { font-size: 2rem; } }
 .ring-sub {
@@ -337,15 +334,9 @@ body {
 }
 .l-bar-fill {
     height: 100%;
-    background: linear-gradient(90deg, #4f46e5, #06b6d4, #22c55e);
-    background-size: 200% 100%;
+    background: #4f46e5;
     width: 0%; border-radius: 3px;
     transition: width 0.6s ease;
-    animation: barShimmer 3s linear infinite;
-}
-@keyframes barShimmer {
-    0%   { background-position: 0% 0%; }
-    100% { background-position: 200% 0%; }
 }
 .l-bar-label { font-size: 0.7rem; color: rgba(255,255,255,0.25); text-align: center; }
 
@@ -401,18 +392,6 @@ body {
                 <div class="ring-pulse"></div>
                 <div class="ring-pulse-2"></div>
                 <svg class="ring-svg" viewBox="0 0 200 200">
-                    <defs>
-                        <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                            <stop offset="0%"   stop-color="#4f46e5"/>
-                            <stop offset="40%"  stop-color="#3b82f6"/>
-                            <stop offset="75%"  stop-color="#06b6d4"/>
-                            <stop offset="100%" stop-color="#22c55e"/>
-                        </linearGradient>
-                        <linearGradient id="ringGradDone" x1="0%" y1="0%" x2="100%" y2="0%">
-                            <stop offset="0%"   stop-color="#22c55e"/>
-                            <stop offset="100%" stop-color="#4ade80"/>
-                        </linearGradient>
-                    </defs>
                     <!-- outer dashed decorative ring -->
                     <circle class="ro" cx="100" cy="100" r="95"/>
                     <!-- inner decorative ring -->
@@ -682,7 +661,7 @@ function runStep(i) {
                 setPct(100);
                 ringEl.classList.add('complete');
                 iconEl.classList.add('visible');
-                pctEl.style.cssText = 'background:#4ade80;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;';
+                pctEl.style.color = '#4ade80';
                 document.getElementById('mainCard').classList.add('complete');
                 setStatus("Done! Loading your results...");
                 labelEl.textContent = "Analysis complete, redirecting now";

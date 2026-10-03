@@ -87,6 +87,14 @@ class Payment(models.Model):
                 condition=models.Q(checkout_id__gt=""),
                 name="unique_nonempty_checkout_id",
             ),
+            models.CheckConstraint(
+                condition=models.Q(amount__gte=0),
+                name="payment_amount_non_negative",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(status__in=["pending", "completed", "failed", "refunded"]),
+                name="payment_status_valid",
+            ),
         ]
 
     def __str__(self):
@@ -155,6 +163,12 @@ class Transaction(models.Model):
             models.Index(fields=["mpesa_ref"]),
             # Manual code verification looks up mpesa_ref__iexact → UPPER(mpesa_ref)
             models.Index(Upper("mpesa_ref"), name="payments_txn_mpesa_ref_upper"),
+        ]
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(amount__gte=0),
+                name="transaction_amount_non_negative",
+            ),
         ]
 
     def __str__(self):

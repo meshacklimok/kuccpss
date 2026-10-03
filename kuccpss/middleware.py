@@ -240,6 +240,42 @@ class SlowRequestLogMiddleware:
         return response
 
 
+class SlowQueryLogMiddleware:
+    """
+    Logs individual SQL statements slower than DB_SLOW_QUERY_MS (default 500 ms),
+    plus requests that issue more than DB_QUERY_COUNT_WARN queries (default 100,
+    a strong N+1 signal). Uses Django's execute_wrapper, so the overhead is one
+    perf_counter() pair per query.
+    """
+
+    def __init__(self, get_response):
+        from django.conf import settings
+        self.get_response = get_response
+        self.slow_ms = getattr(settings, 'DB_SLOW_QUERY_MS', 500)
+        self.count_warn = getattr(settings, 'DB_QUERY_COUNT_WARN', 100)
+
+    def __call__(self, request):
+        from django.db import connection
+        stats = {'count': 0}
+
+        def wrapper(execute, sql, params, many, context):
+            stats['count'] += 1
+            t0 = time.perf_counter()
+            try:
+                return execute(sql, params, many, context)
+            finally:
+                ms = (time.perf_counter() - t0) * 1000
+                if ms > self.slow_ms:
+                    log.warning("SLOW QUERY %.0fms  %s %s  — %s",
+                                ms, request.method, request.path, sql[:500])
+
+        with connection.execute_wrapper(wrapper):
+            response = self.get_response(request)
+        if stats['count'] > self.count_warn:
+            log.warning("HIGH QUERY COUNT %d  %s %s", stats['count'], request.method, request.path)
+        return response
+
+
 class GracefulErrorMiddleware:
     """
     Catches unhandled exceptions and returns a friendly response instead of a raw
@@ -281,7 +317,7 @@ class MaintenanceModeMiddleware:
     ``settings.MAINTENANCE_MODE`` is on.
 
     Deliberately let through so you can still work on a sleeping site:
-      * staff / superusers (session cookie must already exist, or log in via /admin/)
+      * staff / superusers (session cookie must already exist, or log in via /cn-staff/)
       * /cn-staff/ (admin) and the login pages, so you can *become* staff
       * any IP listed in ``settings.MAINTENANCE_ALLOWED_IPS``
       * static & media files, and health checks
@@ -496,10 +532,12 @@ class HeavyEndpointRateLimitMiddleware:
     """
     RULES = [
         ('/clusterpoints/', 'POST', 20, 600),
-        ('/clusterpoints/eligible-courses/', 'GET', 30, 600),
+        ('/clusterpoints/eligible/', 'GET', 30, 600),
         ('/career/', 'POST', 10, 600),
         # Password reset / email verification (allauth + custom) — anti email-bombing
         ('/accounts/password/reset/', 'POST', 5, 3600),
+        # Admin login (staff 2FA follows, but don't allow password guessing)
+        ('/cn-staff/login/', 'POST', 10, 900),
         ('/accounts/confirm-email/', 'POST', 5, 3600),
         # M-Pesa STK push initiation and manual code verification
         ('/payments/initiate/', 'POST', 5, 600),

@@ -237,3 +237,31 @@ class CareerEngineLog(models.Model):
 
     def __str__(self):
         return f'{self.pathway} — {self.result_count} matches'
+
+
+class AuditLog(models.Model):
+    """
+    Append-only trail of security- and money-relevant actions: payment status
+    changes, wallet credits/debits, withdrawals, refunds. Written via
+    analytics.audit.record(). Django's admin LogEntry already covers ordinary
+    admin edits; this covers the code paths that bypass the admin (webhooks,
+    queryset.update() calls, payouts).
+    """
+    action       = models.CharField(max_length=60, db_index=True)
+    actor        = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True,
+                                     on_delete=models.SET_NULL, related_name='+')
+    # Snapshot so the trail survives the actor's account being deleted.
+    actor_label  = models.CharField(max_length=254, blank=True)
+    target_type  = models.CharField(max_length=60, blank=True)
+    target_id    = models.CharField(max_length=64, blank=True)
+    amount       = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
+    details      = models.JSONField(default=dict, blank=True)
+    ip           = models.GenericIPAddressField(null=True, blank=True)
+    created_at   = models.DateTimeField(auto_now_add=True, db_index=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        indexes  = [models.Index(fields=['target_type', 'target_id'])]
+
+    def __str__(self):
+        return f'{self.action} {self.target_type}#{self.target_id}'

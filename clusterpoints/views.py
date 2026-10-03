@@ -1137,9 +1137,15 @@ def share_calculator_create(request):
     if request.method != 'POST':
         return JsonResponse({'ok': False}, status=405)
 
+    import json
     try:
-        import json
         body = json.loads(request.body)
+        if not isinstance(body, dict):
+            raise ValueError
+    except ValueError:
+        return JsonResponse({'ok': False, 'error': 'Invalid request.'}, status=400)
+
+    try:
         mean_grade      = body.get('mean_grade', '')
         aggregate       = int(body.get('aggregate', 0) or 0)
         cluster_points  = body.get('cluster_points', {})  # {"kuccps_num": score, ...}

@@ -20,8 +20,16 @@ class AccountsConfig(AppConfig):
 
         if _NON_SERVING_COMMANDS.intersection(sys.argv):
             return
-        # Under runserver's autoreloader, only warm in the serving child.
-        if 'runserver' in sys.argv and os.environ.get('RUN_MAIN') != 'true':
-            return
-        from accounts.tasks import start_homepage_cache_warmer
-        start_homepage_cache_warmer()
+        # Gunicorn starts them per worker from post_worker_init (gunicorn.conf.py):
+        # with preload_app this runs in the master, and threads don't survive fork.
+        # Under runserver's autoreloader, only start them in the serving child.
+        if 'runserver' in sys.argv and os.environ.get('RUN_MAIN') == 'true':
+            start_web_threads()
+
+
+def start_web_threads():
+    """Start the per-process background threads of a web server process."""
+    from accounts.tasks import start_homepage_cache_warmer
+    from kuccpss.scheduler import start_scheduler
+    start_homepage_cache_warmer()
+    start_scheduler()

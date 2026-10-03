@@ -13,7 +13,7 @@
     {% block keywords %}<meta name="keywords" content="KUCCPS, KCSE cluster points calculator, Kenya university placement, KMTC courses, TVET courses, cluster points, KCSE results 2024 2025">{% endblock %}
     <meta name="robots" content="index, follow">
     <meta name="author" content="CareerNext">
-    {% block canonical %}{% endblock %}
+    {% block canonical %}<link rel="canonical" href="https://www.careernext.co.ke{{ request.path }}">{% endblock %}
 
     <!-- Open Graph -->
     <meta property="og:type" content="{% block og_type %}website{% endblock %}">
@@ -68,23 +68,23 @@
       "@context": "https://schema.org",
       "@type": "WebSite",
       "name": "CareerNext",
-      "url": "https://careernext.co.ke",
+      "url": "https://www.careernext.co.ke",
       "description": "Kenya's open access KCSE cluster points calculator and KUCCPS course finder. Discover university, KMTC, TVET and TTC courses you qualify for.",
       "potentialAction": {
         "@type": "SearchAction",
         "target": {
           "@type": "EntryPoint",
-          "urlTemplate": "https://careernext.co.ke/api/search/?q={search_term_string}"
+          "urlTemplate": "https://www.careernext.co.ke/api/search/?q={search_term_string}"
         },
         "query-input": "required name=search_term_string"
       },
       "publisher": {
         "@type": "Organization",
         "name": "CareerNext",
-        "url": "https://careernext.co.ke",
+        "url": "https://www.careernext.co.ke",
         "logo": {
           "@type": "ImageObject",
-          "url": "https://careernext.co.ke{% static 'img/logo-mark.svg' %}"
+          "url": "https://www.careernext.co.ke{% static 'img/logo-mark.svg' %}"
         },
         "contactPoint": {
           "@type": "ContactPoint",
@@ -134,10 +134,9 @@
       <div class="cap-halo"></div>
     </div>
 
-    <!-- Logo with shimmer sweep -->
+    <!-- Logo -->
     <div class="splash-logo-wrap">
       <span class="splash-logo" id="splashLogo">CareerNext</span>
-      <span class="splash-shimmer" aria-hidden="true"></span>
     </div>
 
     <!-- Typewriter tagline -->
@@ -204,29 +203,7 @@
 .splash-logo {
   font-size: clamp(2.2rem, 9vw, 3.6rem);
   font-weight: 900; letter-spacing: -1.5px;
-  background: #ffffff;
-  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-  background-clip: text; display: block;
-}
-/* Shimmer sweep: light moves from tail (right) to top-left */
-.splash-shimmer {
-  position: absolute; inset: 0;
-  background: linear-gradient(
-    105deg,
-    transparent 20%,
-    rgba(255,255,255,0.55) 48%,
-    rgba(255,255,255,0.75) 52%,
-    transparent 80%
-  );
-  background-size: 200% 100%;
-  background-position: 200% 0;
-  -webkit-background-clip: text; background-clip: text;
-  animation: shimmerSweep 1.1s 0.8s ease forwards;
-  pointer-events: none;
-}
-@keyframes shimmerSweep {
-  from { background-position: 200% 0; }
-  to   { background-position: -40% 0; }
+  color: #ffffff; display: block;
 }
 
 /* ── Tagline ── */
@@ -1406,23 +1383,23 @@ window._ph = function (name, props) {
     <div style="background:#1e3a8a;padding:1rem 1.25rem;
                 display:flex;align-items:center;justify-content:space-between;">
       <span style="color:#fff;font-weight:800;font-size:0.95rem;">Send Feedback</span>
-      <button onclick="document.getElementById('fb-modal').style.display='none'"
+      <button type="button" aria-label="Close feedback" onclick="document.getElementById('fb-modal').style.display='none'"
         style="background:rgba(255,255,255,0.15);border:none;color:#fff;border-radius:50%;
                width:28px;height:28px;cursor:pointer;font-size:1rem;line-height:1;">&times;</button>
     </div>
     <form id="fb-form" onsubmit="submitFeedback(event)" style="padding:1.25rem;display:flex;flex-direction:column;gap:0.85rem;">
       {% csrf_token %}
       <input type="hidden" name="page_url" id="fb-page-url">
-      <select name="feedback_type" style="border:1.5px solid #e2e8f0;border-radius:10px;padding:0.55rem 0.75rem;font-size:0.85rem;color:#374151;outline:none;">
+      <select name="feedback_type" aria-label="Feedback type" style="border:1.5px solid #e2e8f0;border-radius:10px;padding:0.55rem 0.75rem;font-size:0.85rem;color:#374151;outline:none;">
         <option value="general">General Feedback</option>
         <option value="bug">Bug Report</option>
         <option value="suggestion">Feature Suggestion</option>
         <option value="content">Content Error</option>
       </select>
-      <textarea name="message" required maxlength="2000" rows="4" placeholder="Tell us what you think..."
+      <textarea name="message" required maxlength="2000" rows="4" aria-label="Your feedback" placeholder="Tell us what you think..."
         style="border:1.5px solid #e2e8f0;border-radius:10px;padding:0.65rem 0.75rem;
                font-size:0.85rem;resize:vertical;outline:none;font-family:inherit;color:#374151;"></textarea>
-      <input type="email" name="email" placeholder="Your email (optional, for follow-up)"
+      <input type="email" name="email" aria-label="Your email (optional)" placeholder="Your email (optional, for follow-up)"
         style="border:1.5px solid #e2e8f0;border-radius:10px;padding:0.55rem 0.75rem;font-size:0.85rem;outline:none;">
       <div id="fb-status" style="display:none;font-size:0.82rem;font-weight:600;text-align:center;padding:0.4rem;border-radius:8px;"></div>
       <button type="submit" style="background:#1e3a8a;color:#fff;border:none;

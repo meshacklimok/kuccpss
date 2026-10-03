@@ -3,7 +3,7 @@ from django.contrib.auth.forms import ReadOnlyPasswordHashField
 from django.core.exceptions import ValidationError
 from django.contrib.auth import authenticate
 from django.utils.translation import gettext_lazy as _
-from .models import User, RememberToken
+from .models import Application, User, RememberToken
 
 # =====================================================
 # HELPER VALIDATORS
@@ -263,3 +263,16 @@ class UserAdminChangeForm(forms.ModelForm):
     class Meta:
         model = User
         fields = ['email', 'full_name', 'password', 'is_active', 'is_staff', 'is_superuser', 'is_verified', 'agreed_terms']
+
+
+# =====================================================
+# APPLICATION TRACKER
+# =====================================================
+class ApplicationForm(forms.ModelForm):
+    class Meta:
+        model = Application
+        fields = ['course_name', 'institution_name', 'status', 'deadline', 'notes']
+        widgets = {
+            'deadline': forms.DateInput(attrs={'type': 'date'}),
+            'notes': forms.Textarea(attrs={'rows': 3}),
+        }
