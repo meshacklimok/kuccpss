@@ -179,7 +179,7 @@ def _send_payment_receipt(payment: "Payment") -> None:
         ) or ""
 
         user_name = getattr(payment.user, "full_name", None) or payment.user.email
-        site_url = "https://careernext.co.ke"
+        site_url = "https://www.careernext.co.ke"
         paid_at = timezone.localtime(payment.updated_at).strftime("%d %b %Y, %I:%M %p")
 
         ctx = {

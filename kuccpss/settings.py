@@ -63,7 +63,7 @@ CANONICAL_HOST = os.environ.get('CANONICAL_HOST', '' if DEBUG else 'www.careerne
 
 # ── Maintenance mode ─────────────────────────────────────────────────────────
 # Flip MAINTENANCE_MODE=True in the host's env vars to take the site offline.
-# Staff users, /admin/, and any IP in MAINTENANCE_ALLOWED_IPS still get through
+# Staff users, /cn-staff/ (admin), and any IP in MAINTENANCE_ALLOWED_IPS still get through
 # so you can verify the site before switching it back on.
 MAINTENANCE_MODE = os.environ.get('MAINTENANCE_MODE', 'False') == 'True'
 MAINTENANCE_MESSAGE = os.environ.get(
@@ -119,15 +119,20 @@ INSTALLED_APPS = [
 # In production CLOUDINARY_URL is set as an env var (cloudinary://key:secret@cloud).
 # Locally, files are served from MEDIA_ROOT as usual.
 CLOUDINARY_URL = os.environ.get('CLOUDINARY_URL', '')
+# Static files: WhiteNoise compressed + hashed names (long cache, safe busting).
+# Tests skip the manifest because they run with DEBUG off and no collectstatic.
+import sys
+_STATIC_BACKEND = (
+    "django.contrib.staticfiles.storage.StaticFilesStorage"
+    if len(sys.argv) > 1 and sys.argv[1] == "test"
+    else "whitenoise.storage.CompressedManifestStaticFilesStorage"
+)
+STORAGES = {
+    "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+    "staticfiles": {"BACKEND": _STATIC_BACKEND},
+}
 if CLOUDINARY_URL:
-    STORAGES = {
-        "default": {
-            "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
-        },
-        "staticfiles": {
-            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
-        },
-    }
+    STORAGES["default"] = {"BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage"}
     MEDIA_URL = 'https://res.cloudinary.com/'
 else:
     MEDIA_URL = '/media/'
@@ -240,6 +245,14 @@ DATABASES = {
 DB_SLOW_QUERY_MS = int(os.environ.get('DB_SLOW_QUERY_MS', '500'))
 DB_QUERY_COUNT_WARN = int(os.environ.get('DB_QUERY_COUNT_WARN', '100'))
 
+# ── Background jobs (kuccpss/scheduler.py) ────────────────────────────────────
+# Pending-payment recovery + mentorship reminders/auto-complete, run in a thread
+# inside the web process every 10 min because no qcluster/cron runs in production.
+BACKGROUND_JOBS_ENABLED = os.environ.get('BACKGROUND_JOBS_ENABLED', str(not DEBUG)) == 'True'
+# Public base URL the scheduler pings every cycle so free hosting doesn't sleep.
+# Render sets RENDER_EXTERNAL_URL automatically; set KEEPALIVE_URL='' to stop.
+KEEPALIVE_URL = os.environ.get('KEEPALIVE_URL', os.environ.get('RENDER_EXTERNAL_URL', ''))
+
 # ── Task Queue (Django-Q2) ────────────────────────────────────────────────────
 # Uses the Django ORM as the broker by default (zero extra infrastructure).
 # Automatically switches to Redis when REDIS_URL is available.
@@ -335,7 +348,7 @@ USE_TZ = True
 STATIC_URL = 'static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
 STATIC_ROOT = BASE_DIR / 'staticfiles'
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+# Storage backend is set in STORAGES above (STATICFILES_STORAGE is ignored in Django 5.2).
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field

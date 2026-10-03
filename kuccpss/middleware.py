@@ -317,7 +317,7 @@ class MaintenanceModeMiddleware:
     ``settings.MAINTENANCE_MODE`` is on.
 
     Deliberately let through so you can still work on a sleeping site:
-      * staff / superusers (session cookie must already exist, or log in via /admin/)
+      * staff / superusers (session cookie must already exist, or log in via /cn-staff/)
       * /cn-staff/ (admin) and the login pages, so you can *become* staff
       * any IP listed in ``settings.MAINTENANCE_ALLOWED_IPS``
       * static & media files, and health checks
@@ -532,10 +532,12 @@ class HeavyEndpointRateLimitMiddleware:
     """
     RULES = [
         ('/clusterpoints/', 'POST', 20, 600),
-        ('/clusterpoints/eligible-courses/', 'GET', 30, 600),
+        ('/clusterpoints/eligible/', 'GET', 30, 600),
         ('/career/', 'POST', 10, 600),
         # Password reset / email verification (allauth + custom) — anti email-bombing
         ('/accounts/password/reset/', 'POST', 5, 3600),
+        # Admin login (staff 2FA follows, but don't allow password guessing)
+        ('/cn-staff/login/', 'POST', 10, 900),
         ('/accounts/confirm-email/', 'POST', 5, 3600),
         # M-Pesa STK push initiation and manual code verification
         ('/payments/initiate/', 'POST', 5, 600),

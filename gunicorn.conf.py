@@ -61,3 +61,13 @@ bind = f"0.0.0.0:{os.environ.get('PORT', '8000')}"
 # Loads Django once in the master process; workers fork from it.
 # Saves ~50 MB RAM per worker on Render Starter / Free tiers.
 preload_app = True
+
+
+# ── Per-worker background threads ────────────────────────────────────────────
+# With preload_app, AppConfig.ready() runs in the master, and threads started
+# there don't exist in the forked workers. Start them in each worker instead:
+# the homepage cache warmer (each worker has its own LocMemCache) and the
+# background-jobs scheduler (its advisory lock keeps one cycle at a time).
+def post_worker_init(worker):
+    from accounts.apps import start_web_threads
+    start_web_threads()
