@@ -48,7 +48,7 @@
 
     <!-- Right form panel -->
     <div class="auth-panel-right">
-      <h2>Welcome back</h2>
+      <h1>Welcome back</h1>
       <p class="auth-panel-sub-text">Login to continue your career journey</p>
 
       {% if GOOGLE_OAUTH_AVAILABLE %}
@@ -69,6 +69,7 @@
 
       <form method="POST" novalidate id="login-form">
         {% csrf_token %}
+        {% if request.GET.next %}<input type="hidden" name="next" value="{{ request.GET.next }}">{% endif %}
 
         {% if form.non_field_errors %}
         <div class="alert alert-danger py-2 px-3 mb-3" style="font-size:0.82rem;border-radius:8px;">
@@ -106,7 +107,7 @@
       </form>
 
       <p class="auth-bottom-link">
-        Don't have an account? <a href="{% url 'accounts:register' %}">Register Now</a>
+        Don't have an account? <a href="{% url 'accounts:register' %}{% if request.GET.next %}?next={{ request.GET.next|urlencode }}{% endif %}">Register Now</a>
       </p>
     </div><!-- /auth-panel-right -->
 

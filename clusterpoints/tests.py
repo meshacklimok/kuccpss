@@ -110,3 +110,29 @@ class ClusterCalculatorViewTests(TestCase):
     def test_calculator_page_loads(self):
         response = self.client.get(reverse('clusterpoints:calculator'))
         self.assertIn(response.status_code, [200, 301, 302])
+
+
+class ShareCalculatorTests(TestCase):
+    URL = '/clusterpoints/share/create/'
+
+    def setUp(self):
+        from django.contrib.auth import get_user_model
+        user = get_user_model().objects.create_user(email='sharer@example.com', password='x')
+        self.client.force_login(user)
+
+    def test_malformed_body_is_a_400_not_a_500(self):
+        for body in ('', 'not json', '[1, 2]'):
+            with self.subTest(body=body):
+                r = self.client.post(self.URL, body, content_type='application/json')
+                self.assertEqual(r.status_code, 400)
+
+    def test_valid_share_creates_public_link(self):
+        import json
+        r = self.client.post(self.URL, json.dumps({
+            'mean_grade': 'B+', 'aggregate': 64,
+            'cluster_points': {'1': 40.2, '13': 38.1}, 'cluster_names': {'1': 'Law'},
+        }), content_type='application/json')
+        self.assertEqual(r.status_code, 200)
+        url = r.json()['url'].replace('http://testserver', '')
+        self.client.logout()
+        self.assertEqual(self.client.get(url).status_code, 200)

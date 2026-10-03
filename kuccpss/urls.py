@@ -43,14 +43,20 @@ def serve_sw(_request):
 
 def health_check(_request):
     import json
+    import time
     from django.db import connection
+    t0 = time.perf_counter()
     try:
-        connection.ensure_connection()
+        # A real round-trip, not just ensure_connection(): a reused connection can
+        # look open while the server behind it is gone.
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT 1")
         db_ok = True
     except Exception:
         db_ok = False
+    db_ms = round((time.perf_counter() - t0) * 1000, 1)
     status = 200 if db_ok else 503
-    payload = {"status": "ok" if db_ok else "degraded", "db": db_ok}
+    payload = {"status": "ok" if db_ok else "degraded", "db": db_ok, "db_ms": db_ms}
     return HttpResponse(json.dumps(payload), content_type="application/json", status=status)
 
 

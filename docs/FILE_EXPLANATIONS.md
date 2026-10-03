@@ -235,8 +235,8 @@ Registrations for TVET/KMTC/TTC/CareerProfile/Quiz/CareerConfig (singleton)/AIKn
 ### `career/apps.py`
 `CareerConfig(AppConfig)` — name collision with the `CareerConfig` **model** in `models.py` (two distinct classes, same name).
 
-### `career/job_market.py` (64 lines)
-`_build_lookup()` (`lru_cache`), `get_jmd_for_course(course)`, `get_jmd_lookup()`.
+### `career/job_market.py` (116 lines)
+`_build_lookup()` (`lru_cache`, normalised keywords), `get_jmd_for_course(course)` (exact `career_outcomes` term → longest keyword found as whole words in the course name; no category fallback), `_level_adjust()` (diploma/certificate courses get the technician-level equivalent via `NON_DEGREE_EQUIVALENT` / `CERTIFICATE_EQUIVALENT`), `get_jmd_lookup()`.
 
 ### `career/tasks.py` (75 lines)
 `generate_ai_recommendation_async`, `save_career_snapshot`, `expire_shared_results` (periodic cleanup).
@@ -250,7 +250,7 @@ Empty boilerplate — no actual tests.
 | `seed_careers.py` | seeds ~20+ `CareerProfile` rows + quiz seed data |
 | `expand_careers.py` | adds more `CareerProfile`s, keyword-links `courses.Course` to profiles; `--link-only` flag |
 | `seed_knowledge.py` | seeds `AIKnowledgeEntry` (854 lines). **One entry restates the cluster-points formula using the older, non-canonical fraction version** (`sum/48 × aggregate/84`) — the AI knowledge base is out of sync with the live `clusterpoints/services.py` formula |
-| `seed_job_market.py` | seeds ~70 `JobMarketData` rows from BrighterMonday/KNBS/KRA sources |
+| `seed_job_market.py` | seeds 131 `JobMarketData` rows: `CAREERS` (BrighterMonday 2024, with 2025 CBA overrides for doctors, clinical officers and TSC teachers) + `ESTIMATED_CAREERS` (labelled KUCCPSS estimates for fields with no survey row) |
 | `sync_career_clusters.py` | **the legacy↔new course-system bridge.** Copies `cluster` FK from `courses.Course` → `career.Course` by case-insensitive name match. Dry-run by default; `--apply` to write |
 
 ---
@@ -517,7 +517,7 @@ Trivial `AppConfig`.
 Pure-Python calendar generation — **no external library, no Google Calendar API auth, no Jitsi** (despite model docstring mentioning "Jitsi room"). `google_calendar_url(session)` — client-side "add to calendar" link, location hardcoded to `"Coordinate via WhatsApp"`. `generate_ics(session)` — hand-built `VCALENDAR`/`VEVENT` with two `VALARM` reminders. Neither references `meet_link`.
 
 ### `mentorship/management/commands/mentorship_housekeeping.py`
-Cron job. `_send_reminders()` (60–120min window, **no idempotency flag** — duplicate reminders possible on repeated runs), `_complete_expired()` (auto-completes sessions >30min past). **Does not** touch `WithdrawalRequest` or withdrawal `SiteSetting`s at all.
+Manual entry point for `mentorship/tasks.py` (`send_session_reminders()` — 60–120min window, once per session via `reminder_sent`; `complete_expired_sessions()` — >30min past). The same functions run every 10 min from `kuccpss/scheduler.py`. **Does not** touch `WithdrawalRequest` or withdrawal `SiteSetting`s at all.
 
 ### `mentorship/management/commands/seed_test_mentors.py`
 Dev/demo seeding — 5 hardcoded approved `MentorProfile`s with fallback lookups if hardcoded PKs don't exist. Idempotent.
@@ -566,7 +566,7 @@ Base URLs `SANDBOX_BASE`/`PROD_BASE` selected by `INTASEND_SANDBOX`.
 - `REPEATABLE_FEATURES`, `PAYMENT_TO_SUBMISSION` module constants.
 
 ### `payments/tasks.py`
-`send_payment_confirmation` (plain-text, appears to be an older/alternate mechanism vs. `views.py`'s HTML+PDF version), `check_pending_payments()` (marks >30min pending as failed — no visible scheduler wiring), `top_up_ai_credits_after_payment` (alternate to the inline version in `views.py`).
+`send_payment_confirmation` (plain-text, appears to be an older/alternate mechanism vs. `views.py`'s HTML+PDF version), `check_pending_payments()` (marks >30min pending as failed — run every 10 min by `kuccpss/scheduler.py`), `top_up_ai_credits_after_payment` (alternate to the inline version in `views.py`).
 
 ### `payments/tests.py`
 Empty stub.

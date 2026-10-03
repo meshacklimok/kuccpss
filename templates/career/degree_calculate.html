@@ -199,7 +199,7 @@
             <div class="acc-row" id="row-{{ bound.html_name }}">
                 <div class="row-icon"><i class="bi {{ icon }}"></i></div>
                 <div class="row-name">{{ subj.name }}</div>
-                <select name="{{ bound.html_name }}" class="lce-select form-select" id="sel-{{ bound.html_name }}"
+                <select name="{{ bound.html_name }}" aria-label="{{ subj.name }} grade" class="lce-select form-select" id="sel-{{ bound.html_name }}"
                         data-subject="{{ subj.name }}"{% if subj.name in required_subject_names %} data-required="1"{% endif %}
                         onchange="onSelectChange('{{ bound.html_name }}', 'compulsory', this)">
                     <option value="">None</option>
@@ -241,7 +241,7 @@
             <div class="acc-row" id="row-{{ bound.html_name }}">
                 <div class="row-icon"><i class="bi {{ icon }}"></i></div>
                 <div class="row-name">{{ subj.name }}</div>
-                <select name="{{ bound.html_name }}" class="lce-select form-select" id="sel-{{ bound.html_name }}"
+                <select name="{{ bound.html_name }}" aria-label="{{ subj.name }} grade" class="lce-select form-select" id="sel-{{ bound.html_name }}"
                         onchange="onSelectChange('{{ bound.html_name }}', '{{ forloop.parentloop.counter }}', this)">
                     <option value="">None</option>
                     <option value="12" {% if bound.value == '12' %}selected{% endif %}>A</option>

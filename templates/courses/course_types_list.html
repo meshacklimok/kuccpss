@@ -170,15 +170,6 @@ body { background: #f5f7ff; }
 }
 .ct-main-card:hover .ct-mc-arrow { transform: translateX(4px); }
 
-/* shimmer sweep */
-.ct-main-card::before {
-    content: ''; position: absolute;
-    top: 0; left: -80%; width: 60%; height: 100%;
-    background: linear-gradient(110deg, transparent 35%, rgba(255,255,255,0.18) 50%, transparent 65%);
-    transition: left 0.55s ease; pointer-events: none; z-index: 2;
-}
-.ct-main-card:hover::before { left: 130%; }
-
 /* colour themes (fallback background while photo loads) + real photo per pathway */
 .cc-degree { --g1:#4338ca; --img: url('https://images.unsplash.com/photo-1740065592671-9cb593ee9b78?w=800&q=70&auto=format&fit=crop'); }
 .cc-kmtc   { --g1:#b91c1c; --img: url('https://images.unsplash.com/photo-1516841273335-e39b37888115?w=800&q=70&auto=format&fit=crop'); }

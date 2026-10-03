@@ -1,11 +1,15 @@
 # clusterpoints/urls.py
 
 from django.urls import path
+from django.views.generic import RedirectView
 from . import views
 
 app_name = "clusterpoints"
 
 urlpatterns = [
+
+    # Bare /clusterpoints/ (old links, bookmarks) -> calculator
+    path("", RedirectView.as_view(pattern_name="clusterpoints:calculator", permanent=True, query_string=True)),
 
     # ===============================
     # KCSE Calculator

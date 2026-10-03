@@ -828,7 +828,7 @@
       <div class="kpi-card c-green">
         <p class="kpi-label">Manage</p>
         <p class="kpi-value" style="font-size:1rem;padding-top:.4rem;">
-          <a href="/admin/resources/sitefeedback/" target="_blank" style="color:var(--green);font-weight:700;text-decoration:none;">
+          <a href="{% url 'admin:resources_sitefeedback_changelist' %}" target="_blank" style="color:var(--green);font-weight:700;text-decoration:none;">
             <i class="fas fa-external-link-alt me-1"></i> Django Admin
           </a>
         </p>
@@ -1079,6 +1079,9 @@
   let feedInterval = null;
   let feedRunning  = true;
 
+  // Feed labels include raw visitor search queries — always escape before innerHTML.
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
   function refreshFeed() {
     fetch('{% url "analytics:live_feed" %}')
       .then(r => r.json())
@@ -1087,12 +1090,12 @@
         if (!list || !data.items) return;
         list.innerHTML = data.items.map(item => `
           <div class="feed-item">
-            <span class="feed-dot fd-${item.type}"></span>
+            <span class="feed-dot fd-${esc(item.type)}"></span>
             <div style="flex:1;min-width:0;">
-              <div class="feed-label">${item.label}</div>
-              ${item.sub ? `<div class="feed-sub">${item.sub}</div>` : ''}
+              <div class="feed-label">${esc(item.label)}</div>
+              ${item.sub ? `<div class="feed-sub">${esc(item.sub)}</div>` : ''}
             </div>
-            <span class="feed-ts">${item.ts}</span>
+            <span class="feed-ts">${esc(item.ts)}</span>
           </div>`).join('');
       })
       .catch(() => {});

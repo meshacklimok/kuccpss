@@ -12,7 +12,9 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 
 from datetime import timedelta
+from decimal import Decimal, InvalidOperation
 
+from analytics.audit import record
 from kuccpss.circuit_breaker import intasend_breaker
 
 from .models import Payment, Transaction
@@ -177,7 +179,7 @@ def _send_payment_receipt(payment: "Payment") -> None:
         ) or ""
 
         user_name = getattr(payment.user, "full_name", None) or payment.user.email
-        site_url = "https://careernext.co.ke"
+        site_url = "https://www.careernext.co.ke"
         paid_at = timezone.localtime(payment.updated_at).strftime("%d %b %Y, %I:%M %p")
 
         ctx = {
@@ -268,6 +270,8 @@ def complete_payment(payment: "Payment", *, mpesa_code: str = "") -> bool:
     won = Payment.objects.filter(pk=payment.pk).exclude(status="completed").update(**fields)
     payment.refresh_from_db()
     if won:
+        record("payment.completed", payment, amount=payment.amount,
+               feature=payment.feature, mpesa_code=mpesa_code)
         fulfil_completed_payment(payment)
     return bool(won)
 
@@ -446,6 +450,16 @@ def initiate_payment(request):
     })
 
 
+def _safe_amount(value) -> Decimal:
+    """Webhook amounts arrive as strings; never let a malformed one 500 the webhook
+    (IntaSend would retry forever) or violate the non-negative CHECK constraint."""
+    try:
+        amount = Decimal(str(value))
+    except (InvalidOperation, ValueError):
+        return Decimal("0")
+    return amount if amount.is_finite() and amount >= 0 else Decimal("0")
+
+
 @csrf_exempt
 @require_POST
 def mpesa_webhook(request):
@@ -509,23 +523,28 @@ def mpesa_webhook(request):
         logger.warning("Webhook for unknown payment ref: %s", api_ref)
         return HttpResponse(status=200)  # 200 so IntaSend doesn't retry indefinitely
 
-    # Save the raw transaction record
-    Transaction.objects.create(
-        payment=payment,
-        mpesa_ref=mpesa_ref,
-        phone_number=phone,
-        amount=value,
-        raw_response=payload,
-    )
+    # Save the raw transaction record — once per (ref, state): IntaSend retries a
+    # webhook until it gets a 200, and each retry must not add another row.
+    if not Transaction.objects.filter(
+        payment=payment, mpesa_ref=mpesa_ref, raw_response__state=payload.get("state", "")
+    ).exists():
+        Transaction.objects.create(
+            payment=payment,
+            mpesa_ref=mpesa_ref,
+            phone_number=phone,
+            amount=_safe_amount(value),
+            raw_response=payload,
+        )
 
     # Update Payment status. Retried/duplicate webhooks must not re-fulfil, and a late
     # FAILED event must never downgrade a payment that has already completed.
     if state == "COMPLETE":
         complete_payment(payment)
     elif state == "FAILED":
-        Payment.objects.filter(pk=payment.pk, status="pending").update(
+        if Payment.objects.filter(pk=payment.pk, status="pending").update(
             status="failed", updated_at=timezone.now()
-        )
+        ):
+            record("payment.failed", payment, amount=payment.amount, source="webhook")
     # PENDING state → leave as-is
 
     return HttpResponse(status=200)

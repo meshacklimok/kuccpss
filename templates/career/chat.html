@@ -68,6 +68,23 @@
     color: #0e7490;
 }
 
+/* ── Follow-up suggestion chips (under the latest AI reply) ── */
+.followup-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin: -0.25rem 0 0.75rem 44px;
+}
+.followup-chips .starter-chip {
+    white-space: normal;
+    text-align: left;
+    font-size: 0.78rem;
+    padding: 5px 12px;
+    border-color: #a5f3fc;
+    background: #f0fdff;
+    color: #0e7490;
+}
+
 /* ── Message list ── */
 .chat-messages {
     flex: 1;
@@ -499,6 +516,7 @@ body.dark .pm-how { color: var(--text-2, #cbd5e1); }
 
 {% block extra_js %}
 <script src="{% static 'js/payment_polling.js' %}"></script>
+<script src="{% static 'js/ai_format.js' %}"></script>
 <script>
 const CHAT_URL     = "{% url 'career:ajax_ai_chat' %}";
 const CSRF         = "{{ csrf_token }}";
@@ -563,6 +581,27 @@ function sendStarter(el) {
     send();
 }
 
+/* ─── Follow-up chips under the latest reply ────────── */
+function clearFollowups() {
+    document.querySelectorAll('.followup-chips').forEach(el => el.remove());
+}
+function showFollowups(questions) {
+    clearFollowups();
+    if (!questions || !questions.length) return;
+    const box  = document.getElementById('chatMessages');
+    const wrap = document.createElement('div');
+    wrap.className = 'followup-chips';
+    questions.forEach(q => {
+        const chip = document.createElement('span');
+        chip.className = 'starter-chip';
+        chip.textContent = q;
+        chip.onclick = () => { if (!document.getElementById('sendBtn').disabled) sendStarter(chip); };
+        wrap.appendChild(chip);
+    });
+    box.appendChild(wrap);
+    box.scrollTop = box.scrollHeight;
+}
+
 /* ─── Append a message bubble ───────────────────────── */
 function appendMsg(role, html, extraClass = '') {
     const box   = document.getElementById('chatMessages');
@@ -577,34 +616,8 @@ function appendMsg(role, html, extraClass = '') {
     return div;
 }
 
-/* ─── Simple markdown formatter ─────────────────────── */
-function fmt(text) {
-    text = text.replace(/&/g, '&amp;').replace(/</g, '&lt;')
-               .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-    const lines = text.split('\n');
-    let out = '', list = null;   /* 'ul' | 'ol' | null */
-    const closeList = () => { if (list) { out += `</${list}>`; list = null; } };
-    for (const line of lines) {
-        const head   = line.match(/^#{1,4}\s+(.*)/);
-        const bullet = line.match(/^\s*[•\-\*]\s+(.*)/);
-        const number = line.match(/^\s*\d+[.)]\s+(.*)/);
-        if (head) {
-            closeList();
-            out += `<strong style="display:block;margin:10px 0 4px">${head[1]}</strong>`;
-        } else if (bullet) {
-            if (list !== 'ul') { closeList(); out += '<ul>'; list = 'ul'; }
-            out += `<li>${bullet[1]}</li>`;
-        } else if (number) {
-            if (list !== 'ol') { closeList(); out += '<ol>'; list = 'ol'; }
-            out += `<li>${number[1]}</li>`;
-        } else {
-            closeList();
-            out += line.trim() ? `<p style="margin:0 0 4px">${line}</p>` : '<br>';
-        }
-    }
-    closeList();
-    return out;
-}
+/* ─── Markdown → safe HTML (static/js/ai_format.js) ── */
+function fmt(text) { return cnAiFormat(text); }
 
 /* ─── Send message ──────────────────────────────────── */
 async function send() {
@@ -612,6 +625,7 @@ async function send() {
     if (!text || text.length > 400) return;
 
     document.getElementById('starterChips').style.display = 'none';
+    clearFollowups();
     inp.value = ''; inp.style.height = 'auto';
     document.getElementById('charHint').textContent = '';
 
@@ -626,7 +640,7 @@ async function send() {
     /* Record the turn + update credit counters after a successful reply */
     function afterReply(replyText) {
         history.push({ role: 'user',      content: text });
-        history.push({ role: 'assistant', content: replyText });
+        history.push({ role: 'assistant', content: cnAiStrip(replyText) });
         if (history.length > 16) history = history.slice(-16);
 
         if (freeLimit !== null) {
@@ -658,9 +672,10 @@ async function send() {
 
         /* ── Streamed reply: render tokens as they arrive ── */
         if (res.ok && !ctype.includes('application/json')) {
-            typing.remove();
-            const msgDiv = appendMsg('bot', '');
-            const bubble = msgDiv.querySelector('.bubble');
+            /* Keep the typing dots until the first words arrive — the AI may
+               spend a moment looking things up in the course database first. */
+            const bubble = typing.querySelector('.bubble');
+            const dots   = bubble.innerHTML;
             const box    = document.getElementById('chatMessages');
             const reader  = res.body.getReader();
             const decoder = new TextDecoder();
@@ -669,10 +684,15 @@ async function send() {
                 const { done, value } = await reader.read();
                 if (done) break;
                 full += decoder.decode(value, { stream: true });
-                bubble.innerHTML = fmt(full);
+                bubble.innerHTML = full.trim() ? fmt(full) : dots;
                 box.scrollTop = box.scrollHeight;
             }
+            if (!cnAiStrip(full)) {
+                full = 'Sorry, I could not put an answer together — please try asking again.';
+                bubble.innerHTML = fmt(full);
+            }
             afterReply(full);
+            showFollowups(cnAiFollowups(full));
             inp.focus();
             return;
         }
@@ -700,6 +720,7 @@ async function send() {
         } else {
             appendMsg('bot', fmt(data.reply));
             afterReply(data.reply);
+            showFollowups(data.followups || cnAiFollowups(data.reply));
         }
     } catch {
         typing.remove();

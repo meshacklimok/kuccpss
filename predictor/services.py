@@ -184,7 +184,7 @@ def predict_offerings_for_calc_cluster(calc_cluster_number: int, student_score: 
     offerings = (
         CourseOffering.objects
         .filter(course__cluster__number=calc_cluster_number)
-        .select_related("course", "institution", "course__cluster",
+        .select_related("course", "institution__institution_type", "course__cluster",
                         "course__course_type")
         .exclude(cutoff_points__isnull=True)
     )

@@ -16,7 +16,7 @@ Allow: /career/
 Allow: /resources/
 
 # AI assistants and answer engines are welcome, please cite careernext.co.ke.
-# Machine-readable summary of what this site does: https://careernext.co.ke/llms.txt
+# Machine-readable summary of what this site does: https://www.careernext.co.ke/llms.txt
 User-agent: GPTBot
 Allow: /
 
@@ -56,4 +56,4 @@ Allow: /
 User-agent: CCBot
 Allow: /
 
-Sitemap: https://careernext.co.ke/sitemap.xml
+Sitemap: https://www.careernext.co.ke/sitemap.xml

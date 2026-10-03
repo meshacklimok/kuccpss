@@ -1158,6 +1158,7 @@ careernext.co.ke, Kenya's #1 KCSE career guidance platform (100% free!){% endfil
 {% endblock %}
 
 {% block extra_js %}
+<script src="{% static 'js/ai_format.js' %}"></script>
 <script>
 // Init Bootstrap tooltips (Bootstrap is now loaded above in base.html)
 document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function (el) {
@@ -1491,23 +1492,9 @@ function aipTime() {
   return new Date().toLocaleTimeString('en-KE', {hour:'2-digit', minute:'2-digit'});
 }
 
-// Escape HTML, then apply light markdown (bold, bullets, numbered lists).
+// Escape HTML, then apply light markdown (bold, bullets, lists, safe links) — static/js/ai_format.js
 function aipFmt(text) {
-  text = String(text).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
-                     .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-  let out = '', list = null;
-  const closeList = () => { if (list) { out += '</' + list + '>'; list = null; } };
-  for (const line of text.split('\n')) {
-    const head   = line.match(/^#{1,4}\s+(.*)/);
-    const bullet = line.match(/^\s*[•\-\*]\s+(.*)/);
-    const number = line.match(/^\s*\d+[.)]\s+(.*)/);
-    if (head) { closeList(); out += '<strong style="display:block;margin:6px 0 2px">' + head[1] + '</strong>'; }
-    else if (bullet) { if (list !== 'ul') { closeList(); out += '<ul style="margin:2px 0;padding-left:18px">'; list = 'ul'; } out += '<li>' + bullet[1] + '</li>'; }
-    else if (number) { if (list !== 'ol') { closeList(); out += '<ol style="margin:2px 0;padding-left:18px">'; list = 'ol'; } out += '<li>' + number[1] + '</li>'; }
-    else { closeList(); out += line.trim() ? line + '<br>' : '<br>'; }
-  }
-  closeList();
-  return out;
+  return cnAiFormat(text, { listStyle: 'margin:2px 0;padding-left:18px' });
 }
 
 // `html` is trusted markup built here; plain text must go through aipFmt first.
@@ -1731,7 +1718,7 @@ function nativeShareResult() {
     if (!hasJmd) return;
     var note = document.createElement('p');
     note.style.cssText = 'font-size:0.68rem;color:#94a3b8;text-align:center;margin:0.5rem 0 1.5rem;padding:0 1rem;';
-    note.innerHTML = '<i class="fas fa-circle-info me-1"></i>Salary ranges are gross monthly estimates for Kenya ({{ job_market_year|default:"2024" }}) from <a href="https://www.brightermonday.co.ke/research" target="_blank" rel="noopener" style="color:#94a3b8;">BrighterMonday Kenya Salary Report</a> &amp; <a href="https://www.knbs.or.ke" target="_blank" rel="noopener" style="color:#94a3b8;">KNBS Economic Survey</a>. Actual pay varies by employer, experience &amp; location.';
+    note.innerHTML = '<i class="fas fa-circle-info me-1"></i>Salary ranges are gross monthly pay in Kenya, from the <a href="https://www.brightermonday.co.ke/research" target="_blank" rel="noopener" style="color:#94a3b8;">BrighterMonday Kenya Salary Report 2024</a>, 2025 public-sector pay agreements (doctors, clinical officers, TSC teachers), and KUCCPSS estimates benchmarked to the <a href="https://www.knbs.or.ke" target="_blank" rel="noopener" style="color:#94a3b8;">KNBS Economic Survey 2026</a>. Open a course to see its exact source. Actual pay varies by employer, experience &amp; location.';
     var paginationEl = document.querySelector('.pagination');
     var target = paginationEl ? paginationEl.closest('nav') : document.querySelector('.results-list');
     if (target) target.insertAdjacentElement('afterend', note);

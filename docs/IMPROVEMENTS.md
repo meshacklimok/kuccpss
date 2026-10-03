@@ -142,10 +142,8 @@ priority-ordered within each category.
 
 ## Monitoring
 
-1. **Add a scheduled job for stale/pending payment cleanup verification.** `payments/tasks.py
-   ::check_pending_payments` (stale >30min → failed) exists — confirm it's actually scheduled
-   (via django-q2) in production, since several other `tasks.py` files in this codebase were found
-   to be unwired duplicates of synchronous logic.
+1. ~~**Add a scheduled job for stale/pending payment cleanup verification.**~~ Done (2026-10-02):
+   `check_pending_payments` runs every 10 min from `kuccpss/scheduler.py`.
 2. **Surface the "which webhook confirmed this mentorship session" fact in logs/Sentry breadcrumbs**
    so the confirmed webhook-divergence issue (auto-payout depends on which webhook fires) is at
    least observable in production until it's fixed in code.

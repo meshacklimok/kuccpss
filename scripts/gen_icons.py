@@ -1,11 +1,11 @@
 """
 Generate CareerNext PNG / ICO brand assets from the SVG logo design.
 
-Renders the logo mark (gradient tile + rising path + forward arrowhead)
-directly with Pillow so the diagonal blue->green gradient is exact.
+Renders the logo mark (solid navy tile + rising path + forward arrowhead)
+directly with Pillow.
 
 Outputs (into static/images/):
-  icon-192.png, icon-512.png   -> PWA maskable icons (full-bleed gradient)
+  icon-192.png, icon-512.png   -> PWA maskable icons (full-bleed tile)
   icon-180.png                 -> apple-touch-icon
   favicon.ico                  -> multi-size favicon (16/32/48)
   logo-og.png                  -> 1200x630 social share card (light bg + lockup)
@@ -16,33 +16,8 @@ from PIL import Image, ImageDraw, ImageFont
 OUT = os.path.join(os.path.dirname(__file__), "..", "static", "images")
 os.makedirs(OUT, exist_ok=True)
 
-# Brand gradient stops (position 0..1, RGB)
-STOPS = [(0.0, (0x25, 0x63, 0xeb)), (0.55, (0x1e, 0x3a, 0x8a)), (1.0, (0x16, 0xa3, 0x4a))]
-
-
-def _lerp(a, b, t):
-    return tuple(round(a[i] + (b[i] - a[i]) * t) for i in range(3))
-
-
-def _grad_color(t):
-    t = max(0.0, min(1.0, t))
-    for i in range(len(STOPS) - 1):
-        p0, c0 = STOPS[i]
-        p1, c1 = STOPS[i + 1]
-        if p0 <= t <= p1:
-            return _lerp(c0, c1, (t - p0) / (p1 - p0))
-    return STOPS[-1][1]
-
-
-def diagonal_gradient(size):
-    """Diagonal (top-left -> bottom-right) gradient image, no alpha."""
-    g = Image.new("RGB", (size, size))
-    px = g.load()
-    maxd = (size - 1) * 2
-    for y in range(size):
-        for x in range(size):
-            px[x, y] = _grad_color((x + y) / maxd)
-    return g
+# Brand tile colour (solid navy — the site uses no colour gradients)
+BRAND = (0x1e, 0x3a, 0x8a)
 
 
 def quad_points(p0, c, p1, n=40):
@@ -85,15 +60,15 @@ def draw_mark_glyph(draw, f, ox=0.0, oy=0.0, color=(255, 255, 255)):
 def render_mark(size, full_bleed=True, ss=4):
     """Render the square mark at `size`px. full_bleed = no rounded corners (maskable)."""
     big = size * ss
-    grad = diagonal_gradient(max(64, big // 8)).resize((big, big), Image.BICUBIC)
+    tile = Image.new("RGB", (big, big), BRAND)
     img = Image.new("RGBA", (big, big), (0, 0, 0, 0))
 
     if full_bleed:
-        img.paste(grad, (0, 0))
+        img.paste(tile, (0, 0))
     else:
         mask = Image.new("L", (big, big), 0)
         ImageDraw.Draw(mask).rounded_rectangle([0, 0, big - 1, big - 1], radius=int(big * 0.14), fill=255)
-        img.paste(grad, (0, 0), mask)
+        img.paste(tile, (0, 0), mask)
 
     f = big / 64.0
     draw_mark_glyph(ImageDraw.Draw(img), f)

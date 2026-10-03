@@ -57,17 +57,6 @@ form:nth-of-type(2) .opt-card { animation-delay: 0.15s; }
 form:nth-of-type(3) .opt-card { animation-delay: 0.24s; }
 form:nth-of-type(4) .opt-card { animation-delay: 0.33s; }
 
-/* shimmer */
-.opt-card::before {
-    content: '';
-    position: absolute; top: 0; left: -75%;
-    width: 50%; height: 100%;
-    background: linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.5) 50%, transparent 60%);
-    transition: left 0.45s ease;
-    pointer-events: none;
-}
-.opt-card:hover::before { left: 130%; }
-
 /* hover lift */
 .opt-card:hover {
     transform: translateY(-5px) scale(1.01);
@@ -123,7 +112,6 @@ body.dark .opt-card {
     --accent-border: rgba(255, 255, 255, 0.09);
 }
 body.dark .opt-card.primary { background: rgba(79,70,229,0.16); --accent-border: rgba(99,102,241,0.35); }
-body.dark .opt-card::before { background: rgba(255,255,255,0.06); }
 body.dark .opt-title { color: var(--text); }
 body.dark .opt-card.primary .opt-title { color: #a5b4fc; }
 body.dark .opt-desc  { color: var(--text-2); }

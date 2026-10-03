@@ -67,6 +67,7 @@ class QuizSubmissionAdmin(admin.ModelAdmin):
 @admin.register(QuizAnswer)
 class QuizAnswerAdmin(admin.ModelAdmin):
     list_display = ("submission", "question", "option")
+    list_select_related = ("submission__user", "question", "option__question")
     list_filter  = ("question__category",)
 
 

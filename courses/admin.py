@@ -1,5 +1,6 @@
 from django import forms
 from django.contrib import admin
+from django.db.models import Count
 from django.utils.html import format_html, mark_safe
 from import_export.admin import ImportExportModelAdmin
 from import_export.formats.base_formats import CSV
@@ -75,13 +76,21 @@ class CourseOfferingInline(admin.TabularInline):
     autocomplete_fields = ('institution',)
 
 
+class CategoryListFilter(admin.RelatedFieldListFilter):
+    # CourseCategory.__str__ reads course_type; load it up front instead of once per category.
+    def field_choices(self, field, request, model_admin):
+        qs = CourseCategory.objects.select_related('course_type').order_by('course_type__name', 'name')
+        return [(c.pk, str(c)) for c in qs]
+
+
 @admin.register(Course)
 class CourseAdmin(ImportExportModelAdmin):
     resource_classes = [CourseResource]
     formats = [CSV]
 
     list_display = ('name', 'course_type', 'category', 'cluster', 'offering_count', 'pdf_icon', 'created_at')
-    list_filter = ('course_type', 'category', 'cluster')
+    list_filter = ('course_type', ('category', CategoryListFilter), 'cluster')
+    list_select_related = ('course_type', 'category__course_type', 'cluster')
     search_fields = ('name', 'slug', 'description')
     prepopulated_fields = {"slug": ("name",)}
     filter_horizontal = ('core_subjects',)
@@ -103,9 +112,13 @@ class CourseAdmin(ImportExportModelAdmin):
         }),
     )
 
+    def get_queryset(self, request):
+        return super().get_queryset(request).annotate(_offering_count=Count('offerings'))
+
     def offering_count(self, obj):
-        return obj.offerings.count()
+        return obj._offering_count
     offering_count.short_description = "Institutions"
+    offering_count.admin_order_field = '_offering_count'
 
     def pdf_icon(self, obj):
         if obj.pdf_file:
@@ -122,6 +135,7 @@ class CourseOfferingAdmin(ImportExportModelAdmin):
 
     list_display = ('course', 'institution', 'latest_cutoff_display')
     list_filter = ('institution__institution_type', 'course__course_type')
+    list_select_related = ('course', 'institution__institution_type')
     search_fields = ('course__name', 'institution__name')
     autocomplete_fields = ('course', 'institution')
     fields = ('course', 'institution', 'cutoff_2025', 'cutoff_2024', 'cutoff_2023', 'cutoff_2022', 'cutoff_2021')
@@ -137,6 +151,8 @@ class ReviewAdmin(admin.ModelAdmin):
     list_display = ('user', 'rating', 'course', 'institution', 'short_body', 'created_at')
     list_filter = ('rating',)
     search_fields = ('user__email', 'course__name', 'institution__name', 'body')
+    autocomplete_fields = ('user', 'course', 'institution')
+    list_select_related = ('user', 'course', 'institution__institution_type')
     readonly_fields = ('created_at',)
 
     def short_body(self, obj):

@@ -217,7 +217,7 @@ cluster_points = 48 × sqrt( (core_midpoint_marks / 400) × (aggregate_total / 8
 - `mentorship/forms.py` — `MentorRegistrationForm`, `BookingForm`, `AddSlotsForm`/`AddWeekSlotsForm`, `WithdrawalForm`, `RatingForm`, `CancelSessionForm`
 - `mentorship/calendar_utils.py` — `google_calendar_url()`, `generate_ics()` (hand-built iCal, no external calendar API)
 - `mentorship/admin.py` — approval workflow (reject button, bulk approve/reject/deactivate actions), `confirm_manual_payment` action
-- `mentorship/management/commands/mentorship_housekeeping.py` — cron job: session reminders (60–120 min window) + auto-complete sessions >30 min past their slot
+- `mentorship/management/commands/mentorship_housekeeping.py` — manual run of `mentorship/tasks.py`: session reminders (once per session) (60–120 min window) + auto-complete sessions >30 min past their slot
 - `mentorship/urls.py` — directory, become-mentor, dashboard/slots, booking/checkout/webhook, session lifecycle, withdrawal routes
 - `resources/migrations/0010_seed_withdrawal_settings.py` (**currently untracked in git**) — seeds `mentor_min_withdrawal` (100) and `affiliate_min_withdrawal` (500) as admin-editable `SiteSetting` rows
 - Templates: `templates/mentorship/directory.html`, `mentor_profile.html`, `become_mentor.html`, `mentor_dashboard.html`, `book_session.html`, `checkout.html`, `session_detail.html`, `my_sessions.html`
@@ -228,7 +228,7 @@ cluster_points = 48 × sqrt( (core_midpoint_marks / 400) × (aggregate_total / 8
 3. **Payment** — `initiate_payment` creates/updates a `payments.Payment` (`feature="mentorship_booking"`) keyed by the session's UUID `token` as IntaSend's `api_ref`; on webhook confirmation, `_confirm_session_after_payment` sets `confirmed`, credits `mentor.wallet_balance`, sends confirmation emails+ICS+in-app notification+push, and calls `_maybe_auto_pay_mentor`.
 4. **Manual verification fallback** — `verify_payment_manual` calls `fetch_intasend_status` directly if the webhook is late/missing; else emails admin for manual review.
 5. **Session lifecycle** — `complete_session` (mentor marks done), `rate_session` (mentee, one-time), `cancel_session` (frees slot, debits wallet if already credited, sends refund-required email to admin — refund itself is manual, no automated M-Pesa reversal).
-6. **Auto-completion & reminders** — `mentorship_housekeeping` management command (intended for a scheduled cron).
+6. **Auto-completion & reminders** — `mentorship/tasks.py`, run every 10 min by `kuccpss/scheduler.py`; `mentorship_housekeeping` runs it by hand.
 7. **Withdrawals** — `request_withdrawal` (`@require_recent_auth`) validates against `_mentor_min_withdrawal()` (reads the `mentor_min_withdrawal` `SiteSetting`), calls `payments.services.send_mentor_payout()` (IntaSend B2C "Send Money"), synchronously marks the `WithdrawalRequest` processed/failed. `_maybe_auto_pay_mentor` also auto-triggers a full-balance payout once wallet balance crosses `MENTOR_AUTO_PAY_THRESHOLD` (default 500).
 
 **State:** Complete and live. Auto-payout depends on IntaSend's B2C "Send Money" feature being manually activated on the IntaSend account (per TODO.md — unclear if done for production).
