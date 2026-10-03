@@ -79,7 +79,7 @@ class MentorRegistrationForm(forms.ModelForm):
         # Only universities (degree) and KMTC — not TVETs or TTCs
         self.fields["institution"].queryset = Institution.objects.filter(
             institution_type__slug__in=["kmtc", "public-university", "private-university"]
-        ).order_by("institution_type_id", "name")
+        ).select_related("institution_type").order_by("institution_type_id", "name")
         self.fields["student_id_upload"].required = True
         self.fields["portal_screenshot"].required = True
 

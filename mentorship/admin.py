@@ -91,6 +91,8 @@ class MentorProfileAdmin(admin.ModelAdmin):
     ]
     list_filter = ["is_approved", "is_active", "is_rejected", "year_of_study"]
     search_fields = ["user__email", "user__full_name", "course__name", "institution__name"]
+    autocomplete_fields = ["user", "course", "institution"]
+    list_select_related = ["user", "course", "institution"]
     readonly_fields = [
         "total_sessions", "average_rating", "wallet_balance", "total_earned",
         "created_at", "updated_at", "student_id_preview", "portal_screenshot_preview",

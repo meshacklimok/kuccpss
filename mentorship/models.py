@@ -255,6 +255,8 @@ class MentorshipSession(models.Model):
 
     # Track whether booking confirmation emails have been sent
     confirmation_sent = models.BooleanField(default=False)
+    # Set when the 1-hour reminder emails go out, so repeated housekeeping runs don't resend
+    reminder_sent = models.BooleanField(default=False)
 
     status = models.CharField(
         max_length=30,
