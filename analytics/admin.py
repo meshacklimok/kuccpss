@@ -131,6 +131,7 @@ class PWAInstallLogAdmin(admin.ModelAdmin):
 @admin.register(CareerEngineLog)
 class CareerEngineLogAdmin(admin.ModelAdmin):
     list_display   = ('pathway', 'result_count', 'mean_grade', 'user', 'created_at')
+    list_select_related = ('user',)
     list_filter    = ('pathway', 'created_at')
     readonly_fields = ('created_at',)
     date_hierarchy = 'created_at'
@@ -140,6 +141,7 @@ class CareerEngineLogAdmin(admin.ModelAdmin):
 @admin.register(PageViewLog)
 class PageViewLogAdmin(admin.ModelAdmin):
     list_display    = ('path', 'method', 'status_code', 'device', 'response_time_ms', 'user', 'ip', 'created_at')
+    list_select_related = ('user',)
     list_filter     = ('method', 'status_code', 'device', 'created_at')
     search_fields   = ('path', 'ip')
     readonly_fields = ('created_at',)

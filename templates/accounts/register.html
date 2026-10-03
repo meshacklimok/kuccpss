@@ -50,7 +50,7 @@
 
     <!-- Right form panel -->
     <div class="auth-panel-right">
-      <h2>Create your account</h2>
+      <h1>Create your account</h1>
       <p class="auth-panel-sub-text">Join thousands of KCSE students choosing smarter</p>
 
       {% if GOOGLE_OAUTH_AVAILABLE %}
@@ -71,6 +71,7 @@
 
       <form method="POST" novalidate id="register-form">
         {% csrf_token %}
+        {% if request.GET.next %}<input type="hidden" name="next" value="{{ request.GET.next }}">{% endif %}
 
         {% if form.non_field_errors %}
         <div class="alert alert-danger py-2 px-3 mb-3" style="font-size:0.82rem;border-radius:8px;">
@@ -139,7 +140,7 @@
       </form>
 
       <p class="auth-bottom-link">
-        Already have an account? <a href="{% url 'accounts:login' %}">Login</a>
+        Already have an account? <a href="{% url 'accounts:login' %}{% if request.GET.next %}?next={{ request.GET.next|urlencode }}{% endif %}">Login</a>
       </p>
     </div><!-- /auth-panel-right -->
 

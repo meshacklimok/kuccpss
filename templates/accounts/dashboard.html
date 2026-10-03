@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load static %}
 {% block title %}My Dashboard: KCSE Cluster Points & KUCCPS Courses | CareerNext{% endblock %}
 
 {% block content %}
@@ -960,8 +961,8 @@ body.dark .helb-criteria-item    { background: rgba(22,163,74,0.12); border-colo
             </div>
           </div>
         </div>
-        <button class="reco-car-btn rc-prev" onclick="rcMove('recoWrapReal',-1)"><i class="bi bi-chevron-left" style="font-size:0.8rem;"></i></button>
-        <button class="reco-car-btn rc-next" onclick="rcMove('recoWrapReal',1)"><i class="bi bi-chevron-right" style="font-size:0.8rem;"></i></button>
+        <button type="button" aria-label="Previous" class="reco-car-btn rc-prev" onclick="rcMove('recoWrapReal',-1)"><i class="bi bi-chevron-left" style="font-size:0.8rem;"></i></button>
+        <button type="button" aria-label="Next" class="reco-car-btn rc-next" onclick="rcMove('recoWrapReal',1)"><i class="bi bi-chevron-right" style="font-size:0.8rem;"></i></button>
         <div class="reco-dots-bar" id="recoDotsReal"></div>
       </div>
     </div>
@@ -1019,8 +1020,8 @@ body.dark .helb-criteria-item    { background: rgba(22,163,74,0.12); border-colo
             </div>
           </div>
         </div>
-        <button class="reco-car-btn rc-prev" onclick="rcMove('recoWrapSample',-1)"><i class="bi bi-chevron-left" style="font-size:0.8rem;"></i></button>
-        <button class="reco-car-btn rc-next" onclick="rcMove('recoWrapSample',1)"><i class="bi bi-chevron-right" style="font-size:0.8rem;"></i></button>
+        <button type="button" aria-label="Previous" class="reco-car-btn rc-prev" onclick="rcMove('recoWrapSample',-1)"><i class="bi bi-chevron-left" style="font-size:0.8rem;"></i></button>
+        <button type="button" aria-label="Next" class="reco-car-btn rc-next" onclick="rcMove('recoWrapSample',1)"><i class="bi bi-chevron-right" style="font-size:0.8rem;"></i></button>
         <div class="reco-dots-bar" id="recoDotsSample"></div>
       </div>
     </div>
@@ -2270,6 +2271,7 @@ body.dark .helb-criteria-item    { background: rgba(22,163,74,0.12); border-colo
 
 
 {% block extra_js %}
+<script src="{% static 'js/ai_format.js' %}"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 
@@ -2504,7 +2506,7 @@ function sendAiMsg() {
               var d = line.slice(6).trim();
               if (d && d !== '[DONE]') {
                 try { full += JSON.parse(d); } catch(e) { full += d; }
-                tBubble.textContent = full;
+                tBubble.innerHTML = cnAiFormat(full);
                 msgs.scrollTop = msgs.scrollHeight;
               }
             }
@@ -2517,7 +2519,7 @@ function sendAiMsg() {
       return res.json().then(function (d) {
         tBubble.className = 'ai-msg bot';
         var reply = d.reply || d.response || d.message || 'Done.';
-        tBubble.textContent = reply;
+        tBubble.innerHTML = cnAiFormat(reply);
         _aiHistory.push({ role: 'assistant', content: reply });
         msgs.scrollTop = msgs.scrollHeight;
         btn.disabled = false;

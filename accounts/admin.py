@@ -153,6 +153,12 @@ class UserAdmin(BaseUserAdmin):
     def delete_model(self, request, obj):
         obj.soft_delete()
 
+    def formfield_for_manytomany(self, db_field, request, **kwargs):
+        # Permission.__str__ reads content_type; without this the widget runs one query per permission.
+        if db_field.name == 'user_permissions':
+            kwargs['queryset'] = db_field.remote_field.model.objects.select_related('content_type')
+        return super().formfield_for_manytomany(db_field, request, **kwargs)
+
     def delete_queryset(self, request, queryset):
         queryset.update(deleted_at=timezone.now(), is_active=False)
 

@@ -121,6 +121,11 @@ class RegisterView(View):
             login(request, user, backend='django.contrib.auth.backends.ModelBackend')
             request.session['_auth_verified_at'] = time.time()
             messages.success(request, f"Welcome to CareerNext, {user.full_name or user.email}!")
+            raw_next = request.POST.get("next") or request.GET.get("next") or ""
+            if url_has_allowed_host_and_scheme(
+                raw_next, allowed_hosts={request.get_host()}, require_https=request.is_secure()
+            ):
+                return redirect(raw_next)
             return redirect("accounts:dashboard")
 
         return render(request, self.template_name, {"form": form})
@@ -198,8 +203,14 @@ class LoginView(View):
             request.session.set_expiry(90 * 24 * 3600)
 
             messages.success(
-                request, f"Welcome back, {user.full_name or user.email}!"
+                request, f"Welcome back, {user.full_name or user.email}"
             )
+            # Return to the page that required login (@login_required adds ?next=)
+            raw_next = request.POST.get("next") or request.GET.get("next") or ""
+            if url_has_allowed_host_and_scheme(
+                raw_next, allowed_hosts={request.get_host()}, require_https=request.is_secure()
+            ):
+                return redirect(raw_next)
             return redirect("accounts:dashboard")
 
         # Bad credentials — count this failure toward both limits
