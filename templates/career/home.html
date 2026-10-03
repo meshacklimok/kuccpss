@@ -96,10 +96,7 @@
   animation: fadeUp 0.5s 0.08s ease both;
 }
 .cn-hero h1 .accent {
-  background: #93c5fd;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: #93c5fd;
 }
 
 .cn-hero .hero-lead {
@@ -294,17 +291,6 @@
 .pathway-card:nth-child(4) { animation-delay: 0.26s; }
 .pathway-card:nth-child(5) { animation-delay: 0.33s; }
 .pathway-card:nth-child(6) { animation-delay: 0.40s; }
-
-/* shimmer sweep */
-.pathway-card::before {
-  content: '';
-  position: absolute; top: 0; left: -75%;
-  width: 50%; height: 100%;
-  background: linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.55) 50%, transparent 60%);
-  transition: left 0.5s ease;
-  pointer-events: none;
-}
-.pathway-card:hover::before { left: 130%; }
 
 /* arrow indicator */
 .pathway-card::after {
@@ -535,9 +521,6 @@ body.dark .pathway-section { background: var(--surface-2); }
 body.dark .pathway-card {
   background: var(--surface);
   box-shadow: var(--shadow-sm);
-}
-body.dark .pathway-card::before { /* shimmer on dark surface */
-  background: linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.06) 50%, transparent 60%);
 }
 body.dark .pathway-title    { color: var(--text); }
 body.dark .pathway-subtitle { color: var(--text-2); }

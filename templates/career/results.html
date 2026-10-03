@@ -46,7 +46,7 @@
                         </div>
                         <div class="col-md-3 d-flex align-items-end">
                             <button type="submit" class="btn btn-primary me-2">Filter</button>
-                            <a href="{% url 'career:results' %}" class="btn btn-secondary">Reset</a>
+                            <a href="{% url 'career:filter_matches' %}" class="btn btn-secondary">Reset</a>
                         </div>
                     </form>
                 </div>
@@ -80,7 +80,7 @@
                                 {% for match in matches %}
                                 <tr>
                                     <td>{{ forloop.counter }}</td>
-                                    <td>{{ match.course.name|default:match.tvet_course.name|default:match.kmc_course.name|default:match.ttc_course.name }}</td>
+                                    <td>{% if match.course %}{{ match.course.name }}{% elif match.tvet_course %}{{ match.tvet_course.name }}{% elif match.kmc_course %}{{ match.kmc_course.name }}{% elif match.ttc_course %}{{ match.ttc_course.name }}{% endif %}</td>
                                     <td>
                                         {% if match.course %}
                                             Degree / Diploma
