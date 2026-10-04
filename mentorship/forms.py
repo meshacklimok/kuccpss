@@ -3,7 +3,7 @@ from datetime import datetime as dt_datetime
 from django import forms
 from django.utils import timezone
 
-from .models import MentorProfile, TimeSlot, WithdrawalRequest
+from .models import MentorProfile, TimeSlot, WithdrawalRequest, bookable_slots_q
 
 TIME_OPTIONS = [
     ("11:00", "11:00 AM"),
@@ -153,9 +153,7 @@ class BookingForm(forms.Form):
     def __init__(self, mentor, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["slot"].queryset = TimeSlot.objects.filter(
-            mentor=mentor,
-            is_booked=False,
-            date__gte=timezone.now().date(),
+            bookable_slots_q(), mentor=mentor,
         ).order_by("date", "start_time")
 
     def clean_mentee_phone(self):

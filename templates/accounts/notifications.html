@@ -46,13 +46,13 @@
             <!-- Type badge + unread dot -->
             <div class="d-flex align-items-center gap-2 mb-1 flex-wrap">
               <span class="badge fw-600"
-                    style="font-size:0.68rem;letter-spacing:0.04em;padding:3px 9px;border-radius:20px;
+                    style="font-size:0.7rem;letter-spacing:0.04em;padding:3px 9px;border-radius:20px;
                            background:{% if tid == 'warning' %}#fef9c3;color:#92400e{% elif tid == 'deadline' %}#fee2e2;color:#991b1b{% elif tid == 'success' %}#dcfce7;color:#166534{% elif tid == 'system' %}#f1f5f9;color:#475569{% else %}#e8f0fe;color:#3730a3{% endif %};">
                 <i class="fas fa-{% if tid == 'warning' %}exclamation-triangle{% elif tid == 'deadline' %}clock{% elif tid == 'success' %}check-circle{% elif tid == 'system' %}cog{% else %}info-circle{% endif %} me-1"></i>
                 {{ notif.get_notif_type_display }}
               </span>
               {% if not notif.is_read %}
-              <span class="badge bg-warning text-dark" style="font-size:0.65rem;">New</span>
+              <span class="badge bg-warning text-dark" style="font-size:0.7rem;">New</span>
               {% endif %}
             </div>
 

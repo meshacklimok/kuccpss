@@ -80,38 +80,56 @@
   border-color: #c7d2fe;
 }
 .career-card-banner {
-  height: 90px;
+  /* --tint / --ink come from .sector-* in style.css */
+  height: 96px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 2.2rem;
   position: relative;
+  background-color: var(--tint);
+  /* faint dot grid in the sector colour */
+  background-image: radial-gradient(color-mix(in srgb, var(--ink) 22%, transparent) 1.2px, transparent 1.6px);
+  background-size: 14px 14px;
+  background-position: 7px 7px;
+  border-bottom: 1px solid color-mix(in srgb, var(--ink) 12%, transparent);
+}
+.career-icon-tile {
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  background: #fff;
+  color: var(--ink);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  box-shadow: 0 1px 2px rgba(15,23,42,0.06), 0 4px 12px color-mix(in srgb, var(--ink) 18%, transparent);
+  border: 1px solid color-mix(in srgb, var(--ink) 14%, transparent);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.career-card:hover .career-icon-tile {
+  transform: translateY(-3px);
+  box-shadow: 0 2px 4px rgba(15,23,42,0.06), 0 10px 22px color-mix(in srgb, var(--ink) 26%, transparent);
 }
 .career-card-body { padding: 1.1rem; flex: 1; display: flex; flex-direction: column; }
 .demand-badge {
   display: inline-block;
   padding: 2px 8px;
   border-radius: 50px;
-  font-size: 0.65rem;
+  font-size: 0.7rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
 
-/* Banner gradients per sector tag */
-.banner-technology  { background: #1e1b4b; }
-.banner-health      { background: #052e16; }
-.banner-engineering { background: #1c1917; }
-.banner-finance     { background: #042f2e; }
-.banner-business    { background: #0c1a4b; }
-.banner-law         { background: #2d1654; }
-.banner-education   { background: #172554; }
-.banner-agriculture { background: #14532d; }
-.banner-creative    { background: #4a044e; }
-.banner-science     { background: #1e3a5f; }
-.banner-environment { background: #14532d; }
-.banner-social      { background: #4c0519; }
-.banner-default     { background: #1e293b; }
+body.dark .career-card { background: var(--surface); border-color: var(--border); }
+body.dark .career-card-banner { background-color: color-mix(in srgb, var(--ink) 14%, #171717); }
+body.dark .career-icon-tile {
+  background: #242424;
+  color: color-mix(in srgb, var(--ink) 70%, #fff);
+  border-color: color-mix(in srgb, var(--ink) 30%, transparent);
+  box-shadow: none;
+}
 
 /* Demand badge colours */
 .demand-very_high { background: #dcfce7; color: #166534; }
@@ -144,7 +162,7 @@
         <form method="GET" id="searchForm" class="d-flex gap-2 flex-wrap">
           {% if active_sector %}<input type="hidden" name="sector" value="{{ active_sector }}">{% endif %}
           {% if active_demand %}<input type="hidden" name="demand" value="{{ active_demand }}">{% endif %}
-          <input type="text" name="q" data-suggest="careers" class="hero-search" placeholder="Search careers e.g. Doctor, Engineer…" value="{{ query }}">
+          <input type="text" name="q" aria-label="Search careers" data-suggest="careers" class="hero-search" placeholder="Search careers e.g. Doctor, Engineer…" value="{{ query }}">
           {% if query %}
           <a href="{% url 'career:career_profiles' %}{% if active_sector %}?sector={{ active_sector }}{% endif %}"
              class="btn btn-sm" style="background:rgba(255,255,255,0.15);color:#fff;border-radius:50px;border:1.5px solid rgba(255,255,255,0.3);">

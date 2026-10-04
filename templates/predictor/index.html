@@ -19,7 +19,7 @@
   border: 1px solid var(--border);
 }
 .cutoff-value { font-size: 1.25rem; font-weight: 800; line-height: 1.1; }
-.cutoff-label { font-size: .62rem; color: var(--muted); letter-spacing: .04em; text-transform: uppercase; }
+.cutoff-label { font-size: 0.7rem; color: var(--muted); letter-spacing: .04em; text-transform: uppercase; }
 
 .range-bar-wrap { height: 6px; border-radius: 3px; background: var(--bg); border: 1px solid var(--border); position: relative; overflow: visible; }
 .range-bar { height: 100%; border-radius: 3px; background: var(--accent); }
@@ -61,7 +61,7 @@
 }
 
 .method-badge {
-  display: inline-block; font-size: .62rem; font-weight: 700; padding: 2px 6px;
+  display: inline-block; font-size: 0.7rem; font-weight: 700; padding: 2px 6px;
   border-radius: 4px; text-transform: uppercase; letter-spacing: .03em;
 }
 .method-wma   { background: #e0f2fe; color: #0369a1; }
@@ -253,7 +253,7 @@
 
           <!-- Latest actual cutoff -->
           <div class="col-6 col-lg-1 text-center">
-            <div class="small text-muted" style="font-size:.65rem; text-transform:uppercase; letter-spacing:.04em;">
+            <div class="small text-muted" style="font-size:0.7rem; text-transform:uppercase; letter-spacing:.04em;">
               {{ LATEST_CUTOFF_YEAR }}
             </div>
             <div class="fw-bold" style="font-size:1.05rem; color:var(--dark);">
@@ -263,14 +263,14 @@
 
           <!-- 2026 prediction (single) -->
           <div class="col-6 col-lg-2 text-center">
-            <div class="small text-muted mb-1" style="font-size:.65rem; text-transform:uppercase; letter-spacing:.04em;">
+            <div class="small text-muted mb-1" style="font-size:0.7rem; text-transform:uppercase; letter-spacing:.04em;">
               2026 Predicted
             </div>
             <div class="cutoff-badge mx-auto">
               <span class="cutoff-value" style="color:var(--primary);">{{ row.pred.predicted }}</span>
               <span class="cutoff-label">/ 48</span>
             </div>
-            <div class="text-muted mt-1" style="font-size:.65rem;">
+            <div class="text-muted mt-1" style="font-size:0.7rem;">
               {{ row.pred.low }} – {{ row.pred.high }}
             </div>
           </div>
@@ -290,7 +290,7 @@
               <i class="fas fa-minus d-block fa-lg mb-1"></i>Stable
             </span>
             {% endif %}
-            <div class="text-muted" style="font-size:.65rem;">{{ row.pred.years_used }}yr data</div>
+            <div class="text-muted" style="font-size:0.7rem;">{{ row.pred.years_used }}yr data</div>
           </div>
 
           <!-- Score vs range bar (hidden on mobile — too narrow to be useful) -->
@@ -303,7 +303,7 @@
               <div class="your-score-tick"
                    style="left:{{ row.score|floatformat:0 }}%"></div>
             </div>
-            <div style="font-size:.62rem;color:var(--muted);">vs cutoff {{ row.pred.predicted }}</div>
+            <div style="font-size:0.7rem;color:var(--muted);">vs cutoff {{ row.pred.predicted }}</div>
             {% else %}
             <span class="text-muted" style="font-size:.72rem;">
               <a href="{% url 'clusterpoints:calculator' %}">Score?</a>

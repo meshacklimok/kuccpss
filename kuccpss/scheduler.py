@@ -6,7 +6,7 @@ django-q Schedules never fire. This daemon thread runs the jobs that can't wait 
 the next deploy (build.sh already handles the daily-ish cleanups):
 
   - payments.tasks.check_pending_payments  — recover payments whose webhook was lost
-  - mentorship.tasks.send_session_reminders / complete_expired_sessions
+  - mentorship.tasks.release_abandoned_bookings / send_session_reminders / complete_expired_sessions
 
 A Postgres advisory lock makes sure only one process runs a cycle at a time, however
 many gunicorn workers or instances call start_scheduler(). Every job is also safe to
@@ -34,9 +34,9 @@ _start_lock = threading.Lock()
 
 
 def _jobs():
-    from mentorship.tasks import complete_expired_sessions, send_session_reminders
+    from mentorship.tasks import complete_expired_sessions, release_abandoned_bookings, send_session_reminders
     from payments.tasks import check_pending_payments
-    return [check_pending_payments, send_session_reminders, complete_expired_sessions]
+    return [check_pending_payments, release_abandoned_bookings, send_session_reminders, complete_expired_sessions]
 
 
 def _try_lock(connection) -> bool:

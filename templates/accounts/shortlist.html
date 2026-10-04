@@ -29,7 +29,7 @@
   .sl-card-header { padding: 1rem; }
   .sl-card-body { padding: 0.85rem 1rem; }
   .sl-card-footer { padding: 0.85rem 1rem; }
-  .sl-label { min-width: 80px; font-size: 0.68rem; }
+  .sl-label { min-width: 80px; font-size: 0.7rem; }
   .sl-value { font-size: 0.82rem; }
   .sl-course-name { font-size: 1rem; }
 }
@@ -60,7 +60,7 @@
 .sl-course-name:hover { color: #1d4ed8; }
 
 /* ── Type pill ── */
-.type-pill { display:inline-block;padding:2px 9px;border-radius:50px;font-size:0.68rem;font-weight:700; }
+.type-pill { display:inline-block;padding:2px 9px;border-radius:50px;font-size:0.7rem;font-weight:700; }
 .tp-degree  { background:#dbeafe;color:#1d4ed8; }
 .tp-diploma { background:#ede9fe;color:#6d28d9; }
 .tp-kmtc    { background:#dcfce7;color:#15803d; }
@@ -221,14 +221,14 @@
 .cth-rank {
   display:inline-flex;align-items:center;justify-content:center;
   width:22px;height:22px;border-radius:50%;
-  background:#3b82f6;color:#fff;font-size:0.68rem;font-weight:900;
+  background:#3b82f6;color:#fff;font-size:0.7rem;font-weight:900;
   flex-shrink:0; margin-right:5px;
 }
 
 /* Remove btn inside table */
 .cth-remove {
   background: rgba(239,68,68,0.15); border: none; border-radius: 6px;
-  color: #fca5a5; font-size: 0.65rem; padding: 2px 7px; cursor: pointer;
+  color: #fca5a5; font-size: 0.7rem; padding: 2px 7px; cursor: pointer;
   transition: background 0.15s;
 }
 .cth-remove:hover { background: rgba(239,68,68,0.3); color: #fff; }
@@ -260,6 +260,7 @@
 .gap-positive { background:#dcfce7; color:#15803d; }
 .gap-negative { background:#fee2e2; color:#b91c1c; }
 .gap-close    { background:#fef9c3; color:#854d0e; }
+body.dark .empty-icon { background: rgba(92,157,255,.14); color: var(--primary-light); }
 </style>
 
 <!-- ── HERO ── -->
@@ -412,7 +413,7 @@
           <form method="post" action="{% url 'accounts:shortlist_toggle' course.pk %}" class="flex-shrink-0">
             {% csrf_token %}
             <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill" title="Remove"
-                    style="font-size:0.7rem;padding:2px 8px;" onclick="return confirm('Remove {{ course.name }} from shortlist?')">
+                    style="font-size:0.7rem;padding:2px 8px;" data-confirm="Remove {{ course.name }} from your shortlist?" data-confirm-ok="Remove">
               <i class="fas fa-times"></i>
             </button>
           </form>
@@ -486,11 +487,11 @@
             <div class="d-flex flex-wrap gap-1">
               {% if course.core_subjects.all %}
                 {% for subj in course.core_subjects.all|slice:":5" %}
-                <span class="badge rounded-pill" style="background:#f1f5f9;color:#475569;font-size:0.67rem;font-weight:600;">{{ subj.name }}</span>
+                <span class="badge rounded-pill" style="background:#f1f5f9;color:#475569;font-size:0.7rem;font-weight:600;">{{ subj.name }}</span>
                 {% endfor %}
               {% elif course.subject_requirements %}
                 {% for req in course.subject_requirements %}
-                <span class="badge rounded-pill" style="background:#eff6ff;color:#1d4ed8;font-size:0.67rem;font-weight:600;">
+                <span class="badge rounded-pill" style="background:#eff6ff;color:#1d4ed8;font-size:0.7rem;font-weight:600;">
                   {{ req.subjects_str }}{% if req.min_grade %} ({{ req.min_grade }}+){% endif %}
                 </span>
                 {% endfor %}
@@ -617,7 +618,7 @@
                 </div>
                 <form method="post" action="{% url 'accounts:shortlist_toggle' course.pk %}" style="flex-shrink:0;">
                   {% csrf_token %}
-                  <button type="submit" class="cth-remove" title="Remove" onclick="return confirm('Remove {{ course.name }}?')">
+                  <button type="submit" class="cth-remove" title="Remove" data-confirm="Remove {{ course.name }} from your shortlist?" data-confirm-ok="Remove">
                     <i class="fas fa-times"></i>
                   </button>
                 </form>
@@ -746,13 +747,13 @@
               {% if item.course.core_subjects.all %}
               <div class="d-flex flex-wrap gap-1">
                 {% for subj in item.course.core_subjects.all|slice:":4" %}
-                <span class="badge rounded-pill" style="background:#f1f5f9;color:#475569;font-size:0.67rem;font-weight:600;">{{ subj.name }}</span>
+                <span class="badge rounded-pill" style="background:#f1f5f9;color:#475569;font-size:0.7rem;font-weight:600;">{{ subj.name }}</span>
                 {% endfor %}
               </div>
               {% elif item.course.subject_requirements %}
               <div class="d-flex flex-wrap gap-1">
                 {% for req in item.course.subject_requirements %}
-                <span class="badge rounded-pill" style="background:#eff6ff;color:#1d4ed8;font-size:0.67rem;font-weight:600;">
+                <span class="badge rounded-pill" style="background:#eff6ff;color:#1d4ed8;font-size:0.7rem;font-weight:600;">
                   {{ req.subjects_str }}{% if req.min_grade %} ({{ req.min_grade }}+){% endif %}
                 </span>
                 {% endfor %}

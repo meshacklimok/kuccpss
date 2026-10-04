@@ -81,6 +81,11 @@ def send_session_reminders() -> int:
             note="After the session, remember to mark it as complete from your dashboard.",
             user_email=session.mentor.user.email,
         )
+        _push(session.mentee, f"Your session with {mentor_name} starts in ~1 hour",
+              f"WhatsApp {mentor_name} on {session.mentor.whatsapp} to confirm how you'll connect.",
+              session.get_absolute_url())
+        _push(session.mentor.user, f"Session with {mentee_name} starts in ~1 hour",
+              f"{slot_str} — topic: {session.mentee_question[:80]}", "/mentorship/dashboard/")
         sent += 1
 
     if sent:
@@ -92,20 +97,76 @@ def complete_expired_sessions() -> int:
     """Mark confirmed sessions as completed once their start time is 30+ min past."""
     from django.db.models import Q
     from mentorship.models import MentorshipSession
+    from mentorship.views import send_rating_request
 
     cutoff = timezone.localtime(timezone.now() - timedelta(minutes=30))
     expired = MentorshipSession.objects.filter(
         Q(slot__date__lt=cutoff.date())
         | Q(slot__date=cutoff.date(), slot__start_time__lte=cutoff.time()),
         status="confirmed",
-    ).select_related("mentor")
+    ).select_related("mentor", "mentor__user", "mentee")
 
     completed = 0
     for session in expired:
         if MentorshipSession.objects.filter(pk=session.pk, status="confirmed").update(status="completed"):
             session.mentor.refresh_stats()
+            send_rating_request(session)
             completed += 1
 
     if completed:
         logger.info("complete_expired_sessions: auto-completed %d sessions", completed)
     return completed
+
+
+ABANDONED_CHECKOUT_MINUTES = 30
+
+
+def release_abandoned_bookings() -> int:
+    """
+    Free slots held by bookings that never got paid. Booking claims the slot before
+    payment, so without this a student who closes the checkout page locks that slot
+    forever. Sessions the student submitted an M-Pesa code for (pending manual
+    verification) wait for an admin and are left alone.
+    """
+    from django.db import transaction
+    from mentorship.models import MentorshipSession, TimeSlot
+    from mentorship.views import _confirm_session_after_payment
+    from payments.models import Payment
+    from payments.services import fetch_intasend_status
+
+    cutoff = timezone.now() - timedelta(minutes=ABANDONED_CHECKOUT_MINUTES)
+    stale = MentorshipSession.objects.filter(
+        status="pending_payment", created_at__lt=cutoff,
+    ).select_related("mentor", "mentor__user", "mentee", "slot")
+
+    released = 0
+    for session in stale:
+        if session.payment_ref:
+            state = fetch_intasend_status(session.payment_ref)
+            # The STK push may have succeeded with the webhook lost — confirm, don't drop
+            if state == "COMPLETE":
+                _confirm_session_after_payment(session, source="mentorship:release_abandoned_bookings")
+                continue
+            # Still processing (or IntaSend unreachable) — look again next run, up to 2h
+            if state in ("PENDING", "PROCESSING", None) and session.created_at > timezone.now() - timedelta(hours=2):
+                continue
+        with transaction.atomic():
+            if not MentorshipSession.objects.filter(pk=session.pk, status="pending_payment").update(status="cancelled"):
+                continue
+            TimeSlot.objects.filter(pk=session.slot_id).update(is_booked=False)
+            Payment.objects.filter(mentorship_session=session, status="pending").update(
+                status="failed", updated_at=timezone.now()
+            )
+        released += 1
+
+    if released:
+        logger.info("release_abandoned_bookings: freed %d slots", released)
+    return released
+
+
+def _push(user, title, body, url):
+    try:
+        from accounts.views import _send_push_to_user
+        _send_push_to_user(user, title=title, body=body, url=url)
+    except Exception:
+        logger.exception("Mentorship push notification failed for user %s", user.pk)

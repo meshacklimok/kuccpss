@@ -5,9 +5,11 @@ from datetime import time as dt_time, datetime
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.core.exceptions import ValidationError
 from kuccpss.email_utils import notify_admin_withdrawal, send_branded_email
 from django.db import IntegrityError, transaction
 from django.db.models import F, Q
+from django.db.models.functions import Greatest
 from django.http import JsonResponse, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
@@ -18,7 +20,7 @@ from django.views.decorators.http import require_POST
 from accounts.decorators import require_recent_auth
 from analytics.audit import record
 from .forms import AddSlotsForm, AddWeekSlotsForm, BookingForm, CancelSessionForm, MentorRegistrationForm, RatingForm, WithdrawalForm, _mentor_min_withdrawal
-from .models import MentorProfile, MentorshipConfig, MentorshipSession, TimeSlot, WithdrawalRequest
+from .models import MentorProfile, MentorshipConfig, MentorshipSession, TimeSlot, WithdrawalRequest, bookable_slots_q
 
 logger = logging.getLogger(__name__)
 
@@ -68,10 +70,7 @@ def directory(request):
             pass
 
     # Only show mentors with at least one future open slot
-    mentors = mentors.filter(
-        slots__is_booked=False,
-        slots__date__gte=timezone.now().date(),
-    ).distinct()
+    mentors = mentors.filter(bookable_slots_q("slots__")).distinct()
 
     from django.core.paginator import Paginator
     paginator = Paginator(mentors, _mentors_per_page())
@@ -116,9 +115,7 @@ def mentor_profile(request, mentor_pk):
         _lv(request, 'mentor_profile', mentor.pk, str(mentor.user.get_full_name() or mentor.user.email))
     except Exception:
         pass
-    available_slots = mentor.slots.filter(
-        is_booked=False, date__gte=timezone.now().date()
-    ).order_by("date", "start_time")
+    available_slots = mentor.slots.filter(bookable_slots_q()).order_by("date", "start_time")
     reviews = mentor.sessions.filter(
         status="completed", rating__isnull=False
     ).select_related("mentee").order_by("-updated_at")[:6]
@@ -351,11 +348,20 @@ def complete_session(request, token):
     session = get_object_or_404(
         MentorshipSession, token=token, mentor__user=request.user, status="confirmed"
     )
-    session.status = "completed"
-    session.save(update_fields=["status"])
+    if session.slot.is_future:
+        messages.error(request, "You can mark this session complete once it has started.")
+        return redirect("mentorship:dashboard")
+    if not MentorshipSession.objects.filter(pk=session.pk, status="confirmed").update(status="completed"):
+        return redirect("mentorship:dashboard")
     session.mentor.refresh_stats()
+    send_rating_request(session)
 
-    # Notify mentee to rate
+    messages.success(request, "Session marked as complete — great work!")
+    return redirect("mentorship:dashboard")
+
+
+def send_rating_request(session):
+    """Ask the mentee to rate a session that just completed."""
     send_branded_email(
         to=session.mentee.email,
         subject=f"How was your session with {session.mentor.display_name}?",
@@ -371,9 +377,6 @@ def complete_session(request, token):
         cta_label="Rate My Session →",
         user_email=session.mentee.email,
     )
-
-    messages.success(request, "Session marked as complete — great work!")
-    return redirect("mentorship:dashboard")
 
 
 # ── Booking Flow ──────────────────────────────────────────────────────────────
@@ -391,25 +394,26 @@ def book_session(request, mentor_pk):
         if form.is_valid():
             slot = form.cleaned_data["slot"]
 
-            # Re-check slot availability (race condition guard)
-            slot.refresh_from_db()
-            if slot.is_booked:
+            # Claim the slot with a conditional UPDATE so two students submitting at
+            # once can't both get it; the loser sees a friendly message, not a 500.
+            try:
+                with transaction.atomic():
+                    if not TimeSlot.objects.filter(pk=slot.pk, is_booked=False).update(is_booked=True):
+                        raise IntegrityError("slot already booked")
+                    session = MentorshipSession.objects.create(
+                        mentor=mentor,
+                        mentee=request.user,
+                        slot=slot,
+                        course_interest=mentor.course,
+                        mentee_question=form.cleaned_data["mentee_question"],
+                        mentee_phone=form.cleaned_data["mentee_phone"],
+                        status="pending_payment",
+                        amount=mentor.effective_session_price(),
+                        mentor_payout=mentor.effective_mentor_payout(),
+                    )
+            except IntegrityError:
                 messages.error(request, "That slot was just booked by someone else. Please choose another.")
                 return redirect("mentorship:book_session", mentor_pk=mentor_pk)
-
-            session = MentorshipSession.objects.create(
-                mentor=mentor,
-                mentee=request.user,
-                slot=slot,
-                course_interest=mentor.course,
-                mentee_question=form.cleaned_data["mentee_question"],
-                mentee_phone=form.cleaned_data["mentee_phone"],
-                status="pending_payment",
-                amount=mentor.effective_session_price(),
-                mentor_payout=mentor.effective_mentor_payout(),
-            )
-            slot.is_booked = True
-            slot.save(update_fields=["is_booked"])
 
             return redirect("mentorship:checkout", token=session.token)
     else:
@@ -428,10 +432,16 @@ def book_session(request, mentor_pk):
 
 @login_required
 def checkout(request, token):
-    session = get_object_or_404(
-        MentorshipSession, token=token, mentee=request.user,
-        status__in=["pending_payment", "pending_manual_verification"],
-    )
+    session = get_object_or_404(MentorshipSession, token=token, mentee=request.user)
+    if session.status in ("confirmed", "completed", "refunded"):
+        return redirect(session.get_absolute_url())
+    if session.status == "cancelled":
+        messages.info(
+            request,
+            "This booking expired because payment wasn't completed within 30 minutes, "
+            "so the slot was released. Please pick a time again.",
+        )
+        return redirect("mentorship:book_session", mentor_pk=session.mentor_id)
     from resources.models import SiteSetting
     contact_email = SiteSetting.get("contact_email", default=settings.ADMIN_EMAIL)
     return render(request, "mentorship/checkout.html", {
@@ -448,15 +458,10 @@ def session_status(request, token):
 
     # Fallback: if webhook delivered confirmation but emails weren't sent, send now
     if session.status == "confirmed" and not session.confirmation_sent:
-        try:
-            session_full = MentorshipSession.objects.select_related(
-                "mentor", "mentor__user", "mentee", "slot"
-            ).get(pk=session.pk)
-            if _send_booking_confirmation(session_full):
-                session_full.confirmation_sent = True
-                session_full.save(update_fields=["confirmation_sent"])
-        except Exception:
-            pass
+        session_full = MentorshipSession.objects.select_related(
+            "mentor", "mentor__user", "mentee", "slot"
+        ).get(pk=session.pk)
+        _send_confirmation_once(session_full)
 
     return JsonResponse({
         "status": session.status,
@@ -626,21 +631,253 @@ def _confirm_session_after_payment(session: MentorshipSession, source: str = "un
         Payment.objects.filter(mentorship_session=session).exclude(status="completed").update(
             status="completed", updated_at=timezone.now()
         )
+        # Any payout the mentor still owes from an earlier reversal comes out of this credit.
+        debt = MentorProfile.objects.select_for_update().values_list("payout_debt", flat=True).get(pk=session.mentor_id)
+        recovered = min(debt, session.mentor_payout)
         MentorProfile.objects.filter(pk=session.mentor_id).update(
-            wallet_balance=F("wallet_balance") + session.mentor_payout,
+            wallet_balance=F("wallet_balance") + (session.mentor_payout - recovered),
+            payout_debt=F("payout_debt") - recovered,
             total_earned=F("total_earned") + session.mentor_payout,
         )
         record("mentor.wallet_credited", session.mentor, amount=session.mentor_payout,
-               session=session.token, source=source)
+               debt_recovered=recovered, session=session.token, source=source)
     logger.info("Mentorship session %s confirmed via %s", session.token, source)
     session.status = "confirmed"
     mentor = session.mentor
-    mentor.refresh_from_db(fields=["wallet_balance", "total_earned"])
-    if not session.confirmation_sent:
-        if _send_booking_confirmation(session):
-            session.confirmation_sent = True
-            session.save(update_fields=["confirmation_sent"])
+    mentor.refresh_from_db(fields=["wallet_balance", "total_earned", "payout_debt"])
+    _send_confirmation_once(session)
     _maybe_auto_pay_mentor(mentor)
+
+
+def _send_confirmation_once(session: MentorshipSession):
+    """Send the booking confirmation emails exactly once. The flag is claimed with a
+    conditional UPDATE before sending, so the webhook and the checkout page's status
+    poll can't both send; it's released again if sending fails so a later call retries."""
+    if not MentorshipSession.objects.filter(pk=session.pk, confirmation_sent=False).update(confirmation_sent=True):
+        session.confirmation_sent = True
+        return
+    sent = False
+    try:
+        sent = _send_booking_confirmation(session)
+    except Exception:
+        logger.exception("Booking confirmation emails failed for session %s", session.token)
+    if not sent:
+        MentorshipSession.objects.filter(pk=session.pk).update(confirmation_sent=False)
+    session.confirmation_sent = bool(sent)
+
+
+def _reverse_mentor_credit(session: MentorshipSession, source: str, request=None) -> int:
+    """Take back the payout a confirmed session credited to the mentor. Whatever the
+    wallet can't cover (it was already paid out to M-Pesa) becomes payout_debt, which
+    the mentor's next earnings repay. Must run inside transaction.atomic(). Returns
+    the amount that went to debt."""
+    amount = session.mentor_payout
+    balance = MentorProfile.objects.select_for_update().values_list("wallet_balance", flat=True).get(pk=session.mentor_id)
+    taken = min(balance, amount)
+    owed = amount - taken
+    MentorProfile.objects.filter(pk=session.mentor_id).update(
+        wallet_balance=F("wallet_balance") - taken,
+        payout_debt=F("payout_debt") + owed,
+        total_earned=Greatest(F("total_earned") - amount, 0),
+    )
+    record("mentor.wallet_debited", session.mentor, request=request, amount=taken,
+           debt_added=owed, session=session.token, source=source)
+    if owed:
+        logger.warning("Mentor %s owes KES %s for reversed session %s (already paid out)",
+                       session.mentor_id, owed, session.token)
+    return owed
+
+
+REFUNDABLE_STATUSES = ("confirmed", "cancelled")
+
+
+def _mark_session_refunded(session: MentorshipSession, source: str, request=None,
+                           notify=True, via_intasend=False) -> bool:
+    """Record a session as refunded: free its slot, reverse the mentor's credit if it
+    was still confirmed, mark the payment refunded and (optionally) tell the student.
+    Moves no money itself — refund_session() does that through IntaSend."""
+    from payments.models import Payment
+    was_credited = session.status == "confirmed"
+    with transaction.atomic():
+        # Conditional on the status we read, so a concurrent confirm/refund can't
+        # leave the wallet credited for a refunded session (or debited twice).
+        if not MentorshipSession.objects.filter(pk=session.pk, status=session.status).update(status="refunded"):
+            return False
+        # A cancelled session's slot was already freed and may belong to someone else now.
+        if session.slot_id and session.status != "cancelled":
+            TimeSlot.objects.filter(pk=session.slot_id).update(is_booked=False)
+        if was_credited:
+            _reverse_mentor_credit(session, source=source, request=request)
+        Payment.objects.filter(mentorship_session=session).update(status="refunded", updated_at=timezone.now())
+        record("mentor.session_refunded", session, request=request, amount=session.amount,
+               mentor_debited=session.mentor_payout if was_credited else 0,
+               refund_ref=session.refund_ref, source=source)
+    session.status = "refunded"
+    if notify:
+        send_branded_email(
+            to=session.mentee.email,
+            subject="CareerNext — Mentorship Session Refunded",
+            heading="Your Session Has Been Refunded",
+            banner_label="Refund",
+            banner_color="amber",
+            greeting="Hi,",
+            body_lines=[
+                f"Your mentorship session with {session.mentor.display_name} has been cancelled and refunded.",
+                _refund_note(session) if via_intasend else
+                "The amount has been returned to the M-Pesa number you paid with.",
+            ],
+            table_rows=[
+                {"label": "Amount", "value": f"KES {session.amount}", "highlight": True},
+                {"label": "Slot", "value": session.slot.datetime_display if session.slot_id else "—"},
+            ],
+            user_email=session.mentee.email,
+        )
+    return True
+
+
+def _refund_note(session: MentorshipSession) -> str:
+    return (f"Your refund of KES {session.amount} has been issued and will be returned to the "
+            "M-Pesa number you paid with. This can take a few working days.")
+
+
+def _notify_admin_refund_needed(session: MentorshipSession, why: str):
+    send_branded_email(
+        to=_admin_email(),
+        subject=f"ACTION: Refund mentorship payment — {session.mentee_display}",
+        heading="Mentorship Refund Needs Attention",
+        banner_label="⚠ Action Required",
+        banner_color="amber",
+        greeting="Hi Admin,",
+        body_lines=[
+            "An automatic refund could not be completed. Please refund the student by hand, "
+            "then use \"Mark as refunded (paid back manually)\" in admin — or retry with "
+            "\"Refund via IntaSend\".",
+            why,
+        ],
+        table_rows=[
+            {"label": "Mentee", "value": f"{session.mentee_display} ({session.mentee.email})"},
+            {"label": "Mentor", "value": session.mentor.display_name},
+            {"label": "Slot", "value": session.slot.datetime_display},
+            {"label": "Amount", "value": f"KES {session.amount}", "highlight": True},
+            {"label": "Phone", "value": session.phone_used or session.mentee_phone or "—"},
+            {"label": "IntaSend invoice", "value": session.payment_ref or "—"},
+            {"label": "Session Token", "value": str(session.token)},
+        ],
+        cta_url=f"https://www.careernext.co.ke/cn-staff/mentorship/mentorshipsession/{session.pk}/change/",
+        cta_label="Open in Admin →",
+    )
+
+
+def refund_session(session: MentorshipSession, reason: str, source: str, request=None, notify=True) -> bool:
+    """Refund the student's M-Pesa payment through IntaSend, then record the session
+    as refunded. Returns True once IntaSend accepts the refund. If it can't (no IntaSend
+    invoice, API error), admin is emailed to refund by hand and False is returned;
+    calling again retries. The refund_requested_at claim means two paths racing (or a
+    double-click) can never refund the same payment twice."""
+    from payments.services import request_intasend_refund
+
+    if session.status not in REFUNDABLE_STATUSES or session.refund_ref:
+        return False
+    if not session.payment_ref:
+        _notify_admin_refund_needed(session, f"Reason: {reason}. There is no IntaSend invoice on this "
+                                             "session (it was paid outside the STK push), so it can't be refunded automatically.")
+        return False
+    if not MentorshipSession.objects.filter(
+        pk=session.pk, refund_requested_at__isnull=True, refund_ref=""
+    ).update(refund_requested_at=timezone.now(), refund_error=""):
+        logger.info("Refund for session %s already in progress — %s skipped", session.token, source)
+        return False
+
+    try:
+        ref = request_intasend_refund(
+            session.payment_ref, session.amount, f"CareerNext mentorship {session.token}: {reason}",
+        )
+    except Exception as exc:
+        err = str(exc)[:500]
+        MentorshipSession.objects.filter(pk=session.pk).update(refund_requested_at=None, refund_error=err)
+        session.refund_error = err
+        record("mentor.refund_failed", session, request=request, amount=session.amount, error=err, source=source)
+        logger.error("IntaSend refund failed for session %s: %s", session.token, exc)
+        _notify_admin_refund_needed(session, f"Reason: {reason}. IntaSend refund request failed: {err}")
+        return False
+
+    ref = ref or "requested"
+    MentorshipSession.objects.filter(pk=session.pk).update(refund_ref=ref)
+    session.refund_ref = ref
+    logger.info("IntaSend refund %s issued for session %s (%s)", ref, session.token, source)
+    if not _mark_session_refunded(session, source=source, request=request, notify=notify, via_intasend=True):
+        logger.error("Session %s refunded via IntaSend (%s) but its status changed concurrently", session.token, ref)
+    return True
+
+
+def _handle_late_payment(session: MentorshipSession, source: str):
+    """M-Pesa confirmed a payment for a booking we'd already released as abandoned.
+    If the slot is still free and in the future, give the student their session;
+    otherwise keep the money on record, tell the student, and ask admin to refund."""
+    from payments.models import Payment
+    # Claim: only a released booking has a non-completed payment. A session the
+    # student/mentor cancelled after paying already has a completed one, and
+    # webhook retries find this one completed after the first run.
+    if not Payment.objects.filter(mentorship_session=session).exclude(
+        status__in=["completed", "refunded"]
+    ).update(status="completed", updated_at=timezone.now()):
+        logger.info("Late payment for session %s already handled — %s skipped", session.token, source)
+        return
+
+    reclaimed = False
+    if session.slot.is_future:
+        try:
+            with transaction.atomic():
+                if TimeSlot.objects.filter(pk=session.slot_id, is_booked=False).update(is_booked=True):
+                    reclaimed = bool(MentorshipSession.objects.filter(
+                        pk=session.pk, status="cancelled").update(status="pending_payment"))
+                    if not reclaimed:
+                        raise IntegrityError("session no longer cancelled")
+        except IntegrityError:
+            reclaimed = False
+    if reclaimed:
+        session.status = "pending_payment"
+        _confirm_session_after_payment(session, source=f"{source}:late_payment")
+        return
+
+    record("mentor.session_late_payment", session, amount=session.amount, source=source)
+    logger.warning("Late payment for released session %s — refunding", session.token)
+    refunded = refund_session(
+        session, reason="paid after the booking expired and the slot was taken",
+        source=f"{source}:late_payment", notify=False,
+    )
+    send_branded_email(
+        to=session.mentee.email,
+        subject="CareerNext — Your Mentorship Payment Will Be Refunded",
+        heading="We'll Refund Your Payment",
+        banner_label="Refund",
+        banner_color="amber",
+        greeting="Hi,",
+        body_lines=[
+            f"Your M-Pesa payment for the session with {session.mentor.display_name} came through "
+            "after the booking had expired, and that time slot is no longer available.",
+            (_refund_note(session) if refunded else
+             "We'll refund the full amount to the number you paid with within 24 hours.")
+            + " You're welcome to book another time in the meantime.",
+        ],
+        table_rows=[
+            {"label": "Amount", "value": f"KES {session.amount}", "highlight": True},
+            {"label": "Slot", "value": session.slot.datetime_display},
+        ],
+        cta_url=f"https://www.careernext.co.ke{reverse('mentorship:mentor_profile', args=[session.mentor_id])}",
+        cta_label="Book another time →",
+        user_email=session.mentee.email,
+    )
+
+
+def handle_paid_session(session: MentorshipSession, source: str):
+    """Entry point for a COMPLETE payment notification on a mentorship session."""
+    if session.status in CONFIRMABLE_STATUSES:
+        _confirm_session_after_payment(session, source=source)
+    elif session.status == "cancelled":
+        _handle_late_payment(session, source=source)
+    else:
+        logger.info("Payment for session %s ignored — status %s (%s)", session.token, session.status, source)
 
 
 @csrf_exempt
@@ -676,20 +913,19 @@ def payment_webhook(request):
         try:
             session = MentorshipSession.objects.select_related(
                 "mentor", "mentor__user", "mentee", "slot"
-            ).get(token=api_ref, status="pending_payment")
+            ).get(token=api_ref)
+        except (MentorshipSession.DoesNotExist, ValueError, ValidationError):
+            return HttpResponse(status=200)  # unrelated ref
 
-            invoice_id = (
-                payload.get("invoice_id")
-                or payload.get("invoice", {}).get("invoice_id", "")
-            )
-            if invoice_id:
-                session.payment_ref = invoice_id
-                session.save(update_fields=["payment_ref"])
+        invoice_id = (
+            payload.get("invoice_id")
+            or payload.get("invoice", {}).get("invoice_id", "")
+        )
+        if invoice_id and invoice_id != session.payment_ref:
+            session.payment_ref = invoice_id
+            session.save(update_fields=["payment_ref"])
 
-            _confirm_session_after_payment(session, source="mentorship:payment_webhook")
-
-        except MentorshipSession.DoesNotExist:
-            pass  # Already processed or unrelated ref
+        handle_paid_session(session, source="mentorship:payment_webhook")
 
     return HttpResponse(status=200)
 
@@ -908,7 +1144,6 @@ def _send_booking_confirmation(session: MentorshipSession):
     base = "https://www.careernext.co.ke"
     gcal_link = google_calendar_url(session)
 
-    ics_content = generate_ics(session)
     ics_filename = f"session_{session.token}.ics"
 
     mentee_phone_line = f"Phone     : {session.mentee_phone}\n" if session.mentee_phone else ""
@@ -942,7 +1177,7 @@ def _send_booking_confirmation(session: MentorshipSession):
                 f"A calendar invite (.ics) is attached to this email."
             ),
             user_email=session.mentee.email,
-            attachments=[(ics_filename, ics_content, "text/calendar")],
+            attachments=[(ics_filename, generate_ics(session, "REQUEST", session.mentee.email), "text/calendar")],
             fail_silently=False,
         )
         mentee_sent = True
@@ -983,7 +1218,7 @@ def _send_booking_confirmation(session: MentorshipSession):
                 f"A calendar invite (.ics) is attached."
             ),
             user_email=session.mentor.user.email,
-            attachments=[(ics_filename, ics_content, "text/calendar")],
+            attachments=[(ics_filename, generate_ics(session, "REQUEST", session.mentor.user.email), "text/calendar")],
             fail_silently=False,
         )
         logger.info("Booking confirmation sent to mentor %s for session %s", session.mentor.user.email, session.token)
@@ -1040,7 +1275,7 @@ def download_ics(request, token):
     if request.user not in (session.mentee, session.mentor.user):
         return redirect("mentorship:directory")
 
-    ics = generate_ics(session)
+    ics = generate_ics(session, "PUBLISH")
     response = HttpResponse(ics, content_type="text/calendar; charset=utf-8")
     response["Content-Disposition"] = f'attachment; filename="session_{session.token}.ics"'
     return response
@@ -1086,16 +1321,16 @@ def cancel_session(request, token):
                     return redirect("mentorship:my_sessions") if is_mentee else redirect("mentorship:dashboard")
                 TimeSlot.objects.filter(pk=session.slot_id).update(is_booked=False)
                 # Confirmed sessions always credited the mentor; reverse that credit.
-                MentorProfile.objects.filter(
-                    pk=session.mentor_id, wallet_balance__gte=session.mentor_payout
-                ).update(wallet_balance=F("wallet_balance") - session.mentor_payout)
-                record("mentor.wallet_debited", session.mentor, request=request,
-                       amount=session.mentor_payout, session=session.token,
-                       source=f"cancelled_by_{cancelled_by}")
+                owed = _reverse_mentor_credit(session, source=f"cancelled_by_{cancelled_by}", request=request)
             session.status = "cancelled"
 
-            _send_cancellation_emails(session, cancelled_by, reason)
-            messages.success(request, "Session cancelled. Our team will process the refund within 24 hours.")
+            refunded = refund_session(session, reason=f"cancelled by {cancelled_by}: {reason}",
+                                      source=f"cancelled_by_{cancelled_by}", request=request, notify=False)
+            _send_cancellation_emails(session, cancelled_by, reason, mentor_owed=owed, refunded=refunded)
+            if refunded:
+                messages.success(request, f"Session cancelled. KES {session.amount} is being refunded to the M-Pesa number used to pay.")
+            else:
+                messages.success(request, "Session cancelled. Our team will process the refund within 24 hours.")
             return redirect("mentorship:my_sessions") if is_mentee else redirect("mentorship:dashboard")
     else:
         form = CancelSessionForm()
@@ -1107,7 +1342,9 @@ def cancel_session(request, token):
     })
 
 
-def _send_cancellation_emails(session, cancelled_by, reason):
+def _send_cancellation_emails(session, cancelled_by, reason, mentor_owed=0, refunded=False):
+    from .calendar_utils import generate_ics
+
     slot_str = session.slot.datetime_display
     mentor_name = session.mentor.display_name
     mentee_name = session.mentee_display
@@ -1124,8 +1361,12 @@ def _send_cancellation_emails(session, cancelled_by, reason):
     ]:
         is_mentee = recipient_email == session.mentee.email
         money_note = (
-            "A refund will be processed to the original M-Pesa number within 24 hours."
+            (_refund_note(session) if refunded else
+             "A refund will be processed to the original M-Pesa number within 24 hours.")
             if is_mentee else
+            f"The session payout has been reversed. KES {mentor_owed} of it was already paid out to you, "
+            "so it will be deducted from your next session earnings."
+            if mentor_owed else
             "The session payout has been reversed from your wallet."
         )
         send_branded_email(
@@ -1148,6 +1389,9 @@ def _send_cancellation_emails(session, cancelled_by, reason):
             cta_label="Browse Mentors →",
             note="If you have concerns about this cancellation, contact us at support@careernext.co.ke.",
             user_email=recipient_email,
+            # Same UID as the confirmation invite, so calendars drop the event
+            attachments=[(f"session_{session.token}.ics",
+                          generate_ics(session, "CANCEL", recipient_email), "text/calendar")],
         )
 
     # Notify admin for manual refund processing

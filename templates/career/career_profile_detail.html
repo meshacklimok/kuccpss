@@ -145,7 +145,7 @@
 }
 .route-card:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0,0,0,0.08); }
 .route-card .r-count { font-size: 1.4rem; font-weight: 900; line-height: 1; }
-.route-card .r-label { font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; margin-top: 2px; }
+.route-card .r-label { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; margin-top: 2px; }
 .rc-degree  { background:#eff6ff; border-color:#bfdbfe; color:#1d4ed8; }
 .rc-diploma { background:#f5f3ff; border-color:#ddd6fe; color:#6d28d9; }
 .rc-kmtc    { background:#f0fdf4; border-color:#bbf7d0; color:#15803d; }
@@ -270,7 +270,7 @@
               <i class="fas fa-fire" style="color:#2563eb;font-size:0.85rem;"></i>
             </div>
             <div>
-              <div style="font-size:0.67rem;color:#64748b;text-transform:uppercase;letter-spacing:0.06em;font-weight:700;">Demand</div>
+              <div style="font-size:0.7rem;color:#64748b;text-transform:uppercase;letter-spacing:0.06em;font-weight:700;">Demand</div>
               <div style="font-size:0.82rem;font-weight:700;color:#1e293b;">{{ profile.get_demand_level_display }}</div>
             </div>
           </div>
@@ -280,7 +280,7 @@
               <i class="fas fa-money-bill-wave" style="color:#16a34a;font-size:0.85rem;"></i>
             </div>
             <div>
-              <div style="font-size:0.67rem;color:#64748b;text-transform:uppercase;letter-spacing:0.06em;font-weight:700;">Avg Salary</div>
+              <div style="font-size:0.7rem;color:#64748b;text-transform:uppercase;letter-spacing:0.06em;font-weight:700;">Avg Salary</div>
               <div style="font-size:0.82rem;font-weight:700;color:#16a34a;">{{ profile.average_salary }}</div>
             </div>
           </div>
@@ -291,7 +291,7 @@
               <i class="fas fa-graduation-cap" style="color:#7c3aed;font-size:0.85rem;"></i>
             </div>
             <div>
-              <div style="font-size:0.67rem;color:#64748b;text-transform:uppercase;letter-spacing:0.06em;font-weight:700;">Linked Courses</div>
+              <div style="font-size:0.7rem;color:#64748b;text-transform:uppercase;letter-spacing:0.06em;font-weight:700;">Linked Courses</div>
               <div style="font-size:0.82rem;font-weight:700;color:#1e293b;">{{ total_linked }} course{{ total_linked|pluralize }}</div>
             </div>
           </div>
@@ -302,7 +302,7 @@
               <i class="fas fa-tags" style="color:#0f766e;font-size:0.85rem;"></i>
             </div>
             <div>
-              <div style="font-size:0.67rem;color:#64748b;text-transform:uppercase;letter-spacing:0.06em;font-weight:700;">Sector</div>
+              <div style="font-size:0.7rem;color:#64748b;text-transform:uppercase;letter-spacing:0.06em;font-weight:700;">Sector</div>
               <div style="font-size:0.82rem;font-weight:700;color:#1e293b;">{{ profile.career_tags|truncatechars:30 }}</div>
             </div>
           </div>
@@ -426,7 +426,7 @@
       <div class="section-card">
         <h5><i class="fas fa-graduation-cap text-success"></i>
           Courses That Lead Here
-          <span class="badge bg-success bg-opacity-15 text-success fw-700 rounded-pill ms-1" style="font-size:0.68rem;">{{ total_linked }}</span>
+          <span class="badge bg-success bg-opacity-15 text-success fw-700 rounded-pill ms-1" style="font-size:0.7rem;">{{ total_linked }}</span>
         </h5>
         <p class="text-muted mb-3" style="font-size:0.83rem;">
           These are real courses offered by Kenyan universities and colleges that prepare you for a career as a <strong>{{ profile.title }}</strong>.
@@ -531,7 +531,7 @@
             {% if profile.demand_level == 'very_high' %}bg-success
             {% elif profile.demand_level == 'high' %}bg-primary
             {% elif profile.demand_level == 'medium' %}bg-warning text-dark
-            {% else %}bg-secondary{% endif %}" style="font-size:0.68rem;">
+            {% else %}bg-secondary{% endif %}" style="font-size:0.7rem;">
             {{ profile.get_demand_level_display }}
           </span>
         </div>
@@ -546,7 +546,7 @@
           <span class="text-muted small">Pathways</span>
           <div class="d-flex flex-wrap gap-1 justify-content-end">
             {% for type_name, courses in courses_by_type %}
-            <span class="badge rounded-pill fw-600" style="font-size:0.62rem;
+            <span class="badge rounded-pill fw-600" style="font-size:0.7rem;
               {% if 'TVET' in type_name %}background:#ccfbf1;color:#0f766e;
               {% elif type_name == 'Degree' %}background:#dbeafe;color:#1d4ed8;
               {% elif type_name == 'Diploma' %}background:#ede9fe;color:#6d28d9;
@@ -565,7 +565,7 @@
           <div class="d-flex flex-wrap gap-1 justify-content-end">
             {% for tag in profile.career_tags|split:"," %}
             {% if tag|length > 0 %}
-            <span class="badge bg-primary bg-opacity-10 text-primary rounded-pill" style="font-size:0.65rem;">{{ tag|title }}</span>
+            <span class="badge bg-primary bg-opacity-10 text-primary rounded-pill" style="font-size:0.7rem;">{{ tag|title }}</span>
             {% endif %}
             {% endfor %}
           </div>
@@ -599,9 +599,8 @@
         <h6 class="fw-800 mb-3" style="font-size:0.88rem;color:#0f172a;">Similar Careers</h6>
         {% for rel in related %}
         <a href="{% url 'career:career_profile_detail' rel.slug %}"
-           class="d-flex align-items-center gap-3 p-2 rounded-3 text-decoration-none mb-1"
-           style="transition:background 0.15s;"
-           onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background=''">
+           class="d-flex align-items-center gap-3 p-2 rounded-3 text-decoration-none mb-1 hv-row"
+           style="transition:background 0.15s;">
           <div class="rounded-2 d-flex align-items-center justify-content-center flex-shrink-0"
                style="width:34px;height:34px;background:#eef2ff;color:var(--primary);">
             <i class="{{ rel.icon|default:'fas fa-briefcase' }}" style="font-size:0.85rem;"></i>

@@ -38,7 +38,7 @@
       <div class="card p-4">
         <p class="text-muted small mb-3 fw-semibold">Or search for what you need:</p>
         <form action="{% url 'courses:course_types_list' %}" method="GET" class="d-flex gap-2">
-          <input type="text" name="q" class="form-control" data-suggest="courses" placeholder="e.g. Medicine, Computer Science…">
+          <input type="text" name="q" aria-label="Search courses" class="form-control" data-suggest="courses" placeholder="e.g. Medicine, Computer Science…">
           <button class="btn btn-success" type="submit">
             <i class="fas fa-search"></i>
           </button>

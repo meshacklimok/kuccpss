@@ -94,7 +94,7 @@ class MentorProfileAdmin(admin.ModelAdmin):
     autocomplete_fields = ["user", "course", "institution"]
     list_select_related = ["user", "course", "institution"]
     readonly_fields = [
-        "total_sessions", "average_rating", "wallet_balance", "total_earned",
+        "total_sessions", "average_rating", "wallet_balance", "total_earned", "payout_debt",
         "created_at", "updated_at", "student_id_preview", "portal_screenshot_preview",
     ]
     actions = ["approve_selected", "reject_selected", "deactivate_selected"]
@@ -147,7 +147,7 @@ class MentorProfileAdmin(admin.ModelAdmin):
             "fields": ("is_approved", "is_active", "is_rejected", "rejection_reason"),
         }),
         ("Statistics (read-only)", {
-            "fields": ("total_sessions", "average_rating", "wallet_balance", "total_earned"),
+            "fields": ("total_sessions", "average_rating", "wallet_balance", "total_earned", "payout_debt"),
         }),
         ("Timestamps", {
             "fields": ("created_at", "updated_at"),
@@ -390,8 +390,9 @@ class MentorshipSessionAdmin(admin.ModelAdmin):
     ]
     list_filter = ["status", "confirmation_sent"]
     search_fields = ["mentee__email", "mentor__user__email", "payment_ref", "manual_payment_ref", "token"]
-    readonly_fields = ["token", "created_at", "updated_at", "confirmation_sent"]
-    actions = ["mark_completed", "mark_refunded", "confirm_manual_payment"]
+    readonly_fields = ["token", "created_at", "updated_at", "confirmation_sent",
+                       "refund_ref", "refund_requested_at", "refund_error"]
+    actions = ["mark_completed", "refund_via_intasend", "mark_refunded", "confirm_manual_payment"]
 
     fieldsets = (
         ("Session", {
@@ -403,7 +404,7 @@ class MentorshipSessionAdmin(admin.ModelAdmin):
         }),
         ("Payment", {
             "fields": ("amount", "mentor_payout", "status", "payment_ref", "phone_used",
-                       "manual_payment_ref"),
+                       "manual_payment_ref", "refund_ref", "refund_requested_at", "refund_error"),
         }),
         ("Notifications", {
             "fields": ("confirmation_sent",),
@@ -465,11 +466,14 @@ class MentorshipSessionAdmin(admin.ModelAdmin):
     status_badge.short_description = "Status"
 
     def mark_completed(self, request, queryset):
+        from mentorship.views import send_rating_request
         count = 0
-        for session in queryset.filter(status="confirmed"):
+        for session in queryset.filter(status="confirmed").select_related("mentor", "mentor__user", "mentee", "slot"):
+            if not MentorshipSession.objects.filter(pk=session.pk, status="confirmed").update(status="completed"):
+                continue
             session.status = "completed"
-            session.save(update_fields=["status"])
             session.mentor.refresh_stats()
+            send_rating_request(session)
             count += 1
         self.message_user(
             request,
@@ -478,56 +482,42 @@ class MentorshipSessionAdmin(admin.ModelAdmin):
         )
     mark_completed.short_description = "Mark selected as completed"
 
+    def refund_via_intasend(self, request, queryset):
+        """Send the student's money back through IntaSend, then record the refund."""
+        from mentorship.views import REFUNDABLE_STATUSES, refund_session
+        done, failed = 0, []
+        for session in queryset.filter(status__in=REFUNDABLE_STATUSES).select_related(
+            "mentor", "mentor__user", "mentee", "slot"
+        ):
+            if refund_session(session, reason="refunded by admin", source="admin_refund", request=request):
+                done += 1
+            else:
+                failed.append(f"{str(session.token)[:8]}: {session.refund_error or 'no IntaSend invoice / already refunding'}")
+        if done:
+            self.message_user(request, f"{done} refund(s) issued through IntaSend; students notified.", messages.SUCCESS)
+        if failed:
+            self.message_user(request, "Not refunded: " + "; ".join(failed), messages.ERROR)
+        if not done and not failed:
+            self.message_user(request, "Only confirmed or cancelled sessions can be refunded.", messages.WARNING)
+    refund_via_intasend.short_description = "Refund via IntaSend (sends money back to the student)"
+
     def mark_refunded(self, request, queryset):
-        from payments.models import Payment
+        """Record-only: for refunds already paid back by hand outside IntaSend."""
+        from mentorship.views import _mark_session_refunded
+        # "cancelled" covers both a paid session the student/mentor cancelled (credit
+        # already reversed at cancel time) and a late payment on a released booking.
         count = 0
-        for session in queryset.filter(status__in=["confirmed", "pending_payment", "pending_manual_verification"]):
-            was_credited = session.status == "confirmed"
-            with transaction.atomic():
-                # Conditional on the status we read, so a concurrent confirm/refund can't
-                # leave the wallet credited for a refunded session (or debited twice).
-                won = MentorshipSession.objects.filter(pk=session.pk, status=session.status).update(status="refunded")
-                if not won:
-                    continue
-                # Release the slot so it can be booked again.
-                if session.slot_id:
-                    TimeSlot.objects.filter(pk=session.slot_id).update(is_booked=False)
-                # Only confirmed sessions ever credited the mentor's wallet.
-                if was_credited:
-                    MentorProfile.objects.filter(pk=session.mentor_id).update(
-                        wallet_balance=Greatest(F("wallet_balance") - session.mentor_payout, 0),
-                        total_earned=Greatest(F("total_earned") - session.mentor_payout, 0),
-                    )
-                Payment.objects.filter(mentorship_session=session).update(
-                    status="refunded", updated_at=timezone.now()
-                )
-                record("mentor.session_refunded", session, request=request,
-                       amount=session.amount, mentor_debited=session.mentor_payout if was_credited else 0)
-            session.status = "refunded"
-            send_branded_email(
-                to=session.mentee.email,
-                subject="CareerNext — Mentorship Session Refunded",
-                heading="Your Session Has Been Refunded",
-                banner_label="Refund",
-                banner_color="amber",
-                greeting="Hi,",
-                body_lines=[
-                    f"Your mentorship session with {session.mentor.display_name} has been cancelled and marked for refund.",
-                    "The amount will be returned to the M-Pesa number you paid with.",
-                ],
-                table_rows=[
-                    {"label": "Amount", "value": f"KES {session.amount}", "highlight": True},
-                    {"label": "Slot",   "value": session.slot.datetime_display if session.slot_id else "—"},
-                ],
-                user_email=session.mentee.email,
-            )
-            count += 1
+        for session in queryset.filter(
+            status__in=["confirmed", "pending_payment", "pending_manual_verification", "cancelled"]
+        ).select_related("mentor", "mentor__user", "mentee", "slot"):
+            if _mark_session_refunded(session, source="admin_mark_refunded", request=request):
+                count += 1
         self.message_user(
             request,
-            f"{count} session(s) refunded — slots released and mentees notified.",
+            f"{count} session(s) marked refunded — slots released and mentees notified.",
             messages.SUCCESS if count else messages.WARNING,
         )
-    mark_refunded.short_description = "Mark selected as refunded"
+    mark_refunded.short_description = "Mark as refunded (paid back manually — moves no money)"
 
     def confirm_manual_payment(self, request, queryset):
         """

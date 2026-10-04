@@ -1,4 +1,4 @@
-const CACHE = 'careernext-v7';
+const CACHE = 'careernext-v8';
 const OFFLINE_URL = '/offline/';
 
 self.addEventListener('install', e => {

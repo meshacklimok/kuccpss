@@ -41,7 +41,23 @@
     <link rel="apple-touch-icon" sizes="180x180" href="{% static 'images/icon-180.png' %}">
     <link rel="shortcut icon" href="{% static 'images/favicon.ico' %}" type="image/x-icon">
     <link rel="manifest" href="{% static 'manifest.json' %}">
-    <meta name="theme-color" content="#1e3a8a">
+    <meta name="theme-color" content="#1e3a8a" id="theme-color-meta">
+    <!-- Theme before first paint: saved choice wins, otherwise follow the phone's system setting -->
+    <script>
+    (function () {
+        var dark = false;
+        try {
+            var saved = localStorage.getItem('kuccpss-dark');
+            dark = saved !== null ? saved === '1'
+                 : window.matchMedia('(prefers-color-scheme: dark)').matches;
+        } catch (e) {}
+        if (dark) {
+            document.documentElement.classList.add('dark-pref');
+            document.getElementById('theme-color-meta').setAttribute('content', '#000000');
+        }
+    }());
+    </script>
+    <style>html.dark-pref, html.dark-pref body { background: #000; color-scheme: dark; }</style>
     <meta name="vapid-public-key" content="{{ VAPID_PUBLIC_KEY }}"
           id="vapid-public-key">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -60,6 +76,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <script src="{% static 'js/ui.js' %}"></script>
 
     <!-- JSON-LD Structured Data -->
     {% block schema_org %}
@@ -109,6 +126,7 @@
     {% block extra_head %}{% endblock %}
 </head>
 <body>
+<script>if (document.documentElement.classList.contains('dark-pref')) document.body.classList.add('dark');</script>
 
 <!-- Skip to main content (keyboard accessibility) -->
 <a class="skip-link" href="#main-content">Skip to main content</a>
@@ -179,7 +197,7 @@
 .splash-cap-wrap {
   position: relative;
   transform: translateY(-120px); opacity: 0;
-  animation: capDrop 0.7s 0.1s cubic-bezier(0.34,1.56,0.64,1) forwards;
+  animation: capDrop 0.5s 0s cubic-bezier(0.34,1.56,0.64,1) forwards;
   filter: drop-shadow(0 0 18px rgba(147,197,253,0.7));
 }
 @keyframes capDrop {
@@ -188,7 +206,7 @@
 .cap-halo {
   position: absolute; inset: -12px; border-radius: 50%;
   background: rgba(147,197,253,0.28);
-  animation: haloPulse 1.2s 0.8s ease-in-out infinite alternate;
+  animation: haloPulse 1.2s 0.5s ease-in-out infinite alternate;
 }
 @keyframes haloPulse {
   from { transform: scale(0.85); opacity: 0.4; }
@@ -198,7 +216,7 @@
 /* ── Logo with shimmer ── */
 .splash-logo-wrap {
   position: relative; display: inline-block;
-  opacity: 0; animation: fadeUp 0.5s 0.6s ease forwards;
+  opacity: 0; animation: fadeUp 0.4s 0.25s ease forwards;
 }
 .splash-logo {
   font-size: clamp(2.2rem, 9vw, 3.6rem);
@@ -211,19 +229,19 @@
   font-size: clamp(0.82rem, 3.5vw, 1rem);
   color: rgba(147,197,253,0.92); font-weight: 500; letter-spacing: 0.03em;
   min-height: 1.5em; text-align: center;
-  opacity: 0; animation: fadeUp 0.4s 0.9s ease forwards;
+  opacity: 0; animation: fadeUp 0.3s 0.4s ease forwards;
 }
 
 /* ── Progress bar ── */
 .splash-bar-wrap {
   width: min(200px, 65vw); height: 3px;
   background: rgba(255,255,255,0.1); border-radius: 99px; overflow: hidden;
-  opacity: 0; animation: fadeUp 0.4s 0.7s ease forwards;
+  opacity: 0; animation: fadeUp 0.3s 0.3s ease forwards;
 }
 .splash-bar {
   height: 100%; width: 0; border-radius: 99px;
   background: #3b82f6;
-  animation: barFill 1.8s 0.75s cubic-bezier(0.4,0,0.2,1) forwards;
+  animation: barFill 0.95s 0.3s cubic-bezier(0.4,0,0.2,1) forwards;
 }
 @keyframes barFill { to { width: 100%; } }
 @keyframes fadeUp {
@@ -274,14 +292,14 @@
   var idx     = 0;
   setTimeout(function tick() {
     tagEl.textContent = phrase.slice(0, ++idx);
-    if (idx < phrase.length) setTimeout(tick, 38);
-  }, 950);
+    if (idx < phrase.length) setTimeout(tick, 26);
+  }, 400);
 
-  /* Dismiss after 2.2s — app is already on /dashboard/ via start_url */
+  /* Dismiss after 1.3s — app is already on /dashboard/ via start_url */
   setTimeout(function () {
     splash.classList.add('splash-exit');
     setTimeout(function () { splash.style.display = 'none'; }, 450);
-  }, 2200);
+  }, 1300);
 }());
 </script>
 
@@ -289,9 +307,9 @@
     {% if messages %}
     <div class="messages-container">
         {% for message in messages %}
-        <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show shadow-sm rounded-3 mb-2" role="alert">
+        <div class="alert alert-{% if message.level_tag == 'error' %}danger{% else %}{{ message.level_tag|default:'info' }}{% endif %} {{ message.extra_tags }} alert-dismissible fade show shadow-sm rounded-3 mb-2" role="alert">
             {{ message }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Dismiss message"></button>
         </div>
         {% endfor %}
     </div>
@@ -305,6 +323,10 @@
                 <img src="{% static 'img/logo-white.svg' %}" alt="CareerNext" height="38" style="height:38px;width:auto;">
             </a>
 
+            <!-- Dark mode toggle: kept outside the collapse so it is always visible on mobile -->
+            <button id="dark-toggle" class="ms-auto me-2 ms-lg-2 me-lg-0 order-lg-last" title="Toggle dark mode" aria-label="Toggle dark mode" aria-pressed="false">
+                <i class="fas fa-moon" id="dark-icon"></i>
+            </button>
 
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
                     data-bs-target="#mainNav" aria-controls="mainNav"
@@ -336,7 +358,7 @@
                         <ul class="dropdown-menu">
                             <li><a class="dropdown-item fw-semibold" href="{% url 'career:home' %}">
                                 <i class="fas fa-compass me-2 text-success"></i>Career Engine
-                                <span class="badge rounded-pill ms-1" style="font-size:0.6rem;background:#dcfce7;color:#15803d;padding:2px 6px;">New</span>
+                                <span class="badge rounded-pill ms-1" style="font-size:0.7rem;background:#dcfce7;color:#15803d;padding:2px 6px;">New</span>
                             </a></li>
                             <li><a class="dropdown-item" href="{% url 'career:career_profiles' %}">
                                 <i class="fas fa-user-tie me-2 text-primary"></i>Career Profiles
@@ -399,6 +421,9 @@
                             <li><a class="dropdown-item" href="{% url 'accounts:how_it_works' %}">
                                 <i class="fas fa-circle-play me-2 text-success"></i>How It Works
                             </a></li>
+                            <li><a class="dropdown-item" href="#feedback" data-open-feedback>
+                                <i class="fas fa-comment-dots me-2 text-primary"></i>Send Feedback
+                            </a></li>
                             <li class="pwa-install-menu-item"><hr class="dropdown-divider"></li>
                             <li class="pwa-install-menu-item"><a class="dropdown-item fw-semibold" href="#" id="pwa-menu-install">
                                 <i class="fas fa-mobile-screen-button me-2 text-primary"></i>Install App
@@ -432,14 +457,9 @@
                         </a>
                     </li>
                     {% endif %}
-                    <li class="nav-item me-1">
-                        <button id="dark-toggle" title="Toggle dark mode" aria-label="Toggle dark mode" aria-pressed="false">
-                            <i class="fas fa-moon" id="dark-icon"></i>
-                        </button>
-                    </li>
                     {% if user.is_authenticated %}
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle d-flex align-items-center gap-2" href="#" data-bs-toggle="dropdown">
+                        <a class="nav-link dropdown-toggle d-flex align-items-center gap-2" href="#" data-bs-toggle="dropdown" aria-label="Account menu">
                             <div class="rounded-circle bg-white d-flex align-items-center justify-content-center"
                                  style="width:30px;height:30px;font-size:0.8rem;color:var(--primary);font-weight:700;">
                                 {{ user.full_name|first|upper|default:user.email|first|upper }}
@@ -533,10 +553,10 @@
             <p class="mb-0" style="font-size:0.75rem;opacity:0.55;margin-top:2px;">Find Your Course</p>
           </div>
           <div class="footer-socials">
-            <a href="#" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
-            <a href="#" aria-label="Twitter/X"><i class="fab fa-x-twitter"></i></a>
-            <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
-            {% if whatsapp_group_url %}<a href="{{ whatsapp_group_url }}" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp Group"><i class="fab fa-whatsapp"></i></a>{% endif %}
+            {% if facebook_url %}<a href="{{ facebook_url }}" target="_blank" rel="noopener noreferrer" aria-label="CareerNext on Facebook"><i class="fab fa-facebook-f" aria-hidden="true"></i></a>{% endif %}
+            {% if twitter_url %}<a href="{{ twitter_url }}" target="_blank" rel="noopener noreferrer" aria-label="CareerNext on X"><i class="fab fa-x-twitter" aria-hidden="true"></i></a>{% endif %}
+            {% if instagram_url %}<a href="{{ instagram_url }}" target="_blank" rel="noopener noreferrer" aria-label="CareerNext on Instagram"><i class="fab fa-instagram" aria-hidden="true"></i></a>{% endif %}
+            {% if whatsapp_group_url %}<a href="{{ whatsapp_group_url }}" target="_blank" rel="noopener noreferrer" aria-label="Join our WhatsApp group"><i class="fab fa-whatsapp" aria-hidden="true"></i></a>{% endif %}
           </div>
         </div>
 
@@ -610,10 +630,10 @@
               Kenya's guide to KUCCPS placement.
             </p>
             <div class="footer-socials">
-              <a href="#" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
-              <a href="#" aria-label="Twitter/X"><i class="fab fa-x-twitter"></i></a>
-              <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
-              {% if whatsapp_group_url %}<a href="{{ whatsapp_group_url }}" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp Group"><i class="fab fa-whatsapp"></i></a>{% endif %}
+              {% if facebook_url %}<a href="{{ facebook_url }}" target="_blank" rel="noopener noreferrer" aria-label="CareerNext on Facebook"><i class="fab fa-facebook-f" aria-hidden="true"></i></a>{% endif %}
+              {% if twitter_url %}<a href="{{ twitter_url }}" target="_blank" rel="noopener noreferrer" aria-label="CareerNext on X"><i class="fab fa-x-twitter" aria-hidden="true"></i></a>{% endif %}
+              {% if instagram_url %}<a href="{{ instagram_url }}" target="_blank" rel="noopener noreferrer" aria-label="CareerNext on Instagram"><i class="fab fa-instagram" aria-hidden="true"></i></a>{% endif %}
+              {% if whatsapp_group_url %}<a href="{{ whatsapp_group_url }}" target="_blank" rel="noopener noreferrer" aria-label="Join our WhatsApp group"><i class="fab fa-whatsapp" aria-hidden="true"></i></a>{% endif %}
             </div>
           </div>
 
@@ -694,6 +714,7 @@
             <a href="{% url 'accounts:terms' %}">Terms</a>
             <a href="{% url 'accounts:about' %}">About</a>
             <a href="{% url 'accounts:how_it_works' %}">How It Works</a>
+            <a href="#feedback" data-open-feedback>Send Feedback</a>
             <span>Built for Kenyan students <i class="fas fa-heart" style="color:#f87171;"></i></span>
           </span>
         </div>
@@ -725,7 +746,7 @@
                style="padding:3px 10px;color:#cbd5e1;border-color:#475569;">Home</a>
           </div>
         </div>
-        <button onclick="document.getElementById('global-error-toast').style.display='none'"
+        <button onclick="document.getElementById('global-error-toast').style.display='none'" aria-label="Close"
                 style="background:none;border:none;color:#94a3b8;font-size:1.1rem;cursor:pointer;
                        flex-shrink:0;line-height:1;padding:0 2px;">&times;</button>
       </div>
@@ -756,9 +777,9 @@
             <i class="fas fa-tachometer-alt" aria-hidden="true"></i>Dashboard
         </a>
         {% else %}
-        <a href="{% url 'accounts:dashboard' %}" class="{% if '/accounts/dashboard' in p %}active{% endif %}"
-           aria-label="Dashboard" {% if '/accounts/dashboard' in p %}aria-current="page"{% endif %}>
-            <i class="fas fa-tachometer-alt" aria-hidden="true"></i>Dashboard
+        <a href="{% url 'accounts:login' %}" class="{% if '/accounts/login' in p or '/accounts/register' in p %}active{% endif %}"
+           aria-label="Log in" {% if '/accounts/login' in p %}aria-current="page"{% endif %}>
+            <i class="fas fa-user-circle" aria-hidden="true"></i>Login
         </a>
         {% endif %}
     </nav>
@@ -807,7 +828,7 @@
     </div>
 
     <!-- Back to top button -->
-    <button id="back-to-top" title="Back to top"
+    <button id="back-to-top" title="Back to top" aria-label="Back to top"
             style="display:none;position:fixed;bottom:80px;right:20px;z-index:999;
                    width:42px;height:42px;border-radius:50%;border:none;
                    background:var(--primary,#2563eb);color:#fff;font-size:1.1rem;
@@ -823,10 +844,11 @@
     <script src="{% static 'js/main.js' %}" defer></script>
     <script src="{% static 'js/search_suggest.js' %}" defer></script>
     <script>
-    /* Auto-dismiss flash messages after 5s */
+    /* Auto-dismiss success/info flash messages after 5s; errors & warnings stay until closed */
     (function(){
         setTimeout(function(){
-            document.querySelectorAll('.messages-container .alert').forEach(function(el){
+            if (typeof bootstrap === 'undefined') return;
+            document.querySelectorAll('.messages-container .alert:not(.alert-error):not(.alert-danger):not(.alert-warning)').forEach(function(el){
                 var bsAlert = bootstrap.Alert.getOrCreateInstance(el);
                 bsAlert.close();
             });
@@ -848,15 +870,24 @@
         window.addEventListener('pageshow', function(){ loader.classList.remove('active'); });
     })();
 
-    /* Form submit loading state */
+    /* Form submit loading state: delegated so forms added later (HTMX) are covered,
+       and cleared when the page is restored via the Back button. */
     (function(){
-        document.querySelectorAll('form').forEach(function(form){
-            form.addEventListener('submit', function(){
-                var btn = form.querySelector('[type="submit"]:not([data-no-loading])');
-                if (btn && !btn.disabled) {
-                    btn.classList.add('btn-loading');
-                    btn.setAttribute('aria-busy', 'true');
-                }
+        document.addEventListener('submit', function(e){
+            // HTMX / fetch-driven forms cancel the native submit and never navigate away
+            if (e.defaultPrevented) return;
+            var form = e.target;
+            var btn = (e.submitter && e.submitter.matches('[type="submit"]:not([data-no-loading])'))
+                ? e.submitter : form.querySelector('[type="submit"]:not([data-no-loading])');
+            if (btn && !btn.disabled) {
+                btn.classList.add('btn-loading');
+                btn.setAttribute('aria-busy', 'true');
+            }
+        });
+        window.addEventListener('pageshow', function(){
+            document.querySelectorAll('.btn-loading').forEach(function(b){
+                b.classList.remove('btn-loading');
+                b.removeAttribute('aria-busy');
             });
         });
     })();
@@ -902,19 +933,34 @@
             });
         }
 
-        // Dark mode
+        // Dark mode (initial class is set before first paint in <head>/<body>)
         var icon = document.getElementById('dark-icon');
         var darkBtn = document.getElementById('dark-toggle');
+        var themeMeta = document.getElementById('theme-color-meta');
         function applyDark(on){
             document.body.classList.toggle('dark', on);
+            document.documentElement.classList.toggle('dark-pref', on);
+            if (themeMeta) themeMeta.setAttribute('content', on ? '#000000' : '#1e3a8a');
             if (icon) icon.className = on ? 'fas fa-sun' : 'fas fa-moon';
-            if (darkBtn) darkBtn.setAttribute('aria-pressed', on ? 'true' : 'false');
+            if (darkBtn) {
+                darkBtn.setAttribute('aria-pressed', on ? 'true' : 'false');
+                darkBtn.setAttribute('title', on ? 'Switch to light mode' : 'Switch to dark mode');
+            }
+            document.dispatchEvent(new CustomEvent('cn:themechange', { detail: { dark: on } }));
         }
-        applyDark(localStorage.getItem('kuccpss-dark') === '1');
+        function savedPref(){
+            try { return localStorage.getItem('kuccpss-dark'); } catch (e) { return null; }
+        }
+        applyDark(document.body.classList.contains('dark'));
         if (darkBtn) darkBtn.addEventListener('click', function(){
             var on = !document.body.classList.contains('dark');
-            localStorage.setItem('kuccpss-dark', on ? '1' : '0');
+            try { localStorage.setItem('kuccpss-dark', on ? '1' : '0'); } catch (e) {}
             applyDark(on);
+        });
+        // Follow the phone's system theme live, until the user picks one here
+        var mq = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)');
+        if (mq && mq.addEventListener) mq.addEventListener('change', function(e){
+            if (savedPref() === null) applyDark(e.matches);
         });
     })();
     </script>
@@ -947,29 +993,32 @@
 <script>
 /* ── HTMX global error handling ── */
 (function () {
-    var _lastHtmxEl = null, _lastHtmxEvent = null;
+    var _lastReq = null, _hideTimer = null;
     var toast = document.getElementById('global-error-toast');
     var msgEl  = document.getElementById('global-error-msg');
 
     function showToast(msg) {
         if (msgEl) msgEl.textContent = msg || 'We couldn\'t load results. Please try again.';
         if (toast) { toast.style.display = 'block'; }
-        // Auto-hide after 8 seconds
-        setTimeout(function () { if (toast) toast.style.display = 'none'; }, 8000);
+        // Auto-hide after 8 seconds (restart the timer if another error arrives)
+        clearTimeout(_hideTimer);
+        _hideTimer = setTimeout(function () { if (toast) toast.style.display = 'none'; }, 8000);
     }
 
+    // Re-issue the exact request that failed (same element, verb and URL),
+    // whatever triggered it: click, change, submit, load or polling.
     window.retryLastHtmx = function () {
         if (toast) toast.style.display = 'none';
-        if (_lastHtmxEl && _lastHtmxEvent) {
-            htmx.trigger(_lastHtmxEl, _lastHtmxEvent);
+        if (_lastReq && window.htmx && document.body.contains(_lastReq.elt)) {
+            htmx.ajax(_lastReq.verb, _lastReq.path, { source: _lastReq.elt });
         } else {
             window.location.reload();
         }
     };
 
     document.body.addEventListener('htmx:beforeRequest', function (e) {
-        _lastHtmxEl    = e.target;
-        _lastHtmxEvent = 'click';
+        var cfg = e.detail && e.detail.requestConfig;
+        if (cfg) _lastReq = { elt: e.detail.elt, verb: cfg.verb.toUpperCase(), path: cfg.path };
     });
 
     // HTTP error responses (4xx/5xx)
@@ -1238,20 +1287,9 @@ window._ph = function (name, props) {
 {% endif %}
 
 <script>
-/* Portrait orientation lock — stay portrait until device is clearly landscape (≥3:2).
-   Lock API works in PWA/standalone and fullscreen; silently ignored in plain browser tabs. */
+/* Landscape layout tweaks (no orientation lock — users may rotate freely, WCAG 1.3.4). */
 (function () {
-    function tryLockPortrait() {
-        if (screen.orientation && typeof screen.orientation.lock === 'function') {
-            screen.orientation.lock('portrait').catch(function () {});
-        }
-    }
-    tryLockPortrait();
-    document.addEventListener('visibilitychange', function () {
-        if (document.visibilityState === 'visible') tryLockPortrait();
-    });
-
-    /* Browser fallback: only apply .layout-landscape once the device has actually
+    /* Only apply .layout-landscape once the device has actually
        been turned a full quarter-turn (angle 90/270) — not merely tilted. */
     function checkRatio() {
         var angle = (screen.orientation && typeof screen.orientation.angle === 'number')
@@ -1364,19 +1402,8 @@ window._ph = function (name, props) {
 {% endif %}
 
 <!-- ── FEEDBACK BUTTON & MODAL ── -->
-<button id="fb-trigger" onclick="document.getElementById('fb-modal').style.display='flex'"
-  title="Send feedback"
-  style="position:fixed;bottom:1.5rem;left:1.5rem;z-index:9000;
-         background:#1e3a8a;color:#fff;
-         border:none;border-radius:50px;padding:0.55rem 1.1rem;
-         font-size:0.82rem;font-weight:700;cursor:pointer;
-         box-shadow:0 4px 16px rgba(30,58,138,0.4);
-         display:none;align-items:center;gap:6px;transition:transform 0.15s;">
-  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-  Feedback
-</button>
 
-<div id="fb-modal" style="display:none;position:fixed;inset:0;z-index:10000;align-items:flex-end;justify-content:flex-start;padding:1.5rem;">
+<div id="fb-modal" role="dialog" aria-modal="true" aria-label="Send feedback" style="display:none;position:fixed;inset:0;z-index:10000;align-items:flex-end;justify-content:flex-start;padding:1.5rem;">
   <div style="position:absolute;inset:0;" onclick="document.getElementById('fb-modal').style.display='none'"></div>
   <div style="position:relative;z-index:1;width:min(380px,96vw);background:#fff;border-radius:20px;
               box-shadow:0 24px 64px rgba(0,0,0,0.35);overflow:hidden;">
@@ -1413,30 +1440,20 @@ window._ph = function (name, props) {
 <script>
 document.getElementById('fb-page-url').value = window.location.pathname;
 
-// Show feedback button only during the 5th minute of the session (4:00–5:00)
-(function() {
-  var key = 'fb_session_start';
-  if (!sessionStorage.getItem(key)) sessionStorage.setItem(key, Date.now());
-  var start = parseInt(sessionStorage.getItem(key), 10);
-  var btn = document.getElementById('fb-trigger');
-  var SHOW_AT = 4 * 60 * 1000;   // 4 minutes
-  var HIDE_AT = 5 * 60 * 1000;   // 5 minutes
-  function tick() {
-    var elapsed = Date.now() - start;
-    if (elapsed >= SHOW_AT && elapsed < HIDE_AT) {
-      btn.style.display = 'flex';
-      var remaining = HIDE_AT - elapsed;
-      setTimeout(function() { btn.style.display = 'none'; }, remaining);
-    } else if (elapsed < SHOW_AT) {
-      setTimeout(function() {
-        btn.style.display = 'flex';
-        setTimeout(function() { btn.style.display = 'none'; }, HIDE_AT - (Date.now() - start));
-      }, SHOW_AT - elapsed);
-    }
-    // elapsed >= HIDE_AT: never show
-  }
-  tick();
-})();
+// Open/close feedback modal from any [data-open-feedback] link
+function openFeedback(e) {
+  if (e) e.preventDefault();
+  var m = document.getElementById('fb-modal');
+  m.style.display = 'flex';
+  var ta = m.querySelector('textarea'); if (ta) ta.focus();
+}
+document.addEventListener('click', function (e) {
+  if (e.target.closest('[data-open-feedback]')) openFeedback(e);
+});
+document.addEventListener('keydown', function (e) {
+  var m = document.getElementById('fb-modal');
+  if (e.key === 'Escape' && m && m.style.display === 'flex') m.style.display = 'none';
+});
 
 function submitFeedback(e) {
   e.preventDefault();
@@ -1448,23 +1465,20 @@ function submitFeedback(e) {
     .then(function(res){
       if (res.ok) {
         status.style.display = 'block';
-        status.style.background = '#f0fdf4';
-        status.style.color = '#15803d';
+        status.className = 'fb-status fb-status--ok';
         status.textContent = 'Thank you! Your feedback has been received.';
         form.querySelector('textarea').value = '';
         form.querySelector('input[type=email]').value = '';
         setTimeout(function(){document.getElementById('fb-modal').style.display='none';status.style.display='none';},2500);
       } else {
         status.style.display = 'block';
-        status.style.background = '#fef2f2';
-        status.style.color = '#991b1b';
+        status.className = 'fb-status fb-status--err';
         status.textContent = res.error || 'Something went wrong. Please try again.';
       }
     })
     .catch(function(){
       status.style.display = 'block';
-      status.style.background = '#fef2f2';
-      status.style.color = '#991b1b';
+      status.className = 'fb-status fb-status--err';
       status.textContent = 'Network error. Please try again.';
     });
 }
@@ -1486,14 +1500,6 @@ function submitFeedback(e) {
 }());
 </script>
 
-<script>
-/* Try to lock orientation to portrait via Screen Orientation API (works in PWA/fullscreen) */
-(function () {
-    if (screen.orientation && screen.orientation.lock) {
-        screen.orientation.lock('portrait').catch(function () { /* silently ignored in browser context */ });
-    }
-}());
-</script>
 
 <script>
 /* Session heartbeat — keeps SessionLog.last_seen_at fresh for avg-time-on-site metric */

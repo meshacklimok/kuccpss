@@ -52,7 +52,7 @@
             <dt class="col-5 text-muted small fw-normal">Duration</dt>
             <dd class="col-7 small">15 minutes</dd>
 
-            <dt class="col-5 text-muted small fw-normal">Amount Paid</dt>
+            <dt class="col-5 text-muted small fw-normal">{% if session.status == "pending_payment" %}Amount Due{% else %}Amount Paid{% endif %}</dt>
             <dd class="col-7 small">KES {{ session.amount }}</dd>
 
             {% if session.status in "confirmed,completed" %}
@@ -77,16 +77,26 @@
           {% if session.status == "confirmed" %}
             <div class="alert alert-success rounded-3 mt-4 small">
               <i class="bi bi-whatsapp fs-5 me-2"></i>
-              <strong>Next step:</strong> Send {{ session.mentor.display_name }} a WhatsApp message at
-              <a href="https://wa.me/{{ session.mentor.whatsapp|cut:'+' }}" target="_blank" class="fw-bold">
-                {{ session.mentor.whatsapp }}
-              </a>
-              to confirm your call time.
+              {% if user == session.mentee %}
+                <strong>Next step:</strong> Send {{ session.mentor.display_name }} a WhatsApp message at
+                <a href="https://wa.me/{{ session.mentor.whatsapp|cut:'+' }}" target="_blank" rel="noopener" class="fw-bold">
+                  {{ session.mentor.whatsapp }}
+                </a>
+                to confirm your call time.
+              {% elif session.mentee_phone %}
+                <strong>Next step:</strong> {{ session.mentee_display }} will WhatsApp you to confirm how you'll connect.
+                You can also reach them at
+                <a href="https://wa.me/{{ session.mentee_phone|cut:'+' }}" target="_blank" rel="noopener" class="fw-bold">
+                  {{ session.mentee_phone }}
+                </a>.
+              {% else %}
+                <strong>Next step:</strong> {{ session.mentee_display }} will WhatsApp you to confirm how you'll connect.
+              {% endif %}
             </div>
 
             <!-- Calendar buttons -->
             <div class="d-flex flex-wrap gap-2 mt-3">
-              <a href="{{ gcal_url }}" target="_blank"
+              <a href="{{ gcal_url }}" target="_blank" rel="noopener"
                  class="btn btn-sm btn-outline-primary rounded-pill px-3 fw-semibold">
                 <img src="https://ssl.gstatic.com/calendar/images/dynamiclogo_2020q4/calendar_16_2x.png"
                      width="16" height="16" class="me-1" alt="">
@@ -98,7 +108,9 @@
               </a>
             </div>
             <div class="text-muted mt-1" style="font-size:.75rem;">
-              <i class="bi bi-bell me-1"></i>The calendar event includes reminders 1 hour and 15 minutes before your session.
+              <i class="bi bi-bell me-1"></i>We'll email you about 1 hour before the session.
+              The .ics file adds reminders 1 hour and 15 minutes before in Apple Calendar and Outlook;
+              Google Calendar uses your own default notification settings.
             </div>
           {% endif %}
 

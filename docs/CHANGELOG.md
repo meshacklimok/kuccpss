@@ -12,6 +12,17 @@ Format: `[YYYY-MM-DD]` — description of what changed and why.
 
 ---
 
+## [2026-10-04] — Mentorship: booking integrity, calendar invites, automatic refunds
+- **Slots:** a cancelled slot can be rebooked (slot is now a FK with a one-active-session constraint, migration 0016). Booking claims the slot atomically. Slots starting within 30 min are hidden. Unpaid bookings are released after 30 min by `release_abandoned_bookings`, which checks IntaSend first.
+- **Calendar:** .ics text is escaped and folded per RFC 5545. Each recipient gets a REQUEST invite with ORGANIZER/ATTENDEE. Cancellation sends METHOD:CANCEL. The Google link carries `ctz`. Google ignores .ics alarms; the UI now says so.
+- **Lifecycle:** mentors can't complete before start. Auto-complete and the admin action send the rating request. The 1-hour reminder also goes out as web push. Expired checkouts redirect to booking.
+- **Money:**
+  - Reversing a payout that was already paid out records `payout_debt` (migration 0017), recovered from the next earnings.
+  - Confirmation emails are claimed atomically, so they're sent once.
+  - A payment arriving after release reclaims the slot if it is free, otherwise it is refunded.
+- **Refunds:** automatic via the IntaSend chargebacks API on cancellation and late payment (migration 0018: `refund_ref`, `refund_requested_at`, `refund_error`). Failures email admin. The new admin action "Refund via IntaSend" retries. "Mark as refunded" is now record-only.
+- **Dark mode:** `/career/results/` filter bar, result cards, chips, backup plan and AI panel.
+
 ## [2026-10-03] — CareerNext AI chat: database tools, site guide, identity
 - **New `career/ai_assistant.py`:** the chat brain now lives here; `ajax_ai_chat` in `career/views.py` handles only access, credits and logging.
 - **Reads the database through OpenAI tool calling.** The model can look things up while answering:

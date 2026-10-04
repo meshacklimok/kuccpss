@@ -158,7 +158,7 @@ body { background: #f5f7ff; }
     display: flex; align-items: center; justify-content: space-between; margin-top: 0.5rem;
 }
 .ct-mc-count {
-    font-size: 0.67rem; font-weight: 800;
+    font-size: 0.7rem; font-weight: 800;
     background: rgba(255,255,255,0.18); color: #fff;
     border-radius: 20px; padding: 3px 10px; letter-spacing: 0.03em;
 }
@@ -246,10 +246,10 @@ body { background: #f5f7ff; }
 
 .ct-tvet-body { flex: 1; min-width: 0; }
 .ct-tvet-name { font-size: 0.84rem; font-weight: 700; color: #1e293b; line-height: 1.3; }
-.ct-tvet-sub  { font-size: 0.67rem; color: #94a3b8; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ct-tvet-sub  { font-size: 0.7rem; color: #94a3b8; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 .ct-tvet-count {
-    font-size: 0.65rem; font-weight: 800;
+    font-size: 0.7rem; font-weight: 800;
     background: #ecfdf5; color: #059669;
     border-radius: 12px; padding: 2px 8px; flex-shrink: 0;
 }
@@ -292,6 +292,7 @@ body { background: #f5f7ff; }
 body.dark .ct-tvet-wrap { border-color: var(--border); }
 body.dark .ct-tvet-grid { background: var(--surface); }
 body.dark .ct-tvet-item { border-color: var(--surface-2); }
+body.dark .ct-wave path { fill: var(--bg); }
 body.dark .ct-tvet-item:hover { background: var(--surface-2); }
 body.dark .ct-tvet-name { color: var(--text); }
 body.dark .ct-tvet-sub  { color: var(--text-3); }
@@ -311,7 +312,7 @@ body.dark .ct-section-label-text { color: var(--text-3); }
         <!-- Quick course search -->
         <form method="get" action="{% url 'courses:course_types_list' %}" class="ct-search">
             <span class="ct-search-icon"><i class="bi bi-search"></i></span>
-            <input type="text" name="q" placeholder="Search any course, e.g. Data Science…" autocomplete="off"
+            <input type="text" name="q" aria-label="Search courses" placeholder="Search any course, e.g. Data Science…" autocomplete="off"
                    data-suggest="courses">
             <button class="ct-search-btn" type="submit">Search</button>
         </form>
@@ -329,7 +330,7 @@ body.dark .ct-section-label-text { color: var(--text-3); }
             </div>
             <div class="ct-stat-div"></div>
             <div class="ct-stat">
-                <div class="ct-stat-num">20</div>
+                <div class="ct-stat-num">18</div>
                 <div class="ct-stat-label">KUCCPS Clusters</div>
             </div>
         </div>

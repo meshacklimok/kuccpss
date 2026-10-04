@@ -275,8 +275,9 @@ document.addEventListener('DOMContentLoaded', function () {
       e.preventDefault();
       if (promptInstall()) return;
       if (isIos && iosModal) { iosModal.hidden = false; return; }
-      alert('To install CareerNext, open your browser menu (⋮) and choose '
-          + '"Install app" or "Add to Home screen".');
+      var msg = 'To install CareerNext, open your browser menu (⋮) and choose '
+          + '"Install app" or "Add to Home screen".';
+      if (window.cnToast) cnToast(msg, 'info'); else alert(msg);
     });
   }
 
