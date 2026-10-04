@@ -46,7 +46,7 @@
     <p class="ps-sub">{{ groups|length }} programme{{ groups|length|pluralize }} &middot; {{ course_count }} course listing{{ course_count|pluralize }}. Programmes listed under different names are grouped together.</p>
     <form method="get" action="{% url 'courses:course_types_list' %}" class="ps-search">
       <i class="fas fa-search"></i>
-      <input type="text" name="q" value="{{ q }}" placeholder="e.g. Data Science, Nursing, Law" autocomplete="off" data-suggest="courses">
+      <input type="text" name="q" aria-label="Search programmes" value="{{ q }}" placeholder="e.g. Data Science, Nursing, Law" autocomplete="off" data-suggest="courses">
       {% if type_filter %}<input type="hidden" name="type" value="{{ type_filter }}">{% endif %}
       <button type="submit">Search</button>
     </form>

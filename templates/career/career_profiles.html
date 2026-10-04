@@ -92,7 +92,7 @@
   display: inline-block;
   padding: 2px 8px;
   border-radius: 50px;
-  font-size: 0.65rem;
+  font-size: 0.7rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -144,7 +144,7 @@
         <form method="GET" id="searchForm" class="d-flex gap-2 flex-wrap">
           {% if active_sector %}<input type="hidden" name="sector" value="{{ active_sector }}">{% endif %}
           {% if active_demand %}<input type="hidden" name="demand" value="{{ active_demand }}">{% endif %}
-          <input type="text" name="q" data-suggest="careers" class="hero-search" placeholder="Search careers e.g. Doctor, Engineer…" value="{{ query }}">
+          <input type="text" name="q" aria-label="Search careers" data-suggest="careers" class="hero-search" placeholder="Search careers e.g. Doctor, Engineer…" value="{{ query }}">
           {% if query %}
           <a href="{% url 'career:career_profiles' %}{% if active_sector %}?sector={{ active_sector }}{% endif %}"
              class="btn btn-sm" style="background:rgba(255,255,255,0.15);color:#fff;border-radius:50px;border:1.5px solid rgba(255,255,255,0.3);">

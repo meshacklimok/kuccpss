@@ -84,7 +84,7 @@
   display: block;
 }
 .stat-chip-label {
-  font-size: 0.65rem; font-weight: 700; letter-spacing: 0.07em;
+  font-size: 0.7rem; font-weight: 700; letter-spacing: 0.07em;
   text-transform: uppercase; color: rgba(255,255,255,0.45);
   display: block; margin-top: 3px;
 }
@@ -144,8 +144,8 @@
 .metric-tile .mt-num {
   font-size: 1.6rem; font-weight: 900; line-height: 1; color: #1e293b;
 }
-.metric-tile .mt-num sub { font-size: 0.65rem; font-weight: 600; color: #94a3b8; vertical-align: baseline; margin-left: 2px; }
-.metric-tile .mt-label { font-size: 0.63rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: #94a3b8; margin-top: 4px; }
+.metric-tile .mt-num sub { font-size: 0.7rem; font-weight: 600; color: #94a3b8; vertical-align: baseline; margin-left: 2px; }
+.metric-tile .mt-label { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: #94a3b8; margin-top: 4px; }
 
 /* ── onboarding checklist ── */
 .ob-step {
@@ -392,7 +392,7 @@
 /* ── Comparison table ── */
 .cmp-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 0.78rem; }
 .cmp-table th {
-  font-size: 0.63rem; font-weight: 800; text-transform: uppercase;
+  font-size: 0.7rem; font-weight: 800; text-transform: uppercase;
   letter-spacing: 0.07em; color: #94a3b8;
   padding: 0 0.6rem 0.5rem; text-align: left; white-space: nowrap;
 }
@@ -502,7 +502,7 @@ body.dark .reco-card {
 }
 body.dark .reco-card .r-course { color: var(--text); }
 body.dark .reco-card .r-inst   { color: var(--text-2); }
-body.dark .reco-dot             { background: #334155; }
+body.dark .reco-dot             { background: var(--surface-2); }
 body.dark .reco-dot.active      { background: #6366f1; }
 
 /* My Courses tabs */
@@ -544,7 +544,7 @@ body.dark .readiness-icon-todo  { background: var(--surface-2); border-color: va
 /* Cutoff match */
 body.dark .cutoff-row            { background: var(--surface-2); border-color: var(--border); }
 body.dark .cutoff-row:hover      { border-color: #6366f1; background: rgba(99,102,241,0.07); }
-body.dark .cutoff-bar-track      { background: #1e293b; }
+body.dark .cutoff-bar-track      { background: var(--surface-2); }
 
 /* HELB */
 body.dark .helb-criteria-item    { background: rgba(22,163,74,0.12); border-color: rgba(22,163,74,0.25); color: #86efac; }
@@ -755,7 +755,7 @@ body.dark .helb-criteria-item    { background: rgba(22,163,74,0.12); border-colo
             <div class="readiness-icon-todo"><i class="{{ step.icon }}"></i></div>
             <div style="min-width:0;flex:1;">
               <div style="font-size:0.8rem;font-weight:700;color:#1e293b;">{{ step.label }}</div>
-              <div style="font-size:0.68rem;color:#94a3b8;line-height:1.3;">{{ step.desc }}</div>
+              <div style="font-size:0.7rem;color:#94a3b8;line-height:1.3;">{{ step.desc }}</div>
             </div>
             <i class="bi bi-chevron-right ms-auto" style="color:#c7d2fe;font-size:0.78rem;flex-shrink:0;"></i>
           </a>
@@ -917,7 +917,7 @@ body.dark .helb-criteria-item    { background: rgba(22,163,74,0.12); border-colo
             <div class="reco-carousel-item">
               <div class="reco-card" style="border-color:{{ m.tier_color }};">
                 <div class="d-flex justify-content-between align-items-center mb-2">
-                  <span style="font-size:0.66rem;font-weight:700;padding:2px 9px;border-radius:20px;
+                  <span style="font-size:0.7rem;font-weight:700;padding:2px 9px;border-radius:20px;
                                background:{{ m.tier_color }}22;color:{{ m.tier_color }};">{{ m.tier }}</span>
                   {% if snapshot.pathway == 'Degree' %}
                     {% if m.diff >= 0 %}
@@ -930,7 +930,7 @@ body.dark .helb-criteria-item    { background: rgba(22,163,74,0.12); border-colo
                 <div class="r-course">{{ m.course_name }}</div>
                 <div class="r-inst mb-2"><i class="fas fa-university me-1"></i>{{ m.institution_name }}</div>
                 <div class="d-flex align-items-center justify-content-between mt-auto pt-2" style="border-top:1px solid #f1f5f9;">
-                  <span style="font-size:0.68rem;color:#94a3b8;">
+                  <span style="font-size:0.7rem;color:#94a3b8;">
                     {% if snapshot.pathway == 'Degree' %}{% if m.kuccps_num %}Cluster {{ m.kuccps_num }} · {% endif %}Cutoff: {{ m.cutoff|default:"—" }}
                     {% else %}Min. Grade: <strong style="color:#b91c1c;">{{ m.cutoff|default:"—" }}</strong>{% endif %}
                   </span>
@@ -991,19 +991,19 @@ body.dark .helb-criteria-item    { background: rgba(22,163,74,0.12); border-colo
             <div class="reco-carousel-item">
               <div class="reco-card" style="opacity:0.82;border-color:{{ pc.color }}44;filter:blur(0);">
                 <div class="d-flex justify-content-between align-items-center mb-2">
-                  <span style="font-size:0.66rem;font-weight:700;padding:2px 9px;border-radius:20px;background:{{ pc.bg }};color:{{ pc.color }};">Preview</span>
+                  <span style="font-size:0.7rem;font-weight:700;padding:2px 9px;border-radius:20px;background:{{ pc.bg }};color:{{ pc.color }};">Preview</span>
                   <span style="font-size:0.7rem;color:#cbd5e1;">Cluster {{ pc.cluster_num }}</span>
                 </div>
                 <div class="r-course">{{ pc.name }}</div>
                 <div class="r-inst mb-2">
-                  <span style="font-size:0.68rem;color:#94a3b8;">
+                  <span style="font-size:0.7rem;color:#94a3b8;">
                     <span style="padding:2px 7px;border-radius:4px;background:{{ pc.bg }};color:{{ pc.color }};">
                       <i class="fas {{ pc.icon }} me-1"></i>Degree
                     </span>
                   </span>
                 </div>
                 <div class="d-flex align-items-center justify-content-between mt-auto pt-2" style="border-top:1px solid #f1f5f9;">
-                  <span style="font-size:0.68rem;color:#94a3b8;">Cutoff: {{ pc.cutoff|default:"—" }}</span>
+                  <span style="font-size:0.7rem;color:#94a3b8;">Cutoff: {{ pc.cutoff|default:"—" }}</span>
                   <i class="fas fa-lock" style="color:#cbd5e1;font-size:0.8rem;"></i>
                 </div>
               </div>
@@ -1108,11 +1108,11 @@ body.dark .helb-criteria-item    { background: rgba(22,163,74,0.12); border-colo
     <div class="courses-nav">
       <button class="courses-tab-btn active" onclick="switchTab('watchlistPane','shortlistPane',this,document.querySelector('.courses-tab-btn:not(.active) ~ .courses-tab-btn, .courses-tab-btn'))">
         <i class="fas fa-bookmark" style="color:#f59e0b;"></i>Watchlist
-        <span class="badge ms-1" style="background:#fef3c7;color:#92400e;font-size:0.62rem;border-radius:10px;">{{ saved_count }}</span>
+        <span class="badge ms-1" style="background:#fef3c7;color:#92400e;font-size:0.7rem;border-radius:10px;">{{ saved_count }}</span>
       </button>
       <button class="courses-tab-btn" onclick="switchTab('shortlistPane','watchlistPane',this,document.querySelector('.courses-tab-btn.active'))">
         <i class="fas fa-list-check text-primary"></i>Shortlist
-        <span class="badge ms-1" style="background:#eff6ff;color:#1d4ed8;font-size:0.62rem;border-radius:10px;">{{ shortlist_count }}</span>
+        <span class="badge ms-1" style="background:#eff6ff;color:#1d4ed8;font-size:0.7rem;border-radius:10px;">{{ shortlist_count }}</span>
       </button>
     </div>
 
@@ -1172,7 +1172,7 @@ body.dark .helb-criteria-item    { background: rgba(22,163,74,0.12); border-colo
                 <div class="fw-700 text-dark" style="font-size:0.78rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
                   {{ item.course.name|truncatewords:5 }}
                 </div>
-                <div class="text-muted" style="font-size:0.67rem;">{{ item.course.course_type.name }}</div>
+                <div class="text-muted" style="font-size:0.7rem;">{{ item.course.course_type.name }}</div>
               </div>
             </a>
           </div>
@@ -1223,9 +1223,9 @@ body.dark .helb-criteria-item    { background: rgba(22,163,74,0.12); border-colo
             <div class="fw-600 text-dark" style="font-size:0.81rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
               {{ evt.label }}
             </div>
-            <div class="text-muted" style="font-size:0.67rem;">{{ evt.ts|timesince }} ago</div>
+            <div class="text-muted" style="font-size:0.7rem;">{{ evt.ts|timesince }} ago</div>
           </div>
-          <span style="font-size:0.63rem;font-weight:700;padding:2px 8px;border-radius:10px;
+          <span style="font-size:0.7rem;font-weight:700;padding:2px 8px;border-radius:10px;
                        background:{{ evt.icon_bg }};color:{{ evt.icon_color }};white-space:nowrap;flex-shrink:0;">
             {{ evt.sub }}
           </span>
@@ -1262,13 +1262,13 @@ body.dark .helb-criteria-item    { background: rgba(22,163,74,0.12); border-colo
 
         {# Legend #}
         <div class="d-flex gap-3 flex-wrap" style="padding-bottom:0.5rem;border-bottom:1px solid #f1f5f9;">
-          <span class="d-flex align-items-center gap-1" style="font-size:0.68rem;color:#64748b;">
+          <span class="d-flex align-items-center gap-1" style="font-size:0.7rem;color:#64748b;">
             <span style="display:inline-block;width:12px;height:4px;border-radius:2px;background:#4f46e5;"></span>Your points
           </span>
-          <span class="d-flex align-items-center gap-1" style="font-size:0.68rem;color:#64748b;">
+          <span class="d-flex align-items-center gap-1" style="font-size:0.7rem;color:#64748b;">
             <span style="display:inline-block;width:3px;height:12px;border-radius:2px;background:#ef4444;vertical-align:middle;"></span>Cutoff line
           </span>
-          <span class="ms-auto d-flex align-items-center gap-2" style="font-size:0.68rem;">
+          <span class="ms-auto d-flex align-items-center gap-2" style="font-size:0.7rem;">
             <span style="background:#dcfce7;color:#15803d;padding:1px 7px;border-radius:10px;font-weight:700;">+pts</span>Qualifies
             <span style="background:#fee2e2;color:#dc2626;padding:1px 7px;border-radius:10px;font-weight:700;">-pts</span>Shortfall
           </span>
@@ -1278,7 +1278,7 @@ body.dark .helb-criteria-item    { background: rgba(22,163,74,0.12); border-colo
         <a href="{{ cmp.url }}" class="cutoff-row">
           <div class="d-flex align-items-center gap-2">
             <div class="rounded-2 flex-shrink-0 d-flex align-items-center justify-content-center fw-800"
-                 style="width:28px;height:28px;font-size:0.68rem;background:#dbeafe;color:#1d4ed8;">
+                 style="width:28px;height:28px;font-size:0.7rem;background:#dbeafe;color:#1d4ed8;">
               {{ cmp.cluster_num }}
             </div>
             <div style="min-width:0;flex:1;">
@@ -1287,15 +1287,15 @@ body.dark .helb-criteria-item    { background: rgba(22,163,74,0.12); border-colo
                 {{ cmp.name }}
               </div>
               <div class="d-flex align-items-center gap-2 mt-1">
-                <span class="text-muted" style="font-size:0.68rem;">{{ cmp.inst }}</span>
+                <span class="text-muted" style="font-size:0.7rem;">{{ cmp.inst }}</span>
                 {% if cmp.trend %}
                 <span class="{{ cmp.trend_color }} d-flex align-items-center gap-1"
-                      style="font-size:0.65rem;font-weight:700;"
+                      style="font-size:0.7rem;font-weight:700;"
                       title="{{ cmp.trend_tip }}">
                   <i class="fas {{ cmp.trend_icon }}" style="font-size:0.6rem;"></i>{{ cmp.trend|capfirst }}
                 </span>
                 {% if cmp.predicted %}
-                <span style="font-size:0.63rem;color:#94a3b8;">2026 est: <strong>{{ cmp.predicted }}</strong></span>
+                <span style="font-size:0.7rem;color:#94a3b8;">2026 est: <strong>{{ cmp.predicted }}</strong></span>
                 {% endif %}
                 {% endif %}
               </div>
@@ -1324,8 +1324,8 @@ body.dark .helb-criteria-item    { background: rgba(22,163,74,0.12); border-colo
                  style="left:{% widthratio cmp.cutoff 48 100 %}%;"></div>
           </div>
           <div class="d-flex justify-content-between mt-1" style="margin-left:36px;">
-            <span style="font-size:0.63rem;color:#64748b;">Your pts: <strong>{{ cmp.user_pts }}</strong></span>
-            <span style="font-size:0.63rem;color:#ef4444;">Cutoff: <strong>{{ cmp.cutoff }}</strong>/48</span>
+            <span style="font-size:0.7rem;color:#64748b;">Your pts: <strong>{{ cmp.user_pts }}</strong></span>
+            <span style="font-size:0.7rem;color:#ef4444;">Cutoff: <strong>{{ cmp.cutoff }}</strong>/48</span>
           </div>
         </a>
         {% endfor %}
@@ -1362,12 +1362,12 @@ body.dark .helb-criteria-item    { background: rgba(22,163,74,0.12); border-colo
             {{ chk.course_name }}
           </a>
           {% if chk.all_pass %}
-          <span style="font-size:0.65rem;font-weight:700;padding:2px 9px;border-radius:20px;
+          <span style="font-size:0.7rem;font-weight:700;padding:2px 9px;border-radius:20px;
                        background:#dcfce7;color:#15803d;white-space:nowrap;flex-shrink:0;">
             <i class="fas fa-check me-1"></i>All met
           </span>
           {% else %}
-          <span style="font-size:0.65rem;font-weight:700;padding:2px 9px;border-radius:20px;
+          <span style="font-size:0.7rem;font-weight:700;padding:2px 9px;border-radius:20px;
                        background:#fee2e2;color:#dc2626;white-space:nowrap;flex-shrink:0;">
             <i class="fas fa-exclamation-triangle me-1"></i>Gap found
           </span>
@@ -1433,14 +1433,14 @@ body.dark .helb-criteria-item    { background: rgba(22,163,74,0.12); border-colo
               <div class="cmp-inst">{{ row.inst }}</div>
             </td>
             <td>
-              <span style="font-size:0.68rem;font-weight:700;padding:2px 7px;border-radius:6px;
+              <span style="font-size:0.7rem;font-weight:700;padding:2px 7px;border-radius:6px;
                            background:#f1f5f9;color:#475569;white-space:nowrap;">
                 {{ row.type }}
               </span>
             </td>
             <td>
               <div class="rounded-2 d-inline-flex align-items-center justify-content-center fw-800"
-                   style="width:26px;height:26px;font-size:0.65rem;background:#dbeafe;color:#1d4ed8;">
+                   style="width:26px;height:26px;font-size:0.7rem;background:#dbeafe;color:#1d4ed8;">
                 {{ row.cluster }}
               </div>
             </td>
@@ -1454,7 +1454,7 @@ body.dark .helb-criteria-item    { background: rgba(22,163,74,0.12); border-colo
                     {% endif %}
                   {% endfor %}
                 {% endif %}
-              ">{{ row.cutoff }}<span class="text-muted fw-400" style="font-size:0.65rem;">/48</span></span>
+              ">{{ row.cutoff }}<span class="text-muted fw-400" style="font-size:0.7rem;">/48</span></span>
               {% else %}
               <span class="text-muted">—</span>
               {% endif %}
@@ -1526,7 +1526,7 @@ body.dark .helb-criteria-item    { background: rgba(22,163,74,0.12); border-colo
           <i class="fas fa-handshake" style="color:#fde68a;"></i>Featured Institutions
         </div>
       </div>
-      <span class="badge" style="background:rgba(255,255,255,0.2);color:#fff;font-size:0.65rem;border-radius:10px;border:1px solid rgba(255,255,255,0.25);">Sponsored</span>
+      <span class="badge" style="background:rgba(255,255,255,0.2);color:#fff;font-size:0.7rem;border-radius:10px;border:1px solid rgba(255,255,255,0.25);">Sponsored</span>
     </div>
     <div class="dash-card-body d-flex flex-column gap-2">
       {% for promo in featured_promos %}
@@ -1591,7 +1591,7 @@ body.dark .helb-criteria-item    { background: rgba(22,163,74,0.12); border-colo
             {{ article.excerpt }}
           </div>
           {% endif %}
-          <div class="text-muted mt-1" style="font-size:0.66rem;">
+          <div class="text-muted mt-1" style="font-size:0.7rem;">
             <i class="fas fa-clock me-1"></i>{{ article.created_at|date:"d M Y" }}
           </div>
         </div>
@@ -1723,14 +1723,14 @@ body.dark .helb-criteria-item    { background: rgba(22,163,74,0.12); border-colo
          style="border-bottom:1px solid #f1f5f9;transition:background 0.15s;background:#fef9c3;"
          onmouseover="this.style.background='#fef3c7'" onmouseout="this.style.background='#fef9c3'">
         <div class="rounded-2 flex-shrink-0 d-flex align-items-center justify-content-center"
-             style="width:30px;height:30px;background:#f59e0b;color:#fff;font-size:0.6rem;font-weight:800;text-align:center;line-height:1.1;">
+             style="width:30px;height:30px;background:#f59e0b;color:#fff;font-size:0.7rem;font-weight:800;text-align:center;line-height:1.1;">
           <i class="fas fa-star" style="font-size:0.75rem;"></i>
         </div>
         <div style="min-width:0;flex:1;">
           <div class="fw-700 text-dark" style="font-size:0.78rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
             {{ spotlight.course.name|truncatechars:30 }}
           </div>
-          <div style="font-size:0.65rem;font-weight:700;color:#d97706;text-transform:uppercase;letter-spacing:0.05em;">
+          <div style="font-size:0.7rem;font-weight:700;color:#d97706;text-transform:uppercase;letter-spacing:0.05em;">
             Course of the Week
           </div>
         </div>
@@ -1743,7 +1743,7 @@ body.dark .helb-criteria-item    { background: rgba(22,163,74,0.12); border-colo
          style="border-bottom:1px solid #f1f5f9;transition:background 0.15s;"
          onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background=''">
         <div class="rounded-2 flex-shrink-0 d-flex align-items-center justify-content-center fw-800"
-             style="width:30px;height:30px;font-size:0.68rem;
+             style="width:30px;height:30px;font-size:0.7rem;
                     {% if forloop.counter == 1 %}background:#f59e0b;color:#78350f;
                     {% elif forloop.counter == 2 %}background:rgba(148,163,184,0.2);color:#64748b;border:1px solid #cbd5e1;
                     {% elif forloop.counter == 3 %}background:rgba(180,83,9,0.1);color:#d97706;border:1px solid rgba(180,83,9,0.2);
@@ -1754,7 +1754,7 @@ body.dark .helb-criteria-item    { background: rgba(22,163,74,0.12); border-colo
           <div class="fw-700 text-dark" style="font-size:0.78rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
             {{ c.name|truncatechars:28 }}
           </div>
-          <div class="text-muted" style="font-size:0.67rem;">
+          <div class="text-muted" style="font-size:0.7rem;">
             <i class="fas fa-eye me-1" style="font-size:0.55rem;"></i>{{ c.trend_stat }} {{ c.trend_label }}
           </div>
         </div>
@@ -1797,7 +1797,7 @@ body.dark .helb-criteria-item    { background: rgba(22,163,74,0.12); border-colo
         <div style="min-width:0;flex:1;">
           <div class="fw-700 text-dark" style="font-size:0.78rem;">{{ itype.label }}</div>
         </div>
-        <span class="badge" style="background:#fef3c7;color:#92400e;font-size:0.62rem;border-radius:8px;">{{ itype.count }}</span>
+        <span class="badge" style="background:#fef3c7;color:#92400e;font-size:0.7rem;border-radius:8px;">{{ itype.count }}</span>
       </a>
       {% endfor %}
     </div>
@@ -1812,7 +1812,7 @@ body.dark .helb-criteria-item    { background: rgba(22,163,74,0.12); border-colo
       <h6 class="sidebar-card-title" style="color:#fff;">
         <i class="bi bi-people-fill"></i>Mentorship
         {% if next_session %}
-        <span class="badge ms-1" style="background:rgba(255,255,255,0.2);font-size:0.62rem;">Booked</span>
+        <span class="badge ms-1" style="background:rgba(255,255,255,0.2);font-size:0.7rem;">Booked</span>
         {% endif %}
       </h6>
       <a href="{% url 'mentorship:directory' %}" class="btn-header-light" {% if guest %}data-guest-gate="1"{% endif %}>
@@ -1851,7 +1851,7 @@ body.dark .helb-criteria-item    { background: rgba(22,163,74,0.12); border-colo
           <div class="fw-700 text-dark" style="font-size:0.8rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
             {{ mentor.user.full_name|default:mentor.user.email }}
           </div>
-          <div class="text-muted" style="font-size:0.67rem;">
+          <div class="text-muted" style="font-size:0.7rem;">
             {{ mentor.course.name|truncatewords:4 }}
             {% if mentor.average_rating %}
             &nbsp;·&nbsp;<i class="fas fa-star" style="color:#f59e0b;font-size:0.55rem;"></i>
@@ -1861,7 +1861,7 @@ body.dark .helb-criteria-item    { background: rgba(22,163,74,0.12); border-colo
         </div>
         <a href="{% url 'mentorship:directory' %}?q={{ mentor.course.name|urlencode }}"
            class="btn btn-success btn-sm flex-shrink-0"
-           style="font-size:0.68rem;border-radius:8px;white-space:nowrap;">
+           style="font-size:0.7rem;border-radius:8px;white-space:nowrap;">
           Book
         </a>
       </div>
@@ -1871,12 +1871,12 @@ body.dark .helb-criteria-item    { background: rgba(22,163,74,0.12); border-colo
         {% for item in shortlist_items|slice:":2" %}
         <a href="{% url 'mentorship:directory' %}?q={{ item.course.name|urlencode }}"
            class="btn btn-outline-success btn-sm rounded-pill"
-           style="font-size:0.68rem;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+           style="font-size:0.7rem;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
           {{ item.course.name|truncatewords:3 }}
         </a>
         {% endfor %}
         <a href="{% url 'mentorship:directory' %}" class="btn btn-outline-secondary btn-sm rounded-pill"
-           style="font-size:0.68rem;">All mentors</a>
+           style="font-size:0.7rem;">All mentors</a>
       </div>
       {% endif %}
       {% elif shortlist_items %}
@@ -1996,13 +1996,13 @@ body.dark .helb-criteria-item    { background: rgba(22,163,74,0.12); border-colo
       </h6>
       {% if not snapshot %}
         {# Locked — show enticing "100 msgs" teaser #}
-        <span style="font-size:0.63rem;font-weight:700;padding:2px 8px;border-radius:10px;
+        <span style="font-size:0.7rem;font-weight:700;padding:2px 8px;border-radius:10px;
                      background:rgba(251,191,36,0.2);color:#fbbf24;border:1px solid rgba(251,191,36,0.3);">
           100 msgs free
         </span>
       {% elif ai_credit_info.has_access %}
         <span id="aiCreditBadge"
-              style="font-size:0.63rem;font-weight:700;padding:2px 8px;border-radius:10px;
+              style="font-size:0.7rem;font-weight:700;padding:2px 8px;border-radius:10px;
                      background:rgba(255,255,255,0.15);color:#d1fae5;border:1px solid rgba(255,255,255,0.2);">
           {% if ai_credit_info.paid_remaining > 0 %}
             {{ ai_credit_info.paid_remaining }} msgs left
@@ -2012,7 +2012,7 @@ body.dark .helb-criteria-item    { background: rgba(22,163,74,0.12); border-colo
         </span>
       {% else %}
         <a href="{% url 'payments:payment_required' %}?feature=ai_chat_access"
-           style="font-size:0.63rem;font-weight:700;padding:2px 9px;border-radius:10px;
+           style="font-size:0.7rem;font-weight:700;padding:2px 9px;border-radius:10px;
                   background:#fbbf24;color:#92400e;text-decoration:none;">
           Top up →
         </a>
@@ -2076,7 +2076,7 @@ body.dark .helb-criteria-item    { background: rgba(22,163,74,0.12); border-colo
   <div class="sidebar-card reveal">
     <div class="sidebar-card-header">
       <h6 class="sidebar-card-title"><i class="fas fa-award" style="color:#7c3aed;"></i>Scholarships</h6>
-      <span class="badge" style="background:#ede9fe;color:#6d28d9;font-size:0.65rem;border-radius:10px;">Sponsored</span>
+      <span class="badge" style="background:#ede9fe;color:#6d28d9;font-size:0.7rem;border-radius:10px;">Sponsored</span>
     </div>
     <div class="sidebar-card-body d-flex flex-column gap-2 p-2">
       {% for promo in scholarship_alerts %}
@@ -2100,16 +2100,16 @@ body.dark .helb-criteria-item    { background: rgba(22,163,74,0.12); border-colo
           </div>
           <div class="text-muted" style="font-size:0.7rem;">{{ inst.name }}</div>
           {% if promo.scholarship_amount %}
-          <span style="font-size:0.68rem;font-weight:700;padding:1px 7px;border-radius:4px;background:#ede9fe;color:#7c3aed;">
+          <span style="font-size:0.7rem;font-weight:700;padding:1px 7px;border-radius:4px;background:#ede9fe;color:#7c3aed;">
             {{ promo.scholarship_amount }}
           </span>
           {% endif %}
           {% if promo.scholarship_deadline %}
-          <div style="font-size:0.66rem;font-weight:600;margin-top:2px;
+          <div style="font-size:0.7rem;font-weight:600;margin-top:2px;
                       color:{% if promo.scholarship_deadline_soon %}#dc2626{% else %}#64748b{% endif %};">
             Closes {{ promo.scholarship_deadline|date:"d M Y" }}
             {% if promo.scholarship_deadline_soon %}
-            <span style="font-size:0.58rem;background:#fee2e2;color:#dc2626;padding:1px 4px;border-radius:3px;">Soon</span>
+            <span style="font-size:0.7rem;background:#fee2e2;color:#dc2626;padding:1px 4px;border-radius:3px;">Soon</span>
             {% endif %}
           </div>
           {% endif %}
@@ -2138,7 +2138,7 @@ body.dark .helb-criteria-item    { background: rgba(22,163,74,0.12); border-colo
         </div>
         <div style="min-width:0;flex:1;">
           <div class="fw-700 small" style="color:#1e3a8a;">KUCCPS Portal</div>
-          <div class="text-muted" style="font-size:0.68rem;">students.kuccps.net</div>
+          <div class="text-muted" style="font-size:0.7rem;">students.kuccps.net</div>
         </div>
         <i class="fas fa-external-link-alt text-muted" style="font-size:0.6rem;"></i>
       </a>
@@ -2149,7 +2149,7 @@ body.dark .helb-criteria-item    { background: rgba(22,163,74,0.12); border-colo
         </div>
         <div style="min-width:0;flex:1;">
           <div class="fw-700 small" style="color:#14532d;">HELB</div>
-          <div class="text-muted" style="font-size:0.68rem;">Higher Education Loans Board</div>
+          <div class="text-muted" style="font-size:0.7rem;">Higher Education Loans Board</div>
         </div>
         <i class="fas fa-external-link-alt text-muted" style="font-size:0.6rem;"></i>
       </a>
@@ -2160,7 +2160,7 @@ body.dark .helb-criteria-item    { background: rgba(22,163,74,0.12); border-colo
         </div>
         <div style="min-width:0;flex:1;">
           <div class="fw-700 small" style="color:#92400e;">KNEC</div>
-          <div class="text-muted" style="font-size:0.68rem;">National Examinations Council</div>
+          <div class="text-muted" style="font-size:0.7rem;">National Examinations Council</div>
         </div>
         <i class="fas fa-external-link-alt text-muted" style="font-size:0.6rem;"></i>
       </a>
@@ -2171,7 +2171,7 @@ body.dark .helb-criteria-item    { background: rgba(22,163,74,0.12); border-colo
         </div>
         <div style="min-width:0;flex:1;">
           <div class="fw-700 small" style="color:#581c87;">Universities Fund</div>
-          <div class="text-muted" style="font-size:0.68rem;">universitiesfund.ac.ke</div>
+          <div class="text-muted" style="font-size:0.7rem;">universitiesfund.ac.ke</div>
         </div>
         <i class="fas fa-external-link-alt text-muted" style="font-size:0.6rem;"></i>
       </a>
@@ -2182,7 +2182,7 @@ body.dark .helb-criteria-item    { background: rgba(22,163,74,0.12); border-colo
         </div>
         <div style="min-width:0;flex:1;">
           <div class="fw-700 small" style="color:#7f1d1d;">Ministry of Education</div>
-          <div class="text-muted" style="font-size:0.68rem;">education.go.ke</div>
+          <div class="text-muted" style="font-size:0.7rem;">education.go.ke</div>
         </div>
         <i class="fas fa-external-link-alt text-muted" style="font-size:0.6rem;"></i>
       </a>
@@ -2272,7 +2272,7 @@ body.dark .helb-criteria-item    { background: rgba(22,163,74,0.12); border-colo
 
 {% block extra_js %}
 <script src="{% static 'js/ai_format.js' %}"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script>
 
 /* ── Cluster bar chart ─────────────────────────────────────── */

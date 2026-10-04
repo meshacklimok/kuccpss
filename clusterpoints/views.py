@@ -305,7 +305,7 @@ def kcse_calculator_view(request):
         'Aviation Technology': 'bi-airplane-fill', 'Kenyan Sign Language': 'bi-hand-index-thumb',
     }
     _GM = {
-        'II':  {'label': 'Sciences',                    'color': '#059669', 'icon': 'bi-beaker'},
+        'II':  {'label': 'Sciences',                    'color': '#059669', 'icon': 'bi-eyedropper'},
         'III': {'label': 'Humanities',                  'color': '#0891b2', 'icon': 'bi-book-fill'},
         'IV':  {'label': 'Technical & Applied',         'color': '#d97706', 'icon': 'bi-tools'},
         'V':   {'label': 'Languages, Business & Music', 'color': '#db2777', 'icon': 'bi-music-note'},

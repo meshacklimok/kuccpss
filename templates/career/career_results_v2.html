@@ -15,7 +15,7 @@
 .pick-control { width:auto; min-width:220px; max-width:420px; flex:1; border-radius:8px; font-size:.8rem; }
 .pick-summary { font-size:.78rem; color:#475569; }
 .pick-group-head { font-weight:700; font-size:.92rem; color:#1e293b; margin-top:.5rem; display:flex; align-items:center; gap:.5rem; }
-.pick-exact-badge, .pick-related-badge { font-size:.68rem; font-weight:700; padding:2px 8px; border-radius:50px; text-transform:uppercase; letter-spacing:.03em; }
+.pick-exact-badge, .pick-related-badge { font-size:0.7rem; font-weight:700; padding:2px 8px; border-radius:50px; text-transform:uppercase; letter-spacing:.03em; }
 .pick-exact-badge { background:#dcfce7; color:#166534; }
 .pick-related-badge { background:#e0e7ff; color:#3730a3; }
 .results-hero {
@@ -180,7 +180,7 @@
     flex-wrap: wrap;
 }
 .nd-label {
-    font-size: 0.68rem;
+    font-size: 0.7rem;
     font-weight: 600;
     color: #94a3b8;
     text-transform: uppercase;
@@ -715,7 +715,7 @@ You should check yours too, it's 100% free and instant!
               {% else %}
               <span class="course-name">{{ sp.institution.name }}</span>
               {% endif %}
-              <span class="badge" style="background:#f59e0b;color:#fff;font-size:0.65rem;padding:2px 7px;border-radius:99px;">Sponsored</span>
+              <span class="badge" style="background:#f59e0b;color:#fff;font-size:0.7rem;padding:2px 7px;border-radius:99px;">Sponsored</span>
             </div>
             <div class="inst-name">
               <i class="bi bi-building me-1"></i>{{ sp.institution.name }}
@@ -1245,7 +1245,7 @@ document.body.insertAdjacentHTML('beforeend', `
 #aiUnreadBadge {
   position:absolute; top:2px; right:2px;
   width:18px; height:18px; border-radius:50%;
-  background:#ef4444; color:#fff; font-size:0.65rem; font-weight:800;
+  background:#ef4444; color:#fff; font-size:0.7rem; font-weight:800;
   display:none; align-items:center; justify-content:center;
   border:2px solid #fff;
 }
@@ -1301,7 +1301,7 @@ document.body.insertAdjacentHTML('beforeend', `
   padding:6px 8px; text-align:center;
 }
 .aip-stat-num { color:#fff; font-weight:800; font-size:0.88rem; }
-.aip-stat-lbl { color:rgba(255,255,255,0.65); font-size:0.62rem; text-transform:uppercase; letter-spacing:0.04em; }
+.aip-stat-lbl { color:rgba(255,255,255,0.65); font-size:0.7rem; text-transform:uppercase; letter-spacing:0.04em; }
 
 /* ── Messages ── */
 .aip-body {
@@ -1334,7 +1334,7 @@ document.body.insertAdjacentHTML('beforeend', `
   background:#4338ca; color:#fff;
   border-bottom-right-radius:4px;
 }
-.aip-time { font-size:0.62rem; color:#94a3b8; margin-top:3px; text-align:right; }
+.aip-time { font-size:0.7rem; color:#94a3b8; margin-top:3px; text-align:right; }
 .aip-time.bot-time { text-align:left; padding-left:36px; }
 
 /* ── Typing ── */
@@ -1390,7 +1390,7 @@ document.body.insertAdjacentHTML('beforeend', `
 #aipSend:disabled { opacity:0.5; transform:none; cursor:not-allowed; }
 .aip-footer {
   text-align:center; padding:5px 0 8px;
-  font-size:0.62rem; color:#94a3b8; background:#fff;
+  font-size:0.7rem; color:#94a3b8; background:#fff;
 }
 </style>
 
@@ -1431,7 +1431,7 @@ document.body.insertAdjacentHTML('beforeend', `
         <div class="aip-title">CareerNext AI Advisor</div>
         <div class="aip-subtitle"><i class="fas fa-circle" style="font-size:0.45rem;color:#22c55e;"></i> Online &bull; <a href="{% url 'career:career_chat' %}" style="color:inherit;text-decoration:underline;">Open full chat</a></div>
       </div>
-      <button class="aip-close" onclick="aipToggle()"><i class="fas fa-times"></i></button>
+      <button class="aip-close" onclick="aipToggle()" aria-label="Close assistant"><i class="fas fa-times" aria-hidden="true"></i></button>
     </div>
     <!-- Stats strip -->
     <div class="aip-stats">
@@ -1465,9 +1465,9 @@ document.body.insertAdjacentHTML('beforeend', `
 
   <!-- Input -->
   <div class="aip-inputbar">
-    <input id="aipInput" type="text" placeholder="Ask about your results, courses, universities…"
+    <input id="aipInput" type="text" aria-label="Ask the assistant" placeholder="Ask about your results, courses, universities…"
            maxlength="300" onkeydown="if(event.key==='Enter')aipSend()">
-    <button id="aipSend" onclick="aipSend()"><i class="fas fa-paper-plane"></i></button>
+    <button id="aipSend" onclick="aipSend()" aria-label="Send message"><i class="fas fa-paper-plane" aria-hidden="true"></i></button>
   </div>
   <div class="aip-footer">Your data stays private &bull; Results based on your KCSE input &bull; <a href="{% url 'career:career_chat' %}" style="color:#6366f1;">Full chat</a></div>
 </div>
@@ -1662,7 +1662,7 @@ function generateShareLink() {
         if (!data.ok) {
             btn.disabled = false;
             btn.innerHTML = '<i class="bi bi-link-45deg me-1"></i>Generate Share Link';
-            alert('Could not create link: ' + (data.error || 'Unknown error'));
+            cnToast('Could not create link: ' + (data.error || 'please try again.'), 'error');
             return;
         }
         _shareUrl = data.url;
@@ -1685,7 +1685,7 @@ function generateShareLink() {
     .catch(function(err) {
         btn.disabled = false;
         btn.innerHTML = '<i class="bi bi-link-45deg me-1"></i>Generate Share Link';
-        alert('Could not create share link. Please try again.\n\n' + (err && err.message ? err.message : ''));
+        console.error(err); cnToast('Could not create a share link. Check your connection and try again.', 'error');
     });
 }
 
@@ -1717,7 +1717,7 @@ function nativeShareResult() {
     var hasJmd = document.querySelector('.meta-chip[style*="coins"]');
     if (!hasJmd) return;
     var note = document.createElement('p');
-    note.style.cssText = 'font-size:0.68rem;color:#94a3b8;text-align:center;margin:0.5rem 0 1.5rem;padding:0 1rem;';
+    note.style.cssText = 'font-size:0.7rem;color:#94a3b8;text-align:center;margin:0.5rem 0 1.5rem;padding:0 1rem;';
     note.innerHTML = '<i class="fas fa-circle-info me-1"></i>Salary ranges are gross monthly pay in Kenya, from the <a href="https://www.brightermonday.co.ke/research" target="_blank" rel="noopener" style="color:#94a3b8;">BrighterMonday Kenya Salary Report 2024</a>, 2025 public-sector pay agreements (doctors, clinical officers, TSC teachers), and KUCCPSS estimates benchmarked to the <a href="https://www.knbs.or.ke" target="_blank" rel="noopener" style="color:#94a3b8;">KNBS Economic Survey 2026</a>. Open a course to see its exact source. Actual pay varies by employer, experience &amp; location.';
     var paginationEl = document.querySelector('.pagination');
     var target = paginationEl ? paginationEl.closest('nav') : document.querySelector('.results-list');

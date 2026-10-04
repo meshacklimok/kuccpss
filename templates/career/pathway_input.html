@@ -33,7 +33,7 @@
     box-shadow: 0 2px 12px rgba(30,58,138,0.08);
 }
 .sb-pathway {
-    font-size: 0.68rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase;
+    font-size: 0.7rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase;
     background: var(--pw-bg); border: 1px solid var(--pw-border);
     color: var(--pw); border-radius: 20px; padding: 3px 12px;
 }
@@ -88,7 +88,7 @@
     transition: all 0.15s; color: #64748b; -webkit-tap-highlight-color: transparent;
 }
 .mgp-g { font-size: 1rem; font-weight: 800; line-height: 1; }
-.mgp-p { font-size: 0.58rem; font-weight: 700; color: #94a3b8; margin-top: 2px; }
+.mgp-p { font-size: 0.7rem; font-weight: 700; color: #94a3b8; margin-top: 2px; }
 .mgp:hover { border-color: var(--pw-border); background: var(--pw-bg); color: var(--pw); transform: translateY(-1px); box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
 .mgp:active { transform: scale(0.93); }
 .mgp.sel-a { background: #f0fdf4; border-color: #86efac; color: #15803d; }
@@ -127,9 +127,9 @@
 .acc-header:hover { background: #f8fafc; }
 .acc-icon { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 0.95rem; flex-shrink: 0; }
 .acc-title { font-size: 0.95rem; font-weight: 700; color: #1e293b; }
-.acc-badge { font-size: 0.6rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; padding: 2px 8px; border-radius: 5px; flex-shrink: 0; margin-left: 2px; }
+.acc-badge { font-size: 0.7rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; padding: 2px 8px; border-radius: 5px; flex-shrink: 0; margin-left: 2px; }
 .acc-badge.opt { background: #f1f5f9; color: #64748b; border: 1px solid #e2e8f0; }
-.acc-count { font-size: 0.68rem; font-weight: 700; color: #16a34a; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; padding: 1px 8px; display: none; }
+.acc-count { font-size: 0.7rem; font-weight: 700; color: #16a34a; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; padding: 1px 8px; display: none; }
 .acc-count.visible { display: inline; }
 .acc-spacer { flex: 1; }
 .acc-chevron { font-size: 0.9rem; color: #94a3b8; transition: transform 0.3s, color 0.2s; flex-shrink: 0; }
@@ -177,7 +177,7 @@
 .tag-chip:hover { border-color: var(--pw-border); color: var(--pw); background: var(--pw-bg); }
 .tag-chip.selected { border-color: var(--pw); background: var(--pw-bg); color: var(--pw); font-weight: 700; }
 .tag-chip input { display: none; }
-.tag-chip .tc-chk { font-size: 0.65rem; opacity: 0; color: var(--pw); transition: opacity 0.15s; }
+.tag-chip .tc-chk { font-size: 0.7rem; opacity: 0; color: var(--pw); transition: opacity 0.15s; }
 .tag-chip.selected .tc-chk { opacity: 1; }
 .tag-chip.hidden-chip { display: none; }
 
@@ -262,7 +262,7 @@
         <div class="sb-line"></div>
         <div class="sb-dot" style="font-size:.7rem;">2</div>
     </div>
-    <span style="font-size:0.68rem;color:rgba(255,255,255,0.3);font-weight:500;">Grades → Results</span>
+    <span style="font-size:0.7rem;color:rgba(255,255,255,0.3);font-weight:500;">Grades → Results</span>
     <div class="sb-spacer"></div>
     {% if use_kcse_form %}
     <div class="sb-counter" id="sbCounter">0 / 7 subjects</div>
@@ -445,7 +445,7 @@
         </div>
         <div style="position:relative;margin-bottom:0.65rem;">
             <i class="bi bi-search" style="position:absolute;left:0.6rem;top:50%;transform:translateY(-50%);color:#94a3b8;font-size:0.75rem;pointer-events:none;"></i>
-            <input type="text" id="countySearch" placeholder="Filter counties…"
+            <input type="text" id="countySearch" aria-label="Filter counties" placeholder="Filter counties…"
                    style="width:100%;padding:0.45rem 0.75rem 0.45rem 2rem;font-size:0.78rem;border:1.5px solid #e2e8f0;border-radius:9px;background:#f8fafc;color:#374151;outline:none;">
         </div>
         <div class="county-grid" id="county-grid" style="max-height:220px;overflow-y:auto;padding-right:2px;">

@@ -224,7 +224,7 @@ document.getElementById('quizForm').addEventListener('submit', function(e) {
   var unanswered = totalQ - Object.keys(answered).length;
   if (unanswered > 0) {
     e.preventDefault();
-    alert('Please answer all ' + totalQ + ' questions before submitting. (' + unanswered + ' remaining)');
+    cnToast('Please answer all ' + totalQ + ' questions before submitting (' + unanswered + ' remaining).', 'warning');
   }
 });
 </script>
