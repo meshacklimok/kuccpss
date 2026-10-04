@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load custom_filters %}
 {% block title %}Your Career Matches: KUCCPS Recommended Courses Kenya | CareerNext{% endblock %}
 
 {% block content %}
@@ -142,10 +143,11 @@
           </div>
 
           <!-- Icon -->
-          <div class="rounded-2 d-flex align-items-center justify-content-center flex-shrink-0"
-               style="width:40px;height:40px;background:#eef2ff;color:var(--primary);">
-            <i class="{{ match.profile.icon|default:'fas fa-briefcase' }}"></i>
+          {% with first_tag=match.profile.career_tags|split:","|first %}
+          <div class="sector-tile sector-{{ first_tag|default:'default' }}">
+            <i class="{{ match.profile.icon|default:'fas fa-briefcase' }}" aria-hidden="true"></i>
           </div>
+          {% endwith %}
 
           <!-- Title -->
           <div style="flex:1;min-width:0;">
@@ -202,14 +204,14 @@
        style="background:#f8fafc;border:1.5px solid #e2e8f0;">
     <div class="flex-grow-1">
       <div class="fw-800 text-dark mb-1">Ready to take the next step?</div>
-      <div class="text-muted small">Calculate your cluster points to see which courses you qualify for.</div>
+      <div class="text-muted small">Use the Career Engine to see which courses you qualify for.</div>
     </div>
     <div class="d-flex gap-2 flex-wrap">
       <a href="{% url 'career:quiz' %}" class="btn btn-outline-secondary fw-700 rounded-pill btn-sm">
         <i class="fas fa-redo me-1"></i>Retake Quiz
       </a>
-      <a href="{% url 'clusterpoints:calculator' %}" class="btn btn-primary fw-700 rounded-pill btn-sm">
-        <i class="fas fa-calculator me-1"></i>Calculate Cluster Points
+      <a href="{% url 'career:home' %}" class="btn btn-primary fw-700 rounded-pill btn-sm">
+        <i class="fas fa-compass me-1"></i>Open Career Engine
       </a>
     </div>
   </div>
