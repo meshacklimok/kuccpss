@@ -323,6 +323,10 @@
                 <img src="{% static 'img/logo-white.svg' %}" alt="CareerNext" height="38" style="height:38px;width:auto;">
             </a>
 
+            <!-- Dark mode toggle: kept outside the collapse so it is always visible on mobile -->
+            <button id="dark-toggle" class="ms-auto me-2 ms-lg-2 me-lg-0 order-lg-last" title="Toggle dark mode" aria-label="Toggle dark mode" aria-pressed="false">
+                <i class="fas fa-moon" id="dark-icon"></i>
+            </button>
 
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
                     data-bs-target="#mainNav" aria-controls="mainNav"
@@ -453,11 +457,6 @@
                         </a>
                     </li>
                     {% endif %}
-                    <li class="nav-item me-1">
-                        <button id="dark-toggle" title="Toggle dark mode" aria-label="Toggle dark mode" aria-pressed="false">
-                            <i class="fas fa-moon" id="dark-icon"></i>
-                        </button>
-                    </li>
                     {% if user.is_authenticated %}
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle d-flex align-items-center gap-2" href="#" data-bs-toggle="dropdown" aria-label="Account menu">
@@ -1466,23 +1465,20 @@ function submitFeedback(e) {
     .then(function(res){
       if (res.ok) {
         status.style.display = 'block';
-        status.style.background = '#f0fdf4';
-        status.style.color = '#15803d';
+        status.className = 'fb-status fb-status--ok';
         status.textContent = 'Thank you! Your feedback has been received.';
         form.querySelector('textarea').value = '';
         form.querySelector('input[type=email]').value = '';
         setTimeout(function(){document.getElementById('fb-modal').style.display='none';status.style.display='none';},2500);
       } else {
         status.style.display = 'block';
-        status.style.background = '#fef2f2';
-        status.style.color = '#991b1b';
+        status.className = 'fb-status fb-status--err';
         status.textContent = res.error || 'Something went wrong. Please try again.';
       }
     })
     .catch(function(){
       status.style.display = 'block';
-      status.style.background = '#fef2f2';
-      status.style.color = '#991b1b';
+      status.className = 'fb-status fb-status--err';
       status.textContent = 'Network error. Please try again.';
     });
 }

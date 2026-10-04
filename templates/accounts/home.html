@@ -458,11 +458,9 @@ body.dark .step-card          { background: var(--surface); border-color: var(--
       {% for article in recent_articles %}
       <div class="col-md-4 reveal">
         <a href="{% url 'resources:article_detail' article.slug %}"
-           class="d-flex flex-column h-100 text-decoration-none rounded-4 overflow-hidden"
+           class="d-flex flex-column h-100 text-decoration-none rounded-4 overflow-hidden hv-lift hv-lift-blue"
            style="background:var(--surface);border:1.5px solid var(--border);box-shadow:var(--shadow-sm);
-                  transition:box-shadow 0.2s,transform 0.2s,border-color 0.2s;"
-           onmouseover="this.style.boxShadow='0 8px 28px rgba(37,99,235,0.12)';this.style.transform='translateY(-3px)';this.style.borderColor='#bfdbfe'"
-           onmouseout="this.style.boxShadow='';this.style.transform='';this.style.borderColor=''">
+                  transition:box-shadow 0.2s,transform 0.2s,border-color 0.2s;">
           {% if article.thumbnail %}
           <img src="{{ article.thumbnail.url }}" alt="{{ article.title }}" loading="lazy"
                style="width:100%;height:160px;object-fit:cover;">
@@ -530,10 +528,8 @@ body.dark .step-card          { background: var(--surface); border-color: var(--
       {% with inst=promo.institution %}
       <div class="col-sm-6 col-lg-3 reveal">
         <a href="{% url 'institutions:institution_detail' inst.institution_type.slug inst.slug %}"
-           class="d-flex flex-column h-100 text-decoration-none rounded-4 overflow-hidden"
-           style="background:var(--surface);border:1.5px solid var(--border);box-shadow:var(--shadow-sm);transition:box-shadow 0.2s,transform 0.2s,border-color 0.2s;"
-           onmouseover="this.style.boxShadow='0 8px 28px rgba(0,0,0,0.1)';this.style.transform='translateY(-3px)';this.style.borderColor='#fde68a'"
-           onmouseout="this.style.boxShadow='';this.style.transform='';this.style.borderColor=''">
+           class="d-flex flex-column h-100 text-decoration-none rounded-4 overflow-hidden hv-lift hv-lift-amber"
+           style="background:var(--surface);border:1.5px solid var(--border);box-shadow:var(--shadow-sm);transition:box-shadow 0.2s,transform 0.2s,border-color 0.2s;">
           <div style="height:4px;background:#d97706;"></div>
           <div class="p-4 d-flex flex-column flex-grow-1">
             <div class="d-flex align-items-center gap-3 mb-3">
@@ -594,10 +590,8 @@ body.dark .step-card          { background: var(--surface); border-color: var(--
       {% with inst=promo.institution %}
       <div class="col-md-6 reveal">
         <a href="{% url 'institutions:institution_detail' inst.institution_type.slug inst.slug %}"
-           class="d-flex gap-4 align-items-start p-4 rounded-4 text-decoration-none h-100"
-           style="background:var(--surface);border:1.5px solid var(--border);box-shadow:var(--shadow-sm);transition:box-shadow 0.2s,transform 0.2s,border-color 0.2s;"
-           onmouseover="this.style.boxShadow='0 8px 24px rgba(124,58,237,0.12)';this.style.transform='translateY(-2px)';this.style.borderColor='#e9d5ff'"
-           onmouseout="this.style.boxShadow='';this.style.transform='';this.style.borderColor=''">
+           class="d-flex gap-4 align-items-start p-4 rounded-4 text-decoration-none h-100 hv-lift hv-lift-violet"
+           style="background:var(--surface);border:1.5px solid var(--border);box-shadow:var(--shadow-sm);transition:box-shadow 0.2s,transform 0.2s,border-color 0.2s;">
           {% if inst.logo %}
           <img src="{{ inst.logo.url }}" width="50" height="50" class="rounded-circle flex-shrink-0"
                style="object-fit:contain;border:1px solid var(--border);" alt="{{ inst.name }}" loading="lazy">

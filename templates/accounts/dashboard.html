@@ -289,7 +289,7 @@
   padding: 0.75rem; border-radius: 10px; text-decoration: none;
   transition: background 0.15s;
 }
-.news-row:hover { background: #f8fafc; }
+.news-row:hover { background: var(--hover-tint); }
 .news-row + .news-row { border-top: 1px solid #f1f5f9; }
 
 /* ── empty state ── */
@@ -305,7 +305,7 @@
   padding: 0.65rem 0.75rem; text-decoration: none; border-radius: 8px;
   transition: background 0.15s;
 }
-.ext-link-row:hover { background: #f8fafc; }
+.ext-link-row:hover { background: var(--hover-tint); }
 .ext-link-row + .ext-link-row { border-top: 1px solid #f8fafc; }
 
 /* ── Application Readiness ring ── */
@@ -324,7 +324,7 @@
   border-radius: 8px;
   transition: background 0.15s;
 }
-.readiness-step:hover { background: #f8fafc; padding-left: 4px; text-decoration: none; color: inherit; }
+.readiness-step:hover { background: var(--hover-tint); padding-left: 4px; text-decoration: none; color: inherit; }
 .readiness-icon-done {
   width: 26px; height: 26px; border-radius: 50%; flex-shrink: 0;
   background: #dcfce7; color: #16a34a;
@@ -400,7 +400,7 @@
   padding: 0.6rem; border-top: 1px solid #f1f5f9;
   color: #1e293b; vertical-align: middle;
 }
-.cmp-table tr:hover td { background: #f8fafc; }
+.cmp-table tr:hover td { background: var(--hover-tint); }
 .cmp-table .cmp-course { font-weight: 700; max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .cmp-table .cmp-inst   { color: #64748b; font-size: 0.7rem; }
 
@@ -443,7 +443,7 @@
 body.dark .req-course-block    { background: var(--surface-2); border-color: var(--border); }
 body.dark .req-course-block:hover { border-color: #6366f1; }
 body.dark .cmp-table td        { border-top-color: var(--border); color: var(--text); }
-body.dark .cmp-table tr:hover td { background: var(--surface-2); }
+body.dark .cmp-table tr:hover td { background: var(--hover-tint); }
 body.dark .cmp-table .cmp-inst { color: var(--text-2); }
 body.dark .ai-chat-msgs        { scrollbar-color: var(--border) transparent; }
 body.dark .ai-msg.bot          { background: var(--surface-2); color: var(--text); }
@@ -528,17 +528,17 @@ body.dark .qa-btn       { background: var(--surface-2); border-color: var(--bord
 body.dark .qa-btn:hover { background: rgba(59,130,246,0.1); border-color: #3b82f6; color: var(--text); }
 
 /* News + external link rows */
-body.dark .news-row:hover            { background: var(--surface-2); }
+body.dark .news-row:hover            { background: var(--hover-tint); }
 body.dark .news-row + .news-row      { border-top-color: var(--border); }
-body.dark .ext-link-row:hover        { background: var(--surface-2); }
+body.dark .ext-link-row:hover        { background: var(--hover-tint); }
 body.dark .ext-link-row + .ext-link-row { border-top-color: var(--border); }
 
 /* Onboarding step hover */
-body.dark .ob-step:hover { background: var(--surface-2); }
+body.dark .ob-step:hover { background: var(--hover-tint); }
 
 /* Readiness ring */
 body.dark .readiness-pct-num    { color: var(--text); }
-body.dark .readiness-step:hover { background: var(--surface-2); }
+body.dark .readiness-step:hover { background: var(--hover-tint); }
 body.dark .readiness-icon-todo  { background: var(--surface-2); border-color: var(--border); color: var(--text-3); }
 
 /* Cutoff match */
@@ -1161,9 +1161,8 @@ body.dark .helb-criteria-item    { background: rgba(22,163,74,0.12); border-colo
           {% for item in shortlist_items %}
           <div class="col-12 col-sm-6">
             <a href="{% url 'courses:course_detail_no_category' item.course.course_type.slug item.course.slug %}"
-               class="d-flex align-items-center gap-2 p-2 rounded-3 text-decoration-none"
-               style="background:#f8fafc;border:1.5px solid #e2e8f0;transition:border-color 0.15s;"
-               onmouseover="this.style.borderColor='#c7d2fe'" onmouseout="this.style.borderColor='#e2e8f0'">
+               class="d-flex align-items-center gap-2 p-2 rounded-3 text-decoration-none hv-border-indigo"
+               style="background:#f8fafc;border:1.5px solid #e2e8f0;transition:border-color 0.15s;">
               <div class="rounded-2 d-flex align-items-center justify-content-center flex-shrink-0"
                    style="width:32px;height:32px;background:#eff6ff;color:#2563eb;">
                 <i class="fas fa-graduation-cap" style="font-size:0.75rem;"></i>
@@ -1212,9 +1211,8 @@ body.dark .helb-criteria-item    { background: rgba(22,163,74,0.12); border-colo
     <div class="dash-card-body" style="padding:0.75rem 1.25rem;">
       <div class="d-flex flex-column" style="gap:0.1rem;">
         {% for evt in activity_feed %}
-        <a href="{{ evt.url }}" class="d-flex align-items-center gap-3 py-2 text-decoration-none rounded-2"
-           style="transition:background 0.12s;padding-left:4px;padding-right:4px;"
-           onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background=''">
+        <a href="{{ evt.url }}" class="d-flex align-items-center gap-3 py-2 text-decoration-none rounded-2 hv-row"
+           style="transition:background 0.12s;padding-left:4px;padding-right:4px;">
           <div class="rounded-2 flex-shrink-0 d-flex align-items-center justify-content-center"
                style="width:32px;height:32px;background:{{ evt.icon_bg }};color:{{ evt.icon_color }};">
             <i class="{{ evt.icon }}" style="font-size:0.75rem;"></i>
@@ -1494,10 +1492,8 @@ body.dark .helb-criteria-item    { background: rgba(22,163,74,0.12); border-colo
         {% for cluster in all_clusters %}
         <div class="col-6 col-md-4">
           <a href="{% url 'clusters:cluster_detail' cluster.slug %}"
-             class="d-flex align-items-center gap-2 p-2 rounded-3 text-decoration-none"
-             style="background:#f8fafc;border:1.5px solid #e2e8f0;transition:border-color 0.15s,background 0.15s;"
-             onmouseover="this.style.background='#eff6ff';this.style.borderColor='#93c5fd'"
-             onmouseout="this.style.background='#f8fafc';this.style.borderColor='#e2e8f0'">
+             class="d-flex align-items-center gap-2 p-2 rounded-3 text-decoration-none hv-tint-blue"
+             style="background:#f8fafc;border:1.5px solid #e2e8f0;transition:border-color 0.15s,background 0.15s;">
             <div class="rounded-2 d-flex align-items-center justify-content-center flex-shrink-0 fw-800"
                  style="width:30px;height:30px;font-size:0.72rem;background:#dbeafe;color:#1d4ed8;">
               {{ cluster.kuccps_number|default:"—" }}
@@ -1532,10 +1528,8 @@ body.dark .helb-criteria-item    { background: rgba(22,163,74,0.12); border-colo
       {% for promo in featured_promos %}
       {% with inst=promo.institution %}
       <a href="{% url 'institutions:institution_detail' inst.institution_type.slug inst.slug %}"
-         class="d-flex gap-3 align-items-start p-2 rounded-3 text-decoration-none"
-         style="background:#f8fafc;border:1.5px solid #e2e8f0;transition:border-color 0.15s,background 0.15s;"
-         onmouseover="this.style.background='#fffbeb';this.style.borderColor='#fde68a'"
-         onmouseout="this.style.background='#f8fafc';this.style.borderColor='#e2e8f0'">
+         class="d-flex gap-3 align-items-start p-2 rounded-3 text-decoration-none hv-tint-amber"
+         style="background:#f8fafc;border:1.5px solid #e2e8f0;transition:border-color 0.15s,background 0.15s;">
         {% if inst.logo %}
         <img src="{{ inst.logo.url }}" width="40" height="40"
              class="rounded-circle flex-shrink-0" style="object-fit:contain;border:1px solid #f1f5f9;" alt="{{ inst.name }}" loading="lazy">
@@ -1719,9 +1713,8 @@ body.dark .helb-criteria-item    { background: rgba(22,163,74,0.12); border-colo
     <div style="padding:0.25rem 0;">
       {% if spotlight %}
       <a href="{{ spotlight.course.get_absolute_url }}"
-         class="d-flex align-items-center gap-2 py-2 px-3 text-decoration-none"
-         style="border-bottom:1px solid #f1f5f9;transition:background 0.15s;background:#fef9c3;"
-         onmouseover="this.style.background='#fef3c7'" onmouseout="this.style.background='#fef9c3'">
+         class="d-flex align-items-center gap-2 py-2 px-3 text-decoration-none hv-tint-yellow"
+         style="border-bottom:1px solid #f1f5f9;transition:background 0.15s;background:#fef9c3;">
         <div class="rounded-2 flex-shrink-0 d-flex align-items-center justify-content-center"
              style="width:30px;height:30px;background:#f59e0b;color:#fff;font-size:0.7rem;font-weight:800;text-align:center;line-height:1.1;">
           <i class="fas fa-star" style="font-size:0.75rem;"></i>
@@ -1739,9 +1732,8 @@ body.dark .helb-criteria-item    { background: rgba(22,163,74,0.12); border-colo
       {% endif %}
       {% for c in trending_viewed %}
       <a href="{{ c.get_absolute_url }}"
-         class="d-flex align-items-center gap-2 py-2 px-3 text-decoration-none"
-         style="border-bottom:1px solid #f1f5f9;transition:background 0.15s;"
-         onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background=''">
+         class="d-flex align-items-center gap-2 py-2 px-3 text-decoration-none hv-row"
+         style="border-bottom:1px solid #f1f5f9;transition:background 0.15s;">
         <div class="rounded-2 flex-shrink-0 d-flex align-items-center justify-content-center fw-800"
              style="width:30px;height:30px;font-size:0.7rem;
                     {% if forloop.counter == 1 %}background:#f59e0b;color:#78350f;
@@ -1762,10 +1754,9 @@ body.dark .helb-criteria-item    { background: rgba(22,163,74,0.12); border-colo
       </a>
       {% endfor %}
     </div>
-    <a href="{% url 'courses:course_types_list' %}"
+    <a class="hv-row" href="{% url 'courses:course_types_list' %}"
        style="display:block;text-align:center;padding:0.7rem;font-size:0.73rem;font-weight:700;
-              color:#64748b;text-decoration:none;border-top:1px solid #f1f5f9;transition:background 0.15s;"
-       onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background=''">
+              color:#64748b;text-decoration:none;border-top:1px solid #f1f5f9;transition:background 0.15s;">
       Browse all courses <i class="fas fa-arrow-right ms-1"></i>
     </a>
   </div>
@@ -1787,9 +1778,8 @@ body.dark .helb-criteria-item    { background: rgba(22,163,74,0.12); border-colo
     <div class="sidebar-card-body" style="padding:0.5rem 0.75rem;">
       {% for itype in inst_type_links %}
       <a href="{{ itype.url }}"
-         class="d-flex align-items-center gap-2 py-2 px-1 rounded-2 text-decoration-none"
-         style="border-bottom:1px solid #f1f5f9;transition:background 0.15s;"
-         onmouseover="this.style.background='#fffbeb'" onmouseout="this.style.background=''">
+         class="d-flex align-items-center gap-2 py-2 px-1 rounded-2 text-decoration-none hv-tint-amber"
+         style="border-bottom:1px solid #f1f5f9;transition:background 0.15s;">
         <div class="rounded-2 flex-shrink-0 d-flex align-items-center justify-content-center"
              style="width:30px;height:30px;background:#fef3c7;color:#d97706;">
           <i class="{{ itype.icon }}" style="font-size:0.75rem;"></i>
@@ -1963,9 +1953,8 @@ body.dark .helb-criteria-item    { background: rgba(22,163,74,0.12); border-colo
       {% endif %}
       {% for career in recommended_careers %}
       <a href="{% url 'career:career_profile_detail' career.slug %}"
-         class="d-flex align-items-center gap-2 p-2 rounded-2 text-decoration-none mb-1"
-         style="transition:background 0.15s;"
-         onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background=''">
+         class="d-flex align-items-center gap-2 p-2 rounded-2 text-decoration-none mb-1 hv-row"
+         style="transition:background 0.15s;">
         <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
              style="width:34px;height:34px;background:#eef2ff;color:#4f46e5;">
           <i class="{{ career.icon|default:'fas fa-briefcase' }}" style="font-size:0.8rem;"></i>
@@ -2082,9 +2071,8 @@ body.dark .helb-criteria-item    { background: rgba(22,163,74,0.12); border-colo
       {% for promo in scholarship_alerts %}
       {% with inst=promo.institution %}
       <a href="{% url 'institutions:institution_detail' inst.institution_type.slug inst.slug %}"
-         class="d-flex gap-2 align-items-start p-2 rounded-3 text-decoration-none"
-         style="background:#fdf4ff;border:1.5px solid #e9d5ff;transition:border-color 0.15s;"
-         onmouseover="this.style.borderColor='#c4b5fd'" onmouseout="this.style.borderColor='#e9d5ff'">
+         class="d-flex gap-2 align-items-start p-2 rounded-3 text-decoration-none hv-border-violet"
+         style="background:#fdf4ff;border:1.5px solid #e9d5ff;transition:border-color 0.15s;">
         {% if inst.logo %}
         <img src="{{ inst.logo.url }}" width="36" height="36"
              class="rounded-circle flex-shrink-0" style="object-fit:contain;" alt="{{ inst.name }}" loading="lazy">

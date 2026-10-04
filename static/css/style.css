@@ -1411,3 +1411,98 @@ body.dark .cn-dialog-btn--danger { color: #ff6b61; }
 body.dark svg [stroke="#e2e8f0" i], body.dark svg [stroke="#f1f5f9" i],
 body.dark svg [stroke="#e5e7eb" i], body.dark svg [stroke="#f3f4f6" i],
 body.dark svg [stroke="#cbd5e1" i] { stroke: var(--surface-2); }
+
+
+/* ── 35. HOVER STATES (replace inline onmouseover handlers) ──── */
+/* !important: these elements carry inline base colours, which a
+   plain :hover rule cannot override. Dark variants follow One UI —
+   a hovered row lifts one step to --surface-2, never to white. */
+:root { --hover-tint: #eef4ff; }              /* soft blue wash for hovered rows */
+body.dark { --hover-tint: rgba(92,157,255,0.11); }
+.hv-row, .hv-tint-blue, .hv-tint-amber, .hv-tint-yellow { transition: background-color .15s, border-color .15s; }
+.hv-border-indigo, .hv-border-violet { transition: border-color .15s; }
+.hv-lift { transition: box-shadow .2s, transform .2s, border-color .2s; }
+
+.hv-row:hover          { background: var(--hover-tint) !important; }
+.hv-tint-blue:hover    { background: #eff6ff !important; border-color: #93c5fd !important; }
+.hv-tint-amber:hover   { background: #fffbeb !important; border-color: #fde68a !important; }
+.hv-tint-yellow:hover  { background: #fef3c7 !important; }
+.hv-border-indigo:hover { border-color: #c7d2fe !important; }
+.hv-border-violet:hover { border-color: #c4b5fd !important; }
+.hv-lift:hover         { transform: translateY(-3px); }
+.hv-lift-blue:hover    { box-shadow: 0 8px 28px rgba(37,99,235,0.12) !important; border-color: #bfdbfe !important; }
+.hv-lift-amber:hover   { box-shadow: 0 8px 28px rgba(0,0,0,0.1) !important; border-color: #fde68a !important; }
+.hv-lift-violet:hover  { box-shadow: 0 8px 24px rgba(124,58,237,0.12) !important; border-color: #e9d5ff !important; }
+
+body.dark .hv-row:hover           { background: var(--hover-tint) !important; }
+body.dark .hv-tint-blue:hover     { background: rgba(92,157,255,0.12) !important; border-color: rgba(92,157,255,0.45) !important; }
+body.dark .hv-tint-amber:hover    { background: rgba(255,179,64,0.12) !important; border-color: rgba(255,179,64,0.4) !important; }
+body.dark .hv-tint-yellow:hover   { background: rgba(255,179,64,0.22) !important; }
+body.dark .hv-border-indigo:hover { border-color: #6366f1 !important; }
+body.dark .hv-border-violet:hover { border-color: #8b5cf6 !important; }
+body.dark .hv-lift:hover          { box-shadow: 0 8px 24px rgba(0,0,0,0.6) !important; }
+body.dark .hv-lift-blue:hover     { border-color: rgba(92,157,255,0.5) !important; }
+body.dark .hv-lift-amber:hover    { border-color: rgba(255,179,64,0.45) !important; }
+body.dark .hv-lift-violet:hover   { border-color: rgba(179,157,255,0.5) !important; }
+
+/* Text inside a hovered row keeps full contrast */
+body.dark :is(.hv-row, .hv-tint-blue, .hv-tint-amber, .hv-tint-yellow):hover .text-dark { color: var(--text) !important; }
+
+@media (prefers-reduced-motion: reduce) { .hv-lift:hover { transform: none; } }
+
+/* Page-level :hover rules (in template <style> blocks) that tint light */
+body.dark :is(.faq-q, .acc-header, .acc-row, .course-item, .hiw-nav-link,
+  .lce-btn-back, .dm-btn-back, .dm-btn-clear, .dl-btn.gray):hover {
+  background: var(--hover-tint) !important; color: var(--text) !important;
+}
+body.dark :is(.lce-btn-back, .dm-btn-back, .dm-btn-clear):hover { border-color: #525252 !important; }
+body.dark :is(.sector-tab, .linked-course-item, .bp-alt-row, .toc-link, .option-label):hover,
+body.dark .filter-chip:is(:hover, .active) {
+  background: rgba(92,157,255,0.12) !important; border-color: rgba(92,157,255,0.5) !important;
+  color: var(--primary-light) !important;
+}
+body.dark :is(.linked-course-item, .bp-alt-row, .option-label):hover { color: inherit !important; }
+body.dark .starter-chip:hover, body.dark .upload-zone:is(:hover, .dragover) {
+  background: rgba(100,210,255,0.1) !important; border-color: #22d3ee !important; color: #67e8f9 !important;
+}
+body.dark .dl-btn.red:hover { background: rgba(255,69,58,0.15) !important; color: #ff6b61 !important; }
+
+/* Feedback modal status line */
+.fb-status--ok  { background: #f0fdf4; color: #15803d; }
+.fb-status--err { background: #fef2f2; color: #991b1b; }
+body.dark .fb-status--ok  { background: rgba(52,199,89,0.14); color: #4ade80; }
+body.dark .fb-status--err { background: rgba(255,69,58,0.15); color: #ff6b61; }
+
+/* Career sector colours: pale tint + strong ink, keyed by a career's first tag.
+   Used by career cards and quiz-result icons. Unknown tags fall back to slate. */
+.sector-tile, .career-card-banner { --tint: #f8fafc; --ink: #64748b; }
+.sector-technology  { --tint: #eef2ff; --ink: #4f46e5; }
+.sector-health      { --tint: #ecfdf5; --ink: #059669; }
+.sector-engineering { --tint: #fff7ed; --ink: #ea580c; }
+.sector-finance     { --tint: #f0fdfa; --ink: #0d9488; }
+.sector-business    { --tint: #eff6ff; --ink: #2563eb; }
+.sector-law         { --tint: #f5f3ff; --ink: #7c3aed; }
+.sector-education   { --tint: #f0f9ff; --ink: #0284c7; }
+.sector-agriculture { --tint: #f7fee7; --ink: #65a30d; }
+.sector-creative    { --tint: #fdf4ff; --ink: #c026d3; }
+.sector-science     { --tint: #ecfeff; --ink: #0891b2; }
+.sector-environment { --tint: #f0fdf4; --ink: #16a34a; }
+.sector-social      { --tint: #fff1f2; --ink: #e11d48; }
+.sector-tourism     { --tint: #fffbeb; --ink: #d97706; }
+.sector-governance  { --tint: #f8fafc; --ink: #475569; }
+
+/* Small tinted icon square (quiz results, lists) */
+.sector-tile {
+  width: 40px; height: 40px;
+  border-radius: 12px;
+  flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--tint);
+  color: var(--ink);
+  border: 1px solid color-mix(in srgb, var(--ink) 16%, transparent);
+}
+body.dark .sector-tile {
+  background: color-mix(in srgb, var(--ink) 18%, #171717);
+  color: color-mix(in srgb, var(--ink) 70%, #fff);
+  border-color: color-mix(in srgb, var(--ink) 30%, transparent);
+}

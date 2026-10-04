@@ -599,9 +599,8 @@
         <h6 class="fw-800 mb-3" style="font-size:0.88rem;color:#0f172a;">Similar Careers</h6>
         {% for rel in related %}
         <a href="{% url 'career:career_profile_detail' rel.slug %}"
-           class="d-flex align-items-center gap-3 p-2 rounded-3 text-decoration-none mb-1"
-           style="transition:background 0.15s;"
-           onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background=''">
+           class="d-flex align-items-center gap-3 p-2 rounded-3 text-decoration-none mb-1 hv-row"
+           style="transition:background 0.15s;">
           <div class="rounded-2 d-flex align-items-center justify-content-center flex-shrink-0"
                style="width:34px;height:34px;background:#eef2ff;color:var(--primary);">
             <i class="{{ rel.icon|default:'fas fa-briefcase' }}" style="font-size:0.85rem;"></i>
