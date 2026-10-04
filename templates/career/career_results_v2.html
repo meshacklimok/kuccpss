@@ -313,6 +313,71 @@
 .margin-low  { background:#eff6ff; color:#1d4ed8; }
 .bp-footnote { font-size:.78rem; color:#94a3b8; text-align:center; margin-top:.5rem; }
 .bp-footnote a { color:#7c3aed; }
+.jm-row { padding-top:0.35rem; border-top:1px solid #f1f5f9; }
+.jm-salary { background:#f0fdf4; color:#15803d; border:1px solid #bbf7d0; font-weight:600; }
+.jm-demand-high   { background:#f0fdf4; color:#166534; border:1px solid #86efac; }
+.jm-demand-medium { background:#fefce8; color:#854d0e; border:1px solid #fde68a; }
+.jm-demand-low    { background:#f8fafc; color:#64748b; border:1px solid #e2e8f0; }
+.cat-chip { background:#f5f3ff; color:#6d28d9; border:1px solid #ddd6fe; }
+.sponsored-card { border:1.5px solid #fbbf24; background:#fffbeb; }
+
+/* ── Dark mode (body.dark, One UI tokens from style.css) ── */
+body.dark .filter-bar { background:var(--bg); border-bottom-color:var(--border); box-shadow:none; }
+body.dark .filter-chip { background:var(--surface); border-color:var(--border); color:var(--text-2); }
+body.dark .filter-chip:hover, body.dark .filter-chip.active { background:rgba(92,157,255,.16); border-color:var(--primary-light); color:#cfe0ff; }
+body.dark .pick-row { border-top-color:var(--border); }
+body.dark :is(.pick-label, .pick-summary) { color:var(--text-2); }
+body.dark .pick-group-head { color:var(--text); }
+
+body.dark .result-card { background:var(--surface); border-color:var(--border); }
+body.dark .result-card:hover { border-color:var(--primary-light); box-shadow:none; }
+body.dark .result-card.nd-disqualified-card { background:var(--surface); border-color:rgba(255,69,58,.45); }
+body.dark .sponsored-card { background:rgba(245,158,11,.10); border-color:rgba(245,158,11,.55); }
+body.dark :is(.course-link, .result-card .course-name) { color:var(--text); }
+body.dark .course-link:hover { color:var(--primary-light); }
+body.dark .result-card .inst-name { color:var(--text-2); }
+body.dark .jm-row { border-top-color:var(--border); }
+
+/* Pastel chips -> translucent tints of the same hue with light text */
+body.dark .meta-chip { background:var(--surface-2); color:var(--text-2); border-color:transparent; }
+body.dark :is(.chance-HighLikelihood, .chance-Likely, .tier-best, .qual-badge, .nd-good, .nd-strong,
+  .pts-diff.pos, .pred-chip, .pred-chip.falling, .margin-high, .margin-mid, .jm-salary, .jm-demand-high,
+  .pick-exact-badge) { background:rgba(52,199,89,.16); color:#7ee2a0; border-color:rgba(52,199,89,.35); }
+body.dark :is(.chance-Borderline, .tier-stretch, .meta-chip.subj-req, .jm-demand-medium)
+  { background:rgba(245,158,11,.16); color:#fcd38a; border-color:rgba(245,158,11,.35); }
+body.dark :is(.chance-Unlikely, .tier-longshot, .tier-disqualified, .disqual-badge, .nd-disq, .nd-min,
+  .pts-diff.neg, .pred-chip.rising, .meta-chip.min-req, .bp-gap-pill)
+  { background:rgba(255,69,58,.16); color:#ff9b94; border-color:rgba(255,69,58,.35); }
+body.dark :is(.tier-safe, .nd-meets, .nd-your, .pts-diff.zero, .margin-low, .pick-related-badge)
+  { background:rgba(92,157,255,.16); color:#9cc3ff; border-color:rgba(92,157,255,.35); }
+body.dark :is(.tier-easy, .pred-chip.stable, .jm-demand-low) { background:var(--surface-2); color:var(--text-2); border-color:transparent; }
+body.dark .tier-competitive { background:rgba(236,72,153,.16); color:#f9a8d4; }
+body.dark .cat-chip { background:rgba(179,157,255,.16); color:#cbbcff; border-color:rgba(179,157,255,.35); }
+body.dark .disqual-reason { background:rgba(255,69,58,.12); border-color:rgba(255,69,58,.35); color:#ff9b94; }
+body.dark .nd-grade-bar { background:var(--surface-2); border-color:var(--border); }
+body.dark .nd-arrow { color:var(--text-3); }
+/* Active filter chips keep their status hue */
+body.dark .filter-chip:is(.tier-active-best, .chance-active-HighLikelihood, .chance-active-Likely, .qual-active-qualifies)
+  { background:rgba(52,199,89,.18); border-color:#34c759; color:#7ee2a0; }
+body.dark .filter-chip:is(.tier-active-stretch, .chance-active-Borderline)
+  { background:rgba(245,158,11,.18); border-color:#f59e0b; color:#fcd38a; }
+body.dark .filter-chip.tier-active-safe { background:rgba(92,157,255,.18); border-color:#5c9dff; color:#9cc3ff; }
+body.dark .filter-chip.tier-active-easy { background:var(--surface-2); border-color:#5a5a5a; color:var(--text); }
+body.dark .filter-chip:is(.tier-active-longshot, .tier-active-disqualified, .chance-active-Unlikely, .qual-active-does_not_qualify)
+  { background:rgba(255,69,58,.18); border-color:#ff453a; color:#ff9b94; }
+
+/* Backup plan */
+body.dark .bp-card { background:var(--surface); border-color:var(--border); box-shadow:none; }
+body.dark :is(.bp-title, .bp-asp-link, .bp-alt-name) { color:var(--text); }
+body.dark :is(.bp-sub, .bp-asp-inst, .bp-alt-inst) { color:var(--text-2); }
+body.dark .bp-aspiration { border-bottom-color:var(--border); }
+body.dark .bp-divider::before, body.dark .bp-divider::after { background:var(--border); }
+body.dark .bp-alt-row { background:var(--surface-2); border-color:transparent; }
+body.dark .bp-alt-row:hover { background:#2e2e2e; border-color:var(--border); }
+
+/* Recalculate modal */
+body.dark .recalc-card h5 { color:var(--text) !important; }
+body.dark .recalc-card p { color:var(--text-2) !important; }
 @media(max-width:640px) { .bp-grid { grid-template-columns:1fr; } .bp-header { flex-direction:column; gap:.6rem; } }
 </style>
 
@@ -705,7 +770,7 @@ You should check yours too, it's 100% free and instant!
   <div class="row g-2 mb-2">
     {% for sp in sponsored_listings %}
     <div class="col-12">
-      <div class="result-card" style="border:1.5px solid #fbbf24;background:#fffbeb;">
+      <div class="result-card sponsored-card">
         <div class="chance-stripe" style="background:#f59e0b;"></div>
         <div class="ps-2 d-flex align-items-start justify-content-between gap-2 flex-wrap">
           <div style="min-width:0;flex:1;">
@@ -925,7 +990,7 @@ You should check yours too, it's 100% free and instant!
                             </span>
                             {% endif %}
                             {% if match.course.category %}
-                            <span class="meta-chip" style="background:#f5f3ff;color:#6d28d9;border:1px solid #ddd6fe;">
+                            <span class="meta-chip cat-chip">
                                 <i class="bi bi-folder me-1"></i>{{ match.course.category.name }}
                             </span>
                             {% endif %}
@@ -983,11 +1048,11 @@ You should check yours too, it's 100% free and instant!
                         {% endif %}
 
                         {% if match.job_market %}
-                        <div class="meta-row mt-2" style="padding-top:0.35rem;border-top:1px solid #f1f5f9;">
-                            <span class="meta-chip" style="background:#f0fdf4;color:#15803d;border:1px solid #bbf7d0;font-weight:600;">
+                        <div class="meta-row mt-2 jm-row">
+                            <span class="meta-chip jm-salary">
                                 <i class="fas fa-coins me-1" style="font-size:0.65rem;"></i>{{ match.job_market.salary_display }}
                             </span>
-                            <span class="meta-chip" style="background:{% if match.job_market.demand == 'High' %}#f0fdf4;color:#166534;border:1px solid #86efac{% elif match.job_market.demand == 'Low' %}#f8fafc;color:#64748b;border:1px solid #e2e8f0{% else %}#fefce8;color:#854d0e;border:1px solid #fde68a{% endif %};">
+                            <span class="meta-chip {% if match.job_market.demand == 'High' %}jm-demand-high{% elif match.job_market.demand == 'Low' %}jm-demand-low{% else %}jm-demand-medium{% endif %}">
                                 {% if match.job_market.demand == 'High' %}<i class="fas fa-arrow-trend-up me-1" style="font-size:0.65rem;"></i>{% endif %}{{ match.job_market.demand }} Demand
                             </span>
                         </div>
@@ -1392,6 +1457,17 @@ document.body.insertAdjacentHTML('beforeend', `
   text-align:center; padding:5px 0 8px;
   font-size:0.7rem; color:#94a3b8; background:#fff;
 }
+/* ── Dark mode ── */
+body.dark #aiChatPanel { background:#1f1f1f; box-shadow:0 32px 80px rgba(0,0,0,.6); }
+body.dark .aip-body { background:#1f1f1f; }
+body.dark .aip-body::-webkit-scrollbar-thumb { background:#3a3a3a; }
+body.dark :is(.aip-bubble.bot, .aip-typing) { background:var(--surface-2); color:var(--text); border-color:transparent; box-shadow:none; }
+body.dark :is(.aip-chips, .aip-inputbar, .aip-footer) { background:#1f1f1f; border-top-color:var(--border); }
+body.dark .aip-chip { background:rgba(92,157,255,.14); border-color:rgba(92,157,255,.3); color:#9cc3ff; }
+body.dark .aip-chip:hover { background:rgba(92,157,255,.24); color:#cfe0ff; }
+body.dark #aipInput { background:var(--surface-2); border-color:transparent; color:var(--text); }
+body.dark #aipInput:focus { background:var(--surface-2); border-color:var(--primary-light); }
+body.dark .aip-footer { color:var(--text-3); }
 </style>
 
 <!-- Pulse ring behind button -->
@@ -1736,7 +1812,7 @@ function cardClick(e, card) {
 {% if not is_locked and not guest_locked and user.is_authenticated %}
 <!-- Recalculate confirmation modal -->
 <div id="career-recalc-modal" style="display:none;position:fixed;inset:0;z-index:9998;align-items:center;justify-content:center;background:rgba(0,0,0,0.55);">
-    <div style="background:#fff;border-radius:16px;padding:2rem;max-width:380px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,0.3);text-align:center;">
+    <div class="recalc-card" style="background:#fff;border-radius:16px;padding:2rem;max-width:380px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,0.3);text-align:center;">
         <div style="font-size:2rem;margin-bottom:0.5rem;">🔄</div>
         <h5 style="font-weight:800;color:#1e293b;margin-bottom:0.5rem;">Recalculate Grades?</h5>
         <p style="font-size:0.85rem;color:#64748b;margin-bottom:1.5rem;">

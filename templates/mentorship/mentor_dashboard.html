@@ -76,6 +76,11 @@
       <div class="card border-0 shadow-sm rounded-4 text-center p-3 h-100">
         <div class="text-success fs-3 fw-bold mb-1">{{ mentor.wallet_balance }}</div>
         <div class="text-muted small">Wallet (KES)</div>
+        {% if mentor.payout_debt %}
+          <div class="text-danger mt-1" style="font-size:.72rem;" title="A cancelled session's payout had already been sent to you; it comes out of your next earnings.">
+            KES {{ mentor.payout_debt }} to be deducted from next earnings
+          </div>
+        {% endif %}
       </div>
     </div>
     <div class="col-6 col-md-3">
@@ -125,6 +130,12 @@
                     <i class="bi bi-chat-dots me-1"></i>{{ session.mentee_question|truncatewords:20 }}
                   </div>
                 </div>
+                {% if session.slot.is_future %}
+                <a href="{% url 'mentorship:download_ics' session.token %}"
+                   class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+                  <i class="bi bi-calendar-plus me-1"></i>Add to calendar
+                </a>
+                {% else %}
                 <form method="post" action="{% url 'mentorship:complete_session' session.token %}">
                   {% csrf_token %}
                   <button type="submit" class="btn btn-success btn-sm rounded-pill px-3 fw-semibold"
@@ -132,6 +143,7 @@
                     <i class="bi bi-check2 me-1"></i>Mark Complete
                   </button>
                 </form>
+                {% endif %}
               </div>
             {% endfor %}
           {% else %}

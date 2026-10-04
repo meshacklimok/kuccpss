@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime, time as dt_time
+from datetime import datetime, time as dt_time, timedelta
 from django.conf import settings
 from django.db import models
 from django.db.models import Avg
@@ -77,6 +77,9 @@ class MentorProfile(models.Model):
     # Earnings wallet (in KES cents avoided — store as KES integers)
     wallet_balance = models.PositiveIntegerField(default=0)
     total_earned = models.PositiveIntegerField(default=0)
+    # Payout reversed after it had already been paid out to M-Pesa (wallet too low to
+    # debit). Recovered automatically from the mentor's next session earnings.
+    payout_debt = models.PositiveIntegerField(default=0)
 
     # Computed stats — refreshed after each session
     total_sessions = models.PositiveIntegerField(default=0)
@@ -120,7 +123,7 @@ class MentorProfile(models.Model):
 
     @property
     def available_slots_count(self):
-        return self.slots.filter(is_booked=False, date__gte=timezone.now().date()).count()
+        return self.slots.filter(bookable_slots_q()).count()
 
     def effective_session_price(self):
         if self.custom_session_price is not None:
@@ -131,6 +134,19 @@ class MentorProfile(models.Model):
         if self.custom_mentor_payout is not None:
             return self.custom_mentor_payout
         return MentorshipConfig.get().mentor_payout
+
+
+BOOKING_LEAD_MINUTES = 30
+
+
+def bookable_slots_q(prefix=""):
+    """Q for open slots starting at least BOOKING_LEAD_MINUTES from now (local time).
+    `prefix` lets it filter through a relation, e.g. bookable_slots_q("slots__")."""
+    cutoff = timezone.localtime() + timedelta(minutes=BOOKING_LEAD_MINUTES)
+    return models.Q(**{f"{prefix}is_booked": False}) & (
+        models.Q(**{f"{prefix}date__gt": cutoff.date()})
+        | models.Q(**{f"{prefix}date": cutoff.date(), f"{prefix}start_time__gte": cutoff.time()})
+    )
 
 
 class TimeSlot(models.Model):
@@ -201,6 +217,9 @@ class WithdrawalRequest(models.Model):
         return f"{self.mentor.display_name} — KES {self.amount} ({self.status})"
 
 
+ACTIVE_STATUSES = ("pending_payment", "pending_manual_verification", "confirmed", "completed")
+
+
 class MentorshipSession(models.Model):
     STATUS_CHOICES = [
         ("pending_payment",           "Pending Payment"),
@@ -222,10 +241,13 @@ class MentorshipSession(models.Model):
         on_delete=models.CASCADE,
         related_name="mentorship_sessions",
     )
-    slot = models.OneToOneField(
+    # A ForeignKey (not one-to-one) so a slot freed by a cancellation can be booked
+    # again while the cancelled session keeps its history; the constraint in Meta
+    # still allows only one live session per slot.
+    slot = models.ForeignKey(
         TimeSlot,
         on_delete=models.CASCADE,
-        related_name="session",
+        related_name="sessions",
     )
     course_interest = models.ForeignKey(
         "courses.Course",
@@ -255,6 +277,11 @@ class MentorshipSession(models.Model):
 
     # Track whether booking confirmation emails have been sent
     confirmation_sent = models.BooleanField(default=False)
+    # IntaSend refund (chargeback) tracking. refund_requested_at doubles as the claim
+    # that stops two paths refunding the same payment.
+    refund_ref = models.CharField(max_length=100, blank=True)
+    refund_requested_at = models.DateTimeField(null=True, blank=True)
+    refund_error = models.CharField(max_length=500, blank=True)
     # Set when the 1-hour reminder emails go out, so repeated housekeeping runs don't resend
     reminder_sent = models.BooleanField(default=False)
 
@@ -277,6 +304,13 @@ class MentorshipSession(models.Model):
         indexes = [
             models.Index(fields=["mentor", "status"]),
             models.Index(fields=["mentee", "created_at"]),
+        ]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["slot"],
+                condition=models.Q(status__in=ACTIVE_STATUSES),
+                name="one_active_session_per_slot",
+            ),
         ]
 
     def __str__(self):

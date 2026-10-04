@@ -493,22 +493,23 @@ def mpesa_webhook(request):
         try:
             session = MentorshipSession.objects.select_related(
                 "mentor", "mentor__user", "mentee", "slot"
-            ).get(token=session_token, status="pending_payment")
+            ).get(token=session_token)
         except MentorshipSession.DoesNotExist:
-            logger.warning("Webhook: no pending mentorship session for ref %s", api_ref)
+            logger.warning("Webhook: no mentorship session for ref %s", api_ref)
             return HttpResponse(status=200)
 
         if state == "COMPLETE":
+            from mentorship.views import handle_paid_session
             invoice_id = (
                 payload.get("invoice_id")
                 or payload.get("invoice", {}).get("invoice_id", "")
             )
-            if invoice_id:
+            if invoice_id and invoice_id != session.payment_ref:
                 session.payment_ref = invoice_id
                 session.save(update_fields=["payment_ref"])
 
-            from mentorship.views import _confirm_session_after_payment
-            _confirm_session_after_payment(session, source="payments:mpesa_webhook")
+            # Also covers a payment that lands after the booking was released as abandoned.
+            handle_paid_session(session, source="payments:mpesa_webhook")
 
         return HttpResponse(status=200)
 
