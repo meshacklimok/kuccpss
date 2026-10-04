@@ -1153,3 +1153,17 @@ class CareerSubmission(models.Model):
         from django.utils import timezone
         delta = (self.lock_at - timezone.now()).total_seconds()
         return max(0, int(delta))
+
+    def grade_summary(self):
+        """[(subject, letter), ...] for the review banner; empty for cluster-point entries."""
+        if self.method not in (self.METHOD_CALCULATE, self.METHOD_UPLOAD):
+            return []
+        from clusterpoints.forms import DEFAULT_GRADE_CHOICES
+        letters = dict(DEFAULT_GRADE_CHOICES)
+        out = []
+        for name, pts in (self.grades_json or {}).items():
+            try:
+                out.append((name, letters.get(int(pts), str(pts))))
+            except (TypeError, ValueError):
+                continue
+        return sorted(out)

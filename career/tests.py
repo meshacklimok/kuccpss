@@ -153,6 +153,46 @@ class DegreePathwayTests(CareerTestBase):
         self.assertEqual(self.client.get('/career/results/').status_code, 200)
 
 
+class GradeLockTests(CareerTestBase):
+    """Grace-period review: Edit keeps previous grades; Confirm & Lock locks them."""
+
+    def setUp(self):
+        super().setUp()
+        from career.models import SubmissionLockConfig
+        SubmissionLockConfig.objects.create(feature='degree_career', lock_minutes=5)
+
+    def _submission(self):
+        from career.models import CareerSubmission
+        return CareerSubmission.objects.get(user=self.user, feature='degree_career')
+
+    def test_edit_prefills_previous_grades(self):
+        self.client.post('/career/degree/calculate/', self.grades_post())
+        r = self.client.get('/career/degree/calculate/')
+        math = Subject.objects.get(name='Mathematics')
+        # Mathematics was 11 (A-) — its option must render selected, not an empty form
+        self.assertRegex(r.content.decode(), rf'name="subject_{math.pk}"[\s\S]*?value="11"\s+selected')
+
+    def test_results_banner_lists_submitted_grades(self):
+        self.client.post('/career/degree/calculate/', self.grades_post())
+        self.client.post('/career/degree/options/', {'action': 'calculate'})
+        self.client.get('/career/loading/degree/')
+        r = self.client.get('/career/results/')
+        self.assertContains(r, 'sub-lock-banner')
+        self.assertContains(r, 'Mathematics <b>A-</b>', html=False)
+
+    def test_confirm_locks_and_is_idempotent(self):
+        self.client.post('/career/degree/calculate/', self.grades_post())
+        for _ in range(2):
+            r = self.client.post('/career/submission/confirm/', json.dumps({'feature': 'degree_career'}),
+                                 content_type='application/json')
+            self.assertEqual(r.status_code, 200)
+        self.assertEqual(self._submission().status, 'locked')
+
+    def test_confirm_rejects_bad_json(self):
+        r = self.client.post('/career/submission/confirm/', 'not json', content_type='application/json')
+        self.assertEqual(r.status_code, 400)
+
+
 class NonDegreePathwayTests(CareerTestBase):
 
     def test_kcse_form_pathways_reach_results(self):

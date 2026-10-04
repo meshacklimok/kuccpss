@@ -893,60 +893,97 @@ body.dark .lce-btn-calc:disabled { background: var(--surface-2); color: var(--te
 
     {% if sub_banner %}
     <!-- Grace-period confirmation banner -->
-    <div id="sub-lock-banner" class="sub-lock-banner mt-3">
+    <div id="sub-lock-banner" class="sub-lock-banner mt-3" role="region" aria-label="Confirm your grades">
       <div class="d-flex align-items-center flex-wrap gap-3 py-2 px-3">
         <span style="font-size:1.2rem;color:#facc15;flex-shrink:0;"><i class="bi bi-shield-lock-fill"></i></span>
         <div class="flex-grow-1" style="font-size:0.87rem;">
           <strong>Are these your grades?</strong>
           You have <span id="sub-lock-countdown" style="font-weight:800;color:#facc15;font-size:1rem;">{{ sub_banner.seconds_remaining }}</span>s to review &amp; edit before they are locked to your account.
         </div>
-        <a href="{{ sub_banner.edit_url }}" class="btn btn-sm btn-outline-warning fw-bold">
+        <a href="{{ sub_banner.edit_url }}" id="sub-lock-edit-btn" class="btn btn-sm btn-outline-warning fw-bold">
           <i class="bi bi-pencil me-1"></i>Edit Grades
         </a>
-        <button id="sub-lock-confirm-btn" class="btn btn-sm btn-success fw-bold">
+        <button type="button" id="sub-lock-confirm-btn" class="btn btn-sm btn-success fw-bold">
           <i class="bi bi-check-circle me-1"></i>Confirm &amp; Lock
         </button>
       </div>
+      {% if sub_banner.grades %}
+      <div class="sub-lock-grades px-3 pb-2">
+        {% for name, letter in sub_banner.grades %}<span class="sub-lock-chip">{{ name }} <b>{{ letter }}</b></span>{% endfor %}
+      </div>
+      {% endif %}
+      <div id="sub-lock-msg" class="px-3 pb-2" style="display:none;font-size:0.82rem;color:#fca5a5;"></div>
       <div style="height:4px;background:rgba(255,255,255,0.2);">
         <div id="sub-lock-bar" style="height:100%;background:#facc15;width:100%;transition:width 1s linear;"></div>
       </div>
     </div>
     <style>
     .sub-lock-banner { background:#1e3a8a;color:#fff;border-radius:12px;overflow:hidden;border:2px solid #facc15;margin-bottom:1rem; }
+    .sub-lock-grades { display:flex;flex-wrap:wrap;gap:0.35rem; }
+    .sub-lock-chip { background:rgba(255,255,255,0.12);border-radius:999px;padding:0.15rem 0.6rem;font-size:0.75rem; }
+    .sub-lock-chip b { color:#facc15; }
     </style>
     <script>
     (function(){
-      var total      = {{ sub_banner.seconds_remaining }};
+      var total      = Math.max(1, {{ sub_banner.seconds_remaining }});
       var feature    = "{{ sub_banner.feature }}";
       var confirmUrl = "{% url 'career:confirm_submission' %}";
       var counter    = document.getElementById('sub-lock-countdown');
       var bar        = document.getElementById('sub-lock-bar');
       var banner     = document.getElementById('sub-lock-banner');
       var confirmBtn = document.getElementById('sub-lock-confirm-btn');
-      var remaining  = total;
-      bar.style.width = '100%';
-      var tick = setInterval(function(){
-        remaining--;
+      var editBtn    = document.getElementById('sub-lock-edit-btn');
+      var msg        = document.getElementById('sub-lock-msg');
+      var deadline   = Date.now() + {{ sub_banner.seconds_remaining }} * 1000;
+      var tick;
+
+      function showLocked(text) {
+        clearInterval(tick);
+        banner.innerHTML = '<div class="py-2 px-3"><i class="bi bi-lock-fill me-2" style="color:#facc15;"></i><strong>Grades locked.</strong> ' + text + '</div>';
+        banner.style.borderColor = '#16a34a';
+      }
+
+      // Grades are already filled in above — Edit just takes the student back to them.
+      editBtn.addEventListener('click', function(e){
+        var form = document.getElementById('calcForm');
+        if (!form) return;
+        e.preventDefault();
+        form.querySelectorAll('.acc-body').forEach(function(b){
+          if (!b.classList.contains('open') && b.querySelector('select.has-value, select option[selected]:not([value=""])')) {
+            toggleAcc(b.previousElementSibling);
+          }
+        });
+        form.scrollIntoView({behavior:'smooth', block:'start'});
+      });
+
+      function update() {
+        // Wall-clock based so a backgrounded tab doesn't drift behind the server's lock_at
+        var remaining = Math.max(0, Math.round((deadline - Date.now()) / 1000));
         counter.textContent = remaining;
         bar.style.width = (remaining / total * 100) + '%';
         if (remaining <= 0) {
-          clearInterval(tick);
-          counter.textContent = '0';
+          showLocked('The review window has ended. Contact support if you need to make changes.');
           banner.style.borderColor = '#ef4444';
-          confirmBtn.disabled = true;
-          confirmBtn.textContent = 'Locked';
         }
-      }, 1000);
+      }
+      tick = setInterval(update, 1000);
+      update();
+
       confirmBtn.addEventListener('click', function(){
+        if (!window.confirm('Lock these grades to your account? You will not be able to edit them afterwards.')) return;
         confirmBtn.disabled = true;
+        msg.style.display = 'none';
         fetch(confirmUrl, {
           method: 'POST',
           headers: {'Content-Type':'application/json','X-CSRFToken':'{{ csrf_token }}'},
           body: JSON.stringify({feature: feature})
-        }).then(function(r){ return r.json(); }).then(function(){
-          clearInterval(tick);
-          banner.innerHTML = '<div class="py-2 px-3"><i class="bi bi-check-circle-fill text-success me-2"></i><strong>Grades locked.</strong> Contact support if you need to make changes.</div>';
-          banner.style.borderColor = '#16a34a';
+        }).then(function(r){
+          if (!r.ok) throw new Error(r.status);
+          showLocked('Contact support if you need to make changes.');
+        }).catch(function(){
+          confirmBtn.disabled = false;
+          msg.textContent = 'Could not lock your grades — check your connection and try again.';
+          msg.style.display = '';
         });
       });
     })();

@@ -1811,17 +1811,19 @@ def confirm_submission(request):
     if request.method != 'POST':
         return JsonResponse({'ok': False}, status=405)
     from career.models import CareerSubmission
-    body = _json.loads(request.body or b'{}')
-    feature = body.get('feature', '')
     try:
-        sub = CareerSubmission.objects.get(
-            user=request.user, feature=feature, status=CareerSubmission.STATUS_PENDING
-        )
+        body = _json.loads(request.body or b'{}')
+    except ValueError:
+        return JsonResponse({'ok': False, 'error': 'bad_request'}, status=400)
+    feature = body.get('feature', '') if isinstance(body, dict) else ''
+    sub = CareerSubmission.objects.filter(user=request.user, feature=feature).first()
+    if sub is None:
+        return JsonResponse({'ok': False, 'error': 'not_found'}, status=404)
+    # Idempotent: a double-click or a lock that already expired is still a success
+    if sub.status != CareerSubmission.STATUS_LOCKED:
         sub.status = CareerSubmission.STATUS_LOCKED
-        sub.save(update_fields=['status'])
-        return JsonResponse({'ok': True})
-    except CareerSubmission.DoesNotExist:
-        return JsonResponse({'ok': False}, status=404)
+        sub.save(update_fields=['status', 'updated_at'])
+    return JsonResponse({'ok': True, 'status': sub.status})
 
 
 # ─────────────────────────────────────────────
@@ -2682,6 +2684,7 @@ def career_results(request):
                         'lock_at_iso': _sub.lock_at.isoformat(),
                         'feature': CareerSubmission.FEATURE_DEGREE,
                         'edit_url': reverse('career:degree_calculate'),
+                        'grades': _sub.grade_summary(),
                     }
 
     cfg = _get_career_config()

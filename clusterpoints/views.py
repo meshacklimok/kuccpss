@@ -354,6 +354,7 @@ def kcse_calculator_view(request):
             'lock_at_iso': existing_sub.lock_at.isoformat(),
             'feature': CareerSubmission.FEATURE_CALCULATOR,
             'edit_url': reverse('clusterpoints:calculator'),
+            'grades': existing_sub.grade_summary(),
         }
 
     from payments.services import has_paid_for_current_session, is_feature_enabled, price_for_feature
