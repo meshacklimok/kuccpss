@@ -77,9 +77,26 @@
   border-radius: 50%;
   background: #fff;
 }
-/* Progress bar */
+/* Progress bar — sticky so it stays visible while scrolling */
+.quiz-progress-sticky {
+  position: sticky;
+  top: 0;
+  z-index: 1010;
+  background: #fff;
+  padding: 0.75rem 1rem;
+  margin: 0 -1rem 1.5rem;
+  border-bottom: 1px solid #e2e8f0;
+  transition: top 0.3s cubic-bezier(0.4,0,0.2,1), box-shadow 0.2s;
+}
+.quiz-progress-sticky.is-stuck { box-shadow: 0 4px 12px rgba(15,23,42,0.08); }
+body.dark .quiz-progress-sticky { background: #000; border-bottom-color: #1c1c1c; }
+.quiz-progress-pct { font-weight: 800; color: #4f46e5; }
+.quiz-card.answered { border-color: #c7d2fe; }
+.quiz-card.answered .q-check { display: inline-block; }
+.q-check { display: none; color: #16a34a; margin-left: 0.4rem; }
+.quiz-card.missing { border-color: #f87171; }
 .quiz-progress-bar {
-  height: 4px;
+  height: 8px;
   border-radius: 50px;
   background: #e2e8f0;
   overflow: hidden;
@@ -121,12 +138,13 @@
   {% if questions %}
 
   <!-- Progress -->
-  <div class="mb-4">
+  <div class="quiz-progress-sticky" id="quizProgress">
     <div class="d-flex justify-content-between small text-muted mb-1">
       <span id="progressLabel">Question 1 of {{ questions|length }}</span>
-      <span id="answeredCount">0 answered</span>
+      <span><span id="answeredCount">0 of {{ questions|length }} answered</span> · <span class="quiz-progress-pct" id="progressPct">0%</span></span>
     </div>
-    <div class="quiz-progress-bar">
+    <div class="quiz-progress-bar" role="progressbar" aria-label="Quiz progress"
+         aria-valuemin="0" aria-valuemax="{{ questions|length }}" aria-valuenow="0" id="progressBar">
       <div class="quiz-progress-fill" id="progressFill" style="width:0%;"></div>
     </div>
   </div>
@@ -149,6 +167,7 @@
         <p class="fw-800 text-dark mb-3" style="font-size:0.95rem;">
           <span class="text-primary me-2" style="font-size:0.8rem;">Q{{ forloop.parentloop.counter }}.{{ forloop.counter }}</span>
           {{ question.text }}
+          <i class="fas fa-check-circle q-check" aria-hidden="true"></i>
         </p>
         <div class="row g-2">
           {% for option in question.options.all %}
@@ -194,36 +213,89 @@
 <script>
 var totalQ = {{ questions|length }};
 var answered = {};
+var cards = Array.prototype.slice.call(document.querySelectorAll('.quiz-card'));
+var progressEl = document.getElementById('quizProgress');
+var navbar = document.querySelector('.site-navbar');
 
-document.addEventListener('change', function(e) {
-  var radio = e.target.closest('input[type="radio"]');
-  if (!radio) return;
+function updateProgress() {
+  var count = Object.keys(answered).length;
+  var pct = Math.round(count / totalQ * 100);
+  document.getElementById('answeredCount').textContent = count + ' of ' + totalQ + ' answered';
+  document.getElementById('progressPct').textContent = pct + '%';
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressBar').setAttribute('aria-valuenow', count);
+}
 
-  // Update option styling
+function markAnswered(radio) {
   var card = radio.closest('.quiz-card');
   card.querySelectorAll('.option-label').forEach(function(lbl) {
     lbl.classList.remove('selected');
   });
   radio.closest('.option-label').classList.add('selected');
-
-  // Track answered
+  card.classList.add('answered');
+  card.classList.remove('missing');
   answered[radio.name] = true;
-  var count = Object.keys(answered).length;
-  document.getElementById('answeredCount').textContent = count + ' of ' + totalQ + ' answered';
-  document.getElementById('progressFill').style.width = (count / totalQ * 100) + '%';
+}
+
+function stickyOffset() {
+  return (navbar && !navbar.classList.contains('nav-hidden')) ? navbar.offsetHeight : 0;
+}
+
+// Keep the bar below the navbar when it is shown, flush to top when it hides,
+// and track which question is currently in view.
+function onScroll() {
+  progressEl.style.top = stickyOffset() + 'px';
+  progressEl.classList.toggle('is-stuck', progressEl.getBoundingClientRect().top <= stickyOffset() + 1 && window.scrollY > 0);
+
+  var line = progressEl.getBoundingClientRect().bottom + 40;
+  var current = 0;
+  cards.forEach(function(c, i) {
+    if (c.getBoundingClientRect().top <= line) current = i;
+  });
+  document.getElementById('progressLabel').textContent = 'Question ' + (current + 1) + ' of ' + totalQ;
+}
+
+function scrollToCard(card) {
+  var y = card.getBoundingClientRect().top + window.scrollY - progressEl.offsetHeight - stickyOffset() - 16;
+  window.scrollTo({ top: y, behavior: 'smooth' });
+}
+
+document.addEventListener('change', function(e) {
+  var radio = e.target.closest('input[type="radio"]');
+  if (!radio) return;
+  var wasAnswered = !!answered[radio.name];
+  markAnswered(radio);
+  updateProgress();
+
+  // On first answer, move on to the next unanswered question
+  if (!wasAnswered) {
+    var idx = cards.indexOf(radio.closest('.quiz-card'));
+    var next = cards.slice(idx + 1).concat(cards.slice(0, idx)).filter(function(c) {
+      return !c.classList.contains('answered');
+    })[0];
+    if (next) setTimeout(function() { scrollToCard(next); }, 250);
+  }
 });
 
 // Restore selections on back navigation
-document.querySelectorAll('input[type="radio"]:checked').forEach(function(r) {
-  r.closest('.option-label').classList.add('selected');
-  answered[r.name] = true;
-});
+document.querySelectorAll('input[type="radio"]:checked').forEach(markAnswered);
+updateProgress();
+
+window.addEventListener('scroll', onScroll, { passive: true });
+window.addEventListener('resize', onScroll);
+if (navbar && window.MutationObserver) {
+  new MutationObserver(onScroll).observe(navbar, { attributes: true, attributeFilter: ['class'] });
+}
+onScroll();
 
 // Validate on submit
 document.getElementById('quizForm').addEventListener('submit', function(e) {
   var unanswered = totalQ - Object.keys(answered).length;
   if (unanswered > 0) {
     e.preventDefault();
+    var missing = cards.filter(function(c) { return !c.classList.contains('answered'); });
+    missing.forEach(function(c) { c.classList.add('missing'); });
+    if (missing[0]) scrollToCard(missing[0]);
     cnToast('Please answer all ' + totalQ + ' questions before submitting (' + unanswered + ' remaining).', 'warning');
   }
 });
