@@ -35,7 +35,7 @@
 {% endblock %}
 
 {% block extra_head %}
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
 
 <style>
 /* ── sticky step bar wrapper ── */
@@ -52,7 +52,7 @@
     box-shadow: 0 2px 12px rgba(30,58,138,0.08);
 }
 .sb-badge {
-    font-size: 0.68rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase;
+    font-size: 0.7rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase;
     background: #eff6ff; border: 1px solid #bfdbfe;
     color: #1d4ed8; border-radius: 20px; padding: 3px 12px;
 }
@@ -117,13 +117,13 @@
 }
 .acc-title { font-size: 0.95rem; font-weight: 700; color: #1e293b; }
 .acc-badge {
-    font-size: 0.6rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase;
+    font-size: 0.7rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase;
     padding: 2px 8px; border-radius: 5px; flex-shrink: 0;
 }
 .acc-badge.req { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
 .acc-badge.opt { background: #f1f5f9; color: #64748b; border: 1px solid #e2e8f0; }
 .acc-count {
-    font-size: 0.68rem; font-weight: 700; color: #16a34a;
+    font-size: 0.7rem; font-weight: 700; color: #16a34a;
     background: #f0fdf4; border: 1px solid #bbf7d0;
     border-radius: 10px; padding: 1px 8px; display: none;
 }
@@ -228,7 +228,7 @@
     box-shadow: 0 2px 12px rgba(30,58,138,0.07);
 }
 .score-block { display: flex; flex-direction: column; gap: 0.2rem; }
-.score-label { font-size: 0.68rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.08em; }
+.score-label { font-size: 0.7rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.08em; }
 .score-val { font-size: 2rem; font-weight: 900; color: #16a34a; line-height: 1; }
 .score-val.grade { color: #1e3a8a; }
 .score-sep { width: 1px; height: 48px; background: #e2e8f0; align-self: center; }
@@ -240,7 +240,7 @@
 }
 .grade-chip.active { background: #1e3a8a; border-color: #1e3a8a; color: #fff; }
 .grade-chip .gl { font-size: .8rem; font-weight: 700; line-height: 1; color: #374151; }
-.grade-chip .gr { font-size: .6rem; color: #94a3b8; line-height: 1.3; }
+.grade-chip .gr { font-size: 0.7rem; color: #94a3b8; line-height: 1.3; }
 .grade-chip.active .gl, .grade-chip.active .gr { color: #fff; opacity: .9; }
 
 /* pathway recommendation */
@@ -255,7 +255,7 @@
     background: rgba(255,255,255,0.2);
 }
 .pw-rec-title { font-size: 0.95rem; font-weight: 800; color: #fff; margin: 0 0 0.2rem; }
-.pw-rec-badge { font-size: 0.68rem; font-weight: 700; background: rgba(255,255,255,0.2); color: #fff; border-radius: 20px; padding: 2px 10px; display: inline-block; margin-bottom: 0.35rem; }
+.pw-rec-badge { font-size: 0.7rem; font-weight: 700; background: rgba(255,255,255,0.2); color: #fff; border-radius: 20px; padding: 2px 10px; display: inline-block; margin-bottom: 0.35rem; }
 .pw-rec-desc  { font-size: 0.82rem; color: rgba(255,255,255,0.8); margin: 0 0 0.75rem; }
 .pw-rec-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
 .pw-btn-light {
@@ -443,7 +443,7 @@ body.dark .save-bar { background: #064e3b; }
 }
 .pg-currency { font-size:0.88rem; font-weight:700; color:#16a34a; }
 .pg-amount   { font-size:2.2rem; font-weight:900; color:#15803d; line-height:1; }
-.pg-once     { font-size:0.68rem; font-weight:600; color:#22c55e; align-self:center; margin-left:0.2rem; }
+.pg-once     { font-size:0.7rem; font-weight:600; color:#22c55e; align-self:center; margin-left:0.2rem; }
 .pg-features {
     display:grid; grid-template-columns:1fr 1fr; gap:0.4rem 1rem;
     text-align:left; margin-bottom:1.35rem; padding:0 0.25rem;
@@ -457,7 +457,7 @@ body.dark .save-bar { background: #064e3b; }
     margin-bottom:0.65rem; transition:all 0.2s; box-shadow:0 4px 20px rgba(0,168,89,0.4);
 }
 .pg-btn-mpesa:hover { background:#009150; transform:translateY(-1px); box-shadow:0 6px 24px rgba(0,168,89,0.5); }
-.pg-mpesa-badge { background:#fff; color:#00a859; font-size:0.6rem; font-weight:900; letter-spacing:0.05em; padding:2px 7px; border-radius:4px; }
+.pg-mpesa-badge { background:#fff; color:#00a859; font-size:0.7rem; font-weight:900; letter-spacing:0.05em; padding:2px 7px; border-radius:4px; }
 .pg-btn-card {
     width:100%; background:#f8fafc; color:#374151; border:1.5px solid #e2e8f0;
     border-radius:13px; padding:0.78rem 1rem; font-size:0.88rem; font-weight:600;
@@ -496,10 +496,10 @@ body.dark .pg-secure   { color:var(--text-3); }
 .cluster-card.zero { opacity: 0.45; }
 .cluster-info { flex: 1; min-width: 0; }
 .cluster-label { font-size: 0.72rem; font-weight: 800; color: #1d4ed8; line-height: 1.2; }
-.cluster-name  { font-size: 0.63rem; color: #94a3b8; font-weight: 500; line-height: 1.3; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.cluster-name  { font-size: 0.7rem; color: #94a3b8; font-weight: 500; line-height: 1.3; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
 .cluster-pts   { font-size: 1.15rem; font-weight: 900; color: #16a34a; line-height: 1; text-align: right; }
 .cluster-card.zero .cluster-pts { color: #cbd5e1; }
-.cluster-max   { font-size: 0.58rem; color: #94a3b8; font-weight: 500; text-align: right; }
+.cluster-max   { font-size: 0.7rem; color: #94a3b8; font-weight: 500; text-align: right; }
 .cluster-card[data-bs-toggle="tooltip"] { cursor: help; }
 .cn-tooltip .tooltip-inner {
     max-width: 260px; font-size: 0.78rem; line-height: 1.5;
@@ -524,14 +524,14 @@ body.dark .pg-secure   { color:var(--text-3); }
 }
 .pred-table { width: 100%; border-collapse: collapse; }
 .pred-table th {
-    font-size: 0.65rem; font-weight: 700; color: #94a3b8; text-transform: uppercase;
+    font-size: 0.7rem; font-weight: 700; color: #94a3b8; text-transform: uppercase;
     letter-spacing: 0.07em; padding: 6px 8px; text-align: left;
     border-bottom: 1.5px solid #f1f5f9;
 }
 .pred-table td { font-size: 0.78rem; padding: 7px 8px; border-bottom: 1px solid #f1f5f9; color: #374151; }
 .pred-table tr:last-child td { border-bottom: none; }
 .pred-table tr:nth-child(even) td { background: #f8fafc; }
-.status-badge { font-size: 0.68rem; font-weight: 700; padding: 2px 9px; border-radius: 20px; white-space: nowrap; }
+.status-badge { font-size: 0.7rem; font-weight: 700; padding: 2px 9px; border-radius: 20px; white-space: nowrap; }
 .s-high   { background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; }
 .s-likely { background: #f0fdf4; color: #16a34a; border: 1px solid #d1fae5; }
 .s-border { background: #fefce8; color: #a16207; border: 1px solid #fde68a; }
@@ -618,6 +618,7 @@ body.dark .results-divider-label { color: var(--text-3); }
 body.dark .score-card        { background: var(--surface); border-color: var(--border); box-shadow: none; }
 body.dark .score-label       { color: var(--text-3); }
 body.dark .score-sep         { background: var(--border); }
+body.dark .score-val.grade    { color: var(--primary-light); }
 body.dark .grade-chip        { background: var(--surface-2); border-color: var(--border); }
 body.dark .grade-chip .gl    { color: var(--text-2); }
 body.dark .grade-chip.active { background: var(--primary-dark); border-color: var(--primary); }
@@ -775,11 +776,11 @@ body.dark .lce-btn-calc:disabled { background: var(--surface-2); color: var(--te
     <div class="sb-steps">
         <div class="sb-dot active"><i class="bi bi-pencil-fill" style="font-size:.65rem;"></i></div>
         <div class="sb-line"></div>
-        <div class="sb-dot {% if results %}done{% endif %}" style="font-size:.65rem;">
+        <div class="sb-dot {% if results %}done{% endif %}" style="font-size:0.7rem;">
             {% if results %}<i class="bi bi-check-lg"></i>{% else %}2{% endif %}
         </div>
     </div>
-    <span style="font-size:0.68rem;color:#94a3b8;font-weight:500;">Grades → Results</span>
+    <span style="font-size:0.7rem;color:#94a3b8;font-weight:500;">Grades → Results</span>
     <div class="sb-spacer"></div>
     <div class="sb-counter" id="sbCounter">0 / 7 subjects</div>
 </div>
@@ -1197,7 +1198,7 @@ body.dark .lce-btn-calc:disabled { background: var(--surface-2); color: var(--te
             if (!data.ok) {
                 btn.disabled = false;
                 btn.innerHTML = '<i class="bi bi-link-45deg me-1"></i>Generate Share Link';
-                alert('Could not create link: ' + (data.error || 'Unknown error'));
+                cnToast('Could not create link: ' + (data.error || 'please try again.'), 'error');
                 return;
             }
             _calcShareUrl = data.url;
@@ -1221,7 +1222,7 @@ body.dark .lce-btn-calc:disabled { background: var(--surface-2); color: var(--te
         .catch(function(err) {
             btn.disabled = false;
             btn.innerHTML = '<i class="bi bi-link-45deg me-1"></i>Generate Share Link';
-            alert('Could not create share link. Please try again.\n\n' + (err && err.message ? err.message : ''));
+            console.error(err); cnToast('Could not create a share link. Check your connection and try again.', 'error');
         });
     }
 
@@ -1599,7 +1600,7 @@ function revealResults() {
 
 function initChart() {
     var ctx = document.getElementById('clusterChart');
-    if (!ctx) return;
+    if (!ctx || typeof Chart === 'undefined') return;
     new Chart(ctx, {
         type: 'radar',
         data: {

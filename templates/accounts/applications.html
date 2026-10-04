@@ -55,7 +55,7 @@
               <i class="fas fa-edit"></i>
             </a>
             <form action="{% url 'accounts:application_delete' app.pk %}" method="POST" class="d-inline"
-                  onsubmit="return confirm('Delete this application?')">
+                  data-confirm="Delete this application?" data-confirm-ok="Delete">
               {% csrf_token %}
               <button type="submit" class="btn btn-sm btn-outline-danger">
                 <i class="fas fa-trash"></i>

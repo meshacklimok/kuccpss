@@ -322,6 +322,32 @@ def fetch_intasend_status(checkout_id: str) -> str | None:
     return invoice["state"] if invoice else None
 
 
+def request_intasend_refund(invoice_id: str, amount: int, details: str) -> str:
+    """
+    Ask IntaSend to refund a collection back to the payer (IntaSend "chargeback").
+    Returns the refund reference on success, raises on failure. IntaSend processes
+    the refund to the original M-Pesa number after accepting the request.
+    """
+    url = f"{get_base_url()}/chargebacks/"
+    headers = {
+        "Authorization": f"Bearer {settings.INTASEND_SECRET_KEY}",
+        "Content-Type": "application/json",
+    }
+    payload = {
+        "invoice": invoice_id,
+        "amount": amount,
+        "reason": "Unavailable service",
+        "reason_details": details[:255],
+    }
+    logger.info("IntaSend refund → %s | payload: %s", url, payload)
+    with intasend_breaker.guard():
+        response = requests.post(url, json=payload, headers=headers, timeout=15)
+        logger.info("IntaSend refund response %s: %s", response.status_code, response.text[:500])
+        response.raise_for_status()
+    data = response.json()
+    return str(data.get("chargeback_id") or data.get("id") or "")
+
+
 def send_mentor_payout(phone: str, amount: int, mentor_name: str, ref: str = "") -> dict:
     """
     Send M-Pesa B2C payout to a mentor via Intasend Send Money API.

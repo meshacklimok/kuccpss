@@ -120,8 +120,10 @@ Now resolved (previously listed as gaps): dependency vulnerability scanning
 (`CLOUDINARY_URL`, `GOOGLE_CLIENT_ID`, `VAPID_*` now present).
 
 - Periodic jobs run in-process via `kuccpss/scheduler.py` (no qcluster/cron on Render):
-  `check_pending_payments`, mentorship reminders (sent once, tracked by `reminder_sent`) and
-  auto-complete, every 10 min under a Postgres advisory lock, started per gunicorn worker by
+  `check_pending_payments`, `release_abandoned_bookings`, mentorship reminders (sent once, tracked
+  by `reminder_sent`, email + web push) and auto-complete, every 10 min under a Postgres advisory lock, started per gunicorn worker by
   `post_worker_init`. Each cycle pings `KEEPALIVE_URL/health/` so Render's free tier stays awake. Log purges run on each deploy from `build.sh`.
 - No automated cron processes `WithdrawalRequest` rows beyond the synchronous request-time call —
-  `mentorship_housekeeping` only handles session reminders/completion.
+  `mentorship_housekeeping` handles abandoned-booking release and session reminders/completion.
+- Refund status after IntaSend accepts a chargeback is not tracked (no chargeback webhook handler);
+  the session is marked refunded once the request is accepted.

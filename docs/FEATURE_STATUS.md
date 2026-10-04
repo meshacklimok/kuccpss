@@ -193,10 +193,15 @@ Status legend: ✅ Done | 🚧 In Progress | 📋 Planned | ❌ Blocked | [-] Dr
 | Google Meet link on sessions | ✅ | meet_link field on MentorshipSession; shown to both parties after confirmation |
 | Add time slots (single + weekly batch) | ✅ | add_slots, add_weekly_slots views |
 | Session cancellation | ✅ | cancel_session; email notifications to both parties |
-| Session completion | ✅ | complete_session; triggers auto mentor payout if balance threshold met |
+| Session completion | ✅ | complete_session (only after start), auto-complete and admin action all send the rating request |
 | ICS calendar download | ✅ | download_ics returns `.ics` file for slot |
 | My sessions list (mentee) | ✅ | my_sessions view |
 | Mentee phone number captured | ✅ | mentee_phone on session for M-Pesa outreach |
+| Slot rebooking after cancellation | ✅ | slot is a FK; DB constraint allows one active session per slot |
+| Abandoned checkout release | ✅ | `release_abandoned_bookings` frees slots unpaid after 30 min (checks IntaSend first) |
+| Calendar invites | ✅ | Escaped/folded .ics; per-recipient REQUEST invite, CANCEL on cancellation; Google link with ctz. Google ignores .ics alarms |
+| Automatic refunds | ✅ | IntaSend chargebacks API on cancel and late payment; admin "Refund via IntaSend" retry; one refund per session |
+| Mentor payout debt | ✅ | Reversal after payout recorded as `payout_debt`, recovered from next earnings |
 
 ---
 
