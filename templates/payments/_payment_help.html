@@ -86,6 +86,11 @@ body.dark .pay-help--light { background: var(--surface-2, #1e293b); border-color
 body.dark .pay-help--light summary { color: var(--text, #f1f5f9); }
 body.dark .pay-help--light .pay-help-input { background: var(--surface, #0f172a); border-color: var(--border, #334155); color: var(--text, #f1f5f9); }
 body.dark .pay-help--light .pay-help-contact a { color: #93c5fd; }
+
+/* Dark mode: page-local light palette mapped to One UI tokens */
+body.dark .pay-help-msg.is-ok { color: #5fd88a; }
+body.dark .pay-help-msg.is-err { color: #ff8a80; }
+body.dark .pay-help-msg.is-info { color: #ffc266; }
 </style>
 
 <script src="{% static 'js/payment_polling.js' %}"></script>

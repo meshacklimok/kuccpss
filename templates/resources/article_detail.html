@@ -370,7 +370,7 @@
 function copyLink(btn) {
   navigator.clipboard.writeText(window.location.href).then(() => {
     const orig = btn.innerHTML;
-    btn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+    btn.innerHTML = '<i class="fas fa-check"></i> Copied';
     btn.style.background = '#d1fae5';
     setTimeout(() => { btn.innerHTML = orig; btn.style.background = ''; }, 2000);
   });

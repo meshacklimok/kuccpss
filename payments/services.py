@@ -25,10 +25,12 @@ FEATURE_PRICES = {
 # again to recalculate for a new grade session.
 REPEATABLE_FEATURES = {"ai_chat_access", "view_cluster_points", "premium_career_report"}
 
-# Maps a payment feature to the CareerSubmission feature it should lock
+# Maps a payment feature to the CareerSubmission features it should lock. The career
+# report gates both degree and non-degree results; a payment doesn't record which
+# pathway it came from, so it unlocks whichever of those sessions is awaiting payment.
 PAYMENT_TO_SUBMISSION = {
-    "view_cluster_points": "cluster_calculator",
-    "premium_career_report": "degree_career",
+    "view_cluster_points": ("cluster_calculator",),
+    "premium_career_report": ("degree_career", "non_degree_career"),
 }
 
 
@@ -108,13 +110,18 @@ def lock_submission_on_payment(payment: "Payment") -> None:
     - On a repeat payment (recalculation), the submission was already reset to pending
       by the recalculate endpoint; this call locks the new session too.
     """
-    calc_feature = PAYMENT_TO_SUBMISSION.get(payment.feature)
-    if not calc_feature:
-        return
+    for calc_feature in PAYMENT_TO_SUBMISSION.get(payment.feature, ()):
+        _lock_one_submission(payment, calc_feature)
+
+
+def _lock_one_submission(payment: "Payment", calc_feature: str) -> None:
     try:
         from career.models import CareerSubmission, SubmissionLockConfig
         from django.utils import timezone as _tz
-        subs = CareerSubmission.objects.filter(user=payment.user, feature=calc_feature)
+        # Only sessions still awaiting payment — an already-paid session keeps its own link
+        subs = CareerSubmission.objects.filter(
+            user=payment.user, feature=calc_feature, unlocked_by_payment__isnull=True,
+        )
         lock_cfg = SubmissionLockConfig.get_for_feature(calc_feature)
         # Always link the payment — has_paid_for_current_session() reads this link, so
         # skipping it (lock config missing or lock_on_payment off) left paid users locked out.

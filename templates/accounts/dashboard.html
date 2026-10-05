@@ -440,7 +440,7 @@
 .ai-chat-send:disabled { background: #c7d2fe; cursor: not-allowed; transform: none; }
 
 /* dark mode — new widgets */
-body.dark .req-course-block    { background: var(--surface-2); border-color: var(--border); }
+body.dark .req-course-block    { background: var(--surface-2); border-color: transparent; }
 body.dark .req-course-block:hover { border-color: #6366f1; }
 body.dark .cmp-table td        { border-top-color: var(--border); color: var(--text); }
 body.dark .cmp-table tr:hover td { background: var(--hover-tint); }
@@ -512,19 +512,19 @@ body.dark .courses-tab-btn.active { color: #818cf8; border-bottom-color: #818cf8
 body.dark .courses-tab-btn:hover  { color: #818cf8; }
 
 /* Watchlist / cluster items */
-body.dark .wl-item         { background: var(--surface-2); border-color: var(--border); }
+body.dark .wl-item         { background: var(--surface-2); border-color: transparent; }
 body.dark .wl-item:hover   { border-color: #6366f1; }
 body.dark .wl-badge        { background: rgba(79,70,229,0.2); color: #a5b4fc; }
-body.dark .cluster-row     { background: var(--surface-2); border-color: var(--border); }
+body.dark .cluster-row     { background: var(--surface-2); border-color: transparent; }
 body.dark .cluster-row:hover { background: rgba(59,130,246,0.1); border-color: #3b82f6; }
 
 /* Sidebar cards */
-body.dark .sidebar-card          { background: var(--surface); border-color: var(--border); }
+body.dark .sidebar-card          { background: var(--surface); border-color: transparent; }
 body.dark .sidebar-card-header   { border-bottom-color: var(--border); }
 body.dark .sidebar-card-title    { color: var(--text); }
 
 /* Quick action buttons */
-body.dark .qa-btn       { background: var(--surface-2); border-color: var(--border); color: var(--text); }
+body.dark .qa-btn       { background: var(--surface-2); border-color: transparent; color: var(--text); }
 body.dark .qa-btn:hover { background: rgba(59,130,246,0.1); border-color: #3b82f6; color: var(--text); }
 
 /* News + external link rows */
@@ -539,16 +539,26 @@ body.dark .ob-step:hover { background: var(--hover-tint); }
 /* Readiness ring */
 body.dark .readiness-pct-num    { color: var(--text); }
 body.dark .readiness-step:hover { background: var(--hover-tint); }
-body.dark .readiness-icon-todo  { background: var(--surface-2); border-color: var(--border); color: var(--text-3); }
+body.dark .readiness-icon-todo  { background: var(--surface-2); border-color: transparent; color: var(--text-3); }
 
 /* Cutoff match */
-body.dark .cutoff-row            { background: var(--surface-2); border-color: var(--border); }
+body.dark .cutoff-row            { background: var(--surface-2); border-color: transparent; }
 body.dark .cutoff-row:hover      { border-color: #6366f1; background: rgba(99,102,241,0.07); }
 body.dark .cutoff-bar-track      { background: var(--surface-2); }
 
 /* HELB */
 body.dark .helb-criteria-item    { background: rgba(22,163,74,0.12); border-color: rgba(22,163,74,0.25); color: #86efac; }
 
+
+/* Dark mode: page-local light palette mapped to One UI tokens */
+body.dark .btn-dash-white { background: var(--surface); color: var(--primary-light); }
+body.dark .btn-dash-white:hover { color: var(--primary-light); }
+body.dark .readiness-icon-done { background: rgba(52,199,89,0.14); color: #5fd88a; }
+body.dark .diff-badge.qualify { background: rgba(52,199,89,0.14); color: #5fd88a; }
+body.dark .diff-badge.shortfall { background: rgba(255,69,58,0.15); color: #ff8a80; }
+body.dark .req-pill.pass { background: rgba(52,199,89,0.14); color: #5fd88a; }
+body.dark .req-pill.fail { background: rgba(255,69,58,0.15); color: #ff8a80; }
+body.dark .ai-msg.typing { background: var(--surface-2); }
 </style>
 
 
@@ -714,7 +724,7 @@ body.dark .helb-criteria-item    { background: rgba(22,163,74,0.12); border-colo
       {% if readiness_pct >= 80 %}
       <span style="font-size:0.7rem;font-weight:700;padding:3px 10px;border-radius:20px;
                    background:rgba(74,222,128,0.2);color:#4ade80;border:1px solid rgba(74,222,128,0.3);">
-        Almost there!
+        Almost there
       </span>
       {% endif %}
     </div>
@@ -809,18 +819,15 @@ body.dark .helb-criteria-item    { background: rgba(22,163,74,0.12); border-colo
         </div>
       </div>
 
-      {# bar chart #}
-      <canvas id="clusterChart" height="110" style="margin-bottom:0.75rem;"></canvas>
-      <div class="d-flex gap-3 mb-3 flex-wrap">
-        <span class="d-flex align-items-center gap-1" style="font-size:0.7rem;color:#64748b;">
-          <span style="width:10px;height:10px;border-radius:3px;background:#16a34a;display:inline-block;"></span>Strong (≥36)
+      {# bar chart — top 5 clusters #}
+      <div class="d-flex justify-content-between align-items-center mb-1">
+        <span style="font-size:0.72rem;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.06em;">
+          Top 5 Clusters
         </span>
-        <span class="d-flex align-items-center gap-1" style="font-size:0.7rem;color:#64748b;">
-          <span style="width:10px;height:10px;border-radius:3px;background:#2563eb;display:inline-block;"></span>Good (24–35)
-        </span>
-        <span class="d-flex align-items-center gap-1" style="font-size:0.7rem;color:#64748b;">
-          <span style="width:10px;height:10px;border-radius:3px;background:#f97316;display:inline-block;"></span>Fair (&lt;24)
-        </span>
+        <span style="font-size:0.68rem;color:#94a3b8;">out of 48</span>
+      </div>
+      <div style="position:relative;height:150px;margin-bottom:0.9rem;">
+        <canvas id="clusterChart"></canvas>
       </div>
 
       {# cluster grid #}
@@ -1290,7 +1297,7 @@ body.dark .helb-criteria-item    { background: rgba(22,163,74,0.12); border-colo
                 <span class="{{ cmp.trend_color }} d-flex align-items-center gap-1"
                       style="font-size:0.7rem;font-weight:700;"
                       title="{{ cmp.trend_tip }}">
-                  <i class="fas {{ cmp.trend_icon }}" style="font-size:0.6rem;"></i>{{ cmp.trend|capfirst }}
+                  <i class="fas {{ cmp.trend_icon }}" style="font-size:0.6rem;"></i>{{ cmp.trend_label }}
                 </span>
                 {% if cmp.predicted %}
                 <span style="font-size:0.7rem;color:#94a3b8;">2026 est: <strong>{{ cmp.predicted }}</strong></span>
@@ -1516,7 +1523,7 @@ body.dark .helb-criteria-item    { background: rgba(22,163,74,0.12); border-colo
   {% if featured_promos %}
   <div class="dash-card reveal">
     <div class="dash-card-header-gradient"
-         style="background:#78350f;">
+         style="background:#0f172a;">
       <div>
         <div class="fw-800" style="font-size:0.9rem;display:flex;align-items:center;gap:7px;">
           <i class="fas fa-handshake" style="color:#fde68a;"></i>Featured Institutions
@@ -1767,9 +1774,9 @@ body.dark .helb-criteria-item    { background: rgba(22,163,74,0.12); border-colo
   {% if inst_type_links %}
   <div class="sidebar-card reveal">
     <div class="sidebar-card-header"
-         style="background:#78350f;border:none;">
+         style="background:#0f172a;border:none;">
       <h6 class="sidebar-card-title" style="color:#fff;">
-        <i class="fas fa-university"></i>Institutions
+        <i class="fas fa-university" style="color:#93c5fd;"></i>Institutions
       </h6>
       <a href="{% url 'institutions:institution_types_list' %}" class="btn-header-light">
         Browse all
@@ -1798,9 +1805,9 @@ body.dark .helb-criteria-item    { background: rgba(22,163,74,0.12); border-colo
   {# ── MENTORSHIP ── #}
   <div class="sidebar-card reveal">
     <div class="sidebar-card-header"
-         style="background:#064e3b;border:none;">
+         style="background:#0f172a;border:none;">
       <h6 class="sidebar-card-title" style="color:#fff;">
-        <i class="bi bi-people-fill"></i>Mentorship
+        <i class="bi bi-people-fill" style="color:#4ade80;"></i>Mentorship
         {% if next_session %}
         <span class="badge ms-1" style="background:rgba(255,255,255,0.2);font-size:0.7rem;">Booked</span>
         {% endif %}
@@ -2265,35 +2272,54 @@ body.dark .helb-criteria-item    { background: rgba(22,163,74,0.12); border-colo
 
 /* ── Cluster bar chart ─────────────────────────────────────── */
 {% if cluster_results %}
-const clusterLabels = [{% for r in cluster_results %}"C{{ r.cluster.kuccps_number }}"{% if not forloop.last %},{% endif %}{% endfor %}];
-const clusterNames  = [{% for r in cluster_results %}"{{ r.cluster.name|escapejs }}"{% if not forloop.last %},{% endif %}{% endfor %}];
-const clusterData   = [{% for r in cluster_results %}{{ r.cluster_points }}{% if not forloop.last %},{% endif %}{% endfor %}];
-const barColors     = clusterData.map(v => v >= 36 ? '#16a34a' : v >= 24 ? '#2563eb' : '#f97316');
+const clusterTop = [{% for r in cluster_results %}{n:"C{{ r.cluster.kuccps_number }}",name:"{{ r.cluster.name|escapejs }}",v:{{ r.cluster_points }}}{% if not forloop.last %},{% endif %}{% endfor %}]
+  .sort((a, b) => b.v - a.v).slice(0, 5);
 
-new Chart(document.getElementById('clusterChart'), {
-  type: 'bar',
-  data: {
-    labels: clusterLabels,
-    datasets: [{
-      label: 'Cluster Points', data: clusterData,
-      backgroundColor: barColors, borderRadius: 6, borderSkipped: false
-    }]
-  },
-  options: {
-    responsive: true,
-    plugins: {
-      legend: { display: false },
-      tooltip: { callbacks: {
-        title: items => clusterNames[items[0].dataIndex],
-        label: ctx => ` ${ctx.parsed.y.toFixed(1)} pts`
-      } }
+(function () {
+  const canvas = document.getElementById('clusterChart');
+  if (!canvas) return;
+  const css = getComputedStyle(document.documentElement);
+  const brand     = (css.getPropertyValue('--primary').trim()      || '#2563EB');
+  const brandDark = (css.getPropertyValue('--primary-dark').trim() || '#1E3A8A');
+  const ctx = canvas.getContext('2d');
+  const fill = c => {
+    const { chartArea } = c.chart;
+    if (!chartArea) return brand;
+    const g = ctx.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
+    g.addColorStop(0, brandDark);
+    g.addColorStop(1, brand);
+    return g;
+  };
+
+  new Chart(canvas, {
+    type: 'bar',
+    data: {
+      labels: clusterTop.map(c => c.n),
+      datasets: [{
+        label: 'Cluster Points', data: clusterTop.map(c => c.v),
+        backgroundColor: fill, borderRadius: 6, borderSkipped: false,
+        maxBarThickness: 34
+      }]
     },
-    scales: {
-      y: { beginAtZero: true, max: 48, grid: { color: '#f1f5f9' }, ticks: { font: { size: 10 } } },
-      x: { ticks: { font: { size: 9 } } }
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: {
+          title: items => clusterTop[items[0].dataIndex].name,
+          label: c => ` ${c.parsed.y.toFixed(1)} / 48 pts`
+        } }
+      },
+      scales: {
+        y: { beginAtZero: true, max: 48, ticks: { stepSize: 12, font: { size: 10 }, color: '#94a3b8' },
+             grid: { color: 'rgba(148,163,184,0.15)' }, border: { display: false } },
+        x: { ticks: { font: { size: 10, weight: '600' }, color: '#94a3b8' },
+             grid: { display: false }, border: { display: false } }
+      }
     }
-  }
-});
+  });
+})();
 {% endif %}
 
 

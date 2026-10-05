@@ -38,6 +38,18 @@
 }
 .cmp-note { font-size: 0.72rem; color: #64748b; font-style: italic; }
 .empty-state { text-align: center; padding: 4rem 2rem; }
+
+/* Dark mode: page-local light palette mapped to One UI tokens */
+body.dark .cmp-table thead th { background: var(--surface-2); border-bottom-color: var(--border); color: var(--text-2); }
+body.dark .cmp-table tbody tr:hover { background: var(--surface-2); }
+body.dark .cmp-table tbody td { border-bottom-color: var(--border); }
+body.dark .cmp-course { color: var(--text); }
+body.dark .cmp-course:hover { color: var(--primary-light); }
+body.dark .cmp-inst { color: var(--text-2); }
+body.dark .cmp-badge { background: var(--surface-2); color: var(--text-2); }
+body.dark .cmp-cluster-chip { background: rgba(92,157,255,0.14); color: var(--primary-light); }
+body.dark .cmp-rank-chip { background: rgba(92,157,255,0.14); color: #b39dff; }
+body.dark .cmp-note { color: var(--text-2); }
 </style>
 
 <div class="cmp-hero">
