@@ -323,13 +323,13 @@
 
 /* ── Dark mode (body.dark, One UI tokens from style.css) ── */
 body.dark .filter-bar { background:var(--bg); border-bottom-color:var(--border); box-shadow:none; }
-body.dark .filter-chip { background:var(--surface); border-color:var(--border); color:var(--text-2); }
+body.dark .filter-chip { background:var(--surface); border-color: transparent; color:var(--text-2); }
 body.dark .filter-chip:hover, body.dark .filter-chip.active { background:rgba(92,157,255,.16); border-color:var(--primary-light); color:#cfe0ff; }
 body.dark .pick-row { border-top-color:var(--border); }
 body.dark :is(.pick-label, .pick-summary) { color:var(--text-2); }
 body.dark .pick-group-head { color:var(--text); }
 
-body.dark .result-card { background:var(--surface); border-color:var(--border); }
+body.dark .result-card { background:var(--surface); border-color: transparent; }
 body.dark .result-card:hover { border-color:var(--primary-light); box-shadow:none; }
 body.dark .result-card.nd-disqualified-card { background:var(--surface); border-color:rgba(255,69,58,.45); }
 body.dark .sponsored-card { background:rgba(245,158,11,.10); border-color:rgba(245,158,11,.55); }
@@ -354,7 +354,7 @@ body.dark :is(.tier-easy, .pred-chip.stable, .jm-demand-low) { background:var(--
 body.dark .tier-competitive { background:rgba(236,72,153,.16); color:#f9a8d4; }
 body.dark .cat-chip { background:rgba(179,157,255,.16); color:#cbbcff; border-color:rgba(179,157,255,.35); }
 body.dark .disqual-reason { background:rgba(255,69,58,.12); border-color:rgba(255,69,58,.35); color:#ff9b94; }
-body.dark .nd-grade-bar { background:var(--surface-2); border-color:var(--border); }
+body.dark .nd-grade-bar { background:var(--surface-2); border-color: transparent; }
 body.dark .nd-arrow { color:var(--text-3); }
 /* Active filter chips keep their status hue */
 body.dark .filter-chip:is(.tier-active-best, .chance-active-HighLikelihood, .chance-active-Likely, .qual-active-qualifies)
@@ -367,18 +367,56 @@ body.dark .filter-chip:is(.tier-active-longshot, .tier-active-disqualified, .cha
   { background:rgba(255,69,58,.18); border-color:#ff453a; color:#ff9b94; }
 
 /* Backup plan */
-body.dark .bp-card { background:var(--surface); border-color:var(--border); box-shadow:none; }
+body.dark .bp-card { background:var(--surface); border-color: transparent; box-shadow:none; }
 body.dark :is(.bp-title, .bp-asp-link, .bp-alt-name) { color:var(--text); }
 body.dark :is(.bp-sub, .bp-asp-inst, .bp-alt-inst) { color:var(--text-2); }
 body.dark .bp-aspiration { border-bottom-color:var(--border); }
 body.dark .bp-divider::before, body.dark .bp-divider::after { background:var(--border); }
 body.dark .bp-alt-row { background:var(--surface-2); border-color:transparent; }
-body.dark .bp-alt-row:hover { background:#2e2e2e; border-color:var(--border); }
+body.dark .bp-alt-row:hover { background:#2f3032; border-color:var(--border); }
 
 /* Recalculate modal */
 body.dark .recalc-card h5 { color:var(--text) !important; }
 body.dark .recalc-card p { color:var(--text-2) !important; }
 @media(max-width:640px) { .bp-grid { grid-template-columns:1fr; } .bp-header { flex-direction:column; gap:.6rem; } }
+
+/* Dark mode: page-local light palette mapped to One UI tokens */
+body.dark .pick-label { color: var(--text-2); }
+body.dark .pick-summary { color: var(--text-2); }
+body.dark .pick-exact-badge { background: rgba(52,199,89,0.14); color: #5fd88a; }
+body.dark .pick-related-badge { background: rgba(92,157,255,0.14); color: #b39dff; }
+body.dark .chance-HighLikelihood { background: rgba(52,199,89,0.14); color: #5fd88a; }
+body.dark .chance-Borderline { background: rgba(255,179,64,0.14); }
+body.dark .chance-Unlikely { background: rgba(255,69,58,0.15); color: #ff8a80; }
+body.dark .tier-safe { background: rgba(92,157,255,0.14); color: var(--primary-light); }
+body.dark .tier-easy { background: var(--surface-2); color: var(--text-2); }
+body.dark .course-link { color: var(--text); }
+body.dark .result-card .course-name { color: var(--text); }
+body.dark .filter-chip.chance-active-HighLikelihood { background: rgba(52,199,89,0.14); color: #5fd88a; }
+body.dark .filter-chip.chance-active-Likely { background: rgba(52,199,89,0.14); color: #5fd88a; }
+body.dark .filter-chip.chance-active-Borderline { background: rgba(255,179,64,0.14); }
+body.dark .filter-chip.chance-active-Unlikely { background: rgba(255,69,58,0.15); color: #ff8a80; }
+body.dark .filter-chip.tier-active-best { background: rgba(52,199,89,0.14); color: #5fd88a; }
+body.dark .filter-chip.tier-active-stretch { background: rgba(255,179,64,0.14); color: #ffc266; }
+body.dark .filter-chip.tier-active-longshot { background: rgba(255,69,58,0.15); color: #ff8a80; }
+body.dark .filter-chip.qual-active-qualifies { background: rgba(52,199,89,0.14); color: #5fd88a; }
+body.dark .filter-chip.qual-active-does_not_qualify { background: rgba(255,69,58,0.15); color: #ff8a80; }
+body.dark .filter-chip.tier-active-disqualified { background: rgba(255,69,58,0.15); color: #ff8a80; }
+body.dark .bp-title { color: var(--text); }
+body.dark .bp-sub { color: var(--text-2); }
+body.dark .bp-card:hover { border-color: rgba(179,157,255,0.6); }
+body.dark .bp-asp-link:hover { color: #b39dff; }
+body.dark .bp-gap-pill { background: rgba(255,69,58,0.15); border-color: rgba(255,69,58,0.6); color: #ff8a80; }
+body.dark .bp-alt-name { color: var(--text); }
+body.dark .bp-alt-name:hover { color: #b39dff; }
+body.dark .bp-alt-inst { color: var(--text-2); }
+body.dark .bp-footnote a { color: #b39dff; }
+body.dark .jm-demand-medium { background: rgba(255,179,64,0.14); border-color: rgba(255,179,64,0.45); }
+body.dark .jm-demand-low { background: var(--surface-2); border-color: transparent; color: var(--text-2); }
+body.dark #aiUnreadBadge { border-color: var(--border); }
+body.dark .aip-bubble.bot { background: var(--surface); border-color: transparent; color: var(--text); }
+body.dark .aip-typing { background: var(--surface); border-color: transparent; }
+body.dark .aip-chips { background: var(--surface); border-top-color: var(--border); }
 </style>
 
 <!-- Main content (blurred when locked) -->
@@ -439,6 +477,9 @@ body.dark .recalc-card p { color:var(--text-2) !important; }
 
   function showLocked(text, color) {
     clearInterval(tick);
+    // Locked grades can't be edited — drop the hero Edit Grades link too
+    var heroEdit = document.getElementById('hero-edit-grades-btn');
+    if (heroEdit) heroEdit.remove();
     banner.innerHTML = '<div class="container py-2"><i class="bi bi-lock-fill me-2" style="color:#facc15;"></i><strong>Grades locked.</strong> ' + text + '</div>';
     banner.style.borderBottomColor = color;
   }
@@ -468,7 +509,7 @@ body.dark .recalc-card p { color:var(--text-2) !important; }
       showLocked('Contact support if you need to change them.', '#16a34a');
     }).catch(function(){
       confirmBtn.disabled = false;
-      msg.textContent = 'Could not lock your grades — check your connection and try again.';
+      msg.textContent = 'Could not lock your grades. Check your connection and try again.';
       msg.style.display = '';
     });
   });
@@ -495,11 +536,13 @@ body.dark .recalc-card p { color:var(--text-2) !important; }
                     <i class="bi bi-arrow-counterclockwise me-1"></i>Recalculate
                 </button>
                 {% endif %}
-                <a href="{{ edit_url }}"
+                {% if not grades_locked %}
+                <a href="{{ edit_url }}" id="hero-edit-grades-btn"
                    class="btn btn-sm"
                    style="background:rgba(255,255,255,0.15);color:#fff;border:1px solid rgba(255,255,255,0.3);border-radius:8px;font-size:0.78rem;font-weight:600;padding:5px 12px;">
                     <i class="bi bi-pencil-square me-1"></i>Edit Grades
                 </a>
+                {% endif %}
             </div>
         </div>
         <div class="row g-3">
@@ -754,13 +797,13 @@ body.dark .recalc-card p { color:var(--text-2) !important; }
 📊 My Mean Grade: {{ mean_grade }}{% endif %}
 ✅ {{ total_count }} courses matched (University, KMTC, TVET & TTC)
 
-You should check yours too, it's 100% free and instant!
+You should check yours too, it's 100% free and instant.
 👉 careernext.co.ke, Kenya's #1 KCSE career guide{% endfilter %}"
                target="_blank" rel="noopener"
                class="btn btn-sm fw-bold" style="background:#25d366;color:white;">
               <i class="bi bi-whatsapp me-1"></i>WhatsApp
             </a>
-            <a href="https://twitter.com/intent/tweet?text={{ 'I found '|urlencode }}{{ total_count }}{{ ' KCSE courses I qualify for! 🎓 '|urlencode }}{{ pathway }}{{ ' pathway · '|urlencode }}{{ cluster_pts_single|floatformat:1 }}{{ ' pts. Check yours FREE 👉 careernext.co.ke @CareerNextKE'|urlencode }}"
+            <a href="https://twitter.com/intent/tweet?text={{ 'I found '|urlencode }}{{ total_count }}{{ ' KCSE courses I qualify for 🎓 '|urlencode }}{{ pathway }}{{ ' pathway · '|urlencode }}{{ cluster_pts_single|floatformat:1 }}{{ ' pts. Check yours FREE 👉 careernext.co.ke @CareerNextKE'|urlencode }}"
                target="_blank" rel="noopener"
                class="btn btn-sm fw-bold" style="background:#000;color:white;">
               <i class="bi bi-twitter-x me-1"></i>X / Twitter
@@ -1135,7 +1178,7 @@ You should check yours too, it's 100% free and instant!
 📊 Mean Grade: {{ mean_grade }}{% endif %}
 ✅ {{ total_count }} matches across University, KMTC, TVET & TTC
 
-You should check what YOU qualify for too! 👇
+You should check what YOU qualify for too 👇
 careernext.co.ke, Kenya's #1 KCSE career guidance platform (100% free!){% endfilter %}"
              target="_blank" rel="noopener"
              class="btn fw-bold" style="background:#25d366;color:white;border-radius:10px;">
@@ -1470,16 +1513,17 @@ document.body.insertAdjacentHTML('beforeend', `
   font-size:0.7rem; color:#94a3b8; background:#fff;
 }
 /* ── Dark mode ── */
-body.dark #aiChatPanel { background:#1f1f1f; box-shadow:0 32px 80px rgba(0,0,0,.6); }
-body.dark .aip-body { background:#1f1f1f; }
-body.dark .aip-body::-webkit-scrollbar-thumb { background:#3a3a3a; }
+body.dark #aiChatPanel { background:#1e1f21; box-shadow:0 32px 80px rgba(0,0,0,.6); }
+body.dark .aip-body { background:#1e1f21; }
+body.dark .aip-body::-webkit-scrollbar-thumb { background:#3a3b3d; }
 body.dark :is(.aip-bubble.bot, .aip-typing) { background:var(--surface-2); color:var(--text); border-color:transparent; box-shadow:none; }
-body.dark :is(.aip-chips, .aip-inputbar, .aip-footer) { background:#1f1f1f; border-top-color:var(--border); }
+body.dark :is(.aip-chips, .aip-inputbar, .aip-footer) { background:#1e1f21; border-top-color:var(--border); }
 body.dark .aip-chip { background:rgba(92,157,255,.14); border-color:rgba(92,157,255,.3); color:#9cc3ff; }
 body.dark .aip-chip:hover { background:rgba(92,157,255,.24); color:#cfe0ff; }
 body.dark #aipInput { background:var(--surface-2); border-color:transparent; color:var(--text); }
 body.dark #aipInput:focus { background:var(--surface-2); border-color:var(--primary-light); }
 body.dark .aip-footer { color:var(--text-3); }
+
 </style>
 
 <!-- Pulse ring behind button -->
@@ -1650,7 +1694,7 @@ function aipHandleError(data) {
   return false;
 }
 
-const AIP_FALLBACK_GREETING = 'Hi! I\'m your CareerNext AI Advisor. Ask me anything about your career results.';
+const AIP_FALLBACK_GREETING = 'Hi, I\'m your CareerNext AI Advisor. Ask me anything about your career results.';
 
 function aipGreet() {
   aipShowTyping();
@@ -1762,11 +1806,11 @@ function generateShareLink() {
             gradeInfo + '\n' +
             '✅ {{ total_count }} courses matched (University, KMTC, TVET & TTC)\n\n' +
             '👀 See my full results:\n' + _shareUrl + '\n\n' +
-            '💡 Find YOUR matches FREE at careernext.co.ke, Kenya\'s #1 KCSE career guide!';
+            '💡 Find YOUR matches FREE at careernext.co.ke, Kenya\'s #1 KCSE career guide.';
 
         document.getElementById('waShareBtn').href = 'https://wa.me/?text=' + encodeURIComponent(waMsg);
         document.getElementById('twShareBtn').href = 'https://twitter.com/intent/tweet?text=' +
-            encodeURIComponent('I found {{ total_count }} KCSE courses I qualify for! 🎓 {{ pathway }} · {{ cluster_pts_single|floatformat:1 }} pts. See my results: ' + _shareUrl + ' @CareerNextKE');
+            encodeURIComponent('I found {{ total_count }} KCSE courses I qualify for 🎓 {{ pathway }} · {{ cluster_pts_single|floatformat:1 }} pts. See my results: ' + _shareUrl + ' @CareerNextKE');
         document.getElementById('generateSection').style.display = 'none';
         document.getElementById('shareUrlSection').style.display = '';
     })
@@ -1794,7 +1838,7 @@ function nativeShareResult() {
     if (navigator.share && _shareUrl) {
         navigator.share({
             title: "My KCSE Career Matches: CareerNext",
-            text: "I found {{ total_count }} courses I qualify for! Check my results:",
+            text: "I found {{ total_count }} courses I qualify for. Check my results:",
             url: _shareUrl,
         }).catch(() => {});
     }
@@ -1806,7 +1850,7 @@ function nativeShareResult() {
     if (!hasJmd) return;
     var note = document.createElement('p');
     note.style.cssText = 'font-size:0.7rem;color:#94a3b8;text-align:center;margin:0.5rem 0 1.5rem;padding:0 1rem;';
-    note.innerHTML = '<i class="fas fa-circle-info me-1"></i>Salary ranges are gross monthly pay in Kenya, from the <a href="https://www.brightermonday.co.ke/research" target="_blank" rel="noopener" style="color:#94a3b8;">BrighterMonday Kenya Salary Report 2024</a>, 2025 public-sector pay agreements (doctors, clinical officers, TSC teachers), and KUCCPSS estimates benchmarked to the <a href="https://www.knbs.or.ke" target="_blank" rel="noopener" style="color:#94a3b8;">KNBS Economic Survey 2026</a>. Open a course to see its exact source. Actual pay varies by employer, experience &amp; location.';
+    note.innerHTML = '<i class="fas fa-circle-info me-1"></i>Salary ranges are gross monthly pay in Kenya, from the <a href="https://www.brightermonday.co.ke/research" target="_blank" rel="noopener" style="color:#94a3b8;">BrighterMonday Kenya Salary Report 2024</a>, 2025 public-sector pay agreements (doctors, clinical officers, TSC teachers), and CareerNext estimates benchmarked to the <a href="https://www.knbs.or.ke" target="_blank" rel="noopener" style="color:#94a3b8;">KNBS Economic Survey 2026</a>. Open a course to see its exact source. Actual pay varies by employer, experience &amp; location.';
     var paginationEl = document.querySelector('.pagination');
     var target = paginationEl ? paginationEl.closest('nav') : document.querySelector('.results-list');
     if (target) target.insertAdjacentElement('afterend', note);
@@ -1828,11 +1872,12 @@ function cardClick(e, card) {
         <div style="font-size:2rem;margin-bottom:0.5rem;">🔄</div>
         <h5 style="font-weight:800;color:#1e293b;margin-bottom:0.5rem;">Recalculate Grades?</h5>
         <p style="font-size:0.85rem;color:#64748b;margin-bottom:1.5rem;">
-            This will unlock grade entry so you can enter new grades.<br>
-            You will need to <strong>pay again</strong> to see the new career results.
+            This will unlock grade entry so you can enter new grades.{% if pathway == 'Degree' %}<br>
+            You will need to <strong>pay again</strong> to see the new career results.{% endif %}
         </p>
         <form method="post" action="{% url 'career:recalculate' %}">
             {% csrf_token %}
+            <input type="hidden" name="pathway" value="{{ pathway_slug }}">
             <button type="submit" style="background:#1e3a8a;color:#fff;border:none;border-radius:10px;padding:0.7rem 1.8rem;font-weight:700;font-size:0.9rem;cursor:pointer;width:100%;margin-bottom:0.6rem;">
                 Yes, unlock grade entry
             </button>

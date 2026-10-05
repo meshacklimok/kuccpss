@@ -679,14 +679,22 @@ def quiz_results_view(request):
         if score > 0:
             scored.append({"profile": profile, "score": score})
 
-    scored.sort(key=lambda x: x["score"], reverse=True)
+    # Highest score first; ties broken alphabetically so the order is stable
+    scored.sort(key=lambda x: (-x["score"], x["profile"].title))
+    best_score = scored[0]["score"] if scored else 0
+    for rank, match in enumerate(scored, start=1):
+        match["rank"] = rank
+        match["pct"] = round(match["score"] * 100 / best_score) if best_score else 0
     top_matches = scored[:6]
+    other_matches = scored[6:]
 
     top_career_names = [m['profile'].title for m in top_matches[:3]]
     ai_summary = _generate_quiz_ai_summary(tag_scores, top_career_names)
 
     return render(request, "career/quiz_results.html", {
         "top_matches": top_matches,
+        "other_matches": other_matches,
+        "total_matches": len(scored),
         "tag_scores": tag_scores,
         "ai_summary": ai_summary,
     })
@@ -1751,6 +1759,55 @@ def _check_subject_requirements(requirements, subject_grades_lower):
 # ─────────────────────────────────────────────
 # Submission lock helpers
 # ─────────────────────────────────────────────
+def _kcse_aggregate(pts_by_name: dict) -> int:
+    """KCSE aggregate (max 84): Maths + best language + next 5 best; the other language rejoins the pool."""
+    working = dict(pts_by_name)
+    agg = []
+    if 'Mathematics' in working:
+        agg.append(working.pop('Mathematics'))
+    lang_scores = {lang: working.pop(lang) for lang in ['English', 'Kiswahili'] if lang in working}
+    if lang_scores:
+        best = max(lang_scores, key=lambda k: lang_scores[k])
+        agg.append(lang_scores[best])
+        for lang, pts in lang_scores.items():
+            if lang != best:
+                working[lang] = pts
+    agg += sorted(working.values(), reverse=True)[:5]
+    return sum(agg)
+
+
+def _non_degree_lock(request):
+    """
+    (lock_cfg, submission) for the shared non-degree grade lock, or (None, None) when
+    the user is a guest or locking is off. Auto-locks a submission whose grace period ended.
+    """
+    from career.models import CareerSubmission, SubmissionLockConfig
+    from django.utils import timezone
+    if not request.user.is_authenticated:
+        return None, None
+    lock_cfg = SubmissionLockConfig.get_for_feature(CareerSubmission.FEATURE_NON_DEGREE)
+    if not (lock_cfg and lock_cfg.is_enabled):
+        return None, None
+    sub = CareerSubmission.objects.filter(
+        user=request.user, feature=CareerSubmission.FEATURE_NON_DEGREE
+    ).first()
+    if sub and sub.status == CareerSubmission.STATUS_PENDING and timezone.now() >= sub.lock_at:
+        sub.status = CareerSubmission.STATUS_LOCKED
+        sub.save(update_fields=['status'])
+    return lock_cfg, sub
+
+
+def _restore_non_degree_session(request, sub) -> None:
+    """Put a locked non-degree submission's grades back into the session."""
+    grades = sub.grades_json or {}
+    if sub.method == sub.METHOD_MANUAL:
+        # Mean-grade-only entry (TTC)
+        request.session['career_mean_grade'] = grades.get('mean_grade', '')
+    else:
+        request.session['career_mean_grade'] = _aggregate_to_mean_grade(_kcse_aggregate(grades))
+        request.session['career_subject_grades'] = {k.lower(): v for k, v in grades.items()}
+
+
 def _restore_degree_session(request, grades_json: dict, method: str = 'calculate') -> None:
     """Re-populate career engine session keys from a saved submission."""
     request.session['career_pathway'] = 'Degree'
@@ -1796,10 +1853,17 @@ def recalculate_view(request):
     from career.models import CareerSubmission
     if request.method != 'POST':
         return redirect('career:degree_calculate')
+    from django.contrib import messages as _msg
+    pathway = request.POST.get('pathway', '').lower()
+    if pathway in PATHWAY_SLUG_TO_LABEL and pathway != 'degree':
+        CareerSubmission.objects.filter(
+            user=request.user, feature=CareerSubmission.FEATURE_NON_DEGREE
+        ).delete()
+        _msg.info(request, "Grade lock removed. Enter your new grades.")
+        return redirect('career:pathway_input', pathway=pathway)
     CareerSubmission.objects.filter(
         user=request.user, feature=CareerSubmission.FEATURE_DEGREE
     ).delete()
-    from django.contrib import messages as _msg
     _msg.info(request, "Grade lock removed. Enter your new grades and pay to see your career results.")
     return redirect('career:degree_calculate')
 
@@ -2316,7 +2380,7 @@ def degree_paste(request):
             # Fallback: plain numbers in order, map to clusters sequentially
             plain_vals = [v.strip() for v in re.split(r'[\s,;]+', raw) if v.strip()]
             try:
-                clusters = list(Cluster.objects.all().order_by('number'))
+                clusters = list(Cluster.objects.kuccps().order_by('number'))
             except Exception:
                 clusters = []
             for i, cluster in enumerate(clusters):
@@ -2380,21 +2444,9 @@ def degree_paste(request):
 def degree_manual(request):
     import re as _re
     from clusters.models import Cluster
-    from courses.models import Course
 
-    # Only clusters that have at least one degree course with an actual offering.
-    # Course.cluster is set only for university/degree courses (see courses/models.py).
-    cluster_ids = (
-        Course.objects
-        .filter(cluster__isnull=False, offerings__isnull=False)
-        .values_list('cluster_id', flat=True)
-        .distinct()
-    )
-    all_clusters = list(
-        Cluster.objects
-        .filter(id__in=cluster_ids)
-        .order_by('number')
-    )
+    # Always all 18 KUCCPS clusters, even ones with no offerings yet.
+    all_clusters = list(Cluster.objects.kuccps().order_by('number'))
 
     # One input per KUCCPS cluster (1-18). Sub-clusters were removed, so each
     # Cluster row (101-118) maps straight to its KUCCPS number.
@@ -2489,11 +2541,39 @@ def pathway_input(request, pathway):
 
     use_kcse_form = pathway.lower() in ('diploma', 'certificate', 'kmtc', 'artisan')
 
+    from career.models import CareerSubmission
+    lock_cfg, lock_sub = _non_degree_lock(request) if pathway_label != 'Degree' else (None, None)
+    grades_locked = bool(lock_sub and lock_sub.status == CareerSubmission.STATUS_LOCKED)
+
+    def _save_submission(grades, method):
+        # Start (or restart) the review window for these grades
+        if not lock_cfg:
+            return
+        from datetime import timedelta
+        from django.utils import timezone
+        CareerSubmission.objects.update_or_create(
+            user=request.user,
+            feature=CareerSubmission.FEATURE_NON_DEGREE,
+            defaults={
+                'grades_json': grades,
+                'method': method,
+                'status': CareerSubmission.STATUS_PENDING,
+                'lock_at': timezone.now() + timedelta(minutes=lock_cfg.lock_minutes),
+                'unlocked_by_payment': None,  # new session requires new payment
+            },
+        )
+
     if request.method == 'POST':
         request.session['career_pathway'] = pathway_label
         request.session['career_categories'] = request.POST.getlist('categories')
         request.session['career_counties'] = request.POST.getlist('counties')
         request.session['career_institution_type'] = request.POST.get('institution_type', '').strip()
+
+        if grades_locked:
+            # Locked grades can't be changed: the submitted grade fields are ignored, but
+            # the student can still switch pathway or filters with their locked grades.
+            _restore_non_degree_session(request, lock_sub)
+            return redirect('career:loading_page', pathway=pathway.lower())
 
         if use_kcse_form:
             form = KCSEForm(request.POST)
@@ -2503,38 +2583,36 @@ def pathway_input(request, pathway):
                 subjects = Subject.objects.filter(id__in=points_by_id.keys())
                 pts_by_name = {s.name: points_by_id[s.id] for s in subjects}  # type: ignore[attr-defined]
 
-                working = pts_by_name.copy()
-                agg = []
-                if 'Mathematics' in working:
-                    agg.append(working.pop('Mathematics'))
-                lang_scores = {lang: working.pop(lang) for lang in ['English', 'Kiswahili'] if lang in working}
-                if lang_scores:
-                    best = max(lang_scores, key=lambda k: lang_scores[k])
-                    agg.append(lang_scores[best])
-                    for lang, pts in lang_scores.items():
-                        if lang != best:
-                            working[lang] = pts
-                agg += sorted(working.values(), reverse=True)[:5]
-                aggregate_total = sum(agg)
-                mean_grade = _aggregate_to_mean_grade(aggregate_total)
+                mean_grade = _aggregate_to_mean_grade(_kcse_aggregate(pts_by_name))
                 request.session['career_mean_grade'] = mean_grade
                 request.session['career_subject_grades'] = {k.lower(): v for k, v in pts_by_name.items()}
+                _save_submission(pts_by_name, CareerSubmission.METHOD_CALCULATE)
                 _loading_url = reverse('career:loading_page', kwargs={'pathway': pathway.lower()})
                 if not request.user.is_authenticated:
                     return redirect(reverse('accounts:register') + '?next=' + _loading_url)
                 return redirect('career:loading_page', pathway=pathway.lower())
             # Fall through to re-render with errors
         else:
-            request.session['career_mean_grade'] = request.POST.get('mean_grade', '').strip()
+            _mean = request.POST.get('mean_grade', '').strip()
+            request.session['career_mean_grade'] = _mean
+            if _mean:
+                _save_submission({'mean_grade': _mean}, CareerSubmission.METHOD_MANUAL)
             _loading_url = reverse('career:loading_page', kwargs={'pathway': pathway.lower()})
             if not request.user.is_authenticated:
                 return redirect(reverse('accounts:register') + '?next=' + _loading_url)
             return redirect('career:loading_page', pathway=pathway.lower())
     else:
-        if use_kcse_form and request.GET.get('edit'):
-            # Pre-populate form from stored session grades
+        if grades_locked:
+            # Show the locked grades read-only
+            _restore_non_degree_session(request, lock_sub)
+        if use_kcse_form and (request.GET.get('edit') or grades_locked):
+            # Pre-populate form from stored session grades (or the locked submission)
             from clusters.models import Subject as _EditSubj
-            stored = request.session.get('career_subject_grades', {})
+            if grades_locked:
+                stored = ({} if lock_sub.method == CareerSubmission.METHOD_MANUAL
+                          else {k.lower(): v for k, v in lock_sub.grades_json.items()})
+            else:
+                stored = request.session.get('career_subject_grades', {})
             if stored:
                 name_to_id = {s.name.lower(): s.id for s in _EditSubj.objects.all()}  # type: ignore[attr-defined]
                 initial = {
@@ -2548,7 +2626,9 @@ def pathway_input(request, pathway):
         else:
             form = KCSEForm() if use_kcse_form else None
 
-    current_mean_grade = request.session.get('career_mean_grade', '') if request.GET.get('edit') else ''
+    current_mean_grade = (
+        request.session.get('career_mean_grade', '') if (request.GET.get('edit') or grades_locked) else ''
+    )
 
     # Build pill-button context for diploma/certificate grade entry
     compulsory_fields, optional_groups = [], []
@@ -2598,6 +2678,7 @@ def pathway_input(request, pathway):
         'required_subject_names': REQUIRED_SUBJECT_NAMES,
         'current_mean_grade': current_mean_grade,
         'is_edit': bool(request.GET.get('edit')),
+        'grades_locked': grades_locked,
         'kenyan_counties': KENYAN_COUNTIES if pathway.lower() == 'artisan' else [],
     })
 
@@ -2664,8 +2745,9 @@ def career_results(request):
         messages.info(request, "Your session expired. Please re-enter your grades to see results.")
         return redirect('career:home')
 
-    # Grace-period submission banner data (degree path only, authenticated)
+    # Grace-period submission banner data (authenticated; degree and non-degree locks are separate)
     _sub_banner = None
+    _grades_locked = False
     if not is_guest and pathway == 'Degree':
         from career.models import CareerSubmission, SubmissionLockConfig
         from django.utils import timezone as _tz
@@ -2686,6 +2768,20 @@ def career_results(request):
                         'edit_url': reverse('career:degree_calculate'),
                         'grades': _sub.grade_summary(),
                     }
+            _grades_locked = bool(_sub and _sub.status == CareerSubmission.STATUS_LOCKED)
+    elif not is_guest:
+        from career.models import CareerSubmission
+        _lock_cfg, _sub = _non_degree_lock(request)
+        if _sub and _sub.status == CareerSubmission.STATUS_PENDING:
+            _slug = {v: k for k, v in PATHWAY_SLUG_TO_LABEL.items()}.get(pathway, pathway.lower())
+            _sub_banner = {
+                'seconds_remaining': _sub.seconds_remaining(),
+                'lock_at_iso': _sub.lock_at.isoformat(),
+                'feature': CareerSubmission.FEATURE_NON_DEGREE,
+                'edit_url': reverse('career:pathway_input', kwargs={'pathway': _slug}) + '?edit=1',
+                'grades': _sub.grade_summary(),
+            }
+        _grades_locked = bool(_sub and _sub.status == CareerSubmission.STATUS_LOCKED)
 
     cfg = _get_career_config()
 
@@ -3172,7 +3268,11 @@ def career_results(request):
     _is_locked = (
         not is_guest
         and _feature_on
-        and not has_paid_for_current_session(request.user, _CareerSubmission.FEATURE_DEGREE, 'premium_career_report')
+        and not has_paid_for_current_session(
+            request.user,
+            _CareerSubmission.FEATURE_DEGREE if pathway == 'Degree' else _CareerSubmission.FEATURE_NON_DEGREE,
+            'premium_career_report',
+        )
     )
     _gate_items = [
         "Your full personalised course list — filtered for YOUR exact cluster points",
@@ -3226,6 +3326,7 @@ def career_results(request):
         'saved_ids':           list(saved_ids),
         'backup_plan':         backup_plan,
         'edit_url':            _edit_url,
+        'pathway_slug':        _pathway_slug,
         'clear_url':           reverse('career:clear_session'),
         'guest':               is_guest,
         'guest_locked':        _guest_locked,
@@ -3235,6 +3336,7 @@ def career_results(request):
         'gate_items':          _gate_items,
         'gate_subtext':        f"We've scanned every university, KMTC, TVET & TTC in Kenya against your exact grades — {len(matches)} courses are waiting for you.",
         'sub_banner':          _sub_banner,
+        'grades_locked':       _grades_locked,
         'sponsored_listings':  sponsored_listings,
     })
 
@@ -3450,7 +3552,7 @@ def _build_career_matches(request):
     if pathway == 'Degree' and cluster_points_dict:
         from clusters.models import Cluster as _Cluster
         # Name lookup: kuccps_num → official KUCCPS cluster name (rows 101–118)
-        knum_to_name = {cl.kuccps_number: cl.name for cl in _Cluster.objects.filter(number__gt=100)}
+        knum_to_name = {cl.kuccps_number: cl.name for cl in _Cluster.objects.kuccps()}
 
         for kn_str, score in sorted(cluster_points_dict.items(), key=lambda x: int(x[0]) if x[0].isdigit() else 999):
             try:

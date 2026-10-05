@@ -143,6 +143,45 @@
 .acc-row.row-missing .lce-select { border-color: #f87171; box-shadow: 0 0 0 3px rgba(239,68,68,0.15); }
 
 @media (max-width: 480px) { .lce-continue-wrap { flex-wrap: wrap; } }
+
+/* Dark mode: page-local light palette mapped to One UI tokens */
+body.dark .step-bar { background: var(--surface); border-bottom-color: var(--border); }
+body.dark .sb-pathway { background: rgba(92,157,255,0.14); border-color: rgba(92,157,255,0.45); color: var(--primary-light); }
+body.dark .sb-dot { border-color: var(--border); }
+body.dark .sb-line { background: var(--surface-2); }
+body.dark .sb-counter { border-color: transparent; background: var(--surface-2); }
+body.dark .sb-counter.ready { border-color: rgba(52,199,89,0.6); background: rgba(52,199,89,0.14); color: #5fd88a; }
+body.dark .sb-progress { background: var(--surface-2); }
+body.dark .lce-head { background: var(--surface); border-color: transparent; }
+body.dark .lce-head h2 { color: var(--text); }
+body.dark .lce-head p { color: var(--text-2); }
+body.dark .lce-alert.danger { background: rgba(255,69,58,0.15); border-color: rgba(255,69,58,0.45); color: #ff8a80; }
+body.dark .acc-section { background: var(--surface); border-color: transparent; }
+body.dark .acc-section.has-values { border-color: rgba(92,157,255,0.6); }
+body.dark .acc-header:hover { background: var(--surface-2); }
+body.dark .acc-title { color: var(--text); }
+body.dark .acc-badge.opt { background: var(--surface-2); border-color: transparent; color: var(--text-2); }
+body.dark .acc-count { background: rgba(52,199,89,0.14); border-color: rgba(52,199,89,0.45); color: #5fd88a; }
+body.dark .acc-header.expanded .acc-chevron { color: var(--text-2); }
+body.dark .acc-row { border-top-color: var(--border); }
+body.dark .acc-row:hover { background: var(--surface-2); }
+body.dark .acc-row.filled { background: rgba(92,157,255,0.14); }
+body.dark .row-icon { background: var(--surface-2); }
+body.dark .acc-row.filled .row-icon { background: rgba(92,157,255,0.14); color: var(--primary-light); }
+body.dark .row-name { color: var(--text); }
+body.dark .acc-row.filled .row-name { color: var(--text); }
+body.dark .req-pill { background: rgba(255,69,58,0.15); border-color: rgba(255,69,58,0.45); color: #ff8a80; }
+body.dark .lce-select { border-color: var(--border); background: var(--surface); color: var(--text); }
+body.dark .lce-select.has-value { border-color: rgba(92,157,255,0.6); background-color: rgba(92,157,255,0.14); color: var(--primary-light); }
+body.dark .lce-continue-wrap { background: var(--surface); border-top-color: var(--border); }
+body.dark .lce-footer-title { color: var(--text-2); }
+body.dark .lce-footer-title strong { color: var(--text); }
+body.dark .lce-btn-back { border-color: transparent; background: var(--surface-2); color: var(--text-2); }
+body.dark .lce-btn-back:hover { background: var(--surface-2); color: var(--text); }
+body.dark .lce-btn-continue:disabled { background: var(--surface-2); }
+body.dark .lce-footer-title.note-flash { color: #ff8a80; }
+body.dark .lce-footer-title.note-flash strong { color: #ff8a80; }
+body.dark .acc-row.row-missing { background: rgba(255,69,58,0.15); }
 </style>
 
 <!-- ══ sticky step bar ══ -->
@@ -344,7 +383,7 @@ function updateGlobalCount() {
     const note = document.getElementById('footerNote');
     btn.disabled = !ready;
     if (ready) {
-        note.innerHTML = '<strong>' + allFilled + ' subjects entered</strong>, ready to continue!';
+        note.innerHTML = '<strong>' + allFilled + ' subjects entered</strong>, ready to continue.';
     } else if (missing.length) {
         const extra = MIN_SUBJECTS - allFilled - missing.length;
         note.innerHTML = 'Fill in <strong>' + missing.join(', ') + '</strong>'

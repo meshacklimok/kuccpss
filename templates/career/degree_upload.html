@@ -29,6 +29,11 @@
     display: none;
     margin: 1rem auto 0;
 }
+
+/* Dark mode: page-local light palette mapped to One UI tokens */
+body.dark .upload-zone { background: var(--surface-2); }
+body.dark .upload-zone:hover, body.dark .upload-zone.dragover { background: rgba(92,157,255,0.14); }
+body.dark #preview-img { border-color: var(--border); }
 </style>
 
 <div class="container py-4" style="max-width:700px;">

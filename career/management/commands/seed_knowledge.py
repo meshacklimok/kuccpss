@@ -774,16 +774,16 @@ ENTRIES = [
     # ═══════════════════════════════════════════════
     {
         "category": "general",
-        "question": "What is KUCCPSS and how does it help students?",
+        "question": "What is CareerNext and how does it help students?",
         "answer": (
-            "KUCCPSS is a free online platform that helps Kenyan KCSE students: "
+            "CareerNext is a free online platform that helps Kenyan KCSE students: "
             "1. Calculate their cluster points using the official KUCCPS formula. "
             "2. Discover which university courses, KMTC programmes, TVETs, and TTCs they qualify for. "
             "3. Get AI-powered career guidance tailored to their grade, subjects, and interests. "
             "It is not an official KUCCPS portal — students must apply on kuccps.net — "
             "but it helps you understand your options before applications open."
         ),
-        "keywords": "kuccpss,what is,platform,help,student,cluster points,career guidance",
+        "keywords": "careernext,kuccpss,what is,platform,help,student,cluster points,career guidance",
         "order": 1,
     },
     {

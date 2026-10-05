@@ -528,7 +528,7 @@ const STATUS_MSGS = [
     "Cross-referencing course database...",
     "Checking entry requirements...",
     "Ranking your best matches...",
-    "Almost done, building your list!",
+    "Almost done, building your list...",
 ];
 
 const FACTS = [
@@ -663,7 +663,7 @@ function runStep(i) {
                 iconEl.classList.add('visible');
                 pctEl.style.color = '#4ade80';
                 document.getElementById('mainCard').classList.add('complete');
-                setStatus("Done! Loading your results...");
+                setStatus("Done. Loading your results...");
                 labelEl.textContent = "Analysis complete, redirecting now";
                 setTimeout(() => { window.location.href = REDIRECT; }, 800);
             }

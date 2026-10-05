@@ -653,7 +653,7 @@ CAREERS = [
 # Survey 2026 average wage (~KSh 82k/month in 2025), and are labelled as such.
 ESTIMATE_SOURCE = {
     'source_year': 2025,
-    'source_name': 'KUCCPSS estimate — benchmarked to BrighterMonday 2024 & KNBS Economic Survey 2026',
+    'source_name': 'CareerNext estimate — benchmarked to BrighterMonday 2024 & KNBS Economic Survey 2026',
     'source_url':  'https://www.knbs.or.ke',
 }
 

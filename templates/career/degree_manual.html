@@ -257,7 +257,37 @@
         <div style="font-size:0.8rem;color:rgba(255,255,255,0.65);text-align:center;">Searching degree courses for your cluster points…</div>
     </div>
 </div>
-<style>@keyframes dm-spin { to { transform:rotate(360deg); } }</style>
+<style>@keyframes dm-spin { to { transform:rotate(360deg); } }
+/* Dark mode: page-local light palette mapped to One UI tokens */
+body.dark .step-bar { background: var(--surface); border-bottom-color: var(--border); }
+body.dark .sb-badge { background: rgba(92,157,255,0.14); border-color: rgba(92,157,255,0.45); color: var(--primary-light); }
+body.dark .sb-dot { border-color: var(--border); }
+body.dark .sb-line { background: var(--surface-2); }
+body.dark .sb-filled-count { border-color: transparent; background: var(--surface-2); }
+body.dark .sb-filled-count.any { border-color: rgba(92,157,255,0.6); background: rgba(92,157,255,0.14); color: var(--primary-light); }
+body.dark .dm-head { background: var(--surface); border-color: transparent; }
+body.dark .dm-head h2 { color: var(--text); }
+body.dark .dm-head p { color: var(--text-2); }
+body.dark .auto-badge { background: rgba(92,157,255,0.14); border-color: rgba(92,157,255,0.45); color: var(--primary-light); }
+body.dark .leg-pill.green { background: rgba(52,199,89,0.14); border-color: rgba(52,199,89,0.45); color: #5fd88a; }
+body.dark .leg-pill.blue { background: rgba(92,157,255,0.14); border-color: rgba(92,157,255,0.45); color: var(--primary-light); }
+body.dark .leg-pill.yellow { background: rgba(255,179,64,0.14); border-color: rgba(255,179,64,0.45); color: #ffc266; }
+body.dark .leg-pill.red { background: rgba(255,69,58,0.15); border-color: rgba(255,69,58,0.45); color: #ff8a80; }
+body.dark .cluster-row { background: var(--surface); border-color: transparent; }
+body.dark .cluster-row:hover { border-color: rgba(92,157,255,0.6); }
+body.dark .cluster-num { background: rgba(92,157,255,0.14); border-color: rgba(92,157,255,0.45); color: var(--primary-light); }
+body.dark .cluster-name { color: var(--text); }
+body.dark .pts-input { border-color: var(--border); background: var(--surface); color: var(--text); }
+body.dark .pts-input.prefilled { background: rgba(92,157,255,0.14); border-color: rgba(92,157,255,0.6); color: var(--primary-light); }
+body.dark .dm-footer { background: var(--surface); border-top-color: var(--border); }
+body.dark .dm-footer-info { color: var(--text-2); }
+body.dark .dm-footer-info strong { color: var(--text); }
+body.dark .dm-btn-back { border-color: transparent; background: var(--surface-2); color: var(--text-2); }
+body.dark .dm-btn-back:hover { background: var(--surface-2); color: var(--text); }
+body.dark .dm-btn-clear { border-color: transparent; background: var(--surface-2); color: var(--text-2); }
+body.dark .dm-btn-clear:hover { background: var(--surface-2); color: var(--text); }
+body.dark .dm-alert.warn { background: rgba(255,179,64,0.14); border-color: rgba(255,179,64,0.45); color: #ffc266; }
+</style>
 
 {% block extra_js %}
 <script>

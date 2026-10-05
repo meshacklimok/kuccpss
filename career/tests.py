@@ -193,6 +193,87 @@ class GradeLockTests(CareerTestBase):
         self.assertEqual(r.status_code, 400)
 
 
+class NonDegreeGradeLockTests(CareerTestBase):
+    """Diploma / Certificate / KMTC / TTC / Artisan share one grade lock."""
+
+    def setUp(self):
+        super().setUp()
+        from career.models import SubmissionLockConfig
+        SubmissionLockConfig.objects.update_or_create(
+            feature='non_degree_career', defaults={'lock_minutes': 5, 'is_enabled': True},
+        )
+
+    def _submission(self):
+        from career.models import CareerSubmission
+        return CareerSubmission.objects.get(user=self.user, feature='non_degree_career')
+
+    def _lock(self):
+        r = self.client.post('/career/submission/confirm/', json.dumps({'feature': 'non_degree_career'}),
+                             content_type='application/json')
+        self.assertEqual(r.status_code, 200)
+
+    def test_submit_starts_review_window(self):
+        self.client.post('/career/input/diploma/', self.grades_post())
+        sub = self._submission()
+        self.assertEqual((sub.status, sub.method), ('pending', 'calculate'))
+        r = self.client.get('/career/results/')
+        self.assertContains(r, 'sub-lock-banner')
+        self.assertContains(r, 'Mathematics <b>A-</b>', html=False)
+
+    def test_ttc_mean_grade_is_locked_too(self):
+        self.client.post('/career/input/ttc/', {'mean_grade': 'C+'})
+        sub = self._submission()
+        self.assertEqual((sub.method, sub.grades_json), ('manual', {'mean_grade': 'C+'}))
+        self.assertContains(self.client.get('/career/results/'), 'Mean grade <b>C+</b>', html=False)
+
+    def test_locked_grades_ignore_new_submissions(self):
+        self.client.post('/career/input/diploma/', self.grades_post())
+        mean = self.client.session['career_mean_grade']
+        self._lock()
+        # Switch pathway and try all-E grades: the locked grades must win
+        r = self.client.post('/career/input/kmtc/', self.grades_post({k: 1 for k in GRADES}))
+        self.assertRedirects(r, '/career/loading/kmtc/', fetch_redirect_response=False)
+        self.assertEqual(self.client.session['career_mean_grade'], mean)
+        self.assertEqual(self.client.session['career_pathway'], 'KMTC')
+        self.assertEqual(self._submission().grades_json, GRADES)
+
+    def test_locked_input_page_is_read_only(self):
+        self.client.post('/career/input/diploma/', self.grades_post())
+        self._lock()
+        r = self.client.get('/career/input/certificate/')
+        self.assertContains(r, 'Your grades are locked')
+        math = Subject.objects.get(name='Mathematics')
+        self.assertRegex(r.content.decode(), rf'name="subject_{math.pk}"[^>]*disabled')
+
+    def test_locked_results_hide_edit_grades(self):
+        self.client.post('/career/input/diploma/', self.grades_post())
+        self._lock()
+        r = self.client.get('/career/results/')
+        self.assertNotContains(r, 'hero-edit-grades-btn')
+        self.assertNotContains(r, 'sub-lock-banner')
+
+    def test_expired_window_auto_locks(self):
+        from django.utils import timezone
+        from datetime import timedelta
+        self.client.post('/career/input/diploma/', self.grades_post())
+        sub = self._submission()
+        sub.lock_at = timezone.now() - timedelta(seconds=1)
+        sub.save(update_fields=['lock_at'])
+        self.client.get('/career/input/diploma/')
+        self.assertEqual(self._submission().status, 'locked')
+
+    def test_recalculate_unlocks_only_non_degree(self):
+        from career.models import CareerSubmission, SubmissionLockConfig
+        SubmissionLockConfig.objects.update_or_create(feature='degree_career', defaults={'lock_minutes': 5})
+        self.client.post('/career/degree/calculate/', self.grades_post())
+        self.client.post('/career/input/diploma/', self.grades_post())
+        self._lock()
+        r = self.client.post('/career/submission/recalculate/', {'pathway': 'diploma'})
+        self.assertRedirects(r, '/career/input/diploma/', fetch_redirect_response=False)
+        self.assertFalse(CareerSubmission.objects.filter(user=self.user, feature='non_degree_career').exists())
+        self.assertTrue(CareerSubmission.objects.filter(user=self.user, feature='degree_career').exists())
+
+
 class NonDegreePathwayTests(CareerTestBase):
 
     def test_kcse_form_pathways_reach_results(self):
@@ -482,3 +563,104 @@ class CareerPagesSmokeTests(CareerTestBase):
             for url in self.PAGES + [f'/career/profiles/{self.profile.slug}/']:
                 with self.subTest(url=url, logged_in=logged_in):
                     self.assertLess(self.client.get(url).status_code, 500)
+
+
+class AIAssistantActionToolTests(CareerTestBase):
+    """Newer CareerNext AI tools: cluster working, what-if, choice planner, careers, actions."""
+
+    def setUp(self):
+        super().setUp()
+        from career import ai_assistant
+        self.ai = ai_assistant
+        grades = {k.lower(): v for k, v in GRADES.items()}
+        pts = {str(r.cluster.kuccps_number): r.cluster_points
+               for r in self._clusters(GRADES) if r.cluster.kuccps_number}
+        self.student = {
+            'pathway': 'Degree', 'mean_grade': 'B+', 'subject_grades': grades,
+            'cluster_points': pts, 'snapshot': None, 'user_id': self.user.pk, 'quiz_tags': {},
+        }
+
+    @staticmethod
+    def _clusters(grades):
+        from clusterpoints.services import calculate_clusters_anonymous
+        return calculate_clusters_anonymous(grades)
+
+    def test_every_tool_spec_has_an_implementation(self):
+        for spec in self.ai.TOOL_SPECS:
+            self.assertIn(spec['function']['name'], self.ai._TOOL_FUNCS)
+
+    def test_aggregate_subjects_matches_aggregate_total(self):
+        from clusterpoints.services import aggregate_subjects, compute_aggregate_total
+        picked = aggregate_subjects(GRADES)
+        self.assertEqual(len(picked), 7)
+        self.assertEqual(picked[0][0], 'Mathematics')
+        self.assertEqual(picked[1][0], 'English')
+        self.assertEqual(sum(p for _, p in picked), compute_aggregate_total(GRADES))
+
+    def test_explain_cluster_points_shows_formula_and_matches_calculator(self):
+        out = self.ai.tool_explain_my_cluster_points(self.student, 1)
+        self.assertEqual(len(out['cluster_subjects']), 4)
+        self.assertIn('48 × √', out['formula'])
+        self.assertAlmostEqual(out['cluster_points'], float(self.student['cluster_points']['1']), places=3)
+        self.assertNotIn('note', out)
+
+    def test_simulate_grade_change_raises_points_and_rechecks_course(self):
+        out = self.ai.tool_simulate_grade_change(
+            self.student, [{'subject': 'english', 'grade': 'A'}], course_name='law')
+        self.assertIn('English: B+ → A', out['changes_applied'])
+        law = next(d for d in out['cluster_changes'] if d['cluster'] == 1)
+        self.assertGreater(law['change'], 0)
+        self.assertIn('with_changes', out['course_check'])
+
+    def test_simulate_rejects_invalid_grade(self):
+        out = self.ai.tool_simulate_grade_change(self.student, [{'subject': 'english', 'grade': 'Z'}])
+        self.assertIn('error', out)
+
+    def test_plan_kuccps_choices_buckets_eligible_course(self):
+        self.student['cluster_points']['1'] = 32.5   # cutoff 30.0 → +2.5 → Safe
+        out = self.ai.tool_plan_kuccps_choices(self.student, level='degree')
+        self.assertEqual(out['plan'][0]['course'], 'Bachelor of Laws Test')
+        self.assertEqual(out['plan'][0]['tier'], 'Safe')
+
+    def test_recommend_careers_uses_quiz_and_eligibility(self):
+        self.profile.career_tags = 'law'
+        self.profile.save()
+        self.profile.related_courses.add(self.degree_course)
+        self.student['cluster_points']['1'] = 32.5
+        self.student['quiz_tags'] = {'law': 3}
+        out = self.ai.tool_recommend_careers_for_me(self.student)
+        self.assertEqual(out['results'][0]['career'], 'Lawyer')
+        self.assertEqual(out['results'][0]['fit'], 'Excellent fit')
+
+    def test_recommend_careers_without_interests_asks(self):
+        self.assertIn('error', self.ai.tool_recommend_careers_for_me(self.student))
+
+    def test_add_to_shortlist_with_rank_and_limit(self):
+        from accounts.models import CourseShortlist
+        out = self.ai.tool_add_to_shortlist(self.student, 'Bachelor of Laws', rank=1, note='Top pick')
+        self.assertEqual(out['result'], 'added')
+        item = CourseShortlist.objects.get(user=self.user, course=self.degree_course)
+        self.assertEqual((item.rank, item.notes), (1, 'Top pick'))
+        for c in Course.objects.exclude(pk=self.degree_course.pk)[:4]:
+            CourseShortlist.objects.create(user=self.user, course=c)
+        extra = Course.objects.create(name='Extra Testing Course', course_type=self.degree_course.course_type)
+        out = self.ai.tool_add_to_shortlist(self.student, extra.name)
+        self.assertIn('full', out['error'])
+
+    def test_add_to_shortlist_requires_login(self):
+        self.student['user_id'] = None
+        self.assertIn('error', self.ai.tool_add_to_shortlist(self.student, 'law'))
+
+    def test_kuccps_calendar_lists_current_cycle(self):
+        from resources.models import CalendarCycle, CalendarEvent
+        cycle = CalendarCycle.objects.create(title='KCSE 2025 Cycle', tab_label='2025', is_current=True)
+        CalendarEvent.objects.create(cycle=cycle, title='First application window', date_label='May 2026',
+                                     status='active')
+        out = self.ai.tool_get_kuccps_calendar(self.student)
+        self.assertEqual(out['events'][0]['event'], 'First application window')
+        self.assertEqual(out['events'][0]['status'], 'Open now')
+
+    def test_location_filter(self):
+        self.student['cluster_points']['1'] = 32.5
+        self.assertEqual(self.ai.tool_find_courses_i_qualify_for(self.student, 'degree', location='Mombasa')['results'], [])
+        self.assertTrue(self.ai.tool_find_courses_i_qualify_for(self.student, 'degree', location='Test')['results'])

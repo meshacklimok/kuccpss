@@ -609,7 +609,7 @@ body.dark .t-saves              { color: rgba(255,255,255,0.4); }
       </div>
       <div class="stat-item">
         <div>
-          <div class="stat-num">20</div>
+          <div class="stat-num">18</div>
           <div class="stat-label">KUCCPS Clusters</div>
         </div>
       </div>
@@ -860,7 +860,14 @@ body.dark .t-saves              { color: rgba(255,255,255,0.4); }
 </section>
 {% endif %}
 
-<style>html { scroll-behavior: smooth; }</style>
+<style>html { scroll-behavior: smooth; }
+/* Dark mode: page-local light palette mapped to One UI tokens */
+body.dark .btn-hero-primary { background: var(--surface); color: var(--primary-light); }
+body.dark .btn-hero-primary:hover { color: var(--primary-light); }
+body.dark .pathway-card.degree { border-color: rgba(92,157,255,0.45); }
+body.dark .pathway-card.kmtc { border-color: rgba(255,69,58,0.6); }
+body.dark .pathway-card.artisan { border-color: rgba(255,179,64,0.45); }
+</style>
 <script>
 /* Re-scroll to hash after layout settles (images/fonts shift the page height) */
 if (window.location.hash) {

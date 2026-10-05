@@ -263,6 +263,23 @@ body.dark .pm-how { color: var(--text-2, #cbd5e1); }
     font-size: 0.85rem;
     color: #374151;
 }
+
+/* Dark mode: page-local light palette mapped to One UI tokens */
+body.dark .chat-header { border-bottom-color: var(--border); }
+body.dark .credit-badge.free { background: rgba(52,199,89,0.14); }
+body.dark .credit-badge.paid { background: rgba(92,157,255,0.14); border-color: rgba(92,157,255,0.45); color: var(--primary-light); }
+body.dark .credit-badge.low { background: rgba(255,179,64,0.14); }
+body.dark .credit-badge.empty { background: rgba(255,69,58,0.15); border-color: rgba(255,69,58,0.45); color: #ff8a80; }
+body.dark .starter-chip { border-color: transparent; background: var(--surface-2); color: var(--text); }
+body.dark .starter-chip:hover { background: rgba(92,157,255,0.14); color: #64d2ff; }
+body.dark .msg.bot .bubble { background: var(--surface-2); color: var(--text); }
+body.dark .bubble.paywall-bubble { background: rgba(255,179,64,0.14); color: #ffc266; }
+body.dark .msg.bot .avatar { background: rgba(92,157,255,0.14); color: #64d2ff; }
+body.dark .chat-input-bar { border-top-color: var(--border); }
+body.dark #chatInput { border-color: var(--border); }
+body.dark .paywall-modal { background: var(--surface); }
+body.dark .pm-close:hover { color: var(--text-2); }
+body.dark .pm-features li { color: var(--text); }
 </style>
 
 <div class="chat-wrapper">
@@ -332,7 +349,7 @@ body.dark .pm-how { color: var(--text-2, #cbd5e1); }
         <div class="msg bot">
             <div class="avatar"><i class="bi bi-stars"></i></div>
             <div class="bubble">
-                Hi! I'm <strong>CareerNext AI</strong>. I can help you choose courses and careers based on your KCSE results, cluster points, and interests.<br><br>
+                Hi, I'm <strong>CareerNext AI</strong>. I can help you choose courses and careers based on your KCSE results, cluster points, and interests.<br><br>
                 Ask me anything, like <em>"I got C+, what can I study?"</em> or <em>"Do I qualify for Computer Science?"</em>
                 {% if credit_info and credit_info.free_limit %}
                 <br><br><span style="font-size:0.82rem;color:#64748b;">
@@ -441,7 +458,7 @@ body.dark .pm-how { color: var(--text-2, #cbd5e1); }
                     <div class="mb-3">
                         <div class="spinner-border text-success" style="width:3rem;height:3rem;"></div>
                     </div>
-                    <h6 class="fw-bold">Check your phone!</h6>
+                    <h6 class="fw-bold">Check your phone</h6>
                     <p class="text-muted small mb-0">An M-Pesa prompt was sent to <strong id="pmSentTo"></strong>.<br>Enter your PIN to complete payment.</p>
                     <p class="text-muted small mt-2">Waiting for confirmation<span id="pmDots">...</span></p>
                     <div class="pm-tips">
@@ -456,9 +473,9 @@ body.dark .pm-how { color: var(--text-2, #cbd5e1); }
             <div class="pm-step" id="pmStepSuccess">
                 <div class="text-center py-2">
                     <div class="mb-3" style="font-size:3.5rem;">✅</div>
-                    <h5 class="fw-bold text-success">Payment Successful!</h5>
+                    <h5 class="fw-bold text-success">Payment Successful</h5>
                     <p class="text-muted small">
-                        Your messages have been topped up. Continue your conversation!
+                        Your messages have been topped up. Continue your conversation.
                     </p>
                     <button class="btn btn-success mt-1" onclick="closePaywall()">
                         <i class="bi bi-chat-dots me-2"></i>Continue Chatting
@@ -688,7 +705,7 @@ async function send() {
                 box.scrollTop = box.scrollHeight;
             }
             if (!cnAiStrip(full)) {
-                full = 'Sorry, I could not put an answer together — please try asking again.';
+                full = 'Sorry, I could not put an answer together. Please try asking again.';
                 bubble.innerHTML = fmt(full);
             }
             afterReply(full);
@@ -869,7 +886,7 @@ function pmOnSuccess() {
     updateCreditBadge();
     /* Show success message in chat */
     appendMsg('bot',
-        `<strong>✅ Top-up successful!</strong><br>
+        `<strong>✅ Top-up successful</strong><br>
          Your AI messages have been added. Continue asking your questions!`
     );
 }
