@@ -5,104 +5,70 @@
    "email": "aisha.student.demo@example.com",
    "full_name": "Aisha Hassan",
    "is_active": true,
-   "is_verified": false,
-   "phone_number": ""
+   "is_verified": false
   },
   {
    "county": "",
    "email": "brian.student.demo@example.com",
    "full_name": "Brian Mutua",
    "is_active": true,
-   "is_verified": false,
-   "phone_number": ""
+   "is_verified": false
   },
   {
    "county": "",
    "email": "mrs.kamau.demo@example.com",
    "full_name": "Mrs. Faith Kamau",
    "is_active": true,
-   "is_verified": false,
-   "phone_number": ""
+   "is_verified": false
   },
   {
    "county": "",
    "email": "prof.otieno.demo@example.com",
    "full_name": "Prof. Daniel Otieno",
    "is_active": true,
-   "is_verified": false,
-   "phone_number": ""
+   "is_verified": false
   },
   {
    "county": "",
    "email": "dr.wanjiru.demo@example.com",
    "full_name": "Dr. Grace Wanjiru",
    "is_active": true,
-   "is_verified": false,
-   "phone_number": ""
-  },
-  {
-   "county": "",
-   "email": "ruthkimeli71@gmail.com",
-   "full_name": "ruth",
-   "is_active": true,
-   "is_verified": true,
-   "phone_number": ""
+   "is_verified": false
   },
   {
    "county": "",
    "email": "dennis.mentor@test.careernext.co.ke",
    "full_name": "Dennis Kipchoge",
    "is_active": true,
-   "is_verified": false,
-   "phone_number": ""
+   "is_verified": false
   },
   {
    "county": "",
    "email": "grace.mentor@test.careernext.co.ke",
    "full_name": "Grace Wanjiku",
    "is_active": true,
-   "is_verified": false,
-   "phone_number": ""
+   "is_verified": false
   },
   {
    "county": "",
    "email": "kevin.mentor@test.careernext.co.ke",
    "full_name": "Kevin Mwangi",
    "is_active": true,
-   "is_verified": false,
-   "phone_number": ""
+   "is_verified": false
   },
   {
    "county": "",
    "email": "amina.mentor@test.careernext.co.ke",
    "full_name": "Amina Hassan",
    "is_active": true,
-   "is_verified": false,
-   "phone_number": ""
+   "is_verified": false
   },
   {
    "county": "",
    "email": "brian.mentor@test.careernext.co.ke",
    "full_name": "Brian Otieno",
    "is_active": true,
-   "is_verified": false,
-   "phone_number": ""
-  },
-  {
-   "county": "nairobi",
-   "email": "ruth@gmail.com",
-   "full_name": "ruth",
-   "is_active": true,
-   "is_verified": true,
-   "phone_number": "0729024549"
-  },
-  {
-   "county": "nairobi",
-   "email": "limomeshk@gmail.com",
-   "full_name": "ttt",
-   "is_active": true,
-   "is_verified": true,
-   "phone_number": "0723245454"
+   "is_verified": false
   }
  ],
  "career.AIKnowledgeEntry": [
@@ -4526,9 +4492,7 @@
    "photo": "",
    "rejection_reason": "",
    "show_new_badge": false,
-   "university_email": "",
    "user": "aisha.student.demo@example.com",
-   "whatsapp": "+254700001002",
    "year_of_study": 2
   },
   {
@@ -4547,9 +4511,7 @@
    "photo": "",
    "rejection_reason": "",
    "show_new_badge": false,
-   "university_email": "",
    "user": "brian.student.demo@example.com",
-   "whatsapp": "+254700001001",
    "year_of_study": 3
   },
   {
@@ -4568,9 +4530,7 @@
    "photo": "",
    "rejection_reason": "",
    "show_new_badge": false,
-   "university_email": "",
    "user": "mrs.kamau.demo@example.com",
-   "whatsapp": "+254700000003",
    "year_of_study": 1
   },
   {
@@ -4589,9 +4549,7 @@
    "photo": "",
    "rejection_reason": "",
    "show_new_badge": false,
-   "university_email": "",
    "user": "prof.otieno.demo@example.com",
-   "whatsapp": "+254700000002",
    "year_of_study": 1
   },
   {
@@ -4610,51 +4568,7 @@
    "photo": "",
    "rejection_reason": "",
    "show_new_badge": false,
-   "university_email": "",
    "user": "dr.wanjiru.demo@example.com",
-   "whatsapp": "+254700000001",
-   "year_of_study": 1
-  },
-  {
-   "bio": "444",
-   "course": "diploma-in-kenya-registered-nursing-and-midwifery",
-   "custom_mentor_payout": null,
-   "custom_session_minutes": null,
-   "custom_session_price": null,
-   "display_order": 0,
-   "headline": "",
-   "institution": "kmtc-homa-bay",
-   "is_active": true,
-   "is_approved": true,
-   "is_rejected": false,
-   "mentor_type": "student",
-   "photo": "",
-   "rejection_reason": "",
-   "show_new_badge": false,
-   "university_email": "",
-   "user": "ruthkimeli71@gmail.com",
-   "whatsapp": "+254729024549",
-   "year_of_study": 1
-  },
-  {
-   "bio": "tyygg",
-   "course": "bachelor-of-science-agribusiness-management",
-   "custom_mentor_payout": null,
-   "custom_session_minutes": null,
-   "custom_session_price": null,
-   "display_order": 0,
-   "headline": "",
-   "institution": "kmtc-bungoma",
-   "is_active": true,
-   "is_approved": false,
-   "is_rejected": false,
-   "mentor_type": "student",
-   "photo": "",
-   "rejection_reason": "",
-   "show_new_badge": false,
-   "university_email": "",
-   "user": "ruth@gmail.com",
-   "whatsapp": "+254729024549",
    "year_of_study": 1
   },
   {
@@ -4673,9 +4587,7 @@
    "photo": "",
    "rejection_reason": "",
    "show_new_badge": false,
-   "university_email": "",
    "user": "dennis.mentor@test.careernext.co.ke",
-   "whatsapp": "+254712000005",
    "year_of_study": 3
   },
   {
@@ -4694,9 +4606,7 @@
    "photo": "",
    "rejection_reason": "",
    "show_new_badge": false,
-   "university_email": "",
    "user": "grace.mentor@test.careernext.co.ke",
-   "whatsapp": "+254712000004",
    "year_of_study": 5
   },
   {
@@ -4715,9 +4625,7 @@
    "photo": "",
    "rejection_reason": "",
    "show_new_badge": false,
-   "university_email": "",
    "user": "kevin.mentor@test.careernext.co.ke",
-   "whatsapp": "+254712000003",
    "year_of_study": 2
   },
   {
@@ -4736,9 +4644,7 @@
    "photo": "",
    "rejection_reason": "",
    "show_new_badge": false,
-   "university_email": "",
    "user": "amina.mentor@test.careernext.co.ke",
-   "whatsapp": "+254712000002",
    "year_of_study": 4
   },
   {
@@ -4757,31 +4663,8 @@
    "photo": "",
    "rejection_reason": "",
    "show_new_badge": false,
-   "university_email": "",
    "user": "brian.mentor@test.careernext.co.ke",
-   "whatsapp": "+254712000001",
    "year_of_study": 3
-  },
-  {
-   "bio": "an agri student",
-   "course": "bachelor-of-agribusiness-management",
-   "custom_mentor_payout": null,
-   "custom_session_minutes": null,
-   "custom_session_price": null,
-   "display_order": 0,
-   "headline": "",
-   "institution": "bumula-institute-of-health-and-development",
-   "is_active": true,
-   "is_approved": true,
-   "is_rejected": false,
-   "mentor_type": "student",
-   "photo": "",
-   "rejection_reason": "",
-   "show_new_badge": false,
-   "university_email": "",
-   "user": "limomeshk@gmail.com",
-   "whatsapp": "0729024549",
-   "year_of_study": 1
   }
  ],
  "mentorship.MentorshipConfig": [
@@ -4795,12 +4678,12 @@
  "mentorship.TimeSlot": [
   {
    "date": "2026-10-06",
-   "mentor": "dr.wanjiru.demo@example.com",
+   "mentor": "prof.otieno.demo@example.com",
    "start_time": "10:00:00"
   },
   {
    "date": "2026-10-06",
-   "mentor": "prof.otieno.demo@example.com",
+   "mentor": "dr.wanjiru.demo@example.com",
    "start_time": "10:00:00"
   },
   {
@@ -4810,12 +4693,12 @@
   },
   {
    "date": "2026-10-06",
-   "mentor": "prof.otieno.demo@example.com",
+   "mentor": "dr.wanjiru.demo@example.com",
    "start_time": "14:00:00"
   },
   {
    "date": "2026-10-06",
-   "mentor": "dr.wanjiru.demo@example.com",
+   "mentor": "prof.otieno.demo@example.com",
    "start_time": "14:00:00"
   },
   {
@@ -4845,12 +4728,12 @@
   },
   {
    "date": "2026-10-07",
-   "mentor": "prof.otieno.demo@example.com",
+   "mentor": "dr.wanjiru.demo@example.com",
    "start_time": "14:00:00"
   },
   {
    "date": "2026-10-07",
-   "mentor": "dr.wanjiru.demo@example.com",
+   "mentor": "prof.otieno.demo@example.com",
    "start_time": "14:00:00"
   },
   {
@@ -4870,12 +4753,12 @@
   },
   {
    "date": "2026-10-08",
-   "mentor": "prof.otieno.demo@example.com",
+   "mentor": "dr.wanjiru.demo@example.com",
    "start_time": "10:00:00"
   },
   {
    "date": "2026-10-08",
-   "mentor": "dr.wanjiru.demo@example.com",
+   "mentor": "prof.otieno.demo@example.com",
    "start_time": "10:00:00"
   },
   {
@@ -4890,12 +4773,12 @@
   },
   {
    "date": "2026-10-08",
-   "mentor": "prof.otieno.demo@example.com",
+   "mentor": "dr.wanjiru.demo@example.com",
    "start_time": "16:00:00"
   },
   {
    "date": "2026-10-08",
-   "mentor": "dr.wanjiru.demo@example.com",
+   "mentor": "prof.otieno.demo@example.com",
    "start_time": "16:00:00"
   }
  ],
@@ -5490,14 +5373,6 @@
    "label": "Calendar Page Notice",
    "setting_type": "textarea",
    "value": "Dates are estimates based on historical KUCCPS patterns. KNEC and KUCCPS set official dates each year. Always verify on the KUCCPS portal (kuccps.net) and KNEC website before acting."
-  },
-  {
-   "group": "contact",
-   "help_note": "All admin alert emails (mentor applications, refunds, withdrawals) are sent here.",
-   "key": "admin_email",
-   "label": "Admin Notification Email",
-   "setting_type": "email",
-   "value": "limomeshk@gmail.com"
   },
   {
    "group": "contact",

@@ -9,8 +9,8 @@ one database to another without relying on primary keys.
 
 Rows are matched on natural keys (slug, email, unique fields), so it's safe to run
 against a database whose ids differ. User activity (sessions, payments, logins,
-quiz submissions) is never exported. Mentor accounts are created with an unusable
-password — they set one via "Forgot password".
+quiz submissions) is never exported, nor are personal contacts or real mentors'
+accounts (the repo is public) — only demo mentors, created with an unusable password.
 """
 import hashlib
 import json
@@ -63,23 +63,40 @@ SPECS = [
     ('institutions.InstitutionPromotion', ['institution'], []),
     ('accounts.User',                ['email'], []),   # mentor accounts only, see _queryset
     ('mentorship.MentorProfile',     ['user'], [
-        # earnings/stats come from real sessions and payments, and ID documents stay private
+        # earnings/stats come from real sessions and payments; contacts and ID documents stay private
         'wallet_balance', 'total_earned', 'payout_debt', 'total_sessions', 'average_rating',
-        'student_id_upload', 'portal_screenshot',
+        'student_id_upload', 'portal_screenshot', 'whatsapp', 'university_email',
     ]),
     ('mentorship.TimeSlot',          ['mentor', 'date', 'start_time'], ['is_booked']),
 ]
 
-USER_FIELDS = ['email', 'full_name', 'is_active', 'is_verified', 'phone_number', 'county']
+USER_FIELDS = ['email', 'full_name', 'is_active', 'is_verified', 'county']
+
+# The export is committed to a public repo: only demo mentor accounts go in it.
+# Real mentors (personal emails) sign up on the live site themselves.
+DEMO_EMAIL_DOMAINS = ('@example.com', '@test.careernext.co.ke')
+PRIVATE_SETTINGS = ('admin_email',)
+
+
+def _demo_users():
+    q = models.Q()
+    for domain in DEMO_EMAIL_DOMAINS:
+        q |= models.Q(email__iendswith=domain)
+    return get_user_model().objects.filter(q)
 
 
 def _queryset(label):
     model = apps.get_model(label)
     if label == 'accounts.User':
-        return model.objects.filter(pk__in=apps.get_model('mentorship.MentorProfile').objects.values('user_id'))
+        return _demo_users().filter(pk__in=apps.get_model('mentorship.MentorProfile').objects.values('user_id'))
+    if label == 'mentorship.MentorProfile':
+        return model.objects.filter(user__in=_demo_users())
     if label == 'mentorship.TimeSlot':
         from django.utils import timezone
-        return model.objects.filter(date__gte=timezone.localdate(), is_booked=False)
+        return model.objects.filter(date__gte=timezone.localdate(), is_booked=False,
+                                    mentor__user__in=_demo_users())
+    if label == 'resources.SiteSetting':
+        return model.objects.exclude(key__in=PRIVATE_SETTINGS).exclude(key__startswith='_')
     return model.objects.all()
 
 
