@@ -22,6 +22,13 @@ class PredictionConfigAdmin(admin.ModelAdmin):
             ),
             "fields": ("band_multiplier",),
         }),
+        ("Cohort Shift — set once the new KCSE results are out", {
+            "description": (
+                "Moves every predicted cutoff up or down by the same amount, for a year-wide change "
+                "that past cutoffs can't show (e.g. a stronger or weaker KCSE cohort)."
+            ),
+            "fields": ("cohort_shift",),
+        }),
     )
 
     def has_add_permission(self, request):

@@ -1,6 +1,8 @@
+from unittest import mock
+
 from django.test import TestCase
 
-from predictor.services import calc_to_kuccps, eligibility, predict_cutoff
+from predictor.services import calc_to_kuccps, compute_floor_stats, eligibility, predict_cutoff
 from predictor.models import PredictionConfig
 
 
@@ -71,6 +73,87 @@ class EligibilityTests(TestCase):
         self.assertEqual(ranks, sorted(ranks))
 
 
+class FloorRegimeTests(TestCase):
+    """Programmes whose latest cutoff is a shared per-cluster floor (did not fill)."""
+
+    def setUp(self):
+        # 10 programmes share floor 15.5 in 2023 and 2024; half of them were once competitive
+        histories = []
+        for i in range(10):
+            h = {"2023": 15.5, "2024": 15.5}
+            if i < 5:
+                h["2022"] = 30.0 + i
+            histories.append((h, False))
+        # one programme fills in 2024 after a floor 2023
+        histories.append(({"2022": 31.0, "2023": 15.5, "2024": 29.0}, False))
+        self.stats = compute_floor_stats(histories)
+
+    def test_shared_value_detected_as_floor(self):
+        self.assertIn(15.5, self.stats["floors"]["2024"])
+        self.assertNotIn(29.0, self.stats["floors"]["2024"])
+
+    def test_floor_programme_uses_minimum_regime(self):
+        pred = predict_cutoff({"2023": 15.5, "2024": 15.5}, False, stats=self.stats)
+        self.assertEqual(pred["regime"], "minimum")
+        self.assertEqual(pred["floor"], 15.5)
+        self.assertLess(pred["p_fill"], 0.5)
+        self.assertEqual(pred["predicted"], 15.5)
+        self.assertIn("Usually doesn't fill", pred["note"])
+
+    def test_returning_programme_refills_below_last_competitive(self):
+        pred = predict_cutoff({"2022": 31.0, "2023": 15.5, "2024": 15.5}, False, stats=self.stats)
+        self.assertEqual(pred["if_filled"], 29.5)
+
+    def test_competitive_programme_unchanged(self):
+        h = {"2022": 31.0, "2023": 15.5, "2024": 29.0}
+        with_stats = predict_cutoff(h, False, stats=self.stats)
+        without = predict_cutoff(h, False, stats={"floors": {}, "fill": {}})
+        self.assertEqual(with_stats["regime"], "competitive")
+        self.assertEqual(with_stats["predicted"], without["predicted"])
+
+    def test_meeting_minimum_is_likely_when_rarely_fills(self):
+        pred = predict_cutoff({"2023": 15.5, "2024": 15.5}, False, stats=self.stats)
+        self.assertIn(eligibility(16.0, pred)["key"], ("HighLikelihood", "Likely"))
+        self.assertEqual(eligibility(12.0, pred)["key"], "Unlikely")
+        self.assertGreater(eligibility(30.0, pred)["chance"], eligibility(16.0, pred)["chance"])
+
+    def test_competitive_eligibility_has_chance(self):
+        elig = eligibility(35.0, {"predicted": 35.0, "low": 33.0, "high": 37.0})
+        self.assertEqual(elig["chance"], 50)
+
+
+class CohortShiftTests(TestCase):
+    def _with_shift(self, shift, *args, **kwargs):
+        import predictor.services as ps
+        cfg = ps._DefaultConfig()
+        cfg.cohort_shift = shift
+        with mock.patch.object(ps, "_get_config", return_value=cfg):
+            return predict_cutoff(*args, **kwargs)
+
+    def test_zero_shift_changes_nothing(self):
+        h = {"2023": 33.0, "2024": 35.0}
+        self.assertEqual(self._with_shift(0.0, h), self._with_shift(0.0, h))
+        self.assertNotIn("cohort_shift", self._with_shift(0.0, h))
+
+    def test_shift_moves_competitive_prediction_and_band(self):
+        h = {"2023": 33.0, "2024": 35.0}
+        base, up = self._with_shift(0.0, h), self._with_shift(1.0, h)
+        for key in ("predicted", "low", "high"):
+            self.assertAlmostEqual(up[key], base[key] + 1.0, places=2)
+        self.assertEqual(up["latest_cutoff"], base["latest_cutoff"])
+
+    def test_shift_moves_floor_programmes(self):
+        stats = compute_floor_stats([({"2023": 15.5, "2024": 15.5}, False) for _ in range(10)])
+        base = self._with_shift(0.0, {"2023": 15.5, "2024": 15.5}, False, stats=stats)
+        down = self._with_shift(-0.8, {"2023": 15.5, "2024": 15.5}, False, stats=stats)
+        self.assertAlmostEqual(down["floor"], base["floor"] - 0.8, places=2)
+        self.assertAlmostEqual(down["if_filled"], base["if_filled"] - 0.8, places=2)
+        self.assertAlmostEqual(down["predicted"], base["predicted"] - 0.8, places=2)
+
+    def test_shift_stays_within_0_48(self):
+        self.assertLessEqual(self._with_shift(2.0, {"2023": 47.5, "2024": 48.0})["high"], 48.0)
+
+
 class ClusterMappingTests(TestCase):
     def test_calc_to_kuccps_subtracts_100(self):
         self.assertEqual(calc_to_kuccps(113), 13)
@@ -86,7 +169,7 @@ class PredictionConfigTests(TestCase):
     def test_get_creates_singleton_with_defaults(self):
         cfg = PredictionConfig.get()
         self.assertEqual(cfg.pk, 1)
-        self.assertEqual(cfg.band_multiplier, 1.0)
+        self.assertEqual(cfg.band_multiplier, 1.5)
 
     def test_get_is_idempotent(self):
         first = PredictionConfig.get()
