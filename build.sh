@@ -17,6 +17,12 @@ python manage.py purge_notifications || echo "Notification purge skipped"
 # Seed payment feature prices (idempotent — skips existing rows)
 python manage.py seed_payment_features
 
+# 18 KUCCPS clusters + degree courses, then site content (mentors, quiz, careers,
+# FAQs, calendar, configs) exported locally with `sync_content --export`.
+# Each step runs only when its data file changed, so admin edits on live survive
+# ordinary deploys.
+python manage.py sync_content --with-portal
+
 # Bulk seed data — reloading it on every deploy burns Neon compute hours even when
 # nothing changed. Set RUN_SEEDS=1 in Render env for a deploy that needs fresh seeds
 # (new database, or data/*.json / seed commands changed), then unset it.
