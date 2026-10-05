@@ -85,11 +85,12 @@ class WithdrawalInline(admin.TabularInline):
 class MentorProfileAdmin(admin.ModelAdmin):
     inlines = [TimeSlotInline, MentorshipSessionInline, WithdrawalInline]
     list_display = [
-        "display_name", "course_name", "institution_name", "year_of_study",
-        "approval_badge", "is_active", "total_sessions", "avg_rating_display",
+        "display_name", "mentor_type", "course_name", "institution_name", "year_of_study",
+        "approval_badge", "is_active", "show_new_badge", "total_sessions", "avg_rating_display",
         "wallet_balance", "created_at", "reject_button",
     ]
-    list_filter = ["is_approved", "is_active", "is_rejected", "year_of_study"]
+    list_editable = ["show_new_badge"]
+    list_filter = ["mentor_type", "show_new_badge", "is_approved", "is_active", "is_rejected", "year_of_study"]
     search_fields = ["user__email", "user__full_name", "course__name", "institution__name"]
     autocomplete_fields = ["user", "course", "institution"]
     list_select_related = ["user", "course", "institution"]
@@ -128,6 +129,15 @@ class MentorProfileAdmin(admin.ModelAdmin):
     portal_screenshot_preview.short_description = "Portal Screenshot (preview)"
 
     fieldsets = (
+        ("Mentor Type", {
+            "fields": ("mentor_type", "headline", "display_order", "show_new_badge"),
+            "description": (
+                "Expert mentors (professionals who advise on any course) are added here by "
+                "admin, not through the signup form: create their user account, then this "
+                "profile with Type = Expert and Approved ticked. Leave course, institution "
+                "and the verification documents blank for experts."
+            ),
+        }),
         ("Mentor Details", {
             "fields": ("user", "course", "institution", "year_of_study", "bio", "whatsapp", "photo"),
         }),
@@ -139,9 +149,9 @@ class MentorProfileAdmin(admin.ModelAdmin):
             ),
             "description": "Review these before approving. Documents are private.",
         }),
-        ("Pricing Override (optional)", {
-            "fields": ("custom_session_price", "custom_mentor_payout"),
-            "description": "Leave blank to use the global Mentorship Pricing Config. Set a value here to override for this mentor only.",
+        ("Pricing & Session Length Override (optional)", {
+            "fields": ("custom_session_price", "custom_mentor_payout", "custom_session_minutes"),
+            "description": "Leave blank to use the global Mentorship Pricing Config. Set a value here to override for this mentor only. Existing bookings keep the price and length they were booked at.",
         }),
         ("Status", {
             "fields": ("is_approved", "is_active", "is_rejected", "rejection_reason"),
@@ -302,11 +312,11 @@ class MentorProfileAdmin(admin.ModelAdmin):
             greeting=f"Hi {mentor.display_name},",
             body_lines=[
                 "Great news — your CareerNext mentor profile has been approved!",
-                "Students studying your course can now book a 15-minute session with you. Start by adding your availability slots from your dashboard.",
+                f"Students can now book a {mentor.effective_session_minutes()}-minute session with you. Start by adding your availability slots from your dashboard.",
             ],
             table_rows=[
                 {"label": "Earnings per session", "value": f"KES {mentor.effective_mentor_payout()}", "highlight": True},
-                {"label": "Session duration",     "value": "15 minutes"},
+                {"label": "Session duration",     "value": f"{mentor.effective_session_minutes()} minutes"},
             ],
             cta_url="https://www.careernext.co.ke/mentorship/dashboard/",
             cta_label="Set My Availability →",
@@ -396,14 +406,14 @@ class MentorshipSessionAdmin(admin.ModelAdmin):
 
     fieldsets = (
         ("Session", {
-            "fields": ("token", "mentor", "mentee", "slot", "course_interest", "mentee_question"),
+            "fields": ("token", "mentor", "mentee", "slot", "course_interest", "course_topic", "mentee_question"),
         }),
         ("Mentee Contact", {
             "fields": ("mentee_phone",),
             "description": "Visible to mentor after payment — never shown to students.",
         }),
         ("Payment", {
-            "fields": ("amount", "mentor_payout", "status", "payment_ref", "phone_used",
+            "fields": ("amount", "mentor_payout", "duration_minutes", "status", "payment_ref", "phone_used",
                        "manual_payment_ref", "refund_ref", "refund_requested_at", "refund_error"),
         }),
         ("Notifications", {
@@ -643,7 +653,7 @@ class WithdrawalRequestAdmin(admin.ModelAdmin):
 
 @admin.register(MentorshipConfig)
 class MentorshipConfigAdmin(admin.ModelAdmin):
-    fields = ("session_price", "mentor_payout", "mentor_signup_enabled")
+    fields = ("session_price", "mentor_payout", "session_minutes", "mentor_signup_enabled")
 
     def has_add_permission(self, request):
         return not MentorshipConfig.objects.exists()

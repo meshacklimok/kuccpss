@@ -40,7 +40,7 @@ class MentorRegistrationForm(forms.ModelForm):
                 "placeholder": (
                     "Tell students about yourself — what course you study, "
                     "what you enjoy about it, challenges you've overcome, "
-                    "and what kind of guidance you can offer in 15 minutes."
+                    "and what kind of guidance you can offer in one short session."
                 ),
                 "class": "form-control",
             }),
@@ -82,6 +82,9 @@ class MentorRegistrationForm(forms.ModelForm):
         ).select_related("institution_type").order_by("institution_type_id", "name")
         self.fields["student_id_upload"].required = True
         self.fields["portal_screenshot"].required = True
+        # Optional on the model (expert mentors have none) but required for students
+        self.fields["course"].required = True
+        self.fields["institution"].required = True
 
         # Filter courses to only those offered at the selected institution.
         # On POST: use submitted institution value.
@@ -118,6 +121,24 @@ class MentorRegistrationForm(forms.ModelForm):
         return number
 
 
+class ExpertProfileForm(forms.ModelForm):
+    """Self-edit form for expert mentors, who have no course, institution or student ID."""
+    class Meta:
+        model = MentorProfile
+        fields = ["headline", "bio", "whatsapp"]
+        widgets = {
+            "headline": forms.TextInput(attrs={
+                "class": "form-control",
+                "placeholder": "e.g. Career Counsellor · 15 yrs experience",
+            }),
+            "bio": forms.Textarea(attrs={"rows": 5, "class": "form-control"}),
+            "whatsapp": forms.TextInput(attrs={"placeholder": "+254712345678", "class": "form-control"}),
+        }
+        labels = {"whatsapp": "WhatsApp Number", "bio": "About You", "headline": "Headline"}
+
+    clean_whatsapp = MentorRegistrationForm.clean_whatsapp
+
+
 class BookingForm(forms.Form):
     slot = forms.ModelChoiceField(
         queryset=TimeSlot.objects.none(),
@@ -150,11 +171,38 @@ class BookingForm(forms.Form):
         }),
     )
 
+    course_topic = forms.CharField(
+        max_length=150,
+        required=False,
+        label="Which course are you asking about?",
+        help_text="Optional — leave blank if you want general guidance.",
+        widget=forms.TextInput(attrs={
+            "class": "form-control",
+            "list": "course-options",
+            "placeholder": "e.g. Bachelor of Medicine and Surgery",
+            "autocomplete": "off",
+        }),
+    )
+
     def __init__(self, mentor, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["slot"].queryset = TimeSlot.objects.filter(
             bookable_slots_q(), mentor=mentor,
         ).order_by("date", "start_time")
+        # Student mentors only talk about their own course
+        if not mentor.is_expert:
+            del self.fields["course_topic"]
+
+    def clean_course_topic(self):
+        return " ".join(self.cleaned_data.get("course_topic", "").split())
+
+    def matched_course(self):
+        """The Course whose name the student typed, if any (for analytics)."""
+        from courses.models import Course
+        topic = self.cleaned_data.get("course_topic")
+        if not topic:
+            return None
+        return Course.objects.filter(name__iexact=topic).order_by("pk").first()
 
     def clean_mentee_phone(self):
         number = self.cleaned_data["mentee_phone"].strip().replace(" ", "")
@@ -186,7 +234,7 @@ class AddSlotsForm(forms.Form):
     times = forms.MultipleChoiceField(
         choices=TIME_OPTIONS,
         widget=forms.CheckboxSelectMultiple,
-        label="Available times (15-min sessions)",
+        label="Available times",
         required=False,
     )
     custom_time = forms.CharField(

@@ -49,7 +49,7 @@ def send_session_reminders() -> int:
             banner_color="amber",
             greeting=f"Hi {mentee_name},",
             body_lines=[
-                f"Your 15-minute mentorship call with {mentor_name} is starting in about 1 hour.",
+                f"Your {session.duration_minutes}-minute mentorship call with {mentor_name} is starting in about 1 hour.",
                 f"WhatsApp {mentor_name} now to confirm how you'll connect: {session.mentor.whatsapp}",
             ],
             table_rows=[
@@ -57,7 +57,7 @@ def send_session_reminders() -> int:
                 {"label": "Starts at", "value": slot_str},
                 {"label": "Topic",     "value": f'"{session.mentee_question}"'},
             ],
-            note="Be on time — it's only 15 minutes. Good luck!",
+            note=f"Be on time — it's only {session.duration_minutes} minutes. Good luck!",
             user_email=session.mentee.email,
         )
         send_branded_email(
@@ -93,21 +93,26 @@ def send_session_reminders() -> int:
     return sent
 
 
+COMPLETE_GRACE_MINUTES = 15
+
+
 def complete_expired_sessions() -> int:
-    """Mark confirmed sessions as completed once their start time is 30+ min past."""
-    from django.db.models import Q
+    """Mark confirmed sessions as completed once they ended 15+ min ago
+    (session length varies per mentor, so the end time is checked per session)."""
     from mentorship.models import MentorshipSession
     from mentorship.views import send_rating_request
 
-    cutoff = timezone.localtime(timezone.now() - timedelta(minutes=30))
-    expired = MentorshipSession.objects.filter(
-        Q(slot__date__lt=cutoff.date())
-        | Q(slot__date=cutoff.date(), slot__start_time__lte=cutoff.time()),
+    cutoff = timezone.localtime(timezone.now() - timedelta(minutes=COMPLETE_GRACE_MINUTES))
+    candidates = MentorshipSession.objects.filter(
+        slot__date__lte=cutoff.date(),
         status="confirmed",
-    ).select_related("mentor", "mentor__user", "mentee")
+    ).select_related("mentor", "mentor__user", "mentee", "slot")
 
     completed = 0
-    for session in expired:
+    for session in candidates:
+        start = timezone.make_aware(datetime.combine(session.slot.date, session.slot.start_time))
+        if start + timedelta(minutes=session.duration_minutes) > cutoff:
+            continue
         if MentorshipSession.objects.filter(pk=session.pk, status="confirmed").update(status="completed"):
             session.mentor.refresh_stats()
             send_rating_request(session)
