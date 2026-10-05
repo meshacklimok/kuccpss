@@ -15,7 +15,7 @@ def cluster_list(request):
     # The 18 KUCCPS clusters (rows 101–118); degree courses link to them directly
     clusters = (
         Cluster.objects
-        .filter(number__gt=100)
+        .kuccps()
         .annotate(course_count=Count('course'))
         .order_by('number')
     )
@@ -100,7 +100,7 @@ def cluster_create(request):
         form = ClusterForm(request.POST, request.FILES)
         if form.is_valid():
             cluster = form.save()
-            messages.success(request, f"Cluster '{cluster.name}' created successfully!")
+            messages.success(request, f"Cluster '{cluster.name}' created successfully.")
             return redirect(cluster.get_absolute_url())
         else:
             messages.error(request, "Please correct the errors below.")
@@ -124,7 +124,7 @@ def cluster_edit(request, slug):
         form = ClusterForm(request.POST, request.FILES, instance=cluster)
         if form.is_valid():
             form.save()
-            messages.success(request, f"Cluster '{cluster.name}' updated successfully!")
+            messages.success(request, f"Cluster '{cluster.name}' updated successfully.")
             return redirect(cluster.get_absolute_url())
         else:
             messages.error(request, "Please correct the errors below.")
@@ -180,7 +180,7 @@ def subject_group_edit(request, group_id):
         form = SubjectGroupForm(request.POST, instance=group)
         if form.is_valid():
             form.save()
-            messages.success(request, f"Subject group '{group.name}' updated successfully!")
+            messages.success(request, f"Subject group '{group.name}' updated successfully.")
             return redirect('clusters:cluster_detail', slug=cluster.slug)
         else:
             messages.error(request, "Please correct the errors below.")

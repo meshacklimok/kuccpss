@@ -78,6 +78,14 @@ body { background: #f0f4ff; }
 }
 .cluster-chip .val { font-weight: 800; }
 .cluster-chip.filled { border-color: #a7f3d0; background: #ecfdf5; color: #065f46; }
+
+/* Dark mode: page-local light palette mapped to One UI tokens */
+body.dark { background: rgba(92,157,255,0.14); }
+body.dark .paste-card { background: var(--surface); }
+body.dark .paste-area { border-color: var(--border); color: var(--text); }
+body.dark .example-box { background: var(--surface-2); border-color: transparent; color: var(--text-2); }
+body.dark .cluster-chip { border-color: transparent; background: var(--surface-2); color: var(--text); }
+body.dark .cluster-chip.filled { background: rgba(52,199,89,0.14); color: #5fd88a; }
 </style>
 
 <div class="container py-4">

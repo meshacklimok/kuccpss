@@ -195,6 +195,31 @@ class CurrentSessionUnlockTests(TestCase):
         sub.refresh_from_db()
         self.assertIsNotNone(sub.unlocked_by_payment_id)
 
+    def test_career_report_locks_non_degree_session(self):
+        from career.models import SubmissionLockConfig
+        SubmissionLockConfig.objects.update_or_create(
+            feature="non_degree_career", defaults={"is_enabled": True, "lock_on_payment": True},
+        )
+        sub = _make_submission(self.user, feature="non_degree_career")
+        self.assertFalse(has_paid_for_current_session(self.user, "non_degree_career", "premium_career_report"))
+        payment = Payment.objects.create(user=self.user, feature="premium_career_report", status="completed")
+        lock_submission_on_payment(payment)
+        sub.refresh_from_db()
+        self.assertEqual((sub.unlocked_by_payment_id, sub.status), (payment.pk, "locked"))
+        self.assertTrue(has_paid_for_current_session(self.user, "non_degree_career", "premium_career_report"))
+
+    def test_career_report_keeps_already_paid_session_link(self):
+        old = Payment.objects.create(user=self.user, feature="premium_career_report", status="completed")
+        degree = _make_submission(self.user, feature="degree_career")
+        lock_submission_on_payment(old)
+        non_degree = _make_submission(self.user, feature="non_degree_career")
+        new = Payment.objects.create(user=self.user, feature="premium_career_report", status="completed")
+        lock_submission_on_payment(new)
+        degree.refresh_from_db()
+        non_degree.refresh_from_db()
+        self.assertEqual(degree.unlocked_by_payment_id, old.pk)
+        self.assertEqual(non_degree.unlocked_by_payment_id, new.pk)
+
     def test_old_payment_does_not_unlock_new_grades(self):
         payment = Payment.objects.create(user=self.user, feature="view_cluster_points", status="completed")
         Payment.objects.filter(pk=payment.pk).update(updated_at=timezone.now() - timedelta(days=2))

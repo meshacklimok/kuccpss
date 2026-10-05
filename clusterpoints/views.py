@@ -163,7 +163,7 @@ def kcse_calculator_view(request):
                     results = calculate_all_clusters(kcse_result)
                 request.session.pop('guest_calc', None)
                 request.session.pop('guest_cluster_map', None)
-                messages.success(request, "Your KCSE results have been saved!")
+                messages.success(request, "Your KCSE results have been saved.")
                 cluster_scores = {
                     r.cluster.number: float(r.cluster_points)
                     for r in results if r.cluster and r.cluster.number
@@ -218,7 +218,7 @@ def kcse_calculator_view(request):
                 # Bust the eligible-courses cache so the new grades take effect immediately
                 from django.core.cache import cache as _cache
                 _cache.delete(f"elig_user_{request.user.pk}_{kcse_result.pk}")
-                messages.success(request, "KCSE results saved and cluster points calculated!")
+                messages.success(request, "KCSE results saved and cluster points calculated.")
                 try:
                     from analytics.utils import log_event as _log_event
                     from analytics.events import CALCULATOR_RUN
@@ -354,6 +354,7 @@ def kcse_calculator_view(request):
             'lock_at_iso': existing_sub.lock_at.isoformat(),
             'feature': CareerSubmission.FEATURE_CALCULATOR,
             'edit_url': reverse('clusterpoints:calculator'),
+            'grades': existing_sub.grade_summary(),
         }
 
     from payments.services import has_paid_for_current_session, is_feature_enabled, price_for_feature
@@ -382,6 +383,7 @@ def kcse_calculator_view(request):
         "cluster_courses_map": cluster_courses_map,
         "cluster_course_counts": cluster_course_counts,
         "sub_banner": sub_banner,
+        "grades_locked": bool(existing_sub and existing_sub.status == CareerSubmission.STATUS_LOCKED),
         "is_results_locked": _is_locked,
         "gate_feature": _gate_feature,
         "gate_price": price_for_feature(_gate_feature),

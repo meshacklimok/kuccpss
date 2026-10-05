@@ -52,6 +52,10 @@ class KCSEForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        # Templates compare bound.value against strings ('12'), and POST data is
+        # always strings — so normalise int initial values (saved grades) to match,
+        # otherwise "Edit grades" renders every select empty.
+        self.initial = {k: str(v) for k, v in self.initial.items() if v not in (None, '')}
 
         # Order: Group I first (so compulsory fields appear first), then II–V
         self.subjects = Subject.objects.all().order_by('group', 'name')

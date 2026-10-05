@@ -261,6 +261,43 @@
 .gap-negative { background:#fee2e2; color:#b91c1c; }
 .gap-close    { background:#fef9c3; color:#854d0e; }
 body.dark .empty-icon { background: rgba(92,157,255,.14); color: var(--primary-light); }
+
+/* Dark mode: page-local light palette mapped to One UI tokens */
+body.dark .sl-card { background: var(--surface); border-color: transparent; }
+body.dark .sl-card:hover { border-color: rgba(92,157,255,0.45); }
+body.dark .sl-card-header { border-bottom-color: var(--border); }
+body.dark .sl-card-footer { border-top-color: var(--border); background: var(--surface-2); }
+body.dark .sl-course-name { color: var(--text); }
+body.dark .sl-course-name:hover { color: var(--primary-light); }
+body.dark .tp-degree { background: rgba(92,157,255,0.14); color: var(--primary-light); }
+body.dark .tp-diploma { background: rgba(179,157,255,0.15); color: #b39dff; }
+body.dark .tp-kmtc { background: rgba(52,199,89,0.14); color: #5fd88a; }
+body.dark .tp-ttc { background: rgba(255,179,64,0.14); }
+body.dark .tp-default { background: var(--surface-2); color: var(--text-2); }
+body.dark .elig-eligible { background: rgba(52,199,89,0.14); color: #5fd88a; }
+body.dark .elig-nearly { background: rgba(255,179,64,0.14); }
+body.dark .elig-not_eligible { background: rgba(255,69,58,0.15); color: #ff8a80; }
+body.dark .comp-high { background: rgba(255,69,58,0.15); color: #ff8a80; }
+body.dark .comp-medium { background: rgba(255,179,64,0.14); color: #ffc266; }
+body.dark .comp-low { background: rgba(52,199,89,0.14); color: #5fd88a; }
+body.dark .rank-select { border-color: var(--border); background: rgba(92,157,255,0.14); color: var(--primary-light); }
+body.dark .sl-label { color: var(--text-2); }
+body.dark .sl-value { color: var(--text); }
+body.dark .notes-box { border-color: var(--border); color: var(--text); }
+body.dark .notes-saved { color: #5fd88a; }
+body.dark .no-cluster-notice { background: rgba(255,179,64,0.14); border-color: rgba(255,179,64,0.45); color: #ffc266; }
+body.dark .compare-wrap { border-color: var(--border); }
+body.dark .compare-table th, body.dark .compare-table td { border-bottom-color: var(--border); }
+body.dark .compare-table tbody tr:hover td { background: var(--surface-2); }
+body.dark .compare-table .row-label { background: var(--surface-2); color: var(--text-2); }
+body.dark .cell-best { background: rgba(52,199,89,0.14) !important; }
+body.dark .cell-worst { background: rgba(255,69,58,0.15) !important; }
+body.dark .cell-best .cval { color: #5fd88a; }
+body.dark .cell-worst .cval { color: #ff8a80; }
+body.dark .cutoff-bar { background: var(--surface-2); }
+body.dark .gap-positive { background: rgba(52,199,89,0.14); color: #5fd88a; }
+body.dark .gap-negative { background: rgba(255,69,58,0.15); color: #ff8a80; }
+body.dark .gap-close { background: rgba(255,179,64,0.14); }
 </style>
 
 <!-- ── HERO ── -->
@@ -424,7 +461,7 @@ body.dark .empty-icon { background: rgba(92,157,255,.14); color: var(--primary-l
           <span class="sl-label" style="min-width:auto;">KUCCPS Choice:</span>
           <select class="rank-select" data-course="{{ course.pk }}"
                   onchange="setRank({{ course.pk }}, this.value, this)">
-            <option value="">— not ranked —</option>
+            <option value="">Not ranked</option>
             {% for r in rank_choices %}
             <option value="{{ r }}" {% if item.rank == r %}selected{% endif %}>{{ r }}{% if r == 1 %} (1st choice){% elif r == 2 %} (2nd choice){% elif r == 3 %} (3rd choice){% elif r == 4 %} (4th choice){% endif %}</option>
             {% endfor %}
@@ -610,7 +647,7 @@ body.dark .empty-icon { background: rgba(92,157,255,.14); color: var(--primary-l
                     </span>
                   </div>
                   <select class="rank-select-sm mt-1" onchange="setRank({{ course.pk }}, this.value, this)">
-                    <option value="">— not ranked —</option>
+                    <option value="">Not ranked</option>
                     {% for r in rank_choices %}
                     <option value="{{ r }}" {% if item.rank == r %}selected{% endif %}>Choice {{ r }}</option>
                     {% endfor %}
@@ -940,7 +977,7 @@ document.getElementById('waShareBtn') && document.getElementById('waShareBtn').a
   const courses = [{% for item in items %}"{{ item.course.name }}"{% if not forloop.last %},{% endif %}{% endfor %}];
   let msg = "🎓 My KCSE Course Shortlist: CareerNext\n\n";
   courses.forEach((c, i) => { msg += (i+1) + ". " + c + "\n"; });
-  msg += "\nThese are the top courses I saved after checking my KCSE eligibility on CareerNext!";
+  msg += "\nThese are the top courses I saved after checking my KCSE eligibility on CareerNext.";
   msg += "\n\n👉 Find out what YOU qualify for FREE: www.careernext.co.ke 🚀";
   window.open("https://wa.me/?text=" + encodeURIComponent(msg), "_blank");
 });

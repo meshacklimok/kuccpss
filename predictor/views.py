@@ -5,7 +5,7 @@ from django.core.paginator import Paginator
 
 from courses.models import CourseOffering, CourseType
 from .services import (
-    predict_cutoff, eligibility,
+    predict_cutoff, eligibility, is_private_offering,
     TREND_ICON, TREND_COLOR, TREND_TIP,
     KUCCPS_NAMES, calc_to_kuccps,
 )
@@ -43,7 +43,7 @@ def _all_offerings_with_pred(query="", kuccps_cluster=None, course_type_slug="",
     """Return enriched rows with prediction data, KUCCPS cluster numbers, and eligibility."""
     qs = (
         CourseOffering.objects
-        .select_related("course", "institution", "course__cluster", "course__course_type")
+        .select_related("course", "institution__institution_type", "course__cluster", "course__course_type")
         .exclude(cutoff_points__isnull=True)
         .order_by("course__name", "institution__name")
     )
@@ -57,7 +57,7 @@ def _all_offerings_with_pred(query="", kuccps_cluster=None, course_type_slug="",
 
     rows = []
     for o in qs:
-        pred = predict_cutoff(o.cutoff_points)
+        pred = predict_cutoff(o.cutoff_points, is_private_offering(o))
         if pred is None:
             continue
 

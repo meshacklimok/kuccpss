@@ -173,6 +173,29 @@
     transition: box-shadow 0.15s;
 }
 .cycle-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.08); }
+
+/* Dark mode: page-local light palette mapped to One UI tokens */
+body.dark .timeline-phase-header { color: #b39dff; }
+body.dark .timeline::before { background: var(--surface-2); }
+body.dark .tl-dot { border-color: var(--border); }
+body.dark .dot-blue { background: rgba(92,157,255,0.14); color: var(--primary-light); }
+body.dark .dot-green { background: rgba(52,199,89,0.14); color: #5fd88a; }
+body.dark .dot-amber { background: rgba(255,179,64,0.14); color: #ffc266; }
+body.dark .dot-red { background: rgba(255,69,58,0.15); color: #ff8a80; }
+body.dark .dot-purple { background: rgba(179,157,255,0.15); color: #b39dff; }
+body.dark .dot-gray { background: var(--surface-2); color: var(--text-2); }
+body.dark .tl-card { background: var(--surface); border-color: transparent; }
+body.dark .tl-card.status-future { border-left-color: var(--border); }
+body.dark .tl-date { color: var(--text-2); }
+body.dark .tl-title { color: var(--text); }
+body.dark .tl-desc { color: var(--text-2); }
+body.dark .pill-done { background: rgba(52,199,89,0.14); color: #5fd88a; }
+body.dark .pill-active { background: rgba(92,157,255,0.14); color: var(--primary-light); }
+body.dark .pill-upcoming { background: rgba(255,179,64,0.14); color: #ffc266; }
+body.dark .pill-future { background: var(--surface-2); color: var(--text-2); }
+body.dark .info-box { background: rgba(92,157,255,0.14); border-color: rgba(92,157,255,0.45); color: var(--primary-light); }
+body.dark .info-box strong { color: var(--primary-light); }
+body.dark .cycle-card { border-color: transparent; background: var(--surface); }
 </style>
 
 <!-- Hero -->

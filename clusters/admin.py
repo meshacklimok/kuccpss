@@ -3,6 +3,7 @@ from django.contrib import admin
 from django.utils.html import format_html
 from .models import Cluster, Subject, SubjectGroup
 from .forms import SubjectGroupForm
+from .constants import NUM_KUCCPS_CLUSTERS
 
 # ------------------------
 # Subject Admin
@@ -37,6 +38,10 @@ class ClusterAdmin(admin.ModelAdmin):
     ordering = ('number',)
     inlines = [SubjectGroupInline]
     readonly_fields = ('created_at', 'updated_at')
+
+    def has_add_permission(self, request):
+        # Exactly 18 KUCCPS clusters — no adding once all slots (101–118) exist
+        return Cluster.objects.kuccps().count() < NUM_KUCCPS_CLUSTERS and super().has_add_permission(request)
 
     fieldsets = (
         (None, {'fields': ('number', 'name', 'description')}),

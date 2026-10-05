@@ -1,6 +1,7 @@
 import uuid
 from datetime import datetime, time as dt_time, timedelta
 from django.conf import settings
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.db.models import Avg
 from django.utils import timezone
@@ -18,21 +19,51 @@ class MentorProfile(models.Model):
         (6, "6th Year / Masters"),
     ]
 
+    STUDENT = "student"
+    EXPERT = "expert"
+    MENTOR_TYPE_CHOICES = [
+        (STUDENT, "Student mentor"),
+        (EXPERT, "Expert mentor"),
+    ]
+
+    mentor_type = models.CharField(
+        max_length=10, choices=MENTOR_TYPE_CHOICES, default=STUDENT, db_index=True,
+        help_text="Expert mentors are professionals who advise on any course. They are "
+                  "listed above student mentors and are added by admin, not via the signup form.",
+    )
+    headline = models.CharField(
+        max_length=120, blank=True,
+        help_text="Expert mentors only — shown in place of course/year, "
+                  "e.g. 'Career Counsellor · 15 yrs experience'.",
+    )
+    display_order = models.PositiveSmallIntegerField(
+        default=0,
+        help_text="Expert mentors only — lower numbers are listed first.",
+    )
+    show_new_badge = models.BooleanField(
+        default=False,
+        help_text="Show the 'New mentor' badge on this mentor's card and profile.",
+    )
+
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         related_name="mentor_profile",
     )
+    # Blank for expert mentors, who aren't tied to one course; the signup form
+    # still requires both for student mentors.
     course = models.ForeignKey(
         "courses.Course",
         on_delete=models.SET_NULL,
         null=True,
+        blank=True,
         related_name="mentors",
     )
     institution = models.ForeignKey(
         "institutions.Institution",
         on_delete=models.SET_NULL,
         null=True,
+        blank=True,
         related_name="mentors",
     )
     year_of_study = models.PositiveSmallIntegerField(choices=YEAR_CHOICES, default=1)
@@ -72,6 +103,11 @@ class MentorProfile(models.Model):
     custom_mentor_payout = models.PositiveIntegerField(
         null=True, blank=True,
         help_text="Override global mentor payout for this mentor only. Leave blank to use the global default.",
+    )
+    custom_session_minutes = models.PositiveSmallIntegerField(
+        null=True, blank=True,
+        validators=[MinValueValidator(5), MaxValueValidator(240)],
+        help_text="Override global session length (minutes) for this mentor only. Leave blank to use the global default.",
     )
 
     # Earnings wallet (in KES cents avoided — store as KES integers)
@@ -118,6 +154,10 @@ class MentorProfile(models.Model):
         return self.user.full_name or self.user.email.split("@")[0].title()
 
     @property
+    def is_expert(self):
+        return self.mentor_type == self.EXPERT
+
+    @property
     def rating_int(self):
         return int(round(self.average_rating))
 
@@ -134,6 +174,11 @@ class MentorProfile(models.Model):
         if self.custom_mentor_payout is not None:
             return self.custom_mentor_payout
         return MentorshipConfig.get().mentor_payout
+
+    def effective_session_minutes(self):
+        if self.custom_session_minutes:
+            return self.custom_session_minutes
+        return MentorshipConfig.get().session_minutes
 
 
 BOOKING_LEAD_MINUTES = 30
@@ -255,6 +300,9 @@ class MentorshipSession(models.Model):
         null=True,
         blank=True,
     )
+    # Expert mentors cover any course, so the student names the one they're asking
+    # about (free text; course_interest is set too when it matches a Course name).
+    course_topic = models.CharField(max_length=150, blank=True)
     mentee_question = models.TextField(max_length=600)
 
     # Mentee contact info (shared with mentor after payment)
@@ -267,6 +315,8 @@ class MentorshipSession(models.Model):
     # Payment
     amount = models.PositiveIntegerField(default=100)
     mentor_payout = models.PositiveIntegerField(default=70)
+    # Snapshot of the mentor's session length at booking, like amount/mentor_payout
+    duration_minutes = models.PositiveSmallIntegerField(default=15)
     payment_ref = models.CharField(max_length=200, blank=True)
     phone_used = models.CharField(max_length=20, blank=True)
     manual_payment_ref = models.CharField(
@@ -321,6 +371,11 @@ class MentorshipSession(models.Model):
         return reverse("mentorship:session_detail", args=[self.token])
 
     @property
+    def end_time(self):
+        start = datetime.combine(self.slot.date, self.slot.start_time)
+        return (start + timedelta(minutes=self.duration_minutes)).time()
+
+    @property
     def mentee_display(self):
         return self.mentee.full_name or self.mentee.email.split("@")[0].title()
 
@@ -334,6 +389,11 @@ class MentorshipConfig(models.Model):
     mentor_payout = models.PositiveIntegerField(
         default=70,
         help_text="Amount (KES) the mentor earns per completed session. Must be less than session_price.",
+    )
+    session_minutes = models.PositiveSmallIntegerField(
+        default=15,
+        validators=[MinValueValidator(5), MaxValueValidator(240)],
+        help_text="Default session length in minutes. Override per mentor on the mentor's profile.",
     )
     mentor_signup_enabled = models.BooleanField(
         default=True,

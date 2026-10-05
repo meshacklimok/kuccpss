@@ -20,6 +20,15 @@
 .st-badge.super  { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
 .st-badge.staff  { background: #eff6ff; color: #1e3a8a; border: 1px solid #bfdbfe; }
 .st-empty { text-align: center; color: #94a3b8; padding: 2rem 0; font-size: .9rem; }
+
+/* Dark mode: page-local light palette mapped to One UI tokens */
+body.dark .st-card { background: var(--surface); border-color: transparent; }
+body.dark .st-title { color: var(--primary-light); }
+body.dark .st-sub { color: var(--text-2); }
+body.dark .st-table th { border-bottom-color: var(--border); }
+body.dark .st-table td { border-bottom-color: var(--border); color: var(--text); }
+body.dark .st-badge.super { background: rgba(255,69,58,0.15); border-color: rgba(255,69,58,0.45); color: #ff8a80; }
+body.dark .st-badge.staff { background: rgba(92,157,255,0.14); border-color: rgba(92,157,255,0.45); color: var(--primary-light); }
 </style>
 
 <div class="st-wrap">

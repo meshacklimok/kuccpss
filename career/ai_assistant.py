@@ -19,7 +19,7 @@ from django.urls import NoReverseMatch, reverse
 
 logger = logging.getLogger(__name__)
 
-MAX_TOOL_ROUNDS = 4          # model ↔ database round-trips before a forced answer
+MAX_TOOL_ROUNDS = 5         # model ↔ database round-trips before a forced answer
 MAX_TOOL_RESULT_CHARS = 8000  # keep tool output from flooding the context window
 
 GRADE_POINTS = {
@@ -155,7 +155,31 @@ def load_student_data(request) -> dict:
         except (TypeError, ValueError):
             continue
     data['cluster_points'] = clean_pts
+    data['quiz_tags'] = _load_quiz_tags(request)
     return data
+
+
+def _load_quiz_tags(request) -> dict:
+    """Career Quiz interest tags → score (session first, then the user's latest submission)."""
+    tags = request.session.get('quiz_tag_scores') or {}
+    if not tags and request.user.is_authenticated:
+        try:
+            from career.models import QuizSubmission
+            sub = (QuizSubmission.objects.filter(user=request.user)
+                   .prefetch_related('answers__option').first())
+            if sub:
+                for ans in sub.answers.all():
+                    for t in ans.option.get_tags_list():
+                        tags[t] = tags.get(t, 0) + 1
+        except Exception:
+            logger.exception("AI chat: quiz lookup failed")
+    out = {}
+    for k, v in dict(tags).items():
+        try:
+            out[str(k).lower()] = int(v)
+        except (TypeError, ValueError):
+            continue
+    return out
 
 
 def has_results(student: dict) -> bool:
@@ -449,17 +473,20 @@ def tool_get_course_details(student, course_name: str, institution: str = '', le
     return detail
 
 
-def tool_find_courses_i_qualify_for(student, level: str = 'degree', interest: str = '', limit: int = 10):
+_NO_RESULTS = {
+    'error': 'The student has no saved KCSE results yet.',
+    'next_step': 'Send them to /career/ to enter their results (or /clusterpoints/calculator/).',
+}
+
+
+def _eligible_matches(student: dict, level: str, interest: str = '', location: str = ''):
+    """
+    Every offering the student is eligible for (degree: within 0.5 below cutoff or better).
+    Returns ([(margin, course, offering, info), ...], offerings_checked).
+    """
     from courses.models import CourseOffering
     from career.views import _check_subject_requirements
 
-    if not has_results(student):
-        return {
-            'error': 'The student has no saved KCSE results yet.',
-            'next_step': 'Send them to /career/ to enter their results (or /clusterpoints/calculator/).',
-        }
-    level = (level or 'degree').lower()
-    limit = min(int(limit or 10), 15)
     qs = _filter_level(
         CourseOffering.objects.select_related(
             'course', 'course__course_type', 'course__cluster', 'course__category', 'institution',
@@ -472,6 +499,9 @@ def tool_find_courses_i_qualify_for(student, level: str = 'degree', interest: st
         for w in words:
             cond |= Q(course__name__icontains=w) | Q(course__career_outcomes__icontains=w)
         qs = qs.filter(cond)
+    if location:
+        qs = qs.filter(Q(institution__location__icontains=location.strip())
+                       | Q(institution__name__icontains=location.strip()))
 
     mg = student.get('mean_grade') or ''
     sg = student.get('subject_grades') or {}
@@ -513,11 +543,22 @@ def tool_find_courses_i_qualify_for(student, level: str = 'degree', interest: st
                 'minimum_mean_grade': min_g, 'your_mean_grade': mg,
                 'status': '🟢 Strong Match' if gdiff >= 2 else '🟡 Meets minimum',
             }))
+    return matches, checked
+
+
+def tool_find_courses_i_qualify_for(student, level: str = 'degree', interest: str = '', limit: int = 10,
+                                    location: str = ''):
+    if not has_results(student):
+        return _NO_RESULTS
+    level = (level or 'degree').lower()
+    limit = min(int(limit or 10), 15)
+    matches, checked = _eligible_matches(student, level, interest, location)
 
     if not matches:
         return {
             'results': [], 'offerings_checked': checked,
-            'note': 'No eligible offerings found for this level/interest. Suggest a different level or broader interest.',
+            'note': 'No eligible offerings found for this level/interest/location. '
+                    'Suggest a different level, broader interest or another county.',
         }
 
     if level == 'degree':
@@ -763,16 +804,407 @@ def tool_get_my_shortlist(student):
         row.update(_student_offering_summary(item.course, student))
         rows.append(row)
     listed = {i.course_id for i in shortlist}
+    from accounts.models import Application
+    apps = [{
+        'course': a.course_name, 'institution': a.institution_name or None,
+        'status': a.get_status_display(), 'deadline': a.deadline,
+    } for a in Application.objects.filter(user_id=student['user_id'])[:10]]
     return {
         'shortlist': rows,
         'saved_courses': [_course_summary(s.course) for s in saved if s.course_id not in listed],
+        'application_tracker': apps,
         'shortlist_url': '/accounts/shortlist/',
         'saved_url': '/accounts/saved-courses/',
+        'applications_url': '/accounts/applications/',
         'note': '' if (rows or saved) else 'Nothing saved yet — tap ⭐ on courses in /career/results/.',
     }
 
 
+# ── Cluster maths: explain + what-if ────────────────────────────────────────
+
+# KNEC mean grade from the 7-subject aggregate (out of 84)
+_AGGREGATE_GRADE_BANDS = [
+    (81, 'A'), (74, 'A-'), (67, 'B+'), (60, 'B'), (53, 'B-'), (46, 'C+'),
+    (39, 'C'), (32, 'C-'), (25, 'D+'), (18, 'D'), (11, 'D-'), (0, 'E'),
+]
+
+
+def _grade_for_aggregate(total: int) -> str:
+    return next(g for floor, g in _AGGREGATE_GRADE_BANDS if total >= floor)
+
+
+def _named_points(subject_grades: dict) -> dict:
+    """{'mathematics': 11} → {'Mathematics': 11} using the canonical Subject names."""
+    from clusters.models import Subject
+    canon = {n.lower(): n for n in Subject.objects.values_list('name', flat=True)}
+    return {canon.get(k, k.title()): v for k, v in subject_grades.items()}
+
+
+def _parse_grade(value) -> int | None:
+    g = str(value or '').strip().upper().replace(' ', '')
+    if g in GRADE_POINTS:
+        return GRADE_POINTS[g]
+    try:
+        n = int(g)
+        return n if 1 <= n <= 12 else None
+    except ValueError:
+        return None
+
+
+def _all_clusters(named: dict) -> dict:
+    from clusterpoints.services import calculate_clusters_anonymous
+    return {r.cluster.kuccps_number: r for r in calculate_clusters_anonymous(named)
+            if r.cluster.kuccps_number is not None}
+
+
+def tool_explain_my_cluster_points(student, cluster: int):
+    """Show the working behind one cluster's points from the student's own grades."""
+    from clusterpoints.services import GRADE_MIDPOINT_MARKS, aggregate_subjects
+    from clusters.models import Cluster
+
+    if not student.get('subject_grades'):
+        return {'error': 'No subject grades on record (they may have typed cluster points directly).',
+                'next_step': 'Enter grades at /clusterpoints/calculator/ to see the full working.'}
+    try:
+        knum = int(cluster)
+    except (TypeError, ValueError):
+        return {'error': 'cluster must be a number 1–18'}
+    named = _named_points(student['subject_grades'])
+    r = _all_clusters(named).get(knum)
+    if r is None:
+        return {'error': f'Cluster {knum} not found.'}
+
+    agg = aggregate_subjects(named)
+    out = {
+        'cluster': knum,
+        'cluster_name': r.cluster.name,
+        'aggregate': {
+            'subjects': [f"{n} {POINTS_TO_GRADE.get(p, p)} ({p})" for n, p in agg],
+            'total': r.aggregate_total, 'max': 84,
+            'rule': 'Mathematics + best of English/Kiswahili + next 5 best subjects',
+        },
+    }
+    picked = r.core_subjects
+    if None in picked:
+        slot_no = picked.index(None)
+        slots = sorted(Cluster.objects.get(pk=r.cluster.pk).subject_groups
+                       .prefetch_related('subjects').all(), key=lambda sg: sg.priority)
+        options = [s.name for s in slots[slot_no].subjects.all()] if slot_no < len(slots) else []
+        out.update(cluster_points=0.0,
+                   why_zero=f"No subject for requirement slot {slot_no + 1}: needs one of {', '.join(options)}")
+        return out
+
+    marks = [GRADE_MIDPOINT_MARKS.get(p, p * 7.5) for _, p in picked]
+    out['cluster_subjects'] = [
+        f"{n} {POINTS_TO_GRADE.get(p, p)} → {m} marks" for (n, p), m in zip(picked, marks)
+    ]
+    core_marks = round(sum(marks), 1)
+    out['formula'] = (f"48 × √(({core_marks} / 400) × ({r.aggregate_total} / 84)) = {r.cluster_points:.3f}")
+    out['cluster_points'] = round(r.cluster_points, 3)
+    saved = (student.get('cluster_points') or {}).get(str(knum))
+    if saved is not None and abs(saved - r.cluster_points) > 0.01:
+        out['note'] = (f"Their saved Cluster {knum} value is {saved:.3f} (e.g. typed from the KUCCPS portal); "
+                       'the portal figure is official — the calculator is an estimate.')
+    return out
+
+
+def tool_simulate_grade_change(student, changes: list, course_name: str = ''):
+    """What-if: recompute every cluster (and optionally one course's eligibility) with changed grades."""
+    if not student.get('subject_grades'):
+        return {'error': 'No subject grades on record to simulate from.',
+                'next_step': 'Enter grades at /clusterpoints/calculator/ first.'}
+    named = _named_points(student['subject_grades'])
+    canon_lower = {k.lower(): k for k in named}
+    from clusters.models import Subject
+    all_subjects = {n.lower(): n for n in Subject.objects.values_list('name', flat=True)}
+
+    new_named = dict(named)
+    applied, rejected = [], []
+    for ch in (changes or [])[:8]:
+        if not isinstance(ch, dict):
+            continue
+        subj = str(ch.get('subject', '')).strip().lower()
+        pts = _parse_grade(ch.get('grade'))
+        name = canon_lower.get(subj) or all_subjects.get(subj)
+        if not name:
+            name = next((v for k, v in all_subjects.items() if subj and subj in k), None)
+        if not name or pts is None:
+            rejected.append(ch)
+            continue
+        old = new_named.get(name)
+        new_named[name] = pts
+        applied.append(f"{name}: {POINTS_TO_GRADE.get(old, '—') if old else 'not taken'} → {POINTS_TO_GRADE[pts]}")
+    if not applied:
+        return {'error': 'No valid changes. Use KCSE subject names and grades A to E.', 'rejected': rejected}
+
+    before, after = _all_clusters(named), _all_clusters(new_named)
+    deltas = []
+    for n in sorted(after):
+        b, a = before[n].cluster_points if n in before else 0.0, after[n].cluster_points
+        if abs(a - b) >= 0.001:
+            deltas.append({'cluster': n, 'name': after[n].cluster.name,
+                           'before': round(b, 3), 'after': round(a, 3), 'change': round(a - b, 3)})
+    agg_before = next(iter(before.values())).aggregate_total if before else 0
+    agg_after = next(iter(after.values())).aggregate_total if after else 0
+    out = {
+        'changes_applied': applied,
+        'aggregate': f"{agg_before} → {agg_after} / 84",
+        'approx_mean_grade': f"{_grade_for_aggregate(agg_before)} → {_grade_for_aggregate(agg_after)} (estimate)",
+        'cluster_changes': deltas or 'No cluster changed.',
+        'caveat': 'Hypothetical — calculator estimate, not official KUCCPS figures.',
+    }
+    if rejected:
+        out['rejected'] = rejected
+    if course_name:
+        found = _find_courses(course_name, 'any', 1)
+        if found:
+            sim = {**student,
+                   'subject_grades': {k.lower(): v for k, v in new_named.items()},
+                   'cluster_points': {str(n): r.cluster_points for n, r in after.items()},
+                   'mean_grade': _grade_for_aggregate(agg_after)}
+            base = {**student, 'cluster_points': {str(n): r.cluster_points for n, r in before.items()}}
+            out['course_check'] = {
+                'course': found[0].name,
+                'now': _student_offering_summary(found[0], base),
+                'with_changes': _student_offering_summary(found[0], sim),
+            }
+        else:
+            out['course_check'] = f'No course matching "{course_name}".'
+    return out
+
+
+# ── KUCCPS choice planner ───────────────────────────────────────────────────
+
+def tool_plan_kuccps_choices(student, interest: str = '', level: str = 'degree', location: str = ''):
+    """A balanced choice list: stretch → competitive → safe, distinct courses where possible."""
+    if not has_results(student):
+        return _NO_RESULTS
+    level = (level or 'degree').lower()
+    matches, _ = _eligible_matches(student, level, interest, location)
+    if not matches:
+        return {'plan': [], 'note': 'Nothing eligible for that interest/level — try broader keywords or another level.'}
+
+    if level == 'degree':
+        buckets = {
+            'Stretch (borderline — worth a try)': sorted(
+                [m for m in matches if m[0] < 0.5], key=lambda m: -m[0]),
+            'Competitive': sorted([m for m in matches if 0.5 <= m[0] <= 2.0], key=lambda m: -m[0]),
+            'Safe': sorted([m for m in matches if m[0] > 2.0], key=lambda m: m[0]),
+        }
+    else:
+        buckets = {
+            'Meets minimum': [m for m in matches if m[0] < 2],
+            'Safe': sorted([m for m in matches if m[0] >= 2], key=lambda m: m[0]),
+        }
+
+    plan, used_courses = [], set()
+    for label, items in buckets.items():
+        picked = 0
+        for diff, c, o, info in items:
+            if picked >= 2 or (c.name, o.institution_id) in used_courses:
+                continue
+            # prefer variety: skip a course name already planned unless the bucket would be empty
+            if any(p['course'] == c.name for p in plan) and len(items) > 3:
+                continue
+            used_courses.add((c.name, o.institution_id))
+            plan.append({'tier': label, 'course': c.name, 'institution': o.institution.name,
+                         'url': _safe_url(c), **info})
+            picked += 1
+    return {
+        'plan': plan,
+        'eligible_offerings_total': len(matches),
+        'how_to_use': 'List choices in true order of preference — first choice is the one you want most. '
+                      'Mix tiers so one competitive year does not leave you unplaced.',
+        'apply_at': 'https://students.kuccps.net',
+        'shortlist_url': '/accounts/shortlist/',
+    }
+
+
+# ── Career matching ─────────────────────────────────────────────────────────
+
+def tool_recommend_careers_for_me(student, interest: str = ''):
+    """Rank career profiles by interest (quiz tags + stated interest) and academic fit."""
+    from career.models import CareerProfile
+
+    quiz = student.get('quiz_tags') or {}
+    words = _keywords(interest) or [w for w in re.findall(r"[a-z]+", (interest or '').lower()) if len(w) > 2][:4]
+    if not quiz and not words:
+        return {'error': 'No interests known yet.',
+                'next_step': 'Ask which fields excite them, or send them to the Career Quiz at /career/quiz/.'}
+
+    scored = []
+    for p in CareerProfile.objects.prefetch_related('related_courses__course_type', 'related_courses__cluster'):
+        tags = [t.lower() for t in p.get_tags_list()]
+        text = f"{p.title} {p.career_tags} {p.description[:300] if p.description else ''}".lower()
+        score = sum(quiz.get(t, 0) for t in tags) + sum(4 * (w in p.title.lower()) + 2 * (w in text) for w in words)
+        if score > 0:
+            scored.append((score, p))
+    if not scored:
+        return {'results': [], 'note': 'No matching career profiles. Try a broader interest.'}
+    scored.sort(key=lambda t: -t[0])
+    top_score = scored[0][0]
+
+    rows = []
+    for score, p in scored[:5]:
+        interest_strength = score / top_score
+        routes = []
+        if has_results(student):
+            for c in list(p.related_courses.all())[:3]:
+                s = _student_offering_summary(c, student)
+                routes.append({'course': c.name, 'level': c.course_type.name if c.course_type_id else None,
+                               'you_qualify_at': s.get('you_qualify_at'), 'url': _safe_url(c)})
+        qualifies = any(r.get('you_qualify_at') for r in routes)
+        if not has_results(student):
+            fit = 'Strong fit (interests only — no results saved)' if interest_strength >= 0.6 else 'Possible fit'
+        elif qualifies and interest_strength >= 0.6:
+            fit = 'Excellent fit'
+        elif qualifies or interest_strength >= 0.6:
+            fit = 'Strong fit' if qualifies else 'Strong interest — check routes'
+        else:
+            fit = 'Possible fit'
+        rows.append({
+            'career': p.title, 'fit': fit,
+            'why_interest': ', '.join(t for t in p.get_tags_list() if quiz.get(t.lower())) or interest or None,
+            'salary': p.average_salary or None, 'demand': p.demand_level,
+            'routes_for_this_student': routes or [c.name for c in list(p.related_courses.all())[:3]],
+            'url': reverse('career:career_profile_detail', args=[p.slug]) if p.slug else None,
+        })
+    return {'results': rows,
+            'based_on': ('Career Quiz answers' if quiz else '') + (' + stated interest' if words else ''),
+            'quiz_url': '/career/quiz/'}
+
+
+# ── People, opinions, dates ─────────────────────────────────────────────────
+
+def tool_find_mentors(student, course_or_field: str = '', institution: str = ''):
+    from mentorship.models import MentorProfile
+
+    qs = (MentorProfile.objects.filter(is_approved=True, is_active=True)
+          .select_related('user', 'course', 'institution'))
+    words = _keywords(course_or_field)
+    if words:
+        cond = Q()
+        for w in words:
+            cond |= Q(course__name__icontains=w)
+        qs = qs.filter(cond)
+    if institution:
+        inst = _find_institution(institution)
+        if inst:
+            qs = qs.filter(institution=inst)
+    rows = [{
+        'mentor': m.display_name.split()[0] if m.display_name else 'Mentor',
+        'studies': m.course.name if m.course else None,
+        'at': m.institution.name if m.institution else None,
+        'year': m.get_year_of_study_display(),
+        'rating': float(m.average_rating) or None,
+        'sessions_done': m.total_sessions,
+        'price_kes': m.effective_session_price(),
+        'open_slots': m.available_slots_count,
+        'url': reverse('mentorship:mentor_profile', args=[m.pk]),
+    } for m in qs[:5]]
+    return {'mentors': rows, 'directory_url': '/mentorship/'} if rows else {
+        'mentors': [], 'note': 'No approved mentor for that yet.', 'directory_url': '/mentorship/'}
+
+
+def tool_get_reviews(student, course_name: str = '', institution: str = ''):
+    from django.db.models import Avg
+    from courses.models import Review
+
+    target, qs = None, Review.objects.none()
+    if course_name:
+        found = _find_courses(course_name, 'any', 1)
+        if found:
+            target, qs = found[0].name, Review.objects.filter(course=found[0])
+    elif institution:
+        inst = _find_institution(institution)
+        if inst:
+            target, qs = inst.name, Review.objects.filter(institution=inst)
+    if target is None:
+        return {'error': 'Course or institution not found.'}
+    stats = qs.aggregate(avg=Avg('rating'), n=Count('id'))
+    if not stats['n']:
+        return {'target': target, 'reviews': 0, 'note': 'No student reviews yet.'}
+    return {
+        'target': target,
+        'average_rating': round(stats['avg'], 1), 'reviews': stats['n'],
+        'recent_comments': [r.body for r in qs.exclude(body='')[:3]],
+        'note': 'Opinions from CareerNext users — not verified facts.',
+    }
+
+
+def tool_get_kuccps_calendar(student):
+    from resources.models import CalendarCycle
+
+    cycle = (CalendarCycle.objects.filter(is_active=True, is_current=True).first()
+             or CalendarCycle.objects.filter(is_active=True).first())
+    if not cycle:
+        return {'error': 'No calendar published.', 'official': 'https://www.kuccps.ac.ke'}
+    from django.utils import timezone
+    return {
+        'cycle': cycle.title, 'today': timezone.localdate(),
+        'events': [{
+            'phase': e.phase or None, 'event': e.title, 'when': e.date_label,
+            'status': dict(e.STATUS_CHOICES).get(e.resolved_status, e.resolved_status),
+            'details': (e.description or '')[:200] or None,
+        } for e in cycle.events.all()[:20]],
+        'calendar_url': '/resources/kuccps-calendar/',
+        'note': 'Dates are CareerNext\'s tracking of KUCCPS announcements — confirm on kuccps.ac.ke.',
+    }
+
+
+# ── Actions (write to the student's own account) ───────────────────────────
+
+SHORTLIST_MAX = 5   # matches accounts.views.shortlist_toggle
+
+
+def tool_add_to_shortlist(student, course_name: str, rank: int | None = None, note: str = ''):
+    if not student.get('user_id'):
+        return {'error': 'Not logged in.', 'next_step': 'Log in at /accounts/login/ to keep a shortlist.'}
+    from accounts.models import CourseShortlist
+
+    found = _find_courses(course_name, 'any', 1)
+    if not found:
+        return {'error': f'No course matching "{course_name}".'}
+    course = found[0]
+    uid = student['user_id']
+    item = CourseShortlist.objects.filter(user_id=uid, course=course).first()
+    if item is None:
+        current = list(CourseShortlist.objects.filter(user_id=uid).select_related('course'))
+        if len(current) >= SHORTLIST_MAX:
+            return {'error': f'Shortlist is full ({SHORTLIST_MAX} courses).',
+                    'current': [i.course.name for i in current],
+                    'next_step': 'Ask which one to remove, or manage it at /accounts/shortlist/.'}
+        item = CourseShortlist.objects.create(user_id=uid, course=course)
+        action = 'added'
+    else:
+        action = 'already on shortlist — updated'
+    fields = []
+    if rank:
+        try:
+            r = int(rank)
+        except (TypeError, ValueError):
+            r = 0
+        if 1 <= r <= 4:
+            CourseShortlist.objects.filter(user_id=uid, rank=r).exclude(pk=item.pk).update(rank=None)
+            item.rank = r
+            fields.append('rank')
+    if note:
+        item.notes = (f"{item.notes}\n{note}" if item.notes else note)[:1000]
+        fields.append('notes')
+    if fields:
+        item.save(update_fields=fields)
+    return {'result': action, 'course': course.name, 'rank': item.rank, 'shortlist_url': '/accounts/shortlist/'}
+
+
 _TOOL_FUNCS = {
+    'explain_my_cluster_points': tool_explain_my_cluster_points,
+    'simulate_grade_change': tool_simulate_grade_change,
+    'plan_kuccps_choices': tool_plan_kuccps_choices,
+    'recommend_careers_for_me': tool_recommend_careers_for_me,
+    'find_mentors': tool_find_mentors,
+    'get_reviews': tool_get_reviews,
+    'get_kuccps_calendar': tool_get_kuccps_calendar,
+    'add_to_shortlist': tool_add_to_shortlist,
     'compare_courses': tool_compare_courses,
     'get_salary_outlook': tool_get_salary_outlook,
     'get_my_shortlist': tool_get_my_shortlist,
@@ -816,7 +1248,8 @@ TOOL_SPECS = [
         "cutoffs and requirements. Optional interest keyword (e.g. 'health', 'business', 'computer').",
         {'level': {'type': 'string', 'enum': _LEVEL_ENUM[1:]},
          'interest': {'type': 'string'},
-         'limit': {'type': 'integer'}},
+         'limit': {'type': 'integer'},
+         'location': {'type': 'string', 'description': 'Optional town/county to stay near, e.g. "Nakuru"'}},
         ['level']),
     _fn('search_institutions',
         'Find universities, KMTC campuses, TVETs and TTCs by name, abbreviation or location (e.g. "Nakuru", "JKUAT").',
@@ -853,6 +1286,54 @@ TOOL_SPECS = [
         "The logged-in student's shortlisted (ranked) and saved courses, with whether they qualify for each and "
         'their best institution. Use for "my shortlist", "my saved courses", "help me rank my choices".',
         {}, []),
+    _fn('explain_my_cluster_points',
+        "Show the working behind the student's points for ONE cluster from their saved grades: the 4 cluster "
+        'subjects picked, midpoint marks, aggregate subjects, and the formula with numbers. Also explains a 0.000 '
+        '(which required subject is missing). Use for "how did I get X points", "why is my cluster 0".',
+        {'cluster': {'type': 'integer', 'description': 'KUCCPS cluster number 1–18'}},
+        ['cluster']),
+    _fn('simulate_grade_change',
+        'What-if calculator: recompute all 18 cluster points with hypothetical grade changes (e.g. after a KNEC '
+        're-mark, or "what if I had B+ in Chemistry"), and optionally re-check one course before vs after.',
+        {'changes': {'type': 'array', 'minItems': 1, 'items': {
+            'type': 'object',
+            'properties': {'subject': {'type': 'string'}, 'grade': {'type': 'string', 'description': 'A, A-, B+ … E'}},
+            'required': ['subject', 'grade']}},
+         'course_name': {'type': 'string'}},
+        ['changes']),
+    _fn('plan_kuccps_choices',
+        'Build a balanced KUCCPS choice list for the student (stretch → competitive → safe) from courses they are '
+        'eligible for. Use for "help me fill my KUCCPS choices", "what should I apply for", "make me a plan".',
+        {'interest': {'type': 'string'},
+         'level': {'type': 'string', 'enum': _LEVEL_ENUM[1:]},
+         'location': {'type': 'string'}},
+        []),
+    _fn('recommend_careers_for_me',
+        "Rank careers for this student by interest (their Career Quiz answers and/or a stated interest) AND academic "
+        "fit (whether they qualify for courses leading there). Returns fit labels. Use for \"what career suits me\", "
+        '"I don\'t know what to study", "I like X — what jobs?".',
+        {'interest': {'type': 'string'}},
+        []),
+    _fn('find_mentors',
+        'Find approved CareerNext mentors (current university students) by course/field and/or institution, '
+        'with rating, price and booking link. Use when they want to talk to someone doing the course.',
+        {'course_or_field': {'type': 'string'}, 'institution': {'type': 'string'}},
+        []),
+    _fn('get_reviews',
+        'Student star ratings and short comments for a course or an institution on CareerNext.',
+        {'course_name': {'type': 'string'}, 'institution': {'type': 'string'}},
+        []),
+    _fn('get_kuccps_calendar',
+        'Current KUCCPS cycle timeline: application windows, revision, placement and reporting dates, with '
+        'status (open now / upcoming / done). Use for "when", "deadline", "is the portal open".',
+        {}, []),
+    _fn('add_to_shortlist',
+        "ACTION: add a course to the logged-in student's shortlist (optional KUCCPS rank 1–4 and a note). "
+        'Only call when the student clearly asks you to add/save/rank it.',
+        {'course_name': {'type': 'string'},
+         'rank': {'type': 'integer', 'description': 'Optional 1–4'},
+         'note': {'type': 'string'}},
+        ['course_name']),
 ]
 
 
@@ -1002,6 +1483,18 @@ You have live, read-only tools over the CareerNext database. NEVER say "I can't 
 - Cutoff questions: get_course_details also gives predicted_next_cutoff (estimate, range, trend, your_chance). Mention
   it as "CareerNext's estimate for the next cycle" — never as a fact or guarantee.
 - Careers, "what does a ___ do" → search_careers. KUCCPS/HELB how-to → search_help_articles.
+- "What career suits me / I don't know what to study / I like X" → recommend_careers_for_me (uses their Career Quiz
+  answers + interest + whether they qualify). Present its fit labels and why.
+- "Help me fill my KUCCPS choices / make me a plan" → plan_kuccps_choices. Explain the stretch/competitive/safe mix
+  and offer to add the picks to their shortlist.
+- "How did I get these points / why is cluster N zero" → explain_my_cluster_points — show the working step by step.
+- "What if I had B+ in Chem / my re-mark comes back higher" → simulate_grade_change (pass course_name if they
+  care about one course). Always say the result is hypothetical.
+- "Courses near Nakuru / in my county" → find_courses_i_qualify_for with location.
+- "Can I talk to someone studying X" → find_mentors. "Is X good / what do students say" → get_reviews.
+- "When does KUCCPS open / deadlines / revision" → get_kuccps_calendar (quote dates exactly as returned).
+- "Add it / save it / make it my first choice" → add_to_shortlist. ONLY on a clear request from the student —
+  never on your own initiative — then confirm what was saved with a link.
 - Call several tools in one turn when a question needs it (e.g. compare_courses + get_my_shortlist).
 - If a lookup returns nothing, retry once with a simpler or alternative keyword (e.g. "BSc Nursing" → "nursing").
   If still nothing, say you could not find verified data and link the relevant directory page.
@@ -1087,6 +1580,29 @@ You: **Both lead to great health careers — but with your points, Nursing is th
 👉 Next step: put Nursing first on your [Shortlist](/accounts/shortlist/); Medicine can come later via a degree upgrade.
 <<FOLLOWUPS: Which universities offer Nursing? | What is Clinical Medicine like? | Can I upgrade to Medicine later?>>
 
+User: which course should I take? I like computers   (saved results; you called find_courses_i_qualify_for)
+You: **With your Maths B+ and Physics B, tech is a strong fit — here's how your options rank.**
+### Best match
+- **BSc Computer Science — Moi University** — Cluster 5: 39.104 | cutoff (2024) 37.250 | +1.854 🟡 — Excellent fit:
+  your strongest cluster, and opens software, data and IT roles
+### Strong alternatives
+- **BSc Information Technology — Maseno University** — +3.020 🟢 — Strong fit: more applied, broad job options
+- **BSc Mathematics & Computer Science — JKUAT** — +0.640 🟡 — Strong fit: suits your Maths, leads to data/analytics
+### Backup
+- **Diploma in ICT** (TVET) — safe on your mean grade; can upgrade to a degree later
+👉 Next step: ⭐ add these to your [Shortlist](/accounts/shortlist/) and order them stretch → safe.
+*Based on previous KUCCPS cutoff data — cutoffs change each cycle.*
+<<FOLLOWUPS: Compare Computer Science vs IT | What do software developers earn? | Which TVETs offer ICT diplomas?>>
+
+User: if my chemistry remark comes back B+ will I get medicine?   (you called simulate_grade_change)
+You: **A B+ in Chemistry lifts your Cluster 13 to 41.880 — closer, but still below Medicine cutoffs.**
+- **Change:** Chemistry B → B+ | Cluster 13: 40.215 → 41.880 (+1.665)
+- **Medicine:** cutoff range 42.100–45.600 — you'd be 0.220 short of the lowest 🟠
+- **Unlocks:** BSc Pharmacy at 2 more universities 🟡
+👉 Next step: keep Medicine as a stretch choice and back it with Pharmacy — want me to build that plan?
+*Hypothetical estimate — official points come from the KUCCPS portal.*
+<<FOLLOWUPS: Build my KUCCPS choice plan | Show how Cluster 13 is calculated | Compare Pharmacy vs Clinical Medicine>>
+
 User: I got D+ and I feel like a failure
 You: **Pole sana — but a D+ is not the end of the road.** Many nurses, engineers and teachers started right here.
 - **Certificate (Level 5):** many courses accept D+
@@ -1137,6 +1653,33 @@ TVET | KMTC | TTC. Avoid GPA/SAT/Major unless asked.
 7. Highly competitive courses (Medicine, Pharmacy, Dentistry, Law, Architecture, Engineering at top schools): flag it.
 8. Missing a degree → show the Diploma/Certificate upgrade route to the same career.
 9. Non-degree pathways use the mean grade + subject requirements only (no cluster points).
+
+═══ GUIDANCE QUALITY — THINK LIKE AN EXPERIENCED KENYAN CAREER COUNSELLOR ═══
+- No generic advice. "Follow your passion" or "tech has many opportunities" is useless on its own — tie every
+  suggestion to THEIR grades, cluster points, subjects or stated interests, and say WHY it fits.
+- Keep these distinct and never blur them: minimum mean grade | subject requirements | cluster | historical cutoff
+  (always name the year) | CareerNext's predicted cutoff. Minimum requirement ≠ cutoff: meeting the minimum only
+  makes them eligible to compete.
+- "Which course should I take?" → don't name one random course. Rank: **Best match** → **Strong alternatives** →
+  **Backup options**, each with a one-line why and the career it leads to. Weigh academic fit (their grades/points),
+  interest fit, market relevance in Kenya, flexibility (how many careers it opens), further study and self-employment.
+- Fit labels: use Excellent fit / Strong fit / Possible fit / Stretch / Weak fit. NEVER invent match percentages.
+- Comparing courses: cover requirements, key subjects, skills, typical careers, flexibility, further study, Kenyan
+  opportunities — as bullets under a ### heading per course. Don't declare one "better"; say which suits WHICH goal.
+- University and TVET/KMTC/TTC are different routes, not better and worse ones. Present them evenly.
+- Honest outcomes: never promise a job, wealth or guaranteed demand. Salaries vary with experience, employer, county,
+  specialisation and industry — only quote figures from get_salary_outlook or career profiles, never make them up.
+- Never invent requirements, cutoffs, programme codes, fees, campuses, institution offerings or KUCCPS policy. If the
+  tools don't have it, say so and point to the official KUCCPS portal or the institution.
+- Uncertainty: say "Based on previous KUCCPS data...", "Historically...", "Please confirm on the KUCCPS portal" — never
+  hide doubt behind confident wording.
+- Follow-up questions: answer first with what you have. Ask at most ONE question, and only when the answer would
+  materially change your recommendation (e.g. "Which field pulls you most — health, tech, business, teaching?").
+- Inform, don't decide: lay out options and trade-offs; the choice is the student's.
+- Don't say "As an AI...". No motivational speeches when they need facts.
+- Wellbeing: if a student mentions self-harm, abuse, severe distress or a medical/financial crisis, respond with care
+  first, set course advice aside, and urge them to talk to a trusted adult, school counsellor or a professional
+  (Kenya: Childline 116, Kenya Red Cross toll-free 1199). In immediate danger, call 999 or 112.
 
 ═══ STUDENT DATA ═══
 The student's saved results appear at the END of this prompt. If they are there, NEVER ask for grades or subjects —
@@ -1224,6 +1767,10 @@ def student_context_text(student: dict, request=None) -> str:
         first = (getattr(request.user, 'first_name', '') or '').strip()
         if first:
             lines.append(f"First name: {first} (use it occasionally, not every message)")
+    quiz = student.get('quiz_tags') or {}
+    if quiz:
+        top = sorted(quiz.items(), key=lambda kv: -kv[1])[:5]
+        lines.append('Career Quiz interests (strongest first): ' + ', '.join(f"{t} ({n})" for t, n in top))
     if not has_results(student):
         lines.append('No KCSE results saved yet. To give personalised answers, guide them to the '
                      '[Course Match Engine](/career/) or [Cluster Points Calculator](/clusterpoints/calculator/). '

@@ -151,6 +151,16 @@ body { background: #f8fafc; }
   transition: color 0.2s, transform 0.2s;
 }
 .cat-card:hover .cat-card-arrow { color: var(--c); transform: translateX(3px); }
+
+/* Dark mode: page-local light palette mapped to One UI tokens */
+body.dark { background: var(--bg); }
+body.dark .cpage-search-strip { background: var(--surface); }
+body.dark .cpage-search-inner { background: var(--surface-2); }
+body.dark .cpage-search-inner:focus-within { background: var(--surface); }
+body.dark .cpage-search-inner input { color: var(--text); }
+body.dark .cpage-section-hd h2 { color: var(--text); }
+body.dark .cat-card { background: var(--surface); }
+body.dark .cat-card-name { color: var(--text); }
 </style>
 
 <div class="cpage-header">
