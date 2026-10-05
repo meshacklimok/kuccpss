@@ -28,7 +28,7 @@ FAQ_DATA = [
 
     # ── Cluster Points ────────────────────────────────────────────────────────
     ("cluster", "How are cluster points calculated?",
-     "The official KUCCPS formula is:\n\nCluster Points = 48 × √( (cluster_subjects / 48) × (aggregate / 84) )\n\nWhere cluster_subjects is the sum of your raw marks in the 4 subjects that form each specific cluster (max 48), and aggregate is your KCSE total (max 84). The maximum possible cluster points score is 48."),
+     "CareerNext uses the KUCCPS weighted formula:\n\nCluster Points = 48 × √( (cluster_marks / 400) × (aggregate / 84) )\n\nWhere cluster_marks is the sum of the midpoint raw marks for your 4 cluster subjects (A = 90.2, B = 66, C = 50 and so on, out of 400), and aggregate is your KCSE total out of 84. The maximum possible cluster points score is 48."),
 
     ("cluster", "What is the KCSE aggregate (total)?",
      "The aggregate is your best 7 subjects scored as follows:\n\nMathematics + best of (English or Kiswahili) + your next 5 best subjects. The maximum aggregate is 84 points (7 subjects × A = 12 each)."),

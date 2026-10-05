@@ -95,6 +95,14 @@ body { background: #f8fafc; }
   box-shadow: 0 2px 14px rgba(180,83,9,0.1) !important;
 }
 .inst-card-sponsored:hover { box-shadow: 0 8px 28px rgba(180,83,9,0.18) !important; }
+
+/* Dark mode: page-local light palette mapped to One UI tokens */
+body.dark { background: var(--bg); }
+body.dark .cpage-search-strip { background: var(--surface); }
+body.dark .cpage-search-inner { background: var(--surface-2); }
+body.dark .cpage-search-inner:focus-within { background: var(--surface); }
+body.dark .cpage-search-inner input { color: var(--text); }
+body.dark .inst-card-sponsored { border-color: rgba(255,179,64,0.45) !important; }
 </style>
 
 <div class="cpage-header">

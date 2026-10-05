@@ -161,6 +161,23 @@
     margin: 0.75rem 0;
     overflow-x: auto;
 }
+
+/* Dark mode: page-local light palette mapped to One UI tokens */
+body.dark .guide-card { background: var(--surface); border-color: transparent; }
+body.dark .guide-card h3 { color: var(--text); }
+body.dark .step-list li { border-bottom-color: var(--border); }
+body.dark .step-num { background: rgba(92,157,255,0.14); color: var(--primary-light); }
+body.dark .step-text { color: var(--text); }
+body.dark .step-text strong { color: var(--text); }
+body.dark .tip-box { background: rgba(255,179,64,0.14); }
+body.dark .warn-box { background: rgba(255,69,58,0.15); }
+body.dark .info-box { background: rgba(92,157,255,0.14); border-color: rgba(92,157,255,0.45); color: var(--primary-light); }
+body.dark .icon-blue { background: rgba(92,157,255,0.14); color: var(--primary-light); }
+body.dark .icon-green { background: rgba(52,199,89,0.14); color: #5fd88a; }
+body.dark .icon-purple { background: rgba(179,157,255,0.15); color: #b39dff; }
+body.dark .icon-amber { background: rgba(255,179,64,0.14); color: #ffc266; }
+body.dark .toc-link { color: var(--text); }
+body.dark .toc-link:hover { background: rgba(92,157,255,0.14); color: var(--primary-light); }
 </style>
 
 <!-- Hero -->

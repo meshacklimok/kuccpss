@@ -26,6 +26,9 @@
   .ph-card { padding: 0.85rem 0.9rem; }
   .ph-actions .btn { flex: 1 1 auto; justify-content: center; }
 }
+
+/* Dark mode: page-local light palette mapped to One UI tokens */
+body.dark .ph-card { border-color: var(--border); }
 </style>
 
 <div class="page-hero">
@@ -142,7 +145,7 @@ document.querySelectorAll('.ph-recheck').forEach(function (btn) {
       var d = await r.json();
       if (d.status === 'completed') {
         msg.className = 'ph-msg text-success fw-semibold';
-        msg.textContent = 'Payment confirmed! Your access is unlocked.';
+        msg.textContent = 'Payment confirmed. Your access is unlocked.';
         setTimeout(function () { window.location.reload(); }, 1200);
         return;
       }

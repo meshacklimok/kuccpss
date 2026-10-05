@@ -406,7 +406,7 @@ body { background: #060c1a; min-height: 100vh; }
             <div class="pr-state" id="pr-step-waiting">
                 <div class="pr-waiting">
                     <div class="pr-waiting-icon">📲</div>
-                    <div class="pr-waiting-title">Check Your Phone!</div>
+                    <div class="pr-waiting-title">Check Your Phone</div>
                     <div class="pr-waiting-sub">
                         An M-Pesa prompt has been sent to your phone.<br>
                         Enter your PIN to complete the payment.<br><br>
@@ -437,7 +437,7 @@ body { background: #060c1a; min-height: 100vh; }
                             <div class="pr-ring-pct" id="pr-ring-pct">0%</div>
                         </div>
                     </div>
-                    <div class="pr-success-title" id="pr-success-title">Payment Confirmed! Unlocking&hellip;</div>
+                    <div class="pr-success-title" id="pr-success-title">Payment Confirmed. Unlocking&hellip;</div>
                     <div class="pr-success-hint" id="pr-success-hint">Loading your results, please don't close this tab</div>
                     <div class="pr-ticks" id="pr-ticks"></div>
                 </div>
@@ -673,7 +673,7 @@ function prShowSuccess(){
             ringEl.classList.add('done');
             pctEl.style.display = 'none';
             doneEl.style.display = 'block';
-            titleEl.textContent = 'All Done! Redirecting…';
+            titleEl.textContent = 'All done. Redirecting…';
             hintEl.textContent  = '';
             setTimeout(function(){
                 window.location.href = NEXT_URL || defaultNext();

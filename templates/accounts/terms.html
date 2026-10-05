@@ -72,6 +72,23 @@
 .tc-table tr:nth-child(even) td { background: #f8fafc; }
 
 .tc-updated { font-size: 0.76rem; color: #94a3b8; }
+
+/* Dark mode: page-local light palette mapped to One UI tokens */
+body.dark .tc-toc { background: var(--surface-2); border-color: transparent; }
+body.dark .tc-toc-title { color: var(--text-2); }
+body.dark .tc-toc a { color: var(--primary-light); }
+body.dark .tc-section h2 { color: var(--text); }
+body.dark .tc-section h3 { color: var(--text); }
+body.dark .tc-section p, body.dark .tc-section li { color: var(--text-2); }
+body.dark .tc-section strong { color: var(--text); }
+body.dark .tc-section a { color: var(--primary-light); }
+body.dark .tc-note-blue { background: rgba(92,157,255,0.14); border-color: rgba(92,157,255,0.45); color: var(--primary-light); }
+body.dark .tc-note-amber { background: rgba(255,179,64,0.14); border-color: rgba(255,179,64,0.45); color: #ffc266; }
+body.dark .tc-note-green { background: rgba(52,199,89,0.14); border-color: rgba(52,199,89,0.45); color: #5fd88a; }
+body.dark .tc-note-red { background: rgba(255,69,58,0.15); border-color: rgba(255,69,58,0.45); color: #ff8a80; }
+body.dark .tc-table th { background: var(--surface-2); border-color: transparent; color: var(--text); }
+body.dark .tc-table td { border-color: var(--border); color: var(--text-2); }
+body.dark .tc-table tr:nth-child(even) td { background: var(--surface-2); }
 </style>
 
 <!-- HERO -->

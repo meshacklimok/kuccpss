@@ -169,6 +169,35 @@
   .hiw-section-icon { width:44px; height:44px; font-size:1.1rem; }
   .feat-grid { grid-template-columns:1fr 1fr; }
 }
+
+/* Dark mode: page-local light palette mapped to One UI tokens */
+body.dark .hiw-sidebar nav { background: var(--surface); border-color: transparent; }
+body.dark .hiw-nav-head { background: var(--surface-2); border-bottom-color: var(--border); color: var(--text-2); }
+body.dark .hiw-nav-link { color: var(--text-2); }
+body.dark .hiw-nav-link:hover { background: var(--surface-2); color: var(--primary-light); }
+body.dark .hiw-nav-link.active { background: rgba(92,157,255,0.14); color: var(--primary-light); }
+body.dark .hiw-section { background: var(--surface); border-color: transparent; }
+body.dark .hiw-section-head { border-bottom-color: var(--border); }
+body.dark .hiw-section-head h2 { color: var(--text); }
+body.dark .hiw-section-head p { color: var(--text-2); }
+body.dark .hiw-step { background: var(--surface-2); border-color: transparent; }
+body.dark .hiw-step-body .step-title { color: var(--text); }
+body.dark .hiw-step-body .step-desc { color: var(--text-2); }
+body.dark .btn-pill { background: rgba(92,157,255,0.14); border-color: rgba(92,157,255,0.45); color: var(--primary-light); }
+body.dark .btn-pill.green { background: rgba(52,199,89,0.14); border-color: rgba(52,199,89,0.45); color: #5fd88a; }
+body.dark .btn-pill.purple { background: rgba(179,157,255,0.15); color: #b39dff; }
+body.dark .btn-pill.amber { background: rgba(255,179,64,0.14); border-color: rgba(255,179,64,0.45); color: #ffc266; }
+body.dark .btn-pill.red { background: rgba(255,69,58,0.15); border-color: rgba(255,69,58,0.45); color: #ff8a80; }
+body.dark .btn-pill.slate { background: var(--surface-2); border-color: transparent; color: var(--text-2); }
+body.dark .hiw-tip { background: rgba(255,179,64,0.14); border-color: rgba(255,179,64,0.45); color: #ffc266; }
+body.dark .hiw-tip.blue { background: rgba(92,157,255,0.14); border-color: rgba(92,157,255,0.45); color: var(--primary-light); }
+body.dark .hiw-tip.green { background: rgba(52,199,89,0.14); border-color: rgba(52,199,89,0.45); color: #5fd88a; }
+body.dark .feat-item { background: var(--surface-2); border-color: transparent; color: var(--text-2); }
+body.dark .feat-item strong { color: var(--text); }
+body.dark .hiw-mobile-tabs { background: var(--surface); border-bottom-color: var(--border); }
+body.dark .hiw-tab-pill { border-color: transparent; background: var(--surface); color: var(--text-2); }
+body.dark .hiw-tab-pill:hover { color: #b39dff; }
+body.dark .hiw-divider { background: var(--surface-2); }
 </style>
 
 <!-- ═══════════════════════════════ HERO ══════════════════════════════════ -->
@@ -952,9 +981,9 @@
               </div>
               <p class="step-desc">
                 Each course detail page includes a <strong>cutoff trend chart</strong> showing how the cutoff point
-                has changed from 2021 to 2024. A rising trend means the course is becoming more competitive;
-                a falling trend may mean more seats or fewer applicants. Use this when comparing courses to
-                judge how risky or safe each choice is.
+                has changed from 2021 to 2025. Look at how much it moves from year to year: a cutoff that
+                jumps around is riskier than one that stays close. One year's rise or fall doesn't tell you
+                what happens next.
               </p>
             </div>
           </div>
@@ -1011,14 +1040,15 @@
             <div class="hiw-step-body">
               <div class="step-title">
                 <span class="btn-pill red me-1"><i class="fas fa-arrow-trend-up"></i> Trend Indicator</span>
-                : Rising, falling, or stable
+                : What happened last year
               </div>
               <p class="step-desc">
-                Each course card shows a trend arrow: <span style="color:#dc2626;"><i class="fas fa-arrow-trend-up"></i> Rising</span>
-                (cutoff going up, harder to get in),
-                <span style="color:#16a34a;"><i class="fas fa-arrow-trend-down"></i> Falling</span>
-                (cutoff dropping, easier), or <i class="fas fa-minus"></i> Stable.
-                A rising course means you should factor in extra margin when deciding.
+                Each course card shows what the cutoff did at the last intake:
+                <span style="color:#dc2626;"><i class="fas fa-arrow-trend-up"></i> Rose last year</span>,
+                <span style="color:#16a34a;"><i class="fas fa-arrow-trend-down"></i> Fell last year</span>,
+                or <i class="fas fa-minus"></i> Steady last year.
+                This is history, not a forecast: a rise one year often doesn't repeat the next.
+                Use the predicted range, not the arrow, to judge your chances.
               </p>
             </div>
           </div>
