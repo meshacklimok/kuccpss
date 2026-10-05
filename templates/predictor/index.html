@@ -66,6 +66,20 @@
 }
 .method-wma   { background: #e0f2fe; color: #0369a1; }
 .method-trend { background: #f0fdf4; color: #15803d; }
+
+/* Dark mode: page-local light palette mapped to One UI tokens */
+body.dark .elig-highlikelihood { background: rgba(52,199,89,0.14); color: #5fd88a; }
+body.dark .elig-likely { background: rgba(52,199,89,0.14); color: #5fd88a; }
+body.dark .elig-borderline { background: rgba(255,179,64,0.14); }
+body.dark .elig-unlikely { background: rgba(255,69,58,0.15); color: #ff8a80; }
+body.dark .trend-up { color: #ff8a80; }
+body.dark .trend-down { color: #5fd88a; }
+body.dark .elig-filter-btn.active-highlikelihood { background: rgba(52,199,89,0.14); color: #5fd88a; }
+body.dark .elig-filter-btn.active-likely { background: rgba(52,199,89,0.14); color: #5fd88a; }
+body.dark .elig-filter-btn.active-borderline { background: rgba(255,179,64,0.14); }
+body.dark .elig-filter-btn.active-unlikely { background: rgba(255,69,58,0.15); color: #ff8a80; }
+body.dark .method-wma { background: rgba(92,157,255,0.14); color: #64d2ff; }
+body.dark .method-trend { background: rgba(52,199,89,0.14); color: #5fd88a; }
 </style>
 {% endblock %}
 
@@ -211,10 +225,10 @@
     Estimated 2026 cutoffs based on historical placement trends. Predictions are provided for guidance only and are not official KUCCPS cutoffs.
   </span>
   <span class="ms-3 trend-up small">
-    <i class="fas fa-arrow-trend-up me-1"></i>Rising (higher competition)
+    <i class="fas fa-arrow-trend-up me-1"></i>Rose last year
   </span>
   <span class="trend-down small">
-    <i class="fas fa-arrow-trend-down me-1"></i>Falling (lower competition)
+    <i class="fas fa-arrow-trend-down me-1"></i>Fell last year
   </span>
 </div>
 
@@ -277,17 +291,21 @@
 
           <!-- Trend direction -->
           <div class="col-6 col-lg-1 text-center">
-            {% if row.pred.trend == "rising" %}
-            <span class="trend-up small fw-semibold">
-              <i class="fas fa-arrow-trend-up d-block fa-lg mb-1"></i>Rising
+            {% if row.pred.regime == "minimum" %}
+            <span class="trend-flat small fw-semibold" title="{{ row.pred.note }}">
+              <i class="fas fa-door-open d-block fa-lg mb-1"></i>Minimum
+            </span>
+            {% elif row.pred.trend == "rising" %}
+            <span class="trend-up small fw-semibold" title="{{ row.pred.trend_tip }}">
+              <i class="fas fa-arrow-trend-up d-block fa-lg mb-1"></i>Rose last year
             </span>
             {% elif row.pred.trend == "falling" %}
-            <span class="trend-down small fw-semibold">
-              <i class="fas fa-arrow-trend-down d-block fa-lg mb-1"></i>Falling
+            <span class="trend-down small fw-semibold" title="{{ row.pred.trend_tip }}">
+              <i class="fas fa-arrow-trend-down d-block fa-lg mb-1"></i>Fell last year
             </span>
             {% else %}
             <span class="trend-flat small fw-semibold">
-              <i class="fas fa-minus d-block fa-lg mb-1"></i>Stable
+              <i class="fas fa-minus d-block fa-lg mb-1"></i>Steady last year
             </span>
             {% endif %}
             <div class="text-muted" style="font-size:0.7rem;">{{ row.pred.years_used }}yr data</div>
@@ -314,9 +332,10 @@
           <!-- Eligibility badge -->
           <div class="col-6 col-lg-1 text-center">
             {% if row.elig %}
-            <span class="elig-pill elig-{{ row.elig.key|lower }}">
+            <span class="elig-pill elig-{{ row.elig.key|lower }}"{% if row.pred.note %} title="{{ row.pred.note }}"{% endif %}>
               {{ row.elig.label }}
             </span>
+            <div class="text-muted" style="font-size:0.7rem;">~{{ row.elig.chance }}% chance</div>
             {% else %}
             <span class="text-muted small">—</span>
             {% endif %}
