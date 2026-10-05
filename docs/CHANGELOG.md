@@ -12,6 +12,16 @@ Format: `[YYYY-MM-DD]` — description of what changed and why.
 
 ---
 
+## [2026-10-05] — Mentorship: expert mentors and configurable session length
+- **Expert mentors:** `MentorProfile.mentor_type` (student/expert), `headline` and `display_order` (migration 0019). Experts are professionals who advise on any course. Admin creates them; there is no signup form or student documents. `course` and `institution` are now `blank=True` on the model, and the signup form still requires them.
+- **Placement:** a "Talk to an Expert" section is pinned above the directory results whatever the search or filters. Course detail pages list up to 3 experts, and their Book links pre-fill the course. Experts edit their profile through `ExpertProfileForm` (headline, bio, WhatsApp).
+- **Booking:** an expert booking asks for an optional course (`MentorshipSession.course_topic`, with autocomplete from course names). Price and payout use the existing per-mentor overrides. Payment, wallet, withdrawal and refunds are unchanged.
+- **Session length:** `MentorshipConfig.session_minutes` (default 15) plus a per-mentor override `custom_session_minutes`. The length is copied onto `MentorshipSession.duration_minutes` at booking. It drives the calendar invites, emails and reminders. Auto-complete now runs 15 min after the session ends (previously 30 min after start, which is the same for 15-min sessions). Adding a slot that overlaps another, given the mentor's session length, is skipped.
+- **Course page:** a single "Talk to a Mentor" card replaces the expert and student cards, with dark-mode styles. It lists student mentors in this course or a close name variation first, then experts. Matching is in `mentorship/matching.py`: qualification wording is stripped, then one name must start with the other ("Data Science" ≈ "Data Science and Analytics") or be nearly identical. Different combinations ("Economics and Data Science") don't match.
+- **Directory:** student mentors with no open slots are now listed, after those with open slots, with "No slots available — check back soon".
+- **Expert cards:** flat amber design with no gradient. The price shows the session length, and chips read "Any course", "N-min call" and "WhatsApp". An expert with open slots gets a direct "Book Session" button.
+- **"New mentor" badge:** now admin-controlled through `MentorProfile.show_new_badge` (migration 0020, default off, editable from the admin list). Previously it showed automatically for every student mentor with 0 sessions.
+
 ## [2026-10-04] — Mentorship: booking integrity, calendar invites, automatic refunds
 - **Slots:** a cancelled slot can be rebooked (slot is now a FK with a one-active-session constraint, migration 0016). Booking claims the slot atomically. Slots starting within 30 min are hidden. Unpaid bookings are released after 30 min by `release_abandoned_bookings`, which checks IntaSend first.
 - **Calendar:** .ics text is escaped and folded per RFC 5545. Each recipient gets a REQUEST invite with ORGANIZER/ATTENDEE. Cancellation sends METHOD:CANCEL. The Google link carries `ctz`. Google ignores .ics alarms; the UI now says so.

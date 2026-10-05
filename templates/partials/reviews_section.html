@@ -8,16 +8,38 @@
           onclick="toggleReviews()" id="reviewsToggleBtn" aria-expanded="false">
     <span class="fw-bold" style="font-size:1rem;color:#1e3a8a;">
       <i class="fas fa-star me-2" style="color:#f59e0b;"></i>
+      <span id="reviewsHeaderText">
       {% if avg_rating %}
         {{ avg_rating }} / 5
         <span class="text-muted fw-normal ms-1" style="font-size:0.82rem;">({{ review_count }} review{{ review_count|pluralize }})</span>
       {% else %}
         Reviews
-        <span class="text-muted fw-normal ms-1" style="font-size:0.82rem;">No reviews yet, be first!</span>
+        <span class="text-muted fw-normal ms-1" style="font-size:0.82rem;">No reviews yet, be the first.</span>
       {% endif %}
+      </span>
     </span>
     <i class="fas fa-chevron-down" id="reviewsChevron" style="color:#94a3b8;transition:transform 0.2s;"></i>
   </button>
+
+  {# ── One-tap rating (always visible) ── #}
+  {% if user.is_authenticated %}
+  <div class="d-flex align-items-center flex-wrap gap-2 pt-2 px-1">
+    <span class="rate-label" id="rateLabel">
+      {{ user_review|yesno:"Your rating:,Tap to rate:" }}
+    </span>
+    <div class="star-pill d-inline-flex gap-1" id="starPicker" role="group" aria-label="Rate this {{ target_type }}">
+      {% for i in "12345" %}
+      <button type="button" class="star-btn" data-val="{{ forloop.counter }}"
+              aria-label="{{ forloop.counter }} star{{ forloop.counter|pluralize }}">&#9733;</button>
+      {% endfor %}
+    </div>
+    <span id="reviewMsg" style="font-size:0.8rem;"></span>
+  </div>
+  {% else %}
+  <div class="pt-2 px-1" style="font-size:0.82rem;color:#64748b;">
+    <a href="{% url 'accounts:login' %}?next={{ request.path }}" class="fw-semibold">Sign in</a> to rate this {{ target_type }}.
+  </div>
+  {% endif %}
 
   {# ── Collapsible panel ── #}
   <div id="reviewsPanel" style="display:none;">
@@ -38,42 +60,24 @@
       </div>
       {% endif %}
 
-      {# ── Review form ── #}
+      {# ── Optional comment ── #}
       {% if user.is_authenticated %}
       <div class="card border-0 mb-3" style="background:#f8fafc;border-radius:12px;padding:1rem 1.1rem;">
-        <div class="fw-semibold mb-2" style="font-size:0.88rem;color:#334155;">
-          {{ user_review|yesno:"Update your review,Leave a review" }}
-        </div>
-        <form id="reviewForm" onsubmit="submitReview(event)">
+        <div class="fw-semibold mb-2" style="font-size:0.88rem;color:#334155;">Add a comment (optional)</div>
+        <form id="reviewForm">
           {% csrf_token %}
-          {# Star picker #}
-          <div class="d-flex gap-2 mb-2" id="starPicker" role="group" aria-label="Rating">
-            {% for i in "12345" %}
-            <button type="button" class="star-btn"
-                    data-val="{{ forloop.counter }}"
-                    onclick="pickStar({{ forloop.counter }})"
-                    style="background:none;border:none;padding:0;font-size:1.6rem;cursor:pointer;color:#e2e8f0;line-height:1;">
-              &#9733;
-            </button>
-            {% endfor %}
-          </div>
           <input type="hidden" name="rating" id="ratingInput" value="{{ user_review.rating|default:'' }}">
-          <textarea name="body" id="reviewBody" maxlength="280" rows="2" placeholder="Optional, share what you know about this {{ target_type }} (max 280 chars)"
+          <textarea name="body" id="reviewBody" maxlength="280" rows="2" placeholder="Share what you know about this {{ target_type }} (max 280 chars)"
                     class="form-control form-control-sm mb-2"
                     style="font-size:0.84rem;resize:none;border-radius:8px;">{{ user_review.body|default:'' }}</textarea>
           <div class="d-flex align-items-center justify-content-between">
             <span style="font-size:0.72rem;color:#94a3b8;" id="charCount">{{ user_review.body|length|default:0 }}/280</span>
             <button type="submit" class="btn btn-primary btn-sm px-4 fw-bold" id="reviewSubmitBtn" disabled style="border-radius:20px;font-size:0.82rem;">
-              {{ user_review|yesno:"Update,Submit" }}
+              Save comment
             </button>
           </div>
-          <div id="reviewMsg" class="mt-2" style="font-size:0.8rem;"></div>
+          <div id="commentHint" class="mt-2" style="font-size:0.75rem;color:#94a3b8;">Tap a star above first.</div>
         </form>
-      </div>
-      {% else %}
-      <div class="text-center py-3 mb-3" style="background:#f8fafc;border-radius:12px;">
-        <p class="mb-2 text-muted" style="font-size:0.85rem;">Sign in to leave a review</p>
-        <a href="{% url 'accounts:login' %}?next={{ request.path }}" class="btn btn-primary btn-sm px-4 fw-bold" style="border-radius:20px;">Sign In</a>
       </div>
       {% endif %}
 
@@ -113,48 +117,109 @@
 </div>
 
 <style>
-.star-btn { transition: color 0.1s; }
-.star-btn.lit { color: #f59e0b !important; }
+.star-btn {
+  background: none; border: none; padding: 0 2px; line-height: 1;
+  font-size: 1.9rem; cursor: pointer;
+  /* Empty stars: amber outline so they stand out on any background */
+  color: transparent; -webkit-text-stroke: 1.5px #f59e0b;
+  transition: color 0.1s, transform 0.1s;
+  touch-action: manipulation;
+}
+.star-btn.lit { color: #f59e0b; }
+.star-pill {
+  background: #fff; border: 1px solid #fde68a; border-radius: 999px;
+  padding: 0.25rem 0.75rem; box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
+}
+.rate-label { font-size: 0.9rem; font-weight: 600; color: #1e3a8a; }
+.star-btn:active { transform: scale(1.2); }
+.star-btn:disabled { cursor: wait; }
 </style>
 
 <script>
 (function () {
-  // ── Star picker ──
-  var initialRating = parseInt('{{ user_review.rating|default:0 }}') || 0;
-  function pickStar(val) {
-    document.getElementById('ratingInput').value = val;
-    document.querySelectorAll('.star-btn').forEach(function (btn) {
-      btn.classList.toggle('lit', parseInt(btn.dataset.val) <= val);
-    });
-    checkReady();
+  var stars     = document.querySelectorAll('#starPicker .star-btn');
+  var ratingEl  = document.getElementById('ratingInput');
+  var bodyEl    = document.getElementById('reviewBody');
+  var countEl   = document.getElementById('charCount');
+  var submitBtn = document.getElementById('reviewSubmitBtn');
+  var hintEl    = document.getElementById('commentHint');
+  var msgEl     = document.getElementById('reviewMsg');
+  var labelEl   = document.getElementById('rateLabel');
+  var headerEl  = document.getElementById('reviewsHeaderText');
+
+  function currentRating() { return parseInt(ratingEl && ratingEl.value) || 0; }
+
+  function light(val) {
+    stars.forEach(function (b) { b.classList.toggle('lit', parseInt(b.dataset.val) <= val); });
   }
-  if (initialRating) pickStar(initialRating);
 
-  document.querySelectorAll('.star-btn').forEach(function (btn) {
-    btn.addEventListener('mouseenter', function () {
-      var v = parseInt(btn.dataset.val);
-      document.querySelectorAll('.star-btn').forEach(function (b) {
-        b.classList.toggle('lit', parseInt(b.dataset.val) <= v);
-      });
-    });
-    btn.addEventListener('mouseleave', function () {
-      var cur = parseInt(document.getElementById('ratingInput').value) || 0;
-      document.querySelectorAll('.star-btn').forEach(function (b) {
-        b.classList.toggle('lit', parseInt(b.dataset.val) <= cur);
-      });
-    });
-  });
-
-  // ── Char counter + submit guard ──
-  var bodyEl = document.getElementById('reviewBody');
-  var countEl = document.getElementById('charCount');
   function checkReady() {
-    var rated = !!document.getElementById('ratingInput').value;
-    var submitBtn = document.getElementById('reviewSubmitBtn');
+    var rated = currentRating() > 0;
     if (submitBtn) submitBtn.disabled = !rated;
+    if (hintEl) hintEl.style.display = rated ? 'none' : '';
     if (countEl && bodyEl) countEl.textContent = bodyEl.value.length + '/280';
   }
+
+  function showMsg(html) { if (msgEl) msgEl.innerHTML = html; }
+
+  function save() {
+    var rating = currentRating();
+    if (!rating) return;
+    var data = new FormData();
+    data.append('rating', rating);
+    data.append('body', bodyEl ? bodyEl.value : '');
+    var csrf = (document.cookie.match(/(?:^|;\s*)csrftoken=([^;]+)/) || [])[1]
+            || (document.querySelector('#reviewForm [name=csrfmiddlewaretoken]') || {}).value || '';
+    stars.forEach(function (b) { b.disabled = true; });
+    if (submitBtn) submitBtn.disabled = true;
+    showMsg('<span style="color:#94a3b8;">Saving…</span>');
+    fetch('{{ review_url }}', {
+      method: 'POST',
+      headers: { 'X-CSRFToken': csrf, 'X-Requested-With': 'XMLHttpRequest' },
+      body: data,
+      credentials: 'same-origin',
+    })
+    .then(function (r) {
+      if (r.redirected || !(r.headers.get('content-type') || '').includes('json')) {
+        throw new Error('bad response');
+      }
+      return r.json();
+    })
+    .then(function (d) {
+      if (d.error) { showMsg('<span class="text-danger">Could not save rating.</span>'); return; }
+      showMsg('<span class="text-success"><i class="fas fa-check me-1"></i>Thanks.</span>');
+      if (labelEl) labelEl.textContent = 'Your rating:';
+      if (headerEl) {
+        headerEl.innerHTML = d.avg + ' / 5 <span class="text-muted fw-normal ms-1" style="font-size:0.82rem;">('
+          + d.total + ' review' + (d.total !== 1 ? 's' : '') + ')</span>';
+      }
+    })
+    .catch(function () {
+      showMsg('<span class="text-danger">Something went wrong, please try again.</span>');
+    })
+    .finally(function () {
+      stars.forEach(function (b) { b.disabled = false; });
+      checkReady();
+    });
+  }
+
+  // ── One tap on a star = rate & save ──
+  stars.forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var val = parseInt(btn.dataset.val);
+      ratingEl.value = val;
+      light(val);
+      save();
+    });
+    btn.addEventListener('mouseenter', function () { light(parseInt(btn.dataset.val)); });
+    btn.addEventListener('mouseleave', function () { light(currentRating()); });
+  });
+  light(currentRating());
+
+  // ── Optional comment ──
   if (bodyEl) bodyEl.addEventListener('input', checkReady);
+  var form = document.getElementById('reviewForm');
+  if (form) form.addEventListener('submit', function (e) { e.preventDefault(); save(); });
   checkReady();
 
   // ── Toggle ──
@@ -166,35 +231,6 @@
     panel.style.display = open ? '' : 'none';
     chevron.style.transform = open ? 'rotate(180deg)' : '';
     btn.setAttribute('aria-expanded', open ? 'true' : 'false');
-  };
-
-  // ── AJAX submit ──
-  window.submitReview = function (e) {
-    e.preventDefault();
-    var form = document.getElementById('reviewForm');
-    var btn  = document.getElementById('reviewSubmitBtn');
-    var msg  = document.getElementById('reviewMsg');
-    var rating = document.getElementById('ratingInput').value;
-    if (!rating) return;
-    btn.disabled = true;
-    var data = new FormData(form);
-    var csrf = (document.cookie.match(/(?:^|;\s*)csrftoken=([^;]+)/) || [])[1] || '';
-    fetch('{{ review_url }}', {
-      method: 'POST',
-      headers: { 'X-CSRFToken': csrf },
-      body: data,
-    })
-    .then(function (r) { return r.json(); })
-    .then(function (d) {
-      if (d.error) { msg.innerHTML = '<span class="text-danger">' + d.error + '</span>'; return; }
-      msg.innerHTML = '<span class="text-success"><i class="fas fa-check me-1"></i>Saved! Average: ' + d.avg + '★ from ' + d.total + ' review' + (d.total !== 1 ? 's' : '') + '</span>';
-      btn.textContent = 'Update';
-      btn.disabled = false;
-    })
-    .catch(function () {
-      msg.innerHTML = '<span class="text-danger">Something went wrong, please try again.</span>';
-      btn.disabled = false;
-    });
   };
 }());
 </script>

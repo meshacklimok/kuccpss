@@ -367,7 +367,7 @@ def initiate_payment(request):
 
     amount = price_for_feature(feature)
     if amount == 0:
-        return JsonResponse({"success": False, "already_unlocked": True, "message": "This feature is free — no payment needed."}, status=400)
+        return JsonResponse({"success": False, "already_unlocked": True, "message": "This feature is free, no payment needed."}, status=400)
 
     # One-time features: block if already paid
     if feature not in REPEATABLE_FEATURES:
@@ -584,7 +584,7 @@ def verify_payment(request, payment_id):
     if remote_state == "COMPLETE":
         _record_intasend_transaction(payment, invoice)
         complete_payment(payment)
-        return JsonResponse({"status": "completed", "feature": payment.feature, "message": "Payment confirmed!"})
+        return JsonResponse({"status": "completed", "feature": payment.feature, "message": "Payment confirmed."})
     elif remote_state == "FAILED":
         Payment.objects.filter(pk=payment.pk, status="pending").update(
             status="failed", updated_at=timezone.now()
@@ -747,7 +747,7 @@ def _code_verified(payment: "Payment") -> JsonResponse:
     return JsonResponse({
         "status": "completed",
         "feature": payment.feature,
-        "message": "Payment verified! Unlocking your access…",
+        "message": "Payment verified. Unlocking your access…",
     })
 
 

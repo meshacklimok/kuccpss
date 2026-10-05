@@ -18,7 +18,16 @@
             </div>
 
           <h3 class="fw-bold mb-1">{{ mentor.display_name }}</h3>
-          <div class="text-muted small mb-2">{{ mentor.get_year_of_study_display }}</div>
+          {% if mentor.is_expert %}
+            <div class="mb-2">
+              <span class="badge rounded-pill" style="background:#fef3c7;color:#92400e;border:1px solid #fcd34d;">
+                <i class="bi bi-patch-check-fill me-1"></i>Expert Mentor
+              </span>
+            </div>
+            {% if mentor.headline %}<div class="text-muted small mb-2">{{ mentor.headline }}</div>{% endif %}
+          {% else %}
+            <div class="text-muted small mb-2">{{ mentor.get_year_of_study_display }}</div>
+          {% endif %}
 
           <!-- Stars -->
           {% if mentor.total_sessions > 0 %}
@@ -34,12 +43,19 @@
                 {{ mentor.average_rating|floatformat:1 }} · {{ mentor.total_sessions }} session{{ mentor.total_sessions|pluralize }} completed
               </div>
             </div>
-          {% else %}
+          {% endif %}
+      {% if mentor.show_new_badge %}
             <span class="badge bg-secondary bg-opacity-10 text-secondary mb-2">New mentor</span>
           {% endif %}
 
           <hr class="my-3">
 
+          {% if mentor.is_expert %}
+            <div class="text-start mb-3">
+              <div class="text-muted small text-uppercase fw-semibold mb-1" style="letter-spacing:.05em;">Can help with</div>
+              <div class="fw-semibold">Any course · general guidance</div>
+            </div>
+          {% endif %}
           {% if mentor.course %}
             <div class="text-start mb-2">
               <div class="text-muted small text-uppercase fw-semibold mb-1" style="letter-spacing:.05em;">Course</div>
@@ -61,7 +77,7 @@
               {% else %}
                 <a href="{% url 'mentorship:book_session' mentor.pk %}"
                    class="btn btn-primary w-100 rounded-pill fw-semibold py-3">
-                  <i class="bi bi-calendar-plus me-2"></i>Book a 15-min Call, KES {{ session_price }}
+                  <i class="bi bi-calendar-plus me-2"></i>Book a {{ session_minutes }}-min Call, KES {{ session_price }}
                 </a>
               {% endif %}
             {% else %}
@@ -76,7 +92,7 @@
             </p>
           {% else %}
             <div class="alert alert-warning py-2 small mb-0 rounded-3">
-              <i class="bi bi-calendar-x me-1"></i> No open slots right now
+              <i class="bi bi-calendar-x me-1"></i> No slots available. Check back soon
             </div>
           {% endif %}
         </div>
@@ -102,7 +118,7 @@
             <li>Choose an available time slot and describe what you want to discuss.</li>
             <li>Pay KES {{ session_price }} via M-Pesa, you'll receive an STK push on your phone.</li>
             <li>Get the mentor's WhatsApp number by email instantly after payment.</li>
-            <li>WhatsApp the mentor to confirm, then join the 15-minute call.</li>
+            <li>WhatsApp the mentor to confirm, then join the {{ session_minutes }}-minute call.</li>
             <li>Rate your session after, helps future students find the best mentors.</li>
           </ol>
         </div>

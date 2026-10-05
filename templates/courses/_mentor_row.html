@@ -1,0 +1,31 @@
+{# One mentor row in the course page's "Talk to a Mentor" card. Needs `mentor` (annotated with has_open_slot) and `course`. #}
+<div class="mg-row">
+  <div class="mg-avatar{% if mentor.is_expert %} mg-avatar-expert{% endif %}">{{ mentor.display_name|first|upper }}</div>
+  <div class="mg-info">
+    <div class="mg-name">
+      <span class="text-truncate">{{ mentor.display_name }}</span>
+      {% if mentor.is_expert %}<i class="bi bi-patch-check-fill mg-verified" title="Expert mentor"></i>{% endif %}
+    </div>
+    <div class="mg-sub">
+      {% if mentor.is_expert %}
+        {{ mentor.headline|default:"Expert mentor" }}
+      {% else %}
+        {{ mentor.get_year_of_study_display }} · {{ mentor.course.name|title }}{% if mentor.institution %}, {{ mentor.institution.name }}{% endif %}
+      {% endif %}
+    </div>
+    <div class="mg-meta">
+      <span class="mg-chip">KES {{ mentor.effective_session_price }} · {{ mentor.effective_session_minutes }} min</span>
+      {% if mentor.has_open_slot %}
+        <span class="mg-avail"><i class="bi bi-circle-fill"></i> Available</span>
+      {% else %}
+        <span class="mg-avail mg-avail-off">No slots yet</span>
+      {% endif %}
+    </div>
+  </div>
+  {% if mentor.has_open_slot %}
+    <a href="{% url 'mentorship:book_session' mentor.pk %}{% if mentor.is_expert %}?course={{ course.name|title|urlencode }}{% endif %}"
+       class="btn mg-btn">Book</a>
+  {% else %}
+    <a href="{% url 'mentorship:mentor_profile' mentor.pk %}" class="btn mg-btn mg-btn-ghost">View</a>
+  {% endif %}
+</div>

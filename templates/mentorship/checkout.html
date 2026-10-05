@@ -15,13 +15,13 @@
               </div>
             <div>
               <div class="fw-bold">{{ session.mentor.display_name }}</div>
-              <div class="opacity-75 small">{{ session.mentor.course }}</div>
+              <div class="opacity-75 small">{% if session.mentor.is_expert %}Expert Mentor{% else %}{{ session.mentor.course }}{% endif %}</div>
             </div>
           </div>
           <div class="d-flex justify-content-between align-items-end">
             <div>
               <div class="opacity-75 small">Session</div>
-              <div class="fw-semibold">{{ session.slot.datetime_display }} · 15 min</div>
+              <div class="fw-semibold">{{ session.slot.datetime_display }} · {{ session.duration_minutes }} min</div>
             </div>
             <div class="text-end">
               <div class="opacity-75 small">Total</div>
@@ -206,7 +206,7 @@
           checks++;
           if (checks > 22) {
             clearInterval(interval);
-            showErr('M-Pesa hasn\'t confirmed this yet. If you entered your PIN and got an M-Pesa SMS, don\'t pay again — enter the code from that SMS below and we\'ll confirm your booking. If no SMS arrived, no money was taken and you can try again.');
+            showErr('M-Pesa hasn\'t confirmed this yet. If you entered your PIN and got an M-Pesa SMS, don\'t pay again. Enter the code from that SMS below and we\'ll confirm your booking. If no SMS arrived, no money was taken and you can try again.');
             payBtn.disabled = false;
             const manual = document.getElementById('manual-verify-section');
             if (manual) manual.scrollIntoView({ behavior: 'smooth', block: 'center' });

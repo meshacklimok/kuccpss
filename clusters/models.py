@@ -2,6 +2,9 @@ from django.db import models
 from django.utils.text import slugify
 from django.urls import reverse
 from django.utils import timezone
+from django.core.exceptions import ValidationError
+
+from .constants import KUCCPS_CLUSTER_NUMBERS, NUM_KUCCPS_CLUSTERS
 
 
 # ============================================================
@@ -85,7 +88,15 @@ class Subject(TimeStampedModel):
 # CLUSTER MODEL
 # ============================================================
 
+class ClusterQuerySet(models.QuerySet):
+    def kuccps(self):
+        """The 18 KUCCPS clusters (rows 101–118) — use this wherever clusters are listed or scored."""
+        return self.filter(number__in=KUCCPS_CLUSTER_NUMBERS)
+
+
 class Cluster(TimeStampedModel):
+    objects = ClusterQuerySet.as_manager()
+
     name = models.CharField(
         max_length=100,
         unique=True,
@@ -141,12 +152,30 @@ class Cluster(TimeStampedModel):
                 counter += 1
             self.slug = slug
 
-        # Auto-assign number if missing
+        # Auto-assign the first free KUCCPS slot (101–118) if missing
         if self.number is None:
-            last_number = Cluster.objects.aggregate(models.Max('number'))['number__max'] or 0
-            self.number = last_number + 1
+            self.number = self._free_number()
+        if self.number not in KUCCPS_CLUSTER_NUMBERS:
+            raise ValidationError(
+                f'There are exactly {NUM_KUCCPS_CLUSTERS} KUCCPS clusters; '
+                f'number must be {KUCCPS_CLUSTER_NUMBERS[0]}–{KUCCPS_CLUSTER_NUMBERS[-1]}.'
+            )
 
         super().save(*args, **kwargs)
+
+    def _free_number(self):
+        taken = set(Cluster.objects.exclude(pk=self.pk).values_list('number', flat=True))
+        return next((n for n in KUCCPS_CLUSTER_NUMBERS if n not in taken), None)
+
+    def clean(self):
+        super().clean()
+        number = self.number if self.number is not None else self._free_number()
+        if number not in KUCCPS_CLUSTER_NUMBERS:
+            raise ValidationError({'number': (
+                f'There are exactly {NUM_KUCCPS_CLUSTERS} KUCCPS clusters; '
+                f'number must be {KUCCPS_CLUSTER_NUMBERS[0]}–{KUCCPS_CLUSTER_NUMBERS[-1]} '
+                f'(KUCCPS cluster number + 100).'
+            )})
 
     def get_absolute_url(self):
         return reverse("clusters:cluster_detail", kwargs={"slug": self.slug})

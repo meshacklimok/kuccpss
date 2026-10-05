@@ -326,8 +326,29 @@ def course_detail(request, type_slug, category_slug=None, course_slug=None):
         'review_count': agg['total'],
         'user_review': user_review,
         'job_market': job_market,
+        'expert_mentors': _expert_mentors(),
+        'student_mentors': _student_mentors(course),
     }
     return render(request, 'courses/course_detail.html', context)
+
+
+def _expert_mentors():
+    """Live expert mentors (any course), listed after the course's student mentors."""
+    from django.db.models import Exists, OuterRef
+    from mentorship.models import MentorProfile, TimeSlot, bookable_slots_q
+    return list(
+        MentorProfile.objects.filter(
+            mentor_type=MentorProfile.EXPERT, is_approved=True, is_active=True,
+        ).select_related('user')
+        .annotate(has_open_slot=Exists(TimeSlot.objects.filter(bookable_slots_q(), mentor=OuterRef('pk'))))
+        .order_by('display_order', '-average_rating', 'pk')[:3]
+    )
+
+
+def _student_mentors(course):
+    """Student mentors in this course or a close name variation, listed first."""
+    from mentorship.matching import student_mentors_for_course
+    return student_mentors_for_course(course)
 
 
 @login_required

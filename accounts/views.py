@@ -120,7 +120,7 @@ class RegisterView(View):
 
             login(request, user, backend='django.contrib.auth.backends.ModelBackend')
             request.session['_auth_verified_at'] = time.time()
-            messages.success(request, f"Welcome to CareerNext, {user.full_name or user.email}!")
+            messages.success(request, f"Welcome to CareerNext, {user.full_name or user.email}.")
             raw_next = request.POST.get("next") or request.GET.get("next") or ""
             if url_has_allowed_host_and_scheme(
                 raw_next, allowed_hosts={request.get_host()}, require_https=request.is_secure()
@@ -574,6 +574,7 @@ def dashboard_view(request: HttpRequest) -> HttpResponse:
             TREND_ICON as _TICON,
             TREND_COLOR as _TCOLOR,
             TREND_TIP as _TTIP,
+            TREND_LABEL as _TLABEL,
         )
         for _item in shortlist_items[:6]:
             _c = _item.course
@@ -617,6 +618,7 @@ def dashboard_view(request: HttpRequest) -> HttpResponse:
                 'trend_icon':  _TICON.get(_trend, 'fa-minus'),
                 'trend_color': _TCOLOR.get(_trend, 'text-muted'),
                 'trend_tip':   _TTIP.get(_trend, ''),
+                'trend_label': _TLABEL.get(_trend, ''),
                 'predicted':   _predicted,
                 'history':     _history_pairs,
             })
@@ -1199,7 +1201,7 @@ def request_affiliate_payout(request):
             cta_label="View Affiliate Dashboard →",
             user_email=request.user.email,
         )
-        messages.success(request, f"KES {amount} has been sent to {mpesa} via M-Pesa!")
+        messages.success(request, f"KES {amount} has been sent to {mpesa} via M-Pesa.")
 
     except Exception as exc:
         wr.refresh_from_db()
@@ -1209,7 +1211,7 @@ def request_affiliate_payout(request):
             wr.save(update_fields=['status', 'admin_note'])
             record('affiliate.payout_failed', wr, request=request, amount=amount, error=exc)
         logging.getLogger(__name__).error("Affiliate payout failed for %s: %s", affiliate.pk, exc)
-        messages.error(request, "Payout failed — please try again or contact support.")
+        messages.error(request, "Payout failed. Please try again or contact support.")
 
     notify_admin_withdrawal(
         kind="Affiliate",
@@ -1456,7 +1458,7 @@ def toggle_save_course(request: HttpRequest, course_id: int) -> HttpResponse:
     if not created:
         obj.delete()
         return JsonResponse({"saved": False, "message": "Removed from saved"})
-    return JsonResponse({"saved": True, "message": "Course saved!"})
+    return JsonResponse({"saved": True, "message": "Course saved."})
 
 
 @login_required
@@ -1571,7 +1573,7 @@ def shortlist_toggle(request: HttpRequest, course_id: int) -> HttpResponse:
     if CourseShortlist.objects.filter(user=request.user).count() > MAX:
         obj.delete()
         return JsonResponse({'shortlisted': False, 'message': f'Shortlist is full (max {MAX} courses)', 'full': True})
-    return JsonResponse({'shortlisted': True, 'message': 'Added to shortlist!'})
+    return JsonResponse({'shortlisted': True, 'message': 'Added to shortlist.'})
 
 
 @login_required

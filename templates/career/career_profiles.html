@@ -122,10 +122,10 @@
   letter-spacing: 0.05em;
 }
 
-body.dark .career-card { background: var(--surface); border-color: var(--border); }
-body.dark .career-card-banner { background-color: color-mix(in srgb, var(--ink) 14%, #171717); }
+body.dark .career-card { background: var(--surface); border-color: transparent; }
+body.dark .career-card-banner { background-color: color-mix(in srgb, var(--ink) 14%, #161719); }
 body.dark .career-icon-tile {
-  background: #242424;
+  background: #252628;
   color: color-mix(in srgb, var(--ink) 70%, #fff);
   border-color: color-mix(in srgb, var(--ink) 30%, transparent);
   box-shadow: none;
@@ -136,6 +136,15 @@ body.dark .career-icon-tile {
 .demand-high      { background: #dbeafe; color: #1e40af; }
 .demand-medium    { background: #fef9c3; color: #854d0e; }
 .demand-low       { background: #f1f5f9; color: #475569; }
+
+/* Dark mode: page-local light palette mapped to One UI tokens */
+body.dark .sector-tab { border-color: transparent; background: var(--surface); color: var(--text-2); }
+body.dark .sector-tab:hover { background: rgba(92,157,255,0.14); }
+body.dark .career-card:hover { border-color: rgba(92,157,255,0.45); }
+body.dark .demand-very_high { background: rgba(52,199,89,0.14); color: #5fd88a; }
+body.dark .demand-high { background: rgba(92,157,255,0.14); color: var(--primary-light); }
+body.dark .demand-medium { background: rgba(255,179,64,0.14); }
+body.dark .demand-low { background: var(--surface-2); color: var(--text-2); }
 </style>
 
 <!-- Hero -->

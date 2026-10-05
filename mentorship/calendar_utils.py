@@ -16,7 +16,6 @@ from django.conf import settings
 from django.utils import timezone
 
 SITE = "https://www.careernext.co.ke"
-SESSION_MINUTES = 15
 
 
 def _slot_utc_datetimes(session):
@@ -26,7 +25,7 @@ def _slot_utc_datetimes(session):
     # Localise to Africa/Nairobi then convert to UTC
     local_dt = timezone.make_aware(naive)          # uses Django's TIME_ZONE setting
     start_utc = timezone.localtime(local_dt, timezone=dt_tz.utc)
-    end_utc = start_utc + timedelta(minutes=SESSION_MINUTES)
+    end_utc = start_utc + timedelta(minutes=session.duration_minutes)
     return start_utc, end_utc
 
 
@@ -74,7 +73,7 @@ def google_calendar_url(session):
 
     title = f"CareerNext Mentorship — {mentor_name}"
     details = (
-        f"{SESSION_MINUTES}-minute mentorship session.\n\n"
+        f"{session.duration_minutes}-minute mentorship session.\n\n"
         f"Mentor : {mentor_name}\n"
         f"Student: {mentee_name}\n"
         f"Topic  : {session.mentee_question}\n\n"
@@ -115,7 +114,7 @@ def generate_ics(session, method="PUBLISH", attendee_email=None):
     if cancelled:
         summary = f"CANCELLED: {summary}"
     description = (
-        f"{SESSION_MINUTES}-minute mentorship session.\n"
+        f"{session.duration_minutes}-minute mentorship session.\n"
         f"Mentor: {mentor_name} | WhatsApp: {session.mentor.whatsapp}\n"
         f"Student: {session.mentee_display}\n"
         f"Topic: {session.mentee_question}\n"

@@ -182,6 +182,29 @@
   border-bottom: 2px solid #f1f5f9;
   font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em;
 }
+
+/* Dark mode: page-local light palette mapped to One UI tokens */
+body.dark .section-card { background: var(--surface); border-color: transparent; }
+body.dark .pathway-step:not(:last-child)::before { background: var(--surface-2); }
+body.dark .bullet-list li { border-bottom-color: var(--border); color: var(--text); }
+body.dark .skill-chip { background: rgba(92,157,255,0.14); color: #b39dff; }
+body.dark .job-tile { background: var(--surface-2); color: var(--text); }
+body.dark .stat-row { border-bottom-color: var(--border); }
+body.dark .rc-degree { background: rgba(92,157,255,0.14); border-color: rgba(92,157,255,0.45); color: var(--primary-light); }
+body.dark .rc-diploma { background: rgba(179,157,255,0.15); border-color: rgba(179,157,255,0.45); color: #b39dff; }
+body.dark .rc-kmtc { background: rgba(52,199,89,0.14); border-color: rgba(52,199,89,0.45); color: #5fd88a; }
+body.dark .rc-ttc { background: rgba(255,179,64,0.14); }
+body.dark .rc-default { background: var(--surface-2); border-color: transparent; color: var(--text-2); }
+body.dark .linked-course-item { border-color: transparent; background: var(--surface-2); }
+body.dark .linked-course-item:hover { border-color: rgba(92,157,255,0.45); background: rgba(92,157,255,0.14); }
+body.dark .lci-degree { background: rgba(92,157,255,0.14); color: var(--primary-light); }
+body.dark .lci-diploma { background: rgba(179,157,255,0.15); color: #b39dff; }
+body.dark .lci-kmtc { background: rgba(52,199,89,0.14); color: #5fd88a; }
+body.dark .lci-ttc { background: rgba(255,179,64,0.14); }
+body.dark .lci-default { background: var(--surface-2); color: var(--text-2); }
+body.dark .lci-name { color: var(--text); }
+body.dark .lci-meta { color: var(--text-2); }
+body.dark .type-group-header { border-bottom-color: var(--border); }
 </style>
 
 <!-- Hero -->

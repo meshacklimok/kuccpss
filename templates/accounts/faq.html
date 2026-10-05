@@ -30,7 +30,7 @@
       "name": "How are cluster points calculated?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "The official KUCCPS formula is: Cluster Points = 48 × √((cluster_subjects / 48) × (aggregate / 84)), where cluster_subjects is the sum of your marks in the 4 subjects that form each cluster and aggregate is your KCSE total out of 84. The maximum cluster points score is 48."
+        "text": "CareerNext uses the KUCCPS weighted formula: Cluster Points = 48 × √((cluster_marks / 400) × (aggregate / 84)), where cluster_marks is the sum of the midpoint raw marks for your 4 cluster subjects (A = 90.2, B = 66, C = 50 and so on, out of 400) and aggregate is your KCSE total out of 84. The maximum cluster points score is 48."
       }
     },
     {
@@ -64,98 +64,208 @@
 
 {% block content %}
 <style>
-.faq-hero {
-    background: #1e3a8a;
-    color: #fff; padding: 3.5rem 0 2.5rem;
+/* ── Hero ─────────────────────────────────────────── */
+.faq-hero { background: var(--primary-dark); color: #fff; padding: 3.5rem 0 3rem; }
+.faq-eyebrow {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.22);
+    border-radius: 999px; padding: 4px 14px; font-size: 0.72rem; font-weight: 800;
+    letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 0.9rem;
 }
-.faq-hero h1 { font-size: clamp(1.7rem, 4vw, 2.5rem); font-weight: 900; line-height: 1.15; }
+.faq-hero h1 { color: #fff; font-size: clamp(1.8rem, 4vw, 2.6rem); font-weight: 900; line-height: 1.12; margin-bottom: 0.6rem; }
+.faq-hero-sub { color: #fff; max-width: 540px; margin: 0 auto 1.6rem; font-size: 1rem; opacity: 0.8; }
 
-/* Sticky scrollspy nav */
-.faq-nav-wrap {
-    position: sticky; top: 0; z-index: 30; background: rgba(255,255,255,0.92);
-    backdrop-filter: blur(8px); border-bottom: 1px solid #e2e8f0;
-    padding: 0.7rem 0; margin-bottom: 0.5rem;
+.faq-search { position: relative; max-width: 560px; margin: 0 auto; }
+.faq-search i.fa-magnifying-glass {
+    position: absolute; left: 18px; top: 50%; transform: translateY(-50%);
+    color: #64748b; font-size: 0.95rem; pointer-events: none;
 }
-.faq-tabs { overflow-x: auto; scrollbar-width: none; }
-.faq-tabs::-webkit-scrollbar { display: none; }
+.faq-search input {
+    width: 100%; border: none; border-radius: 999px; padding: 0.95rem 3rem 0.95rem 2.9rem;
+    font-size: 0.95rem; color: #0f172a; background: #fff; box-shadow: var(--shadow-lg);
+}
+.faq-search input:focus { outline: 3px solid rgba(255,255,255,0.45); outline-offset: 2px; }
+.faq-search-clear {
+    position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+    width: 30px; height: 30px; border: none; border-radius: 50%;
+    background: #f1f5f9; color: #475569; display: none; align-items: center; justify-content: center;
+}
+.faq-search.has-value .faq-search-clear { display: flex; }
+.faq-hero-meta { margin-top: 1rem; font-size: 0.8rem; opacity: 0.7; }
+
+/* ── Topic nav: vertical sidebar on desktop, chip bar on mobile ── */
+.faq-nav {
+    position: sticky; top: 84px; background: var(--surface); border: 1px solid var(--border-soft);
+    border-radius: var(--radius-lg); padding: 0.5rem; box-shadow: var(--shadow-xs);
+}
+.faq-nav-title {
+    font-size: 0.7rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--text-3); padding: 0.6rem 0.75rem 0.4rem;
+}
 .faq-tab-btn {
-    border: 1.5px solid #e2e8f0; background: #fff; border-radius: 20px;
-    padding: 6px 18px; font-size: 0.82rem; font-weight: 700; color: #475569;
-    cursor: pointer; transition: all 0.18s; white-space: nowrap; flex-shrink: 0;
+    width: 100%; display: flex; align-items: center; gap: 0.6rem; border: none; background: none;
+    border-radius: 10px; padding: 0.6rem 0.75rem; font-size: 0.86rem; font-weight: 700;
+    color: var(--text-2); text-align: left; transition: background 0.15s, color 0.15s;
 }
-.faq-tab-btn:hover { border-color: #4f46e5; color: #4f46e5; }
-.faq-tab-btn.active { background: #4f46e5; border-color: #4f46e5; color: #fff; box-shadow: 0 4px 12px rgba(79,70,229,0.3); }
+.faq-tab-btn i { width: 18px; text-align: center; color: var(--text-3); transition: color 0.15s; }
+.faq-tab-btn:hover { background: var(--surface-2); color: var(--text); }
+.faq-tab-btn.active { background: var(--hover-tint, #eff6ff); color: var(--primary); }
+.faq-tab-btn.active i { color: var(--primary); }
+.faq-tab-count {
+    margin-left: auto; font-size: 0.7rem; font-weight: 800; min-width: 22px; text-align: center;
+    padding: 1px 7px; border-radius: 999px; background: var(--surface-2); color: var(--text-2);
+}
+.faq-tab-btn.active .faq-tab-count { background: var(--primary); color: #fff; }
+.faq-tab-btn.is-empty { display: none; }
 
-/* Continuous scroll sections */
-.faq-group { scroll-margin-top: 5.5rem; padding-bottom: 1rem; margin-bottom: 1.5rem; border-bottom: 1px dashed #e2e8f0; }
-.faq-group:last-of-type { border-bottom: none; }
+@media (max-width: 991.98px) {
+    .faq-aside { position: sticky; top: 64px; z-index: 30; }
+    .row .faq-group { scroll-margin-top: 130px; }
+    .faq-nav {
+        position: static; display: flex; gap: 0.4rem; overflow-x: auto; scrollbar-width: none;
+        border-radius: 0; border-width: 0 0 1px; margin: 0 -12px; padding: 0.6rem 12px; box-shadow: none;
+    }
+    .faq-nav::-webkit-scrollbar { display: none; }
+    .faq-nav-title { display: none; }
+    .faq-tab-btn {
+        width: auto; flex-shrink: 0; white-space: nowrap; border: 1px solid var(--border-soft);
+        border-radius: 999px; padding: 0.4rem 0.85rem; font-size: 0.8rem;
+    }
+    .faq-tab-btn.active { border-color: var(--primary); }
+}
+
+/* ── Sections ─────────────────────────────────────── */
+.faq-group { scroll-margin-top: 90px; margin-bottom: 2.25rem; }
 .faq-section-title {
-    display: flex; align-items: center; gap: 0.6rem; font-size: 1.15rem; font-weight: 900;
-    color: #1e293b; margin-bottom: 1rem;
+    display: flex; align-items: center; gap: 0.7rem; font-size: 1.15rem; font-weight: 900;
+    color: var(--text); margin-bottom: 0.9rem;
 }
-.faq-section-title .faq-section-icon {
-    width: 34px; height: 34px; border-radius: 10px; display: flex; align-items: center; justify-content: center;
-    background: #eef2ff; color: #4f46e5; font-size: 0.9rem; flex-shrink: 0;
+.faq-section-icon {
+    width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center;
+    background: var(--hover-tint, #eef2ff); color: var(--primary); font-size: 0.9rem; flex-shrink: 0;
 }
+.faq-section-count { font-size: 0.78rem; font-weight: 700; color: var(--text-3); }
 
+/* ── Accordion items ─────────────────────────────── */
 .faq-item {
-    border: 1.5px solid #e2e8f0; border-radius: 14px; margin-bottom: 0.6rem;
-    overflow: hidden; transition: border-color 0.18s;
+    background: var(--surface); border: 1px solid var(--border-soft); border-radius: 14px;
+    margin-bottom: 0.6rem; overflow: hidden; box-shadow: var(--shadow-xs);
+    transition: border-color 0.18s, box-shadow 0.18s;
 }
-.faq-item:hover { border-color: #a5b4fc; }
-.faq-item.open { border-color: #4f46e5; }
+.faq-item:hover { border-color: var(--border); }
+.faq-item.open { border-color: var(--primary-light); box-shadow: var(--shadow-sm); }
 
 .faq-q {
-    width: 100%; text-align: left; background: #fff; border: none; padding: 1rem 1.2rem;
+    width: 100%; text-align: left; background: none; border: none; padding: 1rem 1.15rem;
     display: flex; align-items: center; justify-content: space-between; gap: 1rem;
-    font-size: 0.92rem; font-weight: 700; color: #1e293b; cursor: pointer;
-    transition: background 0.15s;
+    font-size: 0.94rem; font-weight: 700; color: var(--text); cursor: pointer;
 }
-.faq-q:hover { background: #f8fafc; }
-.faq-item.open .faq-q { background: #eff6ff; color: #1d4ed8; }
+.faq-q:focus-visible { outline: 2px solid var(--primary); outline-offset: -2px; border-radius: 14px; }
+.faq-item.open .faq-q { color: var(--primary); }
 
 .faq-chevron {
-    flex-shrink: 0; width: 22px; height: 22px; border-radius: 50%;
-    background: #f1f5f9; display: flex; align-items: center; justify-content: center;
-    font-size: 0.72rem; color: #64748b; transition: transform 0.25s, background 0.18s;
+    flex-shrink: 0; width: 28px; height: 28px; border-radius: 50%;
+    background: var(--surface-2); display: flex; align-items: center; justify-content: center;
+    font-size: 0.72rem; color: var(--text-2); transition: transform 0.25s, background 0.18s, color 0.18s;
 }
-.faq-item.open .faq-chevron { transform: rotate(180deg); background: #dbeafe; color: #1d4ed8; }
+.faq-item.open .faq-chevron { transform: rotate(180deg); background: var(--primary); color: #fff; }
 
-.faq-a {
-    display: none; padding: 0 1.2rem 1rem; font-size: 0.88rem; color: #475569; line-height: 1.65;
+.faq-a { max-height: 0; overflow: hidden; transition: max-height 0.28s ease; }
+.faq-a-inner {
+    margin: 0 1.15rem; padding: 0.9rem 0 1.1rem; border-top: 1px solid var(--border-soft);
+    font-size: 0.9rem; color: var(--text-2); line-height: 1.7;
 }
-.faq-item.open .faq-a { display: block; }
-.faq-a strong { color: #1e293b; }
-.faq-a a { color: #2563eb; text-decoration: underline; }
+.faq-a strong { color: var(--text); }
+.faq-a a { color: var(--primary); text-decoration: underline; text-underline-offset: 2px; }
+.faq-a code {
+    background: var(--surface-2); color: var(--text); padding: 6px 10px; border-radius: 8px;
+    display: inline-block; margin: 4px 0; font-size: 0.85rem;
+}
+.faq-item mark { background: #fde68a; color: inherit; padding: 0 1px; border-radius: 3px; }
+body.dark .faq-item mark { background: rgba(245,158,11,0.35); }
 
-.faq-cta {
-    background: #1e3a8a;
-    border-radius: 20px; padding: 2.5rem; color: #fff; text-align: center;
+/* ── Search empty state ───────────────────────────── */
+.faq-empty {
+    display: none; text-align: center; padding: 2.5rem 1rem; background: var(--surface);
+    border: 1px dashed var(--border); border-radius: var(--radius-lg); color: var(--text-2);
 }
+.faq-empty i { font-size: 1.6rem; color: var(--text-3); margin-bottom: 0.6rem; }
+
+/* ── Help cards ───────────────────────────────────── */
+.faq-help { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1rem; }
+@media (max-width: 575.98px) { .faq-help { grid-template-columns: 1fr; } }
+.faq-help-card {
+    display: flex; gap: 1rem; align-items: flex-start; padding: 1.3rem;
+    border-radius: var(--radius-lg); text-decoration: none !important;
+    transition: transform 0.18s, box-shadow 0.18s;
+}
+.faq-help-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+.faq-help-card.primary { background: var(--primary-dark); color: #fff; }
+.faq-help-card.plain { background: var(--surface); border: 1px solid var(--border-soft); color: var(--text); }
+.faq-help-icon {
+    width: 44px; height: 44px; border-radius: 12px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center; font-size: 1.05rem;
+}
+.faq-help-card.primary .faq-help-icon { background: rgba(255,255,255,0.14); }
+.faq-help-card.plain .faq-help-icon { background: var(--hover-tint, #eef2ff); color: var(--primary); }
+.faq-help-card h3 { font-size: 1rem; font-weight: 800; margin-bottom: 0.2rem; }
+.faq-help-card p { font-size: 0.84rem; margin: 0; line-height: 1.5; }
+.faq-help-card.primary h3 { color: #fff; }
+.faq-help-card.primary p { color: rgba(255,255,255,0.78); }
+.faq-help-card.plain h3 { color: var(--text); }
+.faq-help-card.plain p { color: var(--text-2); }
+.faq-help-card.primary .faq-help-icon { color: #fff; }
+body.dark .faq-help-card.primary { background: var(--surface-2); }
 </style>
 
 <!-- HERO -->
 <section class="faq-hero">
   <div class="container text-center">
-    <span style="display:inline-block;background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.25);
-                 border-radius:20px;padding:4px 16px;font-size:0.75rem;font-weight:800;
-                 letter-spacing:0.08em;text-transform:uppercase;margin-bottom:0.8rem;">FAQ</span>
-    <h1 class="mb-2">Frequently Asked Questions</h1>
-    <p class="mb-0 opacity-75 mx-auto" style="max-width:500px;font-size:1rem;">
-      Everything you need to know about cluster points, KUCCPS, and using this platform.
+    <span class="faq-eyebrow"><i class="fas fa-circle-question"></i>Help Centre</span>
+    <h1>Frequently Asked Questions</h1>
+    <p class="faq-hero-sub">
+      Everything you need to know about cluster points, KUCCPS placement, and getting the most out of CareerNext.
     </p>
+    <div class="faq-search" id="faqSearchWrap">
+      <i class="fas fa-magnifying-glass"></i>
+      <input type="search" id="faqSearch" placeholder="Search questions, e.g. &quot;cutoff&quot; or &quot;HELB&quot;"
+             aria-label="Search frequently asked questions" autocomplete="off">
+      <button type="button" class="faq-search-clear" id="faqSearchClear" aria-label="Clear search">
+        <i class="fas fa-xmark"></i>
+      </button>
+    </div>
+    <div class="faq-hero-meta" id="faqMeta"></div>
   </div>
 </section>
 
-<div class="container py-5">
+<div class="container py-4 py-lg-5">
+ <div class="row g-4">
 
-  <!-- Category tabs (sticky scrollspy nav) -->
-  <div class="faq-nav-wrap">
-    <div class="d-flex flex-nowrap gap-2 faq-tabs" id="faqTabs">
+  <!-- Topic nav -->
+  <aside class="col-lg-3 faq-aside">
+    <nav class="faq-nav" id="faqTabs" aria-label="FAQ topics">
+      <div class="faq-nav-title">Topics</div>
       {% for cat_key, cat_label, cat_items in faq_groups %}
-      <button class="faq-tab-btn {% if forloop.first %}active{% endif %}" data-tab="{{ cat_key }}">{{ cat_label }}</button>
+      <button type="button" class="faq-tab-btn {% if forloop.first %}active{% endif %}" data-tab="{{ cat_key }}">
+        {% if cat_key == 'general' %}<i class="fas fa-circle-info"></i>
+        {% elif cat_key == 'cluster' %}<i class="fas fa-calculator"></i>
+        {% elif cat_key == 'courses' %}<i class="fas fa-graduation-cap"></i>
+        {% elif cat_key == 'kuccps' %}<i class="fas fa-file-signature"></i>
+        {% elif cat_key == 'account' %}<i class="fas fa-user-gear"></i>
+        {% else %}<i class="fas fa-circle-question"></i>{% endif %}
+        <span>{{ cat_label }}</span>
+        <span class="faq-tab-count" data-count-for="{{ cat_key }}"></span>
+      </button>
       {% endfor %}
-    </div>
+    </nav>
+  </aside>
+
+  <div class="col-lg-9">
+
+  <div class="faq-empty" id="faqEmpty">
+    <div><i class="fas fa-magnifying-glass"></i></div>
+    <p class="fw-700 mb-1" style="color:var(--text);">No questions match "<span id="faqEmptyTerm"></span>"</p>
+    <p class="small mb-0">Try a different word, or <a href="mailto:hello@careernext.co.ke">email us</a> and we'll answer it.</p>
   </div>
 
   {% if has_content %}
@@ -171,6 +281,7 @@
         {% elif cat_key == 'account' %}<i class="fas fa-user-gear"></i>
         {% else %}<i class="fas fa-circle-question"></i>{% endif %}
       </span>{{ cat_label }}
+      <span class="faq-section-count ms-auto"></span>
     </h2>
     {% for item in cat_items %}
     <div class="faq-item">
@@ -178,10 +289,8 @@
         {{ item.question }}
         <span class="faq-chevron"><i class="fas fa-chevron-down"></i></span>
       </button>
-      <div class="faq-a">{{ item.answer|linebreaksbr }}</div>
+      <div class="faq-a">{{ item.answer|urlize|linebreaksbr }}</div>
     </div>
-    {% empty %}
-    <p class="text-muted small py-3">No questions in this category yet.</p>
     {% endfor %}
   </div>
   {% endfor %}
@@ -190,7 +299,7 @@
   <!-- ── FALLBACK HARDCODED FAQ (shown when DB is empty, continuous scroll) ── -->
   <!-- ── GENERAL ── -->
   <div class="faq-group" id="tab-general" data-tab="general">
-    <h2 class="faq-section-title"><span class="faq-section-icon"><i class="fas fa-circle-info"></i></span>General</h2>
+    <h2 class="faq-section-title"><span class="faq-section-icon"><i class="fas fa-circle-info"></i></span>General<span class="faq-section-count ms-auto"></span></h2>
 
     <div class="faq-item">
       <button class="faq-q">
@@ -261,7 +370,7 @@
 
   <!-- ── CLUSTER POINTS ── -->
   <div class="faq-group" id="tab-cluster" data-tab="cluster">
-    <h2 class="faq-section-title"><span class="faq-section-icon"><i class="fas fa-calculator"></i></span>Cluster Points</h2>
+    <h2 class="faq-section-title"><span class="faq-section-icon"><i class="fas fa-calculator"></i></span>Cluster Points<span class="faq-section-count ms-auto"></span></h2>
 
     <div class="faq-item">
       <button class="faq-q">
@@ -269,13 +378,12 @@
         <span class="faq-chevron"><i class="fas fa-chevron-down"></i></span>
       </button>
       <div class="faq-a">
-        The official KUCCPS formula is:<br><br>
-        <code style="background:#f1f5f9;padding:6px 10px;border-radius:6px;display:inline-block;margin:4px 0;">
-          Cluster Points = 48 × √( (cluster_subjects / 48) × (aggregate / 84) )
-        </code><br><br>
-        Where <strong>cluster_subjects</strong> is the sum of your raw marks in the 4 subjects
-        that form each specific cluster (max 48), and <strong>aggregate</strong> is your KCSE
-        total (max 84). The maximum possible cluster points score is <strong>48</strong>.
+        CareerNext uses the KUCCPS weighted formula:<br><br>
+        <code>Cluster Points = 48 × √( (cluster_marks / 400) × (aggregate / 84) )</code><br><br>
+        Where <strong>cluster_marks</strong> is the sum of the midpoint raw marks for your 4
+        cluster subjects (A = 90.2, B = 66, C = 50 and so on, out of 400), and
+        <strong>aggregate</strong> is your KCSE total out of 84. The maximum possible cluster
+        points score is <strong>48</strong>.
       </div>
     </div>
 
@@ -339,7 +447,7 @@
 
   <!-- ── COURSES & PATHWAYS ── -->
   <div class="faq-group" id="tab-courses" data-tab="courses">
-    <h2 class="faq-section-title"><span class="faq-section-icon"><i class="fas fa-graduation-cap"></i></span>Courses & Pathways</h2>
+    <h2 class="faq-section-title"><span class="faq-section-icon"><i class="fas fa-graduation-cap"></i></span>Courses & Pathways<span class="faq-section-count ms-auto"></span></h2>
 
     <div class="faq-item">
       <button class="faq-q">
@@ -414,7 +522,7 @@
 
   <!-- ── KUCCPS PROCESS ── -->
   <div class="faq-group" id="tab-kuccps" data-tab="kuccps">
-    <h2 class="faq-section-title"><span class="faq-section-icon"><i class="fas fa-file-signature"></i></span>KUCCPS Process</h2>
+    <h2 class="faq-section-title"><span class="faq-section-icon"><i class="fas fa-file-signature"></i></span>KUCCPS Process<span class="faq-section-count ms-auto"></span></h2>
 
     <div class="faq-item">
       <button class="faq-q">
@@ -487,7 +595,7 @@
 
   <!-- ── MY ACCOUNT ── -->
   <div class="faq-group" id="tab-account" data-tab="account">
-    <h2 class="faq-section-title"><span class="faq-section-icon"><i class="fas fa-user-gear"></i></span>My Account</h2>
+    <h2 class="faq-section-title"><span class="faq-section-icon"><i class="fas fa-user-gear"></i></span>My Account<span class="faq-section-count ms-auto"></span></h2>
 
     <div class="faq-item">
       <button class="faq-q">
@@ -555,68 +663,162 @@
 
   {% endif %}
 
-  <!-- CTA -->
-  <div class="faq-cta mt-5">
-    <h3 class="fw-900 mb-2">Still have a question?</h3>
-    <p class="opacity-75 mb-3">We're happy to help. Send us a message and we'll get back to you.</p>
-    <div class="d-flex gap-3 justify-content-center flex-wrap">
-      <a href="mailto:hello@careernext.co.ke" class="btn btn-light fw-700 px-4">
-        <i class="fas fa-envelope me-2"></i>Email Us
-      </a>
-      <a href="{% url 'accounts:about' %}" class="btn btn-outline-light fw-700 px-4">
-        <i class="fas fa-info-circle me-2"></i>About Us
-      </a>
-    </div>
+  <!-- Still need help -->
+  <div class="faq-help" id="faqHelp">
+    <a href="mailto:hello@careernext.co.ke" class="faq-help-card primary">
+      <span class="faq-help-icon"><i class="fas fa-envelope"></i></span>
+      <span>
+        <h3>Still have a question?</h3>
+        <p>Email hello@careernext.co.ke and we'll get back to you.</p>
+      </span>
+    </a>
+    <a href="{% url 'career:career_chat' %}" class="faq-help-card plain">
+      <span class="faq-help-icon"><i class="fas fa-robot"></i></span>
+      <span>
+        <h3>Ask CareerNext AI</h3>
+        <p>Get instant answers about courses and careers based on your own results.</p>
+      </span>
+    </a>
   </div>
 
+  </div><!-- /col -->
+ </div><!-- /row -->
 </div>
 
 <script>
-// Smooth-scroll to section on tab click
-var faqTabBtns = document.querySelectorAll('.faq-tab-btn');
-var faqSections = document.querySelectorAll('.faq-group');
-var faqNav = document.querySelector('.faq-nav-wrap');
-var isClickScrolling = false;
+(function() {
+  var tabBtns = document.querySelectorAll('.faq-tab-btn');
+  var groups = document.querySelectorAll('.faq-group');
+  var items = document.querySelectorAll('.faq-item');
+  var search = document.getElementById('faqSearch');
+  var searchWrap = document.getElementById('faqSearchWrap');
+  var emptyBox = document.getElementById('faqEmpty');
+  var meta = document.getElementById('faqMeta');
+  var isClickScrolling = false;
 
-faqTabBtns.forEach(function(btn) {
-  btn.addEventListener('click', function() {
-    var section = document.getElementById('tab-' + btn.dataset.tab);
-    if (!section) return;
-    isClickScrolling = true;
-    faqTabBtns.forEach(function(b) { b.classList.remove('active'); });
-    btn.classList.add('active');
-    section.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    window.clearTimeout(window._faqScrollTimer);
-    window._faqScrollTimer = window.setTimeout(function() { isClickScrolling = false; }, 900);
+  function slugify(t) {
+    return t.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 60);
+  }
+
+  // Wrap answers for the height animation, add ARIA + deep-link ids
+  items.forEach(function(item, i) {
+    var q = item.querySelector('.faq-q');
+    var a = item.querySelector('.faq-a');
+    var inner = document.createElement('div');
+    inner.className = 'faq-a-inner';
+    while (a.firstChild) inner.appendChild(a.firstChild);
+    a.appendChild(inner);
+    item.id = item.id || slugify(q.textContent.trim()) || ('faq-' + i);
+    a.id = item.id + '-answer';
+    q.setAttribute('aria-expanded', 'false');
+    q.setAttribute('aria-controls', a.id);
+    q.type = 'button';
+    item._q = q.childNodes[0].textContent;   // question text (without chevron)
+    item._qNode = q.childNodes[0];
+    item._text = (q.textContent + ' ' + inner.textContent).toLowerCase();
   });
-});
 
-// Continuous-scroll spy: highlight the tab for whichever section is in view
-if ('IntersectionObserver' in window) {
-  var navHeight = faqNav ? faqNav.offsetHeight : 0;
-  var observer = new IntersectionObserver(function(entries) {
-    if (isClickScrolling) return;
-    entries.forEach(function(entry) {
-      if (!entry.isIntersecting) return;
-      var tabKey = entry.target.dataset.tab;
-      faqTabBtns.forEach(function(b) {
-        b.classList.toggle('active', b.dataset.tab === tabKey);
-      });
+  function setOpen(item, open) {
+    var a = item.querySelector('.faq-a');
+    item.classList.toggle('open', open);
+    item.querySelector('.faq-q').setAttribute('aria-expanded', open ? 'true' : 'false');
+    a.style.maxHeight = open ? a.scrollHeight + 'px' : '0px';
+  }
+
+  items.forEach(function(item) {
+    item.querySelector('.faq-q').addEventListener('click', function() {
+      var willOpen = !item.classList.contains('open');
+      setOpen(item, willOpen);
+      if (willOpen && history.replaceState) history.replaceState(null, '', '#' + item.id);
     });
-  }, { rootMargin: '-' + (navHeight + 10) + 'px 0px -70% 0px', threshold: 0 });
-  faqSections.forEach(function(section) { observer.observe(section); });
-}
-
-// Accordion toggle
-document.querySelectorAll('.faq-q').forEach(function(btn) {
-  btn.addEventListener('click', function() {
-    var item = btn.closest('.faq-item');
-    var wasOpen = item.classList.contains('open');
-    // close all others in same section only
-    var group = item.closest('.faq-group');
-    group.querySelectorAll('.faq-item').forEach(function(i) { i.classList.remove('open'); });
-    if (!wasOpen) item.classList.add('open');
   });
-});
+  window.addEventListener('resize', function() {
+    document.querySelectorAll('.faq-item.open').forEach(function(it) { setOpen(it, true); });
+  });
+
+  // Per-topic counts; hide empty topics
+  function refreshCounts() {
+    var total = 0;
+    groups.forEach(function(g) {
+      var n = g.querySelectorAll('.faq-item:not([hidden])').length;
+      total += n;
+      var badge = document.querySelector('[data-count-for="' + g.dataset.tab + '"]');
+      if (badge) {
+        badge.textContent = n;
+        badge.closest('.faq-tab-btn').classList.toggle('is-empty', n === 0);
+      }
+      var sc = g.querySelector('.faq-section-count');
+      if (sc) sc.textContent = n + (n === 1 ? ' question' : ' questions');
+      g.hidden = n === 0;
+    });
+    return total;
+  }
+  var allCount = refreshCounts();
+  var topicCount = Array.prototype.filter.call(groups, function(g) { return !g.hidden; }).length;
+  meta.textContent = allCount + ' answers across ' + topicCount + ' topics';
+
+  // Live search with highlighting
+  function escapeRe(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+  function runSearch() {
+    var term = search.value.trim().toLowerCase();
+    searchWrap.classList.toggle('has-value', term.length > 0);
+    var re = term ? new RegExp('(' + escapeRe(term) + ')', 'ig') : null;
+    items.forEach(function(item) {
+      var match = !term || item._text.indexOf(term) !== -1;
+      item.hidden = !match;
+      var span = document.createElement('span');
+      span.textContent = item._q;
+      if (re && match) span.innerHTML = span.innerHTML.replace(re, '<mark>$1</mark>');
+      var current = item.querySelector('.faq-q').firstChild;
+      item.querySelector('.faq-q').replaceChild(re && match ? span : item._qNode, current);
+    });
+    var n = refreshCounts();
+    emptyBox.style.display = n === 0 ? 'block' : 'none';
+    document.getElementById('faqEmptyTerm').textContent = search.value.trim();
+    meta.textContent = term ? (n + (n === 1 ? ' match' : ' matches')) : allCount + ' answers across ' + topicCount + ' topics';
+  }
+  search.addEventListener('input', runSearch);
+  document.getElementById('faqSearchClear').addEventListener('click', function() {
+    search.value = ''; runSearch(); search.focus();
+  });
+
+  // Topic nav: smooth scroll + scroll spy
+  tabBtns.forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var section = document.getElementById('tab-' + btn.dataset.tab);
+      if (!section) return;
+      isClickScrolling = true;
+      tabBtns.forEach(function(b) { b.classList.toggle('active', b === btn); });
+      section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      window.clearTimeout(window._faqScrollTimer);
+      window._faqScrollTimer = window.setTimeout(function() { isClickScrolling = false; }, 900);
+    });
+  });
+  if ('IntersectionObserver' in window) {
+    var observer = new IntersectionObserver(function(entries) {
+      if (isClickScrolling) return;
+      entries.forEach(function(entry) {
+        if (!entry.isIntersecting) return;
+        tabBtns.forEach(function(b) {
+          var on = b.dataset.tab === entry.target.dataset.tab;
+          b.classList.toggle('active', on);
+          if (on && b.scrollIntoView && window.innerWidth < 992) {
+            b.parentNode.scrollTo({ left: b.offsetLeft - 12, behavior: 'smooth' });
+          }
+        });
+      });
+    }, { rootMargin: '-140px 0px -60% 0px', threshold: 0 });
+    groups.forEach(function(g) { observer.observe(g); });
+  }
+
+  // Open the question named in the URL hash
+  if (location.hash) {
+    var target = document.getElementById(decodeURIComponent(location.hash.slice(1)));
+    if (target && target.classList.contains('faq-item')) {
+      setOpen(target, true);
+      target.scrollIntoView({ block: 'center' });
+    }
+  }
+})();
 </script>
 {% endblock %}

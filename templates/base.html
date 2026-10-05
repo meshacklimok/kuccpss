@@ -820,7 +820,7 @@
                 </div>
                 <div class="pwa-ios-step">
                     <span class="pwa-ios-num">3</span>
-                    Tap <strong>"Add"</strong>, done!
+                    Tap <strong>"Add"</strong> and you're done.
                 </div>
             </div>
             <div class="pwa-ios-arrow-down">↓ tap Share below</div>
@@ -1350,7 +1350,7 @@ window._ph = function (name, props) {
 
     function tick() {
         const ms   = upcoming.date - new Date();
-        if (ms <= 0) { counter.textContent = 'Today!'; return; }
+        if (ms <= 0) { counter.textContent = 'Today'; return; }
         const days = Math.floor(ms / 86400000);
         const hrs  = Math.floor((ms % 86400000) / 3600000);
         const mins = Math.floor((ms % 3600000) / 60000);
@@ -1466,7 +1466,7 @@ function submitFeedback(e) {
       if (res.ok) {
         status.style.display = 'block';
         status.className = 'fb-status fb-status--ok';
-        status.textContent = 'Thank you! Your feedback has been received.';
+        status.textContent = 'Thank you. Your feedback has been received.';
         form.querySelector('textarea').value = '';
         form.querySelector('input[type=email]').value = '';
         setTimeout(function(){document.getElementById('fb-modal').style.display='none';status.style.display='none';},2500);

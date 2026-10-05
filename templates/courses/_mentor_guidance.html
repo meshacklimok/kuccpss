@@ -1,0 +1,118 @@
+{# Course page "Talk to a Mentor" card: students in this course (or a close variation) first, then expert mentors. #}
+<div class="mg-card">
+  <div class="mg-head">
+    <div class="mg-head-icon"><i class="bi bi-chat-dots-fill"></i></div>
+    <div>
+      <h6 class="mg-title">Talk to a Mentor</h6>
+      <p class="mg-lead">A short WhatsApp call, paid via M-Pesa.</p>
+    </div>
+  </div>
+
+  {% if student_mentors %}
+    <div class="mg-label">Students in this course</div>
+    {% for mentor in student_mentors %}
+      {% include 'courses/_mentor_row.html' %}
+    {% endfor %}
+  {% elif course.course_type.slug == 'degree' or course.course_type.slug == 'KMTC' %}
+    <div class="mg-label">Students in this course</div>
+    <div class="mg-empty">
+      <i class="bi bi-person-plus"></i>
+      <span>No student mentor for this course yet.
+        <a href="{% url 'mentorship:directory' %}">Browse all student mentors</a></span>
+    </div>
+  {% endif %}
+
+  {% if expert_mentors %}
+    <div class="mg-label">Expert mentors <span>· guidance on any course</span></div>
+    {% for mentor in expert_mentors %}
+      {% include 'courses/_mentor_row.html' %}
+    {% endfor %}
+  {% endif %}
+
+  <a href="{% url 'mentorship:directory' %}" class="mg-all">See all mentors <i class="bi bi-arrow-right"></i></a>
+</div>
+
+<style>
+.mg-card {
+  background: #fff;
+  border-radius: 1rem;
+  box-shadow: 0 2px 14px rgba(30,58,138,.07);
+  padding: 1.25rem;
+}
+.mg-head { display: flex; gap: .75rem; align-items: center; margin-bottom: .25rem; }
+.mg-head-icon {
+  width: 42px; height: 42px; flex-shrink: 0;
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  background: #eff6ff; color: #2563eb; font-size: 1.1rem;
+}
+.mg-title { font-weight: 700; margin: 0; color: #0f172a; }
+.mg-lead { font-size: .8rem; color: #64748b; margin: 0; }
+.mg-label {
+  font-size: .68rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+  color: #64748b; margin: 1rem 0 .35rem;
+}
+.mg-label span { text-transform: none; letter-spacing: 0; font-weight: 500; }
+.mg-row {
+  display: flex; align-items: center; gap: .75rem;
+  padding: .6rem 0;
+  border-top: 1px solid #f1f5f9;
+}
+.mg-label + .mg-row { border-top: 0; }
+.mg-avatar {
+  width: 40px; height: 40px; flex-shrink: 0; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; background: #dbeafe; color: #1d4ed8;
+}
+.mg-avatar-expert { background: #fef3c7; color: #92400e; }
+.mg-info { flex: 1; min-width: 0; }
+.mg-name { display: flex; align-items: center; gap: .3rem; font-weight: 600; font-size: .88rem; color: #0f172a; }
+.mg-verified { color: #f59e0b; font-size: .8rem; flex-shrink: 0; }
+.mg-sub {
+  font-size: .74rem; color: #64748b; line-height: 1.35;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.mg-meta { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem; margin-top: .3rem; }
+.mg-chip {
+  font-size: .7rem; font-weight: 700; color: #334155;
+  background: #f1f5f9; border-radius: 999px; padding: .1rem .5rem; white-space: nowrap;
+}
+.mg-avail { font-size: .7rem; font-weight: 600; color: #16a34a; white-space: nowrap; }
+.mg-avail i { font-size: .45rem; vertical-align: middle; }
+.mg-avail-off { color: #94a3b8; font-weight: 500; }
+.mg-btn {
+  flex-shrink: 0; font-size: .78rem; font-weight: 700;
+  border-radius: 999px; padding: .35rem .95rem;
+  background: #2563eb; color: #fff; border: 1px solid #2563eb;
+}
+.mg-btn:hover { background: #1d4ed8; border-color: #1d4ed8; color: #fff; }
+.mg-btn-ghost { background: transparent; color: #2563eb; }
+.mg-btn-ghost:hover { background: #eff6ff; color: #1d4ed8; }
+.mg-empty {
+  display: flex; gap: .55rem; align-items: flex-start;
+  font-size: .8rem; color: #64748b; line-height: 1.45;
+  border: 1px dashed #cbd5e1; border-radius: .75rem; padding: .6rem .75rem;
+}
+.mg-empty i { font-size: 1rem; color: #94a3b8; margin-top: .05rem; }
+.mg-empty a, .mg-all { color: #2563eb; font-weight: 600; text-decoration: none; }
+.mg-all { display: inline-flex; gap: .3rem; align-items: center; font-size: .8rem; margin-top: .85rem; }
+.mg-all:hover, .mg-empty a:hover { text-decoration: underline; }
+
+body.dark .mg-card { background: var(--surface); box-shadow: none; }
+body.dark .mg-head-icon { background: rgba(52,123,255,.16); color: var(--primary-light); }
+body.dark .mg-title, body.dark .mg-name { color: var(--text); }
+body.dark .mg-lead, body.dark .mg-sub, body.dark .mg-label, body.dark .mg-empty { color: var(--text-2); }
+body.dark .mg-row { border-top-color: var(--border); }
+body.dark .mg-empty { border-color: var(--border); }
+body.dark .mg-empty i { color: var(--text-3); }
+body.dark .mg-label + .mg-row { border-top: 0; }
+body.dark .mg-avatar { background: rgba(52,123,255,.18); color: var(--primary-light); }
+body.dark .mg-avatar-expert { background: rgba(245,158,11,.18); color: #fbbf24; }
+body.dark .mg-chip { background: var(--surface-2); color: var(--text); }
+body.dark .mg-avail { color: #5fd88a; }
+body.dark .mg-avail-off { color: var(--text-3); }
+body.dark .mg-btn { background: var(--primary); border-color: var(--primary); }
+body.dark .mg-btn-ghost { background: transparent; color: var(--primary-light); border-color: var(--primary); }
+body.dark .mg-btn-ghost:hover { background: rgba(52,123,255,.14); }
+body.dark .mg-empty a, body.dark .mg-all { color: var(--primary-light); }
+</style>

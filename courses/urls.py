@@ -11,6 +11,11 @@ urlpatterns = [
     # Detail for a course type: shows categories or courses
     path('<slug:type_slug>/', views.course_type_detail, name='course_type_detail'),
 
+    # Review submission (AJAX POST) — listed before the detail patterns so
+    # "<type>/<course>/review/" isn't swallowed by "<type>/<category>/<course>/".
+    path('<slug:type_slug>/<slug:category_slug>/<slug:course_slug>/review/', views.submit_course_review, name='submit_course_review'),
+    path('<slug:type_slug>/<slug:course_slug>/review/', views.submit_course_review, name='submit_course_review_no_category'),
+
     # Detail for a category under a type
     path('<slug:type_slug>/<slug:category_slug>/', views.course_category_detail, name='course_category_detail'),
 
@@ -19,8 +24,4 @@ urlpatterns = [
 
     # Optional: If some types have no category (e.g., KMTC), direct course detail
     path('<slug:type_slug>/<slug:course_slug>/', views.course_detail, name='course_detail_no_category'),
-
-    # Review submission (AJAX POST)
-    path('<slug:type_slug>/<slug:category_slug>/<slug:course_slug>/review/', views.submit_course_review, name='submit_course_review'),
-    path('<slug:type_slug>/<slug:course_slug>/review/', views.submit_course_review, name='submit_course_review_no_category'),
 ]

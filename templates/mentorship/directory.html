@@ -70,7 +70,7 @@
       <div class="col-auto hiw-arrow"><i class="bi bi-chevron-right"></i></div>
       <div class="col-auto hiw-step">
         <div class="hiw-num">4</div>
-        <div class="hiw-label">WhatsApp call<br><span>15 minutes, real talk</span></div>
+        <div class="hiw-label">WhatsApp call<br><span>Short call, real talk</span></div>
       </div>
     </div>
   </div>
@@ -136,15 +136,30 @@
   </div>
 </div>
 
+<!-- ── Expert mentors (pinned above results, any course) ──────────────── -->
+{% if experts %}
+<div class="container mb-5" id="experts">
+  <div class="mb-3">
+    <h5 class="fw-700 mb-1"><i class="bi bi-patch-check-fill text-warning me-1"></i>Talk to an Expert</h5>
+    <p class="text-muted small mb-0">Experienced professionals who can guide you on any course or career. Not sure what to choose? Start here.</p>
+  </div>
+  <div class="row g-4">
+    {% for mentor in experts %}
+      {% include 'mentorship/_mentor_card.html' %}
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
 <!-- ── Results ────────────────────────────────────────────────────────── -->
 <div class="container pb-5">
 
   {% if mentors %}
     <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-2">
       <h6 class="fw-700 mb-0 text-muted" style="font-size:.85rem;letter-spacing:.02em;">
-        {{ total_count }} mentor{{ total_count|pluralize }}
+        {{ total_count }}
+        {% if experts %}student {% endif %}mentor{{ total_count|pluralize }}
         {% if query %}for "{{ query }}"{% endif %}
-        with open slots
       </h6>
       {% if query or filter_institution or filter_year or filter_rating %}
         <a href="{% url 'mentorship:directory' %}" class="btn btn-sm btn-outline-secondary rounded-pill px-3">
@@ -168,7 +183,7 @@
         <p class="text-muted small mb-4">Try a different course name or university, or clear all filters.</p>
         <a href="{% url 'mentorship:directory' %}" class="btn btn-outline-primary rounded-pill px-4">Clear search</a>
       {% else %}
-        <h5 class="fw-700 mb-2">No mentors with open slots right now</h5>
+        <h5 class="fw-700 mb-2">No student mentors yet</h5>
         <p class="text-muted small mb-4">Check back soon{% if mentor_signup_enabled %}, or be the first mentor in your course!{% endif %}</p>
         {% if mentor_signup_enabled %}
         <a href="{% url 'mentorship:become_mentor' %}" class="btn btn-primary rounded-pill px-4 fw-semibold">Become a Mentor</a>
@@ -324,6 +339,44 @@
   margin: 0;
   color: #1e293b;
 }
+/* Expert mentor card: flat, amber accent, no gradient */
+.mc.mc-expert { border: 1px solid #fcd34d; box-shadow: 0 2px 16px rgba(180,83,9,.08); }
+.mc-expert .mc-header { background: #fffbeb; border-bottom: 1px solid #fde68a; }
+.mc-expert .mc-avatar { border-color: #fcd34d; }
+.mc-expert .mc-avatar-initials { background: #fef3c7; color: #92400e; }
+.mc-expert .mc-dot { border-color: #fffbeb; }
+.mc-expert .mc-price { background: #fff; color: #92400e; border-color: #fcd34d; }
+.mc-price small { font-weight: 600; opacity: .8; }
+.mc-name-row { display: flex; align-items: center; gap: .45rem; min-width: 0; }
+.mc-name-row .mc-name { min-width: 0; }
+.mc-expert-badge {
+  display: inline-flex; align-items: center; gap: .25rem; flex-shrink: 0;
+  font-size: .68rem; font-weight: 700;
+  color: #92400e; background: #fef3c7; border: 1px solid #fcd34d;
+  border-radius: 999px; padding: .1rem .5rem; white-space: nowrap;
+}
+.mc-headline { font-size: .8rem; font-weight: 600; color: #475569; margin: .1rem 0 .55rem; }
+.mc-chips { display: flex; flex-wrap: wrap; gap: .35rem; margin-bottom: .7rem; }
+.mc-chip {
+  display: inline-flex; align-items: center; gap: .3rem;
+  font-size: .72rem; font-weight: 600; color: #475569;
+  background: #f1f5f9; border-radius: 999px; padding: .2rem .6rem; white-space: nowrap;
+}
+.mc-chip i { color: #b45309; font-size: .75rem; }
+.mc-more { align-self: flex-end; margin-top: .55rem; font-size: .74rem; font-weight: 600; color: #2563eb; text-decoration: none; }
+.mc-more:hover { text-decoration: underline; }
+body.dark .mc-more { color: var(--primary-light); }
+body.dark .mc.mc-expert { border-color: rgba(245,158,11,.35); box-shadow: none; }
+body.dark .mc-expert .mc-header { background: rgba(245,158,11,.08); border-bottom-color: rgba(245,158,11,.2); }
+body.dark .mc-expert .mc-avatar { border-color: rgba(245,158,11,.5); }
+body.dark .mc-expert .mc-avatar-initials { background: rgba(245,158,11,.16); color: #fbbf24; }
+body.dark .mc-expert .mc-dot { border-color: var(--surface); }
+body.dark .mc-expert .mc-price { background: transparent; color: #fbbf24; border-color: rgba(245,158,11,.45); }
+body.dark .mc-expert-badge { background: rgba(245,158,11,.16); border-color: rgba(245,158,11,.45); color: #fbbf24; }
+body.dark .mc-headline { color: var(--text-2); }
+body.dark .mc-chip { background: var(--surface-2); color: var(--text-2); }
+body.dark .mc-chip i { color: #fbbf24; }
+
 .mc-year {
   font-size: .73rem;
   color: #64748b;
@@ -416,7 +469,7 @@
 }
 
 /* ── Dark mode ── */
-body.dark .mc { background:var(--surface); border-color:var(--border); }
+body.dark .mc { background:var(--surface); border-color: transparent; }
 body.dark .mc-name { color:#e2e8f0; }
 body.dark .mc-meta-row { color:#94a3b8; }
 body.dark .mc-bio { color:#94a3b8; }
@@ -426,6 +479,13 @@ body.dark .hiw-strip { background:var(--surface); border-bottom-color:var(--bord
 body.dark .hiw-label { color:#e2e8f0; }
 body.dark .empty-icon { background:var(--surface-2); color:var(--text-3); }
 body.dark .hero-pill { background:rgba(255,255,255,.1); }
+
+/* Dark mode: page-local light palette mapped to One UI tokens */
+body.dark .hiw-label span { color: var(--text-2); }
+body.dark .mc-year { color: var(--text-2); }
+body.dark .mc-rating-txt { color: var(--text-2); }
+body.dark .mc-new-badge { background: rgba(92,157,255,0.14); color: #64d2ff; }
+body.dark .mc-avail-open { background: rgba(52,199,89,0.14); border-color: rgba(52,199,89,0.45); color: #5fd88a; }
 </style>
 
 {% endblock %}

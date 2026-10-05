@@ -11,7 +11,7 @@
             <i class="fa-solid fa-circle-check fa-3x text-success"></i>
         </div>
 
-        <h2 class="fw-bold mb-2">Email Verified!</h2>
+        <h2 class="fw-bold mb-2">Email Verified</h2>
         <p class="text-muted mb-4">
             Your email <strong>{{ user.email }}</strong> has been successfully verified. 
             You can now login and access your dashboard.
@@ -61,5 +61,8 @@
         padding: 2rem;
     }
 }
+
+/* Dark mode: page-local light palette mapped to One UI tokens */
+body.dark .verification-card { background: rgba(0,0,0,0.92); }
 </style>
 {% endblock %}

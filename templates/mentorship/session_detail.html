@@ -37,8 +37,12 @@
               </div>
             <div>
               <div class="fw-bold">{{ session.mentor.display_name }}</div>
-              <div class="text-muted small">{{ session.mentor.course }}</div>
-              <div class="text-muted small">{{ session.mentor.institution }}</div>
+              {% if session.mentor.is_expert %}
+                <div class="text-muted small">Expert Mentor{% if session.mentor.headline %} · {{ session.mentor.headline }}{% endif %}</div>
+              {% else %}
+                <div class="text-muted small">{{ session.mentor.course }}</div>
+                <div class="text-muted small">{{ session.mentor.institution }}</div>
+              {% endif %}
             </div>
           </div>
 
@@ -50,7 +54,12 @@
             <dd class="col-7 fw-semibold small">{{ session.slot.datetime_display }}</dd>
 
             <dt class="col-5 text-muted small fw-normal">Duration</dt>
-            <dd class="col-7 small">15 minutes</dd>
+            <dd class="col-7 small">{{ session.duration_minutes }} minutes</dd>
+
+            {% if session.course_topic %}
+            <dt class="col-5 text-muted small fw-normal">Course</dt>
+            <dd class="col-7 small">{{ session.course_topic }}</dd>
+            {% endif %}
 
             <dt class="col-5 text-muted small fw-normal">{% if session.status == "pending_payment" %}Amount Due{% else %}Amount Paid{% endif %}</dt>
             <dd class="col-7 small">KES {{ session.amount }}</dd>

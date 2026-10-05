@@ -44,6 +44,11 @@
 .rank-2 { background: #94a3b8; color: #0f172a; }
 .rank-3 { background: #cd7c2f; color: #fff; }
 .rank-other { background: #f1f5f9; color: #64748b; }
+
+body.dark .match-card { background: var(--surface); border-color: transparent; }
+body.dark .match-card:hover { border-color: transparent; box-shadow: none; }
+body.dark .rank-other { background: var(--surface-2); color: var(--text-2); }
+body.dark .match-card .fw-800[style*="color:var(--primary)"] { color: var(--primary-light) !important; }
 </style>
 
 <!-- Hero -->
@@ -126,78 +131,28 @@
   </div>
   {% endwith %}
 
-  <!-- All matches -->
-  <h5 class="fw-800 mb-3 text-dark">All Your Matches
-    <span class="text-muted fw-400 fs-6 ms-2">{{ top_matches|length }} career{{ top_matches|length|pluralize }}</span>
+  <!-- Top matches -->
+  <h5 class="fw-800 mb-3 text-dark">Your Top Matches
+    <span class="text-muted fw-400 fs-6 ms-2">{{ top_matches|length }} of {{ total_matches }} career{{ total_matches|pluralize }}</span>
   </h5>
 
   <div class="row g-4">
     {% for match in top_matches %}
-    <div class="col-sm-6 col-lg-4">
-      <div class="match-card">
-
-        <div class="p-3 d-flex align-items-center gap-3 border-bottom">
-          <!-- Rank badge -->
-          <div class="match-rank rank-{% if forloop.counter <= 3 %}{{ forloop.counter }}{% else %}other{% endif %}">
-            {% if forloop.counter == 1 %}🥇{% elif forloop.counter == 2 %}🥈{% elif forloop.counter == 3 %}🥉{% else %}{{ forloop.counter }}{% endif %}
-          </div>
-
-          <!-- Icon -->
-          {% with first_tag=match.profile.career_tags|split:","|first %}
-          <div class="sector-tile sector-{{ first_tag|default:'default' }}">
-            <i class="{{ match.profile.icon|default:'fas fa-briefcase' }}" aria-hidden="true"></i>
-          </div>
-          {% endwith %}
-
-          <!-- Title -->
-          <div style="flex:1;min-width:0;">
-            <div class="fw-800 text-dark" style="font-size:0.88rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
-              {{ match.profile.title }}
-            </div>
-            <span class="badge rounded-pill fw-600
-              {% if match.profile.demand_level == 'very_high' %}bg-success
-              {% elif match.profile.demand_level == 'high' %}bg-primary
-              {% else %}bg-warning text-dark{% endif %}" style="font-size:0.7rem;">
-              {{ match.profile.get_demand_level_display }}
-            </span>
-          </div>
-        </div>
-
-        <div class="p-3 flex-grow-1 d-flex flex-column">
-          <!-- Match bar -->
-          <div class="mb-3">
-            <div class="d-flex justify-content-between mb-1">
-              <span class="text-muted" style="font-size:0.72rem;">Match strength</span>
-              <span class="fw-800" style="color:var(--primary);font-size:0.75rem;">{{ match.score }} pts</span>
-            </div>
-            <div class="progress rounded-pill" style="height:5px;">
-              <div class="progress-bar rounded-pill"
-                   style="width:{% widthratio match.score top_matches.0.score 100 %}%;background:var(--primary);">
-              </div>
-            </div>
-          </div>
-
-          <p class="text-muted flex-grow-1" style="font-size:0.8rem;line-height:1.55;
-             display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;">
-            {{ match.profile.description }}
-          </p>
-
-          {% if match.profile.average_salary %}
-          <div class="small text-success fw-700 mb-2">
-            <i class="fas fa-money-bill-wave me-1"></i>{{ match.profile.average_salary }}
-          </div>
-          {% endif %}
-
-          <a href="{% url 'career:career_profile_detail' match.profile.slug %}"
-             class="btn btn-outline-primary btn-sm fw-700 rounded-pill mt-auto">
-            Explore Career <i class="fas fa-arrow-right ms-1"></i>
-          </a>
-        </div>
-
-      </div>
-    </div>
+    {% include "career/_quiz_match_card.html" %}
     {% endfor %}
   </div>
+
+  {% if other_matches %}
+  <!-- Other matches, ranked by score -->
+  <h5 class="fw-800 mt-5 mb-3 text-dark">Other Matches
+    <span class="text-muted fw-400 fs-6 ms-2">{{ other_matches|length }} more, ranked by match strength</span>
+  </h5>
+  <div class="row g-4">
+    {% for match in other_matches %}
+    {% include "career/_quiz_match_card.html" %}
+    {% endfor %}
+  </div>
+  {% endif %}
 
   <!-- Action banner -->
   <div class="mt-5 p-4 rounded-3 d-flex align-items-center gap-4 flex-wrap"

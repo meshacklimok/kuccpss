@@ -71,6 +71,11 @@
 /* ── alert ── */
 .lce-alert { border-radius: 12px; padding: 0.85rem 1rem; margin-bottom: 1rem; font-size: 0.84rem; display: flex; gap: 0.6rem; align-items: flex-start; }
 .lce-alert.danger { background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; }
+.lce-alert.locked { background: #eff6ff; border: 1px solid #bfdbfe; color: #1e3a8a; }
+/* Locked grades are shown read-only */
+.grades-locked .mgp { pointer-events: none; opacity: 0.6; }
+.grades-locked .mgp[class*="sel-"] { opacity: 1; }
+.grades-locked .lce-select:disabled { opacity: 1; cursor: not-allowed; }
 
 /* ── mean grade picker ── */
 .mean-section {
@@ -252,6 +257,61 @@
     .lce-btn-back { font-size: 0.78rem; }
     .lce-footer-info { width: 100%; order: 2; font-size: 0.78rem; }
 }
+
+/* Dark mode: page-local light palette mapped to One UI tokens */
+body.dark .step-bar { background: var(--surface); border-bottom-color: var(--border); }
+body.dark .sb-dot { border-color: var(--border); }
+body.dark .sb-line { background: var(--surface-2); }
+body.dark .sb-counter { border-color: transparent; background: var(--surface-2); }
+body.dark .sb-counter.ready { border-color: rgba(52,199,89,0.6); background: rgba(52,199,89,0.14); color: #5fd88a; }
+body.dark .sb-progress { background: var(--surface-2); }
+body.dark .lce-head { background: var(--surface); border-color: transparent; }
+body.dark .lce-head h2 { color: var(--text); }
+body.dark .lce-head p { color: var(--text-2); }
+body.dark .lce-alert.danger { background: rgba(255,69,58,0.15); border-color: rgba(255,69,58,0.45); color: #ff8a80; }
+body.dark .lce-alert.locked { background: rgba(10,132,255,0.14); border-color: rgba(10,132,255,0.45); color: #8ec5ff; }
+body.dark .mean-section { background: var(--surface); border-color: transparent; }
+body.dark .mean-label { color: var(--text-2); }
+body.dark .mgp { border-color: transparent; background: var(--surface-2); color: var(--text-2); }
+body.dark .mgp.sel-a { background: rgba(52,199,89,0.14); border-color: rgba(52,199,89,0.6); color: #5fd88a; }
+body.dark .mgp.sel-a .mgp-p { color: #5fd88a; }
+body.dark .mgp.sel-b { background: rgba(92,157,255,0.14); border-color: rgba(92,157,255,0.6); color: var(--primary-light); }
+body.dark .mgp.sel-b .mgp-p { color: var(--primary-light); }
+body.dark .mgp.sel-c { background: rgba(255,179,64,0.14); border-color: rgba(255,179,64,0.45); color: #ffc266; }
+body.dark .mgp.sel-d { background: rgba(255,69,58,0.15); border-color: rgba(255,69,58,0.6); color: #ff8a80; }
+body.dark .mgp.sel-d .mgp-p { color: #ff8a80; }
+body.dark .mgp.sel-e { background: var(--surface-2); border-color: transparent; color: var(--text-2); }
+body.dark .mean-display { background: var(--surface-2); border-color: transparent; }
+body.dark .mean-display-note { color: var(--text-2); }
+body.dark .acc-section { background: var(--surface); border-color: transparent; }
+body.dark .acc-header:hover { background: var(--surface-2); }
+body.dark .acc-title { color: var(--text); }
+body.dark .acc-badge.opt { background: var(--surface-2); border-color: transparent; color: var(--text-2); }
+body.dark .acc-count { background: rgba(52,199,89,0.14); border-color: rgba(52,199,89,0.45); color: #5fd88a; }
+body.dark .acc-header.expanded .acc-chevron { color: var(--text-2); }
+body.dark .acc-row { border-top-color: var(--border); }
+body.dark .acc-row:hover { background: var(--surface-2); }
+body.dark .row-icon { background: var(--surface-2); }
+body.dark .row-name { color: var(--text); }
+body.dark .acc-row.filled .row-name { color: var(--text); }
+body.dark .lce-select { border-color: var(--border); background: var(--surface); color: var(--text); }
+body.dark .tags-section { background: var(--surface); border-color: transparent; }
+body.dark .tags-section-title { color: var(--text); }
+body.dark .tags-sub { color: var(--text-2); }
+body.dark .tags-select-all { color: var(--primary-light); }
+body.dark .tags-select-all:hover { color: var(--primary-light); }
+body.dark .tag-chip { border-color: transparent; background: var(--surface-2); color: var(--text-2); }
+body.dark .county-cb-label { border-color: transparent; background: var(--surface-2); color: var(--text-2); }
+body.dark .county-cb-box { border-color: transparent; background: var(--surface); }
+body.dark .lce-footer { background: var(--surface); border-top-color: var(--border); }
+body.dark .lce-footer-title { color: var(--text-2); }
+body.dark .lce-footer-title strong { color: var(--text); }
+body.dark .lce-btn-back { border-color: transparent; background: var(--surface-2); color: var(--text-2); }
+body.dark .lce-btn-back:hover { background: var(--surface-2); color: var(--text); }
+body.dark .lce-btn-continue:disabled { background: var(--surface-2); }
+body.dark .lce-footer-title.note-flash { color: #ff8a80; }
+body.dark .lce-footer-title.note-flash strong { color: #ff8a80; }
+body.dark .acc-row.row-missing { background: rgba(255,69,58,0.15); }
 </style>
 
 <!-- ══ sticky step bar ══ -->
@@ -276,7 +336,7 @@
 <form method="post" id="pathwayForm">
 {% csrf_token %}
 
-<div class="lce-page">
+<div class="lce-page{% if grades_locked %} grades-locked{% endif %}">
 
     <!-- header card -->
     <div class="lce-head">
@@ -289,6 +349,13 @@
             {% endif %}
         </p>
     </div>
+
+    {% if grades_locked %}
+    <div class="lce-alert locked" role="status">
+        <i class="bi bi-lock-fill flex-shrink-0 mt-1"></i>
+        <span><strong>Your grades are locked.</strong> You can still change the pathway and filters below; your locked grades will be used. Contact support if your grades need changing.</span>
+    </div>
+    {% endif %}
 
     <!-- errors -->
     {% if form and form.non_field_errors %}
@@ -319,7 +386,7 @@
                 <div class="row-name">{{ subj.name }}</div>
                 <select name="{{ bound.html_name }}" aria-label="{{ subj.name }} grade" class="lce-select form-select"
                         data-subject="{{ subj.name }}"{% if subj.name in required_subject_names %} data-required="1"{% endif %}
-                        onchange="onSelChange('{{ bound.html_name }}', 'compulsory', this)">
+                        onchange="onSelChange('{{ bound.html_name }}', 'compulsory', this)"{% if grades_locked %} disabled{% endif %}>
                     <option value="">None</option>
                     <option value="12" {% if bound.value == '12' %}selected{% endif %}>A</option>
                     <option value="11" {% if bound.value == '11' %}selected{% endif %}>A-</option>
@@ -360,7 +427,7 @@
                 <div class="row-icon"><i class="bi {{ icon }}"></i></div>
                 <div class="row-name">{{ subj.name }}</div>
                 <select name="{{ bound.html_name }}" aria-label="{{ subj.name }} grade" class="lce-select form-select"
-                        onchange="onSelChange('{{ bound.html_name }}', '{{ forloop.parentloop.counter }}', this)">
+                        onchange="onSelChange('{{ bound.html_name }}', '{{ forloop.parentloop.counter }}', this)"{% if grades_locked %} disabled{% endif %}>
                     <option value="">None</option>
                     <option value="12" {% if bound.value == '12' %}selected{% endif %}>A</option>
                     <option value="11" {% if bound.value == '11' %}selected{% endif %}>A-</option>
@@ -485,6 +552,8 @@
 
 {% block extra_js %}
 <script>
+var GRADES_LOCKED = {% if grades_locked %}true{% else %}false{% endif %};
+
 /* ══ Accordion ══ */
 function toggleAcc(header) {
     const body = header.nextElementSibling;
@@ -511,7 +580,7 @@ function selectMgp(val) {
 }
 {% if not use_kcse_form %}
 function updateMeanReady() {
-    const gradeSet = document.getElementById('meanGradeHidden').value !== '';
+    const gradeSet = GRADES_LOCKED || document.getElementById('meanGradeHidden').value !== '';
     const ready    = gradeSet && catsOk();
     const btn  = document.getElementById('proceedBtn');
     const note = document.getElementById('footerNote');
@@ -521,19 +590,21 @@ function updateMeanReady() {
         note.innerHTML = 'Select your <strong>mean grade</strong> to proceed';
     } else if (!catsOk()) {
         note.innerHTML = 'Select a <strong>course category</strong> to proceed';
+    } else if (GRADES_LOCKED) {
+        note.innerHTML = '<strong>Grades locked</strong>, ready to proceed.';
     } else {
-        note.innerHTML = 'Mean grade: <strong>' + grade + '</strong>, ready to proceed!';
+        note.innerHTML = 'Mean grade: <strong>' + grade + '</strong>, ready to proceed.';
     }
 }
 {% endif %}
 document.querySelectorAll('.mgp').forEach(pill => {
-    pill.addEventListener('click', () => selectMgp(pill.dataset.val));
+    pill.addEventListener('click', () => { if (!GRADES_LOCKED) selectMgp(pill.dataset.val); });
 });
 const _preGrade = document.getElementById('meanGradeHidden').value;
 if (_preGrade) { selectMgp(_preGrade); }
 
 function catsOk() {
-    if (!_hasCats) return true;
+    if (!document.getElementById('cat-section')) return true;
     return document.querySelectorAll('#cat-grid .county-cb-label.checked').length > 0;
 }
 
@@ -567,7 +638,7 @@ function missingRequired() {
 function updateGlobal() {
     const all      = document.querySelectorAll('select.lce-select.has-value').length;
     const missing  = missingRequired();
-    const gradesOk = all >= 7 && missing.length === 0;
+    const gradesOk = GRADES_LOCKED || (all >= 7 && missing.length === 0);
     const ready    = gradesOk && catsOk();
     const pct      = Math.min(100, Math.round((all / 7) * 100));
     const sb   = document.getElementById('sbCounter');
@@ -577,7 +648,10 @@ function updateGlobal() {
     if (sb)   { sb.textContent = all + ' / 7 subjects'; sb.className = 'sb-counter' + (gradesOk ? ' ready' : ''); }
     if (fill) fill.style.width = pct + '%';
     btn.disabled = !ready;
-    if (missing.length) {
+    if (GRADES_LOCKED) {
+        note.innerHTML = catsOk() ? '<strong>Grades locked</strong>, ready to proceed.'
+                                  : 'Select a <strong>course category</strong> to proceed';
+    } else if (missing.length) {
         const extra = 7 - all - missing.length;
         note.innerHTML = 'Fill in <strong>' + missing.join(', ') + '</strong>'
             + (extra > 0 ? ' and <strong>' + extra + ' more subject' + (extra !== 1 ? 's' : '') + '</strong>' : '')
@@ -588,7 +662,7 @@ function updateGlobal() {
     } else if (!catsOk()) {
         note.innerHTML = 'Select a <strong>course category</strong> to proceed';
     } else {
-        note.innerHTML = '<strong>' + all + ' subjects entered</strong>, ready to proceed!';
+        note.innerHTML = '<strong>' + all + ' subjects entered</strong>, ready to proceed.';
     }
 }
 
@@ -616,7 +690,7 @@ document.querySelector('.lce-footer').addEventListener('click', function (e) {
     let scrollTarget = null;
     {% if use_kcse_form %}
     document.querySelectorAll('select.lce-select[data-required]').forEach(sel => {
-        if (sel.value) return;
+        if (sel.value || GRADES_LOCKED) return;
         const row = sel.closest('.acc-row');
         if (!row) return;
         row.classList.add('row-missing');

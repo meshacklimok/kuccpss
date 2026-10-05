@@ -53,6 +53,21 @@
 .pp-table tr:nth-child(even) td { background: #f8fafc; }
 
 .pp-updated { font-size: 0.78rem; color: #94a3b8; }
+
+/* Dark mode: page-local light palette mapped to One UI tokens */
+body.dark .pp-toc { background: var(--surface-2); border-color: transparent; }
+body.dark .pp-toc-title { color: var(--text-2); }
+body.dark .pp-toc a { color: var(--primary-light); }
+body.dark .pp-section h2 { color: var(--text); }
+body.dark .pp-section h3 { color: var(--text); }
+body.dark .pp-section p, body.dark .pp-section li { color: var(--text-2); }
+body.dark .pp-section strong { color: var(--text); }
+body.dark .pp-section a { color: var(--primary-light); }
+body.dark .pp-highlight { background: rgba(92,157,255,0.14); border-color: rgba(92,157,255,0.45); color: var(--primary-light); }
+body.dark .pp-highlight i { color: var(--primary-light); }
+body.dark .pp-table th { background: var(--surface-2); border-color: transparent; color: var(--text); }
+body.dark .pp-table td { border-color: var(--border); color: var(--text-2); }
+body.dark .pp-table tr:nth-child(even) td { background: var(--surface-2); }
 </style>
 
 <!-- HERO -->
@@ -63,7 +78,7 @@
     </div>
     <h1 class="mb-1">Privacy Policy</h1>
     <p class="pp-updated mb-0">
-      Last updated: <strong style="color:#a5b4fc;">26 September 2026</strong>
+      Last updated: <strong style="color:#a5b4fc;">5 October 2026</strong>
       &nbsp;·&nbsp; Effective from: 23 June 2026
       &nbsp;·&nbsp; Version 2.0
     </p>
@@ -149,8 +164,9 @@
     <h3>2.2 Information Collected Automatically</h3>
     <ul>
       <li><strong>Log data</strong>: IP address, browser type, pages visited, timestamps (standard web server logs)</li>
-      <li><strong>Session data</strong>: login session tokens stored in encrypted cookies</li>
-      <li><strong>Usage analytics</strong>: page views, feature usage (aggregated, not linked to personal identity where possible)</li>
+      <li><strong>Session data</strong>: a random session identifier stored in a secure, HttpOnly cookie (the session data itself is kept on our servers)</li>
+      <li><strong>Usage analytics</strong>: page views, clicks and feature usage, collected via Google Analytics and PostHog. If you are logged in, PostHog events are linked to your account ID and email so we can understand how features are used.</li>
+      <li><strong>Error reports</strong>: when something breaks, Sentry may capture technical details and a replay of the page session to help us fix the bug</li>
       <li><strong>Device information</strong>: device type, operating system, screen size (for improving mobile experience)</li>
     </ul>
 
@@ -204,7 +220,9 @@
     <ul>
       <li><strong>OpenAI (USA)</strong>: KCSE grade data and career preferences are sent to the OpenAI API to power the Career Engine recommendations and OCR result-slip reading. OpenAI processes this data under their API data usage policy and does not use API data to train their models by default.</li>
       <li><strong>Tawk.to (USA)</strong>: If you use the live chat widget, your chat messages and optionally your name/email are processed by Tawk.to.</li>
-      <li><strong>Google (USA)</strong>: If you use Google OAuth login, authentication is handled by Google's identity services.</li>
+      <li><strong>Google (USA)</strong>: If you use Google OAuth login, authentication is handled by Google's identity services. We also use Google Analytics to measure site traffic.</li>
+      <li><strong>PostHog</strong>: Product analytics (page views, clicks, feature usage). For logged-in users this is linked to your account ID and email.</li>
+      <li><strong>Sentry (USA)</strong>: Error monitoring. When an error occurs, technical details and a session replay of the affected page may be sent to Sentry.</li>
       <li><strong>Hosting / infrastructure providers</strong>: Our servers and database are hosted with a cloud provider. They access data only to provide infrastructure services and are bound by data processing agreements.</li>
       <li><strong>Legal requirements</strong>: We may disclose data if required by Kenyan law or a valid court order.</li>
     </ul>
@@ -235,6 +253,21 @@
           <td><a href="https://www.tawk.to/privacy-policy/" target="_blank" rel="noopener">tawk.to/privacy-policy</a></td>
         </tr>
         <tr>
+          <td>Google Analytics</td>
+          <td>Site traffic analytics</td>
+          <td><a href="https://policies.google.com/privacy" target="_blank" rel="noopener">policies.google.com/privacy</a></td>
+        </tr>
+        <tr>
+          <td>PostHog</td>
+          <td>Product analytics</td>
+          <td><a href="https://posthog.com/privacy" target="_blank" rel="noopener">posthog.com/privacy</a></td>
+        </tr>
+        <tr>
+          <td>Sentry</td>
+          <td>Error monitoring &amp; session replay</td>
+          <td><a href="https://sentry.io/privacy/" target="_blank" rel="noopener">sentry.io/privacy</a></td>
+        </tr>
+        <tr>
           <td>Bootstrap CDN / jsDelivr</td>
           <td>UI framework delivery</td>
           <td><a href="https://www.jsdelivr.com/terms/privacy-policy-jsdelivr-net" target="_blank" rel="noopener">jsdelivr.com privacy policy</a></td>
@@ -257,17 +290,21 @@
         <tr><th>Name</th><th>Type</th><th>Purpose</th><th>Duration</th></tr>
       </thead>
       <tbody>
-        <tr><td>sessionid</td><td>Essential</td><td>Keeps you logged in during a session</td><td>Browser session</td></tr>
+        <tr><td>sessionid</td><td>Essential</td><td>Keeps you logged in and remembers in-progress actions (e.g. sign-in with Google, referral codes)</td><td>90 days, renewed each visit</td></tr>
         <tr><td>csrftoken</td><td>Essential</td><td>Protects against cross-site request forgery</td><td>1 year</td></tr>
-        <tr><td>remember_token</td><td>Functional</td><td>"Remember me" persistent login</td><td>72 hours</td></tr>
-        <tr><td>dark_mode</td><td>Functional</td><td>Saves your dark/light mode preference</td><td>Persistent (localStorage)</td></tr>
-        <tr><td>Tawk.to cookies</td><td>Third-party</td><td>Live chat session</td><td>Session / persistent</td></tr>
+        <tr><td>kuccpss-dark</td><td>Functional</td><td>Saves your dark/light mode preference</td><td>Persistent (localStorage)</td></tr>
+        <tr><td>Other local storage</td><td>Functional</td><td>Remembers dismissed banners and notification prompts so we don't show them again</td><td>Persistent (localStorage)</td></tr>
+        <tr><td>_ga, _ga_*</td><td>Analytics (Google Analytics)</td><td>Counts visits and measures how the site is used</td><td>Up to 2 years</td></tr>
+        <tr><td>ph_*_posthog</td><td>Analytics (PostHog)</td><td>Measures feature usage; linked to your account if you are logged in</td><td>Up to 1 year (cookie + localStorage)</td></tr>
+        <tr><td>Sentry session storage</td><td>Error monitoring</td><td>Records error details and a session replay when something breaks</td><td>Browser session</td></tr>
+        <tr><td>Tawk.to cookies</td><td>Third-party</td><td>Live chat session (dashboard only)</td><td>Session / persistent</td></tr>
       </tbody>
     </table>
     <p>
-      We do not use advertising cookies or tracking cookies for marketing purposes.
-      You can disable cookies in your browser settings, but some features (login, CSRF protection)
-      require essential cookies to function.
+      We do not use advertising cookies and we do not share analytics data with advertisers.
+      Analytics cookies (Google Analytics and PostHog) help us understand how students use the site
+      so we can improve it. You can block or delete cookies in your browser settings, but some
+      features (login, CSRF protection) require essential cookies to function.
     </p>
   </div>
 
@@ -394,7 +431,7 @@
 
   <hr style="border-color:#e2e8f0;margin:2rem 0 1.5rem;">
   <div class="d-flex flex-wrap gap-3 justify-content-between align-items-center">
-    <span class="pp-updated">CareerNext Privacy Policy · Last updated September 2026</span>
+    <span class="pp-updated">CareerNext Privacy Policy · Last updated October 2026</span>
     <div class="d-flex gap-3 flex-wrap">
       <a href="{% url 'accounts:terms' %}" class="btn btn-sm btn-outline-secondary">Terms &amp; Conditions</a>
       <a href="{% url 'accounts:about' %}" class="btn btn-sm btn-outline-primary">About Us</a>
