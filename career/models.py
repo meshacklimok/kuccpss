@@ -1043,6 +1043,7 @@ class SubmissionLockConfig(models.Model):
     FEATURE_CHOICES = [
         ('degree_career', 'Career Engine (Degree Path)'),
         ('cluster_calculator', 'Cluster Points Calculator'),
+        ('non_degree_career', 'Career Engine (Diploma / Certificate / KMTC / TTC / Artisan)'),
     ]
     feature = models.CharField(max_length=50, choices=FEATURE_CHOICES, unique=True)
     lock_minutes = models.PositiveIntegerField(
@@ -1065,7 +1066,8 @@ class SubmissionLockConfig(models.Model):
         default=True,
         help_text=(
             "When ON: grades are locked immediately when the linked payment completes "
-            "(view_cluster_points → cluster_calculator; premium_career_report → degree_career). "
+            "(view_cluster_points → cluster_calculator; premium_career_report → degree_career "
+            "and non_degree_career). "
             "Turn OFF to rely only on the time-based grace period."
         ),
     )
@@ -1092,6 +1094,8 @@ class SubmissionLockConfig(models.Model):
 class CareerSubmission(models.Model):
     FEATURE_DEGREE = 'degree_career'
     FEATURE_CALCULATOR = 'cluster_calculator'
+    # One lock shared by every non-degree pathway — KCSE grades don't change with the pathway
+    FEATURE_NON_DEGREE = 'non_degree_career'
 
     STATUS_PENDING = 'pending'
     STATUS_LOCKED = 'locked'
@@ -1156,6 +1160,9 @@ class CareerSubmission(models.Model):
 
     def grade_summary(self):
         """[(subject, letter), ...] for the review banner; empty for cluster-point entries."""
+        if self.feature == self.FEATURE_NON_DEGREE and self.method == self.METHOD_MANUAL:
+            mean = (self.grades_json or {}).get('mean_grade')
+            return [('Mean grade', mean)] if mean else []
         if self.method not in (self.METHOD_CALCULATE, self.METHOD_UPLOAD):
             return []
         from clusterpoints.forms import DEFAULT_GRADE_CHOICES
