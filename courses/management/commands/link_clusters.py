@@ -17,7 +17,7 @@ What this does:
 """
 
 import csv
-from django.core.management.base import BaseCommand
+from django.core.management.base import BaseCommand, CommandError
 from clusters.models import Cluster
 from courses.models import Course
 
@@ -61,6 +61,10 @@ class Command(BaseCommand):
         parser.add_argument('csv_file', type=str)
 
     def handle(self, *args, **options):
+        raise CommandError(
+            'link_clusters creates legacy sub-clusters (1A, 13B, ...), which were removed — '
+            'KUCCPS has exactly 18 clusters. Use import_kuccps_portal instead.'
+        )
         path = options['csv_file']
 
         with open(path, encoding='utf-8-sig', newline='') as f:

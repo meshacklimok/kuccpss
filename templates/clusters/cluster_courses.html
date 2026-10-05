@@ -59,6 +59,15 @@
     background:#f0fdf4; color:#16a34a; border:1px solid #bbf7d0;
     border-radius:20px; padding:3px 12px; font-size:0.75rem; font-weight:700;
 }
+
+/* Dark mode: page-local light palette mapped to One UI tokens */
+body.dark .cc-card { background: var(--surface); border-color: transparent; }
+body.dark .cc-card:hover { border-color: rgba(92,157,255,0.6); }
+body.dark .cc-course-name { color: var(--text); }
+body.dark .cc-meta { color: var(--text-2); }
+body.dark .cc-type-chip { background: rgba(92,157,255,0.14); color: var(--primary-light); }
+body.dark .cc-lock-card { background: var(--surface); border-color: transparent; }
+body.dark .cc-count-pill { background: rgba(52,199,89,0.14); border-color: rgba(52,199,89,0.45); color: #5fd88a; }
 </style>
 {% endblock %}
 
