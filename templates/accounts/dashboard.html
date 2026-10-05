@@ -2279,17 +2279,7 @@ const clusterTop = [{% for r in cluster_results %}{n:"C{{ r.cluster.kuccps_numbe
   const canvas = document.getElementById('clusterChart');
   if (!canvas) return;
   const css = getComputedStyle(document.documentElement);
-  const brand     = (css.getPropertyValue('--primary').trim()      || '#2563EB');
-  const brandDark = (css.getPropertyValue('--primary-dark').trim() || '#1E3A8A');
-  const ctx = canvas.getContext('2d');
-  const fill = c => {
-    const { chartArea } = c.chart;
-    if (!chartArea) return brand;
-    const g = ctx.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
-    g.addColorStop(0, brandDark);
-    g.addColorStop(1, brand);
-    return g;
-  };
+  const brand = (css.getPropertyValue('--primary').trim() || '#2563EB');
 
   new Chart(canvas, {
     type: 'bar',
@@ -2297,7 +2287,7 @@ const clusterTop = [{% for r in cluster_results %}{n:"C{{ r.cluster.kuccps_numbe
       labels: clusterTop.map(c => c.n),
       datasets: [{
         label: 'Cluster Points', data: clusterTop.map(c => c.v),
-        backgroundColor: fill, borderRadius: 6, borderSkipped: false,
+        backgroundColor: brand, borderRadius: 6, borderSkipped: false,
         maxBarThickness: 34
       }]
     },
