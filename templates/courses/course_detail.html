@@ -117,6 +117,9 @@
   background: color-mix(in srgb, var(--primary) 12%, transparent); color: var(--primary);
 }
 .pv-empty { font-size: .8rem; color: var(--text-3); margin: .5rem 0 0; }
+
+/* Dark mode: page-local light palette mapped to One UI tokens */
+body.dark .trend-tab { background: var(--surface-2); border-color: transparent; color: var(--text-2); }
 </style>
 {% endblock %}
 
@@ -386,7 +389,7 @@
           <div id="trendPickWrap" class="mb-2" style="display:none;">
             <label for="trendPick" class="form-label small text-muted mb-1">Add another institution</label>
             <select id="trendPick" class="form-select form-select-sm" style="max-width:360px;">
-              <option value="">— Choose an institution —</option>
+              <option value="">Choose an institution</option>
             </select>
           </div>
           <div style="position:relative; height:280px;">
@@ -652,23 +655,9 @@
       </div>
       {% endif %}
 
-      <!-- Mentorship CTA — only for Degree & KMTC courses -->
-      {% if course.course_type.slug == 'degree' or course.course_type.slug == 'KMTC' %}
-      <div class="card p-4 border-0 shadow-sm rounded-4" style="background: #f0f9ff;">
-        <div class="d-flex align-items-start gap-3">
-          <div class="rounded-circle bg-primary bg-opacity-10 d-flex align-items-center justify-content-center flex-shrink-0" style="width:44px;height:44px;">
-            <i class="bi bi-people-fill text-primary"></i>
-          </div>
-          <div>
-            <h6 class="fw-bold mb-1">Talk to a Student in This Course</h6>
-            <p class="text-muted small mb-3">Get real insights from someone currently studying this, KES 100 for 15 min.</p>
-            <a href="{% url 'mentorship:directory' %}?q={{ course.name|urlencode }}"
-               class="btn btn-primary btn-sm rounded-pill px-3 fw-semibold">
-              <i class="bi bi-calendar-plus me-1"></i>Find a Mentor
-            </a>
-          </div>
-        </div>
-      </div>
+      <!-- Mentors: students in this course (or a close variation) first, then experts -->
+      {% if student_mentors or expert_mentors or course.course_type.slug == 'degree' or course.course_type.slug == 'KMTC' %}
+        {% include 'courses/_mentor_guidance.html' %}
       {% endif %}
 
       <!-- PDF download -->

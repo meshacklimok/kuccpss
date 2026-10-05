@@ -31,3 +31,6 @@ KUCCPS_CLUSTER_NAMES: dict[int, str] = {
 }
 
 NUM_KUCCPS_CLUSTERS = len(KUCCPS_CLUSTER_NAMES)
+
+# Valid Cluster.number values — exactly one row per KUCCPS cluster (101–118)
+KUCCPS_CLUSTER_NUMBERS = range(CALC_CLUSTER_OFFSET + 1, CALC_CLUSTER_OFFSET + NUM_KUCCPS_CLUSTERS + 1)

@@ -38,19 +38,24 @@ def compute_aggregate_total(named_points: dict[str, int]) -> int:
     implementation; every other call site (clusterpoints/models.py, clusterpoints/views.py,
     career/models.py) imports this function rather than reimplementing it.
     """
+    return sum(p for _, p in aggregate_subjects(named_points))
+
+
+def aggregate_subjects(named_points: dict[str, int]) -> list[tuple[str, int]]:
+    """The (subject, points) pairs that make up the aggregate, in selection order."""
     working = named_points.copy()
     agg = []
     if 'Mathematics' in working:
-        agg.append(working.pop('Mathematics'))
+        agg.append(('Mathematics', working.pop('Mathematics')))
     langs = {l: working.pop(l) for l in ['English', 'Kiswahili'] if l in working}
     if langs:
         best = max(langs, key=lambda k: langs[k])
-        agg.append(langs[best])
+        agg.append((best, langs[best]))
         for l, p in langs.items():
             if l != best:
                 working[l] = p
-    agg += sorted(working.values(), reverse=True)[:5]
-    return sum(agg)
+    agg += sorted(working.items(), key=lambda kv: kv[1], reverse=True)[:5]
+    return agg
 
 
 def calculate_clusters_anonymous(named_points: dict[str, int]) -> list:
@@ -63,9 +68,7 @@ def calculate_clusters_anonymous(named_points: dict[str, int]) -> list:
     aggregate_total = compute_aggregate_total(named_points)
 
     clusters = (
-        Cluster.objects
-        .filter(subject_groups__isnull=False)
-        .distinct()
+        Cluster.objects.kuccps()
         .prefetch_related('subject_groups__subjects')
     )
 
@@ -74,6 +77,7 @@ def calculate_clusters_anonymous(named_points: dict[str, int]) -> list:
         slots = sorted(cluster.subject_groups.all(), key=lambda sg: sg.priority)  # type: ignore[attr-defined]
         used = set()
         core: list[int] = []
+        core_subjects: list[tuple[str, int] | None] = []
         any_unfilled = False
 
         for slot in slots:
@@ -87,9 +91,11 @@ def calculate_clusters_anonymous(named_points: dict[str, int]) -> list:
                         best_pts, best_name = pts, subj.name
             if best_name:
                 core.append(best_pts)
+                core_subjects.append((best_name, best_pts))
                 used.add(best_name)
             else:
                 core.append(0)
+                core_subjects.append(None)
                 any_unfilled = True
 
         while len(core) < 4:
@@ -105,6 +111,7 @@ def calculate_clusters_anonymous(named_points: dict[str, int]) -> list:
             cluster=cluster,
             cluster_points=weighted,
             core_subject_total=raw_core,
+            core_subjects=core_subjects,
             aggregate_total=aggregate_total,
             pk=None,
         ))
@@ -143,9 +150,7 @@ def calculate_all_clusters(kcse_result: UserKCSEResult):
 
     # ── Step 2: Calculate cluster points ──────────────────────────
     clusters = (
-        Cluster.objects
-        .filter(subject_groups__isnull=False)
-        .distinct()
+        Cluster.objects.kuccps()
         .prefetch_related('subject_groups__subjects')
     )
 

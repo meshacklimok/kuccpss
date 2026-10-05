@@ -175,6 +175,8 @@
     will-change: transform;
 }
 .lce-footer.bar-hidden { transform: translateY(100%); }
+/* Results just calculated: hide the footer until a grade changes */
+.lce-footer.results-idle, .lce-footer.grades-locked { display: none; }
 .lce-footer-info { flex: 1; min-width: 0; }
 .lce-footer-title { font-size: 0.82rem; font-weight: 600; color: #64748b; }
 .lce-footer-title strong { color: #1e293b; }
@@ -477,7 +479,7 @@ body.dark .pg-card     { background:var(--surface); box-shadow:0 32px 80px rgba(
 body.dark .pg-how      { color:var(--text-2); }
 body.dark .pg-title    { color:var(--text); }
 body.dark .pg-sub      { color:var(--text-2); }
-body.dark .pg-btn-card { background:var(--surface-2); border-color:var(--border); color:var(--text-2); }
+body.dark .pg-btn-card { background:var(--surface-2); border-color: transparent; color:var(--text-2); }
 body.dark .pg-btn-card:hover { background:var(--surface-3,#1e293b); }
 body.dark .pg-secure   { color:var(--text-3); }
 
@@ -588,20 +590,20 @@ body.dark .pg-secure   { color:var(--text-3); }
 /* ── Dark mode ── */
 body.dark .step-bar          { background: var(--surface); border-bottom-color: var(--border); }
 body.dark .sb-badge          { background: rgba(37,99,235,0.15); border-color: rgba(37,99,235,0.3); color: #93C5FD; }
-body.dark .sb-counter        { background: var(--surface-2); border-color: var(--border); color: var(--text-3); }
+body.dark .sb-counter        { background: var(--surface-2); border-color: transparent; color: var(--text-3); }
 body.dark .sb-counter.ready  { background: rgba(22,163,74,0.12); border-color: rgba(22,163,74,0.3); color: #4ADE80; }
 body.dark .sb-progress       { background: var(--surface-2); }
-body.dark .lce-head          { background: var(--surface); border-color: var(--border); }
+body.dark .lce-head          { background: var(--surface); border-color: transparent; }
 body.dark .lce-head h1, body.dark .lce-head h2 { color: var(--text); }
 body.dark .lce-head p        { color: var(--text-2); }
 body.dark .lce-alert.danger  { background: #1C0505; border-color: #7F1D1D; color: #FCA5A5; }
 body.dark .lce-alert.success { background: #052E16; border-color: #166534; color: #86EFAC; }
-body.dark .acc-section       { background: var(--surface); border-color: var(--border); box-shadow: none; }
+body.dark .acc-section       { background: var(--surface); border-color: transparent; box-shadow: none; }
 body.dark .acc-section.has-values { border-color: rgba(37,99,235,0.4); }
 body.dark .acc-header:hover  { background: var(--surface-2); }
 body.dark .acc-title         { color: var(--text); }
 body.dark .acc-badge.req     { background: rgba(220,38,38,0.12); border-color: rgba(220,38,38,0.3); color: #FCA5A5; }
-body.dark .acc-badge.opt     { background: var(--surface-2); border-color: var(--border); color: var(--text-3); }
+body.dark .acc-badge.opt     { background: var(--surface-2); border-color: transparent; color: var(--text-3); }
 body.dark .acc-count         { background: rgba(22,163,74,0.12); border-color: rgba(22,163,74,0.25); color: #4ADE80; }
 body.dark .acc-chevron       { color: var(--text-3); }
 body.dark .acc-row           { border-top-color: var(--surface-2); }
@@ -615,34 +617,34 @@ body.dark .lce-select        { background-color: var(--surface-2); border-color:
 body.dark .lce-select.has-value { background-color: rgba(37,99,235,0.1); border-color: rgba(37,99,235,0.4); color: #93C5FD; }
 body.dark .results-divider-line  { background: var(--border); }
 body.dark .results-divider-label { color: var(--text-3); }
-body.dark .score-card        { background: var(--surface); border-color: var(--border); box-shadow: none; }
+body.dark .score-card        { background: var(--surface); border-color: transparent; box-shadow: none; }
 body.dark .score-label       { color: var(--text-3); }
 body.dark .score-sep         { background: var(--border); }
 body.dark .score-val.grade    { color: var(--primary-light); }
-body.dark .grade-chip        { background: var(--surface-2); border-color: var(--border); }
+body.dark .grade-chip        { background: var(--surface-2); border-color: transparent; }
 body.dark .grade-chip .gl    { color: var(--text-2); }
 body.dark .grade-chip.active { background: var(--primary-dark); border-color: var(--primary); }
-body.dark .cluster-card      { background: var(--surface); border-color: var(--border); box-shadow: none; }
+body.dark .cluster-card      { background: var(--surface); border-color: transparent; box-shadow: none; }
 body.dark .cluster-card:hover { border-color: rgba(37,99,235,0.5); }
 body.dark .cluster-label     { color: #93C5FD; }
 body.dark .cluster-name      { color: var(--text-3); }
-body.dark .pred-section      { background: var(--surface); border-color: var(--border); }
+body.dark .pred-section      { background: var(--surface); border-color: transparent; }
 body.dark .pred-cluster-badge { background: rgba(37,99,235,0.15); border-color: rgba(37,99,235,0.3); color: #93C5FD; }
 body.dark .pred-table th     { color: var(--text-3); border-bottom-color: var(--border); }
 body.dark .pred-table td     { color: var(--text-2); border-bottom-color: var(--surface-2); }
 body.dark .pred-table tr:nth-child(even) td { background: var(--surface-2); }
-body.dark .chart-wrap        { background: var(--surface); border-color: var(--border); }
+body.dark .chart-wrap        { background: var(--surface); border-color: transparent; }
 body.dark .chart-title       { color: var(--text-3); }
 body.dark .info-banner       { background: rgba(146,64,14,0.12); border-color: rgba(146,64,14,0.3); color: #FDE68A; }
-body.dark .dl-bar            { background: var(--surface); border-color: var(--border); }
+body.dark .dl-bar            { background: var(--surface); border-color: transparent; }
 body.dark .dl-label          { color: var(--text-3); }
 body.dark .dl-btn.red  { background: rgba(220,38,38,0.12); border-color: rgba(220,38,38,0.25); color: #FCA5A5; }
 body.dark .dl-btn.blue { background: rgba(37,99,235,0.12); border-color: rgba(37,99,235,0.25); color: #93C5FD; }
-body.dark .dl-btn.gray { background: var(--surface-2); border-color: var(--border); color: var(--text-2); }
+body.dark .dl-btn.gray { background: var(--surface-2); border-color: transparent; color: var(--text-2); }
 body.dark .lce-footer        { background: var(--surface); border-top-color: var(--border); }
 body.dark .lce-footer-title  { color: var(--text-2); }
 body.dark .lce-footer-title strong { color: var(--text); }
-body.dark .lce-btn-back      { background: var(--surface-2); border-color: var(--border); color: var(--text-2); }
+body.dark .lce-btn-back      { background: var(--surface-2); border-color: transparent; color: var(--text-2); }
 body.dark .lce-btn-back:hover { color: var(--text); border-color: var(--text-3); }
 body.dark .lce-btn-calc:disabled { background: var(--surface-2); color: var(--text-3); }
 
@@ -657,6 +659,33 @@ body.dark .lce-btn-calc:disabled { background: var(--surface-2); color: var(--te
     .lce-btn-back { font-size: 0.78rem; }
     .lce-footer-info { width: 100%; order: 2; font-size: 0.78rem; }
 }
+
+/* Dark mode: page-local light palette mapped to One UI tokens */
+body.dark .sb-dot { border-color: var(--border); }
+body.dark .sb-line { background: var(--surface-2); }
+body.dark .acc-header.expanded .acc-chevron { color: var(--text-2); }
+body.dark .lce-footer-title.note-flash { color: #ff8a80; }
+body.dark .lce-footer-title.note-flash strong { color: #ff8a80; }
+body.dark .acc-row.row-missing { background: rgba(255,69,58,0.15); }
+body.dark .score-val { color: #5fd88a; }
+body.dark .pw-btn-light { background: var(--surface); color: var(--primary-light); }
+body.dark .pw-btn-light:hover { background: rgba(92,157,255,0.14); color: var(--primary-light); }
+body.dark .dl-btn.red:hover { background: rgba(255,69,58,0.15); color: #ff8a80; }
+body.dark .dl-btn.blue:hover { background: rgba(92,157,255,0.14); color: var(--primary-light); }
+body.dark .dl-btn.gray:hover { background: var(--surface-2); color: var(--text); }
+body.dark .save-bar-reg { background: var(--surface); color: #5fd88a; }
+body.dark .save-bar-reg:hover { background: rgba(52,199,89,0.14); color: #5fd88a; }
+body.dark .pg-price { background: rgba(52,199,89,0.14); border-color: rgba(52,199,89,0.6); }
+body.dark .pg-currency { color: #5fd88a; }
+body.dark .pg-amount { color: #5fd88a; }
+body.dark .pg-feat { color: var(--text); }
+body.dark .pg-feat i { color: #5fd88a; }
+body.dark .pg-mpesa-badge { background: var(--surface); }
+body.dark .cluster-pts { color: #5fd88a; }
+body.dark .s-high { background: rgba(52,199,89,0.14); border-color: rgba(52,199,89,0.45); color: #5fd88a; }
+body.dark .s-likely { background: rgba(52,199,89,0.14); color: #5fd88a; }
+body.dark .s-border { background: rgba(255,179,64,0.14); border-color: rgba(255,179,64,0.45); }
+body.dark .s-unlik { background: rgba(255,69,58,0.15); border-color: rgba(255,69,58,0.45); color: #ff8a80; }
 </style>
 {% endblock %}
 
@@ -714,7 +743,7 @@ body.dark .lce-btn-calc:disabled { background: var(--surface-2); color: var(--te
     <div class="pg-backdrop"></div>
     <div class="pg-card">
         <div class="pg-lock"><i class="bi bi-lock-fill"></i></div>
-        <h2 class="pg-title">Your Results Are Ready!</h2>
+        <h2 class="pg-title">Your Results Are Ready</h2>
         <p class="pg-sub">Unlock your KUCCPS cluster points to discover which universities, KMTCs, and TVETs you qualify for.</p>
         <div class="pg-price">
             <span class="pg-currency">KES</span>
@@ -829,7 +858,7 @@ body.dark .lce-btn-calc:disabled { background: var(--surface-2); color: var(--te
                 <div class="row-name">{{ subj.name }}</div>
                 <select name="{{ bound.html_name }}" aria-label="{{ subj.name }} grade" class="lce-select"
                         data-subject="{{ subj.name }}"{% if subj.name in required_subject_names %} data-required="1"{% endif %}
-                        onchange="onSelChange('{{ bound.html_name }}', 'compulsory', this)">
+                        onchange="onSelChange('{{ bound.html_name }}', 'compulsory', this)"{% if grades_locked %} disabled{% endif %}>
                     <option value="">Grade</option>
                     <option value="12" {% if bound.value == '12' %}selected{% endif %}>A</option>
                     <option value="11" {% if bound.value == '11' %}selected{% endif %}>A-</option>
@@ -866,7 +895,7 @@ body.dark .lce-btn-calc:disabled { background: var(--surface-2); color: var(--te
                 <div class="row-icon"><i class="bi {{ icon }}"></i></div>
                 <div class="row-name">{{ subj.name }}</div>
                 <select name="{{ bound.html_name }}" aria-label="{{ subj.name }} grade" class="lce-select"
-                        onchange="onSelChange('{{ bound.html_name }}', '{{ forloop.parentloop.counter }}', this)">
+                        onchange="onSelChange('{{ bound.html_name }}', '{{ forloop.parentloop.counter }}', this)"{% if grades_locked %} disabled{% endif %}>
                     <option value="">Grade</option>
                     <option value="12" {% if bound.value == '12' %}selected{% endif %}>A</option>
                     <option value="11" {% if bound.value == '11' %}selected{% endif %}>A-</option>
@@ -937,8 +966,19 @@ body.dark .lce-btn-calc:disabled { background: var(--surface-2); color: var(--te
       var deadline   = Date.now() + {{ sub_banner.seconds_remaining }} * 1000;
       var tick;
 
+      function lockGradeEntry() {
+        function apply() {
+          document.querySelectorAll('#calcForm select.lce-select').forEach(function(sel){ sel.disabled = true; });
+          var footer = document.querySelector('.lce-footer');
+          if (footer) footer.classList.add('grades-locked');
+        }
+        if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', apply);
+        else apply();
+      }
+
       function showLocked(text) {
         clearInterval(tick);
+        lockGradeEntry();
         banner.innerHTML = '<div class="py-2 px-3"><i class="bi bi-lock-fill me-2" style="color:#facc15;"></i><strong>Grades locked.</strong> ' + text + '</div>';
         banner.style.borderColor = '#16a34a';
       }
@@ -982,7 +1022,7 @@ body.dark .lce-btn-calc:disabled { background: var(--surface-2); color: var(--te
           showLocked('Contact support if you need to make changes.');
         }).catch(function(){
           confirmBtn.disabled = false;
-          msg.textContent = 'Could not lock your grades — check your connection and try again.';
+          msg.textContent = 'Could not lock your grades. Check your connection and try again.';
           msg.style.display = '';
         });
       });
@@ -1126,7 +1166,7 @@ body.dark .lce-btn-calc:disabled { background: var(--surface-2); color: var(--te
         if (grade) msg += "📊 Mean Grade: " + grade + "\n";
         if (agg)   msg += "📈 Aggregate: " + agg + " / 84\n";
         if (clLines) msg += "\n🏆 Top Cluster Scores:\n" + clLines + "\n";
-        msg += "\nI used CareerNext to calculate my cluster points & discover every university, KMTC, TVET & TTC course I qualify for in Kenya, 100% FREE! 🚀";
+        msg += "\nI used CareerNext to calculate my cluster points & discover every university, KMTC, TVET & TTC course I qualify for in Kenya, 100% free 🚀";
         msg += "\n\n👉 Calculate yours free: careernext.co.ke";
 
         var btn = document.getElementById('wa-share-btn');
@@ -1247,7 +1287,7 @@ body.dark .lce-btn-calc:disabled { background: var(--surface-2); color: var(--te
                 '📈 Aggregate: ' + (_calcData.aggregate || '—') + ' / 84\n' +
                 '🎯 Best Cluster Score: ' + Math.max.apply(null, Object.values(_calcData.cluster_points)).toFixed(1) + ' / 48\n\n' +
                 '👀 See my full cluster scores:\n' + _calcShareUrl + '\n\n' +
-                '💡 Calculate YOUR cluster points FREE at careernext.co.ke!';
+                '💡 Calculate YOUR cluster points FREE at careernext.co.ke.';
 
             document.getElementById('calcWaShareBtn').href = 'https://wa.me/?text=' + encodeURIComponent(waMsg);
             document.getElementById('calcTwShareBtn').href = 'https://twitter.com/intent/tweet?text=' +
@@ -1313,7 +1353,7 @@ body.dark .lce-btn-calc:disabled { background: var(--surface-2); color: var(--te
                 <td>{% if row.pred.latest_year == LATEST_CUTOFF_YEAR %}<span style="font-weight:700;color:#1e293b;">{{ row.pred.latest_cutoff }}</span>{% else %}<span style="color:#94a3b8;">—</span>{% endif %}</td>
                 <td><span style="font-weight:800;color:#2563eb;">{{ row.pred.predicted }}</span></td>
                 <td style="color:#64748b;font-size:.72rem;">{{ row.pred.low }}–{{ row.pred.high }}</td>
-                <td>{% with key=row.elig.key %}<span class="status-badge {% if key == 'HighLikelihood' %}s-high{% elif key == 'Likely' %}s-likely{% elif key == 'Borderline' %}s-border{% else %}s-unlik{% endif %}">{{ row.elig.label }}</span>{% endwith %}</td>
+                <td>{% with key=row.elig.key %}<span class="status-badge {% if key == 'HighLikelihood' %}s-high{% elif key == 'Likely' %}s-likely{% elif key == 'Borderline' %}s-border{% else %}s-unlik{% endif %}"{% if row.pred.note %} title="{{ row.pred.note }}"{% endif %}>{{ row.elig.label }}</span>{% endwith %}<div style="color:#64748b;font-size:.68rem;">~{{ row.elig.chance }}% chance</div></td>
             </tr>
             {% endfor %}
             </tbody>
@@ -1360,7 +1400,7 @@ body.dark .lce-btn-calc:disabled { background: var(--surface-2); color: var(--te
 {% endif %}
 
 <!-- sticky footer -->
-<div class="lce-footer">
+<div class="lce-footer{% if results %} results-idle{% endif %}{% if grades_locked %} grades-locked{% endif %}">
     <div class="lce-footer-info">
         {% if results %}
         <div class="lce-footer-title" id="footerNote">Change grades above to <strong>recalculate</strong></div>
@@ -1394,6 +1434,12 @@ function onSelChange(field, secId, sel) {
     if (row) row.classList.toggle('filled', hasVal);
     updateSecCount(secId);
     updateGlobal();
+    var footer = document.querySelector('.lce-footer.results-idle');
+    if (footer && !footer.classList.contains('grades-locked')) {
+        footer.classList.remove('results-idle');
+        var note = document.getElementById('footerNote');
+        if (note) note.innerHTML = 'Grades changed, tap <strong>Recalculate</strong> to update';
+    }
 }
 function updateSecCount(secId) {
     const body = document.getElementById('body-' + secId);
@@ -1438,7 +1484,7 @@ function updateGlobal() {
     } else {
         btn.disabled = !ready;
         if (ready) {
-            note.innerHTML = '<strong>' + all + ' subjects entered</strong>, ready to calculate!';
+            note.innerHTML = '<strong>' + all + ' subjects entered</strong>, ready to calculate.';
         } else {
             note.innerHTML = notReadyNote(all, missing, 'calculate');
         }
