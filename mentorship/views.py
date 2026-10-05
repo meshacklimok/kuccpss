@@ -8,7 +8,7 @@ from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
 from kuccpss.email_utils import notify_admin_withdrawal, send_branded_email
 from django.db import IntegrityError, transaction
-from django.db.models import F, Q
+from django.db.models import Exists, F, OuterRef, Q
 from django.db.models.functions import Greatest
 from django.http import JsonResponse, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -19,7 +19,7 @@ from django.views.decorators.http import require_POST
 
 from accounts.decorators import require_recent_auth
 from analytics.audit import record
-from .forms import AddSlotsForm, AddWeekSlotsForm, BookingForm, CancelSessionForm, MentorRegistrationForm, RatingForm, WithdrawalForm, _mentor_min_withdrawal
+from .forms import AddSlotsForm, AddWeekSlotsForm, BookingForm, CancelSessionForm, ExpertProfileForm, MentorRegistrationForm, RatingForm, WithdrawalForm, _mentor_min_withdrawal
 from .models import MentorProfile, MentorshipConfig, MentorshipSession, TimeSlot, WithdrawalRequest, bookable_slots_q
 
 logger = logging.getLogger(__name__)
@@ -44,9 +44,15 @@ def _mentors_per_page() -> int:
 def directory(request):
     from institutions.models import Institution
 
-    mentors = MentorProfile.objects.filter(
-        is_approved=True, is_active=True
-    ).select_related("user", "course", "institution")
+    live = MentorProfile.objects.filter(is_approved=True, is_active=True)
+    # Expert mentors cover every course, so they're pinned above the results
+    # whatever the student searches or filters by.
+    experts = (
+        live.filter(mentor_type=MentorProfile.EXPERT)
+        .select_related("user")
+        .order_by("display_order", "-average_rating", "pk")
+    )
+    mentors = live.filter(mentor_type=MentorProfile.STUDENT).select_related("user", "course", "institution")
 
     query       = request.GET.get("q", "").strip()
     institution = request.GET.get("institution", "").strip()
@@ -69,8 +75,11 @@ def directory(request):
         except ValueError:
             pass
 
-    # Only show mentors with at least one future open slot
-    mentors = mentors.filter(bookable_slots_q("slots__")).distinct()
+    # Every live mentor is listed; those with an open slot come first and the rest
+    # show "No slots available. Check back soon".
+    mentors = mentors.annotate(
+        has_open_slot=Exists(TimeSlot.objects.filter(bookable_slots_q(), mentor=OuterRef("pk")))
+    ).order_by("-has_open_slot", "-average_rating", "-total_sessions", "-created_at")
 
     from django.core.paginator import Paginator
     paginator = Paginator(mentors, _mentors_per_page())
@@ -92,6 +101,7 @@ def directory(request):
         })
 
     return render(request, "mentorship/directory.html", {
+        "experts": experts,
         "mentors": page_obj,
         "page_obj": page_obj,
         "total_count": paginator.count,
@@ -126,6 +136,7 @@ def mentor_profile(request, mentor_pk):
         "reviews": reviews,
         "star_range": range(1, 6),
         "session_price": mentor.effective_session_price(),
+        "session_minutes": mentor.effective_session_minutes(),
         "mentor_signup_enabled": MentorshipConfig.get().mentor_signup_enabled,
     })
 
@@ -223,6 +234,7 @@ def become_mentor(request):
     return render(request, "mentorship/become_mentor.html", {
         "form": form,
         "min_withdrawal": _mentor_min_withdrawal(),
+        "session_minutes": MentorshipConfig.get().session_minutes,
     })
 
 
@@ -264,6 +276,35 @@ def mentor_dashboard(request):
     })
 
 
+def _create_slots(mentor, date, times):
+    """Create open slots for `date`, skipping any that would overlap an existing slot
+    (or each other) given the mentor's session length. Returns (created, skipped)."""
+    minutes = mentor.effective_session_minutes()
+
+    def to_min(t):
+        return t.hour * 60 + t.minute
+
+    taken = [to_min(t) for t in TimeSlot.objects.filter(mentor=mentor, date=date).values_list("start_time", flat=True)]
+    created = skipped = 0
+    for t in sorted(set(times)):
+        start = to_min(t)
+        if any(abs(start - other) < minutes for other in taken):
+            if start not in taken:
+                skipped += 1
+            continue
+        TimeSlot.objects.get_or_create(mentor=mentor, date=date, start_time=t)
+        taken.append(start)
+        created += 1
+    return created, skipped
+
+
+def _overlap_note(skipped, mentor):
+    if not skipped:
+        return ""
+    return (f" {skipped} time(s) skipped — they overlap another slot "
+            f"({mentor.effective_session_minutes()}-min sessions).")
+
+
 @login_required
 @require_POST
 def add_slots(request):
@@ -277,16 +318,11 @@ def add_slots(request):
         all_times = [dt_time(*map(int, ts.split(":"))) for ts in times]
         if custom_time:
             all_times.append(custom_time)
-        created = 0
-        for t in all_times:
-            _, new = TimeSlot.objects.get_or_create(
-                mentor=mentor,
-                date=date,
-                start_time=t,
-            )
-            if new:
-                created += 1
-        messages.success(request, f"{created} slot(s) added for {date.strftime('%d %b %Y')}.")
+        created, skipped = _create_slots(mentor, date, all_times)
+        messages.success(
+            request,
+            f"{created} slot(s) added for {date.strftime('%d %b %Y')}." + _overlap_note(skipped, mentor),
+        )
     else:
         messages.error(request, "Please fix the errors below.")
 
@@ -309,22 +345,20 @@ def add_weekly_slots(request):
         all_times = [dt_time(*map(int, ts.split(":"))) for ts in times]
         if custom_time:
             all_times.append(custom_time)
-        created = 0
+        created = skipped = 0
         today = timezone.now().date()
         for day_offset in weekdays:
             slot_date = monday + timedelta(days=day_offset)
             if slot_date < today:
                 continue
-            for t in all_times:
-                _, new = TimeSlot.objects.get_or_create(
-                    mentor=mentor,
-                    date=slot_date,
-                    start_time=t,
-                )
-                if new:
-                    created += 1
+            day_created, day_skipped = _create_slots(mentor, slot_date, all_times)
+            created += day_created
+            skipped += day_skipped
         week_label = monday.strftime("%d %b") + " – " + (monday + timedelta(days=6)).strftime("%d %b %Y")
-        messages.success(request, f"{created} slot(s) added for the week of {week_label}.")
+        messages.success(
+            request,
+            f"{created} slot(s) added for the week of {week_label}." + _overlap_note(skipped, mentor),
+        )
     else:
         messages.error(request, "Please fix the errors in the weekly slot form.")
 
@@ -356,7 +390,7 @@ def complete_session(request, token):
     session.mentor.refresh_stats()
     send_rating_request(session)
 
-    messages.success(request, "Session marked as complete — great work!")
+    messages.success(request, "Session marked as complete. Great work.")
     return redirect("mentorship:dashboard")
 
 
@@ -370,7 +404,7 @@ def send_rating_request(session):
         banner_color="blue",
         greeting=f"Hi {session.mentee_display},",
         body_lines=[
-            f"Your 15-minute mentorship session with {session.mentor.display_name} is complete!",
+            f"Your {session.duration_minutes}-minute mentorship session with {session.mentor.display_name} is complete!",
             "Please take 30 seconds to rate your experience — your feedback helps future students choose great mentors.",
         ],
         cta_url=f"https://www.careernext.co.ke{session.get_absolute_url()}rate/",
@@ -380,6 +414,17 @@ def send_rating_request(session):
 
 
 # ── Booking Flow ──────────────────────────────────────────────────────────────
+
+def _course_names():
+    """Distinct course names for the expert booking form's autocomplete."""
+    from django.core.cache import cache
+    from courses.models import Course
+    names = cache.get("mentorship:course_names")
+    if names is None:
+        names = list(Course.objects.order_by("name").values_list("name", flat=True).distinct())
+        cache.set("mentorship:course_names", names, 60 * 60)
+    return names
+
 
 @login_required
 def book_session(request, mentor_pk):
@@ -400,16 +445,21 @@ def book_session(request, mentor_pk):
                 with transaction.atomic():
                     if not TimeSlot.objects.filter(pk=slot.pk, is_booked=False).update(is_booked=True):
                         raise IntegrityError("slot already booked")
+                    course_topic = form.cleaned_data.get("course_topic", "")
                     session = MentorshipSession.objects.create(
                         mentor=mentor,
                         mentee=request.user,
                         slot=slot,
-                        course_interest=mentor.course,
+                        course_interest=(
+                            form.matched_course() if mentor.is_expert else mentor.course
+                        ),
+                        course_topic=course_topic,
                         mentee_question=form.cleaned_data["mentee_question"],
                         mentee_phone=form.cleaned_data["mentee_phone"],
                         status="pending_payment",
                         amount=mentor.effective_session_price(),
                         mentor_payout=mentor.effective_mentor_payout(),
+                        duration_minutes=mentor.effective_session_minutes(),
                     )
             except IntegrityError:
                 messages.error(request, "That slot was just booked by someone else. Please choose another.")
@@ -417,8 +467,11 @@ def book_session(request, mentor_pk):
 
             return redirect("mentorship:checkout", token=session.token)
     else:
-        preselected_slot_id = request.GET.get("slot")
-        initial = {"slot": preselected_slot_id} if preselected_slot_id else {}
+        initial = {}
+        if request.GET.get("slot"):
+            initial["slot"] = request.GET["slot"]
+        if mentor.is_expert and request.GET.get("course"):
+            initial["course_topic"] = request.GET["course"][:150]
         form = BookingForm(mentor, initial=initial)
 
     cfg = MentorshipConfig.get()
@@ -426,6 +479,8 @@ def book_session(request, mentor_pk):
         "mentor": mentor,
         "form": form,
         "session_price": mentor.effective_session_price(),
+        "session_minutes": mentor.effective_session_minutes(),
+        "course_names": _course_names() if mentor.is_expert else [],
         "mentor_signup_enabled": cfg.mentor_signup_enabled,
     })
 
@@ -520,7 +575,7 @@ def initiate_payment(request, token):
         session.save(update_fields=["phone_used", "payment_ref"])
         payment.checkout_id = checkout_id
         payment.save(update_fields=["checkout_id"])
-        return JsonResponse({"ok": True, "message": "STK push sent — enter your M-Pesa PIN on your phone."})
+        return JsonResponse({"ok": True, "message": "STK push sent. Enter your M-Pesa PIN on your phone."})
     except Exception as exc:
         logger.error("Mentorship STK push failed: %s", exc)
         payment.status = "failed"
@@ -560,7 +615,7 @@ def verify_payment_manual(request, token):
                 _confirm_session_after_payment(session, source="mentorship:verify_payment_manual")
                 messages.success(
                     request,
-                    "Payment verified! Your session is now confirmed. "
+                    "Payment verified. Your session is now confirmed. "
                     "Check your email for the full details and your mentor's WhatsApp number."
                 )
                 return redirect("mentorship:session_detail", token=token)
@@ -990,7 +1045,7 @@ def rate_session(request, token):
             session.review = form.cleaned_data.get("review", "")
             session.save(update_fields=["rating", "review"])
             session.mentor.refresh_stats()
-            messages.success(request, "Thank you for your feedback! It helps future students greatly.")
+            messages.success(request, "Thank you for your feedback. It helps future students greatly.")
             return redirect("mentorship:session_detail", token=token)
     else:
         form = RatingForm()
@@ -1054,14 +1109,15 @@ def edit_mentor_profile(request):
             "You will be able to edit it once it has been approved."
         )
         return redirect("mentorship:dashboard")
+    form_class = ExpertProfileForm if mentor.is_expert else MentorRegistrationForm
     if request.method == "POST":
-        form = MentorRegistrationForm(request.POST, request.FILES, instance=mentor)
+        form = form_class(request.POST, request.FILES, instance=mentor)
         if form.is_valid():
             form.save()
             messages.success(request, "Profile updated successfully.")
             return redirect("mentorship:dashboard")
     else:
-        form = MentorRegistrationForm(instance=mentor)
+        form = form_class(instance=mentor)
     return render(request, "mentorship/edit_profile.html", {"form": form, "mentor": mentor})
 
 
@@ -1151,8 +1207,8 @@ def _send_booking_confirmation(session: MentorshipSession):
     # ── Email to MENTEE ───────────────────────────────────────────────────────
     mentee_rows = [
         {"label": "Mentor",   "value": mentor_name},
-        {"label": "Course",   "value": session.mentor.course},
-        {"label": "When",     "value": f"{slot_str} (15 min)"},
+        {"label": "Course",   "value": session.course_topic or session.mentor.course or "General guidance"},
+        {"label": "When",     "value": f"{slot_str} ({session.duration_minutes} min)"},
         {"label": "WhatsApp", "value": session.mentor.whatsapp},
     ]
     try:
@@ -1173,7 +1229,7 @@ def _send_booking_confirmation(session: MentorshipSession):
                 f"How to connect: WhatsApp {mentor_name} on {session.mentor.whatsapp} to agree on how you'll meet "
                 f"(WhatsApp Video, Google Meet, or phone call). "
                 f"Your discussion topic: \"{session.mentee_question}\". "
-                f"Be on time — it's only 15 minutes. "
+                f"Be on time — it's only {session.duration_minutes} minutes. "
                 f"A calendar invite (.ics) is attached to this email."
             ),
             user_email=session.mentee.email,
@@ -1193,8 +1249,10 @@ def _send_booking_confirmation(session: MentorshipSession):
     ]
     if session.mentee_phone:
         mentor_rows.append({"label": "Phone", "value": session.mentee_phone})
+    if session.course_topic:
+        mentor_rows.append({"label": "Course", "value": session.course_topic})
     mentor_rows += [
-        {"label": "When",     "value": f"{slot_str} (15 min)"},
+        {"label": "When",     "value": f"{slot_str} ({session.duration_minutes} min)"},
         {"label": "You earn", "value": f"KES {session.mentor_payout}", "highlight": True},
     ]
     try:
@@ -1206,7 +1264,7 @@ def _send_booking_confirmation(session: MentorshipSession):
             banner_color="blue",
             greeting=f"Hi {mentor_name},",
             body_lines=[
-                "A student has booked a 15-minute session with you. Here are the details:",
+                f"A student has booked a {session.duration_minutes}-minute session with you. Here are the details:",
             ],
             table_rows=mentor_rows,
             cta_url=gcal_link,
@@ -1490,7 +1548,7 @@ def request_withdrawal(request):
             cta_label="View Dashboard →",
             user_email=mentor.user.email,
         )
-        messages.success(request, f"KES {amount} has been sent to {mpesa} via M-Pesa!")
+        messages.success(request, f"KES {amount} has been sent to {mpesa} via M-Pesa.")
 
     except Exception as exc:
         wr.refresh_from_db()
@@ -1500,7 +1558,7 @@ def request_withdrawal(request):
             wr.save(update_fields=["status", "admin_note"])
             record("mentor.payout_failed", wr, request=request, amount=amount, error=exc)
         logger.error("Mentor payout failed for %s: %s", mentor.pk, exc)
-        messages.error(request, "Payout failed — please try again or contact support.")
+        messages.error(request, "Payout failed. Please try again or contact support.")
 
     notify_admin_withdrawal(
         kind="Mentor",

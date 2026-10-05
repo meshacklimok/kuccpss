@@ -18,7 +18,7 @@
         </h1>
         <p class="lead mb-4" style="color:#bfdbfe;line-height:1.75;">
           Guide the next generation of Kenyan students, answer their questions about your
-          course, campus life, and career prospects in a focused 15-minute WhatsApp call.
+          course, campus life, and career prospects in a focused {{ session_minutes }}-minute WhatsApp call.
           You earn <strong class="text-white">KES 70</strong> for every session you complete.
         </p>
         <div class="d-flex flex-wrap gap-4 mb-4">
@@ -56,7 +56,7 @@
             </div>
             <div class="col-6">
               <div class="rounded-3 p-3 text-center" style="background:rgba(255,255,255,.12);">
-                <div class="fw-bold" style="font-size:1.6rem;color:#93c5fd;">15 min</div>
+                <div class="fw-bold" style="font-size:1.6rem;color:#93c5fd;">{{ session_minutes }} min</div>
                 <div style="font-size:.78rem;color:#bfdbfe;">per call</div>
               </div>
             </div>
@@ -205,7 +205,7 @@
               {% endif %}
               <div class="form-text">
                 Tell students what you study, what you enjoy, challenges you've overcome,
-                and what you can genuinely help with in 15 minutes. Max 600 characters.
+                and what you can genuinely help with in {{ session_minutes }} minutes. Max 600 characters.
                 <strong>Be honest, students choose mentors based on this.</strong>
               </div>
             </div>
@@ -349,7 +349,7 @@
             <li>On approval, your profile goes live on the directory.</li>
             <li>Add your available time slots to your dashboard.</li>
             <li>Students book and pay KES 100, you receive KES 70.</li>
-            <li>Conduct the 15-minute WhatsApp call at the booked time.</li>
+            <li>Conduct the {{ session_minutes }}-minute WhatsApp call at the booked time.</li>
             <li>Withdraw your earnings anytime via M-Pesa.</li>
           </ol>
         </div>

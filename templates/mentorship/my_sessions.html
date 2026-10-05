@@ -41,7 +41,7 @@
                   </div>
                 <div class="flex-grow-1 min-w-0">
                   <div class="fw-bold text-dark">{{ session.mentor.display_name }}</div>
-                  <div class="text-muted small text-truncate">{{ session.mentor.course }}</div>
+                  <div class="text-muted small text-truncate">{% if session.mentor.is_expert %}Expert Mentor{% if session.course_topic %} · {{ session.course_topic }}{% endif %}{% else %}{{ session.mentor.course }}{% endif %}</div>
                   <div class="text-muted small">{{ session.slot.datetime_display }}</div>
                 </div>
                 <span class="badge rounded-pill px-3 py-2 flex-shrink-0
@@ -109,7 +109,7 @@
     <div class="text-center py-5">
       <i class="bi bi-calendar-x display-4 text-muted opacity-50 d-block mb-3"></i>
       <h5 class="text-muted">No sessions yet</h5>
-      <p class="text-muted small">Book a 15-minute call with a student studying the course you're interested in.</p>
+      <p class="text-muted small">Book a short call with an expert, or with a student studying the course you're interested in.</p>
       <a href="{% url 'mentorship:directory' %}" class="btn btn-primary rounded-pill px-4 mt-2">
         Find a Mentor
       </a>

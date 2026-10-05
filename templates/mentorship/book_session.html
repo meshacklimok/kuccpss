@@ -23,14 +23,19 @@
           </div>
         <div>
           <div class="fw-bold">{{ mentor.display_name }}</div>
-          <div class="text-muted small">{{ mentor.course }} · {{ mentor.institution }}</div>
-          <div class="text-muted small">{{ mentor.get_year_of_study_display }}</div>
+          {% if mentor.is_expert %}
+            <div class="text-muted small"><i class="bi bi-patch-check-fill text-warning me-1"></i>Expert Mentor{% if mentor.headline %} · {{ mentor.headline }}{% endif %}</div>
+            <div class="text-muted small">Any course · general guidance</div>
+          {% else %}
+            <div class="text-muted small">{{ mentor.course }} · {{ mentor.institution }}</div>
+            <div class="text-muted small">{{ mentor.get_year_of_study_display }}</div>
+          {% endif %}
         </div>
       </div>
 
       <div class="card border-0 shadow-sm rounded-4">
         <div class="card-body p-4 p-md-5">
-          <h4 class="fw-bold mb-1">Book a 15-Minute Session</h4>
+          <h4 class="fw-bold mb-1">Book a {{ session_minutes }}-Minute Session</h4>
           <p class="text-muted mb-4">KES {{ session_price }} · Paid via M-Pesa · WhatsApp Call</p>
 
           {% if messages %}
@@ -59,7 +64,7 @@
                     </label>
                   </div>
                 {% empty %}
-                  <div class="alert alert-warning small mb-0 m-2">No open slots available for this mentor right now.</div>
+                  <div class="alert alert-warning small mb-0 m-2">No slots available. Check back soon.</div>
                 {% endfor %}
               </div>
               {% if form.slot.errors %}
@@ -68,6 +73,20 @@
             </div>
 
             <!-- Question -->
+            {% if form.course_topic %}
+            <div class="mb-4">
+              <label class="form-label fw-semibold" for="{{ form.course_topic.id_for_label }}">{{ form.course_topic.label }}</label>
+              {{ form.course_topic }}
+              <datalist id="course-options">
+                {% for name in course_names %}<option value="{{ name }}">{% endfor %}
+              </datalist>
+              <div class="form-text">{{ form.course_topic.help_text }}</div>
+              {% if form.course_topic.errors %}
+                <div class="text-danger small mt-1">{{ form.course_topic.errors }}</div>
+              {% endif %}
+            </div>
+            {% endif %}
+
             <div class="mb-4">
               <label class="form-label fw-semibold">{{ form.mentee_question.label }} <span class="text-danger">*</span></label>
               {{ form.mentee_question }}

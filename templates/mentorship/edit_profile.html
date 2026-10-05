@@ -29,6 +29,14 @@
               <div class="alert alert-danger rounded-3">{{ form.non_field_errors }}</div>
             {% endif %}
 
+            {% if mentor.is_expert %}
+            <div class="mb-4">
+              <label class="form-label fw-semibold">{{ form.headline.label }}</label>
+              {{ form.headline }}
+              <div class="form-text">Shown under your name on your mentor card.</div>
+              {% if form.headline.errors %}<div class="text-danger small mt-1">{{ form.headline.errors }}</div>{% endif %}
+            </div>
+            {% else %}
             <div class="mb-4">
               <label class="form-label fw-semibold">{{ form.course.label }}</label>
               {{ form.course }}
@@ -46,6 +54,7 @@
               {{ form.year_of_study }}
               {% if form.year_of_study.errors %}<div class="text-danger small mt-1">{{ form.year_of_study.errors }}</div>{% endif %}
             </div>
+            {% endif %}
 
             <div class="mb-4">
               <label class="form-label fw-semibold">{{ form.bio.label }}</label>

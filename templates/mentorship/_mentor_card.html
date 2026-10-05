@@ -1,0 +1,107 @@
+{# One mentor card. Used by the directory grid and the expert section. #}
+<div class="col-sm-6 col-lg-4">
+  <div class="mc h-100{% if mentor.is_expert %} mc-expert{% endif %}">
+
+    <!-- Card header: avatar + price -->
+    <div class="mc-header">
+      <div class="mc-avatar-wrap">
+          <div class="mc-avatar mc-avatar-initials">{{ mentor.display_name|first|upper }}</div>
+        {% with slots=mentor.available_slots_count %}
+          <span class="mc-dot {% if slots > 0 %}mc-dot-open{% else %}mc-dot-closed{% endif %}"></span>
+        {% endwith %}
+      </div>
+      <span class="mc-price">KES {{ mentor.effective_session_price }}{% if mentor.is_expert %} <small>/ {{ mentor.effective_session_minutes }} min</small>{% endif %}</span>
+    </div>
+
+    <!-- Card body -->
+    <div class="mc-body">
+
+      <!-- Name + year (students) / headline (experts) -->
+      <div class="mc-name-row">
+        <h5 class="mc-name text-truncate">{{ mentor.display_name }}</h5>
+        {% if mentor.is_expert %}
+          <span class="mc-expert-badge"><i class="bi bi-patch-check-fill"></i> Expert</span>
+        {% else %}
+          <span class="mc-year">{{ mentor.get_year_of_study_display }}</span>
+        {% endif %}
+      </div>
+      {% if mentor.is_expert and mentor.headline %}
+        <div class="mc-headline">{{ mentor.headline }}</div>
+      {% endif %}
+
+      <!-- Rating -->
+      {% if mentor.total_sessions > 0 %}
+        <div class="mc-rating">
+          <span class="mc-stars">
+            {% for i in "12345" %}
+              <i class="bi bi-star{% if forloop.counter <= mentor.rating_int %}-fill{% endif %}"></i>
+            {% endfor %}
+          </span>
+          <span class="mc-rating-txt">{{ mentor.average_rating|floatformat:1 }} &middot; {{ mentor.total_sessions }} session{{ mentor.total_sessions|pluralize }}</span>
+        </div>
+      {% endif %}
+      {% if mentor.show_new_badge %}
+        <span class="mc-new-badge">New mentor</span>
+      {% endif %}
+
+      {% if mentor.is_expert %}
+        <div class="mc-chips">
+          <span class="mc-chip"><i class="bi bi-compass-fill"></i> Any course</span>
+          <span class="mc-chip"><i class="bi bi-clock-fill"></i> {{ mentor.effective_session_minutes }}-min call</span>
+          <span class="mc-chip"><i class="bi bi-whatsapp"></i> WhatsApp</span>
+        </div>
+      {% endif %}
+
+      <!-- Meta -->
+      <div class="mc-meta">
+        {% if mentor.course %}
+          <div class="mc-meta-row">
+            <i class="bi bi-book-fill"></i>
+            <span class="text-truncate">{{ mentor.course.name }}</span>
+          </div>
+        {% endif %}
+        {% if mentor.institution %}
+          <div class="mc-meta-row">
+            <i class="bi bi-building"></i>
+            <span class="text-truncate">{{ mentor.institution.name }}</span>
+          </div>
+        {% endif %}
+      </div>
+
+      <!-- Bio -->
+      {% if mentor.bio %}
+        <p class="mc-bio">{{ mentor.bio }}</p>
+      {% endif %}
+
+      <!-- Footer -->
+      {% with slots=mentor.available_slots_count %}
+      <div class="mc-footer">
+        {% if slots > 0 %}
+          <span class="mc-avail mc-avail-open">
+            <i class="bi bi-calendar-check-fill"></i> {{ slots }} slot{{ slots|pluralize }} open
+          </span>
+        {% else %}
+          <span class="mc-avail mc-avail-closed">
+            <i class="bi bi-calendar-x"></i> No slots available. Check back soon
+          </span>
+        {% endif %}
+        {% if mentor.is_expert and slots > 0 %}
+          <a href="{% url 'mentorship:book_session' mentor.pk %}"
+             class="mc-cta btn btn-primary btn-sm rounded-pill px-3 fw-semibold">
+            Book Session
+          </a>
+        {% else %}
+          <a href="{% url 'mentorship:mentor_profile' mentor.pk %}"
+             class="mc-cta btn btn-primary btn-sm rounded-pill px-3 fw-semibold">
+            View Profile
+          </a>
+        {% endif %}
+      </div>
+      {% if mentor.is_expert and slots > 0 %}
+        <a href="{% url 'mentorship:mentor_profile' mentor.pk %}" class="mc-more">View full profile <i class="bi bi-arrow-right"></i></a>
+      {% endif %}
+      {% endwith %}
+    </div>
+
+  </div>
+</div>
