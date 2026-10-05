@@ -1,0 +1,269 @@
+"""
+Copy site content (mentors, quiz, career profiles, FAQs, calendar, configs…) from
+one database to another without relying on primary keys.
+
+    python manage.py sync_content --export   # local: writes data/live_content.json (+ data/live_media/)
+    python manage.py sync_content            # live:  upserts it; skipped if this exact file was already applied
+    python manage.py sync_content --force    # live:  apply even if already applied
+    python manage.py sync_content --with-portal  # build.sh: also run import_kuccps_portal once per data change
+
+Rows are matched on natural keys (slug, email, unique fields), so it's safe to run
+against a database whose ids differ. User activity (sessions, payments, logins,
+quiz submissions) is never exported. Mentor accounts are created with an unusable
+password — they set one via "Forgot password".
+"""
+import hashlib
+import json
+import os
+import shutil
+
+from django.apps import apps
+from django.conf import settings
+from django.contrib.auth import get_user_model
+from django.core.files import File
+from django.core.files.storage import default_storage
+from django.core.management.base import BaseCommand, CommandError
+from django.db import models, transaction
+
+DATA_FILE = os.path.join(settings.BASE_DIR, 'data', 'live_content.json')
+MEDIA_DIR = os.path.join(settings.BASE_DIR, 'data', 'live_media')
+MARKER_KEY = '_content_sync_hash'
+PORTAL_MARKER_KEY = '_portal_import_hash'
+
+# How a foreign-key target is identified across databases
+FK_KEYS = {
+    'accounts.User': 'email',
+    'courses.Course': 'slug',
+    'institutions.Institution': 'slug',
+    'career.CareerProfile': 'slug',
+    'career.QuizQuestion': 'text',
+    'resources.CalendarCycle': 'title',
+}
+
+# (model, match fields — empty means singleton, fields never copied)
+SPECS = [
+    ('resources.SiteSetting',        ['key'], []),
+    ('resources.FAQItem',            ['question'], []),
+    ('resources.SuccessStory',       ['name', 'quote'], []),
+    ('resources.Article',            ['slug'], []),
+    ('resources.DeadlineBanner',     [], []),
+    ('resources.CalendarCycle',      ['title'], []),
+    ('resources.CalendarEvent',      ['cycle', 'title'], []),
+    ('career.CareerConfig',          [], []),
+    ('career.SubmissionLockConfig',  ['feature'], []),
+    ('career.CareerProfile',         ['slug'], []),
+    ('career.QuizQuestion',          ['text'], []),
+    ('career.QuizOption',            ['question', 'text'], []),
+    ('career.AIKnowledgeEntry',      ['question'], []),
+    ('career.JobMarketData',         ['career_name'], []),
+    ('payments.PaymentFeature',      ['feature'], []),
+    ('predictor.PredictionConfig',   [], []),
+    ('mentorship.MentorshipConfig',  [], []),
+    ('courses.CourseSpotlight',      ['course'], []),
+    ('institutions.InstitutionPromotion', ['institution'], []),
+    ('accounts.User',                ['email'], []),   # mentor accounts only, see _queryset
+    ('mentorship.MentorProfile',     ['user'], [
+        # earnings/stats come from real sessions and payments, and ID documents stay private
+        'wallet_balance', 'total_earned', 'payout_debt', 'total_sessions', 'average_rating',
+        'student_id_upload', 'portal_screenshot',
+    ]),
+    ('mentorship.TimeSlot',          ['mentor', 'date', 'start_time'], ['is_booked']),
+]
+
+USER_FIELDS = ['email', 'full_name', 'is_active', 'is_verified', 'phone_number', 'county']
+
+
+def _queryset(label):
+    model = apps.get_model(label)
+    if label == 'accounts.User':
+        return model.objects.filter(pk__in=apps.get_model('mentorship.MentorProfile').objects.values('user_id'))
+    if label == 'mentorship.TimeSlot':
+        from django.utils import timezone
+        return model.objects.filter(date__gte=timezone.localdate(), is_booked=False)
+    return model.objects.all()
+
+
+def _fields(model, skip):
+    for f in model._meta.fields:
+        if f.primary_key or f.name in skip or f.name in ('created_at', 'updated_at'):
+            continue
+        if model is get_user_model() and f.name not in USER_FIELDS:
+            continue
+        yield f
+
+
+def _fk_key(f):
+    return FK_KEYS.get(f.related_model._meta.label, None)
+
+
+class Command(BaseCommand):
+    help = 'Export/import site content between databases by natural keys'
+
+    def add_arguments(self, parser):
+        parser.add_argument('--export', action='store_true', help='Write data/live_content.json from this database')
+        parser.add_argument('--force', action='store_true', help='Import even if this file was already applied')
+        parser.add_argument('--dry-run', action='store_true', help='Import, report, then roll back')
+        parser.add_argument('--with-portal', action='store_true',
+                            help='First run import_kuccps_portal if data/kuccps_portal_degrees.json changed '
+                                 'since it was last imported (18 clusters + degree courses)')
+
+    def _portal_import(self):
+        from django.core.management import call_command
+        path = os.path.join(settings.BASE_DIR, 'data', 'kuccps_portal_degrees.json')
+        if not os.path.exists(path):
+            return
+        digest = hashlib.sha256(open(path, 'rb').read()).hexdigest()
+        SiteSetting = apps.get_model('resources.SiteSetting')
+        if SiteSetting.objects.filter(key=PORTAL_MARKER_KEY, value=digest).exists():
+            self.stdout.write('KUCCPS portal data already imported — skipping')
+            return
+        call_command('import_kuccps_portal', stdout=self.stdout, stderr=self.stderr)
+        SiteSetting.objects.update_or_create(key=PORTAL_MARKER_KEY, defaults={
+            'value': digest, 'label': 'Portal import marker (internal)', 'group': 'system'})
+
+    def handle(self, *args, **opts):
+        if opts['export']:
+            return self._export()
+        if opts['with_portal']:
+            self._portal_import()
+        if not os.path.exists(DATA_FILE):
+            self.stdout.write('No data/live_content.json — nothing to sync')
+            return
+        raw = open(DATA_FILE, 'rb').read()
+        digest = hashlib.sha256(raw).hexdigest()
+        SiteSetting = apps.get_model('resources.SiteSetting')
+        if not opts['force'] and SiteSetting.objects.filter(key=MARKER_KEY, value=digest).exists():
+            self.stdout.write('Content already synced — skipping')
+            return
+        try:
+            with transaction.atomic():
+                self._import(json.loads(raw))
+                SiteSetting.objects.update_or_create(key=MARKER_KEY, defaults={
+                    'value': digest, 'label': 'Content sync marker (internal)', 'group': 'system'})
+                if opts['dry_run']:
+                    raise _Rollback
+        except _Rollback:
+            self.stdout.write(self.style.WARNING('Dry run — rolled back'))
+
+    # ── export ──────────────────────────────────────────────────────────────
+    def _export(self):
+        out, files = {}, set()
+        for label, keys, skip in SPECS:
+            model = apps.get_model(label)
+            rows = []
+            for obj in _queryset(label):
+                row = {}
+                for f in _fields(model, skip):
+                    val = getattr(obj, f.name if not f.is_relation else f.attname)
+                    if f.is_relation:
+                        target = getattr(obj, f.name)
+                        if target is not None and f.related_model._meta.label == 'mentorship.MentorProfile':
+                            val = target.user.email
+                        elif target is not None:
+                            k = _fk_key(f)
+                            if not k:
+                                raise CommandError(f'No natural key for {label}.{f.name}')
+                            val = getattr(target, k)
+                    elif isinstance(f, models.FileField):
+                        val = val.name if val else ''
+                        if val and os.path.exists(os.path.join(settings.MEDIA_ROOT, val)):
+                            files.add(val)
+                    elif val is not None and not isinstance(val, (str, int, float, bool)):
+                        val = str(val)
+                    row[f.name] = val
+                for m2m in model._meta.many_to_many:
+                    k = FK_KEYS.get(m2m.related_model._meta.label)
+                    if k:
+                        row[m2m.name] = sorted(getattr(t, k) for t in getattr(obj, m2m.name).all())
+                rows.append(row)
+            out[label] = rows
+            self.stdout.write(f'{label:38} {len(rows)}')
+
+        with open(DATA_FILE, 'w', encoding='utf-8') as fh:
+            json.dump(out, fh, indent=1, ensure_ascii=False, sort_keys=True)
+        shutil.rmtree(MEDIA_DIR, ignore_errors=True)
+        for name in files:
+            dest = os.path.join(MEDIA_DIR, name)
+            os.makedirs(os.path.dirname(dest), exist_ok=True)
+            shutil.copy2(os.path.join(settings.MEDIA_ROOT, name), dest)
+        self.stdout.write(self.style.SUCCESS(f'Wrote {DATA_FILE} and {len(files)} media file(s)'))
+
+    # ── import ──────────────────────────────────────────────────────────────
+    def _resolve(self, f, value):
+        if value in (None, ''):
+            return None
+        rel = f.related_model
+        if rel._meta.label == 'mentorship.MentorProfile':
+            return rel.objects.filter(user__email=value).first()
+        return rel.objects.filter(**{_fk_key(f): value}).first()
+
+    def _import(self, data):
+        for label, keys, skip in SPECS:
+            model = apps.get_model(label)
+            created = updated = missing = 0
+            for row in data.get(label, []):
+                values, m2m, file_vals, broken = {}, {}, {}, False
+                for f in _fields(model, skip):
+                    if f.name not in row:
+                        continue
+                    v = row[f.name]
+                    if f.is_relation:
+                        target = self._resolve(f, v)
+                        if v and target is None:
+                            if f.name in keys or not f.null:
+                                broken = True
+                                break
+                            self.stdout.write(f'  {label}: {f.name}={v!r} not on this site — left blank')
+                        values[f.name] = target
+                    elif isinstance(f, models.FileField):
+                        file_vals[f.name] = v
+                    else:
+                        values[f.name] = f.to_python(v) if v is not None else None
+                if broken:
+                    missing += 1
+                    continue
+                for m in model._meta.many_to_many:
+                    if m.name in row:
+                        k = FK_KEYS[m.related_model._meta.label]
+                        m2m[m.name] = list(m.related_model.objects.filter(**{f'{k}__in': row[m.name]}))
+
+                lookup = {k: values[k] for k in keys}
+                obj = model.objects.filter(**lookup).first() if keys else model.objects.order_by('pk').first()
+                if label == 'accounts.User':
+                    if obj:   # never touch an existing live account
+                        continue
+                    obj = model(**values)
+                    obj.set_unusable_password()
+                    created += 1
+                elif obj is None:
+                    obj = model(**values)
+                    created += 1
+                else:
+                    for k, v in values.items():
+                        setattr(obj, k, v)
+                    updated += 1
+                for name, path in file_vals.items():
+                    self._attach(obj, name, path)
+                obj.save()
+                for name, targets in m2m.items():
+                    getattr(obj, name).set(targets)
+            self.stdout.write(f'{label:38} +{created} ~{updated}' + (f' skipped {missing}' if missing else ''))
+
+    def _attach(self, obj, name, path):
+        """Upload a bundled media file to this site's storage (Cloudinary on live)."""
+        current = getattr(obj, name)
+        if not path:
+            return
+        if current and current.name == path and default_storage.exists(path):
+            return
+        src = os.path.join(MEDIA_DIR, path)
+        if not os.path.exists(src):
+            if not current:
+                setattr(obj, name, path)   # keep the reference; file may already be in storage
+            return
+        with open(src, 'rb') as fh:
+            getattr(obj, name).save(os.path.basename(path), File(fh), save=False)
+
+
+class _Rollback(Exception):
+    pass
