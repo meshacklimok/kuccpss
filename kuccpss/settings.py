@@ -211,6 +211,7 @@ TEMPLATES = [
                 'analytics.context_processors.posthog_keys',
                 'analytics.context_processors.sentry_context',
                 'analytics.context_processors.ga_context',
+                'analytics.context_processors.turnstile_context',
                 'analytics.context_processors.data_version',
             ],
         },
@@ -414,6 +415,11 @@ GOOGLE_OAUTH_AVAILABLE = bool(_google_client_id)
 
 
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
+
+# Cloudflare Turnstile bot check on login/register/password reset (kuccpss/turnstile.py).
+# Both keys unset → check disabled.
+TURNSTILE_SITE_KEY = os.environ.get("TURNSTILE_SITE_KEY", "")
+TURNSTILE_SECRET_KEY = os.environ.get("TURNSTILE_SECRET_KEY", "")
 
 # MaxMind GeoLite2 — place GeoLite2-City.mmdb in BASE_DIR/geoip/
 # Download free at: https://dev.maxmind.com/geoip/geolite2-free-geolocation-data

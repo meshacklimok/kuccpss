@@ -32,7 +32,8 @@ class ContentSecurityPolicyMiddleware:
             "https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://unpkg.com "
             "https://code.jquery.com https://www.googletagmanager.com "
             "https://browser.sentry-cdn.com https://embed.tawk.to https://va.tawk.to "
-            "https://accounts.google.com https://apis.google.com",
+            "https://accounts.google.com https://apis.google.com "
+            "https://challenges.cloudflare.com",
         "style-src 'self' 'unsafe-inline' "
             "https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.googleapis.com",
         "font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com data:",
@@ -42,7 +43,8 @@ class ContentSecurityPolicyMiddleware:
         "connect-src 'self' https://www.google-analytics.com https://analytics.google.com "
             "https://eu.posthog.com https://app.posthog.com https://*.sentry.io "
             "https://embed.tawk.to https://va.tawk.to wss://va.tawk.to",
-        "frame-src 'self' https://accounts.google.com https://embed.tawk.to",
+        "frame-src 'self' https://accounts.google.com https://embed.tawk.to "
+            "https://challenges.cloudflare.com",
         "object-src 'none'",
         "base-uri 'self'",
         "form-action 'self' https://accounts.google.com",

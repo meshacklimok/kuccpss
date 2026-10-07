@@ -1,4 +1,5 @@
 from django.urls import path, include
+from django.views.generic import RedirectView
 from . import staff_2fa, views
 
 app_name = "accounts"
@@ -52,6 +53,10 @@ urlpatterns = [
     # ==============================
     # Allauth URLs (Google OAuth + built-in email/password)
     # ==============================
+    # Shadow allauth's own signup and reset routes so they can't bypass the
+    # rate limits and Turnstile check on our register / reset views.
+    path("signup/", RedirectView.as_view(pattern_name="accounts:register", query_string=True)),
+    path("password/reset/", views.TurnstilePasswordResetView.as_view()),
     path("", include("allauth.urls")),
     path("terms/", views.terms_view, name="terms"),
     path("about/", views.about_view, name="about"),
