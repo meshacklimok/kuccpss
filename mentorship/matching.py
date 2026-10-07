@@ -56,8 +56,8 @@ def match_rank(a, b):
 
 def student_mentors_for_course(course, limit=3):
     """Live student mentors studying `course` or a close variation, best match first:
-    same course, then same core name, then variations; within each, mentors with an
-    open slot and higher ratings first."""
+    same course, then same core name, then variations; within each, admin-pinned
+    mentors, then most completed sessions, then an open slot, then higher ratings."""
     from django.db.models import Exists, OuterRef
 
     from .models import MentorProfile, TimeSlot, bookable_slots_q
@@ -75,6 +75,7 @@ def student_mentors_for_course(course, limit=3):
     for mentor in mentors:
         rank = EXACT if mentor.course_id == course.pk else match_rank(target, course_core(mentor.course.name))
         if rank is not None:
-            ranked.append((rank, not mentor.has_open_slot, -mentor.average_rating, mentor.pk, mentor))
-    ranked.sort(key=lambda r: r[:4])
+            ranked.append((rank, not mentor.is_pinned, -mentor.total_sessions, not mentor.has_open_slot,
+                           -mentor.average_rating, mentor.pk, mentor))
+    ranked.sort(key=lambda r: r[:-1])
     return [r[-1] for r in ranked[:limit]]

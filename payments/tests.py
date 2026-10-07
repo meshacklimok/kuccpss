@@ -260,6 +260,15 @@ class VerifyByTransactionCodeTests(TestCase):
         self.assertEqual(payment.status, "completed")
         self.assertTrue(payment.transactions.filter(mpesa_ref="TGH4ABC123").exists())
 
+    @patch("payments.views.fetch_intasend_invoice", return_value={"state": "COMPLETE", "mpesa_ref": "TGH4ABC123"})
+    def test_intasend_ref_stored_over_submitted_code(self, fetch, fulfil):
+        payment = Payment.objects.create(
+            user=self.user, feature="ai_chat_access", amount=50, status="failed", checkout_id="CHK1",
+        )
+        self.assertEqual(self.post("Invoice R7KQ2PX9WZ paid").json()["status"], "completed")
+        payment.refresh_from_db()
+        self.assertEqual(payment.mpesa_code, "TGH4ABC123")
+
     @patch("payments.views.fetch_intasend_invoice", return_value={"state": "PENDING", "mpesa_ref": ""})
     def test_unconfirmed_code_queued_for_review(self, fetch, fulfil):
         payment = Payment.objects.create(

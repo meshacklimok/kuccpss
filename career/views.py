@@ -15,6 +15,7 @@ from .models import (
     CareerProfile, QuizQuestion, QuizSubmission, QuizAnswer, SharedResult,
 )
 from .engine import career_guidance_engine
+from kuccpss.seo import career_profile_meta
 from typing import Dict, List
 
 # =====================================================
@@ -578,6 +579,7 @@ def career_profile_detail(request, slug):
         "related": related,
         "courses_by_type": courses_by_type,
         "total_linked": len(raw_courses),
+        "seo": career_profile_meta(profile, len(raw_courses)),
     })
 
 

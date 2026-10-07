@@ -5,10 +5,14 @@ from django.core.paginator import Paginator
 from django.db.models import Avg, Count
 from django.http import JsonResponse
 from django.shortcuts import render, get_object_or_404, redirect
+from django.urls import reverse
 from django.views.decorators.cache import cache_page
 from django.views.decorators.http import require_POST
-from .models import CourseType, CourseCategory, Course, Review
-from .programmes import find_variations, group_by_programme, search_courses
+from collections import defaultdict
+
+from .models import CourseType, CourseCategory, Course, CourseOffering, Review, LATEST_CUTOFF_YEAR
+from .programmes import find_variations, group_by_programme, search_courses, split_course_name
+from kuccpss.seo import course_meta
 
 log = logging.getLogger(__name__)
 
@@ -19,6 +23,61 @@ def _courses_per_page() -> int:
         return int(SiteSetting.get('courses_per_page', '24'))
     except (TypeError, ValueError):
         return 24
+
+COURSE_SORTS = {
+    'name': 'A–Z',
+    'popular': 'Most offered',
+    'cutoff_high': 'Highest cutoff',
+    'cutoff_low': 'Lowest cutoff',
+}
+
+
+def _course_cards(qs, q, sort):
+    """
+    Courses for a listing page as a list, each annotated for the course card:
+    n_institutions, cutoff_low/high (LATEST_CUTOFF_YEAR across offerings),
+    qualification + title (split from the portal's ALL-CAPS name).
+    """
+    qs = qs.annotate(n_institutions=Count('offerings'))
+    courses = search_courses(q, qs) if q else list(qs.order_by('name'))
+
+    cutoffs = defaultdict(list)
+    offerings = CourseOffering.objects.filter(course__in=qs).values_list('course_id', 'cutoff_points')
+    for course_id, cp in offerings:
+        try:
+            cutoffs[course_id].append(float((cp or {})[LATEST_CUTOFF_YEAR]))
+        except (KeyError, TypeError, ValueError):
+            pass
+
+    for c in courses:
+        cs = cutoffs.get(c.pk)
+        c.cutoff_low = min(cs) if cs else None
+        c.cutoff_high = max(cs) if cs else None
+        c.qualification, c.title = split_course_name(c.name)
+
+    # Several portal names can shorten to the same card title; show the official name on those
+    seen = defaultdict(int)
+    for c in courses:
+        seen[(c.qualification, c.title.lower())] += 1
+    for c in courses:
+        c.show_full_name = seen[(c.qualification, c.title.lower())] > 1
+
+    # Stable sorts keep the relevance/name order as the tiebreak
+    if sort == 'popular':
+        courses.sort(key=lambda c: -c.n_institutions)
+    elif sort == 'cutoff_high':
+        courses.sort(key=lambda c: (c.cutoff_high is None, -(c.cutoff_high or 0)))
+    elif sort == 'cutoff_low':
+        courses.sort(key=lambda c: (c.cutoff_low is None, c.cutoff_low or 0))
+    return courses
+
+
+def _sort_param(request, has_cutoffs=True):
+    sort = request.GET.get('sort', 'name')
+    if sort not in COURSE_SORTS or (sort.startswith('cutoff') and not has_cutoffs):
+        sort = 'name'
+    return sort
+
 
 # ------------------------------
 # Course Types List View
@@ -115,20 +174,36 @@ def course_type_detail(request, type_slug):
     For types without categories (KMTC, TTC, etc.), directly show courses.
     Supports ?q= search + pagination. Returns partial on HTMX requests.
     """
-    course_type = get_object_or_404(CourseType, slug=type_slug)
+    course_type = CourseType.objects.filter(slug=type_slug).first()
+    if course_type is None:
+        # Slugs aren't all lowercase (e.g. "KMTC"), so /courses/kmtc/ must still resolve
+        course_type = get_object_or_404(CourseType, slug__iexact=type_slug)
+        url = reverse('courses:course_type_detail', args=[course_type.slug])
+        if request.GET:
+            url += '?' + request.GET.urlencode()
+        return redirect(url, permanent=True)
     q = request.GET.get('q', '').strip()
     page_num = request.GET.get('page', 1)
 
     categories = list(course_type.categories.all())
+    if categories and not q:
+        from .category_meta import enrich_categories
+        categories = enrich_categories(course_type, categories)
 
     page_obj = None
     courses = None
+    sort = 'name'
+    list_has_cutoffs = False
     if not categories or q:
         qs = Course.objects.filter(course_type=course_type).select_related(
             'course_type', 'category', 'cluster'
         )
-        qs = search_courses(q, qs) if q else qs.order_by('name')
-        paginator = Paginator(qs, _courses_per_page())
+        sort = _sort_param(request)
+        cards = _course_cards(qs, q, sort)
+        list_has_cutoffs = any(c.cutoff_high is not None for c in cards)
+        if not list_has_cutoffs and sort.startswith('cutoff'):
+            sort = 'name'
+        paginator = Paginator(cards, _courses_per_page())
         page_obj = paginator.get_page(page_num)
         courses = page_obj
 
@@ -144,12 +219,19 @@ def course_type_detail(request, type_slug):
     else:
         template = 'courses/course_type_detail.html'
 
+    featured_count = 4 if len(categories) > 6 else 0
     context = {
         'course_type': course_type,
         'categories': categories,
+        'featured_categories': categories[:featured_count],
+        'other_categories': categories[featured_count:],
+        'total_programmes': sum(getattr(c, 'programmes', 0) for c in categories),
+        'has_cutoffs': any(getattr(c, 'top_cutoff', None) for c in categories),
         'courses': courses,
         'page_obj': page_obj,
         'q': q,
+        'sort': sort,
+        'sorts': {k: v for k, v in COURSE_SORTS.items() if list_has_cutoffs or not k.startswith('cutoff')},
     }
     return render(request, template, context)
 
@@ -176,9 +258,12 @@ def course_category_detail(request, type_slug, category_slug):
     qs = Course.objects.filter(category=category).select_related(
         'course_type', 'category', 'cluster'
     )
-    qs = search_courses(q, qs) if q else qs.order_by('name')
+    from .category_meta import enrich_categories
+    enrich_categories(category.course_type, [category])
+    has_cutoffs = bool(category.top_cutoff)
+    sort = _sort_param(request, has_cutoffs)
 
-    paginator = Paginator(qs, _courses_per_page())
+    paginator = Paginator(_course_cards(qs, q, sort), _courses_per_page())
     page_obj = paginator.get_page(page_num)
 
     is_htmx = request.headers.get('HX-Request') == 'true'
@@ -199,6 +284,10 @@ def course_category_detail(request, type_slug, category_slug):
         'courses': page_obj,
         'page_obj': page_obj,
         'q': q,
+        'sort': sort,
+        'sorts': {k: v for k, v in COURSE_SORTS.items() if has_cutoffs or not k.startswith('cutoff')},
+        'has_cutoffs': has_cutoffs,
+        'hide_category': True,
     }
     return render(request, template, context)
 
@@ -315,6 +404,7 @@ def course_detail(request, type_slug, category_slug=None, course_slug=None):
     context = {
         'course': course,
         'offerings': offerings,
+        'seo': course_meta(course, offerings),
         'variations': variations,
         'chart_json': trend['chart_json'] if trend else None,
         'trend_years': trend['years'] if trend else [],

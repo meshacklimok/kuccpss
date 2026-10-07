@@ -8,6 +8,7 @@ from django.contrib.auth.decorators import login_required
 from django.core.cache import cache
 from kuccpss.email_utils import notify_admin_withdrawal, send_branded_email
 from kuccpss.ip_utils import get_client_ip
+from kuccpss.turnstile import FAILED_MESSAGE as TURNSTILE_FAILED_MESSAGE, verify_turnstile
 from datetime import timedelta
 from django.utils import timezone
 from django.views import View
@@ -69,6 +70,10 @@ class RegisterView(View):
         ip = get_client_ip(request)
         if _is_rate_limited(f"register:{ip}", limit=5, window=3600):
             messages.error(request, "Too many registration attempts. Please wait 1 hour and try again.")
+            return render(request, self.template_name, {"form": UserRegistrationForm()})
+
+        if not verify_turnstile(request):
+            messages.error(request, TURNSTILE_FAILED_MESSAGE)
             return render(request, self.template_name, {"form": UserRegistrationForm()})
 
         form = UserRegistrationForm(request.POST)
@@ -178,6 +183,11 @@ class LoginView(View):
         if (cache.get(ip_key, 0) >= LOGIN_FAIL_LIMIT_IP
                 or cache.get(acct_key, 0) >= LOGIN_FAIL_LIMIT_ACCOUNT):
             messages.error(request, "Too many failed login attempts. Please wait 15 minutes and try again.")
+            return render(request, self.template_name, {"form": UserLoginForm()})
+
+        # Bot check before the password is tried, so bots get no credential signal.
+        if not verify_turnstile(request):
+            messages.error(request, TURNSTILE_FAILED_MESSAGE)
             return render(request, self.template_name, {"form": UserLoginForm()})
 
         form = UserLoginForm(request.POST)
@@ -1989,3 +1999,18 @@ def course_comparison_view(request: HttpRequest) -> HttpResponse:
         'comparison': comparison,
         'shortlist_count': len(items),
     })
+
+# =====================================================
+# PASSWORD RESET (allauth view + Turnstile bot check)
+# =====================================================
+from allauth.account.views import PasswordResetView as _AllauthPasswordResetView  # noqa: E402
+
+
+class TurnstilePasswordResetView(_AllauthPasswordResetView):
+    """allauth's reset view, with a bot check before any reset email is sent."""
+
+    def form_valid(self, form):
+        if not verify_turnstile(self.request):
+            messages.error(self.request, TURNSTILE_FAILED_MESSAGE)
+            return self.form_invalid(form)
+        return super().form_valid(form)

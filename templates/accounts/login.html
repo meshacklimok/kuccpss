@@ -3,7 +3,7 @@
 {% load static %}
 {% load socialaccount %}
 
-{% block title %}Sign In: Kenya KCSE Cluster Points Calculator & KUCCPS Course Finder | CareerNext{% endblock %}
+{% block title %}Sign In | CareerNext{% endblock %}
 
 {% block content %}
 <div class="auth-page">
@@ -100,6 +100,8 @@
           <div class="field-error"><i class="fas fa-exclamation-circle"></i>{{ form.password.errors|striptags }}</div>
           {% endif %}
         </div>
+
+        {% include "accounts/_turnstile.html" %}
 
         <button type="submit" class="btn-auth-submit" id="login-submit">
           <i class="fas fa-sign-in-alt me-2"></i>Sign In

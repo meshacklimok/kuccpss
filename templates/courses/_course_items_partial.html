@@ -1,41 +1,47 @@
 {% load static %}
 {% for course in courses %}
-<div class="col-12 col-md-6 col-lg-4">
-  <div class="card h-100 shadow-sm p-3" style="border-radius:0.75rem;transition:transform 0.18s,box-shadow 0.18s;">
-    <div class="d-flex justify-content-between align-items-start mb-1">
-      <h6 class="fw-bold mb-0" style="line-height:1.35;font-size:0.92rem;">
-        {% if course.category %}
-        <a href="{% url 'courses:course_detail' type_slug=course.course_type.slug category_slug=course.category.slug course_slug=course.slug %}"
-           class="text-dark text-decoration-none stretched-link">{{ course.name }}</a>
-        {% else %}
-        <a href="{% url 'courses:course_detail_no_category' type_slug=course.course_type.slug course_slug=course.slug %}"
-           class="text-dark text-decoration-none stretched-link">{{ course.name }}</a>
-        {% endif %}
-      </h6>
-      {% if course.minimum_mean_grade %}
-      <span class="badge ms-2 flex-shrink-0"
-            style="background:#dc2626;color:#fff;font-size:0.7rem;">{{ course.minimum_mean_grade }}</span>
-      {% endif %}
+<div class="col-12 col-md-6 col-xl-4">
+  <article class="crs-card">
+    <div class="crs-tags">
+      {% if course.qualification %}<span class="crs-tag crs-tag--qual">{{ course.qualification }}</span>{% endif %}
+      {% if course.cluster %}<span class="crs-tag" title="{{ course.cluster.name }}">Cluster {{ course.cluster.kuccps_number }}</span>{% endif %}
+      {% if course.minimum_mean_grade %}<span class="crs-tag crs-tag--grade">Min grade {{ course.minimum_mean_grade }}</span>{% endif %}
     </div>
-    {% if course.category %}
-    <small class="text-muted mb-1" style="font-size:0.78rem;">{{ course.category.name }}</small>
+    <h3 class="crs-title">
+      {% if course.category %}
+      <a href="{% url 'courses:course_detail' type_slug=course.course_type.slug category_slug=course.category.slug course_slug=course.slug %}"
+         class="crs-link" title="{{ course.name }}">{{ course.title|default:course.name }}</a>
+      {% else %}
+      <a href="{% url 'courses:course_detail_no_category' type_slug=course.course_type.slug course_slug=course.slug %}"
+         class="crs-link" title="{{ course.name }}">{{ course.title|default:course.name }}</a>
+      {% endif %}
+    </h3>
+    {% if course.show_full_name %}
+    <div class="crs-sub">{{ course.name }}</div>
+    {% endif %}
+    {% if course.category and not hide_category %}
+    <div class="crs-sub">{{ course.category.name }}</div>
     {% endif %}
     {% if course.description %}
-    <p class="text-muted small mb-0 mt-1" style="font-size:0.8rem;">{{ course.description|truncatewords:14 }}</p>
+    <p class="crs-desc">{{ course.description|truncatewords:14 }}</p>
     {% endif %}
-    {% if course.cutoff_points %}
-    <div class="mt-auto pt-2">
-      <span class="badge rounded-pill" style="background:#eff6ff;color:#1e3a8a;border:1px solid #bfdbfe;font-size:0.72rem;">
-        <i class="fas fa-chart-bar me-1"></i>Min {{ course.cutoff_points }} pts
+    <div class="crs-foot">
+      {% if course.n_institutions %}
+      <span><i class="fa-solid fa-building-columns"></i><b>{{ course.n_institutions }}</b> {% if course.course_type.slug == 'degree' %}universit{{ course.n_institutions|pluralize:"y,ies" }}{% else %}institution{{ course.n_institutions|pluralize }}{% endif %}</span>
+      {% endif %}
+      {% if course.cutoff_high is not None %}
+      <span title="{{ course.course_type.name }} cutoff range across institutions, out of 48 points">
+        <i class="fa-solid fa-chart-simple"></i>Cutoff <b>{{ course.cutoff_low|floatformat:1 }}{% if course.cutoff_low != course.cutoff_high %}–{{ course.cutoff_high|floatformat:1 }}{% endif %}</b>
       </span>
+      {% endif %}
+      <i class="fa-solid fa-arrow-right crs-arrow" aria-hidden="true"></i>
     </div>
-    {% endif %}
-  </div>
+  </article>
 </div>
 {% endfor %}
 {% if page_obj.has_next %}
 <div id="load-more-sentinel" class="col-12 d-flex justify-content-center py-5"
-     hx-get="?{% if q %}q={{ q }}&{% endif %}page={{ page_obj.next_page_number }}"
+     hx-get="?{% if q %}q={{ q|urlencode }}&{% endif %}{% if sort and sort != 'name' %}sort={{ sort }}&{% endif %}page={{ page_obj.next_page_number }}"
      hx-trigger="intersect once"
      hx-target="#load-more-sentinel"
      hx-swap="outerHTML">

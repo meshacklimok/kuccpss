@@ -75,11 +75,11 @@ def directory(request):
         except ValueError:
             pass
 
-    # Every live mentor is listed; those with an open slot come first and the rest
-    # show "No slots available. Check back soon".
+    # Every live mentor is listed: admin-pinned first, then most completed sessions.
+    # Those without an open slot show "No slots available. Check back soon".
     mentors = mentors.annotate(
         has_open_slot=Exists(TimeSlot.objects.filter(bookable_slots_q(), mentor=OuterRef("pk")))
-    ).order_by("-has_open_slot", "-average_rating", "-total_sessions", "-created_at")
+    ).order_by("-is_pinned", "-total_sessions", "-has_open_slot", "-average_rating", "-created_at")
 
     from django.core.paginator import Paginator
     paginator = Paginator(mentors, _mentors_per_page())
@@ -139,6 +139,33 @@ def mentor_profile(request, mentor_pk):
         "session_minutes": mentor.effective_session_minutes(),
         "mentor_signup_enabled": MentorshipConfig.get().mentor_signup_enabled,
     })
+
+
+# ── Staff: pin / badge toggles on the public pages ────────────────────────────
+
+# Flags staff can flip from the directory and profile pages. Pinning is invisible
+# to students: it only changes the order student mentors are listed in.
+STAFF_TOGGLE_FLAGS = {"is_pinned", "show_expert_badge", "show_new_badge"}
+
+
+@login_required
+@require_POST
+def staff_toggle_mentor_flag(request, mentor_pk):
+    if not request.user.is_staff:
+        return HttpResponse(status=403)
+    field = request.POST.get("field", "")
+    if field not in STAFF_TOGGLE_FLAGS:
+        return HttpResponse(status=400)
+    mentor = get_object_or_404(MentorProfile, pk=mentor_pk)
+    setattr(mentor, field, not getattr(mentor, field))
+    mentor.save(update_fields=[field, "updated_at"])
+    record(f"mentor.{field}_toggled", mentor, request=request, value=getattr(mentor, field))
+
+    from django.utils.http import url_has_allowed_host_and_scheme
+    next_url = request.POST.get("next", "")
+    if not url_has_allowed_host_and_scheme(next_url, {request.get_host()}, request.is_secure()):
+        next_url = reverse("mentorship:mentor_profile", args=[mentor.pk])
+    return redirect(next_url)
 
 
 # ── AJAX: courses for a given institution ────────────────────────────────────
@@ -595,10 +622,19 @@ def verify_payment_manual(request, token):
         MentorshipSession, token=token, mentee=request.user,
         status__in=["pending_payment", "pending_manual_verification"],
     )
-    mpesa_code = request.POST.get("mpesa_code", "").strip().upper()
+    from payments.services import extract_mpesa_code
 
+    raw = request.POST.get("mpesa_code", "").strip()
+    if not raw:
+        messages.error(request, "Enter the code from your M-Pesa confirmation SMS.")
+        return redirect("mentorship:checkout", token=token)
+    mpesa_code = extract_mpesa_code(raw)
     if not mpesa_code:
-        messages.error(request, "Please enter your M-Pesa transaction code.")
+        messages.error(
+            request,
+            "That doesn't look like an M-Pesa code. It's the 10 letters and numbers at the start "
+            "of your M-Pesa SMS, e.g. TGH4ABC123. You can also paste the whole SMS.",
+        )
         return redirect("mentorship:checkout", token=token)
 
     # Save the code regardless of outcome
@@ -608,10 +644,16 @@ def verify_payment_manual(request, token):
     # ── Step 1: Check IntaSend directly (webhook may have simply not arrived) ──
     if session.payment_ref:
         try:
-            from payments.services import fetch_intasend_status
-            state = fetch_intasend_status(session.payment_ref)
+            from payments.services import fetch_intasend_invoice
+            invoice = fetch_intasend_invoice(session.payment_ref)
+            state = invoice["state"] if invoice else None
             logger.info("IntaSend status check for session %s: %s", session.token, state)
             if state == "COMPLETE":
+                # Keep IntaSend's own M-Pesa reference over whatever was typed.
+                real_code = (invoice.get("mpesa_ref") or "").upper()
+                if real_code and real_code != mpesa_code:
+                    session.manual_payment_ref = real_code
+                    session.save(update_fields=["manual_payment_ref"])
                 _confirm_session_after_payment(session, source="mentorship:verify_payment_manual")
                 messages.success(
                     request,

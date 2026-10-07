@@ -129,3 +129,39 @@ class SyncContentTests(TestCase):
             call_command('sync_content', force=True, stdout=open(os.devnull, 'w'))
             self.assertEqual(FAQItem.objects.count(), 1)
             self.assertEqual(QuizOption.objects.count(), 1)
+
+    def test_quiz_and_cutoffs_mirror_local(self):
+        import os, tempfile
+        from unittest import mock
+        from django.core.management import call_command
+        from career.models import QuizQuestion, QuizOption
+        from courses.models import Course, CourseOffering, CourseType
+        from institutions.models import Institution, InstitutionType
+        from resources.management.commands import sync_content
+
+        inst = Institution.objects.create(name='Test Uni', institution_type=InstitutionType.objects.create(name='Uni'))
+        degree = CourseType.objects.create(name='Degree')
+        a = CourseOffering.objects.create(course=Course.objects.create(name='BSc A', course_type=degree),
+                                          institution=inst, cutoff_points={'2024': 40.1, '2025': 41.2})
+        b = CourseOffering.objects.create(course=Course.objects.create(name='BSc B', course_type=degree),
+                                          institution=inst)
+        q = QuizQuestion.objects.create(text='New wording?', order=1)
+        QuizOption.objects.create(question=q, text='Yes', order=1)
+
+        tmp = tempfile.mkdtemp()
+        with mock.patch.object(sync_content, 'DATA_FILE', os.path.join(tmp, 'c.json')), \
+             mock.patch.object(sync_content, 'MEDIA_DIR', os.path.join(tmp, 'media')):
+            call_command('sync_content', export=True, stdout=open(os.devnull, 'w'))
+            # "Live" still has the old wording, a stale option and different cutoffs
+            old = QuizQuestion.objects.create(text='Old wording?', order=1)
+            QuizOption.objects.create(question=old, text='Yes', order=1)
+            QuizOption.objects.create(question=q, text='Removed locally', order=2)
+            CourseOffering.objects.filter(pk=a.pk).update(cutoff_points={'2024': 39.0})
+            CourseOffering.objects.filter(pk=b.pk).update(cutoff_points={'2024': 30.0})
+            call_command('sync_content', stdout=open(os.devnull, 'w'))
+
+        self.assertEqual(list(QuizQuestion.objects.values_list('text', flat=True)), ['New wording?'])
+        self.assertEqual(list(QuizOption.objects.values_list('text', flat=True)), ['Yes'])
+        a.refresh_from_db(); b.refresh_from_db()
+        self.assertEqual(a.cutoff_points, {'2024': 40.1, '2025': 41.2})
+        self.assertIsNone(b.cutoff_points)

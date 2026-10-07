@@ -10,6 +10,14 @@ class CourseListTests(TestCase):
         response = self.client.get(reverse('courses:course_types_list'))
         self.assertIn(response.status_code, [200, 301, 302])
 
+    def test_course_type_slug_is_case_insensitive(self):
+        CourseType.objects.create(name='KMTC', slug='KMTC')
+        response = self.client.get('/courses/kmtc/?q=nursing')
+        self.assertRedirects(response, '/courses/KMTC/?q=nursing',
+                             status_code=301, fetch_redirect_response=False)
+        self.assertEqual(self.client.get('/courses/KMTC/').status_code, 200)
+        self.assertEqual(self.client.get('/courses/no-such-type/').status_code, 404)
+
 
 class ReviewTests(TestCase):
     def setUp(self):

@@ -1,0 +1,30 @@
+{# Staff-only toggles for one mentor. Include only inside {% if user.is_staff %}; students never see pin state. #}
+<div class="staff-mc d-flex flex-wrap align-items-center gap-1 mt-2 pt-2 border-top">
+  <span class="text-muted me-1" style="font-size:.7rem;"><i class="bi bi-shield-lock me-1"></i>Admin</span>
+  {% if not mentor.is_expert %}
+  <form method="post" action="{% url 'mentorship:staff_toggle_flag' mentor.pk %}" class="d-inline">
+    {% csrf_token %}
+    <input type="hidden" name="field" value="is_pinned">
+    <input type="hidden" name="next" value="{{ request.get_full_path }}">
+    <button type="submit" class="btn btn-sm rounded-pill py-0 px-2 {% if mentor.is_pinned %}btn-dark{% else %}btn-outline-secondary{% endif %}" style="font-size:.72rem;">
+      <i class="bi bi-pin-angle{% if mentor.is_pinned %}-fill{% endif %} me-1"></i>{% if mentor.is_pinned %}Unpin{% else %}Pin to top{% endif %}
+    </button>
+  </form>
+  {% endif %}
+  <form method="post" action="{% url 'mentorship:staff_toggle_flag' mentor.pk %}" class="d-inline">
+    {% csrf_token %}
+    <input type="hidden" name="field" value="show_expert_badge">
+    <input type="hidden" name="next" value="{{ request.get_full_path }}">
+    <button type="submit" class="btn btn-sm rounded-pill py-0 px-2 {% if mentor.show_expert_badge %}btn-warning{% else %}btn-outline-secondary{% endif %}" style="font-size:.72rem;">
+      <i class="bi bi-patch-check{% if mentor.show_expert_badge %}-fill{% endif %} me-1"></i>{% if mentor.show_expert_badge %}Remove Expert badge{% else %}Add Expert badge{% endif %}
+    </button>
+  </form>
+  <form method="post" action="{% url 'mentorship:staff_toggle_flag' mentor.pk %}" class="d-inline">
+    {% csrf_token %}
+    <input type="hidden" name="field" value="show_new_badge">
+    <input type="hidden" name="next" value="{{ request.get_full_path }}">
+    <button type="submit" class="btn btn-sm rounded-pill py-0 px-2 {% if mentor.show_new_badge %}btn-secondary{% else %}btn-outline-secondary{% endif %}" style="font-size:.72rem;">
+      {% if mentor.show_new_badge %}Remove New badge{% else %}Add New badge{% endif %}
+    </button>
+  </form>
+</div>

@@ -160,3 +160,36 @@ def find_variations(course, limit: int = 30):
         'core': core, 'title': display_title(core), 'same': same, 'related': related,
         'n_institutions': len(institution_ids),
     }
+
+
+# Leading qualification → short tag shown on course cards, longest first.
+_QUALIFICATIONS = (
+    (r'bachelors?\s+of\s+science', 'BSc'),
+    (r'bachelors?\s+of\s+arts', 'BA'),
+    (r'bachelors?\s+of\s+technology', 'BTech'),
+    (r'bachelors?\s+of', 'Bachelor'),
+    (r'higher\s+national\s+diploma', 'HND'),
+    (r'diploma', 'Diploma'),
+    (r'artisan(?:\s+certificate)?', 'Artisan'),
+    (r'craft(?:\s+certificate)?', 'Craft'),
+    (r'(?:national\s+)?certificate', 'Certificate'),
+)
+_QUAL_RE = [(re.compile(rf'^{p}\b\s*(?:in\b|of\b)?\s*', re.I), tag) for p, tag in _QUALIFICATIONS]
+
+
+def split_course_name(name: str) -> tuple[str, str]:
+    """'BACHELOR OF SCIENCE (COMPUTER SCIENCE)' → ('BSc', 'Computer Science')."""
+    from kuccpss.seo import _display_name
+
+    name = (name or '').strip()
+    for rx, tag in _QUAL_RE:
+        m = rx.match(name)
+        if not m:
+            continue
+        rest = name[m.end():].strip()
+        if rest.startswith('(') and rest.endswith(')') and rest.count('(') == 1:
+            rest = rest[1:-1].strip()
+        if rest:
+            return tag, _display_name(rest)
+        break
+    return '', _display_name(name)

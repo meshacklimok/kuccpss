@@ -60,6 +60,7 @@ python manage.py shell
 | `ALLOWED_HOSTS` | `careernext.co.ke,.onrender.com` | ✅ |
 | `RESEND_API_KEY` | Transactional email (Resend SMTP) | ✅ |
 | `OPENAI_API_KEY` | AI chat + OCR document scanner | ✅ |
+| `TURNSTILE_SITE_KEY` / `TURNSTILE_SECRET_KEY` | Cloudflare Turnstile bot check on login, register, password reset (Cloudflare dashboard → Turnstile → add site `careernext.co.ke`). Both unset = check off | Recommended |
 | `INTASEND_PUBLISHABLE_KEY` | M-Pesa STK push | ✅ |
 | `INTASEND_SECRET_KEY` | M-Pesa STK push + webhook verify | ✅ |
 | `INTASEND_WEBHOOK_SECRET` | Webhook HMAC verification | ✅ |
