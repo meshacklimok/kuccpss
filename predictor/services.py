@@ -63,12 +63,18 @@ def _get_config() -> _DefaultConfig:
 # their own 2024 minimum): right likely/unlikely call 87.0 -> 88.8% (2023),
 # 86.2 -> 87.9% (2024), 84.5 -> 87.8% (2025); Brier 0.100 -> 0.090, 0.104 -> 0.088,
 # 0.113 -> 0.100.
+#
+# FILLED_SD 1.5 -> 2.5 (MLLabz L-005): when a floor programme filled, the real cutoff was
+# within ±1.5 of if_filled only 31-47% of the time (1.5 assumes 68%); misses had a spread
+# of 2.5-3.4. Brier on floor programmes 0.0720 -> 0.0713 (2023), 0.0722 -> 0.0705 (2024),
+# 0.0857 -> 0.0856 (2025); labels barely move. A cluster-median cutoff for first-time
+# fillers guessed if_filled closer but worsened Brier in 2023-24, so "+3" stays.
 
 FLOOR_MIN_SHARED  = 10     # a value printed for >= this many programmes in one year is a floor
 FILLED_BELOW_LAST = 1.5    # a returning programme refills ~1.5 below its last competitive cutoff
 FILLED_ABOVE_FLOOR = 3.0   # a first-time filler lands ~3 above the floor
 FLOOR_DRIFT       = 1.0    # floors move ~±1 a year; being this far below last year's still counts
-FILLED_SD         = 1.5    # spread of the competitive cutoff once a programme fills
+FILLED_SD         = 2.5    # spread of the competitive cutoff once a programme fills
 
 _floor_cache: dict | None = None
 _floor_ts: float = 0.0
