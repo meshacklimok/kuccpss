@@ -96,7 +96,7 @@
             <p class="text-muted small mb-2">
               <i class="bi bi-info-circle me-1"></i>
               <strong>STK push didn't arrive?</strong> If M-Pesa already deducted the money,
-              enter your transaction code below and we'll verify manually.
+              enter the code from your <strong>M-PESA</strong> SMS (not the IntaSend message) below and we'll verify manually.
             </p>
             {% if session.status == "pending_manual_verification" %}
               <div class="alert alert-warning rounded-3 small">
@@ -111,13 +111,15 @@
                 {% csrf_token %}
                 <div class="input-group input-group-sm">
                   <input type="text" name="mpesa_code" class="form-control rounded-start"
-                         placeholder="e.g. QHX12ABC3D" maxlength="20" style="text-transform:uppercase;">
+                         aria-label="M-Pesa code from your SMS" placeholder="e.g. TGH4ABC123"
+                         autocomplete="off" autocapitalize="characters" spellcheck="false"
+                         style="text-transform:uppercase;">
                   <button type="submit" class="btn btn-outline-secondary rounded-end">
                     Submit Code
                   </button>
                 </div>
                 <div class="form-text">
-                  Find the code in your M-Pesa SMS confirmation message.
+                  It's the 10 letters and numbers at the start of your M-PESA SMS. You can paste the whole SMS.
                   Persistent issues?
                   <a href="mailto:{{ contact_email }}">Contact us at {{ contact_email }}</a>.
                 </div>
