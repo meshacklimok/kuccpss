@@ -12,6 +12,28 @@ Format: `[YYYY-MM-DD]` — description of what changed and why.
 
 ---
 
+## [2026-10-07] — SEO: engine-first titles, type-aware meta, sitemap fixes
+- **Generated titles and meta descriptions** for institution, course and career-profile pages (`kuccpss/seo.py`, tests in `kuccpss/test_seo.py`). Universities and degree courses mention KUCCPS cutoff points (latest-year range); KMTC/TVET/TTC pages mention minimum KCSE mean grade. Previously every institution title promised "Cutoff Points", including KMTCs. Titles fit ~70 chars and drop the brand suffix before the keywords; ALL-CAPS portal course names are title-cased.
+- **Target cohort setting:** `KCSE_CANDIDATE_YEAR` (default 2026, env-overridable) drives the years in titles via the `kuccpss.seo.seo_years` context processor (`kcse_year`, `kuccps_year`). Bump once the 2026 cohort has been placed.
+- **Positioning:** homepage, `/career/`, default meta and WebSite schema now lead with course matching and CareerNext AI rather than the calculator. `/` and `/career/` no longer share a title. Login/register titles shortened. Stale `keywords` meta removed.
+- **Course page fixes:** raw cutoff dict no longer printed into `og:description` and JSON-LD `coursePrerequisites`.
+- **Sitemap:** added career profiles, `/career/kcse-input/`, `/career/quiz/`, `/career/profiles/`; removed login-gated `/clusterpoints/eligible/` (Search Console reported it as a redirect). Sitemap response cached 6 h (took ~8 s to build live).
+
+---
+
+## [2026-10-05] — Predictor: wider spread for programmes at the minimum that fill
+- `FILLED_SD` 1.5 → 2.5 in `predictor/services.py` (MLLabz L-005). When a programme at the minimum filled, its real cutoff was within ±1.5 of the guess only 31–47% of the time; the spread was 2.5–3.4. Floor-programme Brier 0.0720 → 0.0713 (2023), 0.0722 → 0.0705 (2024), 0.0857 → 0.0856 (2025); likely/unlikely labels barely change. Floor programmes' "high" band is 1 point wider.
+- Tested and not shipped: a cluster-median cutoff for first-time fillers in place of "minimum + 3". It guessed the cutoff closer but worsened the chance estimate in 2023 and 2024.
+
+---
+
+## [2026-10-05] — Bot protection: Cloudflare client IP + Turnstile
+- **Client IP:** `get_client_ip()` now uses `CF-Connecting-IP` when the request's last hop is a Cloudflare edge. Before, rate limits, login history and analytics keyed on Cloudflare edge IPs.
+- **Turnstile:** bot check on login, register and password reset; enabled by setting `TURNSTILE_SITE_KEY` and `TURNSTILE_SECRET_KEY`. CSP report-only policy allows `challenges.cloudflare.com`.
+- allauth's `/accounts/signup/` now redirects to `/accounts/register/`.
+
+---
+
 ## [2026-10-05] — Mentorship: expert mentors and configurable session length
 - **Expert mentors:** `MentorProfile.mentor_type` (student/expert), `headline` and `display_order` (migration 0019). Experts are professionals who advise on any course. Admin creates them; there is no signup form or student documents. `course` and `institution` are now `blank=True` on the model, and the signup form still requires them.
 - **Placement:** a "Talk to an Expert" section is pinned above the directory results whatever the search or filters. Course detail pages list up to 3 experts, and their Book links pre-fill the course. Experts edit their profile through `ExpertProfileForm` (headline, bio, WhatsApp).
@@ -21,6 +43,9 @@ Format: `[YYYY-MM-DD]` — description of what changed and why.
 - **Directory:** student mentors with no open slots are now listed, after those with open slots, with "No slots available — check back soon".
 - **Expert cards:** flat amber design with no gradient. The price shows the session length, and chips read "Any course", "N-min call" and "WhatsApp". An expert with open slots gets a direct "Book Session" button.
 - **"New mentor" badge:** now admin-controlled through `MentorProfile.show_new_badge` (migration 0020, default off, editable from the admin list). Previously it showed automatically for every student mentor with 0 sessions.
+- **"Expert" badge:** now admin-controlled through `MentorProfile.show_expert_badge` (migration 0021, default off, editable from the admin list) and can be given to any mentor. Previously it showed automatically for every expert-type mentor. Expert-type behaviour (pinned section, any-course booking, headline) still follows `mentor_type`.
+- **Student mentor order:** admin-pinned (`MentorProfile.is_pinned`, migration 0022, editable from the admin list) first, then most completed sessions, then open slot, then rating. Applies to the directory and the course-page mentor list (after course-match quality). Previously open-slot mentors came first, then rating.
+- **On-site admin controls:** staff see Pin to top / Expert badge / New badge toggles on each mentor card and profile (`mentorship:staff_toggle_flag`, POST, staff only, audit-logged). Students see no pin state; pinning only changes the order.
 
 ## [2026-10-04] — Mentorship: booking integrity, calendar invites, automatic refunds
 - **Slots:** a cancelled slot can be rebooked (slot is now a FK with a one-active-session constraint, migration 0016). Booking claims the slot atomically. Slots starting within 30 min are hidden. Unpaid bookings are released after 30 min by `release_abandoned_bookings`, which checks IntaSend first.

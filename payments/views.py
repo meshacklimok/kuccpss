@@ -719,8 +719,13 @@ def verify_by_transaction_code(request):
         invoice = fetch_intasend_invoice(payment.checkout_id)
         if invoice and invoice["state"] == "COMPLETE":
             _record_intasend_transaction(payment, invoice)
-            complete_payment(payment, mpesa_code=mpesa_code)
-            logger.info("Code verified via IntaSend: user=%s code=%s payment=%s", request.user.email, mpesa_code, payment.pk)
+            # Store IntaSend's own M-Pesa reference — what the user typed may be the IntaSend
+            # invoice ref or a stray token from a pasted message.
+            real_code = (invoice.get("mpesa_ref") or "").upper() or mpesa_code
+            if real_code != mpesa_code:
+                logger.info("Submitted code %s differs from IntaSend M-Pesa ref %s (payment %s)", mpesa_code, real_code, payment.pk)
+            complete_payment(payment, mpesa_code=real_code)
+            logger.info("Code verified via IntaSend: user=%s code=%s payment=%s", request.user.email, real_code, payment.pk)
             return _code_verified(payment)
 
     # 3. Nothing automatic worked — queue for a human.

@@ -3,9 +3,9 @@
 {% load static %}
 {% load socialaccount %}
 
-{% block title %}Create Free Account: Kenya KCSE Cluster Points Calculator & KUCCPS Course Finder | CareerNext{% endblock %}
+{% block title %}Create Your Free Account | CareerNext{% endblock %}
 
-{% block meta %}<meta name="description" content="Create a free CareerNext account to save your KCSE grades, calculate cluster points, shortlist KUCCPS courses and get career guidance matched to your results.">{% endblock %}
+{% block meta %}<meta name="description" content="Create a free CareerNext account to save your KCSE results, see every KUCCPS course you qualify for, shortlist courses and ask CareerNext AI for guidance.">{% endblock %}
 
 {% block content %}
 <div class="auth-page">
@@ -133,6 +133,8 @@
           <div class="field-error" style="margin-top:0.25rem;"><i class="fas fa-exclamation-circle"></i>{{ form.agreed_terms.errors|striptags }}</div>
           {% endif %}
         </div>
+
+        {% include "accounts/_turnstile.html" %}
 
         <button type="submit" class="btn-auth-submit" id="register-submit">
           <i class="fas fa-user-plus me-2"></i>Create Account

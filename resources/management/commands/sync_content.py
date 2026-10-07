@@ -1,6 +1,6 @@
 """
-Copy site content (mentors, quiz, career profiles, FAQs, calendar, configs…) from
-one database to another without relying on primary keys.
+Copy site content (mentors, quiz, career profiles, FAQs, calendar, configs, course
+offering cutoffs…) from one database to another without relying on primary keys.
 
     python manage.py sync_content --export   # local: writes data/live_content.json (+ data/live_media/)
     python manage.py sync_content            # live:  upserts it; skipped if this exact file was already applied
@@ -8,7 +8,8 @@ one database to another without relying on primary keys.
     python manage.py sync_content --with-portal  # build.sh: also run import_kuccps_portal once per data change
 
 Rows are matched on natural keys (slug, email, unique fields), so it's safe to run
-against a database whose ids differ. User activity (sessions, payments, logins,
+against a database whose ids differ. Quiz questions/options and offering cutoffs
+mirror local exactly (stale live rows are deleted / cleared); everything else is upsert-only. User activity (sessions, payments, logins,
 quiz submissions) is never exported, nor are personal contacts or real mentors'
 accounts (the repo is public) — only demo mentors, created with an unusable password.
 """
@@ -71,6 +72,15 @@ SPECS = [
 ]
 
 USER_FIELDS = ['email', 'full_name', 'is_active', 'is_verified', 'county']
+
+# Local is the source of truth for these: live rows missing from the file are deleted.
+# (Quiz rows are matched on their text, so a reworded question would otherwise sit
+# beside the old one. Deleting an old question also drops past answers to it.)
+PRUNE = {'career.QuizQuestion', 'career.QuizOption'}
+
+# Course offering cutoffs, matched on (course slug, institution slug). Applied after
+# the portal import, so live ends up with exactly the local cutoff_points.
+CUTOFFS_KEY = 'courses.CourseOffering.cutoff_points'
 
 # The export is committed to a public repo: only demo mentor accounts go in it.
 # Real mentors (personal emails) sign up on the live site themselves.
@@ -196,6 +206,15 @@ class Command(BaseCommand):
             out[label] = rows
             self.stdout.write(f'{label:38} {len(rows)}')
 
+        CourseOffering = apps.get_model('courses.CourseOffering')
+        out[CUTOFFS_KEY] = [
+            {'course': course, 'institution': inst, 'cutoff_points': cp}
+            for course, inst, cp in CourseOffering.objects.exclude(cutoff_points=None)
+            .order_by('course__slug', 'institution__slug')
+            .values_list('course__slug', 'institution__slug', 'cutoff_points')
+        ]
+        self.stdout.write(f'{CUTOFFS_KEY:38} {len(out[CUTOFFS_KEY])}')
+
         with open(DATA_FILE, 'w', encoding='utf-8') as fh:
             json.dump(out, fh, indent=1, ensure_ascii=False, sort_keys=True)
         shutil.rmtree(MEDIA_DIR, ignore_errors=True)
@@ -218,6 +237,7 @@ class Command(BaseCommand):
         for label, keys, skip in SPECS:
             model = apps.get_model(label)
             created = updated = missing = 0
+            kept = set()
             for row in data.get(label, []):
                 values, m2m, file_vals, broken = {}, {}, {}, False
                 for f in _fields(model, skip):
@@ -262,9 +282,38 @@ class Command(BaseCommand):
                 for name, path in file_vals.items():
                     self._attach(obj, name, path)
                 obj.save()
+                kept.add(obj.pk)
                 for name, targets in m2m.items():
                     getattr(obj, name).set(targets)
-            self.stdout.write(f'{label:38} +{created} ~{updated}' + (f' skipped {missing}' if missing else ''))
+            pruned = 0
+            if label in PRUNE and data.get(label):   # never wipe a table because the file lacks it
+                pruned, _ = model.objects.exclude(pk__in=kept).delete()
+            self.stdout.write(f'{label:38} +{created} ~{updated}' + (f' -{pruned}' if pruned else '')
+                              + (f' skipped {missing}' if missing else ''))
+        if CUTOFFS_KEY in data:
+            self._import_cutoffs(data[CUTOFFS_KEY])
+
+    def _import_cutoffs(self, rows):
+        from django.core.cache import cache
+        from courses.management.commands.import_kuccps_portal import CACHE_KEYS
+        CourseOffering = apps.get_model('courses.CourseOffering')
+        wanted = {(r['course'], r['institution']): r['cutoff_points'] for r in rows}
+        changed, found = [], set()
+        for o in (CourseOffering.objects.select_related('course', 'institution')
+                  .only('cutoff_points', 'course__slug', 'institution__slug')):
+            key = (o.course.slug, o.institution.slug)
+            cp = wanted.get(key)
+            if key in wanted:
+                found.add(key)
+            if o.cutoff_points != cp:
+                o.cutoff_points = cp
+                changed.append(o)
+        CourseOffering.objects.bulk_update(changed, ['cutoff_points'], batch_size=500)
+        for key in CACHE_KEYS:
+            cache.delete(key)
+        missing = len(wanted) - len(found)
+        self.stdout.write(f'{CUTOFFS_KEY:38} ~{len(changed)}'
+                          + (f' ({missing} offerings not on this site)' if missing else ''))
 
     def _attach(self, obj, name, path):
         """Upload a bundled media file to this site's storage (Cloudinary on live)."""

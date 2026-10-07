@@ -61,6 +61,11 @@ CSRF_TRUSTED_ORIGINS = [
 # Set CANONICAL_HOST='' to disable.
 CANONICAL_HOST = os.environ.get('CANONICAL_HOST', '' if DEBUG else 'www.careernext.co.ke')
 
+# KCSE exam year of the cohort the site is aimed at (they apply via KUCCPS the
+# following year). Drives the years shown in page titles and meta descriptions;
+# bump once that cohort has been placed.
+KCSE_CANDIDATE_YEAR = int(os.environ.get('KCSE_CANDIDATE_YEAR', '2026'))
+
 # ── Maintenance mode ─────────────────────────────────────────────────────────
 # Flip MAINTENANCE_MODE=True in the host's env vars to take the site offline.
 # Staff users, /cn-staff/ (admin), and any IP in MAINTENANCE_ALLOWED_IPS still get through
@@ -211,7 +216,9 @@ TEMPLATES = [
                 'analytics.context_processors.posthog_keys',
                 'analytics.context_processors.sentry_context',
                 'analytics.context_processors.ga_context',
+                'analytics.context_processors.turnstile_context',
                 'analytics.context_processors.data_version',
+                'kuccpss.seo.seo_years',
             ],
         },
     },
@@ -414,6 +421,11 @@ GOOGLE_OAUTH_AVAILABLE = bool(_google_client_id)
 
 
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
+
+# Cloudflare Turnstile bot check on login/register/password reset (kuccpss/turnstile.py).
+# Both keys unset → check disabled.
+TURNSTILE_SITE_KEY = os.environ.get("TURNSTILE_SITE_KEY", "")
+TURNSTILE_SECRET_KEY = os.environ.get("TURNSTILE_SECRET_KEY", "")
 
 # MaxMind GeoLite2 — place GeoLite2-City.mmdb in BASE_DIR/geoip/
 # Download free at: https://dev.maxmind.com/geoip/geolite2-free-geolocation-data

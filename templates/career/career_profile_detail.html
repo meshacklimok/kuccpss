@@ -1,8 +1,16 @@
 {% extends "base.html" %}
 {% load custom_filters %}
-{% block title %}{{ profile.title }}: Career Guide for Kenyan KCSE Students | CareerNext{% endblock %}
+{% block title %}{{ seo.title }}{% endblock %}
 
-{% block meta %}<meta name="description" content="What a career in {{ profile.title }} looks like in Kenya: the day-to-day work, expected salary, and the KUCCPS courses and KCSE grades that lead there.">{% endblock %}
+{% block meta %}<meta name="description" content="{{ seo.description }}">{% endblock %}
+{% block og_meta %}
+<meta property="og:title" content="{{ seo.title }}">
+<meta property="og:description" content="{{ seo.description }}">
+{% endblock %}
+{% block twitter_meta %}
+<meta name="twitter:title" content="{{ seo.title }}">
+<meta name="twitter:description" content="{{ seo.description }}">
+{% endblock %}
 
 {% block content %}
 <style>

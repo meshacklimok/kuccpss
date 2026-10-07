@@ -3,6 +3,7 @@ Expert mentors (professionals who advise on any course) and per-mentor session l
 directory placement, booking snapshots, slot overlap, auto-complete, self-edit.
 """
 from datetime import date, time, timedelta
+from unittest import mock
 
 from django.contrib.auth import get_user_model
 from django.core.cache import cache
@@ -168,3 +169,66 @@ class NewMentorBadgeTests(TestCase):
         self.assertContains(resp, "New mentor", count=1)
         resp = self.client.get(reverse("mentorship:mentor_profile", args=[on.pk]))
         self.assertContains(resp, "New mentor")
+
+
+class ExpertBadgeTests(TestCase):
+    def test_badge_only_when_admin_enables_it(self):
+        cache.clear()
+        on = _mentor("on@example.com", show_expert_badge=True)
+        off = _mentor("off@example.com", mentor_type=MentorProfile.EXPERT)
+        resp = self.client.get(reverse("mentorship:directory"))
+        self.assertContains(resp, "mc-expert-badge\"", count=1)
+        resp = self.client.get(reverse("mentorship:mentor_profile", args=[on.pk]))
+        self.assertContains(resp, "Expert Mentor")
+        resp = self.client.get(reverse("mentorship:mentor_profile", args=[off.pk]))
+        self.assertNotContains(resp, "bi-patch-check-fill me-1\"></i>Expert Mentor")
+
+
+class StudentMentorOrderTests(TestCase):
+    def test_pinned_first_then_most_sessions(self):
+        cache.clear()
+        few = _mentor("few@example.com", total_sessions=2)
+        many = _mentor("many@example.com", total_sessions=9, average_rating=3)
+        rated = _mentor("rated@example.com", total_sessions=0, average_rating=5)
+        TimeSlot.objects.create(mentor=rated, date=date.today() + timedelta(days=2), start_time="10:00")
+        resp = self.client.get(reverse("mentorship:directory"))
+        self.assertEqual(list(resp.context["mentors"]), [many, few, rated])
+
+        rated.is_pinned = True
+        rated.save()
+        resp = self.client.get(reverse("mentorship:directory"))
+        self.assertEqual(list(resp.context["mentors"]), [rated, many, few])
+
+
+@override_settings(STAFF_2FA_REQUIRED=False)
+class StaffToggleTests(TestCase):
+    def setUp(self):
+        cache.clear()
+        self.mentor = _mentor("m@example.com")
+        self.url = reverse("mentorship:staff_toggle_flag", args=[self.mentor.pk])
+
+    def test_staff_can_pin_and_badge_from_the_site(self):
+        staff = User.objects.create_user(email="staff@example.com", password="pass1234", is_staff=True)
+        self.client.force_login(staff)
+        with mock.patch("accounts.staff_2fa.session_is_verified", return_value=True):
+            resp = self.client.get(reverse("mentorship:directory"))
+            self.assertContains(resp, "Pin to top")
+            resp = self.client.post(self.url, {"field": "is_pinned", "next": "/mentorship/?page=1"})
+            self.assertRedirects(resp, "/mentorship/?page=1", fetch_redirect_response=False)
+            self.client.post(self.url, {"field": "show_expert_badge", "next": "https://evil.example.com/"})
+        self.mentor.refresh_from_db()
+        self.assertTrue(self.mentor.is_pinned)
+        self.assertTrue(self.mentor.show_expert_badge)
+
+    def test_students_cannot_toggle_or_see_pin(self):
+        self.mentor.is_pinned = True
+        self.mentor.save()
+        student = User.objects.create_user(email="s@example.com", password="pass1234")
+        self.client.force_login(student)
+        resp = self.client.post(self.url, {"field": "show_expert_badge"})
+        self.assertEqual(resp.status_code, 403)
+        for page in (reverse("mentorship:directory"), reverse("mentorship:mentor_profile", args=[self.mentor.pk])):
+            resp = self.client.get(page)
+            self.assertNotContains(resp, "staff-toggle")
+            self.assertNotContains(resp, "Unpin")
+            self.assertNotContains(resp, "bi-pin")

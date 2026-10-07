@@ -327,8 +327,20 @@ IP allow-list.
   A client can prepend fake entries, so the first entry can't be trusted.
 - Earlier versions read the first entry in `accounts/signals.py` and `PageTrackingMiddleware`,
   so login history and analytics could be spoofed. That inconsistency is resolved.
-- If the app ever sits behind more than one proxy layer (e.g. Cloudflare in front of Render),
-  this needs to become "the Nth entry from the end".
+- Cloudflare proxies in front of Render, so that last entry is a Cloudflare edge. When it falls
+  inside Cloudflare's published ranges (`CLOUDFLARE_IP_RANGES` in `ip_utils.py`), the
+  `CF-Connecting-IP` header is used instead. A direct hit on the Render origin can't spoof it,
+  because its last hop isn't a Cloudflare address.
+
+## 9a. Bot checks (Cloudflare Turnstile)
+
+`kuccpss/turnstile.py::verify_turnstile()` runs on POST to login, register and password reset
+(`TurnstilePasswordResetView` wraps allauth's view). allauth's `/accounts/signup/` redirects
+to our register view so it can't bypass the check or the registration rate limit.
+- Off when `TURNSTILE_SITE_KEY`/`TURNSTILE_SECRET_KEY` are unset (dev, tests).
+- Missing or rejected token → form refused before the password is tried.
+- Siteverify unreachable → allowed and logged, so a Cloudflare outage doesn't block logins.
+- AI chat isn't gated per message: it requires a logged-in account plus per-user daily credits.
 
 ---
 

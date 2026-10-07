@@ -22,6 +22,7 @@ from django.conf.urls.static import static
 from django.http import FileResponse, HttpResponse
 from django.views.generic import TemplateView
 from django.contrib.sitemaps.views import sitemap
+from django.views.decorators.cache import cache_page
 import os
 from accounts.views import public_home_view, email_lead_capture
 from kuccpss.search_views import api_search_suggest, api_search_terms
@@ -78,7 +79,9 @@ urlpatterns = [
     path('sw.js', serve_sw, name='service_worker'),
     path('robots.txt', serve_robots, name='robots_txt'),
     path('llms.txt', serve_llms, name='llms_txt'),
-    path('sitemap.xml', sitemap, {'sitemaps': sitemaps}, name='django.contrib.sitemaps.views.sitemap'),
+    # ~2,900 URLs take several seconds to build; cache so Googlebot doesn't time out.
+    path('sitemap.xml', cache_page(60 * 60 * 6)(sitemap), {'sitemaps': sitemaps},
+         name='django.contrib.sitemaps.views.sitemap'),
     path('offline/', TemplateView.as_view(template_name='offline.html'), name='offline'),
     path('cn-staff/', admin.site.urls),
     path('accounts/', include('accounts.urls')),

@@ -9,6 +9,7 @@ from django.views.decorators.cache import cache_page
 from django.views.decorators.http import require_POST
 from courses.models import Review
 from .models import InstitutionType, Institution, InstitutionPromotion
+from kuccpss.seo import institution_meta
 
 INSTITUTIONS_PER_PAGE = 24
 
@@ -85,6 +86,60 @@ def institution_type_detail(request, type_slug):
     })
 
 
+_TYPE_ORDER = [
+    'Degree', 'Diploma', 'KMTC', 'TTC',
+    'TVET Diploma (Level 6)', 'TVET Certificate (Level 5)',
+    'TVET Artisan Certificate (Level 4)', 'TVET Craft Certificate (Level 3)',
+]
+
+
+def _group_offerings(offerings):
+    """
+    Group an institution's offerings course type → category for the detail page,
+    ordered like the course pages (tech/competitive fields first). Each offering
+    gets qualification/title/cutoff/cutoff_pct for its row.
+    Returns (groups, list of latest-year cutoffs).
+    """
+    from courses.category_meta import CATEGORY_META, DEFAULT_META
+    from courses.programmes import split_course_name
+
+    types = {}
+    cutoffs = []
+    for o in offerings:
+        course = o.course
+        o.qualification, o.title = split_course_name(course.name)
+        try:
+            o.cutoff = float(o.latest_cutoff()) if o.latest_cutoff() is not None else None
+        except (TypeError, ValueError):
+            o.cutoff = None
+        if o.cutoff is not None:
+            cutoffs.append(o.cutoff)
+            o.cutoff_pct = round(o.cutoff / 48 * 100)
+        cat_name = course.category.name if course.category else 'Other programmes'
+        t = types.setdefault(course.course_type.name, {'name': course.course_type.name, 'cats': {}})
+        cat = t['cats'].setdefault(cat_name, {
+            'name': cat_name,
+            'meta': CATEGORY_META.get(cat_name, DEFAULT_META),
+            'offerings': [],
+        })
+        cat['offerings'].append(o)
+
+    def type_key(name):
+        if name in _TYPE_ORDER:
+            return (_TYPE_ORDER.index(name), name)
+        return (len(_TYPE_ORDER), name)
+
+    groups = []
+    for name in sorted(types, key=type_key):
+        cats = sorted(types[name]['cats'].values(), key=lambda c: (c['meta']['rank'], c['name']))
+        groups.append({
+            'name': name,
+            'categories': cats,
+            'count': sum(len(c['offerings']) for c in cats),
+        })
+    return groups, cutoffs
+
+
 def institution_detail(request, type_slug, institution_slug):
     institution = get_object_or_404(
         Institution.objects.select_related('institution_type'),
@@ -94,15 +149,10 @@ def institution_detail(request, type_slug, institution_slug):
 
     offerings = list(
         institution.offerings
-        .select_related('course', 'course__course_type', 'course__category')
-        .order_by('course__course_type__name', 'course__category__name', 'course__name')
+        .select_related('course', 'course__course_type', 'course__category', 'course__cluster')
+        .order_by('course__name')
     )
-
-    grouped = {}
-    for offering in offerings:
-        ct = offering.course.course_type.name
-        cat = offering.course.category.name if offering.course.category else 'General'
-        grouped.setdefault(ct, {}).setdefault(cat, []).append(offering)
+    groups, cutoffs = _group_offerings(offerings)
 
     from analytics.utils import log_view
     log_view(request, content_type='institution', object_id=institution.pk, object_name=institution.name)
@@ -113,8 +163,12 @@ def institution_detail(request, type_slug, institution_slug):
 
     return render(request, 'institutions/institution_detail.html', {
         'institution': institution,
-        'grouped_offerings': grouped,
+        'course_groups': groups,
         'total_courses': len(offerings),
+        'field_count': sum(len(g['categories']) for g in groups),
+        'cutoff_low': min(cutoffs) if cutoffs else None,
+        'cutoff_high': max(cutoffs) if cutoffs else None,
+        'seo': institution_meta(institution, len(offerings)),
         'reviews': reviews_qs[:20],
         'avg_rating': round(agg['avg'], 1) if agg['avg'] else None,
         'review_count': agg['total'],
