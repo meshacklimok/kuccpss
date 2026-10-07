@@ -19,9 +19,10 @@
       <!-- Name + year (students) / headline (experts) -->
       <div class="mc-name-row">
         <h5 class="mc-name text-truncate">{{ mentor.display_name }}</h5>
-        {% if mentor.is_expert %}
+        {% if mentor.show_expert_badge %}
           <span class="mc-expert-badge"><i class="bi bi-patch-check-fill"></i> Expert</span>
-        {% else %}
+        {% endif %}
+        {% if not mentor.is_expert %}
           <span class="mc-year">{{ mentor.get_year_of_study_display }}</span>
         {% endif %}
       </div>
@@ -101,6 +102,7 @@
         <a href="{% url 'mentorship:mentor_profile' mentor.pk %}" class="mc-more">View full profile <i class="bi bi-arrow-right"></i></a>
       {% endif %}
       {% endwith %}
+      {% if user.is_staff %}{% include 'mentorship/_staff_mentor_controls.html' %}{% endif %}
     </div>
 
   </div>

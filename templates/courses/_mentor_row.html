@@ -4,7 +4,7 @@
   <div class="mg-info">
     <div class="mg-name">
       <span class="text-truncate">{{ mentor.display_name }}</span>
-      {% if mentor.is_expert %}<i class="bi bi-patch-check-fill mg-verified" title="Expert mentor"></i>{% endif %}
+      {% if mentor.show_expert_badge %}<i class="bi bi-patch-check-fill mg-verified" title="Expert mentor"></i>{% endif %}
     </div>
     <div class="mg-sub">
       {% if mentor.is_expert %}

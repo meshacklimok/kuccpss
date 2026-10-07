@@ -164,6 +164,36 @@ class BookingFlowTests(TestCase):
         session.refresh_from_db()
         self.assertEqual(session.status, "confirmed")
 
+    def _submit_code(self, session, code):
+        self.client.force_login(self.mentee)
+        return self.client.post(reverse("mentorship:verify_payment_manual", args=[session.token]), {"mpesa_code": code})
+
+    def test_manual_code_rejects_non_mpesa_text(self):
+        session = self._age_booking(5)
+        self._submit_code(session, "hello")
+        session.refresh_from_db()
+        self.assertEqual(session.status, "pending_payment")
+        self.assertEqual(session.manual_payment_ref, "")
+
+    def test_manual_code_stores_intasend_ref_when_paid(self):
+        from unittest.mock import patch
+        session = self._age_booking(5)
+        with patch("payments.services.fetch_intasend_invoice",
+                   return_value={"state": "COMPLETE", "mpesa_ref": "TGH4ABC123"}):
+            self._submit_code(session, "Invoice R7KQ2PX9WZ paid")
+        session.refresh_from_db()
+        self.assertEqual(session.status, "confirmed")
+        self.assertEqual(session.manual_payment_ref, "TGH4ABC123")
+
+    def test_manual_code_extracted_from_pasted_sms(self):
+        from unittest.mock import patch
+        session = self._age_booking(5)
+        with patch("payments.services.fetch_intasend_invoice", return_value={"state": "PENDING", "mpesa_ref": ""}):
+            self._submit_code(session, "tgh4abc123 Confirmed. Ksh500.00 sent to IntaSend")
+        session.refresh_from_db()
+        self.assertEqual(session.status, "pending_manual_verification")
+        self.assertEqual(session.manual_payment_ref, "TGH4ABC123")
+
     def test_expired_checkout_redirects_to_booking(self):
         self._book(self.mentee)
         session = MentorshipSession.objects.get(slot=self.slot)

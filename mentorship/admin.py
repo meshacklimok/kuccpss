@@ -86,11 +86,11 @@ class MentorProfileAdmin(admin.ModelAdmin):
     inlines = [TimeSlotInline, MentorshipSessionInline, WithdrawalInline]
     list_display = [
         "display_name", "mentor_type", "course_name", "institution_name", "year_of_study",
-        "approval_badge", "is_active", "show_new_badge", "total_sessions", "avg_rating_display",
+        "approval_badge", "is_active", "is_pinned", "show_expert_badge", "show_new_badge", "total_sessions", "avg_rating_display",
         "wallet_balance", "created_at", "reject_button",
     ]
-    list_editable = ["show_new_badge"]
-    list_filter = ["mentor_type", "show_new_badge", "is_approved", "is_active", "is_rejected", "year_of_study"]
+    list_editable = ["is_pinned", "show_expert_badge", "show_new_badge"]
+    list_filter = ["mentor_type", "is_pinned", "show_expert_badge", "show_new_badge", "is_approved", "is_active", "is_rejected", "year_of_study"]
     search_fields = ["user__email", "user__full_name", "course__name", "institution__name"]
     autocomplete_fields = ["user", "course", "institution"]
     list_select_related = ["user", "course", "institution"]
@@ -130,7 +130,7 @@ class MentorProfileAdmin(admin.ModelAdmin):
 
     fieldsets = (
         ("Mentor Type", {
-            "fields": ("mentor_type", "headline", "display_order", "show_new_badge"),
+            "fields": ("mentor_type", "headline", "display_order", "is_pinned", "show_expert_badge", "show_new_badge"),
             "description": (
                 "Expert mentors (professionals who advise on any course) are added here by "
                 "admin, not through the signup form: create their user account, then this "
