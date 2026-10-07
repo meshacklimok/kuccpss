@@ -53,8 +53,8 @@
   white-space: nowrap;
 }
 .btn-dash-action:hover { transform: translateY(-2px); text-decoration: none; }
-.btn-dash-white { background: #fff; color: #1e3a8a; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
-.btn-dash-white:hover { color: #1e3a8a; box-shadow: 0 4px 18px rgba(0,0,0,0.28); }
+.btn-dash-white { background: #fff; color: #142a6e; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
+.btn-dash-white:hover { color: #142a6e; box-shadow: 0 4px 18px rgba(0,0,0,0.28); }
 .btn-dash-ghost { background: rgba(255,255,255,0.1); color: #fff; border: 1.5px solid rgba(255,255,255,0.25); }
 .btn-dash-ghost:hover { background: rgba(255,255,255,0.18); color: #fff; }
 
@@ -176,7 +176,7 @@
   width: 30px; height: 30px; border-radius: 50%; border: none;
   background: #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.15);
   display: flex; align-items: center; justify-content: center;
-  cursor: pointer; color: #1e3a8a; z-index: 5; padding: 0;
+  cursor: pointer; color: #142a6e; z-index: 5; padding: 0;
   transition: box-shadow 0.15s;
 }
 .reco-car-btn:hover { box-shadow: 0 4px 14px rgba(0,0,0,0.22); }
@@ -559,6 +559,92 @@ body.dark .diff-badge.shortfall { background: rgba(255,69,58,0.15); color: #ff8a
 body.dark .req-pill.pass { background: rgba(52,199,89,0.14); color: #5fd88a; }
 body.dark .req-pill.fail { background: rgba(255,69,58,0.15); color: #ff8a80; }
 body.dark .ai-msg.typing { background: var(--surface-2); }
+
+/* ═══ Uniform card headers: brand navy on top only ═══ */
+.courses-tab-btn.active, .courses-tab-btn:hover { color: #142a6e; border-bottom-color: #142a6e; }
+.courses-tab-count { background: #f1f5f9; color: #142a6e; font-size: 0.7rem; border-radius: 10px; border: 1px solid #cbd5e1; }
+.qa-btn:hover { background: #f1f5f9; border-color: #142a6e; }
+
+/* ═══ KUCCPS timeline card ═══ */
+.tl-link { display: block; color: inherit; text-decoration: none; border-radius: 10px; margin: -6px; padding: 6px; transition: background 0.15s; }
+.tl-link:hover { background: var(--hover-tint); color: inherit; text-decoration: none; }
+.tl-more {
+  display: flex; align-items: center; justify-content: center; gap: 4px;
+  margin-top: 0.6rem; padding-top: 0.6rem; border-top: 1px solid #f1f5f9;
+  font-size: 0.74rem; font-weight: 700; color: #142a6e;
+}
+.tl-link:hover .tl-more { text-decoration: underline; }
+.tl-status {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 0.68rem; font-weight: 700; padding: 3px 9px; border-radius: 20px;
+  background: rgba(255,255,255,0.12); color: #fff; border: 1px solid rgba(255,255,255,0.25);
+}
+.tl-status-open { background: rgba(74,222,128,0.18); color: #86efac; border-color: rgba(74,222,128,0.35); }
+.tl-live { width: 6px; height: 6px; border-radius: 50%; background: #4ade80; animation: dotPulse 1.6s infinite; }
+.tl-countdown { display: flex; align-items: center; gap: 0.9rem; margin-bottom: 1rem; }
+.tl-cal {
+  width: 64px; flex-shrink: 0; border-radius: 12px; overflow: hidden;
+  border: 1.5px solid #142a6e; text-align: center; background: #fff;
+}
+.tl-cal-top {
+  background: #142a6e; color: #fff; font-size: 0.6rem; font-weight: 800;
+  text-transform: uppercase; letter-spacing: 0.1em; padding: 3px 0;
+}
+.tl-cal-num { font-size: 1.6rem; font-weight: 900; color: #142a6e; line-height: 1; padding: 8px 0 9px; }
+.tl-count-label { font-size: 0.85rem; font-weight: 800; color: #1e293b; line-height: 1.25; }
+.tl-count-date { font-size: 0.72rem; color: #64748b; margin-top: 3px; }
+.tl-steps { list-style: none; margin: 0; padding: 0; }
+.tl-step {
+  position: relative; display: flex; align-items: center; gap: 10px;
+  padding: 0.45rem 0 0.45rem 0; font-size: 0.78rem;
+}
+.tl-step:not(:last-child)::after {
+  content: ''; position: absolute; left: 5px; top: calc(50% + 7px);
+  width: 2px; height: calc(100% - 10px); background: #e2e8f0;
+}
+.tl-dot {
+  width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0;
+  border: 2px solid #cbd5e1; background: #fff; position: relative; z-index: 1;
+}
+.tl-step.done .tl-dot { background: #142a6e; border-color: #142a6e; }
+.tl-step.done .tl-step-name { color: #94a3b8; text-decoration: line-through; }
+.tl-step.next .tl-dot { border-color: #142a6e; box-shadow: 0 0 0 3px rgba(20,42,110,0.2); }
+.tl-step.next .tl-step-name { font-weight: 800; }
+.tl-step-name { flex: 1; color: #1e293b; font-weight: 600; }
+.tl-step-date { font-size: 0.72rem; font-weight: 700; color: #64748b; white-space: nowrap; }
+
+/* ═══ Carousel — clearer "swipe me" affordance ═══ */
+.reco-car-btn { background: #142a6e; color: #fff; width: 32px; height: 32px; }
+.reco-nav { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 12px; }
+.reco-nav .reco-dots-bar { margin-top: 0; flex: 1; flex-wrap: wrap; }
+.reco-dot { width: 8px; height: 8px; background: #cbd5e1; }
+.reco-dot.active { width: 22px; background: #142a6e; }
+.reco-hint, .reco-counter {
+  font-size: 0.68rem; font-weight: 800; white-space: nowrap; flex-shrink: 0;
+  padding: 3px 9px; border-radius: 20px;
+  background: #f1f5f9; color: #142a6e; border: 1px solid #cbd5e1;
+}
+.reco-hint { display: inline-flex; align-items: center; gap: 4px; }
+@media (min-width: 992px) { .reco-hint { visibility: hidden; } }
+
+/* ═══ Dark mode ═══ */
+body.dark .courses-tab-btn.active, body.dark .courses-tab-btn:hover { color: #a5b4fc; border-bottom-color: #a5b4fc; }
+body.dark .courses-tab-count { background: var(--surface-2); color: var(--text); border-color: var(--border); }
+body.dark .qa-btn:hover { background: var(--hover-tint); border-color: #818cf8; }
+body.dark .tl-cal { background: var(--surface-2); border-color: #818cf8; }
+body.dark .tl-cal-top { background: #312e81; }
+body.dark .tl-cal-num, body.dark .tl-count-label, body.dark .tl-step-name { color: var(--text); }
+body.dark .tl-count-date, body.dark .tl-step-date { color: var(--text-2); }
+body.dark .tl-more { color: #a5b4fc; border-top-color: var(--border); }
+body.dark .tl-step:not(:last-child)::after { background: var(--border); }
+body.dark .tl-dot { background: var(--surface); border-color: #6b7280; }
+body.dark .tl-step.done .tl-dot { background: #818cf8; border-color: #818cf8; }
+body.dark .tl-step.done .tl-step-name { color: var(--text-3); }
+body.dark .tl-step.next .tl-dot { border-color: #a5b4fc; box-shadow: 0 0 0 3px rgba(129,140,248,0.25); }
+body.dark .reco-car-btn { background: #818cf8; color: #142a6e; }
+body.dark .reco-dot { background: #6b7280; }
+body.dark .reco-dot.active { background: #a5b4fc; }
+body.dark .reco-hint, body.dark .reco-counter { background: rgba(129,140,248,0.15); color: #c7d2fe; border-color: rgba(129,140,248,0.45); }
 </style>
 
 
@@ -649,7 +735,7 @@ body.dark .ai-msg.typing { background: var(--surface-2); }
         {% endif %}
         {% if user.is_superuser %}
         <a href="{% url 'accounts:staff_team' %}" class="btn-dash-action"
-           style="background:#1e3a8a;color:#fff;border:none;">
+           style="background:#142a6e;color:#fff;border:none;">
           <i class="bi bi-shield-lock-fill"></i>Staff & Admins
         </a>
         {% endif %}
@@ -712,7 +798,7 @@ body.dark .ai-msg.typing { background: var(--surface-2); }
   {% if not guest and readiness_pct < 100 %}
   <div class="dash-card reveal">
     <div class="dash-card-header-gradient"
-         style="background:#312e81;">
+         style="background:#142a6e;">
       <div>
         <div class="fw-800" style="font-size:0.9rem;display:flex;align-items:center;gap:7px;">
           <i class="fas fa-chart-pie" style="color:#c4b5fd;"></i>Application Readiness
@@ -784,7 +870,7 @@ body.dark .ai-msg.typing { background: var(--surface-2); }
 
   <div class="dash-card reveal">
     <div class="dash-card-header-gradient"
-         style="background:#1e3a8a;">
+         style="background:#142a6e;">
       <div>
         <div class="fw-800" style="font-size:0.9rem;display:flex;align-items:center;gap:7px;">
           <i class="fas fa-chart-bar" style="color:#93c5fd;"></i>Your Cluster Points
@@ -902,7 +988,7 @@ body.dark .ai-msg.typing { background: var(--surface-2); }
     {% if snapshot and snapshot.top_matches_json %}
     {# — real data — #}
     <div class="dash-card-header-gradient"
-         style="background:#1e3a8a;">
+         style="background:#142a6e;">
       <div>
         <div class="fw-800" style="font-size:0.9rem;display:flex;align-items:center;gap:7px;">
           <i class="fas fa-star" style="color:#fbbf24;"></i>Recommended For You
@@ -970,14 +1056,18 @@ body.dark .ai-msg.typing { background: var(--surface-2); }
         </div>
         <button type="button" aria-label="Previous" class="reco-car-btn rc-prev" onclick="rcMove('recoWrapReal',-1)"><i class="bi bi-chevron-left" style="font-size:0.8rem;"></i></button>
         <button type="button" aria-label="Next" class="reco-car-btn rc-next" onclick="rcMove('recoWrapReal',1)"><i class="bi bi-chevron-right" style="font-size:0.8rem;"></i></button>
-        <div class="reco-dots-bar" id="recoDotsReal"></div>
+        <div class="reco-nav">
+          <span class="reco-hint"><i class="bi bi-arrow-left-right"></i>Swipe</span>
+          <div class="reco-dots-bar" id="recoDotsReal"></div>
+          <span class="reco-counter" id="recoCountReal"></span>
+        </div>
       </div>
     </div>
 
     {% else %}
     {# — sample / no snapshot — #}
     <div class="dash-card-header-gradient"
-         style="background:#1e3a8a;">
+         style="background:#142a6e;">
       <div>
         <div class="fw-800" style="font-size:0.9rem;display:flex;align-items:center;gap:7px;">
           <i class="fas fa-star" style="color:#fbbf24;"></i>Recommended For You
@@ -1029,7 +1119,11 @@ body.dark .ai-msg.typing { background: var(--surface-2); }
         </div>
         <button type="button" aria-label="Previous" class="reco-car-btn rc-prev" onclick="rcMove('recoWrapSample',-1)"><i class="bi bi-chevron-left" style="font-size:0.8rem;"></i></button>
         <button type="button" aria-label="Next" class="reco-car-btn rc-next" onclick="rcMove('recoWrapSample',1)"><i class="bi bi-chevron-right" style="font-size:0.8rem;"></i></button>
-        <div class="reco-dots-bar" id="recoDotsSample"></div>
+        <div class="reco-nav">
+          <span class="reco-hint"><i class="bi bi-arrow-left-right"></i>Swipe</span>
+          <div class="reco-dots-bar" id="recoDotsSample"></div>
+          <span class="reco-counter" id="recoCountSample"></span>
+        </div>
       </div>
     </div>
     {% endif %}
@@ -1038,7 +1132,7 @@ body.dark .ai-msg.typing { background: var(--surface-2); }
 
   {# ── CAREER QUIZ CTA (only if quiz not yet taken) ── #}
   {% if not guest and not quiz_submission %}
-  <div class="dash-card reveal" id="quizCtaCard" style="border-color:#fde68a;">
+  <div class="dash-card reveal" id="quizCtaCard">
     <div class="dash-card-body" style="padding:1rem 1.25rem;">
       <div class="d-flex align-items-center gap-3 flex-wrap">
         <div class="rounded-3 d-flex align-items-center justify-content-center flex-shrink-0"
@@ -1073,7 +1167,7 @@ body.dark .ai-msg.typing { background: var(--surface-2); }
   {# ── MY COURSES (tabbed: Watchlist | Shortlist) ── #}
   {% if guest %}
   <div class="dash-card reveal">
-    <div class="dash-card-header-gradient" style="background:#1e3a8a;">
+    <div class="dash-card-header-gradient" style="background:#142a6e;">
       <div>
         <div class="fw-800" style="font-size:0.9rem;display:flex;align-items:center;gap:7px;">
           <i class="fas fa-layer-group" style="color:#a5b4fc;"></i>My Courses
@@ -1098,7 +1192,7 @@ body.dark .ai-msg.typing { background: var(--surface-2); }
   {% else %}
   <div class="dash-card reveal">
     <div class="dash-card-header-gradient"
-         style="background:#312e81;">
+         style="background:#142a6e;">
       <div>
         <div class="fw-800" style="font-size:0.9rem;display:flex;align-items:center;gap:7px;">
           <i class="fas fa-layer-group" style="color:#c7d2fe;"></i>My Courses
@@ -1114,12 +1208,12 @@ body.dark .ai-msg.typing { background: var(--surface-2); }
     {# tabs nav #}
     <div class="courses-nav">
       <button class="courses-tab-btn active" onclick="switchTab('watchlistPane','shortlistPane',this,document.querySelector('.courses-tab-btn:not(.active) ~ .courses-tab-btn, .courses-tab-btn'))">
-        <i class="fas fa-bookmark" style="color:#f59e0b;"></i>Watchlist
-        <span class="badge ms-1" style="background:#fef3c7;color:#92400e;font-size:0.7rem;border-radius:10px;">{{ saved_count }}</span>
+        <i class="fas fa-bookmark"></i>Watchlist
+        <span class="badge ms-1 courses-tab-count">{{ saved_count }}</span>
       </button>
       <button class="courses-tab-btn" onclick="switchTab('shortlistPane','watchlistPane',this,document.querySelector('.courses-tab-btn.active'))">
-        <i class="fas fa-list-check text-primary"></i>Shortlist
-        <span class="badge ms-1" style="background:#eff6ff;color:#1d4ed8;font-size:0.7rem;border-radius:10px;">{{ shortlist_count }}</span>
+        <i class="fas fa-list-check"></i>Shortlist
+        <span class="badge ms-1 courses-tab-count">{{ shortlist_count }}</span>
       </button>
     </div>
 
@@ -1249,7 +1343,7 @@ body.dark .ai-msg.typing { background: var(--surface-2); }
   {% if not guest and cutoff_comparisons %}
   <div class="dash-card reveal">
     <div class="dash-card-header-gradient"
-         style="background:#1e1b4b;">
+         style="background:#142a6e;">
       <div>
         <div class="fw-800" style="font-size:0.9rem;display:flex;align-items:center;gap:7px;">
           <i class="fas fa-crosshairs" style="color:#a5b4fc;"></i>Cutoff Match
@@ -1345,7 +1439,7 @@ body.dark .ai-msg.typing { background: var(--surface-2); }
   {% if not guest and subject_req_checks %}
   <div class="dash-card reveal">
     <div class="dash-card-header-gradient"
-         style="background:#7c3aed;">
+         style="background:#142a6e;">
       <div>
         <div class="fw-800" style="font-size:0.9rem;display:flex;align-items:center;gap:7px;">
           <i class="fas fa-clipboard-check" style="color:#c4b5fd;"></i>Subject Requirements
@@ -1405,7 +1499,7 @@ body.dark .ai-msg.typing { background: var(--surface-2); }
   {% if not guest and shortlist_comparison %}
   <div class="dash-card reveal">
     <div class="dash-card-header-gradient"
-         style="background:#0f172a;">
+         style="background:#142a6e;">
       <div>
         <div class="fw-800" style="font-size:0.9rem;display:flex;align-items:center;gap:7px;">
           <i class="fas fa-table" style="color:#93c5fd;"></i>Course Comparison
@@ -1483,7 +1577,7 @@ body.dark .ai-msg.typing { background: var(--surface-2); }
   {% if all_clusters %}
   <div class="dash-card reveal">
     <div class="dash-card-header-gradient"
-         style="background:#0f172a;">
+         style="background:#142a6e;">
       <div>
         <div class="fw-800" style="font-size:0.9rem;display:flex;align-items:center;gap:7px;">
           <i class="fas fa-layer-group" style="color:#93c5fd;"></i>KUCCPS Clusters
@@ -1523,7 +1617,7 @@ body.dark .ai-msg.typing { background: var(--surface-2); }
   {% if featured_promos %}
   <div class="dash-card reveal">
     <div class="dash-card-header-gradient"
-         style="background:#0f172a;">
+         style="background:#142a6e;">
       <div>
         <div class="fw-800" style="font-size:0.9rem;display:flex;align-items:center;gap:7px;">
           <i class="fas fa-handshake" style="color:#fde68a;"></i>Featured Institutions
@@ -1567,7 +1661,7 @@ body.dark .ai-msg.typing { background: var(--surface-2); }
   {% if recent_news %}
   <div class="dash-card reveal">
     <div class="dash-card-header-gradient"
-         style="background:#0f172a;">
+         style="background:#142a6e;">
       <div class="fw-800" style="font-size:0.9rem;display:flex;align-items:center;gap:7px;">
         <i class="fas fa-newspaper" style="color:#93c5fd;"></i>Latest News &amp; Updates
       </div>
@@ -1612,52 +1706,70 @@ body.dark .ai-msg.typing { background: var(--surface-2); }
 
 
   {# ── KUCCPS TIMELINE ── #}
-  <div class="sidebar-card reveal" style="overflow:hidden;">
-    <div class="p-4 {% if timeline_phase != 'closed' %}text-white{% endif %}"
-         style="{% if timeline_phase == 'before_open' %}background:#1e3a8a;
-                {% elif timeline_phase == 'open' %}background:#065f46;
-                {% else %}background:#f8fafc;{% endif %}">
-      <div class="d-flex align-items-center gap-2 mb-3">
-        <i class="fas fa-calendar-check {% if timeline_phase == 'closed' %}text-muted{% endif %}"></i>
-        <span class="fw-800" style="font-size:0.88rem;{% if timeline_phase == 'closed' %}color:#1e293b;{% endif %}">
-          KUCCPS 2026 Portal
-        </span>
-      </div>
+  <div class="sidebar-card reveal">
+    <div class="sidebar-card-header" style="background:#142a6e;border:none;">
+      <h6 class="sidebar-card-title" style="color:#fff;">
+        <i class="fas fa-calendar-alt" style="color:#93c5fd;"></i>KUCCPS 2026 Portal
+      </h6>
+      <span class="tl-status tl-status-{{ timeline_phase }}">
+        {% if timeline_phase == 'open' %}<span class="tl-live"></span>Open now
+        {% elif timeline_phase == 'before_open' %}Upcoming
+        {% else %}Closed{% endif %}
+      </span>
+    </div>
+    <div class="sidebar-card-body">
+      <a href="{% url 'resources:kuccps_calendar' %}" class="tl-link">
       {% if timeline_phase != 'closed' %}
-      <div class="text-center py-1 mb-2">
-        <div class="timeline-big-num">{{ timeline_days }}</div>
-        <div style="font-size:0.75rem;opacity:0.8;text-transform:uppercase;letter-spacing:0.06em;margin-top:2px;">
-          {{ timeline_label }}
+      <div class="tl-countdown">
+        <div class="tl-cal">
+          <div class="tl-cal-top">Days</div>
+          <div class="tl-cal-num">{{ timeline_days }}</div>
         </div>
-        <div style="font-size:0.7rem;opacity:0.6;margin-top:3px;">{{ timeline_date }}</div>
+        <div style="min-width:0;">
+          <div class="tl-count-label">{{ timeline_label }}</div>
+          <div class="tl-count-date"><i class="far fa-clock me-1"></i>{{ timeline_date }}</div>
+        </div>
       </div>
       {% else %}
-      <p class="text-muted small mb-2">{{ timeline_date }}</p>
-      {% endif %}
-      <hr class="{% if timeline_phase != 'closed' %}border-white opacity-25{% endif %} my-3">
-      <div class="d-flex flex-column gap-2" style="font-size:0.77rem;">
-        <div class="d-flex justify-content-between {% if timeline_phase != 'closed' %}opacity-90{% endif %}">
-          <span><i class="fas fa-circle me-2" style="font-size:0.4rem;vertical-align:middle;
-            color:{% if timeline_phase == 'before_open' %}#93c5fd{% elif timeline_phase == 'open' %}#86efac{% else %}#94a3b8{% endif %};"></i>Portal Opens</span>
-          <strong>Est. 3 Jul 2026</strong>
+      <div class="tl-countdown">
+        <div class="tl-cal">
+          <div class="tl-cal-top">2026</div>
+          <div class="tl-cal-num"><i class="fas fa-lock" style="font-size:1.1rem;"></i></div>
         </div>
-        <div class="d-flex justify-content-between {% if timeline_phase != 'closed' %}opacity-90{% endif %}">
-          <span><i class="fas fa-circle me-2" style="font-size:0.4rem;vertical-align:middle;
-            color:{% if timeline_phase == 'closed' %}#94a3b8{% else %}#fcd34d{% endif %};"></i>Portal Closes</span>
-          <strong>Est. 21 Aug 2026</strong>
-        </div>
-        <div class="d-flex justify-content-between {% if timeline_phase != 'closed' %}opacity-90{% endif %}">
-          <span><i class="fas fa-circle me-2" style="font-size:0.4rem;vertical-align:middle;color:#f87171;"></i>Results</span>
-          <strong>Est. Sep 2026</strong>
+        <div style="min-width:0;">
+          <div class="tl-count-label">Application closed</div>
+          <div class="tl-count-date">{{ timeline_date }}</div>
         </div>
       </div>
+      {% endif %}
+
+      <ol class="tl-steps">
+        <li class="tl-step {% if timeline_phase != 'before_open' %}done{% else %}next{% endif %}">
+          <span class="tl-dot"></span>
+          <span class="tl-step-name">Portal opens</span>
+          <span class="tl-step-date">Est. 3 Jul 2026</span>
+        </li>
+        <li class="tl-step {% if timeline_phase == 'closed' %}done{% elif timeline_phase == 'open' %}next{% endif %}">
+          <span class="tl-dot"></span>
+          <span class="tl-step-name">Portal closes</span>
+          <span class="tl-step-date">Est. 21 Aug 2026</span>
+        </li>
+        <li class="tl-step {% if timeline_phase == 'closed' %}next{% endif %}">
+          <span class="tl-dot"></span>
+          <span class="tl-step-name">Placement results</span>
+          <span class="tl-step-date">Est. Sep 2026</span>
+        </li>
+      </ol>
+      <div class="tl-more">View full calendar <i class="bi bi-chevron-right"></i></div>
+      </a>
+
       {% if timeline_phase == 'before_open' %}
-      <a href="{% url 'career:home' %}" class="btn btn-light btn-sm w-100 mt-3 fw-700" style="border-radius:10px;font-size:0.8rem;" {% if guest %}data-guest-gate="1"{% endif %}>
+      <a href="{% url 'career:home' %}" class="btn btn-dark btn-sm w-100 mt-3 fw-700" style="border-radius:10px;font-size:0.8rem;" {% if guest %}data-guest-gate="1"{% endif %}>
         <i class="fas fa-rocket me-1"></i>Prepare Now
       </a>
       {% elif timeline_phase == 'open' %}
       <a href="https://students.kuccps.net/" target="_blank" rel="noopener"
-         class="btn btn-light btn-sm w-100 mt-3 fw-700" style="border-radius:10px;font-size:0.8rem;">
+         class="btn btn-dark btn-sm w-100 mt-3 fw-700" style="border-radius:10px;font-size:0.8rem;">
         <i class="fas fa-external-link-alt me-1"></i>Apply on KUCCPS
       </a>
       {% endif %}
@@ -1668,13 +1780,19 @@ body.dark .ai-msg.typing { background: var(--surface-2); }
   {# ── QUICK ACTIONS ── #}
   <div class="sidebar-card reveal">
     <div class="sidebar-card-header"
-         style="background:#1e3a8a;border:none;">
+         style="background:#142a6e;border:none;">
       <h6 class="sidebar-card-title" style="color:#fff;">
         <i class="fas fa-bolt" style="color:#fbbf24;"></i>Quick Actions
       </h6>
     </div>
     <div class="sidebar-card-body">
       <div class="row g-2">
+        <div class="col-6">
+          <a href="{% url 'career:quiz' %}" class="qa-btn" {% if guest %}data-guest-gate="1"{% endif %}>
+            <i class="fas fa-clipboard-list text-warning"></i>Career Quiz
+            {% if guest %}<i class="fas fa-lock ms-1" style="font-size:0.6rem;color:#cbd5e1;"></i>{% endif %}
+          </a>
+        </div>
         <div class="col-6">
           <a href="{% url 'clusterpoints:calculator' %}" class="qa-btn" {% if guest %}data-guest-gate="1"{% endif %}>
             <i class="fas fa-calculator text-primary"></i>Calculator
@@ -1684,12 +1802,6 @@ body.dark .ai-msg.typing { background: var(--surface-2); }
         <div class="col-6">
           <a href="{% url 'clusterpoints:eligible_courses' %}" class="qa-btn" {% if guest %}data-guest-gate="1"{% endif %}>
             <i class="fas fa-check-circle text-success"></i>Eligible
-            {% if guest %}<i class="fas fa-lock ms-1" style="font-size:0.6rem;color:#cbd5e1;"></i>{% endif %}
-          </a>
-        </div>
-        <div class="col-6">
-          <a href="{% url 'career:quiz' %}" class="qa-btn" {% if guest %}data-guest-gate="1"{% endif %}>
-            <i class="fas fa-clipboard-list text-warning"></i>Career Quiz
             {% if guest %}<i class="fas fa-lock ms-1" style="font-size:0.6rem;color:#cbd5e1;"></i>{% endif %}
           </a>
         </div>
@@ -1707,7 +1819,7 @@ body.dark .ai-msg.typing { background: var(--surface-2); }
   {% if trending_viewed or spotlight %}
   <div class="sidebar-card reveal">
     <div class="sidebar-card-header"
-         style="background:#0f172a;border:none;">
+         style="background:#142a6e;border:none;">
       <h6 class="sidebar-card-title" style="color:#fff;">
         <i class="fas fa-fire" style="color:#f97316;"></i>Trending Now
         <span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#22c55e;
@@ -1774,7 +1886,7 @@ body.dark .ai-msg.typing { background: var(--surface-2); }
   {% if inst_type_links %}
   <div class="sidebar-card reveal">
     <div class="sidebar-card-header"
-         style="background:#0f172a;border:none;">
+         style="background:#142a6e;border:none;">
       <h6 class="sidebar-card-title" style="color:#fff;">
         <i class="fas fa-university" style="color:#93c5fd;"></i>Institutions
       </h6>
@@ -1805,7 +1917,7 @@ body.dark .ai-msg.typing { background: var(--surface-2); }
   {# ── MENTORSHIP ── #}
   <div class="sidebar-card reveal">
     <div class="sidebar-card-header"
-         style="background:#0f172a;border:none;">
+         style="background:#142a6e;border:none;">
       <h6 class="sidebar-card-title" style="color:#fff;">
         <i class="bi bi-people-fill" style="color:#4ade80;"></i>Mentorship
         {% if next_session %}
@@ -1928,7 +2040,7 @@ body.dark .ai-msg.typing { background: var(--surface-2); }
   {# ── CAREER IDEAS ── #}
   <div class="sidebar-card reveal">
     <div class="sidebar-card-header"
-         style="background:#1e1b4b;border:none;">
+         style="background:#142a6e;border:none;">
       <h6 class="sidebar-card-title" style="color:#fff;">
         <i class="fas fa-compass" style="color:#a5b4fc;"></i>Career Ideas
       </h6>
@@ -1986,7 +2098,7 @@ body.dark .ai-msg.typing { background: var(--surface-2); }
   {% if not guest and ai_credit_info %}
   <div class="sidebar-card reveal">
     <div class="sidebar-card-header"
-         style="background:#0f172a;border:none;">
+         style="background:#142a6e;border:none;">
       <h6 class="sidebar-card-title" style="color:#fff;">
         <i class="fas fa-robot" style="color:#a5b4fc;"></i>CareerNext AI
       </h6>
@@ -2070,9 +2182,9 @@ body.dark .ai-msg.typing { background: var(--surface-2); }
   {# ── SCHOLARSHIP ALERTS ── #}
   {% if scholarship_alerts %}
   <div class="sidebar-card reveal">
-    <div class="sidebar-card-header">
-      <h6 class="sidebar-card-title"><i class="fas fa-award" style="color:#7c3aed;"></i>Scholarships</h6>
-      <span class="badge" style="background:#ede9fe;color:#6d28d9;font-size:0.7rem;border-radius:10px;">Sponsored</span>
+    <div class="sidebar-card-header" style="background:#142a6e;border:none;">
+      <h6 class="sidebar-card-title" style="color:#fff;"><i class="fas fa-award" style="color:#c4b5fd;"></i>Scholarships</h6>
+      <span class="badge" style="background:rgba(255,255,255,0.2);color:#fff;font-size:0.7rem;border-radius:10px;border:1px solid rgba(255,255,255,0.25);">Sponsored</span>
     </div>
     <div class="sidebar-card-body d-flex flex-column gap-2 p-2">
       {% for promo in scholarship_alerts %}
@@ -2120,7 +2232,7 @@ body.dark .ai-msg.typing { background: var(--surface-2); }
   {# ── OFFICIAL LINKS ── #}
   <div class="sidebar-card reveal">
     <div class="sidebar-card-header"
-         style="background:#0f172a;border:none;">
+         style="background:#142a6e;border:none;">
       <h6 class="sidebar-card-title" style="color:#fff;">
         <i class="fas fa-link" style="color:#94a3b8;"></i>Official Links
       </h6>
@@ -2132,7 +2244,7 @@ body.dark .ai-msg.typing { background: var(--surface-2); }
           <i class="fas fa-university" style="color:#1d4ed8;font-size:0.8rem;"></i>
         </div>
         <div style="min-width:0;flex:1;">
-          <div class="fw-700 small" style="color:#1e3a8a;">KUCCPS Portal</div>
+          <div class="fw-700 small" style="color:#142a6e;">KUCCPS Portal</div>
           <div class="text-muted" style="font-size:0.7rem;">students.kuccps.net</div>
         </div>
         <i class="fas fa-external-link-alt text-muted" style="font-size:0.6rem;"></i>
@@ -2542,63 +2654,58 @@ function sendAiMsg() {
 /* ── Reco carousel ─────────────────────────────────────────── */
 var _rcState = {};
 
+function rcVis() { return window.innerWidth >= 992 ? 3 : window.innerWidth >= 576 ? 2 : 1; }
+/* On phones each card takes 86% so the next one peeks in — shows it's swipeable */
+function rcItemW(wrap) {
+  var vis = rcVis();
+  var w = wrap.querySelector('.reco-carousel-outer').clientWidth / vis;
+  return vis === 1 ? w * 0.86 : w;
+}
+function rcCount(wrap) {
+  return Math.ceil(wrap.querySelectorAll('.reco-carousel-item').length / rcVis());
+}
+
+function rcRender(wrapId) {
+  var wrap = document.getElementById(wrapId);
+  var st = _rcState[wrapId];
+  if (!wrap || !st) return;
+  var vis = rcVis(), n = rcCount(wrap), itemW = rcItemW(wrap);
+  st.current = Math.max(0, Math.min(st.current, n - 1));
+  var track = wrap.querySelector('.reco-carousel-track');
+  [].forEach.call(track.querySelectorAll('.reco-carousel-item'), function (item) {
+    item.style.width = itemW + 'px';
+  });
+  track.style.transform = 'translateX(' + (-(st.current * vis * itemW)) + 'px)';
+
+  var dotsBar = document.getElementById(wrapId.replace('recoWrap', 'recoDots'));
+  if (dotsBar) {
+    if (dotsBar.children.length !== n) {
+      dotsBar.innerHTML = '';
+      for (var i = 0; i < n; i++) {
+        var dot = document.createElement('button');
+        dot.type = 'button';
+        dot.setAttribute('aria-label', 'Slide ' + (i + 1));
+        (function (idx) { dot.addEventListener('click', function () { rcGoTo(wrapId, idx); }); })(i);
+        dotsBar.appendChild(dot);
+      }
+    }
+    [].forEach.call(dotsBar.children, function (d, i) {
+      d.className = 'reco-dot' + (i === st.current ? ' active' : '');
+    });
+  }
+  var counter = document.getElementById(wrapId.replace('recoWrap', 'recoCount'));
+  if (counter) counter.textContent = (st.current + 1) + ' / ' + n;
+}
+
 function rcInit(wrapId) {
   var wrap = document.getElementById(wrapId);
-  if (!wrap) return;
-  var track = wrap.querySelector('.reco-carousel-track');
-  var items = track ? track.querySelectorAll('.reco-carousel-item') : [];
-  if (!track || !items.length) return;
-  var dotsId  = wrapId.replace('recoWrap', 'recoDots');
-  var dotsBar = document.getElementById(dotsId);
+  if (!wrap || !wrap.querySelector('.reco-carousel-item')) return;
   _rcState[wrapId] = { current: 0, timer: null };
 
-  function getVis() { return window.innerWidth >= 992 ? 3 : window.innerWidth >= 576 ? 2 : 1; }
-  function totalSlides() { return Math.ceil(items.length / getVis()); }
-
-  function setWidths() {
-    var pct = (100 / getVis()) + '%';
-    [].forEach.call(items, function (item) { item.style.width = pct; });
-  }
-
-  function buildDots(cur) {
-    if (!dotsBar) return;
-    dotsBar.innerHTML = '';
-    var n = totalSlides();
-    for (var i = 0; i < n; i++) {
-      var dot = document.createElement('button');
-      dot.className = 'reco-dot' + (i === cur ? ' active' : '');
-      dot.setAttribute('aria-label', 'Slide ' + (i + 1));
-      (function (idx) { dot.addEventListener('click', function () { rcGoTo(wrapId, idx); }); })(i);
-      dotsBar.appendChild(dot);
-    }
-  }
-
-  function applyPos(cur) {
-    var vis   = getVis();
-    var outer = wrap.querySelector('.reco-carousel-outer');
-    var itemW = outer.clientWidth / vis;
-    track.style.transform = 'translateX(' + (-(cur * vis * itemW)) + 'px)';
-    if (dotsBar) {
-      [].forEach.call(dotsBar.querySelectorAll('.reco-dot'), function (d, i) {
-        d.className = 'reco-dot' + (i === cur ? ' active' : '');
-      });
-    }
-  }
-
-  function refresh() {
-    setWidths();
-    var n   = totalSlides();
-    var cur = Math.min(_rcState[wrapId].current, n - 1);
-    _rcState[wrapId].current = cur;
-    buildDots(cur);
-    applyPos(cur);
-  }
-  _rcState[wrapId].refresh = refresh;
-
   function startAuto() {
+    stopAuto();
     _rcState[wrapId].timer = setInterval(function () {
-      var n = totalSlides();
-      rcGoTo(wrapId, (_rcState[wrapId].current + 1) % n);
+      rcGoTo(wrapId, (_rcState[wrapId].current + 1) % rcCount(wrap));
     }, 4500);
   }
   function stopAuto() { clearInterval(_rcState[wrapId].timer); }
@@ -2607,59 +2714,37 @@ function rcInit(wrapId) {
   wrap.addEventListener('mouseleave', startAuto);
 
   var touchX = null;
-  wrap.addEventListener('touchstart', function (e) { touchX = e.changedTouches[0].clientX; }, { passive: true });
+  wrap.addEventListener('touchstart', function (e) { touchX = e.changedTouches[0].clientX; stopAuto(); }, { passive: true });
   wrap.addEventListener('touchend', function (e) {
     if (touchX === null) return;
     var dx = e.changedTouches[0].clientX - touchX;
     touchX = null;
-    if (Math.abs(dx) < 40) return;
-    stopAuto(); rcMove(wrapId, dx < 0 ? 1 : -1); startAuto();
+    if (Math.abs(dx) >= 40) rcMove(wrapId, dx < 0 ? 1 : -1);
+    startAuto();
   }, { passive: true });
 
-  refresh();
+  rcRender(wrapId);
   startAuto();
 }
 
 function rcGoTo(wrapId, idx) {
-  var wrap  = document.getElementById(wrapId);
-  if (!wrap || !_rcState[wrapId]) return;
-  var track = wrap.querySelector('.reco-carousel-track');
-  var items = track.querySelectorAll('.reco-carousel-item');
-  var vis   = window.innerWidth >= 992 ? 3 : window.innerWidth >= 576 ? 2 : 1;
-  var n     = Math.ceil(items.length / vis);
-  idx = Math.max(0, Math.min(idx, n - 1));
+  if (!_rcState[wrapId]) return;
   _rcState[wrapId].current = idx;
-  var outer = wrap.querySelector('.reco-carousel-outer');
-  var itemW = outer.clientWidth / vis;
-  track.style.transform = 'translateX(' + (-(idx * vis * itemW)) + 'px)';
-  var dotsBar = document.getElementById(wrapId.replace('recoWrap', 'recoDots'));
-  if (dotsBar) {
-    [].forEach.call(dotsBar.querySelectorAll('.reco-dot'), function (d, i) {
-      d.className = 'reco-dot' + (i === idx ? ' active' : '');
-    });
-  }
+  rcRender(wrapId);
 }
 
 function rcMove(wrapId, dir) {
-  if (!_rcState[wrapId]) return;
-  var wrap  = document.getElementById(wrapId);
-  if (!wrap) return;
-  var track = wrap.querySelector('.reco-carousel-track');
-  var items = track.querySelectorAll('.reco-carousel-item');
-  var vis   = window.innerWidth >= 992 ? 3 : window.innerWidth >= 576 ? 2 : 1;
-  var n     = Math.ceil(items.length / vis);
-  var cur   = _rcState[wrapId].current + dir;
-  cur = cur < 0 ? n - 1 : cur >= n ? 0 : cur;
-  rcGoTo(wrapId, cur);
+  var wrap = document.getElementById(wrapId);
+  if (!wrap || !_rcState[wrapId]) return;
+  var n = rcCount(wrap);
+  rcGoTo(wrapId, (_rcState[wrapId].current + dir + n) % n);
 }
 
 var _rcResizeTimer;
 window.addEventListener('resize', function () {
   clearTimeout(_rcResizeTimer);
   _rcResizeTimer = setTimeout(function () {
-    Object.keys(_rcState).forEach(function (id) {
-      if (_rcState[id] && _rcState[id].refresh) _rcState[id].refresh();
-    });
+    Object.keys(_rcState).forEach(rcRender);
   }, 200);
 });
 
