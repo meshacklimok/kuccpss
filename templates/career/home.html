@@ -1,16 +1,16 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block title %}CareerNext: Kenya's #1 KUCCPS Career Guidance Platform{% endblock %}
+{% block title %}KUCCPS Course Matcher {{ kuccps_year }}: Courses You Qualify For | CareerNext{% endblock %}
 
-{% block meta %}<meta name="description" content="Kenya's smartest KUCCPS career guidance tool. Calculate KCSE cluster points and find every degree, diploma, KMTC, TVET and TTC course you qualify for, free.">{% endblock %}
+{% block meta %}<meta name="description" content="Choose degree, diploma, KMTC, TVET or TTC, enter your KCSE {{ kcse_year }} grades, and see every KUCCPS course you qualify for, checked against the latest cutoffs and requirements.">{% endblock %}
 {% block og_meta %}
-<meta property="og:title" content="CareerNext: Find Every Course You Qualify For After KCSE">
-<meta property="og:description" content="Calculate KCSE cluster points and get matched to courses at universities, KMTCs, TVETs and TTCs via KUCCPS.">
+<meta property="og:title" content="KUCCPS Course Matcher: Every Course Your KCSE Grades Qualify For">
+<meta property="og:description" content="Enter your KCSE grades and get matched to degree, diploma, KMTC, TVET and TTC courses you qualify for via KUCCPS.">
 {% endblock %}
 {% block twitter_meta %}
-<meta name="twitter:title" content="CareerNext: Kenya's #1 KCSE Career Guidance Platform">
-<meta name="twitter:description" content="Calculate cluster points and see every KUCCPS course you qualify for. Free.">
+<meta name="twitter:title" content="KUCCPS Course Matcher: Every Course Your KCSE Grades Qualify For">
+<meta name="twitter:description" content="Enter your KCSE grades and see every KUCCPS course you qualify for.">
 {% endblock %}
 
 {% block content %}

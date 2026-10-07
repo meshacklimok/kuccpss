@@ -61,6 +61,11 @@ CSRF_TRUSTED_ORIGINS = [
 # Set CANONICAL_HOST='' to disable.
 CANONICAL_HOST = os.environ.get('CANONICAL_HOST', '' if DEBUG else 'www.careernext.co.ke')
 
+# KCSE exam year of the cohort the site is aimed at (they apply via KUCCPS the
+# following year). Drives the years shown in page titles and meta descriptions;
+# bump once that cohort has been placed.
+KCSE_CANDIDATE_YEAR = int(os.environ.get('KCSE_CANDIDATE_YEAR', '2026'))
+
 # ── Maintenance mode ─────────────────────────────────────────────────────────
 # Flip MAINTENANCE_MODE=True in the host's env vars to take the site offline.
 # Staff users, /cn-staff/ (admin), and any IP in MAINTENANCE_ALLOWED_IPS still get through
@@ -213,6 +218,7 @@ TEMPLATES = [
                 'analytics.context_processors.ga_context',
                 'analytics.context_processors.turnstile_context',
                 'analytics.context_processors.data_version',
+                'kuccpss.seo.seo_years',
             ],
         },
     },
