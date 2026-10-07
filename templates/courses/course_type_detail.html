@@ -4,163 +4,99 @@
 {% block meta %}<meta name="description" content="All {{ course_type.name }} courses in Kenya with cutoff points, entry requirements and the institutions that offer them. Check which ones your KCSE grades qualify you for.">{% endblock %}
 
 {% block content %}
+{% include 'courses/_cpage_styles.html' %}
 <style>
-body { background: #f8fafc; }
-
-/* ── HEADER ── */
-.cpage-header {
-  background: #0a0f2c;
-  padding: 1.5rem 0 2rem;
-  position: relative; overflow: hidden;
-}
-.cpage-header::before {
-  content: '';
-  position: absolute; inset: 0;
-  background-image: rgba(255,255,255,0.03);
-  background-size: 24px 24px;
-  pointer-events: none;
-}
-.cpage-header::after {
-  content: '';
-  position: absolute;
-  width: 380px; height: 380px; border-radius: 50%;
-  background: rgba(99,102,241,0.22);
-  top: -140px; right: -80px;
-  pointer-events: none;
-}
-
-.cpage-breadcrumb {
-  display: flex; align-items: center; gap: 0.45rem;
-  font-size: 0.78rem; margin-bottom: 1.1rem;
-  position: relative; z-index: 1;
-}
-.cpage-breadcrumb a { color: rgba(255,255,255,0.5); text-decoration: none; transition: color 0.15s; }
-.cpage-breadcrumb a:hover { color: rgba(255,255,255,0.85); }
-.cpage-breadcrumb-sep { color: rgba(255,255,255,0.22); }
-.cpage-breadcrumb-cur { color: rgba(255,255,255,0.85); }
-
-.cpage-hero-row { display: flex; align-items: center; gap: 1rem; position: relative; z-index: 1; }
-.cpage-icon-badge {
-  width: 56px; height: 56px; border-radius: 16px; flex-shrink: 0;
-  background: rgba(255,255,255,0.22);
-  border: 1px solid rgba(255,255,255,0.18);
-  backdrop-filter: blur(10px);
-  display: flex; align-items: center; justify-content: center;
-  font-size: 1.45rem; color: #fff;
-}
-.cpage-hero-title {
-  color: #fff; font-size: 1.65rem; font-weight: 900;
-  margin: 0 0 0.2rem; letter-spacing: -0.3px; line-height: 1.15;
-}
-.cpage-hero-sub { color: rgba(255,255,255,0.52); font-size: 0.82rem; margin: 0; }
-
-/* ── STICKY SEARCH STRIP ── */
-.cpage-search-strip {
-  background: #fff;
-  border-bottom: 1px solid #edf0f4;
-  padding: 0.85rem 0;
-  position: sticky; top: 0; z-index: 100;
-  box-shadow: 0 2px 16px rgba(0,0,0,0.06);
-}
-.cpage-search-inner {
-  display: flex; align-items: center;
-  background: #f1f5f9; border-radius: 12px;
-  padding: 0 0.5rem 0 1rem; gap: 0.5rem;
-  border: 1.5px solid transparent;
-  transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
-}
-.cpage-search-inner:focus-within {
-  border-color: #2563eb; background: #fff;
-  box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
-}
-.cpage-search-inner > i { color: #94a3b8; font-size: 0.9rem; flex-shrink: 0; }
-.cpage-search-inner input {
-  flex: 1; border: none; background: transparent; outline: none;
-  font-size: 0.92rem; color: #1e293b; padding: 0.72rem 0; min-width: 0;
-}
-.cpage-search-inner input::placeholder { color: #94a3b8; }
-.cpage-search-btn {
-  background: #2563eb; color: #fff; border: none;
-  border-radius: 9px; padding: 0.48rem 1.05rem;
-  font-size: 0.82rem; font-weight: 700; cursor: pointer;
-  transition: background 0.2s; flex-shrink: 0;
-}
-.cpage-search-btn:hover { background: #1d4ed8; }
-
-/* ── BODY ── */
-.cpage-body { padding: 1.5rem 0 4rem; }
-
-.cpage-section-hd {
-  display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;
-}
-.cpage-section-hd h2 { font-size: 0.97rem; font-weight: 800; color: #1e293b; margin: 0; }
-.cpage-section-hd span { font-size: 0.77rem; font-weight: 600; color: #94a3b8; }
-
-/* ── CATEGORY CARDS ── */
-.cpage-cat-grid {
-  display: grid; grid-template-columns: 1fr;
-  gap: 0.7rem; margin-bottom: 2.5rem;
-}
-@media (min-width: 480px) { .cpage-cat-grid { grid-template-columns: repeat(2, 1fr); } }
-@media (min-width: 720px) { .cpage-cat-grid { grid-template-columns: repeat(3, 1fr); } }
-@media (min-width: 900px) { .cpage-cat-grid { grid-template-columns: repeat(4, 1fr); } }
-
-.cat-card { --c:#2563eb; --cb:#eff6ff; }
-.cat-card:nth-child(7n+1) { --c:#2563eb; --cb:#eff6ff; }
-.cat-card:nth-child(7n+2) { --c:#7c3aed; --cb:#f5f3ff; }
-.cat-card:nth-child(7n+3) { --c:#059669; --cb:#ecfdf5; }
-.cat-card:nth-child(7n+4) { --c:#d97706; --cb:#fffbeb; }
-.cat-card:nth-child(7n+5) { --c:#dc2626; --cb:#fef2f2; }
-.cat-card:nth-child(7n+6) { --c:#0891b2; --cb:#ecfeff; }
-.cat-card:nth-child(7n+0) { --c:#db2777; --cb:#fdf2f8; }
-
+/* ── CATEGORY CARDS (shared) ── */
 .cat-card {
-  background: #fff; border-radius: 14px;
+  --c: #2563eb;
+  --cb: color-mix(in srgb, var(--c) 11%, #fff);
+  background: #fff; border-radius: 16px;
   border: 1.5px solid #edf0f4;
-  padding: 0.95rem 0.85rem 0.95rem 1rem;
-  text-decoration: none; color: inherit;
-  display: flex; align-items: center; gap: 0.7rem;
+  color: inherit;
   box-shadow: 0 1px 4px rgba(0,0,0,0.04);
   transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.2s;
-  position: relative; overflow: hidden;
-}
-.cat-card::before {
-  content: ''; position: absolute;
-  left: 0; top: 0; bottom: 0; width: 3px;
-  background: var(--c);
-  border-radius: 14px 0 0 14px;
+  position: relative;
+  display: flex; flex-direction: column;
 }
 .cat-card:hover {
   transform: translateY(-3px);
-  box-shadow: 0 8px 22px rgba(0,0,0,0.09);
-  border-color: var(--c); text-decoration: none; color: inherit;
+  box-shadow: 0 10px 26px rgba(15,23,42,0.09);
+  border-color: var(--c);
 }
+/* Whole card is clickable via the title link; chips sit above it */
+.cat-card-link { color: inherit; text-decoration: none; }
+.cat-card-link::after { content: ''; position: absolute; inset: 0; border-radius: 16px; }
+.cat-card-link:hover { color: inherit; text-decoration: none; }
+.cat-card-link:focus-visible { outline: none; }
+.cat-card:has(.cat-card-link:focus-visible) { outline: 3px solid var(--c); outline-offset: 2px; }
+
 .cat-card-icon {
-  width: 36px; height: 36px; border-radius: 9px; flex-shrink: 0;
+  width: 42px; height: 42px; border-radius: 12px; flex-shrink: 0;
   background: var(--cb); color: var(--c);
-  display: flex; align-items: center; justify-content: center; font-size: 0.95rem;
+  display: flex; align-items: center; justify-content: center; font-size: 1.05rem;
   transition: transform 0.22s ease;
 }
-.cat-card:hover .cat-card-icon { transform: scale(1.12); }
-.cat-card-name {
-  flex: 1; font-size: 0.83rem; font-weight: 700; color: #1e293b;
-  line-height: 1.3; min-width: 0;
+.cat-card:hover .cat-card-icon { transform: scale(1.08); }
+.cat-card-name { font-size: 0.95rem; font-weight: 800; color: #0f172a; line-height: 1.25; margin: 0; }
+.cat-card-tag { font-size: 0.78rem; color: #64748b; line-height: 1.45; margin: 0; }
+.cat-card-meta { font-size: 0.74rem; color: #64748b; font-weight: 600; }
+.cat-card-meta b { color: #0f172a; font-weight: 800; }
+.cat-pill {
+  display: inline-flex; align-items: center; gap: 0.3rem;
+  font-size: 0.66rem; font-weight: 800; letter-spacing: 0.02em; text-transform: uppercase;
+  padding: 0.2rem 0.5rem; border-radius: 999px;
+  background: #fef2f2; color: #b91c1c;
 }
-.cat-card-arrow {
-  color: #cbd5e1; font-size: 0.7rem; flex-shrink: 0;
-  transition: color 0.2s, transform 0.2s;
+
+/* ── FEATURED (most competitive) ── */
+.cpage-feat-grid { display: grid; grid-template-columns: 1fr; gap: 0.9rem; margin-bottom: 2.25rem; }
+@media (min-width: 640px)  { .cpage-feat-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 1100px) { .cpage-feat-grid { grid-template-columns: repeat(4, 1fr); } }
+.cat-card--feat { padding: 1.1rem 1.1rem 1rem; gap: 0.75rem; border-top: 4px solid var(--c); }
+.cat-card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 0.5rem; }
+
+.cat-meter { display: flex; flex-direction: column; gap: 0.3rem; }
+.cat-meter-row { display: flex; justify-content: space-between; font-size: 0.72rem; color: #64748b; font-weight: 600; }
+.cat-meter-row b { color: #0f172a; font-weight: 800; }
+.cat-meter-track { height: 6px; border-radius: 999px; background: #eef2f7; overflow: hidden; }
+.cat-meter-fill { height: 100%; border-radius: 999px; background: var(--c); }
+
+.cat-chips { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+.cat-chip {
+  position: relative; z-index: 2;
+  font-size: 0.72rem; font-weight: 600; color: #334155;
+  background: #f1f5f9; border-radius: 8px; padding: 0.25rem 0.55rem;
+  text-decoration: none; transition: background 0.15s, color 0.15s;
 }
-.cat-card:hover .cat-card-arrow { color: var(--c); transform: translateX(3px); }
+.cat-chip:hover { background: var(--cb); color: var(--c); text-decoration: none; }
+.cat-careers { font-size: 0.72rem; color: #64748b; margin-top: auto; padding-top: 0.6rem; border-top: 1px dashed #e2e8f0; }
+.cat-careers i { color: var(--c); margin-right: 0.3rem; }
+
+/* ── OTHER FIELDS ── */
+.cpage-cat-grid { display: grid; grid-template-columns: 1fr; gap: 0.75rem; margin-bottom: 2.5rem; }
+@media (min-width: 640px)  { .cpage-cat-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 1000px) { .cpage-cat-grid { grid-template-columns: repeat(3, 1fr); } }
+.cat-card--row { flex-direction: row; align-items: flex-start; gap: 0.85rem; padding: 0.95rem 1rem; }
+.cat-card-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 0.25rem; }
+.cat-card-arrow { color: #cbd5e1; font-size: 0.72rem; align-self: center; transition: color 0.2s, transform 0.2s; }
+.cat-card--row:hover .cat-card-arrow { color: var(--c); transform: translateX(3px); }
 
 /* Dark mode: page-local light palette mapped to One UI tokens */
-body.dark { background: var(--bg); }
-body.dark .cpage-search-strip { background: var(--surface); }
-body.dark .cpage-search-inner { background: var(--surface-2); }
-body.dark .cpage-search-inner:focus-within { background: var(--surface); }
-body.dark .cpage-search-inner input { color: var(--text); }
-body.dark .cpage-section-hd h2 { color: var(--text); }
-body.dark .cat-card { background: var(--surface); }
-body.dark .cat-card-name { color: var(--text); }
+body.dark .cat-card { background: var(--surface); border-color: var(--border-soft); --cb: color-mix(in srgb, var(--c) 22%, #161719); }
+body.dark .cat-card--feat { border-top-color: var(--c); }
+body.dark .cat-card:hover { border-color: var(--c); }
+body.dark .cat-card-name,
+body.dark .cat-card-meta b,
+body.dark .cat-meter-row b { color: var(--text); }
+body.dark .cat-card-tag,
+body.dark .cat-card-meta,
+body.dark .cat-meter-row,
+body.dark .cat-careers { color: var(--text-2); }
+body.dark .cat-meter-track { background: var(--surface-2); }
+body.dark .cat-chip { background: var(--surface-2); color: var(--text-2); }
+body.dark .cat-chip:hover { color: var(--text); }
+body.dark .cat-careers { border-top-color: var(--border); }
+body.dark .cat-pill { background: rgba(248,113,113,0.15); color: #fca5a5; }
 </style>
 
 <div class="cpage-header">
@@ -179,6 +115,15 @@ body.dark .cat-card-name { color: var(--text); }
         </p>
       </div>
     </div>
+    {% if categories and not q %}
+    <div class="cpage-hero-stats">
+      <span class="cpage-hero-stat"><strong>{{ total_programmes }}</strong>programmes</span>
+      <span class="cpage-hero-stat"><strong>{{ categories|length }}</strong>fields of study</span>
+      <a href="{% url 'career:home' %}" class="cpage-hero-cta">
+        <i class="fa-solid fa-wand-magic-sparkles"></i>See what I qualify for
+      </a>
+    </div>
+    {% endif %}
   </div>
 </div>
 
@@ -218,17 +163,71 @@ body.dark .cat-card-name { color: var(--text); }
   {% endif %}
 
   {% if categories and not q %}
+  {% if featured_categories %}
   <div class="cpage-section-hd">
-    <h2>Browse by Category</h2>
-    <span>{{ categories|length }} categories</span>
+    <div>
+      <h2>{% if has_cutoffs %}Most competitive fields{% else %}Popular fields{% endif %}</h2>
+      <p>{% if has_cutoffs %}Tech, engineering, health and law have the highest cutoffs, out of 48 cluster points.{% else %}In-demand areas to start with.{% endif %}</p>
+    </div>
+  </div>
+  <div class="cpage-feat-grid">
+    {% for cat in featured_categories %}
+    <article class="cat-card cat-card--feat" style="--c: {{ cat.meta.color }}">
+      <div class="cat-card-top">
+        <div class="cat-card-icon"><i class="{{ cat.meta.icon }}"></i></div>
+        {% if cat.is_competitive %}<span class="cat-pill"><i class="fa-solid fa-fire"></i>Highly competitive</span>{% endif %}
+      </div>
+      <div>
+        <h3 class="cat-card-name">
+          <a class="cat-card-link" href="{% url 'courses:course_category_detail' type_slug=course_type.slug category_slug=cat.slug %}">{{ cat.name }}</a>
+        </h3>
+        {% if cat.meta.tagline %}<p class="cat-card-tag mt-1">{{ cat.meta.tagline }}</p>{% endif %}
+      </div>
+      <div class="cat-card-meta">
+        <b>{{ cat.programmes }}</b> programmes{% if cat.institutions %} · <b>{{ cat.institutions }}</b> {% if has_cutoffs %}universities{% else %}institutions{% endif %}{% endif %}
+      </div>
+      {% if cat.avg_cutoff %}
+      <div class="cat-meter" title="Average and highest cutoff, out of 48 cluster points">
+        <div class="cat-meter-row"><span>Avg cutoff <b>{{ cat.avg_cutoff }}</b></span><span>Top <b>{{ cat.top_cutoff }}</b></span></div>
+        <div class="cat-meter-track"><div class="cat-meter-fill" style="width: {{ cat.cutoff_pct }}%"></div></div>
+      </div>
+      {% endif %}
+      {% if cat.popular %}
+      <div class="cat-chips">
+        {% for p in cat.popular %}
+        <a class="cat-chip" href="{% url 'courses:course_types_list' %}?q={{ p.q|urlencode }}&amp;type={{ course_type.slug|urlencode }}">{{ p.label }}</a>
+        {% endfor %}
+      </div>
+      {% endif %}
+      {% if cat.meta.careers %}
+      <div class="cat-careers"><i class="fa-solid fa-briefcase"></i>{{ cat.meta.careers|join:" · " }}</div>
+      {% endif %}
+    </article>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <div class="cpage-section-hd">
+    <div>
+      <h2>{% if featured_categories %}More fields to explore{% else %}Browse by field{% endif %}</h2>
+      <p>{{ other_categories|length }} field{{ other_categories|length|pluralize }}</p>
+    </div>
   </div>
   <div class="cpage-cat-grid">
-    {% for cat in categories %}
-    <a href="{% url 'courses:course_category_detail' type_slug=course_type.slug category_slug=cat.slug %}" class="cat-card">
-      <div class="cat-card-icon"><i class="fas fa-layer-group"></i></div>
-      <span class="cat-card-name">{{ cat.name }}</span>
+    {% for cat in other_categories %}
+    <article class="cat-card cat-card--row" style="--c: {{ cat.meta.color }}">
+      <div class="cat-card-icon"><i class="{{ cat.meta.icon }}"></i></div>
+      <div class="cat-card-body">
+        <h3 class="cat-card-name">
+          <a class="cat-card-link" href="{% url 'courses:course_category_detail' type_slug=course_type.slug category_slug=cat.slug %}">{{ cat.name }}</a>
+        </h3>
+        {% if cat.meta.tagline %}<p class="cat-card-tag">{{ cat.meta.tagline }}</p>{% endif %}
+        <div class="cat-card-meta">
+          <b>{{ cat.programmes }}</b> programme{{ cat.programmes|pluralize }}{% if cat.top_cutoff %} · top cutoff <b>{{ cat.top_cutoff }}</b>{% endif %}
+        </div>
+      </div>
       <i class="fas fa-chevron-right cat-card-arrow"></i>
-    </a>
+    </article>
     {% endfor %}
   </div>
   {% endif %}

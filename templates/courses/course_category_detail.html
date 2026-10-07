@@ -4,25 +4,85 @@
 {% block meta %}<meta name="description" content="{{ category.name }} {{ category.course_type.name }} courses in Kenya. Compare institutions, KUCCPS cutoff points and entry requirements in one place.">{% endblock %}
 
 {% block content %}
-<div class="page-hero">
+{% include 'courses/_cpage_styles.html' %}
+<style>
+.cpage-hero-tag { color: rgba(255,255,255,0.62); font-size: 0.85rem; margin: 0.35rem 0 0; max-width: 640px; }
+.cpage-careers {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem;
+  margin-top: 0.9rem; position: relative; z-index: 1;
+  font-size: 0.75rem; color: rgba(255,255,255,0.5);
+}
+.cpage-careers span {
+  color: rgba(255,255,255,0.85); font-weight: 600;
+  background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12);
+  padding: 0.2rem 0.6rem; border-radius: 999px;
+}
+.cpage-icon-badge--cat { background: var(--c); border-color: transparent; }
+.cpage-clear {
+  color: #94a3b8; text-decoration: none; padding: 0 0.4rem; flex-shrink: 0;
+}
+.cpage-clear:hover { color: #475569; }
+</style>
+
+<div class="cpage-header" style="--c: {{ category.meta.color }}">
   <div class="container">
-    <nav aria-label="breadcrumb" class="mb-2">
-      <ol class="breadcrumb mb-0" style="font-size:0.85rem;">
-        <li class="breadcrumb-item"><a href="{% url 'courses:course_types_list' %}" class="text-white-50">Courses</a></li>
-        <li class="breadcrumb-item">
-          <a href="{% url 'courses:course_type_detail' type_slug=category.course_type.slug %}" class="text-white-50">
-            {{ category.course_type.name }}
-          </a>
-        </li>
-        <li class="breadcrumb-item active text-white">{{ category.name }}</li>
-      </ol>
-    </nav>
-    <h1 class="mb-1"><i class="fas fa-folder-open me-2"></i>{{ category.name }}</h1>
-    <p class="mb-0 opacity-75">{{ category.course_type.name }} &mdash; {{ category.name }} programmes</p>
+    <div class="cpage-breadcrumb">
+      <a href="{% url 'courses:course_types_list' %}">Courses</a>
+      <span class="cpage-breadcrumb-sep">›</span>
+      <a href="{% url 'courses:course_type_detail' type_slug=category.course_type.slug %}">{{ category.course_type.name }}</a>
+      <span class="cpage-breadcrumb-sep">›</span>
+      <span class="cpage-breadcrumb-cur">{{ category.name }}</span>
+    </div>
+    <div class="cpage-hero-row">
+      <div class="cpage-icon-badge cpage-icon-badge--cat"><i class="{{ category.meta.icon }}"></i></div>
+      <div>
+        <h1 class="cpage-hero-title">{{ category.name }}</h1>
+        <p class="cpage-hero-sub">{{ category.course_type.name }} programmes</p>
+      </div>
+    </div>
+    {% if category.meta.tagline or category.description %}
+    <p class="cpage-hero-tag">{% if category.description %}{{ category.description }}{% else %}{{ category.meta.tagline }}{% endif %}</p>
+    {% endif %}
+
+    <div class="cpage-hero-stats">
+      <span class="cpage-hero-stat"><strong>{{ category.programmes }}</strong>programmes</span>
+      {% if category.institutions %}
+      <span class="cpage-hero-stat"><strong>{{ category.institutions }}</strong>{% if category.course_type.slug == 'degree' %}universities{% else %}institutions{% endif %}</span>
+      {% endif %}
+      {% if category.avg_cutoff %}
+      <span class="cpage-hero-stat"><strong>{{ category.avg_cutoff }}</strong>avg cutoff</span>
+      <span class="cpage-hero-stat"><strong>{{ category.top_cutoff }}</strong>top cutoff</span>
+      {% endif %}
+      <a href="{% url 'career:home' %}" class="cpage-hero-cta">
+        <i class="fa-solid fa-wand-magic-sparkles"></i>See what I qualify for
+      </a>
+    </div>
+
+    {% if category.meta.careers %}
+    <div class="cpage-careers">
+      <i class="fa-solid fa-briefcase me-1"></i>Leads to
+      {% for c in category.meta.careers %}<span>{{ c }}</span>{% endfor %}
+    </div>
+    {% endif %}
   </div>
 </div>
 
-<div class="container pb-5">
+<div class="cpage-search-strip">
+  <div class="container">
+    <form method="get" action="" class="cpage-search-inner" role="search">
+      <i class="fas fa-search"></i>
+      <input type="text" name="q" value="{{ q }}"
+             data-suggest="courses" data-suggest-params="category={{ category.slug|urlencode }}"
+             placeholder="Search {{ category.name }} courses…" autocomplete="off"
+             aria-label="Search {{ category.name }} courses">
+      {% if sort and sort != 'name' %}<input type="hidden" name="sort" value="{{ sort }}">{% endif %}
+      {% if q %}<a href="?" class="cpage-clear" title="Clear search"><i class="fas fa-times"></i></a>{% endif %}
+      <button class="cpage-search-btn" type="submit">Search</button>
+    </form>
+  </div>
+</div>
+
+<div class="container cpage-body">
 
   {% if request.user.is_staff %}
   <div class="mb-3">
@@ -32,34 +92,31 @@
   </div>
   {% endif %}
 
-  <!-- Search bar -->
-  <div class="row mb-4">
-    <div class="col-lg-6 col-md-8">
-      <form method="get" action="">
-        <div class="input-group shadow-sm">
-          <input type="text" name="q" value="{{ q }}" class="form-control form-control-lg"
-                 data-suggest="courses" data-suggest-params="category={{ category.slug|urlencode }}"
-                 placeholder="Search {{ category.name }} courses…" autocomplete="off">
-          <button class="btn btn-primary px-4" type="submit">
-            <i class="fas fa-search"></i>
-          </button>
-          {% if q %}
-          <a href="?" class="btn btn-outline-secondary" title="Clear search">
-            <i class="fas fa-times"></i>
-          </a>
-          {% endif %}
-        </div>
-      </form>
-    </div>
+  {% if category.popular and not q %}
+  <div class="cpage-popular mb-3">
+    <span class="text-muted small fw-semibold me-1">Popular:</span>
+    {% for p in category.popular %}
+    <a class="cpage-pop-chip" href="?q={{ p.q|urlencode }}">{{ p.label }}</a>
+    {% endfor %}
   </div>
+  {% endif %}
 
-  <div id="course-results">
+  <div id="course-results" style="--c: {{ category.meta.color }}">
     {% include 'courses/_course_list_partial.html' %}
   </div>
 
 </div>
 
 <style>
-.card:hover { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(0,0,0,0.1) !important; }
+.cpage-popular { display: flex; flex-wrap: wrap; align-items: center; gap: 0.35rem; }
+.cpage-pop-chip {
+  font-size: 0.75rem; font-weight: 600; color: #334155; text-decoration: none;
+  background: #fff; border: 1.5px solid #e2e8f0; border-radius: 8px; padding: 0.25rem 0.6rem;
+  transition: border-color 0.15s, color 0.15s;
+}
+.cpage-pop-chip:hover { border-color: var(--primary); color: var(--primary); }
+#course-results .crs-card { --c: inherit; }
+body.dark .cpage-pop-chip { background: var(--surface); border-color: var(--border); color: var(--text-2); }
+body.dark .cpage-clear:hover { color: var(--text); }
 </style>
 {% endblock %}
