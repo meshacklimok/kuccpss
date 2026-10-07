@@ -11,6 +11,9 @@
       <p class="text-muted mb-0 small">Manage your slots and sessions</p>
     </div>
     <div class="d-flex align-items-center gap-2 flex-wrap">
+      <a href="{% url 'mentorship:directory' %}" class="btn btn-outline-success btn-sm rounded-pill px-3">
+        <i class="bi bi-people-fill me-1"></i>Browse Mentors
+      </a>
       {% if mentor.is_approved %}
         <a href="{% url 'mentorship:edit_profile' %}" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
           <i class="bi bi-pencil me-1"></i>Edit Profile

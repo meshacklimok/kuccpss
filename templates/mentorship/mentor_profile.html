@@ -18,12 +18,14 @@
             </div>
 
           <h3 class="fw-bold mb-1">{{ mentor.display_name }}</h3>
-          {% if mentor.is_expert %}
+          {% if mentor.show_expert_badge %}
             <div class="mb-2">
               <span class="badge rounded-pill" style="background:#fef3c7;color:#92400e;border:1px solid #fcd34d;">
                 <i class="bi bi-patch-check-fill me-1"></i>Expert Mentor
               </span>
             </div>
+          {% endif %}
+          {% if mentor.is_expert %}
             {% if mentor.headline %}<div class="text-muted small mb-2">{{ mentor.headline }}</div>{% endif %}
           {% else %}
             <div class="text-muted small mb-2">{{ mentor.get_year_of_study_display }}</div>
@@ -47,6 +49,7 @@
       {% if mentor.show_new_badge %}
             <span class="badge bg-secondary bg-opacity-10 text-secondary mb-2">New mentor</span>
           {% endif %}
+          {% if user.is_staff %}{% include 'mentorship/_staff_mentor_controls.html' %}{% endif %}
 
           <hr class="my-3">
 

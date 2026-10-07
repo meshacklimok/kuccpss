@@ -44,6 +44,14 @@ class MentorProfile(models.Model):
         default=False,
         help_text="Show the 'New mentor' badge on this mentor's card and profile.",
     )
+    is_pinned = models.BooleanField(
+        default=False,
+        help_text="Student mentors only — pin to the top of the directory, above mentors with more sessions.",
+    )
+    show_expert_badge = models.BooleanField(
+        default=False,
+        help_text="Show the 'Expert' badge next to this mentor's name on their card and profile.",
+    )
 
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL,
