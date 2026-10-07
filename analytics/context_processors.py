@@ -22,6 +22,13 @@ def ga_context(request):
     }
 
 
+def turnstile_context(request):
+    from kuccpss.turnstile import turnstile_enabled
+    return {
+        'TURNSTILE_SITE_KEY': settings.TURNSTILE_SITE_KEY if turnstile_enabled() else '',
+    }
+
+
 def data_version(request):
     """Expose KUCCPS data version/cycle to every template."""
     from courses.models import LATEST_CUTOFF_YEAR
