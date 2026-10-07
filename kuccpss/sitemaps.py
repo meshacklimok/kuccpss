@@ -4,6 +4,7 @@ from django.urls import reverse
 from courses.models import Course, CourseType, CourseCategory
 from institutions.models import Institution, InstitutionType
 from clusters.models import Cluster
+from career.models import CareerProfile
 from resources.models import Article, Resource
 
 
@@ -12,10 +13,15 @@ class StaticPagesSitemap(Sitemap):
     changefreq = "weekly"
 
     def items(self):
+        # Public pages only — login-gated ones (eligible courses, AI chat) just
+        # redirect Googlebot and get reported as "Page with redirect".
         return [
             "home",
+            "career:home",
+            "career:kcse_input",
+            "career:quiz",
+            "career:career_profiles",
             "clusterpoints:calculator",
-            "clusterpoints:eligible_courses",
             "courses:course_types_list",
             "institutions:institution_types_list",
             "clusters:cluster_list",
@@ -23,7 +29,6 @@ class StaticPagesSitemap(Sitemap):
             "resources:resource_list",
             "resources:how_to_guides",
             "resources:kuccps_calendar",
-            "career:home",
         ]
 
     def location(self, item):
@@ -109,6 +114,20 @@ class ClusterSitemap(Sitemap):
         return obj.get_absolute_url()
 
 
+class CareerProfileSitemap(Sitemap):
+    priority = 0.9
+    changefreq = "monthly"
+
+    def items(self):
+        return CareerProfile.objects.all()
+
+    def location(self, obj):
+        return reverse("career:career_profile_detail", kwargs={"slug": obj.slug})
+
+    def lastmod(self, obj):
+        return obj.updated_at
+
+
 class ArticleSitemap(Sitemap):
     priority = 0.9
     changefreq = "weekly"
@@ -131,5 +150,6 @@ sitemaps = {
     "institutions": InstitutionSitemap,
     "institution-types": InstitutionTypeSitemap,
     "clusters": ClusterSitemap,
+    "careers": CareerProfileSitemap,
     "articles": ArticleSitemap,
 }

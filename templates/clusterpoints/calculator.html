@@ -1,10 +1,10 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block title %}KCSE Cluster Points Calculator 2026/2027: Free KUCCPS Tool | CareerNext{% endblock %}
-{% block meta %}<meta name="description" content="Free KCSE cluster points calculator using the official KUCCPS formula. Enter your 2025 or 2026 grades and instantly see your cluster points, eligible university, KMTC and TVET courses in Kenya.">{% endblock %}
+{% block title %}KCSE Cluster Points Calculator {{ kcse_year }}/{{ kuccps_year }}: Free KUCCPS Tool | CareerNext{% endblock %}
+{% block meta %}<meta name="description" content="Free KCSE cluster points calculator using the KUCCPS formula. Enter your KCSE {{ kcse_year }} grades to get your points for all 18 clusters, then see every course you qualify for.">{% endblock %}
 {% block canonical %}<link rel="canonical" href="https://www.careernext.co.ke/clusterpoints/calculator/">{% endblock %}
-{% block keywords %}<meta name="keywords" content="KCSE cluster points calculator, KUCCPS cluster points 2025, cluster points Kenya, KCSE grades to cluster points, KUCCPS calculator Kenya, university placement Kenya 2025 2026">{% endblock %}
+
 
 {% block extra_schema %}
 <script type="application/ld+json">

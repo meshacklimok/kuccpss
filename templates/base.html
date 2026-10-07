@@ -4,13 +4,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}CareerNext: Kenya Career Guidance{% endblock %}</title>
+    <title>{% block title %}CareerNext: KUCCPS Course Matching & Career Guidance{% endblock %}</title>
 
     <!-- SEO -->
     {% block meta %}
-    <meta name="description" content="CareerNext answers 'what course can I do with my KCSE grades?': free cluster points calculator plus a course-match engine that shows every university, KMTC, TVET and TTC course you qualify for via KUCCPS.">
+    <meta name="description" content="CareerNext answers 'what course can I do with my KCSE grades?': enter your results once and see every university, KMTC, TVET and TTC course you qualify for via KUCCPS.">
     {% endblock %}
-    {% block keywords %}<meta name="keywords" content="KUCCPS, KCSE cluster points calculator, Kenya university placement, KMTC courses, TVET courses, cluster points, KCSE results 2024 2025">{% endblock %}
+    {% block keywords %}{% endblock %}
     <meta name="robots" content="index, follow">
     <meta name="author" content="CareerNext">
     {% block canonical %}<link rel="canonical" href="https://www.careernext.co.ke{{ request.path }}">{% endblock %}
@@ -21,7 +21,7 @@
     <meta property="og:url" content="{{ request.build_absolute_uri }}">
     {% block og_meta %}
     <meta property="og:title" content="CareerNext: Your next step after KCSE starts here">
-    <meta property="og:description" content="Enter your KCSE grades once and get your cluster points and every university, KMTC, TVET and TTC course you qualify for via KUCCPS. Free.">
+    <meta property="og:description" content="Enter your KCSE grades once and see every university, KMTC, TVET and TTC course you qualify for via KUCCPS.">
     {% endblock %}
     <meta property="og:image" content="{% static 'images/logo-og.png' %}">
     <meta property="og:image:width" content="1200">
@@ -32,7 +32,7 @@
     <meta name="twitter:site" content="@careernext_ke">
     {% block twitter_meta %}
     <meta name="twitter:title" content="CareerNext: Your next step after KCSE starts here">
-    <meta name="twitter:description" content="Free KCSE cluster points calculator. Discover courses you qualify for via KUCCPS.">
+    <meta name="twitter:description" content="Enter your KCSE grades once and see every KUCCPS course you qualify for.">
     {% endblock %}
     <meta name="twitter:image" content="{% static 'images/logo-og.png' %}">
 
@@ -86,7 +86,7 @@
       "@type": "WebSite",
       "name": "CareerNext",
       "url": "https://www.careernext.co.ke",
-      "description": "Kenya's open access KCSE cluster points calculator and KUCCPS course finder. Discover university, KMTC, TVET and TTC courses you qualify for.",
+      "description": "KUCCPS course matching and career guidance for Kenyan KCSE students: enter your results once and see every university, KMTC, TVET and TTC course you qualify for.",
       "potentialAction": {
         "@type": "SearchAction",
         "target": {
