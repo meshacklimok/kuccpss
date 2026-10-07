@@ -2,13 +2,22 @@
 {% load static %}
 
 {% if courses %}
-  <p class="text-muted mb-3" id="results-count">
-    {% if q %}
-      <strong>{{ page_obj.paginator.count }}</strong> result{{ page_obj.paginator.count|pluralize }} for "<strong>{{ q }}</strong>"
-    {% else %}
-      <strong>{{ page_obj.paginator.count }}</strong> programme{{ page_obj.paginator.count|pluralize }}
+  <div class="crs-toolbar">
+    <p class="crs-count" id="results-count">
+      {% if q %}
+        <strong>{{ page_obj.paginator.count }}</strong> result{{ page_obj.paginator.count|pluralize }} for "<strong>{{ q }}</strong>"
+      {% else %}
+        <strong>{{ page_obj.paginator.count }}</strong> programme{{ page_obj.paginator.count|pluralize }}
+      {% endif %}
+    </p>
+    {% if sorts and page_obj.paginator.count > 1 %}
+    <nav class="crs-sort" aria-label="Sort courses">
+      {% for key, label in sorts.items %}
+      <a href="?{% if q %}q={{ q|urlencode }}&amp;{% endif %}sort={{ key }}"{% if key == sort %} class="active" aria-current="true"{% endif %}>{{ label }}</a>
+      {% endfor %}
+    </nav>
     {% endif %}
-  </p>
+  </div>
   <div class="row g-3" id="course-grid">
     {% include 'courses/_course_items_partial.html' %}
   </div>

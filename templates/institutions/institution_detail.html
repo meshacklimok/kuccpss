@@ -1,39 +1,271 @@
 {% extends 'base.html' %}
-{% block title %}{{ institution.name }}: Courses, Cutoff Points & KUCCPS Placement | CareerNext{% endblock %}
+{% block title %}{{ seo.title }}{% endblock %}
 
-{% block meta %}<meta name="description" content="{{ institution.name }}: every course offered, KUCCPS cutoff points and entry requirements. Check which programmes your KCSE grades qualify you for.">{% endblock %}
+{% block meta %}<meta name="description" content="{{ seo.description }}">{% endblock %}
+{% block og_meta %}
+<meta property="og:title" content="{{ seo.title }}">
+<meta property="og:description" content="{{ seo.description }}">
+{% endblock %}
+{% block twitter_meta %}
+<meta name="twitter:title" content="{{ seo.title }}">
+<meta name="twitter:description" content="{{ seo.description }}">
+{% endblock %}
 
 {% block content %}
-<div class="page-hero">
+{% include 'courses/_cpage_styles.html' %}
+<style>
+/* ── HERO ── */
+.inst-logo {
+  width: 64px; height: 64px; border-radius: 16px; flex-shrink: 0;
+  background: #fff; color: #0a0f2c;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 900; font-size: 1rem; letter-spacing: -0.02em; overflow: hidden;
+}
+.inst-logo img { width: 100%; height: 100%; object-fit: contain; padding: 6px; }
+.inst-pills { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.45rem; }
+.inst-pill {
+  display: inline-flex; align-items: center; gap: 0.35rem;
+  font-size: 0.74rem; font-weight: 600; color: rgba(255,255,255,0.85);
+  background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12);
+  padding: 0.2rem 0.6rem; border-radius: 999px; text-decoration: none;
+}
+a.inst-pill:hover { color: #fff; background: rgba(255,255,255,0.14); }
+.inst-pill .fa-star { color: #fbbf24; }
+.cpage-hero-cta--ghost {
+  background: transparent; color: #fff; border: 1px solid rgba(255,255,255,0.3); margin-left: 0;
+}
+.cpage-hero-cta--ghost:hover { color: #fff; background: rgba(255,255,255,0.08); }
+.inst-ctas { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-left: auto; }
+.inst-ctas .cpage-hero-cta { margin-left: 0; }
+@media (max-width: 575px) { .inst-ctas { margin-left: 0; } }
+
+/* ── TOOLBAR ── */
+.inst-jump {
+  display: flex; gap: 0.35rem; overflow-x: auto; scrollbar-width: none;
+  margin-top: 0.6rem; padding-bottom: 2px;
+}
+.inst-jump::-webkit-scrollbar { display: none; }
+.inst-jump a {
+  --c: #2563eb;
+  flex-shrink: 0; display: inline-flex; align-items: center; gap: 0.35rem;
+  font-size: 0.74rem; font-weight: 700; color: #475569; text-decoration: none;
+  padding: 0.3rem 0.7rem; border-radius: 999px; background: #f1f5f9;
+  transition: background 0.15s, color 0.15s;
+}
+.inst-jump a i { color: var(--c); }
+.inst-jump a:hover { background: color-mix(in srgb, var(--c) 12%, #fff); color: var(--c); }
+.inst-jump a span { color: #94a3b8; font-weight: 600; }
+
+/* ── COURSE GROUPS ── */
+.inst-type-hd {
+  display: flex; align-items: baseline; gap: 0.5rem;
+  font-size: 0.75rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase;
+  color: #64748b; margin: 0.25rem 0 0.75rem;
+}
+.inst-type-hd span { font-weight: 600; letter-spacing: 0; text-transform: none; color: #94a3b8; }
+.inst-cat {
+  --c: #2563eb;
+  --tint: color-mix(in srgb, var(--c) 8%, #fff);
+  background: #fff; border: 1.5px solid #edf0f4; border-left: 4px solid var(--c);
+  border-radius: 16px; margin-bottom: 1.25rem; overflow: hidden; scroll-margin-top: 90px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+}
+/* Field header: tinted band, solid icon, eyebrow label: reads as a section, not a row */
+.inst-cat-hd {
+  display: flex; align-items: center; gap: 0.75rem;
+  padding: 0.9rem 1.1rem; background: var(--tint);
+  border-bottom: 1px solid color-mix(in srgb, var(--c) 18%, #fff);
+}
+.inst-cat-icon {
+  width: 36px; height: 36px; border-radius: 10px; flex-shrink: 0;
+  background: var(--c); color: #fff;
+  display: flex; align-items: center; justify-content: center; font-size: 0.9rem;
+}
+.inst-cat-hd > div:nth-child(2) { flex: 1; min-width: 0; }
+.inst-cat-eyebrow {
+  display: block; font-size: 0.62rem; font-weight: 800; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--c); margin-bottom: 0.05rem;
+}
+.inst-cat-hd h3 { font-size: 1.02rem; font-weight: 800; color: #0f172a; margin: 0; line-height: 1.2; }
+.inst-cat-count {
+  flex-shrink: 0; font-size: 0.72rem; font-weight: 800; color: var(--c);
+  background: #fff; border: 1px solid color-mix(in srgb, var(--c) 25%, #fff);
+  padding: 0.2rem 0.6rem; border-radius: 999px;
+}
+
+/* Course rows: indented under the field with a guide line + dot in the field colour */
+.inst-rows { position: relative; padding: 0.25rem 0; }
+.inst-rows::before {
+  content: ''; position: absolute; top: 0; bottom: 1.4rem; left: calc(1.1rem + 17px);
+  width: 2px; background: color-mix(in srgb, var(--c) 18%, #fff);
+}
+.inst-row {
+  position: relative;
+  display: flex; align-items: center; flex-wrap: wrap; gap: 0.4rem 1rem;
+  padding: 0.7rem 1.1rem 0.7rem calc(1.1rem + 40px);
+  transition: background 0.15s;
+}
+.inst-row::before {
+  content: ''; position: absolute; left: calc(1.1rem + 13px); top: 1.05rem;
+  width: 10px; height: 10px; border-radius: 50%;
+  background: #fff; border: 2px solid var(--c);
+}
+.inst-row + .inst-row { border-top: 1px solid #f1f5f9; }
+.inst-row:hover { background: #f8fafc; }
+.inst-row:hover::before { background: var(--c); }
+.inst-row-main { flex: 1 1 240px; min-width: 0; }
+.inst-row-title { font-size: 0.88rem; font-weight: 600; color: #1e293b; line-height: 1.35; }
+.inst-row-title a { color: inherit; text-decoration: none; }
+.inst-row-title a::after { content: ''; position: absolute; inset: 0; }
+.inst-row-title a:hover { color: var(--c); }
+.inst-row-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 0.3rem 0.5rem; margin-top: 0.3rem; }
+.inst-row-meta .crs-tag { font-size: 0.62rem; }
+.inst-code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.72rem; color: #94a3b8; }
+
+.inst-cut { flex: 0 0 150px; text-align: right; }
+.inst-cut-val { font-size: 0.95rem; font-weight: 800; color: #0f172a; }
+.inst-cut-val small { font-size: 0.68rem; font-weight: 600; color: #94a3b8; margin-left: 0.15rem; }
+.inst-cut-bar { height: 5px; border-radius: 999px; background: #eef2f7; overflow: hidden; margin-top: 0.3rem; }
+.inst-cut-bar div { height: 100%; border-radius: 999px; background: var(--c); }
+.inst-cut-none { font-size: 0.74rem; color: #94a3b8; font-weight: 600; }
+@media (max-width: 575px) {
+  .inst-cut { flex: 1 1 100%; text-align: left; display: flex; align-items: center; gap: 0.6rem; }
+  .inst-cut-bar { flex: 1; margin-top: 0; max-width: 160px; }
+}
+
+.inst-row[hidden], .inst-cat[hidden], .inst-type[hidden] { display: none !important; }
+.inst-empty { display: none; }
+.inst-empty.show { display: block; }
+
+/* ── SIDEBAR ── */
+.inst-side { position: sticky; top: 90px; }
+.inst-card {
+  background: #fff; border: 1.5px solid #edf0f4; border-radius: 16px;
+  padding: 1.1rem 1.2rem; margin-bottom: 1rem; box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+}
+.inst-card h2 {
+  font-size: 0.72rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase;
+  color: #64748b; margin: 0 0 0.75rem;
+}
+.inst-card p { font-size: 0.85rem; color: #475569; line-height: 1.6; margin: 0; }
+.inst-facts { list-style: none; padding: 0; margin: 0; }
+.inst-facts li {
+  display: flex; align-items: flex-start; gap: 0.7rem;
+  padding: 0.6rem 0; border-bottom: 1px solid #f1f5f9; font-size: 0.85rem;
+}
+.inst-facts li:last-child { border-bottom: none; padding-bottom: 0; }
+.inst-facts i { width: 16px; color: #94a3b8; margin-top: 0.2rem; text-align: center; }
+.inst-facts .k { display: block; font-size: 0.7rem; color: #94a3b8; font-weight: 600; }
+.inst-facts .v { color: #0f172a; font-weight: 700; word-break: break-word; }
+.inst-facts a.v { color: var(--primary); text-decoration: none; }
+.inst-cta-card { background: #0a0f2c; border-color: #0a0f2c; color: #fff; }
+.inst-cta-card h2 { color: rgba(255,255,255,0.55); }
+.inst-cta-card p { color: rgba(255,255,255,0.75); margin-bottom: 0.9rem; }
+.inst-cta-card .btn-cta {
+  display: flex; align-items: center; justify-content: center; gap: 0.45rem;
+  background: #fff; color: #0a0f2c; font-weight: 800; font-size: 0.85rem;
+  border-radius: 10px; padding: 0.6rem; text-decoration: none;
+}
+.inst-cta-card .btn-cta:hover { background: #e2e8f0; }
+
+/* Dark mode */
+body.dark .inst-jump a { background: var(--surface-2); color: var(--text-2); }
+body.dark .inst-jump a:hover { color: var(--text); }
+body.dark .inst-type-hd { color: var(--text-2); }
+body.dark .inst-cat,
+body.dark .inst-card { background: var(--surface); border-color: var(--border-soft); }
+body.dark .inst-cat { --tint: color-mix(in srgb, var(--c) 14%, #161719); border-left-color: var(--c); }
+body.dark .inst-cat-hd { border-bottom-color: var(--border); }
+body.dark .inst-row + .inst-row, body.dark .inst-facts li { border-color: var(--border); }
+body.dark .inst-rows::before { background: color-mix(in srgb, var(--c) 30%, #161719); }
+body.dark .inst-row::before { background: var(--surface); }
+body.dark .inst-row:hover::before { background: var(--c); }
+body.dark .inst-cat-count { background: var(--surface); border-color: var(--border); }
+body.dark .inst-cat-hd h3, body.dark .inst-row-title,
+body.dark .inst-cut-val, body.dark .inst-facts .v { color: var(--text); }
+body.dark .inst-row:hover { background: var(--surface-2); }
+body.dark .inst-cut-bar { background: var(--surface-2); }
+body.dark .inst-card p, body.dark .inst-card h2 { color: var(--text-2); }
+body.dark .inst-facts a.v { color: var(--primary-light); }
+body.dark .inst-cta-card { background: var(--surface-2); border-color: var(--border); }
+</style>
+
+{# ── HERO ── #}
+<div class="cpage-header">
   <div class="container">
-    <nav aria-label="breadcrumb" class="mb-2">
-      <ol class="breadcrumb mb-0" style="font-size:0.85rem;">
-        <li class="breadcrumb-item"><a href="{% url 'institutions:institution_types_list' %}" class="text-white-50">Institutions</a></li>
-        <li class="breadcrumb-item">
-          <a href="{% url 'institutions:institution_type_detail' type_slug=institution.institution_type.slug %}" class="text-white-50">
-            {{ institution.institution_type.name }}
-          </a>
-        </li>
-        <li class="breadcrumb-item active text-white">
-          {% if institution.abbreviation %}{{ institution.abbreviation }}{% else %}{{ institution.name }}{% endif %}
-        </li>
-      </ol>
-    </nav>
-    <div class="d-flex align-items-center gap-3">
-      {% if institution.logo %}
-      <img src="{{ institution.logo.url }}" alt="" style="width:64px;height:64px;object-fit:contain;border-radius:50%;background:#fff;padding:4px;" loading="lazy">
-      {% endif %}
-      <div>
-        <h1 class="mb-0">{{ institution.name }}</h1>
-        {% if institution.abbreviation %}
-        <span class="badge mt-1" style="background:rgba(255,255,255,0.2);font-size:0.9rem;">{{ institution.abbreviation }}</span>
+    <div class="cpage-breadcrumb">
+      <a href="{% url 'institutions:institution_types_list' %}">Institutions</a>
+      <span class="cpage-breadcrumb-sep">›</span>
+      <a href="{% url 'institutions:institution_type_detail' type_slug=institution.institution_type.slug %}">{{ institution.institution_type.name }}</a>
+      <span class="cpage-breadcrumb-sep">›</span>
+      <span class="cpage-breadcrumb-cur">{% if institution.abbreviation %}{{ institution.abbreviation }}{% else %}{{ institution.name|truncatechars:40 }}{% endif %}</span>
+    </div>
+
+    <div class="cpage-hero-row">
+      <div class="inst-logo">
+        {% if institution.logo %}
+        <img src="{{ institution.logo.url }}" alt="{{ institution.name }} logo" loading="lazy">
+        {% elif institution.abbreviation %}
+        {{ institution.abbreviation|truncatechars:5 }}
+        {% else %}
+        <i class="{{ institution.institution_type.display_icon }}"></i>
         {% endif %}
+      </div>
+      <div style="min-width:0">
+        <h1 class="cpage-hero-title">{{ institution.name }}</h1>
+        <div class="inst-pills">
+          <a class="inst-pill" href="{% url 'institutions:institution_type_detail' type_slug=institution.institution_type.slug %}">
+            <i class="fa-solid fa-building-columns"></i>{{ institution.institution_type.name }}
+          </a>
+          {% if institution.location %}<span class="inst-pill"><i class="fa-solid fa-location-dot"></i>{{ institution.location }}</span>{% endif %}
+          {% if avg_rating %}<a class="inst-pill" href="#reviews"><i class="fa-solid fa-star"></i>{{ avg_rating }} ({{ review_count }})</a>{% endif %}
+        </div>
+      </div>
+    </div>
+
+    <div class="cpage-hero-stats">
+      <span class="cpage-hero-stat"><strong>{{ total_courses }}</strong>programme{{ total_courses|pluralize }}</span>
+      {% if field_count %}<span class="cpage-hero-stat"><strong>{{ field_count }}</strong>field{{ field_count|pluralize }}</span>{% endif %}
+      {% if cutoff_high is not None %}
+      <span class="cpage-hero-stat"><strong>{{ cutoff_low|floatformat:1 }}{% if cutoff_low != cutoff_high %}–{{ cutoff_high|floatformat:1 }}{% endif %}</strong>{{ LATEST_CUTOFF_YEAR }} cutoffs</span>
+      {% endif %}
+      <div class="inst-ctas">
+        {% if institution.website %}
+        <a href="{{ institution.website }}" target="_blank" rel="noopener" class="cpage-hero-cta cpage-hero-cta--ghost">
+          <i class="fa-solid fa-arrow-up-right-from-square"></i>Website
+        </a>
+        {% endif %}
+        <a href="{% url 'career:home' %}" class="cpage-hero-cta">
+          <i class="fa-solid fa-wand-magic-sparkles"></i>See what I qualify for
+        </a>
       </div>
     </div>
   </div>
 </div>
 
-<div class="container pb-5">
+{# ── FILTER STRIP ── #}
+{% if total_courses > 5 %}
+<div class="cpage-search-strip">
+  <div class="container">
+    <div class="cpage-search-inner" role="search">
+      <i class="fas fa-search"></i>
+      <input type="search" id="inst-filter" placeholder="Filter {{ total_courses }} programmes at {% if institution.abbreviation %}{{ institution.abbreviation }}{% else %}this institution{% endif %}…"
+             autocomplete="off" aria-label="Filter programmes">
+    </div>
+    {% if field_count > 1 %}
+    <nav class="inst-jump" aria-label="Jump to field">
+      {% for g in course_groups %}{% for cat in g.categories %}
+      <a href="#f-{{ forloop.parentloop.counter }}-{{ forloop.counter }}" style="--c: {{ cat.meta.color }}">
+        <i class="{{ cat.meta.icon }}"></i>{{ cat.name }}<span>{{ cat.offerings|length }}</span>
+      </a>
+      {% endfor %}{% endfor %}
+    </nav>
+    {% endif %}
+  </div>
+</div>
+{% endif %}
+
+<div class="container cpage-body">
 
   {% if request.user.is_staff %}
   <div class="mb-3">
@@ -45,155 +277,152 @@
 
   <div class="row g-4">
 
-    <!-- ── Main column ── -->
+    {# ── Courses ── #}
     <div class="col-lg-8">
+      {% if course_groups %}
+        {% for g in course_groups %}
+        <section class="inst-type" aria-label="{{ g.name }} programmes">
+          {% if course_groups|length > 1 %}
+          <h2 class="inst-type-hd">{{ g.name }} <span>{{ g.count }} programme{{ g.count|pluralize }}</span></h2>
+          {% endif %}
 
-      {% if institution.description %}
-      <div class="card p-4 mb-4">
-        <h5 class="fw-bold mb-2"><i class="fas fa-info-circle me-2 text-primary"></i>About</h5>
-        <p class="text-muted mb-0">{{ institution.description }}</p>
-      </div>
-      {% endif %}
-
-      <!-- Courses offered -->
-      <div class="card p-4 mb-4">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-          <h5 class="fw-bold mb-0"><i class="fas fa-book-open me-2 text-success"></i>Courses Offered</h5>
-          <span class="badge rounded-pill px-3 py-2" style="background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0;">
-            {{ total_courses }} course{{ total_courses|pluralize }}
-          </span>
-        </div>
-
-        {% if grouped_offerings %}
-          {% for course_type, categories in grouped_offerings.items %}
-          <div class="mb-4">
-            <h6 class="fw-bold text-uppercase mb-2" style="font-size:0.78rem;letter-spacing:0.06em;color:#64748b;border-bottom:1px solid #e2e8f0;padding-bottom:4px;">
-              {{ course_type }}
-            </h6>
-
-            {% for category, offerings in categories.items %}
-            {% if category != 'General' %}
-            <p class="fw-semibold text-dark mb-1 mt-2" style="font-size:0.85rem;">{{ category }}</p>
-            {% endif %}
-            <ul class="list-unstyled mb-2 ps-2">
-              {% for offering in offerings %}
-              <li class="py-1 d-flex justify-content-between align-items-center" style="border-bottom:1px solid #f1f5f9;">
-                <div>
-                  {% if offering.course.category %}
-                  <a href="{% url 'courses:course_detail' type_slug=offering.course.course_type.slug category_slug=offering.course.category.slug course_slug=offering.course.slug %}"
-                     class="text-dark fw-semibold" style="font-size:0.88rem;text-decoration:none;">
-                    {{ offering.course.name }}
-                  </a>
+          {% for cat in g.categories %}
+          <div class="inst-cat" id="f-{{ forloop.parentloop.counter }}-{{ forloop.counter }}" style="--c: {{ cat.meta.color }}">
+            <div class="inst-cat-hd">
+              <div class="inst-cat-icon"><i class="{{ cat.meta.icon }}"></i></div>
+              <div>
+                <span class="inst-cat-eyebrow">Field</span>
+                <h3>{{ cat.name }}</h3>
+              </div>
+              <span class="inst-cat-count">{{ cat.offerings|length }} programme{{ cat.offerings|length|pluralize }}</span>
+            </div>
+            <div class="inst-rows">
+            {% for o in cat.offerings %}
+            <div class="inst-row" data-q="{{ o.course.name|lower }} {{ o.programme_code|lower }}">
+              <div class="inst-row-main">
+                <div class="inst-row-title">
+                  {% if o.course.category %}
+                  <a href="{% url 'courses:course_detail' type_slug=o.course.course_type.slug category_slug=o.course.category.slug course_slug=o.course.slug %}" title="{{ o.course.name }}">{{ o.title }}</a>
                   {% else %}
-                  <a href="{% url 'courses:course_detail_no_category' type_slug=offering.course.course_type.slug course_slug=offering.course.slug %}"
-                     class="text-dark fw-semibold" style="font-size:0.88rem;text-decoration:none;">
-                    {{ offering.course.name }}
-                  </a>
-                  {% endif %}
-                  {% if offering.programme_code %}
-                  <code class="ms-2 text-muted" style="font-size:0.78rem;">{{ offering.programme_code }}</code>
+                  <a href="{% url 'courses:course_detail_no_category' type_slug=o.course.course_type.slug course_slug=o.course.slug %}" title="{{ o.course.name }}">{{ o.title }}</a>
                   {% endif %}
                 </div>
-                {% with lc=offering.latest_cutoff %}
-                {% if lc is not None %}
-                <span class="badge rounded-pill ms-2"
-                      style="background:{% if lc >= 70 %}#dcfce7;color:#16a34a{% elif lc >= 55 %}#fef3c7;color:#d97706{% else %}#fee2e2;color:#dc2626{% endif %};font-size:0.75rem;white-space:nowrap;">
-                  {{ lc }} pts
-                </span>
-                {% elif offering.cutoff_points %}
-                <span class="badge rounded-pill ms-2 text-muted" style="background:#f1f5f9;font-size:0.75rem;"
-                      title="No {{ LATEST_CUTOFF_YEAR }} cutoff published">—</span>
-                {% elif offering.course.minimum_mean_grade %}
-                <span class="badge rounded-pill ms-2" style="background:#fee2e2;color:#dc2626;font-size:0.75rem;">
-                  Min {{ offering.course.minimum_mean_grade }}
-                </span>
+                <div class="inst-row-meta">
+                  {% if o.qualification %}<span class="crs-tag crs-tag--qual">{{ o.qualification }}</span>{% endif %}
+                  {% if o.course.cluster %}<span class="crs-tag" title="{{ o.course.cluster.name }}">Cluster {{ o.course.cluster.kuccps_number }}</span>{% endif %}
+                  {% if o.programme_code %}<span class="inst-code">{{ o.programme_code }}</span>{% endif %}
+                </div>
+              </div>
+              <div class="inst-cut">
+                {% if o.cutoff is not None %}
+                <div class="inst-cut-val" title="{{ LATEST_CUTOFF_YEAR }} cutoff, out of 48 cluster points">{{ o.cutoff|floatformat:1 }}<small>pts</small></div>
+                <div class="inst-cut-bar"><div style="width: {{ o.cutoff_pct }}%"></div></div>
+                {% elif o.cutoff_points %}
+                <span class="inst-cut-none">No {{ LATEST_CUTOFF_YEAR }} cutoff</span>
+                {% elif o.course.minimum_mean_grade %}
+                <span class="crs-tag crs-tag--grade">Min grade {{ o.course.minimum_mean_grade }}</span>
                 {% endif %}
-                {% endwith %}
-              </li>
-              {% endfor %}
-            </ul>
+              </div>
+            </div>
             {% endfor %}
-
+            </div>
           </div>
           {% endfor %}
+        </section>
+        {% endfor %}
 
-        {% else %}
-        <div class="text-center py-4 text-muted">
+        <div class="inst-empty text-center py-5 text-muted" id="inst-empty">
+          <i class="fas fa-search fa-2x mb-2 d-block opacity-50"></i>
+          No programmes match "<span id="inst-empty-q"></span>".
+        </div>
+      {% else %}
+        <div class="inst-card text-center py-5 text-muted">
           <i class="fas fa-book fa-2x mb-2 d-block opacity-50"></i>
           No courses linked to this institution yet.
         </div>
-        {% endif %}
-      </div>
-
-    </div><!-- /col-lg-8 -->
-
-    <!-- ── Sidebar ── -->
-    <div class="col-lg-4">
-
-      <!-- Quick facts -->
-      <div class="card p-4 mb-4">
-        <h6 class="fw-bold mb-3 text-muted text-uppercase" style="font-size:0.75rem;letter-spacing:0.05em;">Institution Details</h6>
-        <ul class="list-unstyled mb-0">
-          <li class="d-flex justify-content-between py-2 border-bottom">
-            <span class="text-muted">Type</span>
-            <span class="fw-semibold">{{ institution.institution_type.name }}</span>
-          </li>
-          {% if institution.abbreviation %}
-          <li class="d-flex justify-content-between py-2 border-bottom">
-            <span class="text-muted">Abbreviation</span>
-            <span class="fw-semibold">{{ institution.abbreviation }}</span>
-          </li>
-          {% endif %}
-          {% if institution.location %}
-          <li class="d-flex justify-content-between py-2 border-bottom">
-            <span class="text-muted">Location</span>
-            <span class="fw-semibold text-end" style="max-width:60%;">{{ institution.location }}</span>
-          </li>
-          {% endif %}
-          {% if institution.website %}
-          <li class="d-flex justify-content-between py-2 border-bottom">
-            <span class="text-muted">Website</span>
-            <a href="{{ institution.website }}" target="_blank" rel="noopener"
-               class="fw-semibold text-primary" style="font-size:0.85rem;word-break:break-all;">
-              {{ institution.website|truncatechars:30 }}
-            </a>
-          </li>
-          {% endif %}
-          {% if institution.email %}
-          <li class="d-flex justify-content-between py-2 border-bottom">
-            <span class="text-muted">Email</span>
-            <a href="mailto:{{ institution.email }}" class="fw-semibold" style="font-size:0.85rem;">{{ institution.email }}</a>
-          </li>
-          {% endif %}
-          {% if institution.phone %}
-          <li class="d-flex justify-content-between py-2 border-bottom">
-            <span class="text-muted">Phone</span>
-            <span class="fw-semibold">{{ institution.phone }}</span>
-          </li>
-          {% endif %}
-          <li class="d-flex justify-content-between py-2">
-            <span class="text-muted">Courses</span>
-            <span class="fw-semibold">{{ total_courses }}</span>
-          </li>
-        </ul>
-      </div>
-
-      <!-- PDF brochure -->
-      {% if institution.pdf_file %}
-      <div class="card p-4 mb-4">
-        <h6 class="fw-bold mb-3"><i class="fas fa-file-pdf me-2 text-danger"></i>Brochure / Prospectus</h6>
-        <a href="{{ institution.pdf_file.url }}" target="_blank" class="btn btn-outline-danger w-100">
-          <i class="fas fa-download me-2"></i>Download PDF
-        </a>
-      </div>
       {% endif %}
+    </div>
 
-    </div><!-- /col-lg-4 -->
+    {# ── Sidebar ── #}
+    <div class="col-lg-4">
+      <div class="inst-side">
 
-  </div><!-- /row -->
+        {% if institution.description %}
+        <div class="inst-card">
+          <h2>About</h2>
+          <p>{{ institution.description|linebreaksbr }}</p>
+        </div>
+        {% endif %}
 
-  <!-- ── Reviews ── -->
-  {% include "partials/reviews_section.html" with target_type="institution" review_url=request.path|add:"review/" %}
+        <div class="inst-card">
+          <h2>Details</h2>
+          <ul class="inst-facts">
+            <li><i class="fa-solid fa-building-columns"></i><div><span class="k">Type</span><span class="v">{{ institution.institution_type.name }}</span></div></li>
+            {% if institution.location %}
+            <li><i class="fa-solid fa-location-dot"></i><div><span class="k">Location</span><span class="v">{{ institution.location }}</span></div></li>
+            {% endif %}
+            {% if institution.website %}
+            <li><i class="fa-solid fa-globe"></i><div><span class="k">Website</span><a class="v" href="{{ institution.website }}" target="_blank" rel="noopener">{{ institution.website|cut:"https://"|cut:"http://"|truncatechars:34 }}</a></div></li>
+            {% endif %}
+            {% if institution.email %}
+            <li><i class="fa-solid fa-envelope"></i><div><span class="k">Email</span><a class="v" href="mailto:{{ institution.email }}">{{ institution.email }}</a></div></li>
+            {% endif %}
+            {% if institution.phone %}
+            <li><i class="fa-solid fa-phone"></i><div><span class="k">Phone</span><a class="v" href="tel:{{ institution.phone|cut:' ' }}">{{ institution.phone }}</a></div></li>
+            {% endif %}
+            <li><i class="fa-solid fa-book-open"></i><div><span class="k">Programmes on CareerNext</span><span class="v">{{ total_courses }}</span></div></li>
+          </ul>
+        </div>
+
+        <div class="inst-card inst-cta-card">
+          <h2>Can you get in?</h2>
+          <p>Enter your KCSE results once and see which of these programmes you qualify for, and where else you'd get placed.</p>
+          <a class="btn-cta" href="{% url 'career:home' %}"><i class="fa-solid fa-wand-magic-sparkles"></i>Check my courses</a>
+        </div>
+
+        {% if institution.pdf_file %}
+        <div class="inst-card">
+          <h2>Brochure</h2>
+          <a href="{{ institution.pdf_file.url }}" target="_blank" class="btn btn-outline-danger w-100">
+            <i class="fas fa-file-pdf me-2"></i>Download prospectus
+          </a>
+        </div>
+        {% endif %}
+
+      </div>
+    </div>
+  </div>
+
+  <div id="reviews">
+    {% include "partials/reviews_section.html" with target_type="institution" review_url=request.path|add:"review/" %}
+  </div>
 
 </div>
+
+<script>
+(function () {
+  var input = document.getElementById('inst-filter');
+  if (!input) return;
+  var rows = document.querySelectorAll('.inst-row');
+  var cats = document.querySelectorAll('.inst-cat');
+  var types = document.querySelectorAll('.inst-type');
+  var empty = document.getElementById('inst-empty');
+  input.addEventListener('input', function () {
+    var terms = input.value.toLowerCase().trim().split(/\s+/).filter(Boolean);
+    rows.forEach(function (r) {
+      var q = r.getAttribute('data-q');
+      r.hidden = !terms.every(function (t) { return q.indexOf(t) !== -1; });
+    });
+    var any = false;
+    cats.forEach(function (c) {
+      var visible = c.querySelector('.inst-row:not([hidden])');
+      c.hidden = !visible;
+      any = any || !!visible;
+    });
+    types.forEach(function (t) { t.hidden = !t.querySelector('.inst-cat:not([hidden])'); });
+    empty.classList.toggle('show', !any);
+    document.getElementById('inst-empty-q').textContent = input.value;
+  });
+})();
+</script>
 {% endblock %}

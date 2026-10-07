@@ -1,15 +1,15 @@
 {% extends 'base.html' %}
 {% load custom_filters %}
-{% block title %}{{ course.name }} | {{ course.course_type.name }} in Kenya | CareerNext{% endblock %}
+{% block title %}{{ seo.title }}{% endblock %}
 
-{% block meta %}
-<meta name="description" content="{% if course.description %}{{ course.description|truncatechars:155 }}{% else %}Explore {{ course.name }} offered at Kenyan universities and colleges. Check minimum cluster points, subject requirements and institutions via KUCCPS.{% endif %}">
-{% endblock %}
-
-
+{% block meta %}<meta name="description" content="{{ seo.description }}">{% endblock %}
 {% block og_meta %}
-<meta property="og:title" content="{{ course.name }}: {{ course.course_type.name }} in Kenya | CareerNext">
-<meta property="og:description" content="Explore {{ course.name }} offered in Kenya. Minimum cluster points: {{ course.cutoff_points|default:'check eligibility' }}. Find institutions via KUCCPS.">
+<meta property="og:title" content="{{ seo.title }}">
+<meta property="og:description" content="{{ seo.description }}">
+{% endblock %}
+{% block twitter_meta %}
+<meta name="twitter:title" content="{{ seo.title }}">
+<meta name="twitter:description" content="{{ seo.description }}">
 {% endblock %}
 
 {% block extra_schema %}
@@ -18,7 +18,7 @@
   "@context": "https://schema.org",
   "@type": "Course",
   "name": "{{ course.name|escapejs }}",
-  "description": "{{ course.description|default:''|escapejs|truncatechars:300 }}",
+  "description": "{{ course.description|default:seo.description|escapejs|truncatechars:300 }}",
   "provider": {
     "@type": "Organization",
     "name": "CareerNext",
@@ -29,9 +29,9 @@
   "availableChannel": {
     "@type": "ServiceChannel",
     "serviceUrl": "{{ request.build_absolute_uri }}"
-  }{% if course.cutoff_points %},
-  "educationalCredentialAwarded": "{{ course.course_type.name|escapejs }}",
-  "coursePrerequisites": "Minimum KUCCPS cluster points: {{ course.cutoff_points }}"{% endif %}
+  },
+  "educationalCredentialAwarded": "{{ course.course_type.name|escapejs }}"{% if course.minimum_mean_grade %},
+  "coursePrerequisites": "Minimum KCSE mean grade: {{ course.minimum_mean_grade|escapejs }}"{% endif %}
 }
 </script>
 <script type="application/ld+json">
