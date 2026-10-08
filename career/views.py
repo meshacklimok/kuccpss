@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.views.decorators.http import require_http_methods, require_POST
+from django.views.decorators.http import require_POST
 from django.http import JsonResponse, StreamingHttpResponse
 from django.core.paginator import Paginator
 from django.urls import reverse, NoReverseMatch
@@ -11,45 +11,10 @@ import json
 import re as _re
 import time as _time
 from .models import (
-    TVETCourse, StudentCourseMatch, AIRecommendation, CareerInsight, TVETCategory,
     CareerProfile, QuizQuestion, QuizSubmission, QuizAnswer, SharedResult,
 )
-from .engine import career_guidance_engine
 from kuccpss.seo import career_profile_meta
 from typing import Dict, List
-
-# =====================================================
-# Helper Functions
-# =====================================================
-
-def parse_kcse_grades(post_data) -> Dict[str, str]:
-    """
-    Converts POSTed KCSE grade form into a dictionary
-    Expects keys like 'Mathematics', 'English', etc.
-    """
-    kcse_grades = {}
-    for key, value in post_data.items():
-        if key != 'csrfmiddlewaretoken' and value:
-            kcse_grades[key] = value.strip().upper()
-    return kcse_grades
-
-
-def save_student_matches(matches: List[StudentCourseMatch], user=None):
-    """
-    Bulk save all matches to DB, stamping the user on each record.
-    """
-    if user and getattr(user, 'is_authenticated', False):
-        for m in matches:
-            m.user = user
-    StudentCourseMatch.objects.bulk_create(matches, ignore_conflicts=True)
-
-
-def get_course_from_match(match: StudentCourseMatch):
-    """
-    Return the actual course object from a match
-    """
-    return match.course or match.tvet_course or match.kmc_course or match.ttc_course
-
 
 # =====================================================
 # 1. Home / Pathway Selection
@@ -60,7 +25,6 @@ def home(request):
     from django.db.models import Count
 
     categories = ["Degree", "Diploma", "TVET", "KMTC", "TTC"]
-    tvet_categories = TVETCategory.objects.all()
 
     # ── Trending: top 8 most-saved courses ──────────────────────────────
     trending_courses = []
@@ -117,7 +81,6 @@ def home(request):
 
     context = {
         "categories": categories,
-        "tvet_categories": tvet_categories,
         "course_count": Course.objects.count(),
         "institution_count": Institution.objects.count(),
         "trending_courses": trending_courses,
@@ -126,349 +89,18 @@ def home(request):
 
 
 # =====================================================
-# 2. KCSE Input / Career Guidance Form
+# 2. Retired career-app pages
 # =====================================================
-@require_http_methods(["GET", "POST"])
-def kcse_input(request):
-    """
-    KCSE input page: user inputs grades per subject
-    Handles submission and calls career guidance engine
-    """
-    if request.method == "POST":
-        pathway = request.POST.get("pathway")
-        tvet_category = request.POST.get("tvet_category", None)
-        kcse_grades = parse_kcse_grades(request.POST)
+# The old KCSE-input flow matched against the legacy career.Course / TVETCourse /
+# KMTCourse / TTCCourse tables. Matching now runs on courses.Course in
+# pathway_input -> career_results, so these URLs redirect there (301) to keep
+# bookmarks and indexed links working.
 
-        if not kcse_grades:
-            messages.error(request, "Please input at least one KCSE grade.")
-            return redirect("career:kcse_input")
-
-        try:
-            matches, ai = career_guidance_engine(kcse_grades, pathway, tvet_category, user=request.user if request.user.is_authenticated else None)
-        except ValueError as e:
-            messages.error(request, str(e))
-            return redirect("career:kcse_input")
-        except Exception as e:
-            messages.error(request, f"Unexpected error: {str(e)}")
-            return redirect("career:kcse_input")
-
-        # Save matches to DB, binding to the logged-in user if present
-        save_student_matches(matches, user=request.user)
-
-        # Store session info for filtering / sorting later
-        request.session['kcse_grades'] = kcse_grades
-        request.session['pathway'] = pathway
-        request.session['tvet_category'] = tvet_category
-
-        context = {
-            "matches": matches,
-            "ai": ai,
-            "pathway": pathway
-        }
-        return render(request, "career/results.html", context)
-
-    # GET: show form — pre-select pathway if passed from the grid cards
-    pathway = request.GET.get("pathway", "")
-    return render(request, "career/kcse_input.html", {"pathway": pathway})
-
-
-# =====================================================
-# 3. Detailed Course View
-# =====================================================
-@login_required
-def course_detail(request, match_id: int):
-    """
-    Shows detailed information about a course match
-    Includes career insights
-    """
-    try:
-        match = StudentCourseMatch.objects.get(id=match_id)
-    except StudentCourseMatch.DoesNotExist:
-        messages.error(request, "Course match not found.")
-        return redirect("career:kcse_input")
-
-    if match.user is not None and match.user != request.user:
-        messages.error(request, "You do not have permission to view this match.")
-        return redirect("career:kcse_input")
-
-    course_obj = get_course_from_match(match)
-
-    insights = CareerInsight.objects.filter(
-        course=match.course
-    ) or CareerInsight.objects.filter(
-        tvet_course=match.tvet_course
-    ) or CareerInsight.objects.filter(
-        kmc_course=match.kmc_course
-    ) or CareerInsight.objects.filter(
-        ttc_course=match.ttc_course
-    )
-
-    # Pagination for insights if many
-    paginator = Paginator(insights, 5)
-    page_number = request.GET.get('page', 1)
-    page_obj = paginator.get_page(page_number)
-
-    # ── Cutoff trend chart (degree courses only) ──────────────────────────────
-    chart_json = None
-    cutoff_history = []
-    _PALETTE = ['#1e3a8a', '#7c3aed', '#16a34a', '#d97706', '#dc2626', '#0891b2', '#db2777']
-
-    if match.course:
-        try:
-            from .models import CourseCutoffHistory
-            history_qs = (
-                CourseCutoffHistory.objects
-                .filter(course=match.course)
-                .select_related('university')
-                .order_by('year')
-            )
-            cutoff_history = list(history_qs)
-
-            if cutoff_history:
-                # Group by university → {name: {year: points}}
-                uni_map = {}
-                for h in cutoff_history:
-                    uni_name = h.university.name
-                    if uni_name not in uni_map:
-                        uni_map[uni_name] = {}
-                    uni_map[uni_name][h.year] = h.cutoff_points
-
-                all_years = sorted({h.year for h in cutoff_history})
-
-                if len(all_years) >= 2:
-                    datasets = []
-                    for i, (uni_name, year_data) in enumerate(uni_map.items()):
-                        datasets.append({
-                            'label': uni_name[:25],
-                            'data': [year_data.get(y) for y in all_years],
-                            'borderColor': _PALETTE[i % len(_PALETTE)],
-                            'backgroundColor': _PALETTE[i % len(_PALETTE)] + '18',
-                            'tension': 0.38,
-                            'pointRadius': 5,
-                            'pointHoverRadius': 7,
-                            'borderWidth': 2.5,
-                            'fill': False,
-                        })
-
-                    if len(uni_map) > 1:
-                        avg = []
-                        for y in all_years:
-                            vals = [d.get(y) for d in uni_map.values() if d.get(y) is not None]
-                            avg.append(round(sum(vals) / len(vals), 1) if vals else None)
-                        datasets.append({
-                            'label': 'Average',
-                            'data': avg,
-                            'borderColor': '#94a3b8',
-                            'backgroundColor': 'transparent',
-                            'borderDash': [6, 3],
-                            'tension': 0.38,
-                            'pointRadius': 3,
-                            'pointHoverRadius': 5,
-                            'borderWidth': 2,
-                            'fill': False,
-                        })
-
-                    chart_json = json.dumps({
-                        'labels': [str(y) for y in all_years],
-                        'datasets': datasets,
-                    })
-        except Exception:
-            chart_json = None
-
-    context = {
-        "match": match,
-        "course": course_obj,
-        "insights": page_obj,
-        "chart_json": chart_json,
-        "cutoff_history": cutoff_history,
-    }
-    return render(request, "career/course_detail.html", context)
-
-
-# =====================================================
-# 4. AI Recommendation History
-# =====================================================
-@login_required
-def ai_recommendations(request):
-    """
-    Shows historical AI guidance generated in the system
-    """
-    ai_list = AIRecommendation.objects.filter(user=request.user).order_by("-created_at")
-    paginator = Paginator(ai_list, 10)
-    page_number = request.GET.get('page', 1)
-    page_obj = paginator.get_page(page_number)
-
-    return render(request, "career/ai_recommendations.html", {"ai_list": page_obj})
-
-
-# =====================================================
-# 5. Filter Matches by University / Admission Chance
-# =====================================================
-@login_required
-def filter_matches(request):
-    """
-    Filters existing StudentCourseMatches based on GET parameters
-    """
-    pathway = request.session.get('pathway', None)
-    matches = StudentCourseMatch.objects.filter(user=request.user).select_related(
-        'course', 'course__category',
-        'tvet_course', 'tvet_course__category',
-        'kmc_course', 'ttc_course', 'university',
-    )
-
-    # Filter by pathway
-    if pathway == "Degree":
-        matches = matches.filter(course__isnull=False)
-    elif pathway == "Diploma":
-        matches = matches.filter(course__category__name="Diploma")
-    elif pathway == "TVET":
-        tvet_cat = request.session.get('tvet_category', None)
-        if tvet_cat:
-            matches = matches.filter(tvet_course__category__name=tvet_cat)
-    elif pathway == "KMTC":
-        matches = matches.filter(kmc_course__isnull=False)
-    elif pathway == "TTC":
-        matches = matches.filter(ttc_course__isnull=False)
-
-    # Filter by university (free-text search box on the results page)
-    university = request.GET.get("university", "").strip()
-    if university:
-        matches = matches.filter(university__name__icontains=university)
-
-    # Filter by admission chance
-    chance = request.GET.get("admission_chance")
-    if chance:
-        matches = matches.filter(admission_chance__iexact=chance.upper())
-
-    # Sorting
-    sort_by = request.GET.get("sort_by", "match_score")
-    if sort_by == "match_score":
-        matches = matches.order_by("-match_score")
-    elif sort_by == "admission_chance":
-        matches = matches.order_by("-admission_chance")
-
-    paginator = Paginator(matches, 15)
-    page_number = request.GET.get('page', 1)
-    page_obj = paginator.get_page(page_number)
-
-    return render(request, "career/results.html", {"matches": page_obj, "pathway": pathway})
-
-
-# =====================================================
-# 6. AJAX: Dynamic Subject Validation for TVET
-# =====================================================
-@require_http_methods(["POST"])
-def ajax_validate_tvet_subjects(request):
-    """
-    Checks if the entered KCSE grades meet required subjects for a TVET course
-    Returns JSON
-    """
-    kcse_grades = parse_kcse_grades(request.POST)
-    course_id = request.POST.get("course_id")
-    try:
-        course = TVETCourse.objects.get(id=course_id)
-    except TVETCourse.DoesNotExist:
-        return JsonResponse({"valid": False, "message": "Course not found"})
-
-    required_subjects = [s.name for s in course.required_subjects.all()]
-    missing_subjects = [s for s in required_subjects if s not in kcse_grades]
-
-    if missing_subjects:
-        return JsonResponse({
-            "valid": False,
-            "message": f"Missing required subjects: {', '.join(missing_subjects)}"
-        })
-
-    return JsonResponse({"valid": True, "message": "All required subjects met"})
-
-
-# =====================================================
-# 7. AJAX: Auto-Update Admission Chances
-# =====================================================
-@require_http_methods(["POST"])
-def ajax_update_admission(request):
-    """
-    Recalculates admission chance based on updated grades
-    """
-    kcse_grades = parse_kcse_grades(request.POST)
-    pathway = request.POST.get("pathway")
-    tvet_category = request.POST.get("tvet_category", None)
-
-    try:
-        matches, _ = career_guidance_engine(kcse_grades, pathway, tvet_category)
-    except Exception as e:
-        return JsonResponse({"success": False, "message": str(e)})
-
-    # Build JSON response
-    match_list = []
-    for match in matches:
-        course_obj = get_course_from_match(match)
-        match_list.append({
-            "course": course_obj.name,
-            "admission_chance": match.admission_chance,
-            "match_score": int(match.match_score)
-        })
-
-    return JsonResponse({"success": True, "matches": match_list})
-
-
-# =====================================================
-# 8. Search Courses
-# =====================================================
-@login_required
-def search_courses(request):
-    """
-    Allows searching the current user's matches by course name or keyword
-    """
-    query = request.GET.get("q", "")
-    matches = StudentCourseMatch.objects.filter(user=request.user).filter(
-        models.Q(course__name__icontains=query)
-        | models.Q(tvet_course__name__icontains=query)
-        | models.Q(kmc_course__name__icontains=query)
-        | models.Q(ttc_course__name__icontains=query)
-    ).select_related('course', 'tvet_course', 'kmc_course', 'ttc_course', 'university')
-    matches = matches.order_by("-match_score")
-    paginator = Paginator(matches, 15)
-    page_number = request.GET.get('page', 1)
-    page_obj = paginator.get_page(page_number)
-
-    return render(request, "career/results.html", {"matches": page_obj})
-
-
-# =====================================================
-# 9. Export Matches to CSV
-# =====================================================
-import csv
-from django.http import HttpResponse
-
-@login_required
-def export_matches_csv(request):
-    matches = StudentCourseMatch.objects.filter(user=request.user).select_related(
-        'course', 'tvet_course', 'tvet_course__category',
-        'kmc_course', 'ttc_course', 'university',
-    )
-    response = HttpResponse(content_type='text/csv')
-    response['Content-Disposition'] = 'attachment; filename="career_matches.csv"'
-
-    writer = csv.writer(response)
-    writer.writerow(['Course', 'Pathway', 'University', 'Admission Chance', 'Match Score'])
-
-    for match in matches:
-        course_obj = get_course_from_match(match)
-        pathway = ""
-        if match.course:
-            pathway = "Degree/Diploma"
-        elif match.tvet_course:
-            pathway = match.tvet_course.category.name
-        elif match.kmc_course:
-            pathway = "KMTC"
-        elif match.ttc_course:
-            pathway = "TTC"
-
-        writer.writerow([course_obj.name, pathway, match.university.name if match.university else "N/A",
-                         match.admission_chance, int(match.match_score)])
-
-    return response
+def legacy_redirect(request, **kwargs):
+    slug = (request.GET.get('pathway') or '').strip().lower()
+    if slug in PATHWAY_SLUG_TO_LABEL:
+        return redirect('career:pathway_input', pathway=slug, permanent=True)
+    return redirect('career:home', permanent=True)
 
 
 # =====================================================

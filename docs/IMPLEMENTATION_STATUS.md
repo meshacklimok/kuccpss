@@ -14,7 +14,7 @@ concrete, code-verified detail rather than repeating the summary table.
 | KCSE Cluster Points Calculator | Canonical formula in `clusterpoints/services.py`, live and correct for both guest and authenticated flows. |
 | Degree eligibility matching | `clusterpoints/eligibility.py::get_eligible_courses` — cluster-points-based, complete. |
 | Non-degree eligibility matching | `get_eligible_courses_by_mean_grade` — mean-grade-only logic is complete and correct; underlying data is incomplete (see Remaining). |
-| Career engine dispatch | `career/engine.py::career_guidance_engine` — real dispatcher, not a stub, covers Degree/Diploma/TVET/KMTC/TTC. |
+| Career engine | `career/views.py` pathway flow on `courses.Course` — Degree by cutoff points, every other pathway by mean grade. Legacy `career/engine.py` removed 2026-10-08. |
 | CareerNext AI chat | Knowledge-base-first, OpenAI-fallback, credit/rate-gated, master-switched via `CareerConfig`. |
 | Career quiz | Tag-based scoring against `CareerProfile`, AI-narrated summary. |
 | OCR grade upload | GPT-4o Vision extraction from photo/PDF, degrades gracefully to manual entry on failure. |
@@ -48,17 +48,12 @@ concrete, code-verified detail rather than repeating the summary table.
 
 ## 🚧 Stubbed / placeholder functionality
 
-- **`career/models.py::generate_ai_recommendation()`** (the non-chat, results-page recommendation
-  text) still returns placeholder text — confirmed by [API_NOTES.md](API_NOTES.md) as a known
-  stub. AI chat and quiz-summary AI calls are real; this specific call site is not.
 ## ❌ Dead code
 
 - **`clusterpoints/models.py::ClusterCalculationResult.calculate_cluster_points()`** — implements
   the old, forbidden fraction-based formula (`core_pts/48` instead of midpoint-marks). Never
   called by the live request path (`views.py` → `services.py`), but its presence is a latent-bug
   risk if anything ever calls it directly. **Do not use this method as a reference for the formula.**
-- **`career/models.py`'s duplicate `career_guidance_engine()`** — same name/purpose as the live
-  `career/engine.py` version; `career/views.py` imports only the `engine.py` copy.
 - **`courses/forms.py`** (`CourseTypeForm`, `CourseCategoryForm`, `CourseForm`) and
   **`institutions/forms.py`** (`InstitutionTypeForm`, `InstitutionForm`) — not referenced by any
   view, likely superseded by Django admin + `django-import-export`.
@@ -104,13 +99,22 @@ Remaining thin spots:
 - `courses/tests.py` — smoke/review flows only, not chart logic, category-fallback redirects, or `trends.py`.
 - No integration test for the full grade entry → loading → results flow (tracked in TODO.md).
 
-## Two unmerged systems (structural, not a bug)
+## Course systems merged (2026-10-08, phase 1)
 
-`career/models.py`'s legacy `Course`/`TVETCourse`/`KMTCourse`/`TTCCourse` and `courses/models.py`'s
-unified `Course`/`CourseOffering` remain separate by design, bridged one-way (name-match only, dry-run
-by default) via `career/management/commands/sync_career_clusters.py`. Per CLAUDE.md, do not merge
-without explicit instruction — but any feature work touching "courses" must first determine which
-system is in play. See [DATABASE.md](DATABASE.md) and [FEATURES.md](FEATURES.md) §4/§5.
+All course matching now reads `courses.Course` / `CourseOffering` / `institutions.Institution`.
+The legacy career code path (`career/engine.py`, `career/forms.py`, the match/calc helpers and
+`generate_ai_recommendation()` in `career/models.py`, `sync_career_clusters`, and the
+`kcse_input`/`results`/`course_detail`/`ai_recommendations` views and templates) was removed.
+Old URLs 301 to `/career/` (or `/career/input/<pathway>/` when `?pathway=` is given).
+
+The legacy model classes (`KCSEGrade`, `University`, `CourseCategory`, `Course`, `CourseCutoff`,
+`CourseCutoffHistory`, `TVET*`, `KMT*`, `TTC*`, `StudentCourseMatch`, `AIRecommendation`,
+`CareerInsight`) and their tables are **kept but unread** — no migration was made, so the live
+schema is unchanged. Phase 2 (a migration dropping them) waits until the live rows are confirmed
+unneeded. They were not shape-compatible with `courses.Course` (separate per-pathway tables,
+cutoffs as rows, no `Institution` link), so there was nothing to copy across.
+
+**Eligibility rule:** only **Degree** uses cutoff points (cluster points vs `CourseOffering.cutoff_points`). Diploma, Certificate/Artisan (TVET), KMTC and TTC never use cutoff points — they compare the KCSE mean grade with `Course.minimum_mean_grade` (pathway default when blank), plus `subject_requirements` where a course has them.
 
 ## Infrastructure / operational gaps
 
