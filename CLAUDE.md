@@ -52,22 +52,22 @@ The KCSE aggregate (max 84) is always: Mathematics + best(English, Kiswahili) + 
 ### 3. Custom User Model
 Auth uses `accounts.User` (UUID primary key, email-based login). Never switch to Django's default `auth.User`. All foreign keys to users must use `settings.AUTH_USER_MODEL`.
 
-### 4. Career Engine
-`career/engine.py` now dispatches to real pathway functions (`match_degree_courses`, etc.) — it is no longer a stub. AI chat (CareerNext AI) uses `OPENAI_API_KEY` or `ANTHROPIC_API_KEY`. See [docs/API_NOTES.md](docs/API_NOTES.md) before touching the engine.
+### 4. Career Engine & Eligibility Rule
+The engine is `career/views.py`: `degree_*` / `pathway_input` → `career_results` (`_build_career_matches`), all on `courses.Course` + `CourseOffering`.
+- **Only Degree uses cutoff points** (student's cluster points vs each offering's cutoff).
+- **Diploma, TVET, KMTC, TTC never use cutoff points** — eligibility is the student's KCSE mean grade vs `Course.minimum_mean_grade` (plus `subject_requirements` where a course has them).
+AI chat (CareerNext AI) uses `OPENAI_API_KEY` or `ANTHROPIC_API_KEY`. See [docs/API_NOTES.md](docs/API_NOTES.md) before touching the engine.
 
 ### 5. 18 KUCCPS Clusters (no sub-clusters)
 Degree clusters are the 18 on the KUCCPS portal, stored as `Cluster` rows 101–118 (`kuccps_number = number − 100`; names in [clusters/constants.py](clusters/constants.py)). Sub-clusters were removed in Sept 2026. Always list/score clusters via `Cluster.objects.kuccps()`; `Cluster.save()`/`clean()` reject any number outside 101–118, so a 19th cluster can't be created. Every degree `Course` links to one of these, with `entry_requirements` (4 cluster-subject slots) and `subject_requirements` from the portal. Cutoff years are the portal's KCSE-year labels — never shift them. Refresh with `scripts/scrape_kuccps_portal.py` then `manage.py import_kuccps_portal --dry-run` / without `--dry-run`.
 
-### 6. Two Separate Course Systems
-- `career/models.py` — older course models used by the career engine (Course, TVETCourse, KMTCourse, TTCCourse)
-- `courses/models.py` — newer unified Course model linked to `institutions` and `clusters`
-These are not yet merged. Do not conflate them without explicit instruction.
+### 6. One Course System: `courses.Course`
+All course data lives in `courses/models.py` (`Course`, `CourseOffering`, linked to `institutions` and `clusters`). The old `career/models.py` course models (`Course`, `University`, `CourseCutoff*`, `TVETCourse`, `KMTCourse`, `TTCCourse`, `StudentCourseMatch`, `CareerInsight`, …) are **legacy and unread** since Oct 2026 — their tables remain only until a migration drops them. Never add code that reads or writes them. The old `/career/kcse-input/` flow URLs 301 to `/career/`.
 
 ## Known Issues
 Full detail in [docs/IMPLEMENTATION_STATUS.md](docs/IMPLEMENTATION_STATUS.md). Headline items:
-- **`career/models.py::generate_ai_recommendation()`** still returns placeholder text (known stub, see [docs/API_NOTES.md](docs/API_NOTES.md)).
-- **Duplicate dispatcher**: `career/models.py` defines its own unused `career_guidance_engine()` alongside the real one in `career/engine.py` — don't confuse the two.
-- TVET/TTC cutoff points and subject requirements are largely unsourced (logic is correct, data entry is incomplete).
+- Legacy `career` course tables still exist (unread) — drop them in a migration once live data is confirmed empty/unneeded.
+- TVET/TTC minimum mean grades and subject requirements are largely unsourced (logic is correct, data entry is incomplete; many courses fall back to the pathway default grade).
 
 ## Conventions
 - Function-based views with `@login_required` decorator for protected pages

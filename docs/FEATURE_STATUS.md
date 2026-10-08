@@ -118,10 +118,10 @@ Status legend: ✅ Done | 🚧 In Progress | 📋 Planned | ❌ Blocked | [-] Dr
 | Feature | Status | Notes |
 |---|---|---|
 | Pathway selection (Degree/Diploma/KMTC/TVET/TTC) | ✅ | career/home view |
-| KCSE grade input for career matching | ✅ | career/kcse_input view; unified accordion UI |
+| KCSE grade input for career matching | ✅ | career/pathway_input view (`/career/input/<pathway>/`); old kcse_input URL 301s |
 | Document Scanner (OCR) | ✅ | GPT-4o vision; supports JPG/PNG/PDF; detects KCSE slips vs cluster point docs |
-| Degree course matching by cluster points | ✅ | match_degree_courses() dispatched from engine.py |
-| Diploma/KMTC/TVET/TTC matching by mean grade | ✅ | Pathway dispatch functions in engine.py |
+| Degree course matching by cluster points | ✅ | career/views.py on courses.Course — the only pathway using cutoff points |
+| Diploma/KMTC/TVET/TTC matching by mean grade | ✅ | career/views.py on courses.Course — mean grade vs minimum_mean_grade, no cutoff points |
 | Admission chance prediction | ✅ | VERY HIGH / HIGH / MEDIUM / LOW |
 | Match results display + filtering | ✅ | Filter by university, admission chance, sort |
 | Paginated results | ✅ | 15 per page |

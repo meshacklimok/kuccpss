@@ -7,8 +7,16 @@ Format: `[YYYY-MM-DD]` — description of what changed and why.
 ## [Unreleased]
 
 ### In Progress
-- Career engine AI recommendation text — CareerNext AI chat live; `generate_ai_recommendation()` still returns stub text in non-chat flow
 - Mentorship B2C payout disbursement — IntaSend "Send Money" must be activated on account before auto-payouts work
+
+---
+
+## [2026-10-08] — Course systems merged onto `courses.Course` (phase 1, no schema change)
+- **Eligibility rule written down:** only Degree uses cutoff points. Diploma, Certificate/Artisan, KMTC and TTC use KCSE mean grade vs `minimum_mean_grade` (plus `subject_requirements` where set). The removed legacy `match_diploma_courses` broke this by comparing mean grade to cutoff points.
+- **Removed the legacy career engine path:** `career/engine.py`, `career/forms.py`, `sync_career_clusters` command, the calc/match helpers and `generate_ai_recommendation()` stub in `career/models.py`, `generate_ai_recommendation_async` task, and the `kcse_input` / `course_detail` / `ai_recommendations` / filter / search / export / two AJAX views with their four templates.
+- **No broken links:** old URLs (`/career/kcse-input/`, `/career/course/<id>/`, etc.) return 301 to `/career/`, or to `/career/input/<pathway>/` when `?pathway=` is given. `/career/kcse-input/` dropped from the sitemap.
+- **Models untouched:** legacy career model classes and tables are kept but unread (no migration). Dropping them is phase 2, pending a check of live data.
+- Docs: CLAUDE.md rules 4 and 6, DECISIONS #4, ARCHITECTURE, API_NOTES, FEATURE_STATUS, IMPLEMENTATION_STATUS.
 
 ---
 

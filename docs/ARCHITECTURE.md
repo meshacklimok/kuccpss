@@ -10,7 +10,7 @@
 - **Media / image storage:** Cloudinary (`CLOUDINARY_URL` env var); falls back to local `MEDIA_ROOT` in dev
 - **Email:** Resend SMTP (`smtp.resend.com:465 SSL`) via `RESEND_API_KEY`; console backend in dev
 - **Image processing / OCR:** OpenAI GPT-4o vision (document scanner in career engine)
-- **AI (career engine & chat):** OpenAI API via `career/engine.py` and AI chat views; `CareerConfig` controls limits
+- **AI (career engine & chat):** OpenAI API via the AI chat / OCR / quiz views in `career/views.py`; `CareerConfig` controls limits
 - **Web Push:** VAPID keys (`VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`) + service worker
 - **PWA:** `static/manifest.json` + `static/js/sw.js` (cache-v5); standalone mode splash screen
 - **Payments:** IntaSend M-Pesa STK push (`INTASEND_*` env vars); fully wired with webhook handler
@@ -33,7 +33,9 @@ analytics       ← depends on: accounts, courses, institutions
 resources       ← no internal deps
 ```
 
-Note: `career` currently has its own Course/University models parallel to `courses`. They are not yet merged — see DECISIONS.md #4.
+Note: all course matching uses `courses.Course`. `career` still holds legacy Course/University model classes and tables, but nothing reads them — see DECISIONS.md #4.
+
+**Eligibility rule:** only **Degree** uses cutoff points (cluster points vs `CourseOffering.cutoff_points`). Diploma, Certificate/Artisan (TVET), KMTC and TTC never use cutoff points — they compare the KCSE mean grade with `Course.minimum_mean_grade` (pathway default when blank), plus `subject_requirements` where a course has them.
 
 ## Data Flow: KCSE Calculator
 
@@ -131,7 +133,8 @@ Results rendered with admission_chance: VERY HIGH / HIGH / MEDIUM / LOW
 - `Review` — user review of a course; rating (1–5), comment, is_approved
 - `CourseSpotlight` — admin-configured spotlight course; shown on trends/spotlight page
 
-### career (parallel system, not yet merged with courses)
+### career
+Legacy, unread (kept until a migration drops the tables):
 - `KCSEGrade` — grade-letter → points lookup used by career engine
 - `Course`, `TVETCourse`, `KMTCourse`, `TTCCourse` — course types per pathway
 - `University`, `KMTCampus`, `TTCCollege` — institutions per pathway
@@ -139,6 +142,8 @@ Results rendered with admission_chance: VERY HIGH / HIGH / MEDIUM / LOW
 - `StudentCourseMatch` — engine output: course + admission_chance + match_score; FK to User
 - `AIRecommendation` — stored text from AI engine; FK to User
 - `CareerInsight` — demand level, salary, career fields per course
+
+Live:
 - `CareerProfile` — career title, slug, duties, skills, educational_pathway, salary, demand_level, career_tags, M2M to courses.Course
 - `QuizQuestion`, `QuizOption`, `QuizSubmission`, `QuizAnswer` — career assessment quiz; options carry career_tags used for scoring
 - `CareerConfig` — singleton admin config: ai_free_message_limit, ai_paid_message_limit, ai_free_reset_days, `ai_model_name` (OpenAI model used by ALL AI features — chat/insight/quiz summary, default `gpt-4o-mini`, editable without a deploy), `ai_temperature` (0.0–2.0 sampling temperature, default 0.6, applied to all AI calls), session price, payout rate, rate-limiting controls, Tawk.to enabled flag, mentor_signup_enabled

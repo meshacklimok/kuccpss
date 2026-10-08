@@ -565,6 +565,24 @@ class CareerPagesSmokeTests(CareerTestBase):
                     self.assertLess(self.client.get(url).status_code, 500)
 
 
+class RetiredCareerPagesTests(CareerTestBase):
+    """The old KCSE-input flow (legacy career.Course tables) now 301s to the engine."""
+
+    def test_legacy_pages_redirect_to_engine(self):
+        for url in ('/career/kcse-input/', '/career/course/5/', '/career/filter-matches/',
+                    '/career/ai-recommendations/', '/career/search-courses/?q=law',
+                    '/career/export-matches/'):
+            with self.subTest(url=url):
+                self.assertRedirects(self.client.get(url), '/career/',
+                                     status_code=301, fetch_redirect_response=False)
+
+    def test_kcse_input_keeps_pathway(self):
+        self.assertRedirects(self.client.get('/career/kcse-input/?pathway=KMTC'),
+                             '/career/input/kmtc/', status_code=301, fetch_redirect_response=False)
+        self.assertRedirects(self.client.get('/career/kcse-input/?pathway=nonsense'),
+                             '/career/', status_code=301, fetch_redirect_response=False)
+
+
 class AIAssistantActionToolTests(CareerTestBase):
     """Newer CareerNext AI tools: cluster working, what-if, choice planner, careers, actions."""
 

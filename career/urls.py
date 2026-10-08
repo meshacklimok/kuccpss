@@ -7,27 +7,13 @@ urlpatterns = [
     # Home / pathway selection
     path("", views.home, name="home"),
 
-    # KCSE input page
-    path("kcse-input/", views.kcse_input, name="kcse_input"),
-
-    # Course detail view
-    path("course/<int:match_id>/", views.course_detail, name="course_detail"),
-
-    # Filter matches page
-    path("filter-matches/", views.filter_matches, name="filter_matches"),
-
-    # AI recommendations history
-    path("ai-recommendations/", views.ai_recommendations, name="ai_recommendations"),
-
-    # AJAX endpoints
-    path("ajax/validate-tvet-subjects/", views.ajax_validate_tvet_subjects, name="ajax_validate_tvet_subjects"),
-    path("ajax/update-admission/", views.ajax_update_admission, name="ajax_update_admission"),
-
-    # Search courses
-    path("search-courses/", views.search_courses, name="search_courses"),
-
-    # Export matches
-    path("export-matches/", views.export_matches_csv, name="export_matches"),
+    # Retired KCSE-input flow (legacy career.Course tables) → 301 to the engine
+    path("kcse-input/", views.legacy_redirect, name="kcse_input"),
+    path("course/<int:match_id>/", views.legacy_redirect, name="course_detail"),
+    path("filter-matches/", views.legacy_redirect, name="filter_matches"),
+    path("ai-recommendations/", views.legacy_redirect, name="ai_recommendations"),
+    path("search-courses/", views.legacy_redirect, name="search_courses"),
+    path("export-matches/", views.legacy_redirect, name="export_matches"),
 
     # Career profiles
     path("profiles/", views.career_profiles_list, name="career_profiles"),
