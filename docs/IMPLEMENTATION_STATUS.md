@@ -109,9 +109,7 @@ Old URLs 301 to `/career/` (or `/career/input/<pathway>/` when `?pathway=` is gi
 
 The legacy model classes (`KCSEGrade`, `University`, `CourseCategory`, `Course`, `CourseCutoff`,
 `CourseCutoffHistory`, `TVET*`, `KMT*`, `TTC*`, `StudentCourseMatch`, `AIRecommendation`,
-`CareerInsight`) and their tables are **kept but unread** — no migration was made, so the live
-schema is unchanged. Phase 2 (a migration dropping them) waits until the live rows are confirmed
-unneeded. They were not shape-compatible with `courses.Course` (separate per-pathway tables,
+`CareerInsight`) and their tables were dropped in phase 2 (2026-10-09, `career/migrations/0026_drop_legacy_course_models.py`). They were not shape-compatible with `courses.Course` (separate per-pathway tables,
 cutoffs as rows, no `Institution` link), so there was nothing to copy across.
 
 **Eligibility rule:** only **Degree** uses cutoff points (cluster points vs `CourseOffering.cutoff_points`). Diploma, Certificate/Artisan (TVET), KMTC and TTC never use cutoff points — they compare the KCSE mean grade with `Course.minimum_mean_grade` (pathway default when blank), plus `subject_requirements` where a course has them.

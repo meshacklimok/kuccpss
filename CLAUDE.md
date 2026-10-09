@@ -62,11 +62,10 @@ AI chat (CareerNext AI) uses `OPENAI_API_KEY` or `ANTHROPIC_API_KEY`. See [docs/
 Degree clusters are the 18 on the KUCCPS portal, stored as `Cluster` rows 101–118 (`kuccps_number = number − 100`; names in [clusters/constants.py](clusters/constants.py)). Sub-clusters were removed in Sept 2026. Always list/score clusters via `Cluster.objects.kuccps()`; `Cluster.save()`/`clean()` reject any number outside 101–118, so a 19th cluster can't be created. Every degree `Course` links to one of these, with `entry_requirements` (4 cluster-subject slots) and `subject_requirements` from the portal. Cutoff years are the portal's KCSE-year labels — never shift them. Refresh with `scripts/scrape_kuccps_portal.py` then `manage.py import_kuccps_portal --dry-run` / without `--dry-run`.
 
 ### 6. One Course System: `courses.Course`
-All course data lives in `courses/models.py` (`Course`, `CourseOffering`, linked to `institutions` and `clusters`). The old `career/models.py` course models (`Course`, `University`, `CourseCutoff*`, `TVETCourse`, `KMTCourse`, `TTCCourse`, `StudentCourseMatch`, `CareerInsight`, …) are **legacy and unread** since Oct 2026 — their tables remain only until a migration drops them. Never add code that reads or writes them. The old `/career/kcse-input/` flow URLs 301 to `/career/`.
+All course data lives in `courses/models.py` (`Course`, `CourseOffering`, linked to `institutions` and `clusters`). The old `career/models.py` course models (`Course`, `University`, `CourseCutoff*`, `TVETCourse`, `KMTCourse`, `TTCCourse`, `StudentCourseMatch`, `CareerInsight`, …) were **deleted** in `career/migrations/0026_drop_legacy_course_models.py` (Oct 2026). Never recreate them. The old `/career/kcse-input/` flow URLs 301 to `/career/`.
 
 ## Known Issues
 Full detail in [docs/IMPLEMENTATION_STATUS.md](docs/IMPLEMENTATION_STATUS.md). Headline items:
-- Legacy `career` course tables still exist (unread) — drop them in a migration once live data is confirmed empty/unneeded.
 - TVET/TTC minimum mean grades and subject requirements are largely unsourced (logic is correct, data entry is incomplete; many courses fall back to the pathway default grade).
 
 ## Conventions

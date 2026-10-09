@@ -11,6 +11,12 @@ Format: `[YYYY-MM-DD]` — description of what changed and why.
 
 ---
 
+## [2026-10-09] — Legacy career course tables dropped (phase 2)
+- `career/migrations/0026_drop_legacy_course_models.py` deletes the 15 legacy models (KCSEGrade, CourseCategory, University, Course, CourseCutoff, CourseCutoffHistory, TVETCategory, TVETCourse, KMTCampus, KMTCourse, TTCCollege, TTCCourse, StudentCourseMatch, AIRecommendation, CareerInsight). `get_default_course_category()` stays as a no-op because migration 0001 references it.
+- Removed the CareerInsight admin, the six test rows for those models in `data/data.json`, the `--exclude=career.studentcoursematch` flag in `build.sh`, and `scripts/_check_courses.py`.
+
+---
+
 ## [2026-10-08] — Course systems merged onto `courses.Course` (phase 1, no schema change)
 - **Eligibility rule written down:** only Degree uses cutoff points. Diploma, Certificate/Artisan, KMTC and TTC use KCSE mean grade vs `minimum_mean_grade` (plus `subject_requirements` where set). The removed legacy `match_diploma_courses` broke this by comparing mean grade to cutoff points.
 - **Removed the legacy career engine path:** `career/engine.py`, `career/forms.py`, `sync_career_clusters` command, the calc/match helpers and `generate_ai_recommendation()` stub in `career/models.py`, `generate_ai_recommendation_async` task, and the `kcse_input` / `course_detail` / `ai_recommendations` / filter / search / export / two AJAX views with their four templates.

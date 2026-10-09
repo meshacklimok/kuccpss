@@ -37,7 +37,6 @@ if [ "${RUN_SEEDS:-0}" = "1" ]; then
     --exclude=clusterpoints.clustercalculationresult \
     --exclude=clusterpoints.subjectresult \
     --exclude=clusterpoints.userkcseresult \
-    --exclude=career.studentcoursematch \
     || echo "Data load skipped (may already exist)"
 
   # Load career profiles, quiz, articles, FAQs, success stories

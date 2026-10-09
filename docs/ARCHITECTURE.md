@@ -134,7 +134,7 @@ Results rendered with admission_chance: VERY HIGH / HIGH / MEDIUM / LOW
 - `CourseSpotlight` — admin-configured spotlight course; shown on trends/spotlight page
 
 ### career
-Legacy, unread (kept until a migration drops the tables):
+Legacy, dropped 2026-10-09 (migration 0026):
 - `KCSEGrade` — grade-letter → points lookup used by career engine
 - `Course`, `TVETCourse`, `KMTCourse`, `TTCCourse` — course types per pathway
 - `University`, `KMTCampus`, `TTCCollege` — institutions per pathway
