@@ -227904,59 +227904,6 @@
     }
   },
   {
-    "model": "career.coursecategory",
-    "pk": 1,
-    "fields": {
-      "name": "Degree",
-      "description": null
-    }
-  },
-  {
-    "model": "career.university",
-    "pk": 1,
-    "fields": {
-      "name": "uon",
-      "county": "nairobi",
-      "description": ""
-    }
-  },
-  {
-    "model": "career.course",
-    "pk": 1,
-    "fields": {
-      "name": "data science",
-      "category": 1,
-      "description": "",
-      "recommended_fields": "",
-      "career_paths": "",
-      "cluster_subjects": []
-    }
-  },
-  {
-    "model": "career.coursecutoff",
-    "pk": 1,
-    "fields": {
-      "course": 1,
-      "university": 1,
-      "cutoff_points": 35.89,
-      "year": 2026
-    }
-  },
-  {
-    "model": "career.tvetcategory",
-    "pk": 1,
-    "fields": {
-      "name": "IT ang Tech"
-    }
-  },
-  {
-    "model": "career.tvetcategory",
-    "pk": 2,
-    "fields": {
-      "name": "health"
-    }
-  },
-  {
     "model": "resources.resourcecategory",
     "pk": 1,
     "fields": {

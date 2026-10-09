@@ -32,7 +32,7 @@ Records *why* major choices were made. Read this before refactoring or "improvin
 ---
 
 ## 4. One Course System (merged 2026-10-08, phase 1)
-**Update 2026-10-08:** all matching uses `courses.Course`; the legacy career code path was removed and its URLs 301. Legacy model classes/tables stay, unread, until a migration drops them (phase 2). **Eligibility rule:** only **Degree** uses cutoff points (cluster points vs `CourseOffering.cutoff_points`). Diploma, Certificate/Artisan (TVET), KMTC and TTC never use cutoff points — they compare the KCSE mean grade with `Course.minimum_mean_grade` (pathway default when blank), plus `subject_requirements` where a course has them.
+**Update 2026-10-08:** all matching uses `courses.Course`; the legacy career code path was removed and its URLs 301. Legacy model classes/tables were dropped 2026-10-09 (migration 0026). **Eligibility rule:** only **Degree** uses cutoff points (cluster points vs `CourseOffering.cutoff_points`). Diploma, Certificate/Artisan (TVET), KMTC and TTC never use cutoff points — they compare the KCSE mean grade with `Course.minimum_mean_grade` (pathway default when blank), plus `subject_requirements` where a course has them.
 
 **Original decision:** `career/models.py` and `courses/models.py` existed as separate course systems.
 

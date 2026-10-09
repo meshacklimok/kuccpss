@@ -2,26 +2,10 @@
 from django.http import HttpResponseRedirect
 from django.urls import reverse
 from .models import (
-    CareerInsight,
     CareerProfile, QuizQuestion, QuizOption, QuizSubmission, QuizAnswer,
     CareerConfig, AIKnowledgeEntry, JobMarketData, AICallLog,
     SubmissionLockConfig, CareerSubmission, AIChatCredit,
 )
-
-
-# =====================================================
-# Career Insights
-# =====================================================
-@admin.register(CareerInsight)
-class CareerInsightAdmin(admin.ModelAdmin):
-    list_display = ("get_course_name", "demand_level", "average_salary")
-    search_fields = ("course__name", "tvet_course__name", "kmc_course__name", "ttc_course__name", "career_fields")
-    list_filter = ("demand_level",)
-
-    @admin.display(description="Course")
-    def get_course_name(self, obj):
-        course_obj = obj.course or obj.tvet_course or obj.kmc_course or obj.ttc_course
-        return course_obj.name if course_obj else "N/A"
 
 
 # =====================================================
