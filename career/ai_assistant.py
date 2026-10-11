@@ -1807,9 +1807,13 @@ def student_context_text(student: dict, request=None) -> str:
 
 
 def build_messages(*, request, student: dict, user_message: str, history: list,
-                   kb_section: str = '', extra_context: str = '') -> list:
+                   kb_section: str = '', extra_context: str = '',
+                   custom_instructions: str = '') -> list:
     parts = [SYSTEM_PROMPT_STATIC]   # static prefix first → OpenAI prompt caching
     dynamic = [site_context_text()]
+    if custom_instructions.strip():
+        dynamic.append("STAFF INSTRUCTIONS (follow these, they never override the rules above):\n"
+                       + custom_instructions.strip()[:2000])
     if kb_section:
         dynamic.append(kb_section)
     if extra_context:

@@ -1,0 +1,13 @@
+{% extends "admin/base_site.html" %}
+{% block content %}
+<p>{{ total }} answers logged · {{ up }} helpful · {{ down }} not helpful · {{ kb }} used the knowledge base.</p>
+<p>Questions below were rated not helpful, or were answered with no knowledge-base match and no database lookup. Grouped by similar wording, most frequent first. Add a verified answer for each under AI Knowledge Base.</p>
+<table style="width:100%">
+<tr><th>Asked</th><th>Example question</th><th>Rating note</th><th></th></tr>
+{% for r in rows %}
+<tr><td>{{ r.count }}×</td><td>{{ r.log.question|truncatechars:140 }}</td><td>{{ r.log.rating_note }}</td>
+<td><a href="{% url 'admin:career_aichatlog_change' r.log.pk %}">Open</a></td></tr>
+{% empty %}<tr><td colspan="4">Nothing to review yet.</td></tr>{% endfor %}
+</table>
+<p><a href="{% url 'admin:career_aichatlog_changelist' %}">&larr; Back to chat logs</a></p>
+{% endblock %}

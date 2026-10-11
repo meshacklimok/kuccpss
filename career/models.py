@@ -230,6 +230,13 @@ class CareerConfig(models.Model):
             "Change this to switch models without a code deploy, e.g. 'gpt-4o' or 'gpt-4o-mini'."
         ),
     )
+    ai_custom_instructions = models.TextField(
+        blank=True,
+        help_text=(
+            "Extra instructions appended to CareerNext AI's prompt for every chat, e.g. "
+            "'Always mention KUCCPS revision dates' or 'Prefer short answers'. No deploy needed."
+        ),
+    )
     ai_temperature = models.FloatField(
         default=0.6,
         help_text=(
@@ -344,6 +351,45 @@ class AIKnowledgeEntry(models.Model):
 
     def get_keywords_list(self):
         return [k.strip().lower() for k in self.keywords.split(',') if k.strip()]
+
+
+class AIChatLog(models.Model):
+    """
+    One row per CareerNext AI answer. Powers the learning loop: students rate
+    answers, staff review them in admin and promote good ones into AIKnowledgeEntry.
+    """
+    STATUS_CHOICES = [
+        ('new',      'New'),
+        ('reviewed', 'Reviewed'),
+        ('promoted', 'Promoted to knowledge base'),
+        ('ignored',  'Ignored'),
+    ]
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,
+        null=True, blank=True, related_name='ai_chat_logs',
+    )
+    question     = models.TextField()
+    reply        = models.TextField(blank=True)
+    tools_used   = models.JSONField(default=list, blank=True)
+    kb_hit       = models.BooleanField(default=False)
+    model_name   = models.CharField(max_length=50, blank=True)
+    rating       = models.SmallIntegerField(default=0, help_text="1 = helpful, -1 = not helpful, 0 = unrated")
+    rating_note  = models.CharField(max_length=500, blank=True)
+    review_status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='new')
+    created_at   = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name        = 'AI Chat Log'
+        verbose_name_plural = 'AI Chat Logs'
+        indexes = [models.Index(fields=['review_status', 'rating'])]
+
+    def __str__(self):
+        return f"{self.question[:60]} ({self.get_rating_display()})"
+
+    def get_rating_display(self):
+        return {1: 'helpful', -1: 'not helpful'}.get(self.rating, 'unrated')
 
 
 # =====================================================

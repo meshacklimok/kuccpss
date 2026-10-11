@@ -45,6 +45,7 @@ urlpatterns = [
     # ── AI Insight (AJAX) ────────────────────────────
     path("ajax/ai-insight/", views.ajax_ai_insight, name="ajax_ai_insight"),
     path("ajax/ai-chat/",    views.ajax_ai_chat,    name="ajax_ai_chat"),
+    path("ajax/ai-feedback/", views.ajax_ai_feedback, name="ajax_ai_feedback"),
 
     # ── CareerNext AI Chat page ───────────────────────
     path("chat/", views.career_chat, name="career_chat"),

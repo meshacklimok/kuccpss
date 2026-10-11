@@ -884,9 +884,31 @@ def ajax_ai_chat(request):
         history=history if isinstance(history, list) else [],
         kb_section=kb_section,
         extra_context=question_courses,
+        custom_instructions=getattr(cfg, 'ai_custom_instructions', '') or '',
     )
 
     tools_used: list = []
+
+    # Log row is created up front so the streamed response can carry its id for ratings.
+    chat_log = None
+    try:
+        from .models import AIChatLog
+        chat_log = AIChatLog.objects.create(
+            user=request.user, question=user_message[:2000],
+            kb_hit=bool(kb_entries), model_name=cfg.ai_model_name,
+        )
+    except Exception:
+        pass
+
+    def _save_chat_log(reply_text: str):
+        if chat_log is None:
+            return
+        try:
+            chat_log.reply = reply_text
+            chat_log.tools_used = tools_used[:10]
+            chat_log.save(update_fields=['reply', 'tools_used'])
+        except Exception:
+            pass
 
     def _log_chat():
         try:
@@ -923,8 +945,12 @@ def ajax_ai_chat(request):
     # ── Streaming path (chat page) — student sees the answer as it types ──
     if body.get("stream"):
         def token_stream():
+            collected = []
             try:
-                yield from _reply_chunks(stream=True)
+                for piece in _reply_chunks(stream=True):
+                    collected.append(piece)
+                    yield piece
+                _save_chat_log("".join(collected))
                 _log_chat()
             except CircuitOpenError:
                 yield "⚠️ CareerNext AI is busy right now — please try again in a minute."
@@ -935,13 +961,17 @@ def ajax_ai_chat(request):
         response = StreamingHttpResponse(token_stream(), content_type="text/plain; charset=utf-8")
         response["Cache-Control"] = "no-cache"
         response["X-Accel-Buffering"] = "no"   # disable nginx buffering
+        if chat_log is not None:
+            response["X-Chat-Log-Id"] = str(chat_log.pk)
         return response
 
     # ── Non-streaming path (dashboard / results widgets) ──
     try:
         reply, followups = ai_assistant.split_followups("".join(_reply_chunks(stream=False)))
+        _save_chat_log(reply)
         _log_chat()
-        return JsonResponse({"reply": reply, "followups": followups, "kb_used": len(kb_entries)})
+        return JsonResponse({"reply": reply, "followups": followups, "kb_used": len(kb_entries),
+                             "log_id": chat_log.pk if chat_log else None})
     except CircuitOpenError:
         return JsonResponse(
             {"error": "CareerNext AI is busy right now. Please try again in a minute."},
@@ -950,6 +980,29 @@ def ajax_ai_chat(request):
     except Exception as e:
         _logger.error("AI chat error: %s", e)
         return JsonResponse({"error": "AI error, please try again."}, status=500)
+
+
+@require_POST
+def ajax_ai_feedback(request):
+    """Student rates an AI answer. Body: { log_id, rating: 1|-1, note? }"""
+    if not request.user.is_authenticated:
+        return JsonResponse({"error": "login_required"}, status=401)
+    import json as _json
+    from .models import AIChatLog
+    try:
+        body = _json.loads(request.body)
+        log_id = int(body.get("log_id"))
+        rating = int(body.get("rating"))
+    except (ValueError, TypeError):
+        return JsonResponse({"error": "Invalid request."}, status=400)
+    if rating not in (1, -1):
+        return JsonResponse({"error": "Invalid rating."}, status=400)
+    updated = AIChatLog.objects.filter(pk=log_id, user=request.user).update(
+        rating=rating, rating_note=str(body.get("note", ""))[:500],
+    )
+    if not updated:
+        return JsonResponse({"error": "Not found."}, status=404)
+    return JsonResponse({"ok": True})
 
 
 # =====================================================

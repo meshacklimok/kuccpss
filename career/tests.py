@@ -378,6 +378,24 @@ class AIChatTests(CareerTestBase):
     def test_chat_page_renders(self):
         self.assertEqual(self.client.get('/career/chat/').status_code, 200)
 
+    def test_reply_is_logged_and_can_be_rated(self):
+        from .models import AIChatLog
+        with mock.patch('kuccpss.circuit_breaker.get_openai_client', return_value=_fake_openai_client()):
+            r = self.chat(json.dumps({'message': 'Which law courses can I get?', 'history': []}))
+        log = AIChatLog.objects.get()
+        self.assertEqual(r.json()['log_id'], log.pk)
+        self.assertIn('Mocked AI answer', log.reply)
+        rate = self.client.post('/career/ajax/ai-feedback/',
+                                json.dumps({'log_id': log.pk, 'rating': -1, 'note': 'wrong'}),
+                                content_type='application/json')
+        self.assertEqual(rate.status_code, 200)
+        log.refresh_from_db()
+        self.assertEqual((log.rating, log.rating_note), (-1, 'wrong'))
+        bad = self.client.post('/career/ajax/ai-feedback/',
+                               json.dumps({'log_id': log.pk, 'rating': 5}),
+                               content_type='application/json')
+        self.assertEqual(bad.status_code, 400)
+
     def test_json_reply_splits_followups(self):
         msg = SimpleNamespace(content='**Hi!**\n<<FOLLOWUPS: What can I study? | Explain cluster points>>',
                               tool_calls=None)
@@ -682,3 +700,21 @@ class AIAssistantActionToolTests(CareerTestBase):
         self.student['cluster_points']['1'] = 32.5
         self.assertEqual(self.ai.tool_find_courses_i_qualify_for(self.student, 'degree', location='Mombasa')['results'], [])
         self.assertTrue(self.ai.tool_find_courses_i_qualify_for(self.student, 'degree', location='Test')['results'])
+
+
+@override_settings(STAFF_2FA_REQUIRED=False)
+class AIChatLogAdminTests(TestCase):
+    def test_insights_and_promote(self):
+        from django.contrib.auth import get_user_model
+        from .models import AIChatLog, AIKnowledgeEntry
+        admin_user = get_user_model().objects.create_superuser(email='a@x.com', password='pw12345!')
+        self.client.force_login(admin_user)
+        log = AIChatLog.objects.create(question='What is the cutoff for nursing?', reply='Answer', rating=-1)
+        self.assertContains(self.client.get('/cn-staff/career/aichatlog/insights/'), 'cutoff for nursing')
+        self.assertEqual(self.client.get('/cn-staff/career/aichatlog/').status_code, 200)
+        self.client.post('/cn-staff/career/aichatlog/', {
+            'action': 'promote_to_knowledge_base', '_selected_action': [log.pk]})
+        entry = AIKnowledgeEntry.objects.get()
+        self.assertFalse(entry.is_active)
+        log.refresh_from_db()
+        self.assertEqual(log.review_status, 'promoted')
