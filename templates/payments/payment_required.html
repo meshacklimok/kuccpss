@@ -6,7 +6,7 @@
 <style>
 *, *::before, *::after { box-sizing: border-box; }
 
-body { background: #060c1a; min-height: 100vh; }
+body { background: #060c1a; min-height: 100vh; min-height: 100dvh; }
 
 /* ── Animated background ── */
 .pr-bg {
@@ -30,6 +30,7 @@ body { background: #060c1a; min-height: 100vh; }
 .pr-wrap {
     position: relative; z-index: 10;
     min-height: calc(100vh - 60px);
+    min-height: calc(100dvh - 60px);
     display: flex; align-items: center; justify-content: center;
     padding: 2rem 1rem;
 }
