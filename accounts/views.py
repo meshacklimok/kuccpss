@@ -269,17 +269,8 @@ def dashboard_view(request: HttpRequest) -> HttpResponse:
             inst_type_links.append({'label': itype.name, 'count': _inst_counts.get(itype.pk, 0),
                 'url': reverse('institutions:institution_type_detail', kwargs={'type_slug': itype.slug}),
                 'icon': _INST_ICONS.get(_icon_key, 'fas fa-building')})
-        now = tz.now()
-        kuccps_open  = tz.datetime(2026, 7, 3,  12, 0, tzinfo=_dtz.utc)
-        kuccps_close = tz.datetime(2026, 8, 21, 23, 59, tzinfo=_dtz.utc)
-        days_to_open  = (kuccps_open  - now).days
-        days_to_close = (kuccps_close - now).days
-        if days_to_open > 0:
-            timeline_phase, timeline_days, timeline_label, timeline_date = 'before_open', days_to_open, 'Days until portal opens', 'Est. 3 Jul 2026'
-        elif days_to_close > 0:
-            timeline_phase, timeline_days, timeline_label, timeline_date = 'open', days_to_close, 'Days left to apply', 'Closes Est. 21 Aug 2026'
-        else:
-            timeline_phase, timeline_days, timeline_label, timeline_date = 'closed', 0, 'Portal closed for 2026', 'Check students.kuccps.net for 2027 dates'
+        from resources.timeline import get_portal_timeline
+        _timeline = get_portal_timeline()
         from institutions.models import InstitutionPromotion as _IP
         from datetime import date as _date
         _today = _date.today()
@@ -314,8 +305,7 @@ def dashboard_view(request: HttpRequest) -> HttpResponse:
                 {'name': 'Nursing (B.Sc.)',        'cluster_num': 13, 'cutoff': '35.5', 'icon': 'fa-heartbeat',        'bg': '#dcfce7', 'color': '#15803d'},
                 {'name': 'Architecture',           'cluster_num': 5,  'cutoff': '37.0', 'icon': 'fa-drafting-compass', 'bg': '#ccfbf1', 'color': '#0f766e'},
             ],
-            "timeline_phase": timeline_phase, "timeline_days": timeline_days,
-            "timeline_label": timeline_label, "timeline_date": timeline_date,
+            **_timeline,
             "inst_type_links": inst_type_links,
             "trending_viewed": _trends.get('trending_viewed', []),
             "spotlight": _trends.get('spotlight'),
@@ -479,29 +469,9 @@ def dashboard_view(request: HttpRequest) -> HttpResponse:
                 {'name': 'Architecture',           'cluster_num': 5,  'cutoff': '37.0', 'icon': 'fa-drafting-compass',   'bg': '#ccfbf1', 'color': '#0f766e'},
             ]
 
-    # ── KUCCPS 2026 Application Timeline ─────────────────────────────────────
-    now           = tz.now()
-    from datetime import timezone as _dtz
-    kuccps_open   = tz.datetime(2026, 7, 3,  12, 0, tzinfo=_dtz.utc)
-    kuccps_close  = tz.datetime(2026, 8, 21, 23, 59, tzinfo=_dtz.utc)
-    days_to_open  = (kuccps_open  - now).days
-    days_to_close = (kuccps_close - now).days
-
-    if days_to_open > 0:
-        timeline_phase = 'before_open'
-        timeline_days  = days_to_open
-        timeline_label = 'Days until portal opens'
-        timeline_date  = 'Est. 3 Jul 2026'
-    elif days_to_close > 0:
-        timeline_phase = 'open'
-        timeline_days  = days_to_close
-        timeline_label = 'Days left to apply'
-        timeline_date  = 'Closes Est. 21 Aug 2026'
-    else:
-        timeline_phase = 'closed'
-        timeline_days  = 0
-        timeline_label = 'Portal closed for 2026'
-        timeline_date  = 'Check students.kuccps.net for 2027 dates'
+    # ── KUCCPS application timeline (admin: Resources → KUCCPS Calendar) ──────
+    from resources.timeline import get_portal_timeline
+    _timeline = get_portal_timeline()
 
     # ── Active promotions ─────────────────────────────────────────────────────
     from institutions.models import InstitutionType, Institution, InstitutionPromotion
@@ -817,10 +787,7 @@ def dashboard_view(request: HttpRequest) -> HttpResponse:
         # News
         "recent_news":         recent_news,
         # Timeline
-        "timeline_phase":    timeline_phase,
-        "timeline_days":     timeline_days,
-        "timeline_label":    timeline_label,
-        "timeline_date":     timeline_date,
+        **_timeline,
         # Institutions
         "inst_type_links":   inst_type_links,
         # Promotions
@@ -1317,7 +1284,7 @@ def _get_home_static_context():
     from django.core.cache import cache
     from datetime import date as _date
 
-    cache_key = "public_home_static_v1"
+    cache_key = "public_home_static_v3"
     cached = cache.get(cache_key)
     if cached is not None:
         return cached
@@ -1325,7 +1292,7 @@ def _get_home_static_context():
     from resources.models import SuccessStory, Article as _HomeArticle
     from institutions.models import InstitutionPromotion
 
-    stories = list(SuccessStory.objects.filter(is_active=True).order_by('order', 'id'))
+    stories = list(SuccessStory.objects.filter(is_active=True).order_by('-is_pinned', 'order', 'id'))
 
     _today = _date.today()
     _live = list(InstitutionPromotion.objects.filter(
@@ -1336,19 +1303,52 @@ def _get_home_static_context():
     featured_promos    = [p for p in _live if p.tier == 'featured'][:4]
     scholarship_alerts = [p for p in _live if p.tier == 'scholarship'][:4]
 
-    # Sample cluster preview bars for the hero card (static illustrative data)
-    sample_clusters = [
-        ("Cluster 1", 75, "#4f46e5"),
-        ("Cluster 4", 60, "#0891b2"),
-        ("Cluster 9", 88, "#16a34a"),
-        ("Cluster 12", 52, "#d97706"),
+    # Illustrative engine matches for the hero card (pathway, course, eligibility tag, colour)
+    sample_matches = [
+        ("Degree", "BSc Computer Science", "Qualify", "#4f46e5"),
+        ("Diploma", "Diploma in ICT", "Qualify", "#0891b2"),
+        ("KMTC", "Diploma in Clinical Medicine", "Qualify", "#16a34a"),
+        ("TVET", "Certificate in Electrical Installation", "Qualify", "#d97706"),
     ]
 
     recent_articles = list(_HomeArticle.objects.filter(is_published=True).order_by('-featured', '-created_at')[:3])
 
+    # Live catalogue size, rounded down so the "+" on the page is always true.
+    from courses.models import Course, CourseOffering
+    from institutions.models import Institution
+    from career.models import CareerProfile
+
+    def _floor(n, step):
+        return (n // step) * step
+
+    home_stats = [
+        (_floor(Course.objects.count(), 100), "Courses Matched"),
+        (_floor(CourseOffering.objects.count(), 1000), "Institution Placements"),
+        (_floor(Institution.objects.count(), 50), "Institutions"),
+        (_floor(CareerProfile.objects.count(), 10), "Career Profiles"),
+    ]
+
+    from django.urls import reverse as _reverse
+
+    def _pw(slug):
+        if slug == "degree":
+            return _reverse("career:degree_entry")
+        return _reverse("career:pathway_input", args=[slug])
+
+    # (name, icon, eligibility rule, colour, entry url). Degree alone uses cluster points.
+    pathway_rules = [
+        ("Degree", "fa-graduation-cap", "Your cluster points against each course's cut-off.", "#4f46e5", _pw("degree")),
+        ("Diploma", "fa-certificate", "Your KCSE mean grade against the course minimum.", "#0891b2", _pw("diploma")),
+        ("KMTC", "fa-user-nurse", "Mean grade, plus required subjects where the course sets them.", "#16a34a", _pw("kmtc")),
+        ("TVET", "fa-screwdriver-wrench", "Mean grade for certificate and artisan courses.", "#d97706", _pw("certificate")),
+        ("TTC", "fa-chalkboard-user", "Mean grade for teacher training colleges.", "#be185d", _pw("ttc")),
+    ]
+
     ctx = {
+        "pathway_rules": pathway_rules,
+        "home_stats": home_stats,
         "stories": stories,
-        "sample_clusters": sample_clusters,
+        "sample_matches": sample_matches,
         "featured_promos":    featured_promos,
         "scholarship_alerts": scholarship_alerts,
         "recent_articles":    recent_articles,

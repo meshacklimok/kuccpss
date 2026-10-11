@@ -85,5 +85,5 @@ class SitemapTests(TestCase):
         body = self.client.get("/sitemap.xml").content.decode()
         self.assertIn(reverse("career:career_profile_detail", kwargs={"slug": "actuary"}), body)
         self.assertIn(reverse("career:quiz"), body)
-        self.assertIn(reverse("career:kcse_input"), body)
         self.assertNotIn(reverse("clusterpoints:eligible_courses"), body)
+        self.assertNotIn(reverse("career:kcse_input"), body)  # retired, 301s to /career/

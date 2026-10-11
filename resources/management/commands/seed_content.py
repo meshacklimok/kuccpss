@@ -60,7 +60,7 @@ FAQ_DATA = [
 
     # ── KUCCPS Process ────────────────────────────────────────────────────────
     ("kuccps", "When does the KUCCPS application portal open?",
-     "The portal typically opens between June and August each year, after KCSE results are released. For 2026, the portal is estimated to open around 3 July 2026 and close around 21 August 2026. Check the official KUCCPS website and the KUCCPS Calendar on this site for confirmed dates."),
+     "The portal usually opens a few months after KCSE results are released. In the 2025 KCSE cycle, results came out on 9 January 2026, the portal opened on 7 April 2026 and closed on 6 May 2026, revision windows ran until 1 June 2026, and placement results were announced on 8 July 2026. Dates change every year. Check the official KUCCPS website and the KUCCPS Calendar on this site for confirmed dates."),
 
     ("kuccps", "How many course choices can I submit on KUCCPS?",
      "KUCCPS currently allows students to submit up to 4 course choices per pathway (degree, KMTC, TVET, TTC), ranked in order of preference. You are placed into the highest-ranked course you qualify for based on your cluster points and available slots."),

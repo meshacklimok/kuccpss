@@ -7,39 +7,6 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-def generate_ai_recommendation_async(
-    grades_json: dict,
-    pathway: str,
-    user_id: str | None = None,
-    tvet_category: str | None = None,
-) -> int:
-    """
-    Run the career guidance engine and persist the AIRecommendation.
-    Returns the AIRecommendation pk so the caller can fetch it later.
-    """
-    from career.engine import career_guidance_engine
-    from accounts.models import User
-
-    user = None
-    if user_id:
-        try:
-            user = User.objects.get(pk=user_id)
-        except User.DoesNotExist:
-            logger.warning("generate_ai_recommendation_async: user %s not found", user_id)
-
-    try:
-        _matches, ai = career_guidance_engine(
-            kcse_grades=grades_json,
-            pathway=pathway,
-            tvet_category=tvet_category,
-            user=user,
-        )
-        return ai.pk
-    except Exception as exc:
-        logger.error("generate_ai_recommendation_async failed: %s", exc)
-        raise
-
-
 def save_career_snapshot(user_id: str, pathway: str, results: dict) -> None:
     """
     Persist a CareerSessionSnapshot so the dashboard can show recommendations

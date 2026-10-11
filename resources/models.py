@@ -129,9 +129,11 @@ class SuccessStory(models.Model):
                                      help_text="Avatar text colour (hex)")
     order         = models.PositiveIntegerField(default=0)
     is_active     = models.BooleanField(default=True)
+    is_pinned     = models.BooleanField(default=False,
+                                        help_text="Pinned stories are shown first on the home page")
 
     class Meta:
-        ordering = ['order', 'id']
+        ordering = ['-is_pinned', 'order', 'id']
         verbose_name        = 'Success Story'
         verbose_name_plural = 'Success Stories'
         indexes = [models.Index(fields=["is_active", "pathway"])]
@@ -372,6 +374,18 @@ class CalendarCycle(models.Model):
     is_completed = models.BooleanField(default=False, help_text='Show the grey "Completed" badge')
     is_active   = models.BooleanField(default=True, help_text="Untick to hide this cycle from the page")
     order       = models.PositiveIntegerField(default=0, help_text="Lower numbers appear first")
+    portal_year = models.CharField(max_length=4, blank=True,
+                                   help_text='Year the portal runs, e.g. "2027". Shown on the dashboard countdown card.')
+    portal_opens  = models.DateField(null=True, blank=True,
+                                     help_text="Application portal opening date (dashboard countdown)")
+    portal_closes = models.DateField(null=True, blank=True,
+                                     help_text="Application portal closing date (dashboard countdown)")
+    dates_estimated = models.BooleanField(default=True,
+                                          help_text='Show "Est." before the portal dates until KUCCPS confirms them')
+    placement_label = models.CharField(max_length=60, blank=True,
+                                       help_text='Placement results text on the dashboard, e.g. "Sep 2027"')
+    next_cycle_hint = models.CharField(max_length=120, blank=True,
+                                       help_text='Shown once the portal has closed, e.g. "Check students.kuccps.net for 2028 dates"')
 
     class Meta:
         ordering = ['order', '-id']

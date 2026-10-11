@@ -73,6 +73,7 @@ body {
   background-color: var(--bg);
   color: var(--text);
   min-height: 100vh;
+  min-height: 100dvh;
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -1509,4 +1510,24 @@ body.dark .sector-tile {
   background: color-mix(in srgb, var(--ink) 18%, #161719);
   color: color-mix(in srgb, var(--ink) 70%, #fff);
   border-color: color-mix(in srgb, var(--ink) 30%, transparent);
+}
+
+/* ── 34. IOS INPUT ZOOM GUARD ───────────────────────────────── */
+/* iOS Safari zooms the page when a focused field has text under 16px. */
+@media (max-width: 767.98px) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]),
+  select,
+  textarea,
+  .form-control,
+  .form-select,
+  .auth-field .form-control {
+    font-size: 16px !important;
+  }
+}
+
+/* ── 35. WIDE-GUTTER OVERFLOW GUARD ─────────────────────────── */
+/* Bootstrap's g-5/gx-5 gives .row a -1.5rem side margin, wider than the
+   .container's 0.75rem padding, so the page scrolls sideways on phones. */
+@media (max-width: 991.98px) {
+  .row.g-5, .row.gx-5, .row.g-4 { --bs-gutter-x: 1.5rem; }
 }

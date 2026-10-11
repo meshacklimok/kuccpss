@@ -18,7 +18,6 @@ class StaticPagesSitemap(Sitemap):
         return [
             "home",
             "career:home",
-            "career:kcse_input",
             "career:quiz",
             "career:career_profiles",
             "clusterpoints:calculator",

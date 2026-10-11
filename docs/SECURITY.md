@@ -156,14 +156,10 @@ the mentorship webhook and confirm the session without paying. The UUID is visib
 checkout URL, and a confirmation credits the mentor's wallet and can trigger an auto-payout.
 That gap is now closed.
 
-Remaining drift between the two confirmation paths (these are correctness issues, not
-signature issues):
-- `payments.views.mpesa_webhook` has its own copy of the mentorship confirmation logic, and
-  that copy does **not** call `_maybe_auto_pay_mentor`. Any change to
-  `mentorship.views._confirm_session_after_payment` has to be copied into `payments/views.py`
-  by hand.
-- The fallback `verify_payment` and `verify_by_transaction_code` views don't credit affiliate
-  commission.
+Both webhooks, the manual verification fallback, the admin actions and the housekeeping task
+confirm a mentorship session through `mentorship.views.handle_paid_session` /
+`_confirm_session_after_payment`. It flips the status with a conditional UPDATE, so exactly one
+path credits the mentor and triggers `_maybe_auto_pay_mentor`, however the payment arrives.
 
 **Circuit breaker:** outbound calls to IntaSend for STK push and invoice status go through
 `kuccpss.circuit_breaker.intasend_breaker`. After 5 service failures in 60 s (timeouts,

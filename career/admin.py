@@ -2,26 +2,10 @@
 from django.http import HttpResponseRedirect
 from django.urls import reverse
 from .models import (
-    CareerInsight,
     CareerProfile, QuizQuestion, QuizOption, QuizSubmission, QuizAnswer,
     CareerConfig, AIKnowledgeEntry, JobMarketData, AICallLog,
-    SubmissionLockConfig, CareerSubmission, AIChatCredit,
+    SubmissionLockConfig, CareerSubmission, AIChatCredit, AIChatLog,
 )
-
-
-# =====================================================
-# Career Insights
-# =====================================================
-@admin.register(CareerInsight)
-class CareerInsightAdmin(admin.ModelAdmin):
-    list_display = ("get_course_name", "demand_level", "average_salary")
-    search_fields = ("course__name", "tvet_course__name", "kmc_course__name", "ttc_course__name", "career_fields")
-    list_filter = ("demand_level",)
-
-    @admin.display(description="Course")
-    def get_course_name(self, obj):
-        course_obj = obj.course or obj.tvet_course or obj.kmc_course or obj.ttc_course
-        return course_obj.name if course_obj else "N/A"
 
 
 # =====================================================
@@ -116,6 +100,14 @@ class CareerConfigAdmin(admin.ModelAdmin):
             ),
             "fields": ("ai_model_name", "ai_temperature"),
         }),
+        ("CareerNext AI Custom Instructions", {
+            "description": (
+                "Free-text guidance added to every chat (tone, focus, announcements). "
+                "To teach it facts, add verified Q&As under AI Knowledge Base, or promote "
+                "good answers from AI Chat Logs."
+            ),
+            "fields": ("ai_custom_instructions",),
+        }),
         ("AI Quiz Summary Prompt", {
             "description": (
                 "Customise the prompt for the quiz results summary. "
@@ -184,6 +176,86 @@ class AIKnowledgeEntryAdmin(admin.ModelAdmin):
     @admin.display(description="Question")
     def question_short(self, obj):
         return obj.question[:90]
+
+
+# =====================================================
+# AI Chat Logs — review queue for improving CareerNext AI
+# =====================================================
+@admin.register(AIChatLog)
+class AIChatLogAdmin(admin.ModelAdmin):
+    list_display    = ("question_short", "rating", "kb_hit", "tools_short", "review_status", "created_at")
+    list_filter     = ("rating", "review_status", "kb_hit", "created_at")
+    search_fields   = ("question", "reply", "rating_note")
+    list_editable   = ("review_status",)
+    readonly_fields = ("user", "question", "reply", "tools_used", "kb_hit", "model_name",
+                       "rating", "rating_note", "created_at")
+    actions         = ("promote_to_knowledge_base", "mark_reviewed", "mark_ignored")
+    date_hierarchy  = "created_at"
+
+    change_list_template = "admin/career/aichatlog/change_list.html"
+
+    def has_add_permission(self, request):
+        return False
+
+    def get_urls(self):
+        from django.urls import path
+        return [path("insights/", self.admin_site.admin_view(self.insights_view),
+                     name="career_aichatlog_insights")] + super().get_urls()
+
+    def insights_view(self, request):
+        """What to teach the AI next: repeated questions it got wrong or couldn't ground."""
+        from collections import Counter
+        from django.db.models import Count, Q
+        from django.template.response import TemplateResponse
+        logs = AIChatLog.objects.exclude(review_status__in=("promoted", "ignored"))
+        weak = logs.filter(Q(rating=-1) | Q(kb_hit=False, tools_used=[]))
+        norm = Counter()
+        sample = {}
+        for log in weak.order_by("-created_at")[:1000]:
+            key = " ".join(sorted(w for w in log.question.lower().replace("?", " ").split() if len(w) > 3))
+            norm[key] += 1
+            sample.setdefault(key, log)
+        rows = [{"count": n, "log": sample[k]} for k, n in norm.most_common(25) if k]
+        total = AIChatLog.objects.count()
+        stats = AIChatLog.objects.aggregate(
+            up=Count("id", filter=Q(rating=1)), down=Count("id", filter=Q(rating=-1)),
+            kb=Count("id", filter=Q(kb_hit=True)),
+        )
+        ctx = {**self.admin_site.each_context(request), "title": "CareerNext AI — what to teach next",
+               "rows": rows, "total": total, **stats, "opts": self.model._meta}
+        return TemplateResponse(request, "admin/career/aichatlog/insights.html", ctx)
+
+    @admin.display(description="Question")
+    def question_short(self, obj):
+        return obj.question[:90]
+
+    @admin.display(description="Tools")
+    def tools_short(self, obj):
+        return ", ".join(sorted(set(obj.tools_used)))[:60]
+
+    @admin.action(description="Promote to knowledge base (creates INACTIVE drafts to edit)")
+    def promote_to_knowledge_base(self, request, queryset):
+        made = 0
+        for log in queryset.exclude(review_status="promoted").exclude(reply=""):
+            AIKnowledgeEntry.objects.create(
+                question=log.question[:500], answer=log.reply, is_active=False,
+                keywords=",".join(w for w in log.question.lower().split() if len(w) > 3)[:500],
+            )
+            log.review_status = "promoted"
+            log.save(update_fields=["review_status"])
+            made += 1
+        self.message_user(
+            request,
+            f"{made} draft(s) added to the AI Knowledge Base. Edit them and tick Active to teach the AI.",
+        )
+
+    @admin.action(description="Mark as reviewed")
+    def mark_reviewed(self, request, queryset):
+        queryset.update(review_status="reviewed")
+
+    @admin.action(description="Mark as ignored")
+    def mark_ignored(self, request, queryset):
+        queryset.update(review_status="ignored")
 
 
 # =====================================================

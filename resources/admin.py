@@ -49,10 +49,19 @@ class FAQItemAdmin(admin.ModelAdmin):
 
 @admin.register(SuccessStory)
 class SuccessStoryAdmin(admin.ModelAdmin):
-    list_display  = ("name", "county", "course_name", "institution", "pathway", "year", "order", "is_active")
-    list_filter   = ("pathway", "is_active")
+    list_display  = ("name", "county", "course_name", "institution", "pathway", "year", "is_pinned", "order", "is_active")
+    list_filter   = ("is_pinned", "pathway", "is_active")
     search_fields = ("name", "course_name", "institution", "quote")
-    list_editable = ("order", "is_active")
+    list_editable = ("is_pinned", "order", "is_active")
+    actions       = ("pin_stories", "unpin_stories")
+
+    @admin.action(description="Pin selected stories (show first on home page)")
+    def pin_stories(self, request, queryset):
+        queryset.update(is_pinned=True)
+
+    @admin.action(description="Unpin selected stories")
+    def unpin_stories(self, request, queryset):
+        queryset.update(is_pinned=False)
 
     fieldsets = (
         ("Student", {
@@ -65,8 +74,7 @@ class SuccessStoryAdmin(admin.ModelAdmin):
             "fields": ("course_name", "institution", "pathway", "year"),
         }),
         ("Display", {
-            "fields": ("avatar_bg", "avatar_color", "order", "is_active"),
-            "classes": ("collapse",),
+            "fields": ("is_pinned", "is_active", "order", "avatar_bg", "avatar_color"),
         }),
     )
 
@@ -167,9 +175,20 @@ class CalendarEventInline(admin.TabularInline):
 
 @admin.register(CalendarCycle)
 class CalendarCycleAdmin(admin.ModelAdmin):
-    list_display  = ('title', 'tab_label', 'is_current', 'is_completed', 'is_active', 'order', 'event_count')
     list_editable = ('is_current', 'is_completed', 'is_active', 'order')
+    list_display  = ('title', 'portal_year', 'portal_opens', 'portal_closes', 'is_current',
+                     'is_completed', 'is_active', 'order', 'event_count')
     inlines       = [CalendarEventInline]
+    fieldsets = (
+        (None, {'fields': ('title', 'tab_label', 'subtitle', 'is_current', 'is_completed', 'is_active', 'order')}),
+        ('Dashboard portal countdown', {
+            'description': 'Drives the "KUCCPS Portal" card on the dashboard. The cycle marked current '
+                           '(with both dates set) is used. Roll to a new year by adding a cycle, '
+                           'ticking Current and unticking the old one.',
+            'fields': ('portal_year', 'portal_opens', 'portal_closes', 'dates_estimated',
+                       'placement_label', 'next_cycle_hint'),
+        }),
+    )
 
     @admin.display(description='Events')
     def event_count(self, obj):

@@ -785,7 +785,7 @@ body.dark .reco-hint, body.dark .reco-counter { background: rgba(129,140,248,0.1
 
 
 {# ════ MAIN CONTENT ════ #}
-<div style="min-height:100vh;">
+<div style="min-height:100vh;min-height:100dvh;">
 <div class="container py-4">
 <div class="row g-4">
 
@@ -1709,17 +1709,18 @@ body.dark .reco-hint, body.dark .reco-counter { background: rgba(129,140,248,0.1
   <div class="sidebar-card reveal">
     <div class="sidebar-card-header" style="background:#142a6e;border:none;">
       <h6 class="sidebar-card-title" style="color:#fff;">
-        <i class="fas fa-calendar-alt" style="color:#93c5fd;"></i>KUCCPS 2026 Portal
+        <i class="fas fa-calendar-alt" style="color:#93c5fd;"></i>KUCCPS {{ timeline_year }} Portal
       </h6>
       <span class="tl-status tl-status-{{ timeline_phase }}">
         {% if timeline_phase == 'open' %}<span class="tl-live"></span>Open now
         {% elif timeline_phase == 'before_open' %}Upcoming
+        {% elif timeline_phase == 'unset' %}TBA
         {% else %}Closed{% endif %}
       </span>
     </div>
     <div class="sidebar-card-body">
       <a href="{% url 'resources:kuccps_calendar' %}" class="tl-link">
-      {% if timeline_phase != 'closed' %}
+      {% if timeline_phase == 'open' or timeline_phase == 'before_open' %}
       <div class="tl-countdown">
         <div class="tl-cal">
           <div class="tl-cal-top">Days</div>
@@ -1733,11 +1734,11 @@ body.dark .reco-hint, body.dark .reco-counter { background: rgba(129,140,248,0.1
       {% else %}
       <div class="tl-countdown">
         <div class="tl-cal">
-          <div class="tl-cal-top">2026</div>
+          <div class="tl-cal-top">{{ timeline_year|default:"—" }}</div>
           <div class="tl-cal-num"><i class="fas fa-lock" style="font-size:1.1rem;"></i></div>
         </div>
         <div style="min-width:0;">
-          <div class="tl-count-label">Application closed</div>
+          <div class="tl-count-label">{% if timeline_phase == 'unset' %}Dates coming soon{% else %}Application closed{% endif %}</div>
           <div class="tl-count-date">{{ timeline_date }}</div>
         </div>
       </div>
@@ -1747,17 +1748,17 @@ body.dark .reco-hint, body.dark .reco-counter { background: rgba(129,140,248,0.1
         <li class="tl-step {% if timeline_phase != 'before_open' %}done{% else %}next{% endif %}">
           <span class="tl-dot"></span>
           <span class="tl-step-name">Portal opens</span>
-          <span class="tl-step-date">Est. 3 Jul 2026</span>
+          <span class="tl-step-date">{{ timeline_open_text }}</span>
         </li>
         <li class="tl-step {% if timeline_phase == 'closed' %}done{% elif timeline_phase == 'open' %}next{% endif %}">
           <span class="tl-dot"></span>
           <span class="tl-step-name">Portal closes</span>
-          <span class="tl-step-date">Est. 21 Aug 2026</span>
+          <span class="tl-step-date">{{ timeline_close_text }}</span>
         </li>
         <li class="tl-step {% if timeline_phase == 'closed' %}next{% endif %}">
           <span class="tl-dot"></span>
           <span class="tl-step-name">Placement results</span>
-          <span class="tl-step-date">Est. Sep 2026</span>
+          <span class="tl-step-date">{{ timeline_placement_text }}</span>
         </li>
       </ol>
       <div class="tl-more">View full calendar <i class="bi bi-chevron-right"></i></div>

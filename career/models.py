@@ -1,239 +1,16 @@
 from django.db import models
 from django.conf import settings
-from typing import List, Dict, Optional
 
-# =====================================================
-# KCSE Subjects and Grades
-# =====================================================
 from kuccpss.upload_validators import SafeImageValidator
 
-class KCSEGrade(models.Model):
-    subject_name = models.CharField(max_length=50)
-    grade = models.CharField(max_length=3)  # e.g., A, A-, B+, C
+# Legacy career course models (KCSEGrade, University, Course, TVET/KMTC/TTC
+# courses, StudentCourseMatch, AIRecommendation, CareerInsight) were dropped in
+# migration 0026 — all course data lives in courses.Course / CourseOffering.
 
-    def __str__(self):
-        return f"{self.subject_name}: {self.grade}"
-
-
-# =====================================================
-# Course Categories
-# =====================================================
-class CourseCategory(models.Model):
-    name = models.CharField(max_length=50, unique=True)  
-    # Degree, Diploma, Certificate, TVET, TTC, KMTC
-    description = models.TextField(blank=True, null=True)
-
-    def __str__(self):
-        return self.name
-
-
-# =====================================================
-# Universities
-# =====================================================
-class University(models.Model):
-    name = models.CharField(max_length=150, unique=True)
-    county = models.CharField(max_length=50, blank=True, null=True)
-    description = models.TextField(blank=True, null=True)
-
-    def __str__(self):
-        return self.name
-
-
-# =====================================================
-# Courses
-# =====================================================
 
 def get_default_course_category():
-    category, created = CourseCategory.objects.get_or_create(name="Degree")
-    return category.id  # type: ignore[attr-defined]
-class Course(models.Model):
-    name = models.CharField(max_length=150)
-    category = models.ForeignKey(
-        CourseCategory,
-        on_delete=models.CASCADE,
-        related_name="courses",
-        default=get_default_course_category
-    )
-    cluster = models.ForeignKey(
-        'clusters.Cluster',
-        null=True, blank=True,
-        on_delete=models.SET_NULL,
-        related_name='career_courses',
-        help_text="KUCCPS cluster this course belongs to — used for the slot-based cluster points formula",
-    )
-    cluster_subjects = models.ManyToManyField('clusters.Subject', blank=True, related_name='career_courses')
-    description = models.TextField(blank=True, null=True)
-    recommended_fields = models.TextField(blank=True, null=True)
-    career_paths = models.TextField(blank=True, null=True)
-
-    def __str__(self):
-        return f"{self.name} ({self.category.name})"
-
-
-# =====================================================
-# Course Cutoff Points (per university)
-# =====================================================
-class CourseCutoff(models.Model):
-    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name="cutoffs")
-    university = models.ForeignKey(University, on_delete=models.CASCADE, related_name="cutoffs")
-    cutoff_points = models.FloatField()  # Cluster points for degree, mean grade for diploma/KMTC
-    year = models.PositiveIntegerField(default=2026)
-
-    class Meta:
-        unique_together = ('course', 'university', 'year')
-        indexes = [models.Index(fields=['year'])]
-
-    def __str__(self):
-        return f"{self.course.name} - {self.university.name} ({self.cutoff_points})"
-
-
-# =====================================================
-# Historical Cutoff Trends
-# =====================================================
-class CourseCutoffHistory(models.Model):
-    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name="cutoff_history")
-    university = models.ForeignKey(University, on_delete=models.CASCADE, related_name="cutoff_history")
-    year = models.PositiveIntegerField()
-    cutoff_points = models.FloatField()
-
-    class Meta:
-        unique_together = ('course', 'university', 'year')
-        indexes = [models.Index(fields=['year'])]
-
-    def __str__(self):
-        return f"{self.course.name} - {self.university.name} ({self.year})"
-
-
-# =====================================================
-# TVET Categories
-# =====================================================
-class TVETCategory(models.Model):
-    name = models.CharField(max_length=50, unique=True)  # Certificate, Diploma, Artisan
-
-    def __str__(self):
-        return self.name
-
-
-# =====================================================
-# TVET Courses
-# =====================================================
-class TVETCourse(models.Model):
-    name = models.CharField(max_length=150)
-    category = models.ForeignKey(TVETCategory, on_delete=models.CASCADE, related_name="tvet_courses")
-    min_mean_grade = models.CharField(max_length=3, blank=True, null=True)
-    required_subjects = models.ManyToManyField('clusters.Subject', blank=True, related_name='tvet_courses')
-    description = models.TextField(blank=True, null=True)
-    career_paths = models.TextField(blank=True, null=True)
-
-    def __str__(self):
-        return f"{self.name} ({self.category.name})"
-
-
-# =====================================================
-# KMTC Courses and Campuses
-# =====================================================
-class KMTCampus(models.Model):
-    name = models.CharField(max_length=150, unique=True)
-    county = models.CharField(max_length=50, blank=True, null=True)
-
-    def __str__(self):
-        return self.name
-
-
-class KMTCourse(models.Model):
-    name = models.CharField(max_length=150)
-    min_mean_grade = models.CharField(max_length=3)
-    required_subjects = models.ManyToManyField('clusters.Subject', blank=True, related_name='kmt_courses')
-    campuses = models.ManyToManyField(KMTCampus, blank=True)
-    description = models.TextField(blank=True, null=True)
-    career_paths = models.TextField(blank=True, null=True)
-
-    def __str__(self):
-        return self.name
-
-
-# =====================================================
-# TTC Courses and Colleges
-# =====================================================
-class TTCCollege(models.Model):
-    name = models.CharField(max_length=150, unique=True)
-    county = models.CharField(max_length=50, blank=True, null=True)
-
-    def __str__(self):
-        return self.name
-
-
-class TTCCourse(models.Model):
-    name = models.CharField(max_length=150)
-    min_mean_grade = models.CharField(max_length=3)
-    required_subjects = models.ManyToManyField('clusters.Subject', blank=True, related_name='ttc_courses')
-    colleges = models.ManyToManyField(TTCCollege, blank=True)
-    description = models.TextField(blank=True, null=True)
-    career_paths = models.TextField(blank=True, null=True)
-
-    def __str__(self):
-        return self.name
-
-
-# =====================================================
-# Student Course Match (AI Engine Output)
-# =====================================================
-class StudentCourseMatch(models.Model):
-    user = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
-        null=True, blank=True, related_name='course_matches',
-    )
-    course = models.ForeignKey(Course, on_delete=models.CASCADE, null=True, blank=True)
-    tvet_course = models.ForeignKey(TVETCourse, on_delete=models.CASCADE, null=True, blank=True)
-    kmc_course = models.ForeignKey(KMTCourse, on_delete=models.CASCADE, null=True, blank=True)
-    ttc_course = models.ForeignKey(TTCCourse, on_delete=models.CASCADE, null=True, blank=True)
-    university = models.ForeignKey(University, on_delete=models.SET_NULL, null=True, blank=True)
-    admission_chance = models.CharField(max_length=50, blank=True, null=True)  # LOW, MEDIUM, HIGH, VERY HIGH
-    match_score = models.FloatField(default=0)  # AI recommendation score
-    recommended_by_ai = models.BooleanField(default=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        indexes = [models.Index(fields=["user", "created_at"])]
-
-    def __str__(self):
-        target_course = self.course or self.tvet_course or self.kmc_course or self.ttc_course
-        return f"{target_course}"
-
-
-# =====================================================
-# AI Recommendations
-# =====================================================
-class AIRecommendation(models.Model):
-    user = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
-        null=True, blank=True, related_name='ai_recommendations',
-    )
-    advice_text = models.TextField()
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        indexes = [models.Index(fields=["user", "created_at"])]
-
-    def __str__(self):
-        return f"AI Advice ({self.created_at.strftime('%Y-%m-%d')})"
-
-
-# =====================================================
-# Career Insights (Job demand, salary, fields)
-# =====================================================
-class CareerInsight(models.Model):
-    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name="career_insights", null=True, blank=True)
-    tvet_course = models.ForeignKey(TVETCourse, on_delete=models.CASCADE, related_name="career_insights", null=True, blank=True)
-    kmc_course = models.ForeignKey(KMTCourse, on_delete=models.CASCADE, related_name="career_insights", null=True, blank=True)
-    ttc_course = models.ForeignKey(TTCCourse, on_delete=models.CASCADE, related_name="career_insights", null=True, blank=True)
-    demand_level = models.CharField(max_length=50, blank=True, null=True)  # HIGH, MEDIUM, LOW
-    average_salary = models.CharField(max_length=50, blank=True, null=True)
-    career_fields = models.TextField(blank=True, null=True)
-
-    def __str__(self):
-        target_course = self.course or self.tvet_course or self.kmc_course or self.ttc_course
-        return f"Career Insights: {target_course}"
+    """Referenced by migration 0001 only; the model it served no longer exists."""
+    return None
 
 
 # =====================================================
@@ -375,304 +152,6 @@ class QuizAnswer(models.Model):
         return f"{self.question.text[:40]} → {self.option.text}"
 
 # =====================================================
-# Cluster points mapping
-# =====================================================
-CLUSTER_GRADE_POINTS = {
-    "A": 12,
-    "A-": 11,
-    "B+": 10,
-    "B": 9,
-    "B-": 8,
-    "C+": 7,
-    "C": 6,
-    "C-": 5,
-    "D+": 4,
-    "D": 3,
-    "D-": 2,
-    "E": 1,
-}
-
-# =====================================================
-# Mean grade mapping for diploma / KMTC / TVET
-# =====================================================
-MEAN_GRADE_POINTS = {
-    "A": 12,
-    "A-": 11,
-    "B+": 10,
-    "B": 9,
-    "B-": 8,
-    "C+": 7,
-    "C": 6,
-    "C-": 5,
-    "D+": 4,
-    "D": 3,
-    "D-": 2,
-    "E": 1,
-}
-
-
-# =====================================================
-# 1. Calculate Cluster Points for Degree Courses
-# =====================================================
-def _grades_to_points(kcse_grades: Dict[str, str]) -> Dict[str, int]:
-    return {subj: CLUSTER_GRADE_POINTS[g] for subj, g in kcse_grades.items() if g in CLUSTER_GRADE_POINTS}
-
-
-def _compute_aggregate(named_points: Dict[str, int]) -> int:
-    """KCSE aggregate (max 84) — delegates to clusterpoints.services.compute_aggregate_total."""
-    from clusterpoints.services import compute_aggregate_total
-    return compute_aggregate_total(named_points)
-
-
-def calculate_cluster_points(kcse_grades: Dict[str, str], cluster_subjects: List[str]) -> float:
-    """
-    Computes cluster points for a given set of cluster subjects using the
-    midpoint-marks formula (same as clusterpoints/services.py _weighted_cp).
-    Picks the best 4 subjects from cluster_subjects that the student has taken.
-    """
-    from clusterpoints.services import _weighted_cp
-    named_points = _grades_to_points(kcse_grades)
-    aggregate = _compute_aggregate(named_points)
-    if aggregate == 0:
-        return 0.0
-    subj_pts = sorted(
-        (named_points[s] for s in cluster_subjects if s in named_points),
-        reverse=True,
-    )[:4]
-    if len(subj_pts) < 4:
-        return 0.0
-    return _weighted_cp(subj_pts, aggregate)
-
-
-# =====================================================
-# 2. Calculate Mean Grade for Diploma / KMTC / TVET
-# =====================================================
-def calculate_mean_grade(kcse_grades: Dict[str, str]) -> float:
-    """
-    Returns the mean grade points across all subjects
-    """
-    total = 0
-    count = 0
-    for grade in kcse_grades.values():
-        total += MEAN_GRADE_POINTS.get(grade, 0)
-        count += 1
-    if count == 0:
-        return 0
-    return total / count
-
-
-# =====================================================
-# 3. Predict Admission Chance
-# =====================================================
-def predict_admission_chance(student_points: float, cutoff: float) -> str:
-    diff = student_points - cutoff
-    if diff >= 3:
-        return "VERY HIGH"
-    elif diff >= 1:
-        return "HIGH"
-    elif diff >= 0:
-        return "MEDIUM"
-    else:
-        return "LOW"
-
-
-# =====================================================
-# 4. Match Student to Degree Courses
-# =====================================================
-def match_degree_courses(kcse_grades: Dict[str, str]) -> List[StudentCourseMatch]:
-    from clusterpoints.services import calculate_clusters_anonymous
-
-    named_points = _grades_to_points(kcse_grades)
-
-    # Compute all 18 cluster points once using the correct slot-based formula
-    cluster_results = calculate_clusters_anonymous(named_points)
-    cluster_points_map: Dict[int, float] = {r.cluster.pk: r.cluster_points for r in cluster_results}
-
-    matches = []
-    courses = Course.objects.filter(category__name="Degree").select_related('cluster').prefetch_related(
-        'cluster_subjects', 'cutoffs__university'
-    )
-    for course in courses:
-        cid: Optional[int] = course.cluster_id  # type: ignore[attr-defined]
-        if cid and cid in cluster_points_map:
-            # Slot-based formula via clusterpoints/services.py
-            cluster_points = cluster_points_map[cid]
-        else:
-            # Fallback: flat best-4 approach for courses not yet assigned a cluster
-            cluster_subjects = [s.name for s in course.cluster_subjects.all()]
-            cluster_points = calculate_cluster_points(kcse_grades, cluster_subjects)
-
-        if cluster_points == 0:
-            continue
-        for cutoff in course.cutoffs.all():  # type: ignore[attr-defined]
-            if not cutoff.cutoff_points:
-                continue
-            admission = predict_admission_chance(cluster_points, cutoff.cutoff_points)
-            match_score = (cluster_points / cutoff.cutoff_points) * 100
-            matches.append(StudentCourseMatch(
-                course=course,
-                university=cutoff.university,
-                admission_chance=admission,
-                match_score=match_score,
-            ))
-    matches.sort(key=lambda x: x.match_score, reverse=True)
-    return matches
-
-
-# =====================================================
-# 5. Match Student to Diploma Courses
-# =====================================================
-def match_diploma_courses(kcse_grades: Dict[str, str]) -> List[StudentCourseMatch]:
-    mean_grade = calculate_mean_grade(kcse_grades)
-    matches = []
-    for course in Course.objects.filter(category__name="Diploma").prefetch_related('cutoffs__university'):
-        cutoffs = course.cutoffs.all()  # type: ignore[attr-defined]
-        for cutoff in cutoffs:
-            admission = predict_admission_chance(mean_grade, cutoff.cutoff_points)
-            match_score = mean_grade / cutoff.cutoff_points * 100
-            match = StudentCourseMatch(
-                course=course,
-                university=cutoff.university,
-                admission_chance=admission,
-                match_score=match_score
-            )
-            matches.append(match)
-    matches.sort(key=lambda x: x.match_score, reverse=True)
-    return matches
-
-
-# =====================================================
-# 6. Match Student to TVET Courses
-# =====================================================
-def match_tvet_courses(kcse_grades: Dict[str, str], category_name: str) -> List[StudentCourseMatch]:
-    mean_grade = calculate_mean_grade(kcse_grades)
-    matches = []
-    tvet_category = TVETCategory.objects.get(name=category_name)
-    courses = TVETCourse.objects.filter(category=tvet_category)
-    for course in courses:
-        # Optional: check if required subjects are met
-        admission = "HIGH" if mean_grade >= MEAN_GRADE_POINTS.get(course.min_mean_grade, 0) else "LOW"
-        match_score = mean_grade / MEAN_GRADE_POINTS.get(course.min_mean_grade, 1) * 100
-        match = StudentCourseMatch(
-            tvet_course=course,
-            admission_chance=admission,
-            match_score=match_score
-        )
-        matches.append(match)
-    matches.sort(key=lambda x: x.match_score, reverse=True)
-    return matches
-
-
-# =====================================================
-# 7. Match Student to KMTC Courses
-# =====================================================
-def match_kmtc_courses(kcse_grades: Dict[str, str]) -> List[StudentCourseMatch]:
-    mean_grade = calculate_mean_grade(kcse_grades)
-    matches = []
-    courses = KMTCourse.objects.all()
-    for course in courses:
-        admission = "HIGH" if mean_grade >= MEAN_GRADE_POINTS.get(course.min_mean_grade, 0) else "LOW"
-        match_score = mean_grade / MEAN_GRADE_POINTS.get(course.min_mean_grade, 1) * 100
-        match = StudentCourseMatch(
-            kmc_course=course,
-            admission_chance=admission,
-            match_score=match_score
-        )
-        matches.append(match)
-    matches.sort(key=lambda x: x.match_score, reverse=True)
-    return matches
-
-
-# =====================================================
-# 8. Match Student to TTC Courses
-# =====================================================
-def match_ttc_courses(kcse_grades: Dict[str, str]) -> List[StudentCourseMatch]:
-    mean_grade = calculate_mean_grade(kcse_grades)
-    matches = []
-    courses = TTCCourse.objects.all()
-    for course in courses:
-        admission = "HIGH" if mean_grade >= MEAN_GRADE_POINTS.get(course.min_mean_grade, 0) else "LOW"
-        match_score = mean_grade / MEAN_GRADE_POINTS.get(course.min_mean_grade, 1) * 100
-        match = StudentCourseMatch(
-            ttc_course=course,
-            admission_chance=admission,
-            match_score=match_score
-        )
-        matches.append(match)
-    matches.sort(key=lambda x: x.match_score, reverse=True)
-    return matches
-
-
-# =====================================================
-# 9. Generate AI Recommendation
-# =====================================================
-def generate_ai_recommendation(matches: List[StudentCourseMatch], user=None) -> AIRecommendation:
-    """
-    Generate a short personalised career recommendation.
-    Makes a real OpenAI call when OPENAI_API_KEY is set; falls back to a
-    formatted plain-text summary so the page is never blank.
-    """
-    import logging
-    _log = logging.getLogger(__name__)
-
-    if not matches:
-        text = "No suitable courses were found based on the provided KCSE results. Try a different pathway or re-enter your grades."
-        ai = AIRecommendation(advice_text=text, user=user)
-        ai.save()
-        return ai
-
-    top = matches[:5]
-
-    # Build a compact course summary for the prompt
-    lines = []
-    for m in top:
-        course_obj = m.course or m.tvet_course or m.kmc_course or m.ttc_course
-        name = course_obj.name if course_obj else "Unknown course"
-        uni_obj = m.university
-        uni_name = uni_obj.name if uni_obj else ""
-        lines.append(
-            f"• {name}"
-            + (f" at {uni_name}" if uni_name else "")
-            + f" — Admission Chance: {m.admission_chance}, Match Score: {int(m.match_score)}%"
-        )
-    course_summary = "\n".join(lines)
-
-    api_key = getattr(settings, 'OPENAI_API_KEY', '')
-
-    if api_key:
-        try:
-            from kuccpss.circuit_breaker import ai_breaker, get_openai_client
-            prompt = (
-                "You are CareerNext AI — a Kenyan KCSE career guidance assistant. "
-                "A student's top matched courses are:\n"
-                f"{course_summary}\n\n"
-                "Write a warm, encouraging 3–5 sentence personalised guidance message. "
-                "Name their top 2 specific courses. Tell them what their match scores mean. "
-                "Give one actionable next step. Address them as 'you'. No bullet points. Max 100 words."
-            )
-            cfg = CareerConfig.get()
-            client = get_openai_client(api_key)
-            with ai_breaker.guard():
-                resp = client.chat.completions.create(
-                    model=cfg.ai_model_name,
-                    messages=[{'role': 'user', 'content': prompt}],
-                    max_tokens=200,
-                    temperature=cfg.ai_temperature,
-                )
-            text = resp.choices[0].message.content.strip()
-        except Exception as exc:
-            _log.error("generate_ai_recommendation OpenAI error: %s", exc)
-            # Fall back to plain summary
-            text = "Based on your KCSE results, here are your top matched courses:\n" + course_summary
-    else:
-        text = "Based on your KCSE results, here are your top matched courses:\n" + course_summary
-
-    ai = AIRecommendation(advice_text=text, user=user)
-    ai.save()
-    return ai
-
-
-# =====================================================
 # Career Recommendation Config (singleton)
 # =====================================================
 class CareerConfig(models.Model):
@@ -749,6 +228,13 @@ class CareerConfig(models.Model):
         help_text=(
             "OpenAI model used for all CareerNext AI features (chat, insight, quiz summary). "
             "Change this to switch models without a code deploy, e.g. 'gpt-4o' or 'gpt-4o-mini'."
+        ),
+    )
+    ai_custom_instructions = models.TextField(
+        blank=True,
+        help_text=(
+            "Extra instructions appended to CareerNext AI's prompt for every chat, e.g. "
+            "'Always mention KUCCPS revision dates' or 'Prefer short answers'. No deploy needed."
         ),
     )
     ai_temperature = models.FloatField(
@@ -865,6 +351,45 @@ class AIKnowledgeEntry(models.Model):
 
     def get_keywords_list(self):
         return [k.strip().lower() for k in self.keywords.split(',') if k.strip()]
+
+
+class AIChatLog(models.Model):
+    """
+    One row per CareerNext AI answer. Powers the learning loop: students rate
+    answers, staff review them in admin and promote good ones into AIKnowledgeEntry.
+    """
+    STATUS_CHOICES = [
+        ('new',      'New'),
+        ('reviewed', 'Reviewed'),
+        ('promoted', 'Promoted to knowledge base'),
+        ('ignored',  'Ignored'),
+    ]
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,
+        null=True, blank=True, related_name='ai_chat_logs',
+    )
+    question     = models.TextField()
+    reply        = models.TextField(blank=True)
+    tools_used   = models.JSONField(default=list, blank=True)
+    kb_hit       = models.BooleanField(default=False)
+    model_name   = models.CharField(max_length=50, blank=True)
+    rating       = models.SmallIntegerField(default=0, help_text="1 = helpful, -1 = not helpful, 0 = unrated")
+    rating_note  = models.CharField(max_length=500, blank=True)
+    review_status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='new')
+    created_at   = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name        = 'AI Chat Log'
+        verbose_name_plural = 'AI Chat Logs'
+        indexes = [models.Index(fields=['review_status', 'rating'])]
+
+    def __str__(self):
+        return f"{self.question[:60]} ({self.get_rating_display()})"
+
+    def get_rating_display(self):
+        return {1: 'helpful', -1: 'not helpful'}.get(self.rating, 'unrated')
 
 
 # =====================================================
