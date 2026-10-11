@@ -74,7 +74,7 @@ concrete, code-verified detail rather than repeating the summary table.
 Re-verified against the code on 2026-07-02. Items previously listed here that are now fixed:
 mentorship webhook HMAC verification, unified webhook payout logic (`_confirm_session_after_payment`),
 affiliate commission on all verification paths, `WithdrawalRequest` "failed" status choice,
-`get_client_ip()` unified in `kuccpss/ip_utils.py`, password-validator sync (6-char in both places),
+`get_client_ip()` unified in `kuccpss/ip_utils.py`, password-validator sync (8-char minimum everywhere),
 AI knowledge-base formula (now midpoint-marks), duplicate `/accounts/` + `dashboard/` URL mounts,
 orphaned `clusters` views (now wired), `mentorship/directory.html` dark-mode selector,
 `MentorRegistrationForm` slug-based institution filter, `MENTOR_AUTO_PAY_THRESHOLD` (defined in
