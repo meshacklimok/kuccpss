@@ -19,7 +19,8 @@ SITE_URL = "https://www.careernext.co.ke"
 def _doc_url(file_field):
     """Return absolute URL for a file field, or 'Not uploaded'."""
     if file_field:
-        return SITE_URL + file_field.url
+        url = file_field.url
+        return url if url.startswith("http") else SITE_URL + url
     return "Not uploaded"
 
 

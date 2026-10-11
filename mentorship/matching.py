@@ -54,7 +54,7 @@ def match_rank(a, b):
     return None
 
 
-def student_mentors_for_course(course, limit=3):
+def student_mentors_for_course(course, limit=5):
     """Live student mentors studying `course` or a close variation, best match first:
     same course, then same core name, then variations; within each, admin-pinned
     mentors, then most completed sessions, then an open slot, then higher ratings."""
