@@ -239,6 +239,41 @@ class CurrentSessionUnlockTests(TestCase):
 
 
 @patch("payments.views.fulfil_completed_payment")
+class PaymentStatusPollingTests(TestCase):
+    """The status poll asks IntaSend itself, so a lost webhook never leaves a payer locked."""
+
+    def setUp(self):
+        cache.clear()
+        self.user = User.objects.create_user(email="poll@example.com", password="pass1234")
+        self.client.force_login(self.user)
+
+    def poll(self, payment):
+        return self.client.get(reverse("payments:payment_status", args=[payment.pk])).json()
+
+    @patch("payments.views.fetch_intasend_invoice", return_value={"state": "COMPLETE", "mpesa_ref": "UJCPF9P7VD"})
+    def test_pending_payment_completes_without_webhook(self, fetch, fulfil):
+        payment = Payment.objects.create(user=self.user, feature="ai_chat_access", amount=50, checkout_id="CHK1")
+        self.assertEqual(self.poll(payment)["status"], "completed")
+        payment.refresh_from_db()
+        self.assertEqual(payment.status, "completed")
+        fulfil.assert_called_once()
+
+    @patch("payments.views.fetch_intasend_invoice", return_value={"state": "PENDING", "mpesa_ref": ""})
+    def test_still_pending_and_throttled(self, fetch, fulfil):
+        payment = Payment.objects.create(user=self.user, feature="ai_chat_access", amount=50, checkout_id="CHK1")
+        self.assertEqual(self.poll(payment)["status"], "pending")
+        self.assertEqual(self.poll(payment)["status"], "pending")
+        self.assertEqual(fetch.call_count, 1)
+        fulfil.assert_not_called()
+
+    @patch("payments.views.fetch_intasend_invoice")
+    def test_no_checkout_id_skips_intasend(self, fetch, fulfil):
+        payment = Payment.objects.create(user=self.user, feature="ai_chat_access", amount=50)
+        self.assertEqual(self.poll(payment)["status"], "pending")
+        fetch.assert_not_called()
+
+
+@patch("payments.views.fulfil_completed_payment")
 class VerifyByTransactionCodeTests(TestCase):
     def setUp(self):
         cache.clear()

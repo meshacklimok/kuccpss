@@ -3,6 +3,7 @@ import logging
 
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
+from django.core.cache import cache
 from django.core.mail import EmailMultiAlternatives
 from django.http import JsonResponse, HttpResponse
 from django.shortcuts import render, get_object_or_404
@@ -460,6 +461,24 @@ def _safe_amount(value) -> Decimal:
     return amount if amount.is_finite() and amount >= 0 else Decimal("0")
 
 
+def _log_webhook_rejection(request) -> None:
+    """Say why a webhook failed verification without logging the secret itself."""
+    try:
+        body = json.loads(request.body)
+    except ValueError:
+        body = None
+    challenge = body.get("challenge") if isinstance(body, dict) else None
+    logger.warning(
+        "payments:mpesa_webhook signature rejected: signature_header=%s challenge_in_body=%s "
+        "challenge_len=%s secret_len=%s body_keys=%s",
+        bool(request.headers.get("X-IntaSend-Signature")),
+        isinstance(challenge, str) and bool(challenge),
+        len(challenge) if isinstance(challenge, str) else None,
+        len(getattr(settings, "INTASEND_WEBHOOK_SECRET", "")),
+        sorted(body)[:15] if isinstance(body, dict) else None,
+    )
+
+
 @csrf_exempt
 @require_POST
 def mpesa_webhook(request):
@@ -468,7 +487,7 @@ def mpesa_webhook(request):
     Saves a Transaction and updates Payment.status automatically.
     """
     if not verify_intasend_signature(request):
-        logger.warning("payments:mpesa_webhook signature rejected")
+        _log_webhook_rejection(request)
         return HttpResponse(status=403)
     logger.info("M-Pesa webhook received")
 
@@ -558,6 +577,21 @@ def payment_status(request, payment_id):
     Returns: { status: 'pending'|'completed'|'failed' }
     """
     payment = get_object_or_404(Payment, pk=payment_id, user=request.user)
+    # The webhook is the fast path, but it can be late or lost. While a payment is still
+    # pending, ask IntaSend directly (at most once per few seconds per payment) so the
+    # user is unlocked automatically instead of having to enter an M-Pesa code.
+    if payment.status == "pending" and payment.checkout_id and cache.add(f"pay-poll:{payment.pk}", 1, 6):
+        invoice = fetch_intasend_invoice(payment.checkout_id)
+        remote_state = invoice["state"] if invoice else None
+        if remote_state == "COMPLETE":
+            _record_intasend_transaction(payment, invoice)
+            complete_payment(payment)
+            payment.refresh_from_db()
+        elif remote_state == "FAILED":
+            Payment.objects.filter(pk=payment.pk, status="pending").update(
+                status="failed", updated_at=timezone.now()
+            )
+            payment.refresh_from_db()
     return JsonResponse({"status": payment.status, "feature": payment.feature})
 
 
