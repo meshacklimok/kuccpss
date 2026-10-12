@@ -1,5 +1,6 @@
 import hmac
 import hashlib
+import json
 import logging
 import re
 import requests
@@ -154,10 +155,16 @@ def verify_intasend_signature(request) -> bool:
     if not webhook_secret:
         return True
     sig = request.headers.get("X-IntaSend-Signature", "")
-    if not sig:
+    if sig:
+        expected = hmac.new(webhook_secret.encode(), request.body, hashlib.sha256).hexdigest()
+        return hmac.compare_digest(sig, expected) or hmac.compare_digest(sig, webhook_secret)
+    # IntaSend webhooks carry the dashboard "challenge" string in the JSON body rather
+    # than a signature header; it must equal INTASEND_WEBHOOK_SECRET.
+    try:
+        challenge = json.loads(request.body).get("challenge", "")
+    except (ValueError, AttributeError):
         return False
-    expected = hmac.new(webhook_secret.encode(), request.body, hashlib.sha256).hexdigest()
-    return hmac.compare_digest(sig, expected) or hmac.compare_digest(sig, webhook_secret)
+    return isinstance(challenge, str) and bool(challenge) and hmac.compare_digest(challenge, webhook_secret)
 
 
 def credit_affiliate_commission(payment: "Payment") -> None:

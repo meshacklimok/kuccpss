@@ -55,6 +55,17 @@ class VerifyIntasendSignatureTests(TestCase):
         self.assertFalse(verify_intasend_signature(request))
 
 
+    @override_settings(INTASEND_WEBHOOK_SECRET="testsecret")
+    def test_matching_challenge_in_body_accepted(self):
+        request = Mock(headers={}, body=b'{"challenge": "testsecret", "state": "COMPLETE"}')
+        self.assertTrue(verify_intasend_signature(request))
+
+    @override_settings(INTASEND_WEBHOOK_SECRET="testsecret")
+    def test_wrong_challenge_in_body_rejected(self):
+        request = Mock(headers={}, body=b'{"challenge": "nope"}')
+        self.assertFalse(verify_intasend_signature(request))
+
+
 class HasPaidForFeatureTests(TestCase):
     def setUp(self):
         self.user = User.objects.create_user(email="student@example.com", password="pass1234")
