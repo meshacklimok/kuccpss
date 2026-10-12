@@ -3,6 +3,7 @@
 {% load static %}
 {% load socialaccount %}
 
+{% block robots %}noindex, follow{% endblock %}
 {% block title %}Create Your Free Account | CareerNext{% endblock %}
 
 {% block meta %}<meta name="description" content="Create a free CareerNext account to save your KCSE results, see every KUCCPS course you qualify for, shortlist courses and ask CareerNext AI for guidance.">{% endblock %}
@@ -125,9 +126,9 @@
           {{ form.agreed_terms }}
           <label for="{{ form.agreed_terms.id_for_label }}">
             I agree to the
-            <a href="{% url 'accounts:terms' %}" style="color:#4285F4;font-weight:700;text-decoration:none;" target="_blank">Terms &amp; Conditions</a>
+            <a href="{% url 'accounts:terms' %}" style="color:#1a63d6;font-weight:700;text-decoration:none;" target="_blank" rel="noopener">Terms &amp; Conditions</a>
             and
-            <a href="{% url 'accounts:privacy' %}" style="color:#4285F4;font-weight:700;text-decoration:none;" target="_blank">Privacy Policy</a>
+            <a href="{% url 'accounts:privacy' %}" style="color:#1a63d6;font-weight:700;text-decoration:none;" target="_blank" rel="noopener">Privacy Policy</a>
           </label>
           {% if form.agreed_terms.errors %}
           <div class="field-error" style="margin-top:0.25rem;"><i class="fas fa-exclamation-circle"></i>{{ form.agreed_terms.errors|striptags }}</div>

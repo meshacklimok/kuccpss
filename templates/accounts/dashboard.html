@@ -38,6 +38,7 @@
   flex-shrink: 0;
 }
 .dash-name {
+  margin: 0;
   font-size: 1.15rem; font-weight: 800; color: #fff;
   letter-spacing: -0.01em; line-height: 1.2;
 }
@@ -691,7 +692,7 @@ body.dark .reco-hint, body.dark .reco-counter { background: rgba(129,140,248,0.1
         <i class="fas fa-graduation-cap" style="color:rgba(255,255,255,0.7);"></i>
       </div>
       <div class="flex-grow-1">
-        <div class="dash-name">Welcome to CareerNext</div>
+        <h1 class="dash-name">Welcome to CareerNext</h1>
         <div class="dash-meta">Sign in to save results, track courses and unlock your personal dashboard.</div>
       </div>
       <div class="d-flex gap-2 flex-wrap">
@@ -712,7 +713,7 @@ body.dark .reco-hint, body.dark .reco-counter { background: rgba(129,140,248,0.1
       </div>
 
       <div class="flex-grow-1">
-        <div class="dash-name">Welcome back, {{ user.full_name|default:user.email }}</div>
+        <h1 class="dash-name">Welcome back, {{ user.full_name|default:user.email }}</h1>
         <div class="dash-meta">
           {% if user.county %}<i class="bi bi-geo-alt me-1"></i>{{ user.county }}{% endif %}
           {% if user.kcse_year %} &nbsp;·&nbsp; KCSE {{ user.kcse_year }}{% endif %}

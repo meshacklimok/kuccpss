@@ -3,6 +3,7 @@
 {% load static %}
 {% load socialaccount %}
 
+{% block robots %}noindex, follow{% endblock %}
 {% block title %}Sign In | CareerNext{% endblock %}
 
 {% block content %}
@@ -88,7 +89,7 @@
         <div class="auth-field">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.3rem;">
             <label for="{{ form.password.id_for_label }}" style="margin-bottom:0;">Password</label>
-            <a href="{% url 'account_reset_password' %}" style="font-size:0.76rem;color:#4285F4;font-weight:700;text-decoration:none;">Forgot password?</a>
+            <a href="{% url 'account_reset_password' %}" style="font-size:0.76rem;color:#1a63d6;font-weight:700;text-decoration:none;">Forgot password?</a>
           </div>
           <div class="auth-pw-wrap">
             {{ form.password|add_class:"form-control"|attr:"placeholder:Enter your password"|attr:"autocomplete:current-password" }}
