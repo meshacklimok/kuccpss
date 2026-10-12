@@ -57,7 +57,7 @@ def has_paid_for_current_session(user, calc_feature: str, gate_feature: str) -> 
       - user is staff or has a payment exemption
       - the gate feature is disabled / free
       - their current CareerSubmission has an unlocked_by_payment set
-      - they have NO CareerSubmission yet (old results from a previous paid session)
+      - they have NO CareerSubmission and have a completed payment for the gate feature
 
     Returns False (show payment overlay) when they have a submission with
     new grades entered but no payment linked to it yet.
@@ -75,8 +75,10 @@ def has_paid_for_current_session(user, calc_feature: str, gate_feature: str) -> 
         from .models import Payment
         sub = CareerSubmission.objects.filter(user=user, feature=calc_feature).first()
         if sub is None:
-            # No submission = no new unconfirmed calculation — allow viewing old saved results
-            return True
+            # No submission: only a user who has already paid for this feature may view old
+            # saved results. Recalculate deletes the submission, so "no submission" must not
+            # unlock results the user never paid for.
+            return Payment.objects.filter(user=user, feature=gate_feature, status="completed").exists()
         if sub.unlocked_by_payment_id is not None:
             return True
         # Self-heal: a payment completed after this grade session started unlocks it,

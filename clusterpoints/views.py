@@ -230,22 +230,22 @@ def kcse_calculator_view(request):
                 except Exception:
                     pass
 
-                # Save/reset the grace-period submission record
-                if lock_cfg and lock_cfg.is_enabled:
-                    from datetime import timedelta
-                    CareerSubmission.objects.update_or_create(
-                        user=request.user,
-                        feature=CareerSubmission.FEATURE_CALCULATOR,
-                        defaults={
-                            'grades_json': named_points,
-                            'status': CareerSubmission.STATUS_PENDING,
-                            'lock_at': timezone.now() + timedelta(minutes=lock_cfg.lock_minutes),
-                            'unlocked_by_payment': None,  # new session requires new payment
-                        },
-                    )
-                    existing_sub = CareerSubmission.objects.filter(
-                        user=request.user, feature=CareerSubmission.FEATURE_CALCULATOR
-                    ).first()
+                # Always save/reset the submission record: it is what the payment gate keys
+                # on, so skipping it (lock config off/missing) left every recalculation free.
+                from datetime import timedelta
+                CareerSubmission.objects.update_or_create(
+                    user=request.user,
+                    feature=CareerSubmission.FEATURE_CALCULATOR,
+                    defaults={
+                        'grades_json': named_points,
+                        'status': CareerSubmission.STATUS_PENDING,
+                        'lock_at': timezone.now() + timedelta(minutes=lock_cfg.lock_minutes if lock_cfg else 30),
+                        'unlocked_by_payment': None,  # new session requires new payment
+                    },
+                )
+                existing_sub = CareerSubmission.objects.filter(
+                    user=request.user, feature=CareerSubmission.FEATURE_CALCULATOR
+                ).first()
 
             else:
                 # ── Guest: compute in memory, stash in session, then gate ──
@@ -347,7 +347,7 @@ def kcse_calculator_view(request):
 
     # Grace-period banner data for the template
     sub_banner = None
-    if existing_sub and existing_sub.status == CareerSubmission.STATUS_PENDING and results:
+    if lock_cfg and lock_cfg.is_enabled and existing_sub and existing_sub.status == CareerSubmission.STATUS_PENDING and results:
         from django.urls import reverse
         sub_banner = {
             'seconds_remaining': existing_sub.seconds_remaining(),

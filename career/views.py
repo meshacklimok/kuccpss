@@ -1715,21 +1715,21 @@ def degree_calculate(request):
                 kcse_result.recalc_total_points()
                 calculate_all_clusters(kcse_result)
 
-            # Save/reset the grace-period submission record
-            if lock_cfg and lock_cfg.is_enabled:
-                from datetime import timedelta
-                entry_method = request.session.pop('career_entry_method', CareerSubmission.METHOD_CALCULATE)
-                CareerSubmission.objects.update_or_create(
-                    user=request.user,
-                    feature=CareerSubmission.FEATURE_DEGREE,
-                    defaults={
-                        'grades_json': pts_by_name,
-                        'method': entry_method,
-                        'status': CareerSubmission.STATUS_PENDING,
-                        'lock_at': timezone.now() + timedelta(minutes=lock_cfg.lock_minutes),
-                        'unlocked_by_payment': None,  # new session requires new payment
-                    },
-                )
+            # Always save/reset the submission record: the payment gate keys on it, so
+            # skipping it (lock config off/missing) made every recalculation free.
+            from datetime import timedelta
+            entry_method = request.session.pop('career_entry_method', CareerSubmission.METHOD_CALCULATE)
+            CareerSubmission.objects.update_or_create(
+                user=request.user,
+                feature=CareerSubmission.FEATURE_DEGREE,
+                defaults={
+                    'grades_json': pts_by_name,
+                    'method': entry_method,
+                    'status': CareerSubmission.STATUS_PENDING,
+                    'lock_at': timezone.now() + timedelta(minutes=lock_cfg.lock_minutes if lock_cfg else 30),
+                    'unlocked_by_payment': None,  # new session requires new payment
+                },
+            )
 
         if not request.user.is_authenticated:
             # Guest: session is saved; skip degree_options and go straight to loading
@@ -2118,19 +2118,19 @@ def degree_paste(request):
                             if not (_lock_cfg.allow_official_resubmit and _sub.method == CareerSubmission.METHOD_CALCULATE):
                                 _restore_degree_session(request, _sub.grades_json, _sub.method)
                                 return redirect('career:loading_page', pathway='degree')
-                    # Save submission with paste method
-                    from datetime import timedelta
-                    CareerSubmission.objects.update_or_create(
-                        user=request.user,
-                        feature=CareerSubmission.FEATURE_DEGREE,
-                        defaults={
-                            'grades_json': cluster_points,
-                            'method': CareerSubmission.METHOD_PASTE,
-                            'status': CareerSubmission.STATUS_PENDING,
-                            'lock_at': timezone.now() + timedelta(minutes=_lock_cfg.lock_minutes),
-                            'unlocked_by_payment': None,
-                        },
-                    )
+                # Save submission with paste method (always — the payment gate keys on it)
+                from datetime import timedelta
+                CareerSubmission.objects.update_or_create(
+                    user=request.user,
+                    feature=CareerSubmission.FEATURE_DEGREE,
+                    defaults={
+                        'grades_json': cluster_points,
+                        'method': CareerSubmission.METHOD_PASTE,
+                        'status': CareerSubmission.STATUS_PENDING,
+                        'lock_at': timezone.now() + timedelta(minutes=_lock_cfg.lock_minutes if _lock_cfg else 30),
+                        'unlocked_by_payment': None,
+                    },
+                )
 
             request.session['career_pathway'] = 'Degree'
             request.session['career_degree_method'] = 'paste'
@@ -2206,18 +2206,18 @@ def degree_manual(request):
                         if not (_lock_cfg.allow_official_resubmit and _sub.method == CareerSubmission.METHOD_CALCULATE):
                             _restore_degree_session(request, _sub.grades_json, _sub.method)
                             return redirect('career:loading_page', pathway='degree')
-                from datetime import timedelta
-                CareerSubmission.objects.update_or_create(
-                    user=request.user,
-                    feature=CareerSubmission.FEATURE_DEGREE,
-                    defaults={
-                        'grades_json': cluster_points,
-                        'method': CareerSubmission.METHOD_MANUAL,
-                        'status': CareerSubmission.STATUS_PENDING,
-                        'lock_at': _tz.now() + timedelta(minutes=_lock_cfg.lock_minutes),
-                        'unlocked_by_payment': None,
-                    },
-                )
+            from datetime import timedelta
+            CareerSubmission.objects.update_or_create(
+                user=request.user,
+                feature=CareerSubmission.FEATURE_DEGREE,
+                defaults={
+                    'grades_json': cluster_points,
+                    'method': CareerSubmission.METHOD_MANUAL,
+                    'status': CareerSubmission.STATUS_PENDING,
+                    'lock_at': _tz.now() + timedelta(minutes=_lock_cfg.lock_minutes if _lock_cfg else 30),
+                    'unlocked_by_payment': None,
+                },
+            )
 
         request.session['career_pathway'] = 'Degree'
         request.session['career_degree_method'] = request.session.get('career_degree_method', 'manual')
@@ -2252,8 +2252,9 @@ def pathway_input(request, pathway):
     grades_locked = bool(lock_sub and lock_sub.status == CareerSubmission.STATUS_LOCKED)
 
     def _save_submission(grades, method):
-        # Start (or restart) the review window for these grades
-        if not lock_cfg:
+        # Start (or restart) the review window for these grades. Always saved — the payment
+        # gate keys on this record, so skipping it (lock config off) made results free.
+        if not request.user.is_authenticated:
             return
         from datetime import timedelta
         from django.utils import timezone
@@ -2264,7 +2265,7 @@ def pathway_input(request, pathway):
                 'grades_json': grades,
                 'method': method,
                 'status': CareerSubmission.STATUS_PENDING,
-                'lock_at': timezone.now() + timedelta(minutes=lock_cfg.lock_minutes),
+                'lock_at': timezone.now() + timedelta(minutes=lock_cfg.lock_minutes if lock_cfg else 30),
                 'unlocked_by_payment': None,  # new session requires new payment
             },
         )
