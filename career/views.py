@@ -14,7 +14,10 @@ from .models import (
     CareerProfile, QuizQuestion, QuizSubmission, QuizAnswer, SharedResult,
 )
 from kuccpss.seo import career_profile_meta
+import logging
 from typing import Dict, List
+
+logger = logging.getLogger(__name__)
 
 # =====================================================
 # 1. Home / Pathway Selection
@@ -22,7 +25,7 @@ from typing import Dict, List
 def home(request):
     from courses.models import Course, CourseOffering
     from institutions.models import Institution
-    from django.db.models import Count
+    from django.db.models import Count, Prefetch
 
     categories = ["Degree", "Diploma", "TVET", "KMTC", "TTC"]
 
@@ -39,7 +42,6 @@ def home(request):
         )
         id_save_map = dict(top)
         if id_save_map:
-            from django.db.models import Prefetch
             qs = (Course.objects
                   .filter(pk__in=id_save_map)
                   .select_related('course_type', 'cluster')
@@ -66,18 +68,35 @@ def home(request):
     except Exception:
         pass
 
-    # Fallback when DB has no saves yet
+    # Fallback when nobody has saved a course yet: real courses offered by the
+    # most institutions. Never hard-code names or cutoffs here.
     if not trending_courses:
-        trending_courses = [
-            {'name': 'Medicine and Surgery', 'course_type': 'Degree', 'course_type_slug': 'degree', 'slug': None, 'cluster_num': 15, 'cutoff': '42.0', 'institution': 'University of Nairobi', 'saves': None},
-            {'name': 'Computer Science (BSc)', 'course_type': 'Degree', 'course_type_slug': 'degree', 'slug': None, 'cluster_num': 9, 'cutoff': '36.0', 'institution': 'JKUAT', 'saves': None},
-            {'name': 'Civil Engineering', 'course_type': 'Degree', 'course_type_slug': 'degree', 'slug': None, 'cluster_num': 4, 'cutoff': '38.5', 'institution': 'University of Nairobi', 'saves': None},
-            {'name': 'Bachelor of Laws (LLB)', 'course_type': 'Degree', 'course_type_slug': 'degree', 'slug': None, 'cluster_num': 12, 'cutoff': '40.0', 'institution': 'University of Nairobi', 'saves': None},
-            {'name': 'Nursing (B.Sc.)', 'course_type': 'Degree', 'course_type_slug': 'degree', 'slug': None, 'cluster_num': 13, 'cutoff': '35.5', 'institution': 'Kenyatta University', 'saves': None},
-            {'name': 'Architecture (BArch)', 'course_type': 'Degree', 'course_type_slug': 'degree', 'slug': None, 'cluster_num': 5, 'cutoff': '37.0', 'institution': 'University of Nairobi', 'saves': None},
-            {'name': 'Pharmacy (B.Pharm)', 'course_type': 'Degree', 'course_type_slug': 'degree', 'slug': None, 'cluster_num': 15, 'cutoff': '38.0', 'institution': 'University of Nairobi', 'saves': None},
-            {'name': 'Clinical Medicine & Surgery', 'course_type': 'KMTC', 'course_type_slug': 'kmtc', 'slug': None, 'cluster_num': None, 'cutoff': 'B', 'institution': 'KMTC Nairobi', 'saves': None},
-        ]
+        try:
+            fallback = (Course.objects
+                        .annotate(n_off=Count('offerings'))
+                        .filter(n_off__gt=0)
+                        .select_related('course_type', 'cluster')
+                        .prefetch_related(
+                            Prefetch(
+                                'offerings',
+                                queryset=CourseOffering.objects.select_related('institution').order_by('id'),
+                                to_attr='_first_offerings',
+                            ))
+                        .order_by('-n_off', 'name')[:8])
+            for c in fallback:
+                off = c._first_offerings[0] if c._first_offerings else None  # type: ignore[attr-defined]
+                trending_courses.append({
+                    'name': c.name,
+                    'course_type': c.course_type.name if c.course_type else '',
+                    'course_type_slug': c.course_type.slug if c.course_type else '',
+                    'slug': c.slug,
+                    'cluster_num': c.cluster.kuccps_number if c.cluster else None,
+                    'cutoff': off.latest_cutoff() if off else None,
+                    'institution': off.institution.name if off and off.institution else '',
+                    'saves': None,
+                })
+        except Exception:
+            logger.exception("career home: trending fallback failed")
 
     context = {
         "categories": categories,
@@ -1352,7 +1371,7 @@ PATHWAY_DEFAULT_MIN_GRADE = {
     'Diploma':      'C-',
     'Certificate':  'D+',
     'KMTC':         'C',
-    'TTC':          'C-',
+    'TTC':          'C',
     'Artisan':      'D',
 }
 

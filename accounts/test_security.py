@@ -121,3 +121,25 @@ class JsJsonFilterTests(SimpleTestCase):
     def test_none_and_python_values(self):
         self.assertEqual(Template("{{ v|js_json }}").render(Context({"v": None})), "null")
         self.assertEqual(Template("{{ v|js_json }}").render(Context({"v": [1, "a"]})), '[1, "a"]')
+
+
+class GoogleLoginUnprovisionedTests(TestCase):
+    """Missing Google SocialApp must redirect to login, never 500."""
+
+    def test_google_login_without_social_app_redirects_to_login(self):
+        resp = self.client.get('/accounts/google/login/')
+        self.assertEqual(resp.status_code, 302)
+        self.assertEqual(resp['Location'], '/accounts/login/')
+
+    def test_google_callback_without_social_app_redirects_to_login(self):
+        resp = self.client.get('/accounts/google/login/callback/')
+        self.assertEqual(resp.status_code, 302)
+        self.assertEqual(resp['Location'], '/accounts/login/')
+
+
+class CareerHomeNoInventedCutoffsTests(TestCase):
+    def test_empty_db_shows_no_hardcoded_trending_courses(self):
+        resp = self.client.get('/career/')
+        self.assertEqual(resp.status_code, 200)
+        self.assertNotContains(resp, 'Medicine and Surgery')
+        self.assertNotContains(resp, 'Cutoff: 42.0')

@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{# Wraps allauth's built-in pages (inactive account, cancelled login, etc.) in the site chrome. #}
+{% block title %}{% block head_title %}Account{% endblock %} | CareerNext{% endblock %}
+{% block extra_head %}<meta name="robots" content="noindex">{% block allauth_extra_head %}{% endblock %}{% endblock %}
+{% block content %}
+<div class="container py-5" style="max-width:640px;">
+  {% block allauth_content %}{% endblock %}
+</div>
+{% endblock %}

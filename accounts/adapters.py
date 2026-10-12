@@ -27,6 +27,23 @@ class SocialAccountAdapter(DefaultSocialAccountAdapter):
     "Third-Party Login Failure" page.
     """
 
+    def get_app(self, request, provider, client_id=None):
+        from allauth.core.exceptions import ImmediateHttpResponse
+        from allauth.socialaccount.models import SocialApp
+        from django.contrib import messages
+
+        try:
+            return super().get_app(request, provider, client_id=client_id)
+        except SocialApp.DoesNotExist:
+            # Google credentials not provisioned (missing env vars / build step).
+            logger.error("No SocialApp configured for provider %s", provider)
+            messages.error(
+                request,
+                "Google sign-in is temporarily unavailable. "
+                "Please sign in with your email and password.",
+            )
+            raise ImmediateHttpResponse(redirect("accounts:login"))
+
     def on_authentication_error(
         self,
         request,

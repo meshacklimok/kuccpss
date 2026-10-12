@@ -33,7 +33,7 @@ def cluster_list(request):
 # =====================================================
 def cluster_detail(request, slug):
     from courses.models import Course
-    cluster = get_object_or_404(Cluster, slug=slug)
+    cluster = get_object_or_404(Cluster.objects.kuccps(), slug=slug)
     subject_groups = cluster.subject_groups.prefetch_related('subjects').all()  # type: ignore[attr-defined]
     courses = (
         Course.objects
@@ -58,7 +58,7 @@ def cluster_courses(request, slug):
     from courses.models import Course
     from payments.services import has_paid_for_feature, is_feature_enabled, price_for_feature
 
-    cluster = get_object_or_404(Cluster, slug=slug)
+    cluster = get_object_or_404(Cluster.objects.kuccps(), slug=slug)
     all_courses = (
         Course.objects
         .filter(cluster=cluster)

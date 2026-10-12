@@ -300,15 +300,16 @@ def fetch_intasend_invoice(checkout_id: str) -> dict | None:
     """
     if not checkout_id:
         return None
-    # IntaSend collection status: ID goes in the URL path, not as a query param
-    url = f"{get_base_url()}/payment/collection/{checkout_id}/"
+    # IntaSend collection status is a POST with the invoice id in the body; the old
+    # GET /payment/collection/<id>/ route returns 404 for real invoices.
+    url = f"{get_base_url()}/payment/status/"
     headers = {
         "Authorization": f"Bearer {settings.INTASEND_SECRET_KEY}",
         "Content-Type": "application/json",
     }
     try:
         with intasend_breaker.guard():
-            response = requests.get(url, headers=headers, timeout=10)
+            response = requests.post(url, json={"invoice_id": checkout_id}, headers=headers, timeout=10)
             response.raise_for_status()
         data = response.json()
     except Exception as exc:

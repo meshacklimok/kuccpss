@@ -17,7 +17,7 @@ PATHWAY_DEFAULT_MIN_GRADE = {
     'Diploma':      'C-',
     'Certificate':  'D+',
     'KMTC':         'C',
-    'TTC':          'C-',
+    'TTC':          'C',
     'Artisan':      'D',
 }
 

@@ -107,7 +107,7 @@ class ClusterSitemap(Sitemap):
     changefreq = "monthly"
 
     def items(self):
-        return Cluster.objects.all()
+        return Cluster.objects.kuccps()
 
     def location(self, obj):
         return obj.get_absolute_url()

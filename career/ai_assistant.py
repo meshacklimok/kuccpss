@@ -42,7 +42,7 @@ DEFAULT_MIN_GRADE_BY_TYPE = {
     'TVET Certificate (Level 5)': 'D+',
     'Certificate': 'D+',
     'KMTC': 'C',
-    'TTC': 'C-',
+    'TTC': 'C',
     'TVET Artisan Certificate (Level 4)': 'D',
     'TVET Craft Certificate (Level 3)': 'D',
 }

@@ -73,10 +73,21 @@ class IntaSendBreakerIntegrationTests(SimpleTestCase):
     def setUp(self):
         cache.clear()
 
-    @patch("payments.services.requests.get", side_effect=requests.Timeout())
-    def test_status_fetch_stops_calling_when_open(self, mock_get):
+    @patch("payments.services.requests.post", side_effect=requests.Timeout())
+    def test_status_fetch_stops_calling_when_open(self, mock_post):
         from payments.services import fetch_intasend_invoice
         for _ in range(10):
             self.assertIsNone(fetch_intasend_invoice("abc"))
         # 5 real attempts trip the breaker; the rest are refused without a request
-        self.assertEqual(mock_get.call_count, 5)
+        self.assertEqual(mock_post.call_count, 5)
+
+    @patch("payments.services.requests.post")
+    def test_status_fetch_posts_invoice_id_and_parses_invoice(self, mock_post):
+        from payments.services import fetch_intasend_invoice
+        mock_post.return_value.json.return_value = {
+            "invoice": {"invoice_id": "0W64G9N", "state": "COMPLETE", "mpesa_reference": "UJBPF9LELS"}
+        }
+        self.assertEqual(fetch_intasend_invoice("0W64G9N"), {"state": "COMPLETE", "mpesa_ref": "UJBPF9LELS"})
+        args, kwargs = mock_post.call_args
+        self.assertTrue(args[0].endswith("/payment/status/"))
+        self.assertEqual(kwargs["json"], {"invoice_id": "0W64G9N"})

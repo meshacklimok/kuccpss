@@ -168,7 +168,9 @@ def institution_detail(request, type_slug, institution_slug):
         'field_count': sum(len(g['categories']) for g in groups),
         'cutoff_low': min(cutoffs) if cutoffs else None,
         'cutoff_high': max(cutoffs) if cutoffs else None,
-        'seo': institution_meta(institution, len(offerings)),
+        'seo': institution_meta(
+            institution, len(offerings), offerings,
+            min(cutoffs) if cutoffs else None, max(cutoffs) if cutoffs else None),
         'reviews': reviews_qs[:20],
         'avg_rating': round(agg['avg'], 1) if agg['avg'] else None,
         'review_count': agg['total'],

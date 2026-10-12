@@ -43,13 +43,19 @@ def _fit_title(*candidates):
 
 
 def _fit_description(*sentences):
-    """Join sentences in order, stopping before the one that would overflow."""
+    """Join sentences in order, skipping any that would overflow.
+
+    A sentence can itself be a tuple of alternatives, longest first; the first
+    one that fits is used.
+    """
     out = ""
     for s in sentences:
-        joined = f"{out} {s}".strip()
-        if len(joined) > DESCRIPTION_MAX and out:
-            break
-        out = joined
+        options = s if isinstance(s, tuple) else (s,)
+        for option in options:
+            joined = f"{out} {option}".strip()
+            if len(joined) <= DESCRIPTION_MAX or not out:
+                out = joined
+                break
     if len(out) > DESCRIPTION_MAX:
         out = out[: DESCRIPTION_MAX - 1].rsplit(" ", 1)[0] + "…"
     return out
@@ -95,7 +101,25 @@ def _is_degree(course):
     return course.cluster_id is not None or course.course_type.slug == "degree"
 
 
-def institution_meta(institution, total_courses):
+def _sample_courses(offerings, limit=3):
+    """Names of up to `limit` courses from different fields of study."""
+    names, seen = [], set()
+    for o in offerings:
+        key = o.course.category_id or o.course_id
+        if key in seen:
+            continue
+        seen.add(key)
+        names.append(_display_name(o.course.name))
+        if len(names) == limit:
+            break
+    return names
+
+
+def _join_names(names):
+    return ", ".join(names[:-1]) + f" and {names[-1]}" if len(names) > 1 else "".join(names)
+
+
+def institution_meta(institution, total_courses, offerings=(), cutoff_low=None, cutoff_high=None):
     name = institution.name
     where = f" in {institution.location}" if institution.location else ""
     year = kuccps_year()
@@ -128,8 +152,18 @@ def institution_meta(institution, total_courses):
             f"{name}{where}: courses offered and the minimum KCSE mean grade needed."
         )
 
+    samples = _sample_courses(offerings)
+    includes = tuple(f"Includes {_join_names(samples[:n])}." for n in range(len(samples), 0, -1))
+    if _is_university(institution) and cutoff_low is not None and cutoff_high is not None:
+        cutoffs = (f"Cutoffs {_fmt_points(cutoff_low)}–{_fmt_points(cutoff_high)} points."
+                   if cutoff_low != cutoff_high else f"Cutoff {_fmt_points(cutoff_low)} points.")
+    else:
+        cutoffs = ""
+
     description = _fit_description(
         offer,
+        cutoffs,
+        includes,
         f"KCSE {kcse_year()} candidate? See which you qualify for.",
     )
     return {"title": title, "description": description}
