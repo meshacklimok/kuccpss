@@ -38,7 +38,7 @@
 .elig-unlikely       { background: #fee2e2; color: #991b1b; }
 
 .trend-up   { color: #dc2626; }
-.trend-down { color: #16a34a; }
+.trend-down { color: #15803d; }
 .trend-flat { color: var(--muted); }
 
 .filter-bar { background: var(--white); border: 1px solid var(--border); border-radius: var(--radius-sm); }
@@ -137,14 +137,14 @@ body.dark .method-trend { background: rgba(52,199,89,0.14); color: #5fd88a; }
           <span class="input-group-text bg-transparent border-end-0">
             <i class="fas fa-search text-muted"></i>
           </span>
-          <input type="search" name="q" value="{{ query }}" data-suggest="courses"
+          <input type="search" name="q" value="{{ query }}" aria-label="Search courses" data-suggest="courses"
                  class="form-control border-start-0"
                  placeholder="e.g. Nursing, Engineering…">
         </div>
       </div>
       <div class="col-md-3">
         <label class="form-label small fw-semibold mb-1">KUCCPS Cluster (1–18)</label>
-        <select name="cluster" class="form-select">
+        <select name="cluster" aria-label="Filter by cluster" class="form-select">
           <option value="">All 18 clusters</option>
           {% for cl in kuccps_clusters %}
           <option value="{{ cl.number }}"
@@ -156,7 +156,7 @@ body.dark .method-trend { background: rgba(52,199,89,0.14); color: #5fd88a; }
       </div>
       <div class="col-md-3">
         <label class="form-label small fw-semibold mb-1">Course type</label>
-        <select name="type" class="form-select">
+        <select name="type" aria-label="Filter by course type" class="form-select">
           <option value="">All types</option>
           {% for ct in course_types %}
           <option value="{{ ct.slug }}"

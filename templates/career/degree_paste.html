@@ -108,7 +108,7 @@ body.dark .cluster-chip.filled { background: rgba(52,199,89,0.14); color: #5fd88
                 <i class="bi bi-clipboard2-data-fill" style="font-size:1.5rem;color:#059669;"></i>
             </div>
             <div>
-                <h4 class="fw-bold mb-1">Paste Your Cluster Points</h4>
+                <h1 class="h4 fw-bold mb-1">Paste Your Cluster Points</h1>
                 <p class="text-muted small mb-0">
                     Paste up to 18 cluster point values separated by spaces, commas, or new lines.
                     Values must be between <strong>0 – 48</strong>.
@@ -135,7 +135,7 @@ body.dark .cluster-chip.filled { background: rgba(52,199,89,0.14); color: #5fd88
                 </label>
                 <textarea
                     class="paste-area"
-                    name="cluster_data"
+                    name="cluster_data" aria-label="Paste your KUCCPS cluster results"
                     id="pasteArea"
                     placeholder="Paste your KUCCPS cluster results here directly from the results page..."
                     oninput="livePreview(this.value)"

@@ -6,6 +6,9 @@ Disallow: /accounts/social/
 Disallow: /api/
 Disallow: /payments/webhook/
 Disallow: /analytics/
+Disallow: /*/review/
+Disallow: /accounts/login/?next=
+Disallow: /courses/?q=
 
 # Priority crawl targets
 Allow: /clusterpoints/

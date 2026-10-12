@@ -96,7 +96,7 @@ body { background: #f5f7ff; }
 .ct-section-label-text {
     display: inline-flex; align-items: center; gap: 0.45rem;
     font-size: 0.72rem; font-weight: 800; letter-spacing: 0.1em;
-    text-transform: uppercase; color: #64748b; white-space: nowrap;
+    text-transform: uppercase; color: #475569; white-space: nowrap;
 }
 
 /* ── main pathway cards ── */
@@ -329,7 +329,7 @@ body.dark .ct-empty { background: var(--surface); border-color: transparent; }
         <form method="get" action="{% url 'courses:course_types_list' %}" class="ct-search">
             <span class="ct-search-icon"><i class="bi bi-search"></i></span>
             <input type="text" name="q" aria-label="Search courses" placeholder="Search any course, e.g. Data Science…" autocomplete="off"
-                   data-suggest="courses">
+                   aria-label="Search courses" data-suggest="courses">
             <button class="ct-search-btn" type="submit">Search</button>
         </form>
 

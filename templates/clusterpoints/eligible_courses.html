@@ -130,7 +130,7 @@
     <div class="d-flex gap-2 flex-wrap align-items-end">
       <div style="flex:1;min-width:160px;">
         <label class="form-label small fw-600 mb-1">Search</label>
-        <input type="text" name="q" data-suggest="courses" class="form-control form-control-sm"
+        <input type="text" name="q" aria-label="Search courses" data-suggest="courses" class="form-control form-control-sm"
                placeholder="e.g. Medicine" value="{{ query }}">
       </div>
       <div style="min-width:150px;">
@@ -144,7 +144,7 @@
       </div>
       <div style="min-width:150px;">
         <label class="form-label small fw-600 mb-1">Course Type</label>
-        <select name="type" class="form-select form-select-sm">
+        <select name="type" aria-label="Filter by course type" class="form-select form-select-sm">
           <option value="">All Types</option>
           {% for ct in course_types %}
           <option value="{{ ct.slug }}" {% if type_filter == ct.slug %}selected{% endif %}>{{ ct.name }}</option>

@@ -72,7 +72,7 @@
     <form method="get" action="" class="cpage-search-inner" role="search">
       <i class="fas fa-search"></i>
       <input type="text" name="q" value="{{ q }}"
-             data-suggest="courses" data-suggest-params="category={{ category.slug|urlencode }}"
+             aria-label="Search courses" data-suggest="courses" data-suggest-params="category={{ category.slug|urlencode }}"
              placeholder="Search {{ category.name }} courses…" autocomplete="off"
              aria-label="Search {{ category.name }} courses">
       {% if sort and sort != 'name' %}<input type="hidden" name="sort" value="{{ sort }}">{% endif %}

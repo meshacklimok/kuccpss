@@ -46,7 +46,7 @@
     border-radius: 16px; padding: 1.4rem 1.5rem 1.2rem; margin-bottom: 1.25rem;
     box-shadow: 0 1px 8px rgba(30,58,138,0.07);
 }
-.dm-head h2 { font-size: 1.15rem; font-weight: 800; color: #1e293b; margin: 0 0 0.3rem; }
+.dm-head h1 { font-size: 1.15rem; font-weight: 800; color: #1e293b; margin: 0 0 0.3rem; }
 .dm-head p  { font-size: 0.83rem; color: #64748b; margin: 0; line-height: 1.55; }
 .auto-badge {
     display: inline-flex; align-items: center; gap: 0.35rem; margin-top: 0.65rem;
@@ -154,10 +154,10 @@
 
     <!-- header -->
     <div class="dm-head">
-        <h2>
+        <h1>
             <i class="bi bi-{% if from_ocr %}stars{% elif from_calculate %}calculator-fill{% else %}123{% endif %} me-2" style="color:#1d4ed8;"></i>
             {% if from_ocr %}Confirm Scanned Cluster Points{% elif from_calculate %}Review Your Cluster Points{% else %}Enter Your Cluster Points{% endif %}
-        </h2>
+        </h1>
         <p>
             {% if from_ocr %}
                 Scores scanned from your document, check each value and correct any errors before continuing.
@@ -200,6 +200,7 @@
                 type="number"
                 class="pts-input"
                 id="group_{{ grp.main_num }}"
+                aria-label="Cluster {{ grp.main_num }} points: {{ grp.name }}"
                 name="group_{{ grp.main_num }}"
                 min="0" max="48" step="0.1"
                 placeholder="0–48"
@@ -266,7 +267,7 @@ body.dark .sb-line { background: var(--surface-2); }
 body.dark .sb-filled-count { border-color: transparent; background: var(--surface-2); }
 body.dark .sb-filled-count.any { border-color: rgba(92,157,255,0.6); background: rgba(92,157,255,0.14); color: var(--primary-light); }
 body.dark .dm-head { background: var(--surface); border-color: transparent; }
-body.dark .dm-head h2 { color: var(--text); }
+body.dark .dm-head h1 { color: var(--text); }
 body.dark .dm-head p { color: var(--text-2); }
 body.dark .auto-badge { background: rgba(92,157,255,0.14); border-color: rgba(92,157,255,0.45); color: var(--primary-light); }
 body.dark .leg-pill.green { background: rgba(52,199,89,0.14); border-color: rgba(52,199,89,0.45); color: #5fd88a; }

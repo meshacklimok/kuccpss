@@ -89,7 +89,7 @@
                   <i class="bi bi-search text-muted"></i>
                 </span>
                 <input
-                  type="text" name="q" value="{{ query }}" data-suggest="mentors"
+                  type="text" name="q" value="{{ query }}" aria-label="Search mentors" data-suggest="mentors"
                   class="form-control border-start-0 rounded-end-pill pe-4"
                   style="box-shadow:none;"
                   placeholder="Search by course, university, or name…"
@@ -97,7 +97,7 @@
               </div>
             </div>
             <div class="col-6 col-md-auto">
-              <select name="institution" class="form-select rounded-pill">
+              <select name="institution" aria-label="Filter by institution" class="form-select rounded-pill">
                 <option value="">All Institutions</option>
                 {% for inst in institutions %}
                   <option value="{{ inst.pk }}" {% if filter_institution == inst.pk|stringformat:"s" %}selected{% endif %}>
@@ -107,7 +107,7 @@
               </select>
             </div>
             <div class="col-6 col-md-auto">
-              <select name="year" class="form-select rounded-pill">
+              <select name="year" aria-label="Filter by year of study" class="form-select rounded-pill">
                 <option value="">Any Year</option>
                 {% for val, label in year_choices %}
                   <option value="{{ val }}" {% if filter_year == val|stringformat:"s" %}selected{% endif %}>{{ label }}</option>
@@ -115,7 +115,7 @@
               </select>
             </div>
             <div class="col-6 col-md-auto">
-              <select name="rating" class="form-select rounded-pill">
+              <select name="rating" aria-label="Filter by minimum rating" class="form-select rounded-pill">
                 <option value="">Any Rating</option>
                 <option value="4" {% if filter_rating == "4" %}selected{% endif %}>★★★★+ (4+)</option>
                 <option value="3" {% if filter_rating == "3" %}selected{% endif %}>★★★+ (3+)</option>
@@ -451,7 +451,7 @@ body.dark .mc-chip i { color: #fbbf24; }
   white-space: nowrap;
 }
 .mc-avail-open  { background:#f0fdf4; color:#15803d; border:1px solid #bbf7d0; }
-.mc-avail-closed { background:#f8fafc; color:#94a3b8; border:1px solid #e2e8f0; }
+.mc-avail-closed { background:#f8fafc; color:#64748b; border:1px solid #e2e8f0; }
 .mc-cta { font-size: .8rem; }
 
 /* ── Empty state ── */

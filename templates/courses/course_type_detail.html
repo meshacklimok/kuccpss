@@ -132,7 +132,7 @@ body.dark .cat-pill { background: rgba(248,113,113,0.15); color: #fca5a5; }
     <div class="cpage-search-inner">
       <i class="fas fa-search"></i>
       <input type="text" name="q" id="course-search" value="{{ q }}"
-             data-suggest="courses" data-suggest-params="type={{ course_type.slug|urlencode }}"
+             aria-label="Search courses" data-suggest="courses" data-suggest-params="type={{ course_type.slug|urlencode }}"
              placeholder="Search {{ course_type.name }} courses…"
              autocomplete="off"
              hx-get="."

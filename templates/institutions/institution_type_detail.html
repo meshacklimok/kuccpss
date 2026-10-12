@@ -129,7 +129,7 @@ body.dark .inst-card-sponsored { border-color: rgba(255,179,64,0.45) !important;
     <div class="cpage-search-inner">
       <i class="fas fa-search"></i>
       <input type="text" name="q" id="inst-search" value="{{ q }}"
-             data-suggest="institutions" data-suggest-params="itype={{ inst_type.slug|urlencode }}"
+             aria-label="Search institutions" data-suggest="institutions" data-suggest-params="itype={{ inst_type.slug|urlencode }}"
              placeholder="Search {{ inst_type.name }}…"
              autocomplete="off"
              hx-get="."
