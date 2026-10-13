@@ -1,9 +1,9 @@
-from django.contrib import admin, messages
+﻿from django.contrib import admin, messages
 from django.utils import timezone
 from django.utils.timezone import now
 
 from analytics.audit import record
-from .models import Payment, Transaction, PaymentFeature, PaymentExemption, PRODUCT_CHOICES
+from .models import Payment, Transaction, PaymentFeature, PaymentExemption, PaymentGatewayConfig, PRODUCT_CHOICES
 
 
 class ProductListFilter(admin.SimpleListFilter):
@@ -19,6 +19,9 @@ class ProductListFilter(admin.SimpleListFilter):
         from .models import FEATURE_TO_PRODUCT
         features = [f for f, p in FEATURE_TO_PRODUCT.items() if p == self.value()]
         return queryset.filter(feature__in=features)
+
+
+from . import gateway_admin  # noqa: F401  (registers PaymentGatewayConfig)
 
 
 @admin.register(PaymentFeature)
@@ -82,8 +85,8 @@ mark_failed.short_description = "Mark selected payments as FAILED"
 
 @admin.register(Payment)
 class PaymentAdmin(admin.ModelAdmin):
-    list_display = ("user", "product_label", "amount", "phone_number", "status", "mpesa_code", "checkout_id", "created_at")
-    list_filter = ("status", ProductListFilter, "feature")
+    list_display = ("user", "product_label", "amount", "phone_number", "status", "provider", "mpesa_code", "checkout_id", "created_at")
+    list_filter = ("status", "provider", ProductListFilter, "feature")
     search_fields = ("user__email", "checkout_id", "phone_number", "mpesa_code")
     readonly_fields = ("created_at", "updated_at")
     list_editable = ("status",)

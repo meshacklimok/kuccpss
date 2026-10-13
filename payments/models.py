@@ -23,6 +23,63 @@ FEATURE_TO_PRODUCT = {
 AFFILIATE_EXCLUDED_FEATURES = {"mentorship_booking", "ai_chat_access"}
 
 
+PROVIDER_CHOICES = [
+    ("intasend", "IntaSend"),
+    ("daraja", "Safaricom Daraja (Paybill)"),
+]
+
+
+class PaymentGatewayConfig(models.Model):
+    """
+    Single-row admin switchboard for the M-Pesa gateways. Either can be turned off, and
+    if the primary is down STK pushes automatically fall back to the other one.
+    Defaults keep IntaSend as the only live gateway until Daraja is switched on.
+    """
+    primary_provider = models.CharField(max_length=20, choices=PROVIDER_CHOICES, default="intasend")
+    intasend_enabled = models.BooleanField(default=True)
+    daraja_enabled = models.BooleanField(
+        default=False, help_text="Turn on once the Daraja keys, shortcode and passkey are set.",
+    )
+    auto_failover = models.BooleanField(
+        default=True, help_text="If the primary gateway is down, try the other enabled one.",
+    )
+
+    # Daraja credentials, entered in admin (blank → fall back to the DARAJA_* env vars).
+    daraja_consumer_key = models.CharField(max_length=255, blank=True)
+    daraja_consumer_secret = models.CharField(max_length=255, blank=True)
+    daraja_shortcode = models.CharField("Paybill number", max_length=20, blank=True)
+    daraja_passkey = models.CharField("Lipa na M-Pesa passkey", max_length=255, blank=True)
+    daraja_callback_secret = models.CharField(
+        max_length=64, blank=True, help_text="Generated automatically; it is part of the callback URL.",
+    )
+    daraja_site_url = models.CharField(
+        "Public site URL", max_length=200, blank=True,
+        help_text="Where Safaricom can reach this site, e.g. https://www.careernext.co.ke. Blank = default.",
+    )
+    daraja_sandbox = models.BooleanField(
+        "Use Safaricom sandbox", default=False, help_text="Tick only while testing with sandbox credentials.",
+    )
+
+    class Meta:
+        verbose_name = "Payment Gateway Settings"
+        verbose_name_plural = "Payment Gateway Settings"
+
+    def __str__(self):
+        return f"Primary: {self.get_primary_provider_display()}"
+
+    def save(self, *args, **kwargs):
+        self.pk = 1
+        super().save(*args, **kwargs)
+
+    @classmethod
+    def load(cls):
+        try:
+            obj, _ = cls.objects.get_or_create(pk=1)
+            return obj
+        except Exception:  # table missing mid-deploy etc. — behave like the defaults
+            return cls(pk=1)
+
+
 class PaymentFeature(models.Model):
     """Admin-configurable price and enabled flag per feature."""
     feature = models.CharField(max_length=50, unique=True)
@@ -62,6 +119,10 @@ class Payment(models.Model):
     feature = models.CharField(max_length=50, choices=FEATURE_CHOICES)
     amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     phone_number = models.CharField(max_length=20, blank=True)
+    provider = models.CharField(
+        max_length=20, choices=PROVIDER_CHOICES, default="intasend",
+        help_text="Gateway that took this payment. checkout_id is that gateway's own id.",
+    )
     checkout_id = models.CharField(max_length=120, blank=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="pending")
     mpesa_code = models.CharField(max_length=20, blank=True, help_text="User-submitted M-Pesa transaction code for manual verification")

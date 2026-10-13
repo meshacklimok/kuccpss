@@ -320,6 +320,16 @@ INTASEND_SECRET_KEY = os.environ.get("INTASEND_SECRET_KEY", "")
 INTASEND_WEBHOOK_SECRET = os.environ.get("INTASEND_WEBHOOK_SECRET", "")
 INTASEND_SANDBOX = os.environ.get("INTASEND_SANDBOX", "false").lower() == "true"
 
+# Safaricom Daraja (M-Pesa Paybill STK push)
+DARAJA_CONSUMER_KEY = os.environ.get("DARAJA_CONSUMER_KEY", "")
+DARAJA_CONSUMER_SECRET = os.environ.get("DARAJA_CONSUMER_SECRET", "")
+DARAJA_SHORTCODE = os.environ.get("DARAJA_SHORTCODE", "")
+DARAJA_PASSKEY = os.environ.get("DARAJA_PASSKEY", "")
+# Long random string embedded in the callback URL — Safaricom doesn't sign callbacks.
+DARAJA_CALLBACK_SECRET = os.environ.get("DARAJA_CALLBACK_SECRET", "")
+DARAJA_SITE_URL = os.environ.get("DARAJA_SITE_URL", "https://www.careernext.co.ke").rstrip("/")
+DARAJA_SANDBOX = os.environ.get("DARAJA_SANDBOX", "false").lower() == "true"
+
 # Mentorship: wallet balance (KES) at which a mentor is auto-paid out via M-Pesa B2C.
 MENTOR_AUTO_PAY_THRESHOLD = int(os.environ.get("MENTOR_AUTO_PAY_THRESHOLD", "500"))
 

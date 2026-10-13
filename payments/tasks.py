@@ -31,7 +31,11 @@ def check_pending_payments() -> None:
 
     recovered = 0
     for payment in stale.exclude(checkout_id="").select_related("user")[:MAX_REMOTE_CHECKS]:
-        invoice = fetch_intasend_invoice(payment.checkout_id)
+        if payment.provider == "daraja":
+            from payments.daraja import query_stk
+            invoice = query_stk(payment.checkout_id)
+        else:
+            invoice = fetch_intasend_invoice(payment.checkout_id)
         if invoice and invoice["state"] == "COMPLETE":
             _record_intasend_transaction(payment, invoice)
             if complete_payment(payment):

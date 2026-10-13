@@ -1,3 +1,4 @@
+import hmac
 import json
 import logging
 
@@ -16,12 +17,11 @@ from datetime import timedelta
 from decimal import Decimal, InvalidOperation
 
 from analytics.audit import record
-from kuccpss.circuit_breaker import intasend_breaker
 
+from . import daraja, gateway
 from .models import Payment, Transaction
 from .services import (
     REPEATABLE_FEATURES,
-    initiate_stk_push,
     price_for_feature,
     fetch_intasend_status,
     fetch_intasend_invoice,
@@ -277,6 +277,23 @@ def complete_payment(payment: "Payment", *, mpesa_code: str = "") -> bool:
     return bool(won)
 
 
+def _fetch_invoice(payment: "Payment") -> dict | None:
+    """Ask the gateway that took this payment for its current state."""
+    if payment.provider == "daraja":
+        return daraja.query_stk(payment.checkout_id)
+    return fetch_intasend_invoice(payment.checkout_id)
+
+
+def _complete_any_payment(payment: "Payment") -> bool:
+    """complete_payment(), except a Daraja mentorship payment confirms its booking instead
+    (IntaSend mentorship payments are confirmed by their own webhook path, unchanged)."""
+    if payment.provider == "daraja" and payment.mentorship_session_id:
+        from mentorship.views import handle_paid_session
+        handle_paid_session(payment.mentorship_session, source="payments:daraja")
+        return True
+    return complete_payment(payment)
+
+
 @login_required
 def payment_required(request):
     from django.utils.http import url_has_allowed_host_and_scheme
@@ -392,14 +409,14 @@ def initiate_payment(request):
             "payment_id": recent_pending.pk,
         }, status=409)
 
-    if not getattr(settings, "INTASEND_SECRET_KEY", "") or not getattr(settings, "INTASEND_PUBLISHABLE_KEY", ""):
-        logger.error("IntaSend API keys not configured — INTASEND_SECRET_KEY / INTASEND_PUBLISHABLE_KEY missing")
+    if not gateway.configured_providers():
+        logger.error("No M-Pesa gateway enabled and configured (see admin → Payment Gateway Settings)")
         return JsonResponse(
             {"success": False, "message": "Payment system is not yet configured. Please contact support."},
             status=503,
         )
 
-    if intasend_breaker.is_open():
+    if not gateway.usable_providers():
         return JsonResponse(
             {
                 "success": False,
@@ -420,15 +437,16 @@ def initiate_payment(request):
     )
 
     try:
-        checkout_id = initiate_stk_push(
+        provider, checkout_id = gateway.initiate_stk(
             phone_number=phone,
             amount=amount,
             payment_ref=str(payment.pk),
             email=request.user.email,
             narrative=f"CareerNext {payment.get_feature_display()}",
         )
+        payment.provider = provider
         payment.checkout_id = checkout_id
-        payment.save(update_fields=["checkout_id"])
+        payment.save(update_fields=["provider", "checkout_id"])
     except Exception as exc:
         logger.error("STK push failed for payment %s: %s", payment.pk, exc)
         payment.status = "failed"
@@ -570,6 +588,59 @@ def mpesa_webhook(request):
     return HttpResponse(status=200)
 
 
+@csrf_exempt
+@require_POST
+def daraja_callback(request, secret):
+    """
+    Safaricom posts the STK push result here. Callbacks aren't signed, so the URL itself
+    carries DARAJA_CALLBACK_SECRET and we also require the amount to match the payment.
+    Always answers 200 once accepted so Safaricom doesn't keep retrying.
+    """
+    expected = daraja.callback_secret()
+    if not expected or not hmac.compare_digest(secret.encode(), expected.encode()):
+        return HttpResponse(status=404)
+    ack = JsonResponse({"ResultCode": 0, "ResultDesc": "Accepted"})
+
+    try:
+        cb = json.loads(request.body)["Body"]["stkCallback"]
+        checkout_id = cb["CheckoutRequestID"]
+        result_code = int(cb["ResultCode"])
+    except (ValueError, KeyError, TypeError):
+        return HttpResponse(status=400)
+
+    logger.info("Daraja callback: checkout=%s result=%s %s", checkout_id, result_code, cb.get("ResultDesc", ""))
+    payment = Payment.objects.filter(provider="daraja", checkout_id=checkout_id).select_related("mentorship_session").first()
+    if payment is None:
+        logger.warning("Daraja callback for unknown checkout id %s", checkout_id)
+        return ack
+
+    if result_code != 0:
+        if Payment.objects.filter(pk=payment.pk, status="pending").update(status="failed", updated_at=timezone.now()):
+            record("payment.failed", payment, amount=payment.amount, source="daraja_callback")
+        return ack
+
+    items = {i.get("Name"): i.get("Value") for i in (cb.get("CallbackMetadata") or {}).get("Item", []) if isinstance(i, dict)}
+    mpesa_ref = str(items.get("MpesaReceiptNumber", "") or "")
+    paid = _safe_amount(items.get("Amount", "0"))
+    if paid < payment.amount:
+        # Never unlock on a short payment; leave it pending for an admin to review.
+        logger.error("Daraja callback amount mismatch: payment %s expected %s got %s (%s)",
+                     payment.pk, payment.amount, paid, mpesa_ref)
+        return ack
+
+    if mpesa_ref and not Transaction.objects.filter(payment=payment, mpesa_ref=mpesa_ref).exists():
+        Transaction.objects.create(
+            payment=payment, mpesa_ref=mpesa_ref,
+            phone_number=str(items.get("PhoneNumber", "") or payment.phone_number),
+            amount=paid, raw_response=cb,
+        )
+    if payment.mentorship_session_id:
+        _complete_any_payment(payment)
+    else:
+        complete_payment(payment, mpesa_code=mpesa_ref.upper())
+    return ack
+
+
 @login_required
 def payment_status(request, payment_id):
     """
@@ -581,11 +652,11 @@ def payment_status(request, payment_id):
     # pending, ask IntaSend directly (at most once per few seconds per payment) so the
     # user is unlocked automatically instead of having to enter an M-Pesa code.
     if payment.status == "pending" and payment.checkout_id and cache.add(f"pay-poll:{payment.pk}", 1, 6):
-        invoice = fetch_intasend_invoice(payment.checkout_id)
+        invoice = _fetch_invoice(payment)
         remote_state = invoice["state"] if invoice else None
         if remote_state == "COMPLETE":
             _record_intasend_transaction(payment, invoice)
-            complete_payment(payment)
+            _complete_any_payment(payment)
             payment.refresh_from_db()
         elif remote_state == "FAILED":
             Payment.objects.filter(pk=payment.pk, status="pending").update(
@@ -611,13 +682,13 @@ def verify_payment(request, payment_id):
         "verify_payment %s: checkout_id=%r phone=%r amount=%s created=%s",
         payment_id, payment.checkout_id, payment.phone_number, payment.amount, payment.created_at,
     )
-    invoice = fetch_intasend_invoice(payment.checkout_id)
+    invoice = _fetch_invoice(payment)
     remote_state = invoice["state"] if invoice else None
-    logger.info("verify_payment %s: IntaSend says %r", payment_id, remote_state)
+    logger.info("verify_payment %s: %s says %r", payment_id, payment.provider, remote_state)
 
     if remote_state == "COMPLETE":
         _record_intasend_transaction(payment, invoice)
-        complete_payment(payment)
+        _complete_any_payment(payment)
         return JsonResponse({"status": "completed", "feature": payment.feature, "message": "Payment confirmed."})
     elif remote_state == "FAILED":
         Payment.objects.filter(pk=payment.pk, status="pending").update(
@@ -750,7 +821,7 @@ def verify_by_transaction_code(request):
     if feature:
         candidates = candidates.filter(feature=feature)
     for payment in candidates.order_by("-created_at")[:5]:
-        invoice = fetch_intasend_invoice(payment.checkout_id)
+        invoice = _fetch_invoice(payment)
         if invoice and invoice["state"] == "COMPLETE":
             _record_intasend_transaction(payment, invoice)
             # Store IntaSend's own M-Pesa reference — what the user typed may be the IntaSend

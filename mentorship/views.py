@@ -569,10 +569,15 @@ def initiate_payment(request, token):
         return JsonResponse({"ok": False, "error": "Phone number is required."}, status=400)
 
     from payments.models import Payment
-    from payments.services import initiate_stk_push, normalise_phone
-    from kuccpss.circuit_breaker import intasend_breaker
+    from payments import gateway
+    from payments.services import normalise_phone
 
-    if intasend_breaker.is_open():
+    if not gateway.configured_providers():
+        return JsonResponse(
+            {"ok": False, "error": "Payment system is not yet configured. Please contact support."},
+            status=503,
+        )
+    if not gateway.usable_providers():
         return JsonResponse(
             {"ok": False, "error": "M-Pesa is temporarily unavailable. Please try again in a minute."},
             status=503,
@@ -590,7 +595,7 @@ def initiate_payment(request, token):
     )
 
     try:
-        checkout_id = initiate_stk_push(
+        provider, checkout_id = gateway.initiate_stk(
             phone_number=phone,
             amount=session.amount,
             payment_ref=str(session.token),
@@ -600,8 +605,9 @@ def initiate_payment(request, token):
         session.phone_used = normalise_phone(phone)
         session.payment_ref = checkout_id
         session.save(update_fields=["phone_used", "payment_ref"])
+        payment.provider = provider
         payment.checkout_id = checkout_id
-        payment.save(update_fields=["checkout_id"])
+        payment.save(update_fields=["provider", "checkout_id"])
         return JsonResponse({"ok": True, "message": "STK push sent. Enter your M-Pesa PIN on your phone."})
     except Exception as exc:
         logger.error("Mentorship STK push failed: %s", exc)
@@ -645,7 +651,12 @@ def verify_payment_manual(request, token):
     if session.payment_ref:
         try:
             from payments.services import fetch_intasend_invoice
-            invoice = fetch_intasend_invoice(session.payment_ref)
+            from payments.models import Payment as _Payment
+            if _Payment.objects.filter(mentorship_session=session, provider="daraja").exists():
+                from payments.daraja import query_stk
+                invoice = query_stk(session.payment_ref)
+            else:
+                invoice = fetch_intasend_invoice(session.payment_ref)
             state = invoice["state"] if invoice else None
             logger.info("IntaSend status check for session %s: %s", session.token, state)
             if state == "COMPLETE":

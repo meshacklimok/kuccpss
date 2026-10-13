@@ -286,7 +286,7 @@ def dashboard_view(request: HttpRequest) -> HttpResponse:
         _cfg = _CCfg.get()
         return render(request, "accounts/dashboard.html", {
             "guest": True,
-            "tawk_enabled": _cfg.tawk_enabled,
+            "tawk_enabled": False,  # live chat is for registered users only
             "mentor_signup_enabled": _MCfg.get().mentor_signup_enabled,
             "eligible_count": 0, "saved_count": 0, "shortlist_count": 0,
             "saved_courses": [], "shortlist_items": [], "notifications": [],

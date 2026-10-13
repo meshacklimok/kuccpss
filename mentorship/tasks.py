@@ -147,7 +147,12 @@ def release_abandoned_bookings() -> int:
     released = 0
     for session in stale:
         if session.payment_ref:
-            state = fetch_intasend_status(session.payment_ref)
+            if Payment.objects.filter(mentorship_session=session, provider="daraja").exists():
+                from payments.daraja import query_stk
+                invoice = query_stk(session.payment_ref)
+                state = invoice["state"] if invoice else None
+            else:
+                state = fetch_intasend_status(session.payment_ref)
             # The STK push may have succeeded with the webhook lost — confirm, don't drop
             if state == "COMPLETE":
                 _confirm_session_after_payment(session, source="mentorship:release_abandoned_bookings")

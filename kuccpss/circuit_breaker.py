@@ -112,6 +112,7 @@ def _is_openai_service_failure(exc: Exception) -> bool:
 
 ai_breaker = CircuitBreaker("openai", _is_openai_service_failure)
 intasend_breaker = CircuitBreaker("intasend", _is_http_service_failure)
+daraja_breaker = CircuitBreaker("daraja", _is_http_service_failure)
 
 
 def get_openai_client(api_key: str):
