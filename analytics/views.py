@@ -675,6 +675,30 @@ def pages_analytics(request):
     avg_duration_str = _fmt_duration(avg_duration_td)
     avg_duration_s   = int(avg_duration_td.total_seconds()) if avg_duration_td else 0
 
+    # ── Visitors: registered vs guest ─────────────────────────────────────────
+    # One SessionLog row = one visit (browser session). A session counts as
+    # "registered" once any logged-in request happened in it.
+    all_human_sessions = SessionLog.objects.exclude(device='bot')
+    visits_all_time    = all_human_sessions.count()
+    visits_today       = all_human_sessions.filter(
+        created_at__gte=_day_start(today), created_at__lt=_day_start(today + timedelta(days=1))
+    ).count()
+    visits_registered  = session_qs.filter(user__isnull=False).count()
+    visits_guest       = total_sessions - visits_registered
+    registered_pct     = round(visits_registered / max(total_sessions, 1) * 100)
+    unique_registered  = session_qs.filter(user__isnull=False).values('user').distinct().count()
+    visit_labels       = _date_labels(days, ago)
+    visit_series_reg   = _fill_series(
+        session_qs.filter(user__isnull=False)
+        .annotate(day=TruncDate('created_at')).values('day').annotate(n=Count('id')).order_by('day'),
+        visit_labels,
+    )
+    visit_series_guest = _fill_series(
+        session_qs.filter(user__isnull=True)
+        .annotate(day=TruncDate('created_at')).values('day').annotate(n=Count('id')).order_by('day'),
+        visit_labels,
+    )
+
     # Distribution buckets: <30s, 30s–2m, 2–5m, 5–15m, >15m
     def _bucket(qs, lo, hi):
         f = {}
@@ -764,6 +788,13 @@ def pages_analytics(request):
         'avg_duration_str': avg_duration_str,
         'avg_duration_s': avg_duration_s,
         'duration_buckets': duration_buckets,
+        # Visitors (registered vs guest)
+        'visits_all_time': visits_all_time, 'visits_today': visits_today,
+        'visits_registered': visits_registered, 'visits_guest': visits_guest,
+        'registered_pct': registered_pct, 'guest_pct': 100 - registered_pct if total_sessions else 0,
+        'unique_registered': unique_registered,
+        'chart_visit_reg':   json.dumps(visit_series_reg),
+        'chart_visit_guest': json.dumps(visit_series_guest),
         # Geo
         'top_countries': top_countries,
         'top_counties': top_counties,

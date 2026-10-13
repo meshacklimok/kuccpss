@@ -21,6 +21,40 @@
 
 {% block analytics_content %}
 
+<!-- Visits: registered vs guest -->
+<div class="kpi-grid">
+  <div class="kpi">
+    <div class="kpi-label">Total Visits ({{ days }}d)</div>
+    <div class="kpi-val">{{ total_sessions }}</div>
+    <div class="kpi-sub">human browser sessions</div>
+  </div>
+  <div class="kpi green">
+    <div class="kpi-label">Registered Visits</div>
+    <div class="kpi-val">{{ visits_registered }}</div>
+    <div class="kpi-sub">{{ registered_pct }}% · {{ unique_registered }} unique users</div>
+  </div>
+  <div class="kpi amber">
+    <div class="kpi-label">Guest Visits</div>
+    <div class="kpi-val">{{ visits_guest }}</div>
+    <div class="kpi-sub">{{ guest_pct }}% · not logged in</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-label">Visits Today</div>
+    <div class="kpi-val">{{ visits_today }}</div>
+    <div class="kpi-sub">registered + guest</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-label">Visits All Time</div>
+    <div class="kpi-val">{{ visits_all_time }}</div>
+    <div class="kpi-sub">since tracking began</div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-title">Daily Visits — Registered vs Guest</div>
+  <div class="chart-box h220"><canvas id="visitChart"></canvas></div>
+</div>
+
 <!-- Session / time-on-site hero card -->
 <div class="card" style="background:#1e3a8a;color:#fff;margin-bottom:1.25rem;">
   <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;">
@@ -275,6 +309,19 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
 <script>
 const labels = {{ chart_labels|js_json }};
+new Chart(document.getElementById('visitChart'), {
+  type: 'bar',
+  data: { labels,
+    datasets: [
+      { label: 'Registered', data: {{ chart_visit_reg|js_json }},   backgroundColor: '#16a34a' },
+      { label: 'Guest',      data: {{ chart_visit_guest|js_json }}, backgroundColor: '#d97706' }
+    ]
+  },
+  options: { responsive:true, maintainAspectRatio:false,
+    plugins:{ legend:{ position:'bottom' } },
+    scales:{ x:{ stacked:true }, y:{ stacked:true, beginAtZero:true, ticks:{ precision:0 } } } }
+});
+
 new Chart(document.getElementById('hitChart'), {
   type: 'line',
   data: { labels,
