@@ -2767,9 +2767,15 @@ document.addEventListener('click', function (e) {
 {% endif %}
 
 
-{% if tawk_enabled %}
+{% if tawk_enabled and not guest %}
 /* ── Tawk.to ───────────────────────────────────────────────── */
 var Tawk_API = Tawk_API || {}, Tawk_LoadStart = new Date();
+/* Hide the greeting/"Hi, welcome" bubble above the chat button — it covers page content. */
+(function () {
+  var st = document.createElement('style');
+  st.textContent = '#tawk-bubble-container{display:none !important;}';
+  document.head.appendChild(st);
+})();
 Tawk_API.customStyle = {
   visibility: {
     desktop: { position: 'br', xOffset: -1, yOffset: 45 },

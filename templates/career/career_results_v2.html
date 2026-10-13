@@ -1281,8 +1281,12 @@ careernext.co.ke, Kenya's #1 KCSE career guidance platform (100% free!){% endfil
 <script src="{% static 'js/ai_format.js' %}"></script>
 <script>
 // Init Bootstrap tooltips (Bootstrap is now loaded above in base.html)
-document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function (el) {
-    new bootstrap.Tooltip(el, { trigger: 'hover focus' });
+// Bootstrap is loaded with `defer`, so wait for DOMContentLoaded before using it.
+document.addEventListener('DOMContentLoaded', function () {
+    if (typeof bootstrap === 'undefined') return;
+    document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function (el) {
+        new bootstrap.Tooltip(el, { trigger: 'hover focus' });
+    });
 });
 
 // CSRF token from cookie (more reliable than template var when script is cached)

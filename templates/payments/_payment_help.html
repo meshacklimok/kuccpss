@@ -6,7 +6,7 @@
   On success it fires a cancelable `payment:unlocked` event on document
   (detail: {feature}); call preventDefault() to handle it yourself.
 {% endcomment %}
-<details class="pay-help pay-help--{{ theme|default:'light' }}" data-feature="{{ feature }}"
+<details class="pay-help pay-scope" data-feature="{{ feature }}"
          data-success-url="{{ success_url|default:'' }}"
          data-url="{% url 'payments:verify_by_transaction_code' %}" data-csrf="{{ csrf_token }}"
          {% if open %}open{% endif %}>
@@ -40,58 +40,7 @@
     </div>
 </details>
 
-<style>
-.pay-help { margin-top: 1rem; border-radius: 12px; font-size: 0.82rem; line-height: 1.5; text-align: left; }
-.pay-help summary {
-    list-style: none; cursor: pointer; display: flex; align-items: center; justify-content: space-between;
-    gap: 0.5rem; padding: 0.75rem 0.9rem; min-height: 44px; border-radius: 12px; font-weight: 700;
-}
-.pay-help summary::-webkit-details-marker { display: none; }
-.pay-help summary::after { content: "\25BE"; font-size: 0.8rem; transition: transform 0.2s; }
-.pay-help[open] summary::after { transform: rotate(180deg); }
-.pay-help-hint { margin-left: auto; font-weight: 600; font-size: 0.72rem; opacity: 0.7; }
-.pay-help-body { padding: 0 0.9rem 0.9rem; }
-.pay-help-steps { margin: 0 0 0.75rem; padding-left: 1.15rem; }
-.pay-help-steps li { margin-bottom: 0.4rem; }
-.pay-help-form { display: flex; gap: 0.5rem; }
-.pay-help-input {
-    flex: 1; min-width: 0; font-size: 16px; /* 16px stops iOS zoom-on-focus */
-    padding: 0.6rem 0.8rem; border-radius: 10px; outline: none; text-transform: uppercase; letter-spacing: 0.04em;
-}
-.pay-help-btn {
-    border: none; border-radius: 10px; padding: 0.6rem 1.1rem; min-height: 44px;
-    font-weight: 800; cursor: pointer; background: #16a34a; color: #fff; white-space: nowrap;
-}
-.pay-help-btn:disabled { opacity: 0.6; cursor: wait; }
-.pay-help-msg { margin: 0.5rem 0 0; min-height: 1.2em; font-size: 0.8rem; }
-.pay-help-msg.is-ok { color: #16a34a; } .pay-help-msg.is-err { color: #dc2626; } .pay-help-msg.is-info { color: #b45309; }
-.pay-help-contact { display: flex; flex-wrap: wrap; align-items: center; gap: 0.35rem 0.9rem; margin-top: 0.75rem; font-size: 0.78rem; }
-.pay-help-contact a { font-weight: 700; text-decoration: none; overflow-wrap: anywhere; }
-
-.pay-help--light { background: #f8fafc; border: 1px solid #e2e8f0; color: #334155; }
-.pay-help--light summary { color: #1e293b; }
-.pay-help--light .pay-help-input { background: #fff; border: 1.5px solid #cbd5e1; color: #0f172a; }
-.pay-help--light .pay-help-input:focus { border-color: #16a34a; }
-.pay-help--light .pay-help-contact a { color: #1d4ed8; }
-
-.pay-help--dark { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); color: rgba(255,255,255,0.72); }
-.pay-help--dark summary { color: #fff; }
-.pay-help--dark .pay-help-input { background: rgba(255,255,255,0.08); border: 1.5px solid rgba(255,255,255,0.18); color: #fff; }
-.pay-help--dark .pay-help-input::placeholder { color: rgba(255,255,255,0.35); }
-.pay-help--dark .pay-help-input:focus { border-color: #34d399; }
-.pay-help--dark .pay-help-contact a { color: #93c5fd; }
-.pay-help--dark .pay-help-msg.is-ok { color: #34d399; } .pay-help--dark .pay-help-msg.is-err { color: #fca5a5; } .pay-help--dark .pay-help-msg.is-info { color: #fcd34d; }
-
-body.dark .pay-help--light { background: var(--surface-2, #1e293b); border-color: var(--border, #334155); color: var(--text-2, #cbd5e1); }
-body.dark .pay-help--light summary { color: var(--text, #f1f5f9); }
-body.dark .pay-help--light .pay-help-input { background: var(--surface, #0f172a); border-color: var(--border, #334155); color: var(--text, #f1f5f9); }
-body.dark .pay-help--light .pay-help-contact a { color: #93c5fd; }
-
-/* Dark mode: page-local light palette mapped to One UI tokens */
-body.dark .pay-help-msg.is-ok { color: #5fd88a; }
-body.dark .pay-help-msg.is-err { color: #ff8a80; }
-body.dark .pay-help-msg.is-info { color: #ffc266; }
-</style>
+<link rel="stylesheet" href="{% static 'css/payments.css' %}">
 
 <script src="{% static 'js/payment_polling.js' %}"></script>
 <script>

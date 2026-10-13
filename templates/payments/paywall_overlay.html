@@ -1,299 +1,127 @@
 {% load static %}
-{#
+{% comment %}
   Reusable paywall overlay.
   Required context: total_count, gate_feature, gate_price, gate_items (list of strings),
                     gate_headline (optional), gate_subtext (optional)
-#}
-<style>
-.pw-overlay {
-    position: fixed; inset: 0; z-index: 9999;
-    background: rgba(5, 5, 20, 0.82);
-    backdrop-filter: blur(10px) saturate(0.6);
-    display: flex; align-items: center; justify-content: center;
-    padding: 1rem;
-    animation: pw-fade 0.35s ease;
-}
-@keyframes pw-fade { from { opacity:0; } to { opacity:1; } }
+{% endcomment %}
+<link rel="stylesheet" href="{% static 'css/payments.css' %}">
 
-.pw-card {
-    background: #0f172a;
-    border: 1.5px solid rgba(139,92,246,0.3);
-    border-radius: 24px;
-    padding: 2rem 1.75rem 1.5rem;
-    max-width: 430px; width: 100%;
-    max-height: 92vh; overflow-y: auto;
-    box-shadow: 0 40px 100px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.04);
-    animation: pw-up 0.4s cubic-bezier(0.34,1.4,0.64,1);
-    scrollbar-width: none;
-}
-.pw-card::-webkit-scrollbar { display:none; }
-@keyframes pw-up {
-    from { transform: translateY(40px) scale(0.93); opacity:0; }
-    to   { transform: none; opacity:1; }
-}
-
-/* Top check icon */
-.pw-icon {
-    width: 68px; height: 68px;
-    background: #10b981;
-    border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    margin: 0 auto 1.2rem;
-    font-size: 1.8rem; color: #fff;
-    box-shadow: 0 0 0 10px rgba(16,185,129,0.12), 0 0 0 20px rgba(16,185,129,0.05);
-}
-
-/* Count */
-.pw-count {
-    text-align: center;
-    font-size: clamp(1.5rem,5vw,2.1rem);
-    font-weight: 900; line-height: 1.1;
-    margin-bottom: 0.4rem;
-    color: #a78bfa;
-}
-.pw-sub {
-    text-align: center; font-size: 0.83rem;
-    color: rgba(255,255,255,0.45); line-height: 1.55;
-    margin-bottom: 1.4rem;
-}
-
-/* Included list */
-.pw-box {
-    background: rgba(255,255,255,0.04);
-    border: 1px solid rgba(255,255,255,0.07);
-    border-radius: 14px; padding: 1rem 1.1rem;
-    margin-bottom: 1.1rem;
-}
-.pw-box-label {
-    font-size: 0.7rem; font-weight: 800;
-    text-transform: uppercase; letter-spacing: 0.09em;
-    color: rgba(255,255,255,0.3); margin-bottom: 0.7rem;
-}
-.pw-item {
-    display: flex; align-items: flex-start; gap: 0.6rem;
-    margin-bottom: 0.55rem; font-size: 0.81rem;
-    color: rgba(255,255,255,0.78); line-height: 1.45;
-}
-.pw-item:last-child { margin-bottom: 0; }
-.pw-dot {
-    width: 17px; height: 17px; flex-shrink: 0; margin-top: 1px;
-    background: #10b981;
-    border-radius: 50%; display: flex; align-items: center;
-    justify-content: center; font-size: 0.55rem; color: #fff;
-}
-
-/* Price */
-.pw-price-box {
-    background: rgba(79,70,229,0.25);
-    border: 1.5px solid rgba(139,92,246,0.35);
-    border-radius: 14px; padding: 0.9rem;
-    text-align: center; margin-bottom: 1rem;
-}
-.pw-price-label { font-size: 0.7rem; color: rgba(255,255,255,0.35); text-transform:uppercase; letter-spacing:0.06em; margin-bottom:0.2rem; }
-.pw-price-amount { font-size: 2rem; font-weight: 900; color: #fff; line-height:1; margin-bottom:0.15rem; }
-.pw-price-note { font-size: 0.7rem; color: rgba(255,255,255,0.3); }
-
-/* Phone input */
-.pw-phone-row {
-    display: flex;
-    border: 1.5px solid rgba(255,255,255,0.12);
-    border-radius: 12px; overflow: hidden;
-    background: rgba(255,255,255,0.05);
-    margin-bottom: 0.7rem;
-    transition: border-color 0.2s;
-}
-.pw-phone-row:focus-within { border-color: rgba(139,92,246,0.55); }
-.pw-prefix {
-    padding: 0.8rem 0.85rem;
-    font-size: 0.9rem; font-weight: 700; color: rgba(255,255,255,0.45);
-    background: rgba(255,255,255,0.05);
-    border-right: 1px solid rgba(255,255,255,0.07);
-    white-space: nowrap; flex-shrink: 0;
-}
-.pw-phone-inp {
-    flex: 1; background: transparent; border: none; outline: none;
-    color: #fff; font-size: 16px; font-weight: 600; padding: 0.8rem 0.9rem; min-width: 0;
-    letter-spacing: 0.02em;
-}
-.pw-phone-inp::placeholder { color: rgba(255,255,255,0.22); font-weight: 400; }
-
-/* Pay button */
-.pw-btn {
-    width: 100%;
-    background: #7c3aed;
-    border: none; border-radius: 12px; color: #fff;
-    font-size: 1rem; font-weight: 800; padding: 0.9rem;
-    cursor: pointer; transition: transform 0.2s, box-shadow 0.2s, opacity 0.15s;
-    box-shadow: 0 6px 22px rgba(79,70,229,0.5);
-    display: flex; align-items: center; justify-content: center; gap: 0.5rem;
-}
-.pw-btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(79,70,229,0.6); }
-.pw-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
-
-/* Error */
-.pw-err {
-    background: rgba(239,68,68,0.14); border: 1px solid rgba(239,68,68,0.28);
-    border-radius: 8px; padding: 0.55rem 0.85rem;
-    color: #fca5a5; font-size: 0.77rem; margin-bottom: 0.7rem; display: none;
-}
-
-/* States */
-.pw-state { display: none; text-align: center; padding: 0.75rem 0 0.25rem; }
-.pw-state.pw-active { display: block; }
-.pw-state-icon { font-size: 2.2rem; margin-bottom: 0.6rem; }
-.pw-state-title { font-size: 1.05rem; font-weight: 800; color: #fff; margin-bottom: 0.3rem; }
-.pw-state-sub { font-size: 0.8rem; color: rgba(255,255,255,0.45); line-height: 1.5; }
-
-/* Later link */
-.pw-later {
-    display: block; text-align: center; margin-top: 0.9rem;
-    font-size: 0.75rem; color: rgba(255,255,255,0.25);
-    cursor: pointer; text-decoration: none;
-    transition: color 0.2s;
-}
-.pw-later:hover { color: rgba(255,255,255,0.5); }
-
-.pw-label { display:block; font-size:0.74rem; font-weight:700; color:rgba(255,255,255,0.55); margin-bottom:0.35rem; }
-.pw-hint { font-size:0.7rem; color:rgba(255,255,255,0.35); margin:-0.35rem 0 0.75rem; }
-.pw-how { list-style:none; margin:0 0 1rem; padding:0; display:grid; gap:0.4rem; }
-.pw-how li { display:flex; align-items:center; gap:0.55rem; font-size:0.78rem; color:rgba(255,255,255,0.68); }
-.pw-how span {
-    width:20px; height:20px; flex-shrink:0; border-radius:50%; display:inline-flex; align-items:center; justify-content:center;
-    background:rgba(139,92,246,0.25); border:1px solid rgba(139,92,246,0.45); color:#c4b5fd; font-size:0.7rem; font-weight:800;
-}
-.pw-tips { text-align:left; margin-top:0.9rem; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); border-radius:12px; padding:0.75rem 0.9rem; font-size:0.76rem; color:rgba(255,255,255,0.6); }
-.pw-tips b { color:#fff; }
-.pw-tips a { color:#93c5fd; font-weight:700; cursor:pointer; }
-.pw-resume { background:rgba(245,158,11,0.1); border:1px solid rgba(245,158,11,0.35); border-radius:12px; padding:0.7rem 0.85rem; margin-bottom:0.9rem; font-size:0.78rem; color:#fde68a; }
-.pw-resume[hidden] { display:none; }
-.pw-resume button { margin-top:0.5rem; background:rgba(245,158,11,0.2); border:1px solid rgba(245,158,11,0.45); color:#fde68a; border-radius:10px; font-weight:700; padding:0.5rem 0.9rem; min-height:40px; cursor:pointer; }
-.pw-btn-sm { max-width:220px; margin:0.9rem auto 0; font-size:0.85rem; min-height:44px; }
-.pw-later { padding:0.35rem 0; }
-@media (max-width: 420px) {
-    .pw-overlay { padding:0.5rem; align-items:flex-end; }
-    .pw-card { padding:1.4rem 1.1rem 1.1rem; border-radius:20px 20px 16px 16px; max-height:96vh; }
-    .pw-icon { width:52px; height:52px; font-size:1.35rem; margin-bottom:0.8rem; }
-    .pw-sub br { display:none; }
-    .pw-price-amount { font-size:1.6rem; }
-}
-
-/* Blur wrapper for content behind */
-.pw-blurred { filter: blur(5px) brightness(0.5); pointer-events: none; user-select: none; transition: filter 0.3s; }
-</style>
-
-<div class="pw-overlay" id="pw-overlay">
-    <div class="pw-card">
-
-        <div class="pw-icon"><i class="fas fa-check"></i></div>
-
-        <div class="pw-count">
-            {{ total_count }} Course{{ total_count|pluralize }} Found{% if total_count > 1 %}!{% endif %}
-        </div>
-        <div class="pw-sub">
-            {% if gate_subtext %}
-                {{ gate_subtext }}
-            {% else %}
-                We've scanned every university, KMTC, TVET &amp; TTC in Kenya<br>
-                against your exact grades &mdash; your results are ready and waiting.
-            {% endif %}
+<div class="pay-overlay pay-scope" id="pw-overlay">
+    <div class="pay-card" role="dialog" aria-modal="true" aria-labelledby="pw-title">
+        <div class="pay-card-head">
+            <h2 class="pay-card-title" id="pw-title">Make a payment</h2>
+            <span class="pay-card-secure"><i class="fas fa-lock"></i> Secure checkout</span>
         </div>
 
-        <!-- What's included -->
-        <div class="pw-box">
-            <div class="pw-box-label">What's included</div>
-            {% for item in gate_items %}
-            <div class="pw-item">
-                <div class="pw-dot"><i class="fas fa-check" style="font-size:0.5rem;"></i></div>
-                <span>{{ item }}</span>
+        <div class="pay-body">
+            <div class="pay-lead">
+                <div class="pay-lead-count">{{ total_count }} Course{{ total_count|pluralize }} found</div>
+                <div class="pay-lead-sub">
+                    {% if gate_subtext %}{{ gate_subtext }}{% else %}We've checked every university, KMTC, TVET &amp; TTC in Kenya against your grades. Your results are ready.{% endif %}
+                </div>
             </div>
-            {% endfor %}
-        </div>
 
-        <!-- Price -->
-        <div class="pw-price-box">
-            <div class="pw-price-label">One payment &nbsp;·&nbsp; Unlocks these results</div>
-            <div class="pw-price-amount">KES {{ gate_price }}</div>
-            <div class="pw-price-note"><i class="fas fa-shield-alt" style="color:#10b981;margin-right:4px;"></i>Secure M-Pesa &nbsp;·&nbsp; No subscription, ever</div>
-        </div>
-
-        <div class="pw-resume" id="pw-resume" role="status" hidden>
-            <div id="pw-resume-text">You started a payment earlier that we haven't confirmed yet.</div>
-            <button type="button" id="pw-resume-btn"><i class="fas fa-search"></i> Already paid? Check it now</button>
-        </div>
-
-        <!-- Phone step -->
-        <div class="pw-state pw-active" id="pw-step-phone" style="text-align:left;padding-top:0;">
-            <ol class="pw-how" aria-label="How payment works">
-                <li><span>1</span>Enter your M-Pesa number</li>
-                <li><span>2</span>Enter your PIN on the prompt that pops up on your phone</li>
-                <li><span>3</span>Your results unlock here automatically</li>
-            </ol>
-            <div class="pw-err" id="pw-err" role="alert"></div>
-            <label for="pw-phone" class="pw-label">M-Pesa phone number</label>
-            <div class="pw-phone-row">
-                <span class="pw-prefix">+254</span>
-                <input type="tel" id="pw-phone" class="pw-phone-inp"
-                       placeholder="712 345 678" maxlength="16" inputmode="tel" autocomplete="tel-national"
-                       value="{{ request.user.phone_number|default:'' }}">
+            <div class="pay-alert pay-alert--warn" id="pw-resume" role="status" hidden>
+                <div id="pw-resume-text">You started a payment earlier that we haven't confirmed yet.</div>
+                <button type="button" class="pay-btn pay-btn--secondary pay-btn--sm" id="pw-resume-btn"><i class="fas fa-search"></i> Already paid? Check it now</button>
             </div>
-            <div class="pw-hint">Typing 0712&hellip; or 0112&hellip; works too</div>
-            <button class="pw-btn" id="pw-btn">
-                <i class="fas fa-lock-open"></i> Pay KES {{ gate_price }} &amp; Unlock &rarr;
-            </button>
-        </div>
 
-        <!-- Waiting step -->
-        <div class="pw-state" id="pw-step-waiting">
-            <div class="pw-state-icon">📲</div>
-            <div class="pw-state-title">Check Your Phone</div>
-            <div class="pw-state-sub">An M-Pesa prompt was sent to <b id="pw-sent-to" style="color:#fff;"></b>.<br>Enter your PIN to complete payment.<br><br>Waiting for confirmation<span id="pw-dots">.</span></div>
-            <div class="pw-tips">
-                <b>No prompt?</b> Make sure your phone is on and unlocked. The prompt expires after about a minute &mdash;
-                <a id="pw-resend" role="button" tabindex="0">send a new one</a>.<br>
-                <span style="color:#fcd34d;">Already entered your PIN? Just wait &mdash; this updates by itself. Don't pay twice.</span>
+            <!-- Phone step -->
+            <div class="pay-state pay-active" id="pw-step-phone">
+                <p class="pay-section">Payment summary</p>
+                <dl class="pay-summary">
+                    <div class="pay-summary-row"><dt>Service</dt><dd>Unlock these results</dd></div>
+                    <div class="pay-summary-row"><dt>Payment method</dt><dd>M-Pesa</dd></div>
+                    <div class="pay-summary-row pay-summary-total"><dt>Total payable</dt><dd>KES {{ gate_price }}</dd></div>
+                </dl>
+
+                <p class="pay-section">What's included</p>
+                <ul class="pay-list">
+                    {% for item in gate_items %}<li><i class="fas fa-check"></i><span>{{ item }}</span></li>{% endfor %}
+                </ul>
+
+                <ol class="pay-steps" aria-label="How payment works">
+                    <li>Enter your M-Pesa number</li>
+                    <li>Enter your PIN on the prompt that appears on your phone</li>
+                    <li>Your results unlock here automatically</li>
+                </ol>
+
+                <div class="pay-alert pay-alert--err" id="pw-err" role="alert"></div>
+                <label for="pw-phone" class="pay-label">M-Pesa phone number</label>
+                <div class="pay-field">
+                    <span class="pay-prefix">+254</span>
+                    <input type="tel" id="pw-phone" class="pay-input"
+                           placeholder="712 345 678" maxlength="16" inputmode="tel" autocomplete="tel-national"
+                           value="{{ request.user.phone_number|default:'' }}">
+                </div>
+                <div class="pay-hint">Typing 0712&hellip; or 0112&hellip; works too.</div>
+                <button class="pay-btn" id="pw-btn"><i class="fas fa-lock"></i> Pay KES {{ gate_price }}</button>
+                <div class="pay-assure">
+                    <span><i class="fas fa-shield-alt"></i>Secure M-Pesa payment</span>
+                    <span><i class="fas fa-ban"></i>No subscription</span>
+                </div>
             </div>
+
+            <!-- Waiting step -->
+            <div class="pay-state" id="pw-step-waiting">
+                <div class="pay-status">
+                    <div class="pay-status-icon"><i class="fas fa-mobile-alt"></i></div>
+                    <div class="pay-status-title">Check your phone</div>
+                    <div class="pay-status-sub">An M-Pesa prompt was sent to <b id="pw-sent-to"></b>. Enter your PIN to complete the payment.<br>Waiting for confirmation<span id="pw-dots">.</span></div>
+                </div>
+                <div class="pay-tips">
+                    <div class="pay-tips-title">No prompt?</div>
+                    Make sure your phone is on and unlocked. The prompt expires after about a minute &mdash;
+                    <a id="pw-resend" role="button" tabindex="0">send a new one</a>.
+                    <div class="pay-tips-note">Already entered your PIN? Just wait &mdash; this updates by itself. Don't pay twice.</div>
+                </div>
+            </div>
+
+            <!-- Success step -->
+            <div class="pay-state" id="pw-step-success">
+                <div class="pay-status">
+                    <div class="pay-status-icon pay-status-icon--ok"><i class="fas fa-check"></i></div>
+                    <div class="pay-status-title">Payment confirmed</div>
+                    <div class="pay-status-sub">Unlocking your results now&hellip;</div>
+                </div>
+            </div>
+
+            <!-- Failed step -->
+            <div class="pay-state" id="pw-step-failed">
+                <div class="pay-status">
+                    <div class="pay-status-icon pay-status-icon--err"><i class="fas fa-times"></i></div>
+                    <div class="pay-status-title">Payment not completed</div>
+                    <div class="pay-status-sub" id="pw-failed-sub">The M-Pesa prompt was cancelled, timed out, or the PIN wasn't entered. No money was taken.</div>
+                    <div class="pay-btn-row"><button class="pay-btn pay-btn--sm" onclick="pwReset()"><i class="fas fa-redo"></i> Try again</button></div>
+                </div>
+            </div>
+
+            <!-- Timeout step -->
+            <div class="pay-state" id="pw-step-timeout">
+                <div class="pay-status">
+                    <div class="pay-status-icon pay-status-icon--warn"><i class="fas fa-hourglass-half"></i></div>
+                    <div class="pay-status-title">Still processing</div>
+                    <div class="pay-status-sub" id="pw-timeout-sub">If you entered your M-Pesa PIN, your payment may have gone through but confirmation is delayed. Tap Verify, or enter the code from your M-Pesa SMS below.</div>
+                    <div class="pay-btn-row">
+                        <button class="pay-btn pay-btn--sm" id="pw-verify-btn" onclick="pwVerify()"><i class="fas fa-search"></i> Verify payment</button>
+                        <button class="pay-btn pay-btn--secondary pay-btn--sm" onclick="pwReset()"><i class="fas fa-redo"></i> Pay again</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Checking step -->
+            <div class="pay-state" id="pw-step-checking">
+                <div class="pay-status">
+                    <div class="pay-status-icon"><i class="fas fa-search"></i></div>
+                    <div class="pay-status-title">Checking&hellip;</div>
+                    <div class="pay-status-sub">Looking up your payment with M-Pesa.</div>
+                </div>
+            </div>
+
+            {% include "payments/_payment_help.html" with feature=gate_feature %}
+
+            <button type="button" class="pay-later" id="pw-later">Maybe later (results will stay blurred)</button>
         </div>
-
-        <!-- Success step -->
-        <div class="pw-state" id="pw-step-success">
-            <div class="pw-state-icon" style="color:#10b981;">✅</div>
-            <div class="pw-state-title" style="color:#10b981;">Payment Confirmed</div>
-            <div class="pw-state-sub">Unlocking your results now&hellip;</div>
-        </div>
-
-        <!-- Failed step -->
-        <div class="pw-state" id="pw-step-failed">
-            <div class="pw-state-icon">❌</div>
-            <div class="pw-state-title" style="color:#ef4444;">Payment Not Completed</div>
-            <div class="pw-state-sub" id="pw-failed-sub">The M-Pesa prompt was cancelled, timed out, or the PIN wasn't entered. No money was taken.</div>
-            <button class="pw-btn pw-btn-sm" onclick="pwReset()">
-                <i class="fas fa-redo"></i> Try Again
-            </button>
-        </div>
-
-        <!-- Timeout step (confirmation didn't arrive in time) -->
-        <div class="pw-state" id="pw-step-timeout">
-            <div class="pw-state-icon">⏳</div>
-            <div class="pw-state-title" style="color:#f59e0b;">Still Processing…</div>
-            <div class="pw-state-sub" id="pw-timeout-sub">If you entered your M-Pesa PIN, your payment may have gone through but confirmation is delayed. Tap Verify, or enter the code from your M-Pesa SMS below.</div>
-            <button class="pw-btn pw-btn-sm" id="pw-verify-btn" onclick="pwVerify()">
-                <i class="fas fa-search"></i> Verify My Payment
-            </button>
-            <button class="pw-btn pw-btn-sm" style="margin-top:0.6rem;background:rgba(255,255,255,0.08);box-shadow:none;" onclick="pwReset()">
-                <i class="fas fa-redo"></i> Pay Again
-            </button>
-        </div>
-
-        <!-- Checking step -->
-        <div class="pw-state" id="pw-step-checking">
-            <div class="pw-state-icon">🔍</div>
-            <div class="pw-state-title">Checking…</div>
-            <div class="pw-state-sub">Looking up your payment with M-Pesa.</div>
-        </div>
-
-        {% include "payments/_payment_help.html" with feature=gate_feature theme="dark" %}
-
-        <a class="pw-later" id="pw-later" role="button" tabindex="0">Maybe later (results will stay blurred)</a>
     </div>
 </div>
 
@@ -302,7 +130,7 @@
 (function(){
     var FEATURE   = "{{ gate_feature }}";
     var CSRF      = "{{ csrf_token }}";
-    var BTN_HTML  = '<i class="fas fa-lock-open"></i> Pay KES {{ gate_price }} &amp; Unlock &rarr;';
+    var BTN_HTML  = '<i class="fas fa-lock"></i> Pay KES {{ gate_price }}';
     var done      = false;
 
     function pwUnlocked(){
@@ -381,7 +209,7 @@
             onSending: function(){
                 err.style.display = 'none';
                 btn.disabled = true;
-                btn.innerHTML = '<span class="spinner-border spinner-border-sm" style="width:.9rem;height:.9rem;border-width:2px;"></span>&nbsp;Sending M-Pesa prompt&hellip;';
+                btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>&nbsp;Sending M-Pesa prompt&hellip;';
             },
             onInitiated: function(){ document.getElementById('pw-resume').hidden = true; },
             onAlreadyUnlocked: function(){ location.reload(); },
@@ -419,10 +247,10 @@
     function pwState(s){
         ['phone','waiting','success','failed','timeout','checking'].forEach(function(x){
             var el = document.getElementById('pw-step-'+x);
-            if(el){ el.classList.remove('pw-active'); }
+            if(el){ el.classList.remove('pay-active'); }
         });
         var t = document.getElementById('pw-step-'+s);
-        if(t) t.classList.add('pw-active');
+        if(t) t.classList.add('pay-active');
         var help = document.querySelector('#pw-overlay .pay-help');
         if(help){
             help.style.display = (s === 'success' || s === 'checking') ? 'none' : '';
