@@ -5,7 +5,7 @@
 {% block content %}
 <link rel="stylesheet" href="{% static 'css/payments.css' %}">
 
-<div class="pay-page pay-scope">
+<div class="pay-page pay-page--split pay-scope">
   <nav class="pay-crumb" aria-label="Breadcrumb">
     <a href="{{ next_url }}">Back</a> &rsaquo; Checkout
   </nav>
@@ -24,6 +24,8 @@
 
       <!-- Phone step -->
       <div class="pay-state pay-active" id="pr-step-phone">
+       <div class="pay-split">
+        <div class="pay-col pay-col--order">
         <p class="pay-section">Payment summary</p>
         <dl class="pay-summary">
           <div class="pay-summary-row"><dt>Service</dt><dd>
@@ -56,7 +58,9 @@
           <li><i class="fas fa-check"></i><span>Receipt emailed to you</span></li>
           {% endif %}
         </ul>
+        </div>
 
+        <div class="pay-col pay-col--pay">
         <p class="pay-section">How to pay</p>
         <ol class="pay-steps" aria-label="How payment works">
           <li>Enter your M-Pesa number</li>
@@ -81,6 +85,8 @@
           <span><i class="fas fa-receipt"></i>Receipt by email</span>
         </div>
         {% include "payments/_payment_help.html" with feature=feature success_url=next_url %}
+        </div>
+       </div>
       </div>
 
       <!-- Waiting for M-Pesa -->
@@ -104,16 +110,26 @@
         </div>
       </div>
 
-      <!-- Unlock progress -->
+      <!-- Payment successful -->
       <div class="pay-state" id="pr-step-success">
         <div class="pay-status">
           <div class="pay-status-icon pay-status-icon--ok"><i class="fas fa-check"></i></div>
-          <div class="pay-status-title" id="pr-success-title">Payment confirmed. Unlocking&hellip;</div>
-          <div class="pay-status-sub" id="pr-success-hint">Loading your results, please don't close this tab.</div>
+          <div class="pay-status-title">Payment successful</div>
+          <div class="pay-status-sub">Your payment has been received and your access is now unlocked.</div>
         </div>
-        <div class="pay-progress"><div class="pay-progress-bar" id="pr-bar"></div></div>
-        <div class="pay-progress-pct" id="pr-ring-pct">0%</div>
-        <div class="pay-ticks" id="pr-ticks"></div>
+        <dl class="pay-summary pay-receipt" id="pr-receipt">
+          <div class="pay-summary-row"><dt>Service</dt><dd id="pr-r-service">{% if feature == 'view_cluster_points' %}KUCCPS Cluster Points Results{% elif feature == 'ai_chat_access' %}AI Career Guidance Chat{% elif feature == 'view_eligible_courses' %}Full Eligible Courses List{% elif feature == 'premium_career_report' %}Premium Career Report{% else %}Premium Feature{% endif %}</dd></div>
+          <div class="pay-summary-row"><dt>Status</dt><dd><span class="pay-badge pay-badge--ok">Completed</span></dd></div>
+          <div class="pay-summary-row" id="pr-r-ref-row" hidden><dt>M-Pesa reference</dt><dd id="pr-r-ref"></dd></div>
+          <div class="pay-summary-row" id="pr-r-phone-row" hidden><dt>Paid from</dt><dd id="pr-r-phone"></dd></div>
+          <div class="pay-summary-row" id="pr-r-date-row" hidden><dt>Date</dt><dd id="pr-r-date"></dd></div>
+          <div class="pay-summary-row pay-summary-total"><dt>Amount paid</dt><dd>KES <span id="pr-r-amount">{{ price }}</span></dd></div>
+        </dl>
+        <a class="pay-btn" id="pr-continue" href="{{ next_url }}"><i class="fas fa-arrow-right"></i> Continue</a>
+        <div class="pay-btn-row">
+          <a class="pay-btn pay-btn--secondary pay-btn--sm" id="pr-r-download" href="{% url 'payments:payment_history' %}" hidden><i class="fas fa-file-download"></i> Download receipt (PDF)</a>
+          <a class="pay-btn pay-btn--secondary pay-btn--sm" href="{% url 'payments:payment_history' %}"><i class="fas fa-receipt"></i> Payment history</a>
+        </div>
       </div>
 
       <!-- Failed -->
@@ -277,70 +293,31 @@ async function prPay(){
     });
 }
 
-// ── short loading with ring + ticking checklist ──
-var TICK_ITEMS = [
-    'Payment confirmed with M-Pesa',
-    'Verifying transaction details',
-    'Unlocking your account access',
-    'Loading your results',
-    'Almost ready, redirecting now',
-];
-var TOTAL_MS = 3200;
-
+// ── Payment successful: show the full confirmation (no auto-redirect) ──
 var successShown = false;
 function prShowSuccess(){
     if(successShown) return;
     successShown = true;
+    document.getElementById('pr-continue').href = NEXT_URL || defaultNext();
     prState('success');
-    var barEl   = document.getElementById('pr-bar');
-    var pctEl   = document.getElementById('pr-ring-pct');
-    var titleEl = document.getElementById('pr-success-title');
-    var hintEl  = document.getElementById('pr-success-hint');
-    var ticksEl = document.getElementById('pr-ticks');
-
-    ticksEl.innerHTML = '';
-    TICK_ITEMS.forEach(function(txt, i){
-        var d = document.createElement('div');
-        d.className = 'pay-tick';
-        d.id = 'pr-tick-'+i;
-        d.innerHTML = '<div class="pay-tick-box" id="pr-tbox-'+i+'"></div><span>'+txt+'</span>';
-        ticksEl.appendChild(d);
-    });
-
-    var startTime = null;
-    var N = TICK_ITEMS.length;
-    var tickedCount = 0;
-
-    function frame(ts){
-        if(!startTime) startTime = ts;
-        var elapsed = ts - startTime;
-        var pct = Math.min(elapsed / TOTAL_MS, 1);
-
-        barEl.style.width = Math.round(pct * 100) + '%';
-        pctEl.textContent = Math.round(pct * 100) + '%';
-
-        // Tick items
-        var shouldTick = Math.floor(pct * N);
-        while(tickedCount < shouldTick && tickedCount < N){
-            var el  = document.getElementById('pr-tick-'+tickedCount);
-            var box = document.getElementById('pr-tbox-'+tickedCount);
-            if(el)  el.classList.add('ticked');
-            if(box) box.innerHTML = '<i class="fas fa-check"></i>';
-            tickedCount++;
-        }
-
-        if(pct < 1){
-            requestAnimationFrame(frame);
-        } else {
-            // Done
-            titleEl.textContent = 'All done. Redirecting…';
-            hintEl.textContent  = '';
-            setTimeout(function(){
-                window.location.href = NEXT_URL || defaultNext();
-            }, 500);
-        }
-    }
-    requestAnimationFrame(frame);
+    fetch('/payments/receipt-summary/?feature='+encodeURIComponent(FEATURE), {credentials:'same-origin'})
+        .then(function(r){ return r.json(); })
+        .then(function(d){
+            if(!d.found) return;
+            function put(id, val, rowId){
+                if(!val) return;
+                document.getElementById(id).textContent = val;
+                if(rowId) document.getElementById(rowId).hidden = false;
+            }
+            put('pr-r-service', d.service);
+            put('pr-r-amount', d.amount);
+            put('pr-r-ref', d.mpesa_ref, 'pr-r-ref-row');
+            put('pr-r-phone', d.phone, 'pr-r-phone-row');
+            put('pr-r-date', d.paid_at, 'pr-r-date-row');
+            var dl = document.getElementById('pr-r-download');
+            dl.href = d.receipt_url; dl.hidden = false;
+        })
+        .catch(function(){});
 }
 
 window.prVerify = async function(){

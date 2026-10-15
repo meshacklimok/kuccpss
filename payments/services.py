@@ -255,13 +255,13 @@ def extract_mpesa_code(text: str) -> str:
 
 
 def payment_support_contacts() -> dict:
-    """Where a user who paid but can't get in should reach us (admin-editable SiteSettings)."""
+    """Where a user who paid but can't get in should reach us (support mailbox + WhatsApp from SiteSettings)."""
     try:
         from resources.models import SiteSetting
-        email = SiteSetting.get("contact_email", default="") or settings.ADMIN_EMAIL
+        email = settings.PAYMENT_SUPPORT_EMAIL
         whatsapp = re.sub(r"\D", "", SiteSetting.get("whatsapp_number", default="") or "")
     except Exception:
-        email, whatsapp = getattr(settings, "ADMIN_EMAIL", ""), ""
+        email, whatsapp = getattr(settings, "PAYMENT_SUPPORT_EMAIL", ""), ""
     if whatsapp in ("", "254700000000"):  # unset / seed placeholder
         whatsapp = ""
     return {"email": email, "whatsapp": whatsapp}

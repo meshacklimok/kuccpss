@@ -728,6 +728,9 @@ body.dark .reco-hint, body.dark .reco-counter { background: rgba(129,140,248,0.1
         <a href="{% url 'clusterpoints:calculator' %}" class="btn-dash-action btn-dash-ghost">
           <i class="bi bi-calculator-fill"></i>Calculator
         </a>
+        <a href="{% url 'mentorship:directory' %}" class="btn-dash-action btn-dash-ghost" {% if guest %}data-guest-gate="1"{% endif %}>
+          <i class="bi bi-people-fill"></i>Mentorship
+        </a>
         {% if user.is_staff %}
         <a href="{% url 'analytics:dashboard' %}" class="btn-dash-action"
            style="background:#7c3aed;color:#fff;border:none;">
@@ -2025,14 +2028,6 @@ body.dark .reco-hint, body.dark .reco-counter { background: rgba(129,140,248,0.1
         </span>
         <a href="{% url 'mentorship:dashboard' %}" class="btn btn-outline-secondary btn-sm rounded-pill"
            style="font-size:0.72rem;">Dashboard</a>
-      </div>
-      {% elif mentor_signup_enabled %}
-      <div class="pt-2 border-top">
-        <p class="text-muted small mb-2">University student? Earn KES 70 per session.</p>
-        <a href="{% url 'mentorship:become_mentor' %}" class="btn btn-outline-success btn-sm w-100"
-           style="border-radius:8px;font-size:0.78rem;" {% if guest %}data-guest-gate="1"{% endif %}>
-          <i class="bi bi-mortarboard me-1"></i>Become a Mentor
-        </a>
       </div>
       {% endif %}
     </div>

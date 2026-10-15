@@ -153,6 +153,7 @@ else:
 
 DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'CareerNext <noreply@careernext.co.ke>')
 ADMIN_EMAIL = os.environ.get('ADMIN_EMAIL', 'support@careernext.co.ke')
+PAYMENT_SUPPORT_EMAIL = os.environ.get('PAYMENT_SUPPORT_EMAIL', 'support@careernext.co.ke')
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',

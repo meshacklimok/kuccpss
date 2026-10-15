@@ -32,23 +32,32 @@ body.dark .pay-scope, body.dark .pay-overlay {
 /* ── Page shell ── */
 .pay-page { max-width: 560px; margin: 0 auto; padding: 1.5rem 1rem 3rem; }
 .pay-page--wide { max-width: 760px; }
+.pay-page--split { max-width: 920px; }
+.pay-split { display: block; }
+@media (min-width: 840px) {
+    .pay-split { display: grid; grid-template-columns: 1fr 1fr; gap: 0; margin: -1.5rem; }
+    .pay-col { padding: 1.5rem; }
+    .pay-col--order { background: var(--surface-2); border-right: 1px solid var(--border); }
+    .pay-col .pay-summary, .pay-col .pay-list, .pay-col .pay-steps { margin-bottom: 1.5rem; }
+    .pay-col--order .pay-list { margin-bottom: 0; }
+}
 .pay-crumb { font-size: 0.8rem; color: var(--text-3); margin-bottom: 0.75rem; }
 .pay-crumb a { color: var(--text-3); text-decoration: none; }
 .pay-crumb a:hover { text-decoration: underline; }
 
 /* ── Card ── */
 .pay-card {
-    background: var(--surface); border: 1px solid var(--border); border-radius: 4px;
-    overflow: hidden; color: var(--text);
+    background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+    overflow: hidden; color: var(--text); box-shadow: 0 1px 2px rgba(16,24,40,.06), 0 8px 24px -12px rgba(16,24,40,.18);
 }
 .pay-card-head {
-    background: var(--pay-head); color: #fff; padding: 0.85rem 1.25rem;
+    background: var(--pay-head); color: #fff; padding: 1rem 1.5rem;
     display: flex; align-items: center; justify-content: space-between; gap: 1rem;
-    border-bottom: 3px solid var(--pay-accent);
+    border-bottom: 2px solid var(--pay-accent);
 }
 .pay-card-title { font-size: 1rem; font-weight: 700; margin: 0; color: #fff; }
 .pay-card-secure { font-size: 0.75rem; color: #d1d5db; display: inline-flex; align-items: center; gap: 0.35rem; white-space: nowrap; }
-.pay-body { padding: 1.25rem; }
+.pay-body { padding: 1.5rem; }
 .pay-foot {
     padding: 0.8rem 1.25rem; border-top: 1px solid var(--border); background: var(--surface-2);
     display: flex; flex-wrap: wrap; gap: 0.4rem 1.25rem; font-size: 0.8rem;
@@ -60,14 +69,14 @@ body.dark .pay-scope, body.dark .pay-overlay {
 .pay-section { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-3); margin: 0 0 0.5rem; }
 
 /* ── Summary table (service / amount) ── */
-.pay-summary { border: 1px solid var(--border); border-radius: 4px; margin: 0 0 1.25rem; }
+.pay-summary { border: 1px solid var(--border); border-radius: 8px; overflow: hidden; background: var(--surface); margin: 0 0 1.25rem; }
 .pay-summary-row { display: flex; justify-content: space-between; gap: 1rem; padding: 0.7rem 0.9rem; font-size: 0.9rem; border-bottom: 1px solid var(--border); }
 .pay-summary-row:last-child { border-bottom: none; }
 .pay-summary-row dt { color: var(--text-2); font-weight: 500; margin: 0; }
 .pay-summary-row dd { margin: 0; font-weight: 600; color: var(--text); text-align: right; }
-.pay-summary-total { background: var(--surface-2); }
+.pay-summary-total { background: var(--pay-accent-soft); align-items: center; }
 .pay-summary-total dt { color: var(--text); font-weight: 700; }
-.pay-summary-total dd { font-size: 1.15rem; font-weight: 800; }
+.pay-summary-total dd { font-size: 1.35rem; font-weight: 800; color: var(--pay-accent); }
 
 /* ── Included list ── */
 .pay-list { list-style: none; margin: 0 0 1.25rem; padding: 0; }
@@ -75,7 +84,7 @@ body.dark .pay-scope, body.dark .pay-overlay {
 .pay-list li i { color: var(--pay-accent); margin-top: 0.2rem; font-size: 0.75rem; }
 
 /* ── Steps ── */
-.pay-steps { list-style: none; margin: 0 0 1.25rem; padding: 0; counter-reset: pay; border: 1px solid var(--border); border-radius: 4px; }
+.pay-steps { list-style: none; margin: 0 0 1.25rem; padding: 0; counter-reset: pay; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; background: var(--surface); }
 .pay-steps li { counter-increment: pay; display: flex; gap: 0.7rem; align-items: center; padding: 0.6rem 0.9rem; font-size: 0.85rem; color: var(--text-2); border-bottom: 1px solid var(--border); }
 .pay-steps li:last-child { border-bottom: none; }
 .pay-steps li::before {
@@ -86,7 +95,7 @@ body.dark .pay-scope, body.dark .pay-overlay {
 
 /* ── Form ── */
 .pay-label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--text); margin-bottom: 0.35rem; }
-.pay-field { display: flex; border: 1px solid var(--border); border-radius: 4px; background: var(--surface); overflow: hidden; }
+.pay-field { display: flex; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); overflow: hidden; }
 .pay-field:focus-within { border-color: var(--pay-accent); box-shadow: 0 0 0 2px var(--pay-accent-soft); }
 .pay-prefix { padding: 0.7rem 0.9rem; font-weight: 600; font-size: 0.95rem; color: var(--text-2); background: var(--surface-2); border-right: 1px solid var(--border); white-space: nowrap; }
 .pay-input { flex: 1; min-width: 0; border: none; outline: none; background: transparent; color: var(--text); font-size: 16px; font-weight: 600; padding: 0.7rem 0.9rem; letter-spacing: 0.02em; }
@@ -96,7 +105,7 @@ body.dark .pay-scope, body.dark .pay-overlay {
 /* ── Buttons ── */
 .pay-btn {
     width: 100%; display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
-    background: var(--pay-accent); color: #fff; border: 1px solid var(--pay-accent); border-radius: 4px;
+    background: var(--pay-accent); color: #fff; border: 1px solid var(--pay-accent); border-radius: 8px;
     font-size: 1rem; font-weight: 700; padding: 0.8rem 1rem; min-height: 46px; cursor: pointer; text-decoration: none;
 }
 .pay-btn:hover:not(:disabled) { background: var(--pay-accent-hover); border-color: var(--pay-accent-hover); color: #fff; }
@@ -145,7 +154,7 @@ body.dark .pay-scope, body.dark .pay-overlay {
 .pay-tick.ticked .pay-tick-box { background: var(--pay-accent); border-color: var(--pay-accent); color: #fff; }
 
 /* ── "Paid but still locked?" help panel ── */
-.pay-help { margin-top: 1.1rem; border: 1px solid var(--border); border-radius: 4px; font-size: 0.84rem; line-height: 1.5; text-align: left; background: var(--surface); color: var(--text-2); }
+.pay-help { margin-top: 1.1rem; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; font-size: 0.84rem; line-height: 1.5; text-align: left; background: var(--surface); color: var(--text-2); }
 .pay-help summary { list-style: none; cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; padding: 0.7rem 0.9rem; min-height: 44px; font-weight: 600; color: var(--text); background: var(--surface-2); }
 .pay-help summary::-webkit-details-marker { display: none; }
 .pay-help summary::after { content: "\25BE"; font-size: 0.8rem; }
@@ -156,9 +165,9 @@ body.dark .pay-scope, body.dark .pay-overlay {
 .pay-help-steps { margin: 0 0 0.75rem; padding-left: 1.15rem; }
 .pay-help-steps li { margin-bottom: 0.4rem; }
 .pay-help-form { display: flex; gap: 0.5rem; }
-.pay-help-input { flex: 1; min-width: 0; font-size: 16px; padding: 0.6rem 0.8rem; border: 1px solid var(--border); border-radius: 4px; outline: none; background: var(--surface); color: var(--text); text-transform: uppercase; letter-spacing: 0.04em; }
+.pay-help-input { flex: 1; min-width: 0; font-size: 16px; padding: 0.6rem 0.8rem; border: 1px solid var(--border); border-radius: 8px; outline: none; background: var(--surface); color: var(--text); text-transform: uppercase; letter-spacing: 0.04em; }
 .pay-help-input:focus { border-color: var(--pay-accent); box-shadow: 0 0 0 2px var(--pay-accent-soft); }
-.pay-help-btn { border: 1px solid var(--pay-accent); background: var(--pay-accent); color: #fff; border-radius: 4px; padding: 0.6rem 1.1rem; min-height: 44px; font-weight: 700; cursor: pointer; white-space: nowrap; }
+.pay-help-btn { border: 1px solid var(--pay-accent); background: var(--pay-accent); color: #fff; border-radius: 8px; padding: 0.6rem 1.1rem; min-height: 44px; font-weight: 700; cursor: pointer; white-space: nowrap; }
 .pay-help-btn:hover:not(:disabled) { background: var(--pay-accent-hover); }
 .pay-help-btn:disabled { opacity: 0.6; cursor: wait; }
 .pay-help-msg { margin: 0.5rem 0 0; min-height: 1.2em; font-size: 0.82rem; }
@@ -215,3 +224,5 @@ body.dark .pay-scope, body.dark .pay-overlay {
     .pay-help-btn { width: 100%; }
     .pay-overlay { padding: 0.5rem; align-items: flex-end; }
 }
+.pay-scope [hidden], .pay-overlay [hidden] { display: none !important; }
+.pay-receipt .pay-summary-row dd { overflow-wrap: anywhere; }

@@ -7,6 +7,7 @@ from django.contrib.auth.decorators import login_required
 from django.core.cache import cache
 from django.core.mail import EmailMultiAlternatives
 from django.http import JsonResponse, HttpResponse
+from django.urls import reverse
 from django.shortcuts import render, get_object_or_404
 from django.template.loader import render_to_string
 from django.utils import timezone
@@ -355,6 +356,36 @@ def payment_receipt(request, payment_id):
     response = HttpResponse(pdf, content_type="application/pdf")
     response["Content-Disposition"] = f'attachment; filename="CareerNext_Receipt_{payment.pk}.pdf"'
     return response
+
+
+@login_required
+def payment_receipt_summary(request):
+    """
+    Details for the on-page "Payment successful" confirmation: the user's latest completed
+    payment for ?feature=. Works for every provider (IntaSend, Daraja) and for the
+    "paid but still locked" code route, since it only reads what is already recorded.
+    """
+    feature = request.GET.get("feature", "")
+    payments = Payment.objects.filter(user=request.user, status="completed", mentorship_session__isnull=True)
+    if feature:
+        payments = payments.filter(feature=feature)
+    payment = payments.order_by("-updated_at").first()
+    if payment is None:
+        return JsonResponse({"found": False})
+    mpesa_ref = (
+        payment.transactions.order_by("-created_at").values_list("mpesa_ref", flat=True).first()
+        or payment.mpesa_code
+    )
+    return JsonResponse({
+        "found": True,
+        "payment_id": payment.pk,
+        "service": payment.get_product_display(),
+        "amount": int(payment.amount),
+        "mpesa_ref": mpesa_ref or "",
+        "phone": payment.phone_number or "",
+        "paid_at": timezone.localtime(payment.updated_at).strftime("%d %b %Y, %I:%M %p"),
+        "receipt_url": reverse("payments:payment_receipt", args=[payment.pk]),
+    })
 
 
 @login_required

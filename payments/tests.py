@@ -336,3 +336,29 @@ class VerifyByTransactionCodeTests(TestCase):
         for _ in range(10):
             self.post("hello-not-a-code TGH4ABC12X")
         self.assertEqual(self.post("TGH4ABC123").status_code, 429)
+
+
+class ReceiptSummaryTests(TestCase):
+    """Data behind the on-page 'Payment successful' confirmation."""
+
+    def setUp(self):
+        self.user = User.objects.create_user(email="rs@example.com", password="pass1234")
+        self.client.force_login(self.user)
+
+    def test_returns_latest_completed_payment_details(self):
+        p = Payment.objects.create(
+            user=self.user, feature="ai_chat_access", amount=50, status="completed",
+            provider="daraja", mpesa_code="RCK12345XY", phone_number="254712345678",
+        )
+        data = self.client.get("/payments/receipt-summary/?feature=ai_chat_access").json()
+        self.assertTrue(data["found"])
+        self.assertEqual(data["payment_id"], p.pk)
+        self.assertEqual(data["amount"], 50)
+        self.assertEqual(data["mpesa_ref"], "RCK12345XY")
+        self.assertEqual(data["receipt_url"], f"/payments/receipt/{p.pk}/")
+
+    def test_ignores_pending_and_other_users(self):
+        Payment.objects.create(user=self.user, feature="ai_chat_access", amount=50, status="pending")
+        other = User.objects.create_user(email="o@example.com", password="pass1234")
+        Payment.objects.create(user=other, feature="ai_chat_access", amount=50, status="completed")
+        self.assertFalse(self.client.get("/payments/receipt-summary/?feature=ai_chat_access").json()["found"])

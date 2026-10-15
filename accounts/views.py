@@ -49,6 +49,17 @@ LOGIN_FAIL_LIMIT_IP = 10
 LOGIN_FAIL_LIMIT_ACCOUNT = 8
 
 
+def _post_auth_redirect(request: HttpRequest) -> HttpResponse:
+    """Dashboard after login/register, except when the user was sent here from
+    the career engine to sign in — then return them to the engine page."""
+    raw_next = request.POST.get("next") or request.GET.get("next") or ""
+    if raw_next.startswith("/career/") and url_has_allowed_host_and_scheme(
+        raw_next, allowed_hosts={request.get_host()}, require_https=request.is_secure()
+    ):
+        return redirect(raw_next)
+    return redirect("accounts:dashboard")
+
+
 def _login_fail_keys(request: HttpRequest) -> tuple[str, str]:
     email = (request.POST.get("email") or request.POST.get("username") or "").strip().lower()
     return f"login_fail:{get_client_ip(request)}", f"login_fail_acct:{email}"
@@ -126,12 +137,7 @@ class RegisterView(View):
             login(request, user, backend='django.contrib.auth.backends.ModelBackend')
             request.session['_auth_verified_at'] = time.time()
             messages.success(request, f"Welcome to CareerNext, {user.full_name or user.email}.")
-            raw_next = request.POST.get("next") or request.GET.get("next") or ""
-            if url_has_allowed_host_and_scheme(
-                raw_next, allowed_hosts={request.get_host()}, require_https=request.is_secure()
-            ):
-                return redirect(raw_next)
-            return redirect("accounts:dashboard")
+            return _post_auth_redirect(request)
 
         return render(request, self.template_name, {"form": form})
 
@@ -215,13 +221,7 @@ class LoginView(View):
             messages.success(
                 request, f"Welcome back, {user.full_name or user.email}"
             )
-            # Return to the page that required login (@login_required adds ?next=)
-            raw_next = request.POST.get("next") or request.GET.get("next") or ""
-            if url_has_allowed_host_and_scheme(
-                raw_next, allowed_hosts={request.get_host()}, require_https=request.is_secure()
-            ):
-                return redirect(raw_next)
-            return redirect("accounts:dashboard")
+            return _post_auth_redirect(request)
 
         # Bad credentials — count this failure toward both limits
         _incr_counter(ip_key, LOGIN_FAIL_WINDOW)
