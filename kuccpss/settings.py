@@ -17,19 +17,19 @@ from pathlib import Path
 # If the env var is set but malformed it crashes with ValueError.
 # Unset it here so cloudinary falls back to its safe defaults; our guard below
 # re-applies the correct storage backend only when the URL is valid.
-_raw_cloudinary_url = os.environ.get('CLOUDINARY_URL', '')
-if _raw_cloudinary_url and not _raw_cloudinary_url.startswith('cloudinary://'):
-    os.environ.pop('CLOUDINARY_URL', None)
-
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Load .env file if present
+# Load .env file if present (before the Cloudinary guard, so a bad value in .env is caught too)
 try:
     from dotenv import load_dotenv
     load_dotenv(BASE_DIR / '.env')
 except ImportError:
     pass
+
+_raw_cloudinary_url = os.environ.get('CLOUDINARY_URL', '')
+if _raw_cloudinary_url and not _raw_cloudinary_url.startswith('cloudinary://'):
+    os.environ.pop('CLOUDINARY_URL', None)
 
 
 # Quick-start development settings - unsuitable for production
