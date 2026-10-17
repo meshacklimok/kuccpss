@@ -1,9 +1,14 @@
-# Move to a VPS (Render + Neon → Ubuntu server)
+# Move to DigitalOcean (Render + Neon → Droplet)
 
-Moves CareerNext from Render (app) + Neon (Postgres) to one Ubuntu 24.04 server
-running Nginx, gunicorn, django-q, Redis and Postgres. Works the same on Hetzner,
-DigitalOcean, Contabo or Oracle Cloud. Can share the server with another app
-(e.g. nyumbapms) — every name below is prefixed `kuccpss` so nothing collides.
+Moves CareerNext from Render (app) + Neon (Postgres) to one DigitalOcean Droplet
+(Ubuntu 24.04) running Nginx, gunicorn, django-q, Redis and Postgres. Works the same
+on any VPS. Can share the server with another app (e.g. nyumbapms) — every name
+below is prefixed `kuccpss` so nothing collides.
+
+**Droplet to create:** Ubuntu 24.04 LTS, Basic / Regular SSD, 2 GB RAM / 1 vCPU
+(~$12/mo) to start, region closest to Kenya (Frankfurt `fra1` or London `lon1`), your
+SSH key attached. Leave DigitalOcean's paid **Backups** (+20%) off; `backup.sh` (Part 8) does the job. Optionally attach a Reserved IP so
+DNS survives a rebuild. In the DO Cloud Firewall allow only 22, 80 and 443.
 
 Do it in two passes:
 - **Rehearsal (Parts 1–6):** build the server and restore a copy of the live DB while Render keeps serving. No downtime.
@@ -234,16 +239,23 @@ If anything fails before step 3, nothing is lost. Set `MAINTENANCE_MODE=False` o
 ---
 
 ## Part 8 — After the move
-- **Backups.** Neon point-in-time restore is gone, and the GitHub `db-backup` workflow can't reach a database bound to localhost. Disable that workflow and add a server cron job (`crontab -e`):
-  ```cron
-  30 3 * * * pg_dump -Fc "postgresql://kuccpss:CHANGE_ME_long_random@127.0.0.1/kuccpss" -f /home/deploy/backups/kuccpss-$(date +\%F).dump && find /home/deploy/backups -name 'kuccpss-*.dump' -mtime +14 -delete
+- **Backups (free, replaces DO Droplet backups).** Neon point-in-time restore is gone, and the GitHub `db-backup` workflow can't reach a database bound to localhost, so disable that workflow. `backup.sh` dumps the DB daily, keeps 14 locally and copies them off the server:
+  ```bash
+  mkdir ~/backups
+  curl https://rclone.org/install.sh | sudo bash
+  rclone config                      # add a remote: Backblaze B2 (10 GB free) or Google Drive
+  echo 'RCLONE_REMOTE=b2:kuccpss-backups' >> /srv/kuccpss/.env
+  crontab -e                         # add:
+  30 3 * * * /srv/kuccpss/backup.sh >> /home/deploy/backups/backup.log 2>&1
   ```
-  (`mkdir ~/backups` first.) Also copy the backups **off the server** every day, for example with `rclone` to Google Drive or Backblaze B2. A backup that only exists on the server is lost if the server is.
+  Run `./backup.sh` once by hand and confirm the file appears in the remote. A backup that only exists on the server is lost if the server is. Test a restore now and then: `pg_restore --no-owner --no-privileges --clean --if-exists -d <db url> backup_XXXX.dump`.
 - **Deploying from now on** replaces Render's auto-deploy:
   ```bash
-  cd /srv/kuccpss && git pull && source venv/bin/activate && ./build.sh \
-    && sudo systemctl restart kuccpss kuccpss-q
+  cd /srv/kuccpss && ./deploy.sh      # git pull, build.sh, restart both services
   ```
+  `deploy.sh` needs passwordless `sudo systemctl restart kuccpss kuccpss-q` for the
+  `deploy` user (`sudo visudo -f /etc/sudoers.d/kuccpss`:
+  `deploy ALL=(root) NOPASSWD: /usr/bin/systemctl restart kuccpss kuccpss-q`).
 - **Peak season** (January results, KUCCPS application windows): resize to 4 GB / 2 vCPU and raise `GUNICORN_WORKERS` to 5–8.
 - **Logs:** `journalctl -u kuccpss -f` (app), `journalctl -u kuccpss-q -f` (jobs), `/var/log/nginx/error.log`.
 - **Keep Render and Neon for one week** as a fallback, then delete them. Update `docs/DEPLOY.md` and `docs/DATABASE_OPERATIONS.md`, which still describe Render and Neon.

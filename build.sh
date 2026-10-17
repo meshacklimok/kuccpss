@@ -89,35 +89,36 @@ else:
 "
 
 # ── Sentry release tracking ───────────────────────────────────────────────────
-# Requires SENTRY_AUTH_TOKEN, SENTRY_ORG, SENTRY_PROJECT env vars on Render.
+# Requires SENTRY_AUTH_TOKEN, SENTRY_ORG, SENTRY_PROJECT env vars in .env.
 # Creates a named release tied to the git commit so errors map to exact code.
-if [ -n "${SENTRY_AUTH_TOKEN:-}" ] && [ -n "${RENDER_GIT_COMMIT:-}" ]; then
+GIT_COMMIT="${GIT_COMMIT:-$(git rev-parse HEAD 2>/dev/null || true)}"
+if [ -n "${SENTRY_AUTH_TOKEN:-}" ] && [ -n "${GIT_COMMIT:-}" ]; then
   echo "Setting up Sentry CLI..."
   command -v sentry-cli &>/dev/null || curl -sL https://sentry.io/get-cli/ | bash
 
-  sentry-cli releases new "$RENDER_GIT_COMMIT" \
+  sentry-cli releases new "$GIT_COMMIT" \
     --org  "$SENTRY_ORG"     \
     --project "$SENTRY_PROJECT" || true
 
   # Link this release to the commits it contains (requires GitHub integration in Sentry)
-  sentry-cli releases set-commits "$RENDER_GIT_COMMIT" \
+  sentry-cli releases set-commits "$GIT_COMMIT" \
     --auto \
     --org  "$SENTRY_ORG"     \
     --project "$SENTRY_PROJECT" || true
 
-  sentry-cli releases finalize "$RENDER_GIT_COMMIT" \
+  sentry-cli releases finalize "$GIT_COMMIT" \
     --org  "$SENTRY_ORG"     \
     --project "$SENTRY_PROJECT" || true
 
   # Record the deploy so Sentry shows which release is live in production
-  sentry-cli releases deploys "$RENDER_GIT_COMMIT" new \
+  sentry-cli releases deploys "$GIT_COMMIT" new \
     --env production \
     --org  "$SENTRY_ORG"     \
     --project "$SENTRY_PROJECT" || true
 
-  echo "Sentry release ${RENDER_GIT_COMMIT} finalised"
+  echo "Sentry release ${GIT_COMMIT} finalised"
 else
-  echo "SENTRY_AUTH_TOKEN / RENDER_GIT_COMMIT not set — skipping Sentry release"
+  echo "SENTRY_AUTH_TOKEN / GIT_COMMIT not set — skipping Sentry release"
 fi
 
 # Create superuser if not exists

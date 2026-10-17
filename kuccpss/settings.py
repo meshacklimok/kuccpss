@@ -44,20 +44,18 @@ DEBUG = os.environ.get('DJANGO_DEBUG', 'False') == 'True'
 ALLOWED_HOSTS = [
     'localhost',
     '127.0.0.1',
-    '.onrender.com',
     'careernext.co.ke',
     'www.careernext.co.ke',
 ]
 
 CSRF_TRUSTED_ORIGINS = [
-    'https://*.onrender.com',
     'https://careernext.co.ke',
     'https://www.careernext.co.ke',
 ]
 
 # Requests to the www/apex twin of CANONICAL_HOST are 301'd to CANONICAL_HOST so
-# sessions and the Google OAuth callback always use one host. Must match Render's
-# primary domain (www) — Render redirects apex→www itself, so the opposite loops.
+# sessions and the Google OAuth callback always use one host. Django does the
+# apex→www redirect itself (Nginx has no redirect block), so this must be the www host.
 # Set CANONICAL_HOST='' to disable.
 CANONICAL_HOST = os.environ.get('CANONICAL_HOST', '' if DEBUG else 'www.careernext.co.ke')
 
@@ -143,7 +141,7 @@ else:
     MEDIA_URL = '/media/'
     MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
-# Email — uses Resend REST API in production (avoids SMTP port blocks on Render free tier),
+# Email — uses Resend REST API in production (avoids SMTP port blocks (DigitalOcean blocks outbound SMTP by default)),
 # falls back to console backend in dev so you see emails in the terminal
 RESEND_API_KEY = os.environ.get('RESEND_API_KEY', '')
 if RESEND_API_KEY:
@@ -258,8 +256,8 @@ DB_QUERY_COUNT_WARN = int(os.environ.get('DB_QUERY_COUNT_WARN', '100'))
 # inside the web process every 10 min because no qcluster/cron runs in production.
 BACKGROUND_JOBS_ENABLED = os.environ.get('BACKGROUND_JOBS_ENABLED', str(not DEBUG)) == 'True'
 # Public base URL the scheduler pings every cycle so free hosting doesn't sleep.
-# Render sets RENDER_EXTERNAL_URL automatically; set KEEPALIVE_URL='' to stop.
-KEEPALIVE_URL = os.environ.get('KEEPALIVE_URL', os.environ.get('RENDER_EXTERNAL_URL', ''))
+# Only needed on hosts that sleep idle apps; the Droplet doesn't, so it's off unless set.
+KEEPALIVE_URL = os.environ.get('KEEPALIVE_URL', '')
 
 # ── Task Queue (Django-Q2) ────────────────────────────────────────────────────
 # Uses the Django ORM as the broker by default (zero extra infrastructure).
@@ -280,7 +278,7 @@ if _REDIS_URL:
     del Q_CLUSTER['orm']
 
 # ── Caching ───────────────────────────────────────────────────────────────────
-# Local-memory by default (zero dependencies, works on Render free tier).
+# Local-memory by default (zero dependencies, works on a single small server).
 # Automatically upgrades to Redis when REDIS_URL env var is set.
 CACHES = {
     'default': {
@@ -464,7 +462,12 @@ if _vapid_priv_b64:
 VAPID_PRIVATE_KEY = _b64.b64decode(_vapid_priv_b64).decode() if _vapid_priv_b64 else ""
 VAPID_MAILTO      = os.environ.get("VAPID_MAILTO", "support@careernext.co.ke")
 
-# Production database (Neon Postgres) — overrides individual DB_* vars if set.
+# Production database (Postgres on the DigitalOcean Droplet) — overrides individual
+# DB_* vars if set.
+#
+# The notes below apply only if DATABASE_URL points at a PgBouncer pooler (host
+# contains "-pooler", as Neon's did); the Droplet's local Postgres is a direct
+# connection, so persistent connections (DB_CONN_MAX_AGE, default 600) are used.
 #
 # Neon's pooled connection string (host contains "-pooler") runs PgBouncer in
 # transaction mode.  Two things follow from that:
@@ -515,7 +518,7 @@ if not DEBUG:
     if not INTASEND_WEBHOOK_SECRET:
         raise RuntimeError("INTASEND_WEBHOOK_SECRET must be set via environment variable in production.")
 
-    # Render terminates TLS at its edge; tell Django the real proto via the header.
+    # Nginx terminates TLS; tell Django the real proto via the header it sets.
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
     SECURE_SSL_REDIRECT = True
 
@@ -534,7 +537,7 @@ if not DEBUG:
     # and per Django docs hiding it offers no practical CSRF protection.
     SESSION_COOKIE_HTTPONLY = True
 
-# Structured logging — ERROR+ always goes to stdout (Render captures it).
+# Structured logging — ERROR+ always goes to stdout (journald captures it via systemd).
 # In DEBUG mode lower to WARNING so slow requests and app warnings are visible.
 _LOG_LEVEL = 'WARNING' if DEBUG else 'ERROR'
 LOGGING = {
@@ -578,8 +581,8 @@ LOGGING = {
 # Only initialises when SENTRY_DSN is set; completely silent in local dev.
 _SENTRY_DSN  = os.environ.get('SENTRY_DSN', '')
 # Build a consistent release string shared by both backend and frontend JS SDK.
-# Render injects RENDER_GIT_COMMIT (full SHA) on every deploy.
-SENTRY_RELEASE      = os.environ.get('RENDER_GIT_COMMIT', '') or None
+# deploy.sh exports GIT_COMMIT (full SHA) on every deploy.
+SENTRY_RELEASE      = os.environ.get('GIT_COMMIT') or None
 SENTRY_ENVIRONMENT  = 'production' if not DEBUG else 'development'
 
 if _SENTRY_DSN:
