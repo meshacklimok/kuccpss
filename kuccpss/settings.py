@@ -136,7 +136,10 @@ STORAGES = {
 }
 if CLOUDINARY_URL:
     STORAGES["default"] = {"BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage"}
-    MEDIA_URL = 'https://res.cloudinary.com/'
+    # django-cloudinary-storage uses MEDIA_URL as the upload folder prefix ("media/"), and
+    # builds the real https://res.cloudinary.com/<cloud>/... URLs itself. A full URL here
+    # corrupts stored names and returns broken image URLs.
+    MEDIA_URL = '/media/'
 else:
     MEDIA_URL = '/media/'
     MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
