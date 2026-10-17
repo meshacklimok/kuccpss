@@ -2422,6 +2422,16 @@ def loading_page(request, pathway):
 # ─────────────────────────────────────────────
 # G. CAREER RESULTS — unified session-driven results
 # ─────────────────────────────────────────────
+def _safe_attr_json(data):
+    """JSON safe to drop inside a single-quoted HTML attribute (React island props)."""
+    import json
+    from django.utils.safestring import mark_safe
+    out = json.dumps(data)
+    for ch, esc in (('&', '&amp;'), ("'", '&#39;'), ('<', '&lt;'), ('>', '&gt;')):
+        out = out.replace(ch, esc)
+    return mark_safe(out)
+
+
 def career_results(request):
     from courses.models import CourseOffering, CourseType
     from predictor.services import predict_cutoff as _predict_cutoff, TREND_ICON, TREND_COLOR, TREND_TIP
@@ -3016,6 +3026,12 @@ def career_results(request):
         'filter_qual':         filter_qual,
         'search_q':            search_q,
         'sort_by':             sort_by,
+        # Query params the React SortSelect island keeps when the sort changes.
+        # Escape ' < > & so it is safe inside a single-quoted HTML attribute.
+        'sort_keep_json':      _safe_attr_json(
+            {'tier': filter_tier, 'q': search_q} if pathway == 'Degree'
+            else {'qual': filter_qual, 'q': search_q}
+        ),
         'filter_inst':         filter_inst,
         'filter_inst_name':    _selected_inst_name,
         'filter_course':       filter_course,
@@ -3275,7 +3291,7 @@ def _build_career_matches(request):
 def career_results_pdf_quick(request):
     """Quick summary PDF — compact landscape table of all course matches."""
     from reportlab.pdfgen import canvas
-    from kuccpss.pdf_utils import enable_site_links
+    from kuccpss.pdf_utils import draw_logo_mark, enable_site_links
     from reportlab.lib.pagesizes import A4, landscape
     from reportlab.lib.units import cm
     from reportlab.lib import colors
@@ -3327,9 +3343,10 @@ def career_results_pdf_quick(request):
             c.showPage()
         c.setFillColor(NAVY)
         c.rect(0, H - 1.5*cm, W, 1.5*cm, fill=1, stroke=0)
+        draw_logo_mark(c, 1.5*cm, H - 1.25*cm, 1.0*cm)
         c.setFillColor(colors.white)
         c.setFont("Helvetica-Bold", 12)
-        c.drawString(1.5*cm, H - 0.95*cm, "CareerNext — Career Course Matches Summary")
+        c.drawString(2.8*cm, H - 0.95*cm, "CareerNext — Career Course Matches Summary")
         c.setFont("Helvetica", 9)
         c.drawRightString(W - 1.5*cm, H - 0.95*cm, f"Page {page_num[0]}")
         c.setFillColor(colors.HexColor("#0e7490"))
@@ -3687,7 +3704,7 @@ def career_results_pdf_quick(request):
 def career_results_pdf_detailed(request):
     """Detailed placement report PDF — cover page + per-tier grouped results."""
     from reportlab.pdfgen import canvas
-    from kuccpss.pdf_utils import enable_site_links
+    from kuccpss.pdf_utils import draw_logo_mark, enable_site_links
     from reportlab.lib.pagesizes import A4, landscape
     from reportlab.lib.units import cm
     from reportlab.lib import colors
@@ -3750,12 +3767,13 @@ def career_results_pdf_detailed(request):
         c.rect(0, H - 1.8*cm, W, 1.8*cm, fill=1, stroke=0)
         c.setFillColor(GREEN)
         c.rect(0, H - 1.85*cm, W, 0.07*cm, fill=1, stroke=0)
+        draw_logo_mark(c, 1.5*cm, H - 1.55*cm, 1.2*cm)
         c.setFillColor(colors.white)
         c.setFont("Helvetica-Bold", 12)
-        c.drawString(1.5*cm, H - 1.15*cm, "CareerNext — Career Placement Report 2026")
+        c.drawString(3.0*cm, H - 1.15*cm, "CareerNext — Career Placement Report 2026")
         if subtitle:
             c.setFont("Helvetica", 8)
-            c.drawString(1.5*cm, H - 1.55*cm, subtitle)
+            c.drawString(3.0*cm, H - 1.55*cm, subtitle)
         c.setFont("Helvetica", 9)
         c.drawRightString(W - 1.5*cm, H - 1.15*cm, f"Page {page_num[0]}")
         c.setFillColor(colors.HexColor("#0e7490"))

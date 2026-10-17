@@ -139,15 +139,23 @@
   <div class="splash-stars" id="splashStars"></div>
   <div class="splash-content">
 
-    <!-- Graduation cap drops from above -->
+    <!-- Summit mark drops from above -->
     <div class="splash-cap-wrap" id="splashCap">
-      <svg viewBox="0 0 72 72" xmlns="http://www.w3.org/2000/svg" width="72" height="72">
-        <polygon points="36,8 72,26 36,44 0,26" fill="#fff" opacity="0.97"/>
-        <polygon points="36,8 54,17 36,26 18,17" fill="rgba(255,255,255,0.22)"/>
-        <line x1="60" y1="26" x2="60" y2="50" stroke="#fbbf24" stroke-width="3" stroke-linecap="round"/>
-        <circle cx="60" cy="53" r="4.5" fill="#fbbf24"/>
-        <rect x="32" y="26" width="8" height="20" rx="2" fill="rgba(255,255,255,0.92)"/>
-        <ellipse cx="36" cy="46" rx="14" ry="5" fill="rgba(255,255,255,0.88)"/>
+      <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" width="84" height="84" style="position:relative;z-index:1;border-radius:20px;">
+        <defs>
+          <linearGradient id="splashSky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3D72E8"/><stop offset="1" stop-color="#1D46C4"/></linearGradient>
+          <clipPath id="splashTile"><rect width="64" height="64" rx="15"/></clipPath>
+        </defs>
+        <g clip-path="url(#splashTile)">
+          <rect width="64" height="64" fill="url(#splashSky)"/>
+          <path d="M-4 66 L17 34 L23 40 L31 23 L34.5 28 L39 17 L68 66 Z" fill="#fff"/>
+          <path d="M39 17 L68 66 L45 66 L41.5 38 Z" fill="#b9ccf4"/>
+          <path d="M31 23 L34.5 28 L31.5 36 Z" fill="#b9ccf4"/>
+          <path d="M17 34 L23 40 L20.5 44 Z" fill="#b9ccf4"/>
+          <path d="M24 67 L38.5 56.5 L29.5 49 L38.5 41.5 L37 32" fill="none" stroke="#16a34a" stroke-width="3.9" stroke-linecap="round" stroke-linejoin="round"/>
+        </g>
+        <path d="M39 18 V6.5" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/>
+        <path d="M39.7 6 L50 9.4 L39.7 12.8 Z" fill="#4ade80"/>
       </svg>
       <div class="cap-halo"></div>
     </div>
@@ -204,7 +212,7 @@
   to { transform: translateY(0); opacity: 1; }
 }
 .cap-halo {
-  position: absolute; inset: -12px; border-radius: 50%;
+  position: absolute; inset: -12px; border-radius: 28px; z-index: 0;
   background: rgba(147,197,253,0.28);
   animation: haloPulse 1.2s 0.5s ease-in-out infinite alternate;
 }
@@ -549,7 +557,7 @@
         <!-- ── DESKTOP: brand is first column in the row below  ── -->
         <div class="footer-brand-row d-md-none">
           <div>
-            <div class="footer-brand">CareerNext</div>
+            <div class="footer-brand"><img src="{% static 'img/logo-white.svg' %}" alt="CareerNext" height="34" style="height:34px;width:auto;display:block;"></div>
             <p class="mb-0" style="font-size:0.75rem;opacity:0.55;margin-top:2px;">Find Your Course</p>
           </div>
           <div class="footer-socials">
@@ -624,7 +632,7 @@
 
           <!-- Brand -->
           <div class="col-md-3">
-            <div class="footer-brand mb-2">CareerNext</div>
+            <div class="footer-brand mb-2"><img src="{% static 'img/logo-white.svg' %}" alt="CareerNext" height="38" style="height:38px;width:auto;display:block;"></div>
             <p class="small mb-3" style="line-height:1.5;">
               From KCSE to your dream career.<br>
               Kenya's guide to KUCCPS placement.

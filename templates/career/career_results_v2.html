@@ -666,6 +666,8 @@ body.dark .aip-chips { background: var(--surface); border-top-color: var(--borde
 
             <!-- Sort -->
             <div class="ms-auto d-flex align-items-center gap-2">
+                <div data-island="SortSelect"
+                     data-props='{"value":"{{ sort_by }}","options":[{"value":"tier","label":"Sort: {% if pathway == 'Degree' %}Academic Fit{% else %}Qualification Status{% endif %}"},{"value":"institution","label":"Sort: Institution"},{"value":"course","label":"Sort: Course Name"}],"keep":{{ sort_keep_json }}}'>
                 <select class="form-select form-select-sm"
                         style="width:auto;border-radius:8px;font-size:0.8rem;"
                         onchange="location.href='?sort='+this.value+'{% if pathway == 'Degree' %}{% if filter_tier %}&tier={{ filter_tier|urlencode }}{% endif %}{% else %}{% if filter_qual %}&qual={{ filter_qual }}{% endif %}{% endif %}{% if search_q %}&q={{ search_q }}{% endif %}'">
@@ -673,6 +675,7 @@ body.dark .aip-chips { background: var(--surface); border-top-color: var(--borde
                     <option value="institution" {% if sort_by == 'institution' %}selected{% endif %}>Sort: Institution</option>
                     <option value="course"      {% if sort_by == 'course'      %}selected{% endif %}>Sort: Course Name</option>
                 </select>
+                </div>
                 <!-- PDF download buttons -->
                 <a href="{% url 'career:pdf_quick' %}"
                    class="btn btn-sm d-flex align-items-center gap-1"
@@ -1278,6 +1281,7 @@ careernext.co.ke, Kenya's #1 KCSE career guidance platform (100% free!){% endfil
 {% endblock %}
 
 {% block extra_js %}
+<script src="{% static 'dist/islands.js' %}" defer></script>
 <script src="{% static 'js/ai_format.js' %}"></script>
 <script>
 // Init Bootstrap tooltips (Bootstrap is now loaded above in base.html)

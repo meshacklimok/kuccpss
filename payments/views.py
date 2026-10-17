@@ -47,7 +47,7 @@ def _generate_receipt_pdf(payment: "Payment", user_name: str, mpesa_ref: str, pa
     """Render a branded one-page PDF receipt the user can download and keep."""
     import io
     from reportlab.pdfgen import canvas as pdf_canvas
-    from kuccpss.pdf_utils import enable_site_links
+    from kuccpss.pdf_utils import draw_logo_mark, enable_site_links
     from reportlab.lib.pagesizes import A4
     from reportlab.lib.units import cm
     from reportlab.lib import colors as rc
@@ -69,12 +69,13 @@ def _generate_receipt_pdf(payment: "Payment", user_name: str, mpesa_ref: str, pa
     p.rect(0, H - 3.2 * cm, W, 3.2 * cm, fill=1, stroke=0)
     p.setFillColor(TEAL)
     p.rect(0, H - 3.32 * cm, W, 0.12 * cm, fill=1, stroke=0)
+    draw_logo_mark(p, 1.8 * cm, H - 2.65 * cm, 1.9 * cm)
     p.setFillColor(WHITE)
     p.setFont("Helvetica-Bold", 20)
-    p.drawString(1.8 * cm, H - 1.6 * cm, "CareerNext")
+    p.drawString(4.1 * cm, H - 1.6 * cm, "CareerNext")
     p.setFont("Helvetica", 9)
     p.setFillColor(rc.HexColor("#bfdbfe"))
-    p.drawString(1.8 * cm, H - 2.15 * cm, "Kenya's Course & Career Placement Platform")
+    p.drawString(4.1 * cm, H - 2.15 * cm, "Kenya's Course & Career Placement Platform")
     p.setFont("Helvetica-Bold", 12)
     p.setFillColor(WHITE)
     p.drawRightString(W - 1.8 * cm, H - 1.6 * cm, "PAYMENT RECEIPT")

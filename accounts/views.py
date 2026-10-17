@@ -1625,7 +1625,7 @@ def shortlist_set_rank(request: HttpRequest, course_id: int) -> HttpResponse:
 def export_shortlist_pdf(request: HttpRequest) -> HttpResponse:
     from .models import CourseShortlist
     from reportlab.pdfgen import canvas
-    from kuccpss.pdf_utils import enable_site_links
+    from kuccpss.pdf_utils import draw_logo_mark, enable_site_links
     from reportlab.lib.pagesizes import A4
     from reportlab.lib.units import cm
     from reportlab.lib import colors
@@ -1664,15 +1664,16 @@ def export_shortlist_pdf(request: HttpRequest) -> HttpResponse:
         p.rect(0, h - 2.6*cm, w, 2.6*cm, fill=1, stroke=0)
         p.setFillColor(TEAL)
         p.rect(0, h - 2.7*cm, w, 0.12*cm, fill=1, stroke=0)
+        draw_logo_mark(p, 1.5*cm, h - 2.25*cm, 1.7*cm)
         p.setFillColor(WHITE)
         p.setFont('Helvetica-Bold', 16)
-        p.drawString(1.5*cm, h - 1.3*cm, 'CareerNext — My Course Shortlist')
+        p.drawString(3.5*cm, h - 1.3*cm, 'CareerNext — My Course Shortlist')
         p.setFont('Helvetica-Oblique', 7.5)
         p.setFillColor(colors.HexColor('#93c5fd'))
-        p.drawString(1.5*cm, h - 1.78*cm, 'Your Journey Begins Here')
+        p.drawString(3.5*cm, h - 1.78*cm, 'Your Journey Begins Here')
         p.setFont('Helvetica', 8.5)
         p.setFillColor(colors.HexColor('#bfdbfe'))
-        p.drawString(1.5*cm, h - 2.22*cm,
+        p.drawString(3.5*cm, h - 2.22*cm,
             f'Student: {name}   |   Generated: {timezone.now().strftime("%d %b %Y")}')
         p.setFont('Helvetica', 8)
         p.drawRightString(w - 1.5*cm, h - 1.35*cm,

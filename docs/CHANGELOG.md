@@ -11,6 +11,12 @@ Format: `[YYYY-MM-DD]` — description of what changed and why.
 
 ---
 
+## [2026-10-17] — New "Summit" logo applied site-wide
+- Replaced `static/img/logo*.svg`, favicon, `icon-*.png`, `logo-og.png` and added maskable PWA icons (`manifest.json` lists "any" and "maskable" separately).
+- Added `draw_logo_mark()` in `kuccpss/pdf_utils.py`; used in the receipt, cluster-points, shortlist and career PDFs.
+- Updated splash screen, auth pages, 429/500/503/offline pages, transactional and receipt emails, and the admin header (`templates/admin/base_site.html`).
+- Production needs `collectstatic`; users may need a hard refresh to see the new favicon.
+
 ## [2026-10-09] — Legacy career course tables dropped (phase 2)
 - `career/migrations/0026_drop_legacy_course_models.py` deletes the 15 legacy models (KCSEGrade, CourseCategory, University, Course, CourseCutoff, CourseCutoffHistory, TVETCategory, TVETCourse, KMTCampus, KMTCourse, TTCCollege, TTCCourse, StudentCourseMatch, AIRecommendation, CareerInsight). `get_default_course_category()` stays as a no-op because migration 0001 references it.
 - Removed the CareerInsight admin, the six test rows for those models in `data/data.json`, the `--exclude=career.studentcoursematch` flag in `build.sh`, and `scripts/_check_courses.py`.

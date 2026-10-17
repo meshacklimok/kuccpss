@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load static %}
 {% block title %}{% block analytics_title %}Analytics{% endblock %} | CareerNext Staff{% endblock %}
 
 {% block extra_head %}
@@ -460,7 +461,7 @@ body.dark .no-data::before { color: #475569; }
   <!-- ═══════ SIDEBAR ═══════ -->
   <aside class="an-sidebar" id="anSidebar">
     <a class="an-brand" href="{% url 'analytics:dashboard' %}">
-      <span class="an-brand-icon"><i class="fas fa-chart-line" style="color:#fff;"></i></span>
+      <img src="{% static 'img/logo-mark.svg' %}" alt="CareerNext" width="30" height="30" style="border-radius:7px;flex-shrink:0;">
       <span>
         <span class="an-brand-name">Analytics</span>
         <span class="an-brand-sub">CareerNext Staff</span>

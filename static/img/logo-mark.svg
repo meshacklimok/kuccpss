@@ -1,12 +1,18 @@
 <svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="CareerNext">
-  <!-- Rounded tile -->
-  <rect x="0" y="0" width="64" height="64" rx="14" fill="#1e3a8a"/>
-  <!-- Rising career path: from "you now" up to your "next" step -->
-  <g stroke="#ffffff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" fill="none">
-    <path d="M16 48 Q 30 48 34 34 T 48 16"/>
-    <!-- forward / next arrowhead -->
-    <path d="M48 26 L48 16 L38 16"/>
+<g transform="translate(0 0) scale(1.0)">
+  <defs>
+    <linearGradient id="cnm-sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2A4FB0"/><stop offset="1" stop-color="#0B1B4A"/></linearGradient>
+    <clipPath id="cnm-tile"><rect width="64" height="64" rx="15"/></clipPath>
+  </defs>
+  <g clip-path="url(#cnm-tile)">
+    <rect width="64" height="64" fill="url(#cnm-sky)"/>
+    <path d="M-4 66 L17 34 L23 40 L31 23 L34.5 28 L39 17 L68 66 Z" fill="#FFFFFF"/>
+    <path d="M39 17 L68 66 L45 66 L41.5 38 Z" fill="#B9CCF4"/>
+    <path d="M31 23 L34.5 28 L31.5 36 Z" fill="#B9CCF4"/>
+    <path d="M17 34 L23 40 L20.5 44 Z" fill="#B9CCF4"/>
+    <path d="M24 67 L38.5 56.5 L29.5 49 L38.5 41.5 L37 32" fill="none" stroke="#16A34A" stroke-width="3.9" stroke-linecap="round" stroke-linejoin="round"/>
   </g>
-  <!-- starting point node -->
-  <circle cx="16" cy="48" r="5" fill="#ffffff"/>
+  <path d="M39 18 V6.5" stroke="#FFFFFF" stroke-width="2.4" stroke-linecap="round"/>
+  <path d="M39.7 6 L50 9.4 L39.7 12.8 Z" fill="#22C55E"/>
+</g>
 </svg>

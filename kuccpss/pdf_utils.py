@@ -17,6 +17,63 @@ _LINK_RE = re.compile(
 )
 
 
+def draw_logo_mark(c, x: float, y: float, size: float) -> None:
+    """Draw the CareerNext 'Summit' mark with its lower-left corner at (x, y).
+
+    Mirrors static/img/logo-white.svg (lighter tile, made for navy header bands).
+    Coordinates below are the SVG's 64x64 grid, flipped to ReportLab's y-up space.
+    """
+    from reportlab.lib.colors import HexColor
+
+    c.saveState()
+    c.translate(x, y + size)
+    c.scale(size / 64.0, -size / 64.0)
+
+    clip = c.beginPath()
+    clip.roundRect(0, 0, 64, 64, 15)
+    c.clipPath(clip, stroke=0, fill=0)
+
+    c.setFillColor(HexColor("#2F5FD0"))
+    c.rect(0, 0, 64, 64, fill=1, stroke=0)
+
+    def poly(points, fill):
+        path = c.beginPath()
+        path.moveTo(*points[0])
+        for pt in points[1:]:
+            path.lineTo(*pt)
+        path.close()
+        c.setFillColor(HexColor(fill))
+        c.drawPath(path, fill=1, stroke=0)
+
+    poly([(-4, 66), (17, 34), (23, 40), (31, 23), (34.5, 28), (39, 17), (68, 66)], "#FFFFFF")
+    poly([(39, 17), (68, 66), (45, 66), (41.5, 38)], "#B9CCF4")
+    poly([(31, 23), (34.5, 28), (31.5, 36)], "#B9CCF4")
+    poly([(17, 34), (23, 40), (20.5, 44)], "#B9CCF4")
+
+    # Trail
+    c.setStrokeColor(HexColor("#16A34A"))
+    c.setLineWidth(3.9)
+    c.setLineCap(1)
+    c.setLineJoin(1)
+    trail = c.beginPath()
+    trail.moveTo(24, 67)
+    for pt in [(38.5, 56.5), (29.5, 49), (38.5, 41.5), (37, 32)]:
+        trail.lineTo(*pt)
+    c.drawPath(trail, fill=0, stroke=1)
+    c.restoreState()
+
+    # Flag sits above the clip so the pole and pennant can reach past the peak.
+    c.saveState()
+    c.translate(x, y + size)
+    c.scale(size / 64.0, -size / 64.0)
+    c.setStrokeColor(HexColor("#FFFFFF"))
+    c.setLineWidth(2.4)
+    c.setLineCap(1)
+    c.line(39, 18, 39, 6.5)
+    poly([(39.7, 6), (50, 9.4), (39.7, 12.8)], "#4ADE80")
+    c.restoreState()
+
+
 def _href(match: re.Match) -> str:
     if match.group("email"):
         return f"mailto:{match.group('email')}"

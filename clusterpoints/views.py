@@ -8,7 +8,7 @@ from django.http import HttpResponse
 from django.utils import timezone
 
 from reportlab.pdfgen import canvas
-from kuccpss.pdf_utils import enable_site_links
+from kuccpss.pdf_utils import draw_logo_mark, enable_site_links
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import cm
 
@@ -435,12 +435,13 @@ def export_cluster_pdf(request):
         p.rect(0, H - 2.0*cm, W, 2.0*cm, fill=1, stroke=0)
         p.setFillColor(TEAL)
         p.rect(0, H - 2.1*cm, W, 0.12*cm, fill=1, stroke=0)
+        draw_logo_mark(p, 1.5*cm, H - 1.7*cm, 1.4*cm)
         p.setFillColor(WHITE)
         p.setFont("Helvetica-Bold", 13)
-        p.drawString(1.5*cm, H - 1.2*cm, "CareerNext — KCSE Cluster Points Report")
+        p.drawString(3.3*cm, H - 1.2*cm, "CareerNext — KCSE Cluster Points Report")
         p.setFont("Helvetica-Oblique", 7.5)
         p.setFillColor(rc.HexColor("#93c5fd"))
-        p.drawString(1.5*cm, H - 1.72*cm, "Your Journey Begins Here")
+        p.drawString(3.3*cm, H - 1.72*cm, "Your Journey Begins Here")
         p.setFont("Helvetica", 8)
         p.setFillColor(rc.HexColor("#bfdbfe"))
         p.drawRightString(W - 1.5*cm, H - 1.3*cm, f"careernext.co.ke   |   Page {page_num[0]}")
@@ -650,12 +651,13 @@ def export_full_results_pdf(request):
         p.rect(0, H - 2.0*cm, W, 2.0*cm, fill=1, stroke=0)
         p.setFillColor(TEAL)
         p.rect(0, H - 2.1*cm, W, 0.12*cm, fill=1, stroke=0)
+        draw_logo_mark(p, 1.5*cm, H - 1.7*cm, 1.4*cm)
         p.setFillColor(WHITE)
         p.setFont("Helvetica-Bold", 13)
-        p.drawString(1.5*cm, H - 1.2*cm, "CareerNext — KCSE Full Results Report")
+        p.drawString(3.3*cm, H - 1.2*cm, "CareerNext — KCSE Full Results Report")
         p.setFont("Helvetica-Oblique", 7.5)
         p.setFillColor(rc.HexColor("#93c5fd"))
-        p.drawString(1.5*cm, H - 1.72*cm, "Your Journey Begins Here")
+        p.drawString(3.3*cm, H - 1.72*cm, "Your Journey Begins Here")
         p.setFont("Helvetica", 8)
         p.setFillColor(rc.HexColor("#bfdbfe"))
         p.drawRightString(W - 1.5*cm, H - 1.3*cm, f"Page {page_num[0]}  |  careernext.co.ke")
