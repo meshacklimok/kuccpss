@@ -239,16 +239,16 @@ If anything fails before step 3, nothing is lost. Set `MAINTENANCE_MODE=False` o
 ---
 
 ## Part 8 — After the move
-- **Backups (free, replaces DO Droplet backups).** Neon point-in-time restore is gone, and the GitHub `db-backup` workflow can't reach a database bound to localhost, so disable that workflow. `backup.sh` dumps the DB daily, keeps 14 locally and copies them off the server:
+- **Backups (free, replaces DO Droplet backups).** Neon point-in-time restore is gone, and the GitHub `db-backup` workflow can't reach a database bound to localhost, so disable that workflow. `backup.sh` dumps the DB every hour and keeps the 24 newest plus the last dump of each of the 30 days before that (~54 files, ~1 GB), on the server and on every rclone remote in `RCLONE_REMOTE`:
   ```bash
   mkdir ~/backups
   curl https://rclone.org/install.sh | sudo bash
-  rclone config                      # add a remote: Backblaze B2 (10 GB free) or Google Drive
-  echo 'RCLONE_REMOTE=b2:kuccpss-backups' >> /srv/kuccpss/.env
+  rclone config                      # add remotes: Backblaze B2 (10 GB free) and/or Google Drive
+  echo 'RCLONE_REMOTE=b2:kuccpss-backups,gdrive:kuccpss-backups' >> /srv/kuccpss/.env
   crontab -e                         # add:
-  30 3 * * * /srv/kuccpss/backup.sh >> /home/deploy/backups/backup.log 2>&1
+  0 * * * * /srv/kuccpss/backup.sh >> /home/deploy/backups/backup.log 2>&1
   ```
-  Run `./backup.sh` once by hand and confirm the file appears in the remote. A backup that only exists on the server is lost if the server is. Test a restore now and then: `pg_restore --no-owner --no-privileges --clean --if-exists -d <db url> backup_XXXX.dump`.
+  Run `./backup.sh` once by hand and confirm the file appears in each remote. A backup that only exists on the server is lost if the server is. Retention counts files, not time, so if backups stop the old ones are kept, not aged out. Test a restore now and then: `pg_restore --no-owner --no-privileges --clean --if-exists -d <db url> backup_XXXX.dump`.
 - **Deploying from now on** replaces Render's auto-deploy:
   ```bash
   cd /srv/kuccpss && ./deploy.sh      # git pull, build.sh, restart both services
