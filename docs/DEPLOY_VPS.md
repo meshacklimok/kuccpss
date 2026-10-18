@@ -239,12 +239,14 @@ If anything fails before step 3, nothing is lost. Set `MAINTENANCE_MODE=False` o
 ---
 
 ## Part 8 — After the move
-- **Backups (free, replaces DO Droplet backups).** Neon point-in-time restore is gone, and the GitHub `db-backup` workflow can't reach a database bound to localhost, so disable that workflow. `backup.sh` dumps the DB every hour and keeps the 24 newest plus the last dump of each of the 30 days before that (~54 files, ~1 GB), on the server and on every rclone remote in `RCLONE_REMOTE`:
+- **Backups (free, replaces DO Droplet backups).** Neon point-in-time restore is gone, and the GitHub `db-backup` workflow can't reach a database bound to localhost, so disable that workflow. `backup.sh` dumps the DB every hour and keeps the 24 newest, the last dump of each of the 7 days before that, then the last of each of the 8 weeks before that (~39 files, ~800 MB), on the server and on every rclone remote in `RCLONE_REMOTE`:
   ```bash
   mkdir ~/backups
   curl https://rclone.org/install.sh | sudo bash
   rclone config                      # add remotes: Backblaze B2 (10 GB free) and/or Google Drive
-  echo 'RCLONE_REMOTE=b2:kuccpss-backups,gdrive:kuccpss-backups' >> /srv/kuccpss/.env
+  echo 'RCLONE_REMOTE=gdrive:kuccpss-backups' >> /srv/kuccpss/.env   # comma-separate for several
+  # Google Drive: add `use_trash = false` under [gdrive] in ~/.config/rclone/rclone.conf,
+  # or pruned dumps sit in the Drive trash (counted against quota) for 30 days.
   crontab -e                         # add:
   0 * * * * /srv/kuccpss/backup.sh >> /home/deploy/backups/backup.log 2>&1
   ```

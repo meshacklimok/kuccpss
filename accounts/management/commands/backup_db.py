@@ -7,10 +7,11 @@ Usage:
   python manage.py backup_db                 # dump to backups/ directory
   python manage.py backup_db --dest /tmp     # dump to specific path
   python manage.py backup_db --keep 14       # keep only the 14 newest dumps
-  python manage.py backup_db --hourly 24 --daily 30
-                                             # keep the 24 newest, plus the last
-                                             # dump of each of the 30 days before
-  python manage.py backup_db --hourly 24 --daily 30 --remote b2:bucket,gdrive:dir
+  python manage.py backup_db --hourly 24 --daily 7 --weekly 8
+                                             # keep the 24 newest, the last dump of
+                                             # each of the 7 days before, then the
+                                             # last of each of the 8 weeks before
+  python manage.py backup_db --hourly 24 --daily 7 --weekly 8 --remote b2:bucket,gdrive:dir
                                              # also rclone-copy the new dump to
                                              # each remote and prune it the same way
   python manage.py backup_db --stdout        # stream a plain-SQL dump to stdout
@@ -48,28 +49,37 @@ def _backup_time(name):
         return None
 
 
-def backups_to_delete(names, hourly, daily):
+def backups_to_delete(names, hourly, daily, weekly=0):
     """
     Names to remove under the tiered policy: keep the `hourly` newest dumps,
-    then of the rest keep only the newest dump of each of the `daily` most
-    recent local-time days. Names that aren't backup files are never touched.
+    then the newest dump of each of the `daily` most recent local-time days,
+    then the newest dump of each of the `weekly` most recent ISO weeks before
+    that. Names that aren't backup files are never touched.
     """
     dated = sorted(
         ((t, n) for n in names if n.startswith('backup_') and n.endswith('.dump')
          for t in [_backup_time(n)] if t),
         reverse=True,
     )
-    older = dated[hourly:]
-    kept_days = []
     delete = []
-    for t, name in older:
-        day = dj_timezone.localtime(t).date()
-        if day in kept_days:
-            delete.append(name)          # an earlier dump of an already-kept day
-        elif len(kept_days) < daily:
-            kept_days.append(day)        # newest dump of this day — keep
-        else:
-            delete.append(name)
+    tiers = [
+        (daily, lambda d: d),
+        (weekly, lambda d: d.isocalendar()[:2]),
+    ]
+    remaining = dated[hourly:]
+    for limit, period_of in tiers:
+        kept_periods = []
+        passed = []
+        for t, name in remaining:
+            period = period_of(dj_timezone.localtime(t).date())
+            if period in kept_periods:
+                delete.append(name)      # an earlier dump of an already-kept period
+            elif len(kept_periods) < limit:
+                kept_periods.append(period)  # newest dump of this period — keep
+            else:
+                passed.append((t, name))     # beyond this tier — try the next one
+        remaining = passed
+    delete.extend(name for _, name in remaining)
     return delete
 
 
@@ -93,6 +103,10 @@ class Command(BaseCommand):
         parser.add_argument(
             '--daily', type=int, default=30,
             help='Tiered retention: beyond --hourly, keep the last dump of this many days. Default: 30',
+        )
+        parser.add_argument(
+            '--weekly', type=int, default=0,
+            help='Tiered retention: beyond --daily, keep the last dump of this many ISO weeks. Default: 0',
         )
         parser.add_argument(
             '--remote', default='',
@@ -155,7 +169,7 @@ class Command(BaseCommand):
 
         if options['hourly'] is not None:
             names = [f.name for f in dest_dir.glob('backup_*.dump')]
-            old = [dest_dir / n for n in backups_to_delete(names, options['hourly'], options['daily'])]
+            old = [dest_dir / n for n in backups_to_delete(names, options['hourly'], options['daily'], options['weekly'])]
         elif options['keep'] > 0:
             old = sorted(dest_dir.glob('backup_*.dump'), reverse=True)[options['keep']:]
         else:
@@ -189,7 +203,7 @@ class Command(BaseCommand):
         if listing.returncode:
             self.stderr.write(f"rclone listing of {remote} failed; not pruning it.")
             return False
-        old = backups_to_delete(listing.stdout.split(), options['hourly'], options['daily'])
+        old = backups_to_delete(listing.stdout.split(), options['hourly'], options['daily'], options['weekly'])
         for name in old:
             subprocess.run(['rclone', 'deletefile', f"{target}/{name}"])
         if old:

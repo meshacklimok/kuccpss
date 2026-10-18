@@ -29,6 +29,17 @@ class BackupRetentionTests(SimpleTestCase):
         kept = set(names) - set(backups_to_delete(names, hourly=24, daily=3))
         self.assertEqual(len(kept), 24 + 3)
 
+    def test_weekly_tier_after_daily(self):
+        names = self._hourly(24 * 70)  # ten weeks of hourly dumps
+        kept = sorted(set(names) - set(backups_to_delete(names, hourly=24, daily=7, weekly=8)))
+        self.assertEqual(len(kept), 24 + 7 + 8)
+        # the weekly copies are each from a different ISO week
+        from django.utils import timezone as tz
+        from accounts.management.commands.backup_db import _backup_time
+        weekly = kept[:8]
+        weeks = {tz.localtime(_backup_time(n)).date().isocalendar()[:2] for n in weekly}
+        self.assertEqual(len(weeks), 8)
+
     def test_stopped_backups_are_not_aged_out(self):
         # Dumps stopped long ago: retention is count-based, so the newest survive.
         names = self._hourly(30)
