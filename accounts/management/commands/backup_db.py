@@ -7,11 +7,11 @@ Usage:
   python manage.py backup_db                 # dump to backups/ directory
   python manage.py backup_db --dest /tmp     # dump to specific path
   python manage.py backup_db --keep 14       # keep only the 14 newest dumps
-  python manage.py backup_db --hourly 24 --daily 7 --weekly 8
-                                             # keep the 24 newest, the last dump of
-                                             # each of the 7 days before, then the
-                                             # last of each of the 8 weeks before
-  python manage.py backup_db --hourly 24 --daily 7 --weekly 8 --remote b2:bucket,gdrive:dir
+  python manage.py backup_db --hourly 24 --daily 7 --weekly 4 --monthly 12
+                                             # keep the 24 newest, then the last dump
+                                             # of each of the 7 days, 4 weeks and
+                                             # 12 months before
+  python manage.py backup_db --hourly 24 --daily 7 --weekly 4 --monthly 12 --remote b2:bucket,gdrive:dir
                                              # also rclone-copy the new dump to
                                              # each remote and prune it the same way
   python manage.py backup_db --stdout        # stream a plain-SQL dump to stdout
@@ -49,12 +49,13 @@ def _backup_time(name):
         return None
 
 
-def backups_to_delete(names, hourly, daily, weekly=0):
+def backups_to_delete(names, hourly, daily, weekly=0, monthly=0):
     """
     Names to remove under the tiered policy: keep the `hourly` newest dumps,
     then the newest dump of each of the `daily` most recent local-time days,
-    then the newest dump of each of the `weekly` most recent ISO weeks before
-    that. Names that aren't backup files are never touched.
+    then of each of the `weekly` most recent ISO weeks before that, then of
+    each of the `monthly` most recent months before that. Names that aren't
+    backup files are never touched.
     """
     dated = sorted(
         ((t, n) for n in names if n.startswith('backup_') and n.endswith('.dump')
@@ -65,6 +66,7 @@ def backups_to_delete(names, hourly, daily, weekly=0):
     tiers = [
         (daily, lambda d: d),
         (weekly, lambda d: d.isocalendar()[:2]),
+        (monthly, lambda d: (d.year, d.month)),
     ]
     remaining = dated[hourly:]
     for limit, period_of in tiers:
@@ -107,6 +109,10 @@ class Command(BaseCommand):
         parser.add_argument(
             '--weekly', type=int, default=0,
             help='Tiered retention: beyond --daily, keep the last dump of this many ISO weeks. Default: 0',
+        )
+        parser.add_argument(
+            '--monthly', type=int, default=0,
+            help='Tiered retention: beyond --weekly, keep the last dump of this many months. Default: 0',
         )
         parser.add_argument(
             '--remote', default='',
@@ -169,7 +175,7 @@ class Command(BaseCommand):
 
         if options['hourly'] is not None:
             names = [f.name for f in dest_dir.glob('backup_*.dump')]
-            old = [dest_dir / n for n in backups_to_delete(names, options['hourly'], options['daily'], options['weekly'])]
+            old = [dest_dir / n for n in backups_to_delete(names, options['hourly'], options['daily'], options['weekly'], options['monthly'])]
         elif options['keep'] > 0:
             old = sorted(dest_dir.glob('backup_*.dump'), reverse=True)[options['keep']:]
         else:
@@ -203,7 +209,7 @@ class Command(BaseCommand):
         if listing.returncode:
             self.stderr.write(f"rclone listing of {remote} failed; not pruning it.")
             return False
-        old = backups_to_delete(listing.stdout.split(), options['hourly'], options['daily'], options['weekly'])
+        old = backups_to_delete(listing.stdout.split(), options['hourly'], options['daily'], options['weekly'], options['monthly'])
         for name in old:
             subprocess.run(['rclone', 'deletefile', f"{target}/{name}"])
         if old:

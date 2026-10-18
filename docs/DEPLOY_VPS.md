@@ -239,7 +239,7 @@ If anything fails before step 3, nothing is lost. Set `MAINTENANCE_MODE=False` o
 ---
 
 ## Part 8 — After the move
-- **Backups (free, replaces DO Droplet backups).** Neon point-in-time restore is gone, and the GitHub `db-backup` workflow can't reach a database bound to localhost, so disable that workflow. `backup.sh` dumps the DB every hour and keeps the 24 newest, the last dump of each of the 7 days before that, then the last of each of the 8 weeks before that (~39 files, ~800 MB), on the server and on every rclone remote in `RCLONE_REMOTE`:
+- **Backups (free, replaces DO Droplet backups).** Neon point-in-time restore is gone, and the GitHub `db-backup` workflow can't reach a database bound to localhost, so disable that workflow. `backup.sh` dumps the DB every hour and keeps the 24 newest, then the last dump of each of the 7 days, 4 weeks and 12 months before that (~47 files, ~1 GB), on the server and on every rclone remote in `RCLONE_REMOTE`:
   ```bash
   mkdir ~/backups
   curl https://rclone.org/install.sh | sudo bash

@@ -40,6 +40,12 @@ class BackupRetentionTests(SimpleTestCase):
         weeks = {tz.localtime(_backup_time(n)).date().isocalendar()[:2] for n in weekly}
         self.assertEqual(len(weeks), 8)
 
+    def test_monthly_tier_after_weekly(self):
+        # one dump a day for ~15 months is enough to fill every tier
+        names = [_name(self.start + timedelta(days=d)) for d in range(460)]
+        kept = sorted(set(names) - set(backups_to_delete(names, hourly=24, daily=7, weekly=4, monthly=12)))
+        self.assertEqual(len(kept), 24 + 7 + 4 + 12)
+
     def test_stopped_backups_are_not_aged_out(self):
         # Dumps stopped long ago: retention is count-based, so the newest survive.
         names = self._hourly(30)

@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # Hourly database backup on the Droplet (replaces DigitalOcean's paid Droplet backups).
-# Dumps with `manage.py backup_db`, keeps the 24 newest, the last dump of each of
-# the 7 days before that, then the last of each of the 8 weeks before that
-# (~39 files), both locally and on every rclone remote listed in
+# Dumps with `manage.py backup_db`, keeps the 24 newest, then the last dump of
+# each of the 7 days, 4 weeks and 12 months before that (~47 files), both
+# locally and on every rclone remote listed in
 # RCLONE_REMOTE in .env, comma-separated
 # (e.g. RCLONE_REMOTE=b2:kuccpss-backups,gdrive:kuccpss-backups).
 #
@@ -23,4 +23,4 @@ RCLONE_REMOTE="$(grep -E '^RCLONE_REMOTE=' .env 2>/dev/null | cut -d= -f2- || tr
 [ -n "$RCLONE_REMOTE" ] || echo "WARNING: RCLONE_REMOTE not set - backup exists only on this server"
 
 echo "$(date -Is) backup start"
-nice -n 10 python manage.py backup_db --dest "$BACKUP_DIR" --hourly 24 --daily 7 --weekly 8 --remote "$RCLONE_REMOTE"
+nice -n 10 python manage.py backup_db --dest "$BACKUP_DIR" --hourly 24 --daily 7 --weekly 4 --monthly 12 --remote "$RCLONE_REMOTE"
