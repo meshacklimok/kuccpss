@@ -44,7 +44,7 @@ class ContentSecurityPolicyMiddleware:
             "https://eu.posthog.com https://app.posthog.com https://*.sentry.io "
             "https://embed.tawk.to https://va.tawk.to wss://va.tawk.to",
         "frame-src 'self' https://accounts.google.com https://embed.tawk.to "
-            "https://challenges.cloudflare.com",
+            "https://challenges.cloudflare.com https://www.youtube-nocookie.com",
         "object-src 'none'",
         "base-uri 'self'",
         "form-action 'self' https://accounts.google.com",
@@ -341,13 +341,34 @@ class MaintenanceModeMiddleware:
         '/offline/',
     )
 
+    # Admin switch (SiteSetting 'maintenance_mode' = on/off) is re-read at most every
+    # few seconds per worker, so a toggle takes effect across all gunicorn workers fast.
+    _DB_TTL = 5
+    _db_checked_at = 0.0
+    _db_value = False
+
     def __init__(self, get_response):
         self.get_response = get_response
+
+    @classmethod
+    def _enabled_in_admin(cls):
+        import time
+        now = time.monotonic()
+        if now - cls._db_checked_at > cls._DB_TTL:
+            try:
+                from resources.models import SiteSetting
+                value = SiteSetting.objects.filter(key='maintenance_mode') \
+                    .values_list('value', flat=True).first() or ''
+                cls._db_value = value.strip().lower() in ('on', 'true', '1', 'yes')
+            except Exception:
+                pass  # DB unavailable — keep last known value; env var still applies
+            cls._db_checked_at = now
+        return cls._db_value
 
     def __call__(self, request):
         from django.conf import settings
 
-        if not getattr(settings, 'MAINTENANCE_MODE', False):
+        if not (getattr(settings, 'MAINTENANCE_MODE', False) or self._enabled_in_admin()):
             return self.get_response(request)
 
         if request.path.startswith(self.EXEMPT_PREFIXES):
@@ -412,6 +433,10 @@ class PageTrackingMiddleware:
         path = request.path
         if (any(path.startswith(p) for p in self.SKIP_PREFIXES) or
                 path in self.SKIP_PATHS):
+            return self.get_response(request)
+
+        # Browser link-prefetch (hover/touch) isn't a real visit; don't count it.
+        if request.META.get('HTTP_SEC_PURPOSE', '').startswith('prefetch'):
             return self.get_response(request)
 
         t0 = time.monotonic()
