@@ -11,6 +11,11 @@ Format: `[YYYY-MM-DD]` — description of what changed and why.
 
 ---
 
+## [2026-10-19] — Career results: shared course catalogue instead of per-student cache
+- New `courses/catalogue.py`: each gunicorn worker loads the offerings once per course type (~15 MB for all pathways) and shares them across students. Invalidated by a Redis version key bumped on save/delete of Course, CourseOffering, CourseCategory, CourseType, Institution and Cluster, and by `import_kuccps_portal`; 15-min TTL catches bulk writes that skip signals. Warmed per worker at startup.
+- `career_results` and the results PDFs use it. Removed the per-session match cache (2.4–5.4 MB of pickled models per student in Redis, which would exhaust memory at results-day traffic); the dashboard snapshot write is now gated by an input signature in the session. Warm results pages went from ~520–940 ms to ~100–240 ms locally; output unchanged.
+- `docs/DEPLOY_VPS.md`: Postgres tuning + `pg_stat_statements`, Redis `maxmemory` with `volatile-lru` (django-q's queue lives in Redis), `DB_STATEMENT_TIMEOUT_MS=30000`.
+
 ## [2026-10-17] — New "Summit" logo applied site-wide
 - Replaced `static/img/logo*.svg`, favicon, `icon-*.png`, `logo-og.png` and added maskable PWA icons (`manifest.json` lists "any" and "maskable" separately).
 - Added `draw_logo_mark()` in `kuccpss/pdf_utils.py`; used in the receipt, cluster-points, shortlist and career PDFs.

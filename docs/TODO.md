@@ -2,76 +2,20 @@
 
 Format: `[ ]` not done | `[x]` done | `[~]` in progress | `[-]` dropped/deferred
 
-Last updated: 2026-06-30
+Last updated: 2026-10-18
 
 ---
 
-## P0 — Migrate to Railway ($10/mo → 250 concurrent users perfectly)
+## P0 — Hosting: DigitalOcean Droplet (replaces the abandoned Railway plan)
 
-> Current Render Free handles ~40 concurrent users. Railway Hobby handles ~250 at the same $10/mo.
-> Why 250: Railway gives 1–2 dedicated vCPU + 8 GB RAM + same-network Postgres (5ms latency vs 150ms on Render).
-> The eligible courses query drops from 360ms → ~80ms on Railway just from DB proximity.
+> Render + Neon were replaced by a DigitalOcean Droplet (46.101.209.138). Deploy notes: [DEPLOY_VPS.md](DEPLOY_VPS.md).
 
-### Step 1 — Railway account & project setup
-- [ ] Create account at railway.app → New Project → "Empty project"
-- [ ] Add **PostgreSQL** plugin — Railway dashboard → + New → Database → PostgreSQL
-- [ ] Copy `DATABASE_URL` from the PostgreSQL plugin Variables tab
-- [ ] (Optional — adds 100+ users) Add **Redis** plugin → copy `REDIS_URL`; adds ~$3/mo
-
-### Step 2 — Create `railway.toml` config
-- [ ] Create `railway.toml` in project root (file already scaffolded below — just verify)
-- [ ] Confirm `gunicorn.conf.py` is committed (already done)
-- [ ] Confirm `requirements.txt` includes `gunicorn[gthread]` (already done)
-
-### Step 3 — Set environment variables in Railway dashboard
-Copy every variable from your Render dashboard into Railway → Variables:
-- [ ] `SECRET_KEY` — your production secret key
-- [ ] `DJANGO_DEBUG` = `False`
-- [ ] `DATABASE_URL` — from Railway PostgreSQL plugin (paste it)
-- [ ] `REDIS_URL` — from Railway Redis plugin (if added)
-- [ ] `ALLOWED_HOSTS` — add your Railway domain e.g. `careernext.up.railway.app,careernext.co.ke`
-- [ ] `RESEND_API_KEY` — email sending
-- [ ] `OPENAI_API_KEY` — career engine
-- [ ] `INTASEND_SECRET_KEY` + `INTASEND_PUBLISHABLE_KEY` — payments
-- [ ] `SENTRY_DSN` — error monitoring
-- [ ] `GA_MEASUREMENT_ID` — Google Analytics
-- [ ] `GUNICORN_WORKERS` = `4`
-- [ ] `GUNICORN_WORKER_CLASS` = `gthread`
-- [ ] `GUNICORN_THREADS` = `2`
-- [ ] `DATA_VERSION` = `2024`
-- [ ] `DATA_CYCLE` = `2025/2026`
-- [ ] `DATA_UPDATED` = `March 2025`
-
-### Step 4 — Deploy & migrate
-- [ ] Push code to GitHub (Railway auto-deploys from GitHub)
-- [ ] In Railway: connect repo → select branch `master` → deploy
-- [ ] Once deployed, open Railway shell or run via Railway CLI:
-      `python manage.py migrate`
-      `python manage.py collectstatic --noinput`
-      `python manage.py createsuperuser`
-- [ ] Seed payment features: `python manage.py seed_payment_features`
-
-### Step 5 — Point domain to Railway
-- [ ] In Railway: Settings → Domains → Add custom domain → `careernext.co.ke`
-- [ ] Update DNS: add CNAME record pointing `careernext.co.ke` → Railway URL
-- [ ] Update `ALLOWED_HOSTS` to include `careernext.co.ke` (already in settings, just confirm)
-- [ ] Update IntaSend webhook URL from Render URL → Railway URL
-- [ ] Update Sentry `server_name` if hardcoded
-
-### Step 6 — Verify
-- [ ] Open https://careernext.co.ke — home page loads, no 500
-- [ ] Run calculator with real grades → results appear
-- [ ] Check Django admin at /cn-staff/
-- [ ] Send a test email (register a new account)
-- [ ] Run locust load test: `locust -f scripts/locustfile.py --host https://careernext.co.ke`
-      → set 50 users, ramp 5/sec → all green = migration successful
-
-### Capacity after migration (Railway Hobby, $10/mo)
-| Config | Perfect concurrent users | Cost |
-|--------|:------------------------:|------|
-| No Redis (LocMemCache) | **250** | $10/mo |
-| + Railway Redis plugin | **600** | ~$13/mo |
-| Upgrade to Railway Pro + Redis | **2 500** | ~$35/mo |
+- [x] Droplet provisioned, rehearsal deploy done (2026-10-17)
+- [ ] DNS cutover for careernext.co.ke to the Droplet
+- [ ] Deploy migration `career/0026_drop_legacy_course_models` (committed, not yet deployed)
+- [ ] Re-point the IntaSend webhook URL to the new host after cutover
+- [ ] Set `REDIS_URL` in production (cache survives restarts)
+- [ ] Post-cutover checks: home page, calculator, /cn-staff/, registration email, locust run (`scripts/locustfile.py`)
 
 ---
 
@@ -300,36 +244,31 @@ To check: log into your IntaSend dashboard → Send Money → if it says "contac
 - [ ] Set `REDIS_URL` in production (Render) — settings auto-upgrade the cache backend to Redis; cache then survives worker restarts/deploys instead of dying with each LocMemCache process
 
 
-1.back button in big screens
-2. the dedline banner ...kuccps 2026 application portal closes ,check eligibility,apply on kuccps when one cancels  let it appear after 48 hrs
-3.soft delete dont delete completely like  a user
-4.email broadcast--when you click send now there is an error in admin dashboard
-5.email verification  - - [09/Aug/2026:23:04:21 +0300] "GET /sw.js HTTP/1.1" 200 2645 89440μs
-127.0.0.1 - - [09/Aug/2026:23:04:22 +0300] "GET /accounts/verify-email/g8ygkWTv9JEmAAOT87iXbDAxpA-4CxKsbPMFh2BEwSY/ HTTP/1.1" 404 67922 136655μs
-127.0.0.1 - - [09/Aug/2026:23:04:22 +0300] "POST /analytics/heartbeat/ HTTP/1.1" 200 12 119141μs
-127.0.0.1 - - [09/Aug/2026:23:04:25 +0300] "POST /analytics/heartbeat/ HTTP/1.1" 200 12 103402μs
-127.0.0.1 - - [09/Aug/2026:23:04:25 +0300] "GET /static/manifest.json HTTP/1.1" 304 0 1291μs
-127.0.0.1 - - [09/Aug/2026:23:04:27 +0300] "GET /sw.js HTTP/1.1" 200 2645 38302μs
-6.mentee not received an emaail after manual verification
-7.verify tokens turned on and off
+1.~~back button in big screens~~ ✅ (floating Back pill at ≥1200px when the visitor came from another page of the site; hidden on home/dashboard)
+2.~~deadline banner reappears 48 hrs after dismissal~~ ✅
+3.~~soft delete users~~ ✅ (admin delete = soft delete; Restore action; hard delete is superuser-only)
+4.~~email broadcast Send Now error~~ ✅ (confirmation page, POST, background send)
+5.~~email verification link 404~~ ✅ (`/accounts/verify-email/<token>/` resolves; the view redirects, never 404s; the August log line was from an older build)
+6.~~mentee not emailed after manual verification~~ ✅ (admin status edit and the "confirm manual payment" action both run `_confirm_session_after_payment`; emails retried if sending fails)
+7.verify tokens turned on and off -- UNCLEAR, needs a reproduction. Note: RegisterView sets `is_verified=True` at signup, so the emailed link is a courtesy, not a gate
 8.~~CAREEER NEXT AI IN CAREER ENGINE~~ ✅ (results-page widget: greets only when opened so no credit is burned on page load, escapes/formats replies, handles paywall + login, links to full /career/chat/)
-9.REMOVE UNUSEFUL THINGS IN ADMIN LIKE KMT COURSES AND CAMPUSS SAME TO TTC ,tvet categories,courses SINCE WE HAVE A DB THAT DOES THOSE THINGS
+9.~~remove KMTC/TTC/TVET models from admin~~ ✅ (only courses.Course/Offering/Type/Category and institutions.* are registered)
 10.careernext ai customiseX
 11.~~whatsapp group link be editable in admin~~ ✅ (Admin → Resources → Site Settings → "WhatsApp Group Link"; blank hides the footer icon)
-12. notifications remain for 1 month in ones notification panel and admin can delete certain notifications after sometime for evryone also edit
-13.check it does not alloqw connection via http
-14.form serialisation---check what users submit deny unacceptable Audit CareerNext’s file-upload system and securely prevent uploaded JavaScript or other executable files from being stored/executed in a way that could create XSS, code execution, or other security vulnerabilities; implement the safest production-ready solution without breaking legitimate uploads.”
-14.contact us recapture simple
-15.Rate limiting-allow certain nomber of requests per unit time
+12.~~notifications kept 30 days; admin can edit/delete/purge~~ ✅ (`purge_notifications` runs on deploy; NotificationAdmin)
+13.~~no plain HTTP~~ ✅ (SSL redirect, HSTS 1y, secure cookies)
+14.~~upload security~~ ✅ (`kuccpss/upload_validators.py` on every file field) --- original note: Audit CareerNext’s file-upload system and securely prevent uploaded JavaScript or other executable files from being stored/executed in a way that could create XSS, code execution, or other security vulnerabilities; implement the safest production-ready solution without breaking legitimate uploads.”
+14.~~contact form captcha~~ ✅ (Turnstile + honeypot + 3/hour per IP on /resources/contact/)
+15.~~rate limiting~~ ✅
 16.~~Kuccps calendar editable in admin~~ ✅ (Admin → Resources → KUCCPS Calendar)
 17.~~MOVE FEEDBBACK BUTTON TO LEFT~~ ✅
 18.~~More how to guides~~ ✅ (6 new guides on /resources/how-to-guides/)
-19.insert a video space short videeo on how to paste your cluster points 
-20.on the linked courses in career profiles let the courses appear in order that is for thet exact course for example if its a data science course let number one be  data science or with analytics rather than applied statistics and others which do not relate well such as acturial sience
-21.on career engine on sort by institution add one can choose an instition in that category and show the courses he qualifies and not and the rest in that institiom then on course name he can chooose a course or search and show that particular course and its related names and there instituions respectively
-22.on search button when searching let there be suggestions 
-23.contact support form
-24.remve that part that one can upload profile photo let it be like if ones email starts with the letter of email or name
+19.~~video slot on the paste page~~ ✅ (Admin → Site Settings → "How-to-paste video URL"; YouTube or .mp4/.webm; blank hides it) 
+20.~~(done: ranked by `courses.relevance`)~~ on the linked courses in career profiles let the courses appear in order that is for thet exact course for example if its a data science course let number one be  data science or with analytics rather than applied statistics and others which do not relate well such as acturial sience
+21.~~(done: institution/course pickers on results page)~~ on career engine on sort by institution add one can choose an instition in that category and show the courses he qualifies and not and the rest in that institiom then on course name he can chooose a course or search and show that particular course and its related names and there instituions respectively
+22.~~search suggestions~~ ✅ (/api/search/) 
+23.~~contact support form~~ ✅ (/resources/contact/; saved as Site Feedback and emailed to admin_email; linked in footer)
+24.~~initial-letter avatars, no photo upload~~ ✅ (`User.profile_picture` column still exists but is unused)
 25.~~withdraw to alert admin ...withdrawal histrory~~ ✅ (admin emailed on every mentor/affiliate withdrawal; full history at /mentorship/dashboard/withdrawals/ and /accounts/affiliate/withdrawals/)
 26.~~once one scrolls on the 3 horizontal lines it should close~~ ✅ (open mobile ☰ menu collapses after ~40px of page scroll — static/js/main.js)
 27.~~Delete account~~ ✅ (Profile → Delete Account; soft-delete + personal data scrubbed)
