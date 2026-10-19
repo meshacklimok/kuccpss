@@ -165,3 +165,70 @@ class SyncContentTests(TestCase):
         a.refresh_from_db(); b.refresh_from_db()
         self.assertEqual(a.cutoff_points, {'2024': 40.1, '2025': 41.2})
         self.assertIsNone(b.cutoff_points)
+
+
+class ContactFormTests(TestCase):
+    def setUp(self):
+        from django.core.cache import cache
+        cache.clear()
+        self.url = reverse("resources:contact")
+        self.good = {"name": "Amina", "email": "amina@example.com", "topic": "payment",
+                     "message": "My payment went through but results are locked."}
+
+    def test_page_renders(self):
+        self.assertEqual(self.client.get(self.url).status_code, 200)
+
+    def test_valid_post_saves_and_emails_admin(self):
+        from django.core import mail
+        from resources.models import SiteFeedback
+        resp = self.client.post(self.url, self.good)
+        self.assertRedirects(resp, self.url)
+        self.assertEqual(SiteFeedback.objects.count(), 1)
+        self.assertEqual(len(mail.outbox), 1)
+
+    def test_invalid_email_rejected(self):
+        from resources.models import SiteFeedback
+        resp = self.client.post(self.url, {**self.good, "email": "nope"})
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(SiteFeedback.objects.count(), 0)
+
+    def test_honeypot_is_dropped_silently(self):
+        from resources.models import SiteFeedback
+        self.client.post(self.url, {**self.good, "website": "http://spam"})
+        self.assertEqual(SiteFeedback.objects.count(), 0)
+
+    def test_rate_limited_after_three(self):
+        from resources.models import SiteFeedback
+        for _ in range(5):
+            self.client.post(self.url, self.good)
+        self.assertEqual(SiteFeedback.objects.count(), 3)
+
+
+class PasteHelpVideoTests(TestCase):
+    def _video(self, value):
+        from django.core.cache import cache
+        from resources.models import SiteSetting
+        from career.views import _paste_help_video
+        SiteSetting.objects.update_or_create(key='paste_help_video_url', defaults={'label': 'v', 'value': value})
+        cache.clear()
+        return _paste_help_video()
+
+    def test_blank_hides_video(self):
+        self.assertIsNone(self._video(''))
+
+    def test_youtube_variants_become_nocookie_embeds(self):
+        for u in ('https://www.youtube.com/watch?v=dQw4w9WgXcQ', 'https://youtu.be/dQw4w9WgXcQ',
+                  'https://www.youtube.com/shorts/dQw4w9WgXcQ'):
+            self.assertEqual(self._video(u), {'kind': 'youtube', 'src': 'https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ'})
+
+    def test_mp4_ok_but_other_hosts_and_http_rejected(self):
+        self.assertEqual(self._video('https://cdn.example.com/a.mp4')['kind'], 'file')
+        self.assertIsNone(self._video('http://cdn.example.com/a.mp4'))
+        self.assertIsNone(self._video('https://evil.example.com/page'))
+        self.assertIsNone(self._video('javascript:alert(1)'))
+
+    def test_paste_page_renders(self):
+        self._video('https://youtu.be/dQw4w9WgXcQ')
+        resp = self.client.get(reverse('career:degree_paste'))
+        self.assertEqual(resp.status_code, 200)
+        self.assertContains(resp, 'youtube-nocookie.com/embed/dQw4w9WgXcQ')

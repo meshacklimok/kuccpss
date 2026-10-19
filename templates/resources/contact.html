@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block title %}Contact Us | CareerNext Support{% endblock %}
+
+{% block content %}
+<style>
+.ct-wrap { max-width: 640px; margin: 0 auto; padding: 2rem 1rem 3rem; }
+.ct-wrap h1 { font-size: 1.75rem; font-weight: 800; margin-bottom: .35rem; }
+.ct-wrap .ct-sub { color: #64748b; margin-bottom: 1.5rem; }
+.ct-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 1.5rem; }
+.ct-card label { font-weight: 600; font-size: .9rem; margin-bottom: .25rem; }
+.ct-card .form-control, .ct-card .form-select { font-size: 16px; min-height: 44px; }
+.ct-hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+.ct-submit { min-height: 48px; font-weight: 700; }
+body.dark .ct-card { background: #171717; border-color: #2a2a2a; }
+body.dark .ct-wrap .ct-sub { color: #a3a3a3; }
+</style>
+
+<div class="ct-wrap">
+  <h1>Contact us</h1>
+  <p class="ct-sub">Questions about your account, a payment or the course data? Send us a message and we'll reply by email.</p>
+
+  <form method="post" class="ct-card" novalidate>
+    {% csrf_token %}
+    <div class="mb-3">
+      <label for="ct-name">Your name</label>
+      <input id="ct-name" name="name" type="text" class="form-control" maxlength="100" required value="{{ form.name }}" autocomplete="name">
+    </div>
+    <div class="mb-3">
+      <label for="ct-email">Email to reply to</label>
+      <input id="ct-email" name="email" type="email" class="form-control" maxlength="254" required value="{{ form.email }}" autocomplete="email">
+    </div>
+    <div class="mb-3">
+      <label for="ct-topic">What is it about?</label>
+      <select id="ct-topic" name="topic" class="form-select">
+        {% for value, label in topics %}
+        <option value="{{ value }}"{% if form.topic == value %} selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="mb-3">
+      <label for="ct-message">Message</label>
+      <textarea id="ct-message" name="message" rows="6" class="form-control" maxlength="2000" required>{{ form.message }}</textarea>
+      <div class="form-text">For payment issues, include your M-Pesa code (the 10 characters at the start of the SMS).</div>
+    </div>
+
+    <div class="ct-hp" aria-hidden="true">
+      <label for="ct-website">Leave this field empty</label>
+      <input id="ct-website" name="website" type="text" tabindex="-1" autocomplete="off">
+    </div>
+
+    {% include "accounts/_turnstile.html" %}
+
+    <button type="submit" class="btn btn-primary w-100 ct-submit">Send message</button>
+  </form>
+</div>
+{% endblock %}

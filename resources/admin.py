@@ -85,11 +85,30 @@ class SiteSettingAdmin(admin.ModelAdmin):
     list_filter   = ("setting_type", "group")
     search_fields = ("key", "label", "value")
     ordering      = ("group", "key")
+    actions       = ("maintenance_on", "maintenance_off")
 
     fieldsets = (
         (None, {"fields": ("key", "label", "value")}),
         ("Meta", {"fields": ("setting_type", "group", "help_note"), "classes": ("collapse",)}),
     )
+
+    def _set_maintenance(self, request, value):
+        obj, _ = SiteSetting.objects.get_or_create(
+            key="maintenance_mode",
+            defaults={"label": "Maintenance mode", "group": "system",
+                      "help_note": "on = site offline for everyone except staff; off = live"},
+        )
+        obj.value = value
+        obj.save()
+        self.message_user(request, f"Maintenance mode is now {value.upper()} (takes effect within seconds).")
+
+    @admin.action(description="🔴 Turn maintenance mode ON (take site offline)")
+    def maintenance_on(self, request, queryset):
+        self._set_maintenance(request, "on")
+
+    @admin.action(description="🟢 Turn maintenance mode OFF (restore site)")
+    def maintenance_off(self, request, queryset):
+        self._set_maintenance(request, "off")
 
     def value_preview(self, obj):
         v = obj.value

@@ -48,6 +48,8 @@ class SiteSetting(models.Model):
         cache.delete_many([self.key, self._cache_key(self.key)])
         return super().delete(*args, **kwargs)
 
+    _MISSING = '\x00missing\x00'
+
     @staticmethod
     def _cache_key(key):
         return f'sitesetting:{key}'
@@ -60,8 +62,13 @@ class SiteSetting(models.Model):
         if value is None:
             value = cls.objects.filter(key=key).values_list('value', flat=True).first()
             if value is None:
-                return default  # missing rows aren't cached; they stay rare and cheap to add
+                # Cache the miss too: the footer asks for settings that are usually
+                # unset on every page, which cost a query each time. save() clears it.
+                cache.set(cls._cache_key(key), cls._MISSING, 300)
+                return default
             cache.set(cls._cache_key(key), value, 300)
+        elif value == cls._MISSING:
+            return default
         return value
 
 
