@@ -13,207 +13,87 @@
 <meta name="twitter:description" content="Enter your KCSE results once and see every course you qualify for, then ask CareerNext AI what fits you best.">
 {% endblock %}
 
+
 {% block extra_head %}
-
+<link rel="stylesheet" href="{% static 'css/home.css' %}">
 <style>
-/* ── Feature tiles ── */
-.feature-tile {
-  background: var(--surface);
-  border: 1.5px solid var(--border);
-  border-radius: var(--radius);
-  padding: 1.1rem 1rem;
-  display: flex; gap: 0.9rem; align-items: flex-start;
-  text-decoration: none;
-  box-shadow: var(--shadow-sm);
-  transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.25s ease, border-color 0.2s;
-  height: 100%;
-}
-.feature-tile:hover { transform: translateY(-5px); box-shadow: var(--shadow-md); border-color: var(--primary-light); text-decoration: none; }
-.feature-tile h6 { color: var(--text); font-size: 0.88rem; font-weight: 800; margin-bottom: 0.25rem; }
-.feature-tile p  { color: var(--text-2); font-size: 0.78rem; line-height: 1.5; margin: 0; }
-.feature-tile { position: relative; }
-.tile-price-badge {
-  position: absolute; top: 0.6rem; right: 0.6rem;
-  font-size: 0.7rem; font-weight: 800; letter-spacing: 0.02em;
-  padding: 2px 8px; border-radius: 20px; white-space: nowrap;
-}
-.tile-price-badge.free { background: #f0fdf4; color: #15803d; border: 1px solid #86efac; }
-.tile-price-badge.paid { background: #fffbeb; color: #b45309; border: 1px solid #fde68a; }
-body.dark .tile-price-badge.free { background: rgba(22,163,74,0.12); border-color: rgba(22,163,74,0.3); }
-body.dark .tile-price-badge.paid { background: rgba(217,119,6,0.12); border-color: rgba(217,119,6,0.3); }
-
-/* ── Pathway cards ── */
-.pathway-card {
-  display: block; height: 100%; text-decoration: none;
-  background: var(--surface);
-  border: 1.5px solid var(--border);
-  border-top: 4px solid var(--pw);
-  border-radius: var(--radius);
-  padding: 1.25rem 1rem;
-  box-shadow: var(--shadow-sm);
-  transition: transform 0.25s ease, box-shadow 0.25s ease;
-}
-.pathway-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-md); text-decoration: none; }
-.pathway-icon {
-  width: 38px; height: 38px; border-radius: 10px; margin-bottom: 0.8rem;
-  display: flex; align-items: center; justify-content: center;
-  color: var(--pw); background: color-mix(in srgb, var(--pw) 12%, transparent);
-}
-.pathway-card h6 { color: var(--text); font-size: 0.92rem; font-weight: 800; margin-bottom: 0.3rem; }
-.pathway-card p  { color: var(--text-2); font-size: 0.76rem; line-height: 1.5; margin: 0; }
-
-/* ── Step cards (How it works) ── */
-.step-card {
-  background: var(--surface);
-  border: 1.5px solid var(--border);
-  border-radius: var(--radius-lg);
-  padding: 2rem 1.5rem;
-  text-align: center;
-  box-shadow: var(--shadow-sm);
-  height: 100%;
-  transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.25s ease;
-}
-.step-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-md); }
-.step-number {
-  width: 36px; height: 36px; border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 0.82rem; font-weight: 900; margin: 0 auto 1rem;
-}
-
 /* ── Success story cards ── */
 .story-card {
-  background: var(--surface);
-  border: 1.5px solid var(--border);
-  border-radius: var(--radius-lg);
-  padding: 1.5rem;
-  display: flex; flex-direction: column; gap: 1rem;
-  box-shadow: var(--shadow-sm);
-  transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.25s ease, border-color 0.2s;
-  height: 100%;
-  opacity: 0; transform: translateY(24px);
+  background: var(--surface); border: 1.5px solid var(--border); border-radius: var(--radius-lg);
+  padding: 1.25rem; display: flex; flex-direction: column; gap: .9rem; box-shadow: var(--shadow-sm); height: 100%;
 }
-.story-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-md); border-color: #bfdbfe; }
-@keyframes storyIn {
-  from { opacity: 0; transform: translateY(24px) scale(0.97); }
-  to   { opacity: 1; transform: translateY(0) scale(1); }
-}
-.story-card.visible { animation: storyIn 0.55s cubic-bezier(0.22,1,0.36,1) forwards; }
-.story-card:nth-child(2).visible { animation-delay: 0.08s; }
-.story-card:nth-child(3).visible { animation-delay: 0.16s; }
-.story-card:nth-child(4).visible { animation-delay: 0.08s; }
-.story-card:nth-child(5).visible { animation-delay: 0.16s; }
-.story-card:nth-child(6).visible { animation-delay: 0.24s; }
-
-.story-meta    { display: flex; align-items: center; gap: 0.85rem; }
+.story-meta    { display: flex; align-items: center; gap: .85rem; }
 .story-avatar  { width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1rem; font-weight: 900; flex-shrink: 0; }
-.story-name    { font-size: 0.9rem; font-weight: 800; color: var(--text); line-height: 1.2; }
-.story-county  { font-size: 0.7rem; color: var(--text-3); margin-top: 2px; }
-.story-quote   { font-size: 0.84rem; color: var(--text-2); line-height: 1.6; font-style: italic; flex: 1; position: relative; padding-left: 1rem; }
+.story-name    { font-size: .9rem; font-weight: 800; color: var(--text); line-height: 1.2; }
+.story-county  { font-size: .7rem; color: var(--text-3); margin-top: 2px; }
+.story-quote   { font-size: .86rem; color: var(--text-2); line-height: 1.6; font-style: italic; flex: 1; position: relative; padding-left: 1rem; }
 .story-quote::before { content: '\201C'; position: absolute; left: 0; top: -4px; font-size: 1.8rem; color: #bfdbfe; font-style: normal; line-height: 1; font-family: Georgia, serif; }
-.story-prog      { border-top: 1px solid var(--border); padding-top: 0.85rem; }
-.story-prog-name { font-size: 0.8rem; font-weight: 700; color: var(--text); }
-.story-prog-inst { font-size: 0.72rem; color: var(--text-2); }
-.story-pathway   { display: inline-flex; align-items: center; gap: 0.3rem; margin-top: 0.4rem; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; padding: 2px 9px; border-radius: 5px; }
-.grade-badge     { display: inline-flex; align-items: center; gap: 0.3rem; font-size: 0.7rem; font-weight: 800; padding: 3px 10px; border-radius: 20px; border: 1px solid; }
-
-/* Mobile story horizontal scroll */
-@media (max-width: 576px) {
-  .stories-track { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; gap: 1rem; padding: 0 1rem 0.5rem; margin: 0 -0.75rem; scrollbar-width: none; }
-  .stories-track::-webkit-scrollbar { display: none; }
-  .stories-track .col { min-width: 280px; scroll-snap-align: start; flex-shrink: 0; }
-}
-
-/* Dark mode overrides */
-body.dark .story-card:hover   { border-color: var(--primary-light); }
+.story-prog      { border-top: 1px solid var(--border); padding-top: .85rem; }
+.story-prog-name { font-size: .82rem; font-weight: 700; color: var(--text); }
+.story-prog-inst { font-size: .74rem; color: var(--text-2); }
+.story-pathway   { display: inline-flex; align-items: center; gap: .3rem; margin-top: .4rem; font-size: .7rem; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; padding: 2px 9px; border-radius: 5px; }
+.grade-badge     { display: inline-flex; align-items: center; gap: .3rem; font-size: .7rem; font-weight: 800; padding: 3px 10px; border-radius: 20px; border: 1px solid; }
 body.dark .story-quote::before { color: #3b5998; }
-body.dark .step-card          { background: var(--surface); border-color: transparent; }
 </style>
 {% endblock %}
 
 {% block content %}
 
 <!-- ── HERO ── -->
-<section class="hero-section">
+<section class="hm-hero">
   <div class="container">
-    <div class="row align-items-center g-5">
+    <div class="hm-hero-grid">
 
-      <!-- Left: Copy + CTAs -->
-      <div class="col-lg-7 fade-in-up">
-        <div class="d-flex flex-wrap gap-2 mb-3">
-          <span class="hero-badge"><i class="fas fa-bullseye me-1"></i>KCSE Course Matching</span>
-          <span class="trust-badge"><i class="fas fa-brain me-1" style="color:#93c5fd;"></i>Powered by CareerNext AI</span>
-        </div>
+      <div>
+        <span class="hm-pill"><span class="dot"></span>KCSE {{ kcse_year }} course matching &middot; CareerNext AI</span>
 
-        <h1 class="mb-3">
-          See Every Course Your
-          <span style="color:#93c5fd;">KCSE {{ kcse_year }}</span>
-          Grades Qualify For
-        </h1>
+        <h1>See every course your <span class="hl">KCSE {{ kcse_year }}</span> grades qualify for</h1>
 
-        <p class="lead mb-4" style="color:rgba(255,255,255,0.85);">
-          Enter your results once. We match you to every university, KMTC, TVET and TTC course you qualify for, and CareerNext AI helps you choose the right one.
-        </p>
+        <p class="hm-lead">Enter your results once. We match you to every university, KMTC, TVET and TTC course you qualify for, and CareerNext AI helps you choose the right one.</p>
 
-        <div class="d-flex flex-wrap gap-3 mb-3">
-          <a href="{% url 'career:home' %}" class="btn btn-light fw-bold px-5">
-            <i class="fas fa-bullseye me-2 text-primary"></i>Find My Courses
-          </a>
+        <div class="hm-cta">
+          <a href="{% url 'career:home' %}" class="btn btn-main"><i class="fas fa-bullseye"></i>Find My Courses</a>
           {% if user.is_authenticated %}
-          <a href="{% url 'career:career_chat' %}" class="btn btn-outline-light fw-semibold px-4">
-            <i class="fas fa-comments me-2"></i>Ask CareerNext AI
-          </a>
+          <a href="{% url 'career:career_chat' %}" class="btn btn-ghost"><i class="fas fa-comments"></i>Ask CareerNext AI</a>
           {% else %}
-          <a href="{% url 'accounts:register' %}" class="btn btn-outline-light fw-semibold px-4">
-            <i class="fas fa-user-plus me-2"></i>Create Free Account
-          </a>
+          <a href="{% url 'accounts:register' %}" class="btn btn-ghost"><i class="fas fa-user-plus"></i>Create Free Account</a>
           {% endif %}
         </div>
 
-        <p style="font-size:0.8rem;color:rgba(255,255,255,0.6);">
-          <i class="fas fa-database me-1"></i>Built on KUCCPS portal cluster and cut-off data &nbsp;·&nbsp;
-          <i class="fas fa-shield-halved me-1"></i>Your results stay private
+        <p class="hm-trust">
+          <span><i class="fas fa-database"></i>Built on KUCCPS portal data</span>
+          <span><i class="fas fa-shield-halved"></i>Your results stay private</span>
         </p>
+
+        <nav class="hm-quick" aria-label="Choose a pathway">
+          {% for name, icon, rule, color, url in pathway_rules %}
+          <a href="{{ url }}"><i class="fas {{ icon }}"></i>{{ name }}</a>
+          {% endfor %}
+        </nav>
       </div>
 
-      <!-- Right: Sample engine match preview (illustrative) -->
-      <div class="col-lg-5 d-none d-lg-flex justify-content-center fade-in-up">
-        <div style="background:rgba(255,255,255,0.08);border-radius:20px;padding:1.5rem;backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,0.15);width:100%;max-width:340px;">
-          <div class="d-flex align-items-center justify-content-between mb-3">
-            <span style="font-size:0.72rem;font-weight:700;color:rgba(255,255,255,0.6);letter-spacing:0.06em;text-transform:uppercase;">Sample Match Results</span>
-            <div style="width:8px;height:8px;border-radius:50%;background:#4ade80;box-shadow:0 0 6px #4ade80;"></div>
-          </div>
+      <!-- Illustrative engine preview (desktop only) -->
+      <div class="hm-preview" aria-hidden="true">
+        <div class="hm-preview-card">
+          <div class="hm-preview-title"><span>Sample match results</span><span style="width:8px;height:8px;border-radius:50%;background:#4ade80;box-shadow:0 0 6px #4ade80;"></span></div>
           {% for pathway, course, tag, color in sample_matches %}
-          <div class="d-flex align-items-center gap-2 mb-2 p-2" style="background:rgba(255,255,255,0.06);border-radius:10px;">
-            <span style="width:4px;align-self:stretch;border-radius:4px;background:{{ color }};"></span>
-            <div style="flex:1;min-width:0;">
-              <div style="font-size:0.78rem;font-weight:700;color:white;line-height:1.25;">{{ course }}</div>
-              <div style="font-size:0.68rem;color:rgba(255,255,255,0.6);">{{ pathway }}</div>
-            </div>
-            <span style="font-size:0.66rem;font-weight:800;color:#4ade80;white-space:nowrap;"><i class="fas fa-check me-1"></i>{{ tag }}</span>
+          <div class="hm-match">
+            <span class="bar" style="background:{{ color }};"></span>
+            <div class="c">{{ course }}<div class="p">{{ pathway }}</div></div>
+            <span class="t"><i class="fas fa-check me-1"></i>{{ tag }}</span>
           </div>
           {% endfor %}
-          <div class="d-flex align-items-start gap-2 mt-3 p-2" style="background:rgba(147,197,253,0.12);border-radius:10px;">
-            <i class="fas fa-brain mt-1" style="color:#93c5fd;font-size:0.8rem;"></i>
-            <span style="font-size:0.74rem;color:rgba(255,255,255,0.85);line-height:1.45;">"Which of these suits me if I prefer hands-on work?" <b>Ask CareerNext AI.</b></span>
-          </div>
-          <div class="mt-3 pt-3" style="border-top:1px solid rgba(255,255,255,0.1);">
-            <a href="{% url 'career:home' %}" class="btn btn-light btn-sm w-100 fw-bold" style="font-size:0.8rem;">
-              <i class="fas fa-bullseye me-1 text-primary"></i>See My Matches
-            </a>
-          </div>
+          <div class="hm-ai-note"><i class="fas fa-brain"></i><span>"Which of these suits me if I prefer hands-on work?" <b>Ask CareerNext AI.</b></span></div>
         </div>
       </div>
 
     </div>
 
-    <!-- Stats row -->
-    <div class="row g-3 mt-4 pt-4 reveal" style="border-top:1px solid rgba(255,255,255,0.1);">
+    <div class="hm-stats">
       {% for num, label in home_stats %}
-      <div class="col-6 col-md-3">
-        <div class="hero-stat">
-          <div class="stat-num"><span class="counter" data-target="{{ num }}">{{ num }}</span>+</div>
-          <div class="stat-label">{{ label }}</div>
-        </div>
+      <div class="hm-stat">
+        <div class="n"><span class="counter" data-target="{{ num }}">{{ num }}</span>+</div>
+        <div class="l">{{ label }}</div>
       </div>
       {% endfor %}
     </div>
@@ -223,19 +103,18 @@ body.dark .step-card          { background: var(--surface); border-color: transp
 <script>
 (function(){
   var counters = document.querySelectorAll('.counter[data-target]');
-  if (!counters.length || !('IntersectionObserver' in window)) {
+  if (!counters.length || !('IntersectionObserver' in window) || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
     counters.forEach(function(c){ c.textContent = Number(c.dataset.target).toLocaleString(); });
     return;
   }
   var io = new IntersectionObserver(function(entries){
     entries.forEach(function(e){
       if (!e.isIntersecting) return;
-      var el = e.target, target = parseInt(el.dataset.target), startTime = null, duration = 1400;
+      var el = e.target, target = parseInt(el.dataset.target), startTime = null, duration = 1200;
       function step(ts){
         if (!startTime) startTime = ts;
         var prog = Math.min((ts - startTime) / duration, 1);
-        var ease = 1 - Math.pow(1 - prog, 3);
-        el.textContent = Math.round(ease * target).toLocaleString();
+        el.textContent = Math.round((1 - Math.pow(1 - prog, 3)) * target).toLocaleString();
         if (prog < 1) requestAnimationFrame(step);
       }
       requestAnimationFrame(step);
@@ -247,23 +126,22 @@ body.dark .step-card          { background: var(--surface); border-color: transp
 </script>
 
 
-<!-- ── PATHWAYS: how the engine decides eligibility ── -->
-<section style="background:var(--surface-2);padding:4.5rem 0;border-bottom:1px solid var(--border);">
+<!-- ── PATHWAYS ── -->
+<section class="hm-section hm-section--alt">
   <div class="container">
-    <div class="text-center mb-5 reveal">
-      <span class="section-eyebrow" style="color:var(--primary);background:rgba(37,99,235,0.08);">Course Matching</span>
-      <h2 class="section-header mt-2">Matched the Way KUCCPS Places You</h2>
+    <div class="hm-head reveal">
+      <span class="section-eyebrow">Course Matching</span>
+      <h2 class="section-header">Matched the way KUCCPS places you</h2>
       <p class="section-sub">Each pathway is checked against the rule that actually applies to it, so you only see courses you can apply for.</p>
     </div>
-    <div class="row g-3 justify-content-center">
+    <div class="hm-paths">
       {% for name, icon, rule, color, url in pathway_rules %}
-      <div class="col-6 col-lg reveal">
-        <a href="{{ url }}" class="pathway-card" style="--pw:{{ color }};">
-          <div class="pathway-icon"><i class="fas {{ icon }}"></i></div>
-          <h6>{{ name }}</h6>
-          <p>{{ rule }}</p>
-        </a>
-      </div>
+      <a href="{{ url }}" class="hm-path reveal" style="--pw:{{ color }};">
+        <div class="ic"><i class="fas {{ icon }}"></i></div>
+        <h3>{{ name }}</h3>
+        <p>{{ rule }}</p>
+        <span class="go">Start <i class="fas fa-arrow-right ms-1"></i></span>
+      </a>
       {% endfor %}
     </div>
   </div>
@@ -271,109 +149,73 @@ body.dark .step-card          { background: var(--surface); border-color: transp
 
 
 <!-- ── FEATURES ── -->
-<section style="background:var(--bg);padding:4.5rem 0;">
+<section class="hm-section">
   <div class="container">
-    <div class="text-center mb-5 reveal">
+    <div class="hm-head reveal">
       <span class="section-eyebrow" style="color:var(--accent);background:rgba(22,163,74,0.08);">Platform</span>
-      <h2 class="section-header mt-2">Everything After Your Results</h2>
-      <p class="section-sub">Matching, AI guidance and career research in one place</p>
+      <h2 class="section-header">Everything after your results</h2>
+      <p class="section-sub">Matching, AI guidance and career research in one place.</p>
     </div>
-    <div class="row g-3">
-      <div class="col-6 col-md-4 reveal">
-        <a href="{% url 'career:home' %}" class="feature-tile">
-          {% if engine_price %}
-          <span class="tile-price-badge paid">From KES {{ engine_price }}</span>
-          {% else %}
-          <span class="tile-price-badge free">Free</span>
-          {% endif %}
-          <div class="feature-icon feature-icon-blue"><i class="fas fa-bullseye"></i></div>
-          <div><h6>Course Matching Engine</h6><p>Every Degree, Diploma, KMTC, TVET and TTC course you qualify for.</p></div>
-        </a>
-      </div>
-      <div class="col-6 col-md-4 reveal">
-        <a href="{% url 'career:career_chat' %}" class="feature-tile">
-          <div class="feature-icon feature-icon-purple"><i class="fas fa-brain"></i></div>
-          <div><h6>CareerNext AI</h6><p>Ask which course fits you. It already knows your KCSE results.</p></div>
-        </a>
-      </div>
-      <div class="col-6 col-md-4 reveal">
-        <a href="{% url 'career:quiz' %}" class="feature-tile">
-          <div class="feature-icon feature-icon-teal"><i class="fas fa-clipboard-question"></i></div>
-          <div><h6>Career Quiz</h6><p>Discover careers that match your interests.</p></div>
-        </a>
-      </div>
-      <div class="col-6 col-md-4 reveal">
-        <a href="{% url 'career:career_profiles' %}" class="feature-tile">
-          <div class="feature-icon feature-icon-orange"><i class="fas fa-user-tie"></i></div>
-          <div><h6>Career Profiles</h6><p>60+ careers with salary info and the courses that lead to them.</p></div>
-        </a>
-      </div>
-      <div class="col-6 col-md-4 reveal">
-        <a href="{% url 'institutions:institution_types_list' %}" class="feature-tile">
-          <div class="feature-icon feature-icon-green"><i class="fas fa-university"></i></div>
-          <div><h6>All Institutions</h6><p>Universities, KMTCs, TVETs &amp; TTCs.</p></div>
-        </a>
-      </div>
-      <div class="col-6 col-md-4 reveal">
-        <a href="{% url 'clusterpoints:calculator' %}" class="feature-tile">
-          {% if calculator_price %}
-          <span class="tile-price-badge paid">From KES {{ calculator_price }}</span>
-          {% else %}
-          <span class="tile-price-badge free">Free</span>
-          {% endif %}
-          <div class="feature-icon feature-icon-red"><i class="fas fa-calculator"></i></div>
-          <div><h6>Cluster Points Calculator</h6><p>Check your degree cluster points. The engine uses them for you.</p></div>
-        </a>
-      </div>
+    <div class="hm-features">
+      <a href="{% url 'career:home' %}" class="hm-feat reveal">
+        <div class="feature-icon feature-icon-blue"><i class="fas fa-bullseye"></i></div>
+        <div><h3>Course Matching Engine{% if engine_price %}<span class="hm-badge paid">From KES {{ engine_price }}</span>{% else %}<span class="hm-badge free">Free</span>{% endif %}</h3><p>Every Degree, Diploma, KMTC, TVET and TTC course you qualify for.</p></div>
+        <i class="fas fa-chevron-right chev"></i>
+      </a>
+      <a href="{% url 'career:career_chat' %}" class="hm-feat reveal">
+        <div class="feature-icon feature-icon-purple"><i class="fas fa-brain"></i></div>
+        <div><h3>CareerNext AI</h3><p>Ask which course fits you. It already knows your KCSE results.</p></div>
+        <i class="fas fa-chevron-right chev"></i>
+      </a>
+      <a href="{% url 'career:quiz' %}" class="hm-feat reveal">
+        <div class="feature-icon feature-icon-teal"><i class="fas fa-clipboard-question"></i></div>
+        <div><h3>Career Quiz</h3><p>Discover careers that match your interests.</p></div>
+        <i class="fas fa-chevron-right chev"></i>
+      </a>
+      <a href="{% url 'career:career_profiles' %}" class="hm-feat reveal">
+        <div class="feature-icon feature-icon-orange"><i class="fas fa-user-tie"></i></div>
+        <div><h3>Career Profiles</h3><p>60+ careers with salary info and the courses that lead to them.</p></div>
+        <i class="fas fa-chevron-right chev"></i>
+      </a>
+      <a href="{% url 'institutions:institution_types_list' %}" class="hm-feat reveal">
+        <div class="feature-icon feature-icon-green"><i class="fas fa-university"></i></div>
+        <div><h3>All Institutions</h3><p>Universities, KMTCs, TVETs &amp; TTCs.</p></div>
+        <i class="fas fa-chevron-right chev"></i>
+      </a>
+      <a href="{% url 'clusterpoints:calculator' %}" class="hm-feat reveal">
+        <div class="feature-icon feature-icon-red"><i class="fas fa-calculator"></i></div>
+        <div><h3>Cluster Points Calculator{% if calculator_price %}<span class="hm-badge paid">From KES {{ calculator_price }}</span>{% else %}<span class="hm-badge free">Free</span>{% endif %}</h3><p>Check your degree cluster points. The engine uses them for you.</p></div>
+        <i class="fas fa-chevron-right chev"></i>
+      </a>
     </div>
   </div>
 </section>
 
 
 <!-- ── HOW IT WORKS ── -->
-<section style="background:var(--surface-2);padding:4.5rem 0;border-top:1px solid var(--border);border-bottom:1px solid var(--border);">
+<section class="hm-section hm-section--alt">
   <div class="container">
-    <div class="text-center mb-5 reveal">
-      <span class="section-eyebrow" style="color:var(--primary);background:rgba(37,99,235,0.08);">How It Works</span>
-      <h2 class="section-header mt-2">Three Simple Steps</h2>
-      <p class="section-sub">From your KCSE results to a confident course choice</p>
+    <div class="hm-head reveal">
+      <span class="section-eyebrow">How It Works</span>
+      <h2 class="section-header">Three simple steps</h2>
+      <p class="section-sub">From your KCSE results to a confident course choice.</p>
     </div>
-    <div class="row g-4 justify-content-center">
-      <div class="col-md-4 reveal reveal-d1">
-        <div class="step-card card-accent-blue">
-          <div class="step-number" style="background:rgba(37,99,235,0.1);color:var(--primary);">1</div>
-          <div class="feature-icon feature-icon-blue mx-auto mb-3" style="width:56px;height:56px;font-size:1.4rem;">
-            <i class="fas fa-keyboard"></i>
-          </div>
-          <h5 class="fw-bold mb-2">Tell the Engine Your Results</h5>
-          <p class="small mb-0">Pick a pathway and enter your KCSE grades once, or upload your result slip. We handle the rest.</p>
-        </div>
+    <div class="hm-steps">
+      <div class="hm-step reveal">
+        <div class="num" style="background:rgba(37,99,235,0.1);color:var(--primary);">1</div>
+        <div><h3>Tell the engine your results</h3><p>Pick a pathway and enter your KCSE grades once, or upload your result slip. We handle the rest.</p></div>
       </div>
-      <div class="col-md-4 reveal reveal-d2">
-        <div class="step-card card-accent-green">
-          <div class="step-number" style="background:rgba(22,163,74,0.1);color:var(--accent);">2</div>
-          <div class="feature-icon feature-icon-green mx-auto mb-3" style="width:56px;height:56px;font-size:1.4rem;">
-            <i class="fas fa-search"></i>
-          </div>
-          <h5 class="fw-bold mb-2">Get Your Matches</h5>
-          <p class="small mb-0">See every course you qualify for, with the institutions offering it, so you know exactly what to apply for.</p>
-        </div>
+      <div class="hm-step reveal reveal-d1">
+        <div class="num" style="background:rgba(22,163,74,0.1);color:var(--accent);">2</div>
+        <div><h3>Get your matches</h3><p>See every course you qualify for, with the institutions offering it, so you know exactly what to apply for.</p></div>
       </div>
-      <div class="col-md-4 reveal reveal-d3">
-        <div class="step-card card-accent-purple">
-          <div class="step-number" style="background:rgba(124,58,237,0.1);color:var(--purple);">3</div>
-          <div class="feature-icon feature-icon-purple mx-auto mb-3" style="width:56px;height:56px;font-size:1.4rem;">
-            <i class="fas fa-compass"></i>
-          </div>
-          <h5 class="fw-bold mb-2">Decide With CareerNext AI</h5>
-          <p class="small mb-0">Ask which of your matches fits your interests, compare careers and salaries, then choose with confidence.</p>
-        </div>
+      <div class="hm-step reveal reveal-d2">
+        <div class="num" style="background:rgba(124,58,237,0.1);color:var(--purple);">3</div>
+        <div><h3>Decide with CareerNext AI</h3><p>Ask which of your matches fits your interests, compare careers and salaries, then choose with confidence.</p></div>
       </div>
     </div>
-    <div class="text-center mt-5 reveal">
-      <a href="{% url 'career:home' %}" class="btn btn-primary fw-bold px-5">
-        <i class="fas fa-bullseye me-2"></i>Start Matching
-      </a>
+    <div class="hm-center-cta reveal">
+      <a href="{% url 'career:home' %}" class="btn btn-primary"><i class="fas fa-bullseye me-2"></i>Start Matching</a>
     </div>
   </div>
 </section>
@@ -384,19 +226,19 @@ body.dark .step-card          { background: var(--surface); border-color: transp
 
 
 <!-- ── SUCCESS STORIES ── -->
-<section class="py-5" style="background:var(--surface-2);border-top:1px solid var(--border);">
+<section class="hm-section hm-section--alt">
   <div class="container">
-    <div class="text-center mb-5 reveal">
-      <span class="section-eyebrow" style="color:var(--primary);background:rgba(37,99,235,0.08);">
+    <div class="hm-head reveal">
+      <span class="section-eyebrow">
         <i class="bi bi-people-fill me-1"></i>Student Stories
       </span>
-      <h2 class="section-header mt-2">From KCSE Results to Real Careers</h2>
+      <h2 class="section-header">From KCSE Results to Real Careers</h2>
       <p class="section-sub">Students across Kenya who used CareerNext to find their right path</p>
     </div>
 
-    <div class="row g-4 stories-track">
+    <div class="hm-stories">
       {% for story in stories %}
-      <div class="col-md-4">
+      <div>
         <div class="story-card">
           <div class="story-meta">
             <div class="story-avatar" style="background:{{ story.avatar_bg }};color:{{ story.avatar_color }};">{{ story.initials }}</div>
@@ -426,34 +268,17 @@ body.dark .step-card          { background: var(--surface); border-color: transp
         </div>
       </div>
       {% empty %}
-      <div class="col-12 text-center py-4 small" style="color:var(--text-3);">No success stories yet. Add them in the admin.</div>
+      <div class="text-center py-4 small" style="flex:1 1 100%;grid-column:1/-1;color:var(--text-3);">No success stories yet. Add them in the admin.</div>
       {% endfor %}
     </div>
   </div>
 </section>
 
-<script>
-(function(){
-  var cards = document.querySelectorAll('.story-card');
-  if (!cards.length) return;
-  if ('IntersectionObserver' in window) {
-    var io = new IntersectionObserver(function(entries){
-      entries.forEach(function(e){
-        if (e.isIntersecting) { e.target.classList.add('visible'); io.unobserve(e.target); }
-      });
-    }, { threshold: 0.05 });
-    cards.forEach(function(c){ io.observe(c); });
-    setTimeout(function(){ cards.forEach(function(c){ if (!c.classList.contains('visible')) c.classList.add('visible'); }); }, 1500);
-  } else {
-    cards.forEach(function(c){ c.classList.add('visible'); });
-  }
-})();
-</script>
 
 
 <!-- ── LATEST ARTICLES ── -->
 {% if recent_articles %}
-<section class="py-5" style="background:var(--bg);border-top:1px solid var(--border);">
+<section class="hm-section" style="border-top:1px solid var(--border);">
   <div class="container">
     <div class="d-flex align-items-end justify-content-between mb-4 flex-wrap gap-2 reveal">
       <div>
@@ -484,7 +309,7 @@ body.dark .step-card          { background: var(--surface); border-color: transp
             <i class="fas fa-file-alt" style="font-size:2rem;color:rgba(255,255,255,0.5);"></i>
           </div>
           {% endif %}
-          <div class="p-4 d-flex flex-column flex-grow-1">
+          <div class="hm-card-pad d-flex flex-column flex-grow-1">
             {% if article.featured %}
             <span style="font-size:0.7rem;font-weight:700;padding:2px 9px;border-radius:20px;
                          background:#fef3c7;color:#92400e;margin-bottom:0.5rem;display:inline-block;width:fit-content;">
@@ -522,7 +347,7 @@ body.dark .step-card          { background: var(--surface); border-color: transp
 
 <!-- ── PARTNER INSTITUTIONS ── -->
 {% if featured_promos or scholarship_alerts %}
-<section class="py-5" style="background:var(--bg);border-top:1px solid var(--border);">
+<section class="hm-section" style="border-top:1px solid var(--border);">
   <div class="container">
 
     {% if featured_promos %}
@@ -545,7 +370,7 @@ body.dark .step-card          { background: var(--surface); border-color: transp
            class="d-flex flex-column h-100 text-decoration-none rounded-4 overflow-hidden hv-lift hv-lift-amber"
            style="background:var(--surface);border:1.5px solid var(--border);box-shadow:var(--shadow-sm);transition:box-shadow 0.2s,transform 0.2s,border-color 0.2s;">
           <div style="height:4px;background:#d97706;"></div>
-          <div class="p-4 d-flex flex-column flex-grow-1">
+          <div class="hm-card-pad d-flex flex-column flex-grow-1">
             <div class="d-flex align-items-center gap-3 mb-3">
               {% if inst.logo %}
               <img src="{{ inst.logo.url }}" width="46" height="46" class="rounded-circle flex-shrink-0"
@@ -651,21 +476,14 @@ body.dark .step-card          { background: var(--surface); border-color: transp
 
 <!-- ── CTA ── -->
 {% if not user.is_authenticated %}
-<section class="py-5" style="background:var(--surface-2);border-top:1px solid var(--border);">
+<section class="hm-section">
   <div class="container">
-    <div class="card p-5 text-center reveal"
-         style="background:var(--primary-dark);border:none;color:white;border-radius:var(--radius-xl);">
-      <h2 class="fw-bold mb-2" style="color:white;font-size:clamp(1.4rem,3vw,2rem);">Ready to see your matches?</h2>
-      <p class="mb-4" style="opacity:0.85;max-width:480px;margin-left:auto;margin-right:auto;">
-        Enter your KCSE results once and let CareerNext show you every course you qualify for.
-      </p>
-      <div class="d-flex justify-content-center gap-3 flex-wrap">
-        <a href="{% url 'accounts:register' %}" class="btn btn-light fw-bold px-5">
-          <i class="fas fa-user-plus me-2 text-primary"></i>Create Account
-        </a>
-        <a href="{% url 'career:home' %}" class="btn btn-outline-light fw-semibold px-4">
-          <i class="fas fa-bullseye me-2"></i>Find My Courses
-        </a>
+    <div class="hm-final reveal">
+      <h2>Ready to see your matches?</h2>
+      <p>Enter your KCSE results once and let CareerNext show you every course you qualify for.</p>
+      <div class="hm-cta">
+        <a href="{% url 'accounts:register' %}" class="btn btn-main"><i class="fas fa-user-plus"></i>Create Account</a>
+        <a href="{% url 'career:home' %}" class="btn btn-ghost"><i class="fas fa-bullseye"></i>Find My Courses</a>
       </div>
     </div>
   </div>

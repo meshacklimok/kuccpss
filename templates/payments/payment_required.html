@@ -39,7 +39,8 @@
           <div class="pay-summary-row pay-summary-total"><dt>Total payable</dt><dd>KES {{ price }}</dd></div>
         </dl>
 
-        <p class="pay-section">What you get</p>
+        <details class="pay-more" id="pr-more" open>
+        <summary class="pay-section">What you get</summary>
         <ul class="pay-list">
           {% if feature == 'view_cluster_points' %}
           <li><i class="fas fa-check"></i><span>All 18 KUCCPS cluster points calculated from your grades</span></li>
@@ -58,14 +59,15 @@
           <li><i class="fas fa-check"></i><span>Receipt emailed to you</span></li>
           {% endif %}
         </ul>
+        </details>
         </div>
 
         <div class="pay-col pay-col--pay">
         <p class="pay-section">How to pay</p>
         <ol class="pay-steps" aria-label="How payment works">
           <li>Enter your M-Pesa number</li>
-          <li>Enter your M-Pesa PIN on the prompt that appears on your phone</li>
-          <li>Access unlocks here automatically</li>
+          <li>Enter your PIN on the phone prompt</li>
+          <li>Access unlocks automatically</li>
         </ol>
 
         <div class="pay-alert pay-alert--err" id="pr-err" role="alert"></div>
@@ -212,6 +214,11 @@ var poller = createPaymentPoller({
 });
 
 document.getElementById('pr-pay-btn').addEventListener('click', prPay);
+
+// "What you get" starts collapsed on phones to keep the pay form near the top
+if(window.matchMedia('(max-width: 839px)').matches){
+    document.getElementById('pr-more').removeAttribute('open');
+}
 
 // Pre-fill from saved profile number, cleaned to the 9-digit local form
 (function(){

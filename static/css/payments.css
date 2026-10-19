@@ -224,5 +224,30 @@ body.dark .pay-scope, body.dark .pay-overlay {
     .pay-help-btn { width: 100%; }
     .pay-overlay { padding: 0.5rem; align-items: flex-end; }
 }
+/* ── Compact checkout (shorter pages) ── */
+.pay-more > summary { list-style: none; cursor: pointer; display: flex; align-items: center; justify-content: space-between; margin: 0 0 0.5rem; }
+.pay-more > summary::-webkit-details-marker { display: none; }
+.pay-more > summary::after { content: "\25BE"; font-size: 0.8rem; }
+.pay-more[open] > summary::after { transform: rotate(180deg); }
+.pay-summary-row { padding: 0.55rem 0.85rem; font-size: 0.86rem; }
+.pay-steps { display: flex; margin-bottom: 1rem; }
+.pay-steps li { flex: 1; flex-direction: column; text-align: center; gap: 0.35rem; border-bottom: none; border-right: 1px solid var(--border); padding: 0.6rem 0.5rem; font-size: 0.78rem; line-height: 1.3; }
+.pay-steps li:last-child { border-right: none; }
+.pay-list li { padding: 0.2rem 0; }
+.pay-hint { margin-bottom: 0.75rem; }
+.pay-alert { margin-bottom: 0.75rem; }
+.pay-help { margin-top: 0.85rem; }
+@media (max-width: 839px) {
+    .pay-split { display: flex; flex-direction: column; }
+    .pay-col--pay { order: -1; }
+    .pay-col--order { margin-top: 1.25rem; padding-top: 1rem; border-top: 1px solid var(--border); }
+    .pay-col--order .pay-summary { margin-bottom: 0.9rem; }
+    .pay-summary-row:nth-child(2), .pay-summary-row:nth-child(3) { display: none; }
+    .pay-col--pay > .pay-section, .pay-col--pay > .pay-steps { display: none; }
+    .pay-field { border-color: var(--pay-accent); }
+    .pay-body { padding: 1rem; }
+    .pay-page { padding-top: 0.75rem; }
+    .pay-crumb { margin-bottom: 0.5rem; }
+}
 .pay-scope [hidden], .pay-overlay [hidden] { display: none !important; }
 .pay-receipt .pay-summary-row dd { overflow-wrap: anywhere; }

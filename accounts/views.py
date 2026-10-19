@@ -1263,10 +1263,7 @@ def email_lead_capture(request):
 
 def public_home_view(request):
     if request.user.is_authenticated:
-        visits = request.session.get('home_visit_count', 0) + 1
-        request.session['home_visit_count'] = visits
-        if visits > 4:
-            return redirect('accounts:dashboard')
+        return redirect('accounts:dashboard')
 
     from courses.trends import get_trends_context
     from payments.services import price_for_feature

@@ -622,6 +622,7 @@
               <li><a href="{% url 'accounts:about' %}">About Us</a></li>
               <li><a href="{% url 'accounts:privacy' %}">Privacy Policy</a></li>
               <li><a href="{% url 'accounts:terms' %}">Terms &amp; Conditions</a></li>
+              <li><a href="{% url 'resources:contact' %}">Contact Us</a></li>
             </ul>
           </div>
 
@@ -676,6 +677,7 @@
               <li><a href="{% url 'accounts:about' %}">About Us</a></li>
               <li><a href="{% url 'accounts:privacy' %}">Privacy Policy</a></li>
               <li><a href="{% url 'accounts:terms' %}">Terms &amp; Conditions</a></li>
+              <li><a href="{% url 'resources:contact' %}">Contact Us</a></li>
             </ul>
           </div>
 
@@ -722,6 +724,7 @@
             <a href="{% url 'accounts:terms' %}">Terms</a>
             <a href="{% url 'accounts:about' %}">About</a>
             <a href="{% url 'accounts:how_it_works' %}">How It Works</a>
+            <a href="{% url 'resources:contact' %}">Contact</a>
             <a href="#feedback" data-open-feedback>Send Feedback</a>
             <span>Built for Kenyan students <i class="fas fa-heart" style="color:#f87171;"></i></span>
           </span>
@@ -835,6 +838,11 @@
         </div>
     </div>
 
+    <!-- Back button (large screens only; shown when the visitor arrived from another page of this site) -->
+    <button id="page-back" type="button" aria-label="Go back" hidden>
+        <i class="fas fa-arrow-left" aria-hidden="true"></i><span>Back</span>
+    </button>
+
     <!-- Back to top button -->
     <button id="back-to-top" title="Back to top" aria-label="Back to top"
             style="display:none;position:fixed;bottom:80px;right:20px;z-index:999;
@@ -878,6 +886,41 @@
         window.addEventListener('pageshow', function(){ loader.classList.remove('active'); });
     })();
 
+    /* Instant navigation: start fetching a page when the pointer hovers a link
+       (or the finger touches it), so the click lands on an already-loaded page. */
+    (function(){
+        var probe = document.createElement('link');
+        if (!probe.relList || !probe.relList.supports || !probe.relList.supports('prefetch')) return;
+        var conn = navigator.connection || {};
+        if (conn.saveData || /2g/.test(conn.effectiveType || '')) return;
+
+        var SKIP = /\/(logout|login|register|admin|cn-staff|payments?|download|export|pdf|api|analytics|sw\.js|offline)(\/|$)/;
+        var done = {}, timer = null;
+
+        function prefetch(a){
+            if (!a || a.target === '_blank' || a.hasAttribute('download') || a.hasAttribute('data-no-prefetch')) return;
+            if (a.origin !== location.origin || a.protocol.indexOf('http') !== 0) return;
+            if (a.pathname === location.pathname && a.search === location.search) return;
+            if (SKIP.test(a.pathname) || a.pathname.indexOf('/static/') === 0 || a.pathname.indexOf('/media/') === 0) return;
+            if (done[a.href]) return;
+            done[a.href] = 1;
+            var l = document.createElement('link');
+            l.rel = 'prefetch';
+            l.href = a.href;
+            document.head.appendChild(l);
+        }
+        function linkOf(e){ return e.target.closest ? e.target.closest('a[href]') : null; }
+
+        document.addEventListener('mouseover', function(e){
+            var a = linkOf(e);
+            if (!a) return;
+            clearTimeout(timer);
+            timer = setTimeout(function(){ prefetch(a); }, 65);
+        }, { passive: true });
+        document.addEventListener('mouseout', function(){ clearTimeout(timer); }, { passive: true });
+        document.addEventListener('touchstart', function(e){ prefetch(linkOf(e)); }, { passive: true });
+    })();
+
     /* Form submit loading state: delegated so forms added later (HTMX) are covered,
        and cleared when the page is restored via the Back button. */
     (function(){
@@ -898,6 +941,18 @@
                 b.removeAttribute('aria-busy');
             });
         });
+    })();
+
+    (function(){
+        var btn = document.getElementById('page-back');
+        if (!btn) return;
+        var p = location.pathname;
+        if (p === '/' || p === '/accounts/dashboard/') return;
+        var sameSite = false;
+        try { sameSite = !!document.referrer && new URL(document.referrer).origin === location.origin; } catch (e) {}
+        if (!sameSite || history.length < 2) return;
+        btn.hidden = false;
+        btn.addEventListener('click', function(){ history.back(); });
     })();
 
     (function(){

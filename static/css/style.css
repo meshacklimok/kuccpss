@@ -1554,3 +1554,72 @@ body.dark .btn-gradient-success { color: #000; }
 
 .btn-outline-secondary { color: #495057; border-color: #6c757d; }
 .itl-section-hd > span { color: #64748b; }
+
+
+/* ── 25. MOBILE HARDENING (90% of users are on phones) ─────── */
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+body { overflow-x: clip; overflow-wrap: break-word; }
+img, svg, video, canvas, iframe { max-width: 100%; }
+img, video { height: auto; }
+a, button, .btn, input, select, textarea, label { touch-action: manipulation; }
+.btn, a, button { -webkit-tap-highlight-color: transparent; }
+.table-responsive, .tbl-scroll { -webkit-overflow-scrolling: touch; }
+pre, code { white-space: pre-wrap; word-break: break-word; }
+
+@media (max-width: 991.98px) {
+  /* Collapsed menu: comfortable thumb targets */
+  .site-navbar .navbar-nav .nav-link { padding: .75rem .5rem !important; font-size: .98rem; }
+  .site-navbar .dropdown-item { padding: .7rem 1rem; white-space: normal; }
+  .site-navbar .navbar-collapse { max-height: calc(100dvh - 72px); overflow-y: auto; overscroll-behavior: contain; padding-bottom: 1rem; }
+  .site-navbar .navbar-toggler, #dark-toggle { min-width: 44px; min-height: 44px; }
+  .site-navbar .btn-gradient-success { width: 100%; margin-top: .5rem; }
+  .site-navbar .nav-item.ms-2 { margin-left: 0 !important; }
+}
+
+@media (max-width: 767.98px) {
+  /* 16px inputs stop iOS/Android Chrome from zooming the page on focus */
+  .form-control, .form-select, input:not([type=checkbox]):not([type=radio]), select, textarea { font-size: 16px !important; }
+  .form-control, .form-select { min-height: 48px; }
+  .form-check-input { width: 1.25em; height: 1.25em; }
+  .dropdown-menu { max-width: calc(100vw - 2rem); }
+  .modal-dialog { margin: .75rem; }
+  .modal-dialog:not(.modal-dialog-scrollable) .modal-content { max-height: calc(100dvh - 1.5rem); overflow-y: auto; }
+  .card-body { padding: 1rem; }
+  .table-responsive > .table, table.table { font-size: .85rem; }
+  .pagination { flex-wrap: wrap; justify-content: center; }
+  .pagination .page-link { min-width: 44px; min-height: 44px; display: inline-flex; align-items: center; justify-content: center; }
+  .nav-pills, .nav-tabs { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+  .nav-pills::-webkit-scrollbar, .nav-tabs::-webkit-scrollbar { display: none; }
+  .nav-pills .nav-link, .nav-tabs .nav-link { white-space: nowrap; }
+  .page-hero { margin-bottom: 1.25rem; }
+  .page-hero .btn, .page-hero form .btn { max-width: 100%; }
+  .display-1, .display-2, .display-3, .display-4, .display-5 { font-size: 2rem; }
+  .site-footer .footer-links a { display: inline-block; padding: .2rem 0; }
+}
+
+@media (max-width: 575.98px) {
+  .btn-group-vertical-sm { flex-direction: column; width: 100%; }
+  .toast-container, .cn-toast-stack { max-width: calc(100vw - 1.5rem); }
+  #global-error-toast { min-width: 0 !important; width: calc(100vw - 1.5rem); }
+}
+
+/* Keep fixed UI clear of the iPhone home indicator / notch */
+.site-navbar { padding-top: env(safe-area-inset-top); }
+@media (display-mode: standalone) { .site-navbar { padding-top: max(env(safe-area-inset-top), 0px); } }
+
+/* Back button: large screens only, sits in the left gutter below the navbar */
+#page-back { display: none; }
+@media (min-width: 1200px) {
+  #page-back:not([hidden]) {
+    display: inline-flex; align-items: center; gap: .4rem;
+    position: fixed; top: 84px; left: 16px; z-index: 990;
+    padding: .45rem .9rem; border-radius: 999px;
+    border: 1px solid rgba(100,116,139,.35); background: rgba(255,255,255,.92);
+    color: #0f172a; font-size: .85rem; font-weight: 600; cursor: pointer;
+    box-shadow: 0 2px 8px rgba(15,23,42,.08);
+    transition: transform .15s, box-shadow .15s;
+  }
+  #page-back:not([hidden]):hover { transform: translateX(-2px); box-shadow: 0 4px 12px rgba(15,23,42,.15); }
+  body.dark #page-back:not([hidden]) { background: rgba(23,23,23,.92); color: #f5f5f5; border-color: #3a3a3a; }
+}
+@media print { #page-back { display: none !important; } }
