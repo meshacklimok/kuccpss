@@ -76,6 +76,38 @@ SQL
 sudo -u postgres psql -tc "SHOW ssl;"
 ```
 
+### Tune Postgres and Redis (safe to re-run on a live server)
+
+Stock settings assume a tiny machine for Postgres and give Redis no memory cap, so a
+traffic spike can fill RAM and get Postgres OOM-killed. **`bash scripts/tune_server.sh`
+does all of this** (plus `DB_STATEMENT_TIMEOUT_MS` in `.env` and a service restart),
+sized for the Droplet's current RAM — re-run it after resizing. The manual
+equivalent below is for 2 GB; on 1 GB use `shared_buffers=128MB`, `effective_cache_size=512MB`,
+`work_mem=4MB`, `maxmemory 64mb`; on 4 GB `shared_buffers=1GB`, `effective_cache_size=3GB`, `maxmemory 512mb`.
+
+```bash
+sudo -u postgres psql <<'SQL'
+ALTER SYSTEM SET shared_buffers = '256MB';
+ALTER SYSTEM SET effective_cache_size = '1GB';
+ALTER SYSTEM SET work_mem = '8MB';
+ALTER SYSTEM SET maintenance_work_mem = '64MB';
+ALTER SYSTEM SET random_page_cost = 1.1;                 -- SSD
+ALTER SYSTEM SET idle_in_transaction_session_timeout = '60s';
+ALTER SYSTEM SET shared_preload_libraries = 'pg_stat_statements';
+SQL
+sudo systemctl restart postgresql
+sudo -u postgres psql -d kuccpss -c "CREATE EXTENSION IF NOT EXISTS pg_stat_statements;"
+
+# Cap Redis. volatile-lru evicts only keys with an expiry (cache entries) — never
+# django-q's task queue or sessions' DB-backed data. Do NOT use allkeys-lru.
+redis-cli CONFIG SET maxmemory 256mb
+redis-cli CONFIG SET maxmemory-policy volatile-lru
+redis-cli CONFIG REWRITE
+```
+
+Slowest queries since the last reset (run after a busy day):
+`sudo -u postgres psql -d kuccpss -c "SELECT round(mean_exec_time) ms, calls, left(query, 90) FROM pg_stat_statements ORDER BY total_exec_time DESC LIMIT 15;"`
+
 ## Part 4 — Get the code
 
 ```bash
@@ -96,6 +128,7 @@ DB_HEALTH_MAX_SIZE_MB=10240             # default 512 is the Neon free-tier limi
 GUNICORN_WORKERS=3
 GUNICORN_WORKER_CLASS=gthread
 GUNICORN_THREADS=4
+DB_STATEMENT_TIMEOUT_MS=30000           # kill runaway queries instead of tying up a worker
 KEEPALIVE_URL=                          # Render-only ping, not needed
 # keep as-is from Render: SECRET_KEY, INTASEND_*, OPENAI_API_KEY, CLOUDINARY_URL,
 # RESEND_API_KEY, GOOGLE_CLIENT_ID, GOOGLE_SECRET, SENTRY_DSN, POSTHOG_*, VAPID_*,
@@ -258,6 +291,6 @@ If anything fails before step 3, nothing is lost. Set `MAINTENANCE_MODE=False` o
   `deploy.sh` needs passwordless `sudo systemctl restart kuccpss kuccpss-q` for the
   `deploy` user (`sudo visudo -f /etc/sudoers.d/kuccpss`:
   `deploy ALL=(root) NOPASSWD: /usr/bin/systemctl restart kuccpss kuccpss-q`).
-- **Peak season** (January results, KUCCPS application windows): resize to 4 GB / 2 vCPU and raise `GUNICORN_WORKERS` to 5–8.
+- **Peak season** (January results, KUCCPS application windows): resize to 4 GB / 2 vCPU, raise `GUNICORN_WORKERS` to 5–8, and re-run the Postgres/Redis tuning in Part 3 with the 4 GB values. Each worker holds the course catalogue in memory (~15 MB, `courses/catalogue.py`).
 - **Logs:** `journalctl -u kuccpss -f` (app), `journalctl -u kuccpss-q -f` (jobs), `/var/log/nginx/error.log`.
 - **Keep Render and Neon for one week** as a fallback, then delete them. Update `docs/DEPLOY.md` and `docs/DATABASE_OPERATIONS.md`, which still describe Render and Neon.

@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 set -o errexit
 
+# DB_STATEMENT_TIMEOUT_MS in .env guards web requests; migrations and the bulk
+# maintenance below may legitimately run longer. The shell value wins over .env.
+export DB_STATEMENT_TIMEOUT_MS=0
+
 pip install -r requirements.txt
 python manage.py collectstatic --no-input
 python manage.py migrate

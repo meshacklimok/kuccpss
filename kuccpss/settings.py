@@ -158,6 +158,9 @@ PAYMENT_SUPPORT_EMAIL = os.environ.get('PAYMENT_SUPPORT_EMAIL', 'support@careern
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    # Compress HTML/JSON responses (WhiteNoise already serves static files precompressed).
+    # Skips responses that already carry Content-Encoding.
+    'django.middleware.gzip.GZipMiddleware',
     'kuccpss.middleware.CanonicalHostMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'kuccpss.middleware.GracefulErrorMiddleware',
