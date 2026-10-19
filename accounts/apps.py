@@ -30,6 +30,8 @@ class AccountsConfig(AppConfig):
 def start_web_threads():
     """Start the per-process background threads of a web server process."""
     from accounts.tasks import start_homepage_cache_warmer
+    from courses.catalogue import start_warmer as start_course_catalogue_warmer
     from kuccpss.scheduler import start_scheduler
     start_homepage_cache_warmer()
+    start_course_catalogue_warmer()
     start_scheduler()

@@ -126,6 +126,20 @@ body.dark .cluster-chip.filled { background: rgba(52,199,89,0.14); color: #5fd88
         </div>
         {% endfor %}
 
+        {% if help_video %}
+        <div class="mb-4">
+            <div class="fw-semibold small mb-2"><i class="bi bi-play-circle-fill text-success me-1"></i>Watch: how to paste your cluster points</div>
+            <div class="ratio ratio-16x9 rounded-3 overflow-hidden bg-dark">
+                {% if help_video.kind == 'youtube' %}
+                <iframe src="{{ help_video.src }}" title="How to paste your cluster points" loading="lazy"
+                        allow="accelerometer; encrypted-media; picture-in-picture" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>
+                {% else %}
+                <video src="{{ help_video.src }}" controls preload="metadata" playsinline></video>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
         <form method="post" id="pasteForm">
             {% csrf_token %}
 

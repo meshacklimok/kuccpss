@@ -119,6 +119,8 @@ class Command(BaseCommand):
         else:
             for key in CACHE_KEYS:
                 cache.delete(key)
+            from courses.catalogue import bump_version
+            bump_version()
             self.stdout.write(self.style.SUCCESS('Import committed; caches cleared.'))
 
     def note(self, msg):

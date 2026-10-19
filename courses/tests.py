@@ -57,3 +57,37 @@ class ReviewTests(TestCase):
         review = Review.objects.get(course=self.course)
         self.assertEqual(review.rating, 5)
         self.assertEqual(review.body, 'Excellent!')
+
+
+class CatalogueTests(TestCase):
+    """courses.catalogue: shared, read-only offering cache for the career engine."""
+
+    def setUp(self):
+        from institutions.models import Institution, InstitutionType
+        from courses.models import CourseOffering
+        self.kmtc = CourseType.objects.create(name='KMTC', slug='kmtc')
+        inst_type = InstitutionType.objects.create(name='KMTC Campus')
+        self.inst = Institution.objects.create(name='KMTC Nairobi', institution_type=inst_type)
+        self.course = Course.objects.create(name='Diploma in Nursing', course_type=self.kmtc)
+        CourseOffering.objects.create(course=self.course, institution=self.inst)
+
+    def test_matches_queryset_and_shares_course_objects(self):
+        from courses import catalogue
+        from courses.models import CourseOffering
+        other = type(self.inst).objects.create(
+            name='KMTC Mombasa', institution_type=self.inst.institution_type)
+        CourseOffering.objects.create(course=self.course, institution=other)
+        offerings = catalogue.typed_offerings(['KMTC'])
+        self.assertEqual({o.pk for o in offerings},
+                         set(CourseOffering.objects.filter(course__course_type=self.kmtc).values_list('pk', flat=True)))
+        self.assertIs(offerings[0].course, offerings[1].course)
+
+    def test_course_change_invalidates_catalogue(self):
+        from courses import catalogue
+        before = catalogue.typed_offerings(['KMTC'])
+        self.assertIs(catalogue.typed_offerings(['KMTC']), before)  # cached
+        self.course.minimum_mean_grade = 'C'
+        self.course.save()
+        after = catalogue.typed_offerings(['KMTC'])
+        self.assertIsNot(after, before)
+        self.assertEqual(after[0].course.minimum_mean_grade, 'C')

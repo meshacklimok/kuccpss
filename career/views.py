@@ -2062,6 +2062,31 @@ Rules:
 # ─────────────────────────────────────────────
 # C2. DEGREE: Copy-paste cluster points
 # ─────────────────────────────────────────────
+def _paste_help_video():
+    """Admin-set "how to paste your cluster points" video (SiteSetting paste_help_video_url).
+    Returns {'kind': 'youtube'|'file', 'src': url}, or None when unset/unsupported."""
+    import re
+    from urllib.parse import urlparse
+    from resources.models import SiteSetting
+
+    url = (SiteSetting.get('paste_help_video_url', default='') or '').strip()
+    if not url:
+        return None
+    parsed = urlparse(url)
+    if parsed.scheme != 'https':
+        return None
+    host = (parsed.hostname or '').lower()
+    if host in ('youtu.be', 'www.youtube.com', 'youtube.com', 'm.youtube.com'):
+        m = (re.match(r'^/([\w-]{11})$', parsed.path) if host == 'youtu.be'
+             else re.search(r'(?:[?&]v=|/shorts/|/embed/)([\w-]{11})', url))
+        if m:
+            return {'kind': 'youtube', 'src': f'https://www.youtube-nocookie.com/embed/{m.group(1)}'}
+        return None
+    if re.search(r'\.(mp4|webm)$', parsed.path, re.IGNORECASE):
+        return {'kind': 'file', 'src': url}
+    return None
+
+
 def degree_paste(request):
     import re
     from clusters.models import Cluster
@@ -2140,7 +2165,7 @@ def degree_paste(request):
 
         messages.error(request, 'No valid cluster points found. Paste your KUCCPS cluster results and try again.')
 
-    return render(request, 'career/degree_paste.html')
+    return render(request, 'career/degree_paste.html', {'help_video': _paste_help_video()})
 
 
 # ─────────────────────────────────────────────
@@ -2503,11 +2528,10 @@ def career_results(request):
     cfg = _get_career_config()
 
     import hashlib as _hl, json as _js
-    from django.core.cache import cache as _dc
+    from courses import catalogue as _catalogue
 
     _no_active_filter = not filter_tier and not filter_chance and not filter_qual and not search_q
-    _cache_hit  = False
-    _cache_key  = None
+    _search_lower     = search_q.lower()
 
     matches             = []
     cluster_pts_single  = float(request.session.get('career_cluster_pts_single', 0) or 0)
@@ -2536,35 +2560,16 @@ def career_results(request):
     if pathway == 'Degree':
         cluster_points_dict = request.session.get('career_cluster_points', {})
 
-        if _no_active_filter:
-            _cache_key = 'cr_' + _hl.md5(
-                f"{request.session.session_key}:D:{_js.dumps(cluster_points_dict, sort_keys=True)}".encode()
-            ).hexdigest()
-            _cached = _dc.get(_cache_key)
-            if _cached is not None:
-                matches = _cached
-                _cache_hit = True
-
         degree_type = _get_degree_course_type()
-        if degree_type and not _cache_hit:
-            qs = (
-                CourseOffering.objects
-                .filter(course__course_type=degree_type)
-                .select_related(
-                    'course', 'course__cluster', 'course__category', 'course__course_type',
-                    'institution', 'institution__institution_type',
-                )
-                .exclude(cutoff_points__isnull=True)
-            )
-            if search_q:
-                qs = qs.filter(course__name__icontains=search_q)
-
-            for offering in qs:
+        if degree_type:
+            for offering in _catalogue.degree_offerings(degree_type):
+                course = offering.course
+                if search_q and _search_lower not in course.name.lower():
+                    continue
                 cutoff = offering.newest_cutoff()
                 if cutoff is None:
                     continue
 
-                course         = offering.course
                 qualifies      = True
                 disqual_reason = ''
 
@@ -2657,42 +2662,21 @@ def career_results(request):
                     'course_url':     None,
                 })
 
-            if _cache_key:
-                _dc.set(_cache_key, matches, timeout=600)
-
     else:
         student_pts = GRADE_POINTS.get(mean_grade, 0)
         type_names  = COURSE_TYPE_MAP.get(pathway, [])
 
-        if _no_active_filter:
-            _cache_key = 'cr_' + _hl.md5(
-                f"{request.session.session_key}:{pathway}:{mean_grade}".encode()
-            ).hexdigest()
-            _cached = _dc.get(_cache_key)
-            if _cached is not None:
-                matches = _cached
-                _cache_hit = True
-
-        if type_names and not _cache_hit:
-            qs = (
-                CourseOffering.objects
-                .filter(course__course_type__name__in=type_names)
-                .select_related(
-                    'course', 'course__course_type', 'course__category',
-                    'institution', 'institution__institution_type',
-                )
-            )
-            if search_q:
-                qs = qs.filter(course__name__icontains=search_q)
-
+        if type_names:
             # Category filter — narrow to preferred programme areas
-            _categories = request.session.get('career_categories', [])
-            if _categories:
-                qs = qs.filter(course__category__name__in=_categories)
+            _categories = set(request.session.get('career_categories', []))
 
             default_min = PATHWAY_DEFAULT_MIN_GRADE.get(pathway, 'E')
-            for offering in qs:
+            for offering in _catalogue.typed_offerings(type_names):
                 course    = offering.course
+                if search_q and _search_lower not in course.name.lower():
+                    continue
+                if _categories and (course.category is None or course.category.name not in _categories):
+                    continue
                 min_grade = (course.minimum_mean_grade or '').strip() or default_min
                 min_pts   = GRADE_POINTS.get(min_grade, 0)
                 diff      = student_pts - min_pts
@@ -2750,9 +2734,6 @@ def career_results(request):
                     'course_url':       None,
                     'has_specific_min': bool((course.minimum_mean_grade or '').strip()),
                 })
-
-            if _cache_key:
-                _dc.set(_cache_key, matches, timeout=600)
 
     # ── Institution / course pickers (Sort: Institution / Sort: Course Name) ──
     # Options come from the full result set; the chosen value then narrows it.
@@ -2861,8 +2842,15 @@ def career_results(request):
             tier_counts[key] = tier_counts.get(key, 0) + 1
 
     # ── Persist snapshot for logged-in users (powers Personalised Dashboard) ──
-    if (request.user.is_authenticated and matches and _no_active_filter and not _cache_hit
-            and not filter_inst and not filter_course):
+    # Only when the inputs or course data changed — not on every page/sort click.
+    _snap_sig = _hl.md5(_js.dumps([
+        pathway, cluster_points_dict, mean_grade, _degree_agg, subject_grades,
+        request.session.get('career_categories', []), _catalogue.version(),
+    ], sort_keys=True, default=str).encode()).hexdigest()
+    if (request.user.is_authenticated and matches and _no_active_filter
+            and not filter_inst and not filter_course
+            and request.session.get('career_snapshot_sig') != _snap_sig):
+        request.session['career_snapshot_sig'] = _snap_sig
         try:
             from accounts.models import CareerSessionSnapshot
             sorted_top = sorted(matches, key=lambda m: (m['tier_order'], abs(m['diff'])))[:10]
@@ -3084,7 +3072,7 @@ def _build_career_matches(request):
     Build all career course matches from session data (shared by both PDF views).
     Returns (matches, pathway, cluster_pts_single, mean_grade, cluster_points_dict).
     """
-    from courses.models import CourseOffering
+    from courses import catalogue as _catalogue
     from predictor.services import predict_cutoff as _predict_cutoff, TREND_ICON, TREND_COLOR, TREND_TIP
 
     pathway             = request.session.get('career_pathway', '')
@@ -3113,16 +3101,7 @@ def _build_career_matches(request):
         degree_mean_pts    = GRADE_POINTS.get(degree_mean_grade, 0)
         degree_type = _get_degree_course_type()
         if degree_type:
-            qs = (
-                CourseOffering.objects
-                .filter(course__course_type=degree_type)
-                .select_related(
-                    'course', 'course__cluster', 'course__category', 'course__course_type',
-                    'institution', 'institution__institution_type',
-                )
-                .exclude(cutoff_points__isnull=True)
-            )
-            for offering in qs:
+            for offering in _catalogue.degree_offerings(degree_type):
                 cutoff = offering.newest_cutoff()
                 if cutoff is None:
                     continue
@@ -3193,22 +3172,14 @@ def _build_career_matches(request):
         student_pts_val = GRADE_POINTS.get(mean_grade, 0)
         type_names      = COURSE_TYPE_MAP.get(pathway, [])
         if type_names:
-            qs = (
-                CourseOffering.objects
-                .filter(course__course_type__name__in=type_names)
-                .select_related(
-                    'course', 'course__course_type', 'course__category',
-                    'institution', 'institution__institution_type',
-                )
-            )
             # Category filter
-            _categories = request.session.get('career_categories', [])
-            if _categories:
-                qs = qs.filter(course__category__name__in=_categories)
+            _categories = set(request.session.get('career_categories', []))
 
             default_min = PATHWAY_DEFAULT_MIN_GRADE.get(pathway, 'E')
-            for offering in qs:
+            for offering in _catalogue.typed_offerings(type_names):
                 course         = offering.course
+                if _categories and (course.category is None or course.category.name not in _categories):
+                    continue
                 min_grade      = (course.minimum_mean_grade or '').strip() or default_min
                 min_pts        = GRADE_POINTS.get(min_grade, 0)
                 diff           = student_pts_val - min_pts
