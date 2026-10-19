@@ -19,7 +19,7 @@ import multiprocessing
 # Render Free has 0.1 CPU shared; cap at 2 to avoid OOM.
 # On Render free/starter (512 MB) cpu_count() reports host CPUs, not container
 # share, so cap hard at 2 to avoid OOM; override via GUNICORN_WORKERS env var.
-_default_workers = min(multiprocessing.cpu_count() + 1, 2)
+_default_workers = min(multiprocessing.cpu_count() * 2 + 1, 4)
 workers = int(os.environ.get('GUNICORN_WORKERS', _default_workers))
 
 # ── Worker class ─────────────────────────────────────────────────────────────
@@ -27,8 +27,10 @@ workers = int(os.environ.get('GUNICORN_WORKERS', _default_workers))
 # 'gthread' — sync + thread pool; better throughput for I/O-bound views
 #             requires: pip install gunicorn[gthread]
 # 'gevent'  — greenlet-based, highest concurrency, needs: pip install gevent
-worker_class = os.environ.get('GUNICORN_WORKER_CLASS', 'sync')
-threads = int(os.environ.get('GUNICORN_THREADS', 2))  # only used with gthread
+# gthread by default: one slow request (eligible-courses query, AI call) no longer
+# blocks every other visitor queued behind it on the same worker.
+worker_class = os.environ.get('GUNICORN_WORKER_CLASS', 'gthread')
+threads = int(os.environ.get('GUNICORN_THREADS', 4))  # only used with gthread
 
 # ── Timeouts ─────────────────────────────────────────────────────────────────
 # 30 s is tight for the eligible-courses DB query on cold cache;
