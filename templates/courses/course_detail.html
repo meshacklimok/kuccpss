@@ -131,7 +131,7 @@ body.dark .trend-tab { background: var(--surface-2); border-color: transparent; 
         <li class="breadcrumb-item"><a href="{% url 'courses:course_types_list' %}" class="text-white-50">Courses</a></li>
         <li class="breadcrumb-item"><a href="{% url 'courses:course_type_detail' type_slug=course.course_type.slug %}" class="text-white-50">{{ course.course_type.name }}</a></li>
         {% if course.category %}
-        <li class="breadcrumb-item"><a href="{% url 'courses:course_category_detail' type_slug=course.course_type.slug category_slug=course.category.slug %}" class="text-white-50">{{ course.category.name }}</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'courses:course_category_detail' type_slug=course.category.course_type.slug category_slug=course.category.slug %}" class="text-white-50">{{ course.category.name }}</a></li>
         {% endif %}
         <li class="breadcrumb-item active text-white">{{ course.name }}</li>
       </ol>

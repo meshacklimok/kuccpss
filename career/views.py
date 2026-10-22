@@ -826,8 +826,15 @@ def ajax_ai_chat(request):
     except ValueError:
         return JsonResponse({"error": "Invalid request."}, status=400)
 
-    user_message = body.get("message", "").strip()
+    if not isinstance(body, dict) or not isinstance(body.get("message", ""), str):
+        return JsonResponse({"error": "Invalid request."}, status=400)
+
+    # Capped before it reaches the knowledge-base/course searches and the model, so one
+    # oversized POST can't run up token cost or query time (history is capped separately).
+    user_message = body.get("message", "").strip()[:2000]
     history      = body.get("history", [])
+    if not isinstance(history, list):
+        history = []
 
     if not user_message:
         return JsonResponse({"error": "Empty message."}, status=400)
@@ -835,7 +842,7 @@ def ajax_ai_chat(request):
     # ── Per-conversation message cap ─────────────────────
     chat_max = getattr(cfg, 'ai_chat_max_messages', 20)
     if getattr(cfg, 'rate_limiting_enabled', True) and chat_max:
-        msgs_sent = sum(1 for t in history if t.get("role") == "user")
+        msgs_sent = sum(1 for t in history if isinstance(t, dict) and t.get("role") == "user")
         if msgs_sent >= chat_max:
             return JsonResponse(
                 {"error": f"Conversation limit reached ({chat_max} messages). Start a new chat to continue."},

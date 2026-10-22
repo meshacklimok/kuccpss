@@ -27,6 +27,34 @@ class SocialAccountAdapter(DefaultSocialAccountAdapter):
     "Third-Party Login Failure" page.
     """
 
+    def pre_social_login(self, request, sociallogin):
+        """
+        SOCIALACCOUNT_EMAIL_AUTHENTICATION_AUTO_CONNECT links a Google login to any local
+        account with the same email, but register never proves the address is the
+        registrant's (is_verified is set at signup). Without this, someone could register
+        a victim's email with their own password and keep access once the victim signs in
+        with Google. If the matching account's email was never confirmed, drop its
+        password first; the real owner can set one via password reset.
+        """
+        super().pre_social_login(request, sociallogin)
+        if sociallogin.is_existing:
+            return
+        from django.contrib.auth import get_user_model
+        from .models import EmailVerificationToken
+
+        User = get_user_model()
+        for addr in sociallogin.email_addresses:
+            if not addr.verified:
+                continue
+            user = User.objects.filter(email__iexact=addr.email).first()
+            if user is None or not user.has_usable_password():
+                continue
+            if EmailVerificationToken.objects.filter(user=user, is_used=True).exists():
+                continue
+            user.set_unusable_password()
+            user.save(update_fields=["password"])
+            logger.warning("Dropped password of unverified local account %s on Google connect", user.pk)
+
     def get_app(self, request, provider, client_id=None):
         from allauth.core.exceptions import ImmediateHttpResponse
         from allauth.socialaccount.models import SocialApp

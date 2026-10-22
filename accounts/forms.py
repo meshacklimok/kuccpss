@@ -12,6 +12,11 @@ def validate_password_strength(password: str):
     # Kept in sync with AUTH_PASSWORD_VALIDATORS' MinimumLengthValidator in settings.py.
     if len(password) < 8:
         raise ValidationError("Password must be at least 8 characters long.")
+    from django.contrib.auth.password_validation import (
+        CommonPasswordValidator, NumericPasswordValidator,
+    )
+    CommonPasswordValidator().validate(password)
+    NumericPasswordValidator().validate(password)
 
 
 # Known disposable / throwaway email domains

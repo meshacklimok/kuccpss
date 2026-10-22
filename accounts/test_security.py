@@ -143,3 +143,36 @@ class CareerHomeNoInventedCutoffsTests(TestCase):
         self.assertEqual(resp.status_code, 200)
         self.assertNotContains(resp, 'Medicine and Surgery')
         self.assertNotContains(resp, 'Cutoff: 42.0')
+
+
+class GoogleConnectPreHijackTests(TestCase):
+    """Auto-connecting Google to a same-email account must not leave an attacker's password live."""
+
+    def _sociallogin(self, email):
+        from allauth.account.models import EmailAddress
+        from allauth.socialaccount.models import SocialLogin
+        sl = SocialLogin(user=User(email=email))
+        sl.email_addresses = [EmailAddress(email=email, verified=True, primary=True)]
+        return sl
+
+    def _adapter(self):
+        from accounts.adapters import SocialAccountAdapter
+        return SocialAccountAdapter()
+
+    def test_unverified_account_loses_its_password(self):
+        user = User.objects.create_user(email="victim@example.com", password="AttackerPass1!")
+        self._adapter().pre_social_login(None, self._sociallogin("victim@example.com"))
+        user.refresh_from_db()
+        self.assertFalse(user.has_usable_password())
+
+    def test_verified_account_keeps_its_password(self):
+        from accounts.models import EmailVerificationToken
+        user = User.objects.create_user(email="owner@example.com", password="OwnerPass1!")
+        EmailVerificationToken.objects.create(user=user, token="t" * 20, is_used=True)
+        self._adapter().pre_social_login(None, self._sociallogin("owner@example.com"))
+        user.refresh_from_db()
+        self.assertTrue(user.has_usable_password())
+
+    def test_unknown_email_is_untouched(self):
+        self._adapter().pre_social_login(None, self._sociallogin("new@example.com"))
+        self.assertFalse(User.objects.filter(email="new@example.com").exists())

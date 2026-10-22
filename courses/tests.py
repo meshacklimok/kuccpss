@@ -1,3 +1,5 @@
+from io import StringIO
+
 from django.test import TestCase, Client
 from django.urls import reverse
 
@@ -91,3 +93,24 @@ class CatalogueTests(TestCase):
         after = catalogue.typed_offerings(['KMTC'])
         self.assertIsNot(after, before)
         self.assertEqual(after[0].course.minimum_mean_grade, 'C')
+
+
+class FixCategoryTypesCommandTests(TestCase):
+    def test_repoints_course_to_same_named_category_under_its_own_type(self):
+        from django.core.management import call_command
+        from courses.models import Course, CourseCategory, CourseType
+
+        craft = CourseType.objects.create(name="Fix Craft")
+        artisan = CourseType.objects.create(name="Fix Artisan")
+        wrong = CourseCategory.objects.create(name="Health Sciences", course_type=craft)
+        course = Course.objects.create(name="Artisan Fix Course", course_type=artisan, category=wrong)
+
+        call_command("fix_category_types", "--dry-run", stdout=StringIO())
+        course.refresh_from_db()
+        self.assertEqual(course.category, wrong)  # dry run changes nothing
+        self.assertFalse(CourseCategory.objects.filter(course_type=artisan).exists())
+
+        call_command("fix_category_types", stdout=StringIO())
+        course.refresh_from_db()
+        self.assertEqual(course.category.course_type, artisan)
+        self.assertEqual(course.category.name, "Health Sciences")

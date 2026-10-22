@@ -1,14 +1,9 @@
 """
-Gunicorn configuration for CareerNext on Render.
+Gunicorn configuration for CareerNext on a DigitalOcean droplet behind nginx.
 
-Target: 3 000+ concurrent students.
+Defaults: up to 4 gthread workers (2 x CPUs + 1, capped) with 4 threads each.
 
-Render Free tier  → 0.1 vCPU, 512 MB RAM  — 2 sync workers
-Render Starter    → 0.5 vCPU, 512 MB RAM  — 2 sync workers + keep-alive
-Render Standard   → 1   vCPU, 2 GB RAM    — 4 sync workers
-Render Pro        → 2   vCPU, 4 GB RAM    — 8 gthread workers + threads
-
-Change GUNICORN_WORKERS and GUNICORN_WORKER_CLASS env vars to tune
+Set GUNICORN_WORKERS, GUNICORN_THREADS and GUNICORN_WORKER_CLASS env vars to tune
 without modifying this file.
 """
 import os

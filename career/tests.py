@@ -41,6 +41,18 @@ def _fake_openai_client():
 
 class CareerTestBase(TestCase):
     @classmethod
+    def setUpClass(cls):
+        # Module-level caches in career.views would otherwise carry a CourseType /
+        # config row from another app's rolled-back test DB into these tests.
+        from career import views as career_views
+        career_views._degree_course_type_cache = None
+        career_views._career_cfg_cache = None
+        from courses import catalogue
+        catalogue._store.clear()
+        catalogue.bump_version()
+        super().setUpClass()
+
+    @classmethod
     def setUpTestData(cls):
         call_command('seed_clusters', stdout=StringIO())
 
@@ -368,6 +380,22 @@ class AIChatTests(CareerTestBase):
     def test_rejects_bad_input(self):
         self.assertEqual(self.chat('not json').status_code, 400)
         self.assertEqual(self.chat(json.dumps({'message': '  '})).status_code, 400)
+
+    def test_rejects_malformed_json_shapes(self):
+        # Valid JSON of the wrong shape used to raise AttributeError (500).
+        self.assertEqual(self.chat(json.dumps(['hi'])).status_code, 400)
+        self.assertEqual(self.chat(json.dumps({'message': 123})).status_code, 400)
+        with mock.patch('kuccpss.circuit_breaker.get_openai_client', return_value=_fake_openai_client()):
+            r = self.chat(json.dumps({'message': 'hi', 'history': ['x', 5, {'role': 'user'}]}))
+        self.assertEqual(r.status_code, 200)
+
+    def test_user_message_is_capped_before_reaching_model(self):
+        from .models import AIChatLog
+        with mock.patch('kuccpss.circuit_breaker.get_openai_client', return_value=_fake_openai_client()), \
+                mock.patch('career.ai_assistant.build_messages', wraps=__import__('career.ai_assistant', fromlist=['x']).build_messages) as bm:
+            self.chat(json.dumps({'message': 'a' * 50000}))
+        self.assertEqual(len(bm.call_args.kwargs['user_message']), 2000)
+        self.assertEqual(len(AIChatLog.objects.get().question), 2000)
 
     def test_mocked_reply(self):
         with mock.patch('kuccpss.circuit_breaker.get_openai_client', return_value=_fake_openai_client()):

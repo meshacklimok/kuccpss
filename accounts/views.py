@@ -278,7 +278,7 @@ def dashboard_view(request: HttpRequest) -> HttpResponse:
             'institution', 'institution__institution_type'
         ).prefetch_related('institution__offerings__course')
         from clusters.models import Cluster as _Cluster
-        _all_clusters = list(_Cluster.objects.all().only('name', 'slug', 'number', 'color_code', 'icon')[:4])
+        _all_clusters = list(_Cluster.objects.kuccps().order_by('number').only('name', 'slug', 'number', 'color_code', 'icon')[:4])
         from courses.trends import get_trends_context as _get_trends
         _trends = _get_trends()
         from career.models import CareerConfig as _CCfg
@@ -320,6 +320,7 @@ def dashboard_view(request: HttpRequest) -> HttpResponse:
     from clusterpoints.models import UserKCSEResult, ClusterCalculationResult
     from .models import SavedCourse, CourseShortlist, Notification, CareerSessionSnapshot
     from career.models import CareerProfile, QuizSubmission
+    from clusters.constants import KUCCPS_CLUSTER_NUMBERS
 
     # ── KCSE results & cluster chart ──────────────────────────────────────────
     latest_result = UserKCSEResult.objects.filter(user=user).order_by("-created_at").first()
@@ -328,8 +329,11 @@ def dashboard_view(request: HttpRequest) -> HttpResponse:
     eligible_count = 0
     if latest_result:
         cluster_results = list(
-            ClusterCalculationResult.objects.filter(kcse_result=latest_result)
-            .select_related("cluster").order_by("cluster__number")
+            # Results saved before the 18-cluster switch point at retired sub-clusters
+            # whose detail pages 404, so only the 18 KUCCPS clusters are listed.
+            ClusterCalculationResult.objects.filter(
+                kcse_result=latest_result, cluster__number__in=KUCCPS_CLUSTER_NUMBERS
+            ).select_related("cluster").order_by("cluster__number")
         )
         top_cluster_result = max(cluster_results, key=lambda r: r.cluster_points, default=None)
         from clusterpoints.eligibility import get_eligible_courses
@@ -515,7 +519,7 @@ def dashboard_view(request: HttpRequest) -> HttpResponse:
         })
 
     from clusters.models import Cluster
-    all_clusters = list(Cluster.objects.all().only('name', 'slug', 'number', 'color_code', 'icon')[:4])
+    all_clusters = list(Cluster.objects.kuccps().order_by('number').only('name', 'slug', 'number', 'color_code', 'icon')[:4])
 
     from courses.trends import get_trends_context
     trends_ctx = get_trends_context()

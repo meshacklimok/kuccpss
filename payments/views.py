@@ -520,11 +520,10 @@ def _log_webhook_rejection(request) -> None:
     challenge = body.get("challenge") if isinstance(body, dict) else None
     logger.warning(
         "payments:mpesa_webhook signature rejected: signature_header=%s challenge_in_body=%s "
-        "challenge_len=%s secret_len=%s body_keys=%s",
+        "challenge_len=%s body_keys=%s",
         bool(request.headers.get("X-IntaSend-Signature")),
         isinstance(challenge, str) and bool(challenge),
         len(challenge) if isinstance(challenge, str) else None,
-        len(getattr(settings, "INTASEND_WEBHOOK_SECRET", "")),
         sorted(body)[:15] if isinstance(body, dict) else None,
     )
 
@@ -546,7 +545,9 @@ def mpesa_webhook(request):
     except ValueError:
         return HttpResponse(status=400)
 
-    logger.info("M-Pesa webhook: %s", payload)
+    logger.info(
+        "M-Pesa webhook: api_ref=%s state=%s", payload.get("api_ref", ""), payload.get("state", "")
+    )
 
     api_ref = payload.get("api_ref", "")
     state = payload.get("state", "").upper()
@@ -609,7 +610,16 @@ def mpesa_webhook(request):
     # Update Payment status. Retried/duplicate webhooks must not re-fulfil, and a late
     # FAILED event must never downgrade a payment that has already completed.
     if state == "COMPLETE":
-        complete_payment(payment)
+        paid = _safe_amount(value)
+        if paid < payment.amount:
+            # Underpaid (or malformed amount): leave it pending for manual review
+            # rather than unlocking the feature.
+            logger.warning(
+                "IntaSend webhook amount mismatch: payment=%s expected=%s received=%s",
+                payment.pk, payment.amount, paid,
+            )
+        else:
+            complete_payment(payment)
     elif state == "FAILED":
         if Payment.objects.filter(pk=payment.pk, status="pending").update(
             status="failed", updated_at=timezone.now()

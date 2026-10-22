@@ -9,6 +9,7 @@ urlpatterns = [
 
     # Retired KCSE-input flow (legacy career.Course tables) → 301 to the engine
     path("kcse-input/", views.legacy_redirect, name="kcse_input"),
+    path("kcse-input/<path:rest>", views.legacy_redirect),
     path("course/<int:match_id>/", views.legacy_redirect, name="course_detail"),
     path("filter-matches/", views.legacy_redirect, name="filter_matches"),
     path("ai-recommendations/", views.legacy_redirect, name="ai_recommendations"),
