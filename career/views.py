@@ -1772,7 +1772,7 @@ def degree_calculate(request):
         'II':  {'label': 'Sciences',                    'color': '#059669', 'icon': 'bi-eyedropper'},
         'III': {'label': 'Humanities',                  'color': '#0891b2', 'icon': 'bi-book-fill'},
         'IV':  {'label': 'Technical & Applied',         'color': '#d97706', 'icon': 'bi-tools'},
-        'V':   {'label': 'Languages, Business & Music', 'color': '#db2777', 'icon': 'bi-music-note'},
+        'V':   {'label': 'Languages & Music', 'color': '#db2777', 'icon': 'bi-music-note'},
     }
 
     compulsory_fields, groups_map = [], {g: [] for g, _ in _GC if g != 'I'}
@@ -2394,7 +2394,7 @@ def pathway_input(request, pathway):
             'II':  {'label': 'Sciences',                    'color': '#059669', 'icon': 'bi-eyedropper'},
             'III': {'label': 'Humanities',                  'color': '#0891b2', 'icon': 'bi-book-fill'},
             'IV':  {'label': 'Technical & Applied',         'color': '#d97706', 'icon': 'bi-tools'},
-            'V':   {'label': 'Languages, Business & Music', 'color': '#db2777', 'icon': 'bi-music-note'},
+            'V':   {'label': 'Languages & Music', 'color': '#db2777', 'icon': 'bi-music-note'},
         }
         _gmap = {g: [] for g, _ in _GC2 if g != 'I'}
         for _s in _Subj2.objects.all().order_by('group', 'name'):

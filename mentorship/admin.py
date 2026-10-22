@@ -87,10 +87,10 @@ class MentorProfileAdmin(admin.ModelAdmin):
     inlines = [TimeSlotInline, MentorshipSessionInline, WithdrawalInline]
     list_display = [
         "display_name", "mentor_type", "course_name", "institution_name", "year_of_study",
-        "approval_badge", "is_active", "is_pinned", "show_expert_badge", "show_new_badge", "total_sessions", "avg_rating_display",
+        "approval_badge", "is_active", "is_pinned", "show_expert_badge", "show_new_badge", "show_rating", "show_session_count", "total_sessions", "avg_rating_display",
         "wallet_balance", "created_at", "reject_button",
     ]
-    list_editable = ["is_pinned", "show_expert_badge", "show_new_badge"]
+    list_editable = ["is_pinned", "show_expert_badge", "show_new_badge", "show_rating", "show_session_count"]
     list_filter = ["mentor_type", "is_pinned", "show_expert_badge", "show_new_badge", "is_approved", "is_active", "is_rejected", "year_of_study"]
     search_fields = ["user__email", "user__full_name", "course__name", "institution__name"]
     autocomplete_fields = ["user", "course", "institution"]
@@ -138,6 +138,10 @@ class MentorProfileAdmin(admin.ModelAdmin):
                 "profile with Type = Expert and Approved ticked. Leave course, institution "
                 "and the verification documents blank for experts."
             ),
+        }),
+        ("Visibility & Display", {
+            "fields": ("show_rating", "show_session_count"),
+            "description": "Control what stats are displayed on this mentor's card and profile.",
         }),
         ("Mentor Details", {
             "fields": ("user", "course", "institution", "year_of_study", "bio", "whatsapp", "photo"),

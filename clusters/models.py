@@ -42,7 +42,7 @@ GROUP_CHOICES = [
     ('II',  'Group II – Sciences'),
     ('III', 'Group III – Humanities'),
     ('IV',  'Group IV – Technical & Applied'),
-    ('V',   'Group V – Languages, Business & Music'),
+    ('V',   'Group V – Languages & Music'),
 ]
 
 

@@ -746,3 +746,57 @@ class AIChatLogAdminTests(TestCase):
         self.assertFalse(entry.is_active)
         log.refresh_from_db()
         self.assertEqual(log.review_status, 'promoted')
+
+
+class PaywallAllPathwaysTests(CareerTestBase):
+    """Unpaid student: every pathway reaches results behind the paywall, then unlocks on payment."""
+
+    def setUp(self):
+        super().setUp()
+        from payments.models import PaymentExemption
+        PaymentExemption.objects.filter(user=self.user).delete()
+
+    def _enter(self, pathway):
+        if pathway == 'degree':
+            self.client.post('/career/degree/calculate/', self.grades_post())
+            self.client.post('/career/degree/options/', {'action': 'calculate'})
+        elif pathway == 'degree-paste':
+            self.client.post('/career/degree/paste/', {'cluster_data': 'Cluster 1 40.5\nCluster 2 38.2'})
+        elif pathway == 'degree-manual':
+            self.client.post('/career/degree/manual/', {f'group_{i}': 40 for i in range(1, 19)})
+        elif pathway == 'ttc':
+            self.client.post('/career/input/ttc/', {'mean_grade': 'C+'})
+        else:
+            self.client.post(f'/career/input/{pathway}/', self.grades_post())
+
+    def test_every_pathway_locked_then_unlocked_by_payment(self):
+        from payments.models import Payment
+        from payments.services import lock_submission_on_payment
+        expected = {
+            'degree': 'Bachelor of Laws Test',
+            'degree-paste': 'Bachelor of Laws Test',
+            'degree-manual': 'Bachelor of Laws Test',
+            'diploma': 'Diploma in Testing',
+            'certificate': 'Certificate in Testing',
+            'kmtc': 'Diploma in Clinical Testing',
+            'ttc': 'Diploma in Teacher Testing',
+            'artisan': 'Artisan in Testing',
+        }
+        for pathway, course_name in expected.items():
+            with self.subTest(pathway=pathway):
+                Payment.objects.filter(user=self.user).delete()
+                self._enter(pathway)
+                r = self.client.get('/career/results/')
+                self.assertEqual(r.status_code, 200)
+                self.assertTrue(r.context['is_locked'], 'unpaid results must be gated')
+                self.assertContains(r, 'id="pw-overlay"')
+
+                payment = Payment.objects.create(
+                    user=self.user, feature='premium_career_report', status='completed')
+                lock_submission_on_payment(payment)
+                r = self.client.get('/career/results/')
+                self.assertFalse(r.context['is_locked'], 'payment must unlock results')
+                self.assertNotContains(r, 'id="pw-overlay"')
+                self.assertContains(r, course_name)
+                self.assert_pdf('/career/results/pdf/quick/')
+                self.assert_pdf('/career/results/pdf/report/')

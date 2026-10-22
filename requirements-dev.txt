@@ -1,0 +1,2 @@
+-r requirements.txt
+pdfplumber>=0.11   # used only by seed_* management commands and resources/extract_*.py

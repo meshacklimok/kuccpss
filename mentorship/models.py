@@ -52,6 +52,15 @@ class MentorProfile(models.Model):
         default=False,
         help_text="Show the 'Expert' badge next to this mentor's name on their card and profile.",
     )
+    show_session_count = models.BooleanField(
+        default=True,
+        help_text="Display the number of completed sessions on this mentor's card and profile.",
+    )
+    show_rating = models.BooleanField(
+        default=True,
+        help_text="Display the average rating on this mentor's card and profile.",
+    )
+
 
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL,
@@ -164,6 +173,11 @@ class MentorProfile(models.Model):
     @property
     def is_expert(self):
         return self.mentor_type == self.EXPERT
+
+    @property
+    def displayed_session_count(self):
+        # Always the real count: a staff-set override would be fabricated social proof.
+        return self.total_sessions
 
     @property
     def rating_int(self):

@@ -2768,13 +2768,26 @@ var Tawk_API = Tawk_API || {}, Tawk_LoadStart = new Date();
 /* Hide the greeting/"Hi, welcome" bubble above the chat button — it covers page content. */
 (function () {
   var st = document.createElement('style');
-  st.textContent = '#tawk-bubble-container{display:none !important;}';
+  st.textContent = '#tawk-bubble-container,[id*="tawk-bubble"],[class*="tawk-bubble"],[class*="tawk-greeting"],[id*="tawk-greeting"]{display:none !important;visibility:hidden !important;}';
   document.head.appendChild(st);
+  /* Tawk's markup varies by widget version: also hide any injected element/iframe that is the greeting bubble. */
+  function hideBubbles() {
+    document.querySelectorAll('body > div[id*="tawk"], body > div[class*="tawk"], body > iframe').forEach(function (el) {
+      var tag = ((el.id || '') + ' ' + (el.className || '') + ' ' + (el.title || '')).toLowerCase();
+      if (/bubble|greeting|popup|prechat/.test(tag) && !/min-container|min-iframe/.test(tag)) {
+        el.style.setProperty('display', 'none', 'important');
+      }
+    });
+  }
+  new MutationObserver(hideBubbles).observe(document.body, { childList: true, subtree: true });
+  hideBubbles();
 })();
 Tawk_API.customStyle = {
   visibility: {
     desktop: { position: 'br', xOffset: -1, yOffset: 45 },
-    mobile:  { position: 'br', xOffset: -1, yOffset: 45 }
+    mobile:  { position: 'br', xOffset: -1, yOffset: 45 },
+    /* Push the "Hi! How can we help?" greeting + quick-reply buttons off-screen; the chat button stays. */
+    bubble:  { rotate: '0deg', xOffset: -2000, yOffset: 0 }
   }
 };
 Tawk_API.onLoad = function () {

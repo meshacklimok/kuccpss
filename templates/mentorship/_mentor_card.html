@@ -31,14 +31,14 @@
       {% endif %}
 
       <!-- Rating -->
-      {% if mentor.total_sessions > 0 %}
+      {% if mentor.displayed_session_count > 0 and mentor.show_rating %}
         <div class="mc-rating">
           <span class="mc-stars">
             {% for i in "12345" %}
               <i class="bi bi-star{% if forloop.counter <= mentor.rating_int %}-fill{% endif %}"></i>
             {% endfor %}
           </span>
-          <span class="mc-rating-txt">{{ mentor.average_rating|floatformat:1 }} &middot; {{ mentor.total_sessions }} session{{ mentor.total_sessions|pluralize }}</span>
+          <span class="mc-rating-txt">{{ mentor.average_rating|floatformat:1 }}{% if mentor.show_session_count %} &middot; {{ mentor.displayed_session_count }} session{{ mentor.displayed_session_count|pluralize }}{% endif %}</span>
         </div>
       {% endif %}
       {% if mentor.show_new_badge %}

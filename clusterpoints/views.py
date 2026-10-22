@@ -308,7 +308,7 @@ def kcse_calculator_view(request):
         'II':  {'label': 'Sciences',                    'color': '#059669', 'icon': 'bi-eyedropper'},
         'III': {'label': 'Humanities',                  'color': '#0891b2', 'icon': 'bi-book-fill'},
         'IV':  {'label': 'Technical & Applied',         'color': '#d97706', 'icon': 'bi-tools'},
-        'V':   {'label': 'Languages, Business & Music', 'color': '#db2777', 'icon': 'bi-music-note'},
+        'V':   {'label': 'Languages & Music', 'color': '#db2777', 'icon': 'bi-music-note'},
     }
     compulsory_fields = []
     _gmap = {g: [] for g, _ in _GC if g != 'I'}
@@ -367,7 +367,19 @@ def kcse_calculator_view(request):
         and not has_paid_for_current_session(request.user, CareerSubmission.FEATURE_CALCULATOR, _gate_feature)
     )
 
+    # Grades carried over from another feature (e.g. the career engine): the user never
+    # submitted them here, so ask before dropping them straight onto the paywall.
+    _carried_over = bool(
+        _is_locked
+        and request.method == "GET"
+        and not request.GET.get("restore")
+        and not CareerSubmission.objects.filter(
+            user=request.user, feature=CareerSubmission.FEATURE_CALCULATOR
+        ).exists()
+    )
+
     return render(request, "clusterpoints/calculator.html", {
+        "carried_over_grades": _carried_over,
         "form": form,
         "results": results,
         "total_points": total_points,

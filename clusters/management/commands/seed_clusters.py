@@ -57,6 +57,7 @@ SUBJECTS_BY_GROUP = {
         'Drawing and Design',
         'Aviation Technology',
         'Computer Studies',
+        'Business Studies',
     ],
     'V': [
         'French',
@@ -64,7 +65,6 @@ SUBJECTS_BY_GROUP = {
         'Arabic',
         'Kenyan Sign Language',
         'Music',
-        'Business Studies',
     ],
 }
 

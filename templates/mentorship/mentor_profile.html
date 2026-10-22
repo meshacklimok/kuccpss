@@ -32,7 +32,7 @@
           {% endif %}
 
           <!-- Stars -->
-          {% if mentor.total_sessions > 0 %}
+          {% if mentor.displayed_session_count > 0 and mentor.show_rating %}
             <div class="mb-2">
               {% for i in star_range %}
                 {% if i <= mentor.rating_int %}
@@ -42,7 +42,7 @@
                 {% endif %}
               {% endfor %}
               <div class="text-muted small mt-1">
-                {{ mentor.average_rating|floatformat:1 }} · {{ mentor.total_sessions }} session{{ mentor.total_sessions|pluralize }} completed
+                {{ mentor.average_rating|floatformat:1 }}{% if mentor.show_session_count %} · {{ mentor.displayed_session_count }} session{{ mentor.displayed_session_count|pluralize }} completed{% endif %}
               </div>
             </div>
           {% endif %}

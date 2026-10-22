@@ -798,6 +798,26 @@ body.dark .s-unlik { background: rgba(255,69,58,0.15); border-color: rgba(255,69
 </div>
 {% endif %}
 
+{% if carried_over_grades %}
+<div id="saved-grades-notice" role="dialog" aria-modal="true" aria-labelledby="saved-grades-title" style="position:fixed;inset:0;z-index:9998;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.55);">
+    <div style="background:#fff;border-radius:16px;padding:2rem;max-width:400px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,0.3);text-align:center;">
+        <div style="font-size:2rem;margin-bottom:0.5rem;">📋</div>
+        <h5 id="saved-grades-title" style="font-weight:800;color:#1e293b;margin-bottom:0.5rem;">We found your saved KCSE grades</h5>
+        <p style="font-size:0.85rem;color:#64748b;margin-bottom:1.5rem;">
+            These were saved earlier (e.g. from the Career Engine). Use them to see your cluster points, or edit them first.
+        </p>
+        <button type="button" onclick="continueWithSavedGrades()"
+                style="background:#1e3a8a;color:#fff;border:none;border-radius:10px;padding:0.7rem 1.8rem;font-weight:700;font-size:0.9rem;cursor:pointer;width:100%;margin-bottom:0.6rem;">
+            Use these grades
+        </button>
+        <button type="button" onclick="editSavedGrades()"
+                style="background:transparent;border:1.5px solid #e2e8f0;border-radius:10px;padding:0.6rem 1.8rem;font-weight:600;font-size:0.85rem;cursor:pointer;color:#64748b;width:100%;">
+            Edit grades
+        </button>
+    </div>
+</div>
+{% endif %}
+
 <!-- ══ sticky step bar ══ -->
 <div class="step-bar-wrap" id="stepBarWrap">
 <div class="step-bar">
@@ -1609,7 +1629,7 @@ function submitCalcForm(btn) {
 
 // ── Progressive 5-second loading animation + payment gate ──
 {% if results %}{% if is_results_locked %}
-(function () {
+function startResultsLoading() {
     var DURATION = 5000;
     var overlay  = document.getElementById('calc-loading');
     var fill     = document.getElementById('clProgFill');
@@ -1647,7 +1667,33 @@ function submitCalcForm(btn) {
         }
     }
     requestAnimationFrame(tick);
+}
+{% if carried_over_grades %}
+(function () {
+    var m = document.getElementById('saved-grades-notice');
+    if (!m) return;
+    var btn = m.querySelector('button');
+    if (btn) btn.focus();
+    m.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') { editSavedGrades(); return; }
+        if (e.key !== 'Tab') return;
+        var b = m.querySelectorAll('button'), first = b[0], last = b[b.length - 1];
+        if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+        else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+    });
 })();
+function continueWithSavedGrades() {
+    document.getElementById('saved-grades-notice').style.display = 'none';
+    startResultsLoading();
+}
+function editSavedGrades() {
+    document.getElementById('saved-grades-notice').style.display = 'none';
+    var f = document.getElementById('calcForm');
+    if (f) f.scrollIntoView({ behavior: 'smooth' });
+}
+{% else %}
+startResultsLoading();
+{% endif %}
 
 function showPaymentGate() {
     document.getElementById('payment-gate').style.display = 'flex';

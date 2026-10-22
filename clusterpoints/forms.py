@@ -14,7 +14,7 @@ GROUP_LABELS = {
     'II':  'Group II – Sciences',
     'III': 'Group III – Humanities',
     'IV':  'Group IV – Technical & Applied',
-    'V':   'Group V – Languages, Business & Music',
+    'V':   'Group V – Languages & Music',
 }
 
 # Subjects shown in the "Core Subjects" accordion (most students take these)
