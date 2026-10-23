@@ -173,7 +173,12 @@ def kcse_calculator_view(request):
     # ── Load existing saved results on GET (e.g. after payment unlock) ──────────
     if request.method == 'GET' and request.user.is_authenticated and not results:
         _saved = UserKCSEResult.objects.filter(user=request.user).order_by('-created_at').first()
-        if _saved:
+        if _saved and request.session.get('calc_recalc_pending'):
+            # Just unlocked via "Recalculate": open on grade entry (old grades pre-filled), not on results
+            form = KCSEForm(initial={
+                f'subject_{sr.subject_id}': sr.points for sr in _saved.subject_results.all()
+            })
+        elif _saved:
             kcse_result = _saved
             total_points = kcse_result.total_points
             results = list(kcse_result.cluster_results.select_related('cluster').order_by('cluster__number'))  # type: ignore[attr-defined]
@@ -183,6 +188,7 @@ def kcse_calculator_view(request):
                     predicted_groups = predict_all_for_student(_cs, top_per_cluster=5)
 
     if request.method == "POST":
+        request.session.pop('calc_recalc_pending', None)
         if form.is_valid():
             points_dict = form.get_points_dict()  # {subject_id: points}
             subject_ids = [int(s) for s in points_dict.keys()]
@@ -1114,6 +1120,7 @@ def recalculate_view(request):
     CareerSubmission.objects.filter(
         user=request.user, feature=CareerSubmission.FEATURE_CALCULATOR
     ).delete()
+    request.session['calc_recalc_pending'] = True
     messages.info(request, "Grade lock removed. Enter your new grades and pay to see results.")
     return redirect('clusterpoints:calculator')
 

@@ -251,6 +251,11 @@
 .acc-row.row-missing { background: #fef2f2; }
 .acc-row.row-missing .lce-select { border-color: #f87171; box-shadow: 0 0 0 3px rgba(239,68,68,0.15); }
 
+/* The site's mobile bottom tab bar sits on top of this footer and hides Proceed */
+@media (max-width: 991.98px) {
+    .mobile-bottom-nav { display: none !important; }
+}
+
 @media (max-width: 480px) {
     .lce-footer { flex-wrap: wrap; gap: 0.6rem; padding: 0.75rem 1rem calc(0.75rem + env(safe-area-inset-bottom)); }
     .lce-btn-continue { width: 100%; justify-content: center; order: -1; }

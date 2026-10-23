@@ -42,14 +42,12 @@
     <link rel="shortcut icon" href="{% static 'images/favicon.ico' %}" type="image/x-icon">
     <link rel="manifest" href="{% static 'manifest.json' %}">
     <meta name="theme-color" content="#1e3a8a" id="theme-color-meta">
-    <!-- Theme before first paint: saved choice wins, otherwise follow the phone's system setting -->
+    <!-- Theme before first paint: saved choice wins, otherwise light -->
     <script>
     (function () {
         var dark = false;
         try {
-            var saved = localStorage.getItem('kuccpss-dark');
-            dark = saved !== null ? saved === '1'
-                 : window.matchMedia('(prefers-color-scheme: dark)').matches;
+            dark = localStorage.getItem('kuccpss-dark') === '1';
         } catch (e) {}
         if (dark) {
             document.documentElement.classList.add('dark-pref');
@@ -1017,11 +1015,6 @@
             var on = !document.body.classList.contains('dark');
             try { localStorage.setItem('kuccpss-dark', on ? '1' : '0'); } catch (e) {}
             applyDark(on);
-        });
-        // Follow the phone's system theme live, until the user picks one here
-        var mq = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)');
-        if (mq && mq.addEventListener) mq.addEventListener('change', function(e){
-            if (savedPref() === null) applyDark(e.matches);
         });
     })();
     </script>
