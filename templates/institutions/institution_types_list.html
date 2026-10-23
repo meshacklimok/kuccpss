@@ -9,26 +9,13 @@
 
 {% block content %}
 <style>
-body { background: #f8fafc; }
+body { background: var(--bg); }
 
 /* ── HEADER ── */
 .itl-header {
   background: #0a0f2c;
   padding: 2rem 0 2.5rem;
   position: relative; overflow: hidden;
-}
-.itl-header::before {
-  content: '';
-  position: absolute; inset: 0;
-  background-image: rgba(255,255,255,0.03);
-  background-size: 24px 24px; pointer-events: none;
-}
-.itl-header::after {
-  content: '';
-  position: absolute;
-  width: 420px; height: 420px; border-radius: 50%;
-  background: rgba(99,102,241,0.22);
-  top: -160px; right: -100px; pointer-events: none;
 }
 .itl-eyebrow {
   display: inline-flex; align-items: center; gap: 0.4rem;
@@ -92,7 +79,6 @@ body { background: #f8fafc; }
   border-radius: 16px 16px 0 0;
 }
 .type-card:hover {
-  transform: translateY(-5px);
   box-shadow: 0 14px 36px var(--acs, rgba(0,0,0,0.1));
   border-color: var(--acc, #2563eb);
   text-decoration: none; color: inherit;

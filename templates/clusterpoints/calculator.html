@@ -1627,10 +1627,23 @@ function submitCalcForm(btn) {
     }, { passive: true });
 }());
 
-// ── Progressive 5-second loading animation + payment gate ──
+window.addEventListener('pageshow', function (e) {
+    if (!e.persisted) return;
+    var ov = document.getElementById('calc-loading');
+    var pg = document.getElementById('payment-gate');
+    if (ov && !(pg && pg.style.display === 'flex')) ov.style.display = 'none';
+    var b = document.querySelector('[onclick^="submitCalcForm"]');
+    if (b) { b.disabled = false; b.dataset.submitted = ''; b.style.opacity = ''; }
+});
+
+// ── Short results loading animation + payment gate ──
 {% if results %}{% if is_results_locked %}
 function startResultsLoading() {
-    var DURATION = 5000;
+    // Short on first view, near-instant on repeat views (e.g. browser Back)
+    var seen = false;
+    try { seen = sessionStorage.getItem('calcResultsSeen') === '1'; sessionStorage.setItem('calcResultsSeen', '1'); } catch (e) {}
+    var DURATION = seen ? 300 : 2000;
+    var STEP = DURATION / 5;
     var overlay  = document.getElementById('calc-loading');
     var fill     = document.getElementById('clProgFill');
     var pctEl    = document.getElementById('clProgPct');
@@ -1640,12 +1653,12 @@ function startResultsLoading() {
 
     // Activate each step sequentially (1 second apart)
     stepIds.forEach(function (id, i) {
-        setTimeout(function () { document.getElementById(id).classList.add('active'); }, i * 1000);
+        setTimeout(function () { document.getElementById(id).classList.add('active'); }, i * STEP);
         setTimeout(function () {
             var el = document.getElementById(id);
             el.classList.remove('active');
             el.classList.add('done');
-        }, i * 1000 + 900);
+        }, i * STEP + STEP * 0.9);
     });
 
     // Smooth progress bar via rAF

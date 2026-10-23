@@ -1,4 +1,32 @@
 {% if TURNSTILE_SITE_KEY %}
-<div class="cf-turnstile" data-sitekey="{{ TURNSTILE_SITE_KEY }}" data-size="flexible" data-appearance="interaction-only" style="margin-bottom:0.75rem;"></div>
+<div class="cf-turnstile" data-sitekey="{{ TURNSTILE_SITE_KEY }}" data-size="flexible" data-theme="light"
+     data-callback="tsOk" data-expired-callback="tsExpired" data-error-callback="tsError"
+     style="margin-bottom:0.5rem;min-height:65px;"></div>
+<div id="ts-hint" style="font-size:.8rem;color:#475569;margin-bottom:.75rem;">Security check: please wait for the tick before submitting.</div>
+<script>
+(function () {
+  var form = null, btns = [], labels = [];
+  function setup() {
+    var w = document.querySelector('.cf-turnstile');
+    form = w && w.closest('form');
+    if (!form) return;
+    btns = [].slice.call(form.querySelectorAll('button[type=submit], input[type=submit]'));
+    labels = btns.map(function (b) { return b.innerHTML; });
+    lock(true);
+  }
+  function lock(on) {
+    btns.forEach(function (b, i) {
+      b.disabled = on;
+      if (b.tagName === 'BUTTON') b.innerHTML = on ? 'Verifying…' : labels[i];
+    });
+  }
+  function hint(t) { var h = document.getElementById('ts-hint'); if (h) h.textContent = t; }
+  window.tsOk = function () { lock(false); hint('Verified ✓'); };
+  window.tsExpired = function () { lock(true); hint('Check expired, please verify again.'); };
+  window.tsError = function () { lock(false); hint('Security check could not load. Refresh the page if sending fails.'); };
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', setup); else setup();
+  window.addEventListener('pageshow', function (e) { if (e.persisted && window.turnstile) { try { window.turnstile.reset(); } catch (x) {} lock(true); } });
+})();
+</script>
 <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 {% endif %}

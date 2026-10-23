@@ -192,6 +192,32 @@ body.dark .story-quote::before { color: #3b5998; }
 </section>
 
 
+<!-- ── WHERE YOUR RESULTS CAN TAKE YOU (photos) ── -->
+<section class="hm-section">
+  <div class="container">
+    <div class="hm-head">
+      <span class="section-eyebrow">Every Pathway</span>
+      <h2 class="section-header">Where your KCSE results can take you</h2>
+      <p class="section-sub">Degree, health and technical courses, all matched against your grades in one place.</p>
+    </div>
+    <div class="photo-grid">
+      <a href="{% url 'career:home' %}" class="photo-card">
+        <img src="{% static 'images/photos/graduation-800.jpg' %}" srcset="{% static 'images/photos/graduation-800.jpg' %} 800w, {% static 'images/photos/graduation.jpg' %} 1600w" sizes="(max-width: 768px) 100vw, 50vw" alt="University graduates celebrating at their graduation" loading="lazy" decoding="async" width="800" height="533">
+        <div class="pc-body"><h3 class="pc-title">University degrees</h3><p class="pc-text">Matched on your cluster points and subject requirements.</p></div>
+      </a>
+      <a href="{% url 'career:home' %}" class="photo-card">
+        <img src="{% static 'images/photos/nursing-students-800.jpg' %}" srcset="{% static 'images/photos/nursing-students-800.jpg' %} 800w, {% static 'images/photos/nursing-students.jpg' %} 1600w" sizes="(max-width: 768px) 100vw, 50vw" alt="Nursing students in white uniforms" loading="lazy" decoding="async" width="800" height="533">
+        <div class="pc-body"><h3 class="pc-title">KMTC &amp; health courses</h3><p class="pc-text">Nursing, clinical medicine, pharmacy and more.</p></div>
+      </a>
+      <a href="{% url 'career:home' %}" class="photo-card">
+        <img src="{% static 'images/photos/workshop-800.jpg' %}" srcset="{% static 'images/photos/workshop-800.jpg' %} 800w, {% static 'images/photos/workshop.jpg' %} 1600w" sizes="(max-width: 768px) 100vw, 50vw" alt="Students training in a technical college engineering workshop" loading="lazy" decoding="async" width="800" height="533">
+        <div class="pc-body"><h3 class="pc-title">TVET, diploma &amp; artisan</h3><p class="pc-text">Hands-on technical courses at TVETs and national polytechnics.</p></div>
+      </a>
+    </div>
+  </div>
+</section>
+
+
 <!-- ── HOW IT WORKS ── -->
 <section class="hm-section hm-section--alt">
   <div class="container">

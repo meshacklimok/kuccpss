@@ -1623,3 +1623,58 @@ pre, code { white-space: pre-wrap; word-break: break-word; }
   body.dark #page-back:not([hidden]) { background: rgba(23,23,23,.92); color: #f5f5f5; border-color: #3a3a3a; }
 }
 @media print { #page-back { display: none !important; } }
+
+/* ── FLAT UI OVERRIDES ──────────────────────────────────────────
+   No decorative motion, glow, blur or ornamental shapes. Loading
+   indicators (page-loader, skeleton, btn-loading) are untouched. */
+.reveal, .reveal.visible { opacity: 1; transform: none; transition: none; }
+.fade-in-up, .page-hero h1, .page-hero p { animation: none; }
+.card, .feature-tile { transition: none; }
+.card:hover, .feature-tile:hover, .hv-lift:hover,
+.btn-primary-custom:hover, .btn-gradient-success:hover,
+.btn-auth-submit:hover, #back-to-top:hover { transform: none; box-shadow: var(--shadow-sm); }
+.btn-primary-custom:hover, .btn-gradient-success:hover { box-shadow: none; }
+.hero-section::before, .auth-panel-left::before, .auth-panel-left::after { display: none; }
+.hero-badge, .trust-badge, .site-navbar .dropdown-menu { -webkit-backdrop-filter: none; backdrop-filter: none; }
+.site-navbar .dropdown-menu { animation: none; }
+.pwa-ios-sheet { animation: none; }
+#back-to-top { box-shadow: none; }
+body.dark .site-navbar, body.dark .mobile-bottom-nav { -webkit-backdrop-filter: none; backdrop-filter: none; }
+body.dark .site-navbar { background: #000 !important; }
+body.dark .mobile-bottom-nav { background: #000; }
+
+/* ── TYPOGRAPHY: display font for headings and big numbers, Inter for body text ── */
+:root { --font-display: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+h1, h2, h3, h4, .h1, .h2, .h3, .h4, .display-1, .display-2, .display-3, .display-4,
+.page-hero h1, .section-title, .trending-title, .stat-num, .sp-num, .t-num, .stat-chip-num,
+.dash-name, .pathway-title, .t-name, .footer-col-title { font-family: var(--font-display); }
+
+/* ── PHOTO HEROES & PHOTO CARDS: real photo + one flat tint for legible text ── */
+.photo-hero { position: relative; overflow: hidden; }
+.photo-hero[style] {
+  background-color: #0f172a; background-size: cover; background-position: center;
+  background-image: var(--photo-sm);
+}
+@media (min-width: 768px) { .photo-hero[style] { background-image: var(--photo); } }
+.photo-hero::before {
+  content: ''; position: absolute; inset: 0; pointer-events: none;
+  background: rgba(10, 20, 45, 0.74) !important;
+}
+.photo-hero > * { position: relative; z-index: 1; }
+
+.photo-card {
+  display: block; border-radius: 14px; overflow: hidden; background: var(--surface);
+  border: 1px solid var(--border); text-decoration: none; color: var(--text);
+}
+.photo-card:hover { text-decoration: none; color: var(--text); border-color: var(--text-3); }
+.photo-card img { display: block; width: 100%; aspect-ratio: 3 / 2; object-fit: cover; background: var(--surface-2); }
+.photo-card .pc-body { padding: 0.9rem 1rem 1rem; }
+.photo-card .pc-title { font-family: var(--font-display); font-weight: 800; font-size: 1rem; margin: 0 0 0.2rem; color: var(--text); }
+.photo-card .pc-text { font-size: 0.85rem; color: var(--text-2); margin: 0; line-height: 1.5; }
+.photo-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+@media (max-width: 768px) { .photo-grid { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 480px) { .photo-grid { grid-template-columns: 1fr; } }
+
+.photo-split { display: grid; grid-template-columns: 1fr 1fr; gap: 2.5rem; align-items: center; }
+.photo-split img { width: 100%; border-radius: 16px; aspect-ratio: 4 / 3; object-fit: cover; display: block; background: var(--surface-2); }
+@media (max-width: 768px) { .photo-split { grid-template-columns: 1fr; gap: 1.5rem; } }

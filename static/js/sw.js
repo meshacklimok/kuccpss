@@ -1,4 +1,4 @@
-const CACHE = 'careernext-v11';
+const CACHE = 'careernext-v13';
 const OFFLINE_URL = '/offline/';
 
 self.addEventListener('install', e => {
@@ -13,6 +13,7 @@ self.addEventListener('activate', e => {
   e.waitUntil(
     caches.keys()
       .then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k))))
+      .then(() => self.registration.navigationPreload && self.registration.navigationPreload.enable())
       .then(() => self.clients.claim())
   );
 });
@@ -68,9 +69,16 @@ self.addEventListener('fetch', e => {
   // Page navigations: network-only. A failed fetch goes straight to the offline
   // page; the old retry-once doubled the wait on a slow connection.
   if (e.request.mode === 'navigate') {
-    e.respondWith(
-      fetch(e.request).catch(() => caches.match(OFFLINE_URL))
-    );
+    // navigationPreload runs the network request in parallel with SW start-up,
+    // so Back/Forward and link clicks aren't delayed by waking the worker.
+    e.respondWith((async () => {
+      try {
+        const pre = await e.preloadResponse;
+        return pre || await fetch(e.request);
+      } catch (_) {
+        return caches.match(OFFLINE_URL);
+      }
+    })());
     return;
   }
 

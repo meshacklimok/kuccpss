@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% block footer %}{% endblock %}
 {% load static %}
 {% block title %}My Dashboard: KCSE Cluster Points & KUCCPS Courses | CareerNext{% endblock %}
 
@@ -6,15 +7,6 @@
 
 <style>
 
-/* ── animations ── */
-@keyframes fadeUp {
-  from { opacity: 0; transform: translateY(14px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-@keyframes dotPulse {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50%       { opacity: 0.4; transform: scale(0.7); }
-}
 
 /* ── dashboard header ── */
 .dash-header {
@@ -53,9 +45,9 @@
   text-decoration: none; transition: transform 0.2s, box-shadow 0.2s;
   white-space: nowrap;
 }
-.btn-dash-action:hover { transform: translateY(-2px); text-decoration: none; }
-.btn-dash-white { background: #fff; color: #142a6e; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
-.btn-dash-white:hover { color: #142a6e; box-shadow: 0 4px 18px rgba(0,0,0,0.28); }
+.btn-dash-action:hover { text-decoration: none; }
+.btn-dash-white { background: #fff; color: #142a6e;  }
+.btn-dash-white:hover { color: #142a6e;  }
 .btn-dash-ghost { background: rgba(255,255,255,0.1); color: #fff; border: 1.5px solid rgba(255,255,255,0.25); }
 .btn-dash-ghost:hover { background: rgba(255,255,255,0.18); color: #fff; }
 
@@ -95,15 +87,14 @@
   background: #fffbeb;
   border-bottom: 1px solid #fde68a;
   padding: 0.75rem 0;
-  animation: fadeUp 0.3s ease both;
 }
 
 /* ── content cards ── */
 .dash-card {
   background: #fff;
   border-radius: 14px;
-  border: 1.5px solid #c8d3e0;
-  box-shadow: 0 4px 16px rgba(15,23,42,0.10), 0 1px 4px rgba(15,23,42,0.06);
+  border: 1px solid var(--border);
+  box-shadow: none;
   overflow: hidden;
   margin-bottom: 1.25rem;
 }
@@ -194,7 +185,7 @@
   transition: box-shadow 0.15s, transform 0.15s;
   display: flex; flex-direction: column; height: 100%;
 }
-.reco-card:hover { box-shadow: 0 5px 18px rgba(0,0,0,0.1); transform: translateY(-2px); }
+.reco-card:hover { box-shadow: none; }
 .reco-card .r-course {
   font-size: 0.87rem; font-weight: 700; color: #1e293b; line-height: 1.3; margin-bottom: 0.2rem;
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
@@ -254,8 +245,8 @@
 /* ── right sidebar cards ── */
 .sidebar-card {
   background: #fff; border-radius: 14px;
-  border: 1.5px solid #c8d3e0;
-  box-shadow: 0 4px 16px rgba(15,23,42,0.10), 0 1px 4px rgba(15,23,42,0.06);
+  border: 1px solid var(--border);
+  box-shadow: none;
   overflow: hidden; margin-bottom: 1.25rem;
 }
 .sidebar-card-header {
@@ -278,7 +269,7 @@
   font-size: 0.72rem; font-weight: 700; text-align: center;
   transition: border-color 0.15s, background 0.15s, transform 0.2s;
 }
-.qa-btn:hover { background: #eff6ff; border-color: #93c5fd; transform: translateY(-2px); color: #1e293b; text-decoration: none; }
+.qa-btn:hover { background: #eff6ff; border-color: #93c5fd; color: #1e293b; text-decoration: none; }
 .qa-btn i { font-size: 1.1rem; }
 
 /* ── timeline countdown ── */
@@ -418,7 +409,6 @@
 .ai-msg {
   max-width: 88%; padding: 0.55rem 0.75rem;
   border-radius: 12px; font-size: 0.8rem; line-height: 1.45;
-  animation: fadeUp 0.2s ease;
 }
 .ai-msg.user { align-self: flex-end; background: #4f46e5; color: #fff; border-radius: 12px 12px 4px 12px; }
 .ai-msg.bot  { align-self: flex-start; background: #f1f5f9; color: #1e293b; border-radius: 12px 12px 12px 4px; }
@@ -581,7 +571,7 @@ body.dark .ai-msg.typing { background: var(--surface-2); }
   background: rgba(255,255,255,0.12); color: #fff; border: 1px solid rgba(255,255,255,0.25);
 }
 .tl-status-open { background: rgba(74,222,128,0.18); color: #86efac; border-color: rgba(74,222,128,0.35); }
-.tl-live { width: 6px; height: 6px; border-radius: 50%; background: #4ade80; animation: dotPulse 1.6s infinite; }
+.tl-live { width: 6px; height: 6px; border-radius: 50%; background: #4ade80;  }
 .tl-countdown { display: flex; align-items: center; gap: 0.9rem; margin-bottom: 1rem; }
 .tl-cal {
   width: 64px; flex-shrink: 0; border-radius: 12px; overflow: hidden;
@@ -609,7 +599,7 @@ body.dark .ai-msg.typing { background: var(--surface-2); }
 }
 .tl-step.done .tl-dot { background: #142a6e; border-color: #142a6e; }
 .tl-step.done .tl-step-name { color: #94a3b8; text-decoration: line-through; }
-.tl-step.next .tl-dot { border-color: #142a6e; box-shadow: 0 0 0 3px rgba(20,42,110,0.2); }
+.tl-step.next .tl-dot { border-color: #142a6e;  }
 .tl-step.next .tl-step-name { font-weight: 800; }
 .tl-step-name { flex: 1; color: #1e293b; font-weight: 600; }
 .tl-step-date { font-size: 0.72rem; font-weight: 700; color: #64748b; white-space: nowrap; }
@@ -641,7 +631,7 @@ body.dark .tl-step:not(:last-child)::after { background: var(--border); }
 body.dark .tl-dot { background: var(--surface); border-color: #6b7280; }
 body.dark .tl-step.done .tl-dot { background: #818cf8; border-color: #818cf8; }
 body.dark .tl-step.done .tl-step-name { color: var(--text-3); }
-body.dark .tl-step.next .tl-dot { border-color: #a5b4fc; box-shadow: 0 0 0 3px rgba(129,140,248,0.25); }
+body.dark .tl-step.next .tl-dot { border-color: #a5b4fc;  }
 body.dark .reco-car-btn { background: #818cf8; color: #142a6e; }
 body.dark .reco-dot { background: #6b7280; }
 body.dark .reco-dot.active { background: #a5b4fc; }
@@ -1828,7 +1818,7 @@ body.dark .reco-hint, body.dark .reco-counter { background: rgba(129,140,248,0.1
       <h6 class="sidebar-card-title" style="color:#fff;">
         <i class="fas fa-fire" style="color:#f97316;"></i>Trending Now
         <span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#22c55e;
-                     box-shadow:0 0 0 0 rgba(34,197,94,0.5);animation:dotPulse 2s infinite;margin-left:4px;"></span>
+                     margin-left:4px;"></span>
       </h6>
       <a href="{% url 'home' %}#spotlight-trends" class="btn-header-light">
         See all
@@ -2061,7 +2051,7 @@ body.dark .reco-hint, body.dark .reco-counter { background: rgba(129,140,248,0.1
          style="background:#fef9c3;border:1.5px solid #fde68a;" {% if guest %}data-guest-gate="1"{% endif %}>
         <i class="fas fa-lightbulb text-warning flex-shrink-0" style="font-size:0.85rem;"></i>
         <div>
-          <div class="fw-700 small" style="color:#92400e;">Discover your ideal career</div>
+          <div class="fw-700 small" style="color:var(--text);">Discover your ideal career</div>
           <div class="text-muted" style="font-size:0.7rem;">3 minutes · personalised results</div>
         </div>
         {% if guest %}<i class="fas fa-lock ms-auto" style="color:#d97706;font-size:0.75rem;"></i>{% else %}<i class="bi bi-chevron-right ms-auto" style="color:#d97706;font-size:0.8rem;"></i>{% endif %}
@@ -2229,63 +2219,63 @@ body.dark .reco-hint, body.dark .reco-counter { background: rgba(129,140,248,0.1
   {# ── OFFICIAL LINKS ── #}
   <div class="sidebar-card reveal">
     <div class="sidebar-card-header"
-         style="background:#142a6e;border:none;">
-      <h6 class="sidebar-card-title" style="color:#fff;">
-        <i class="fas fa-link" style="color:#94a3b8;"></i>Official Links
+         style="background:var(--surface-2);border-bottom:1px solid var(--border);">
+      <h6 class="sidebar-card-title">
+        <i class="fas fa-link" style="color:var(--text-2);"></i>Official Links
       </h6>
     </div>
     <div style="padding:0.25rem 0;">
       <a href="https://students.kuccps.net/" target="_blank" rel="noopener" class="ext-link-row">
         <div class="rounded-circle flex-shrink-0 d-flex align-items-center justify-content-center"
-             style="width:32px;height:32px;background:#dbeafe;">
-          <i class="fas fa-university" style="color:#1d4ed8;font-size:0.8rem;"></i>
+             style="width:32px;height:32px;background:var(--surface-2);">
+          <i class="fas fa-university" style="color:var(--text-2);font-size:0.8rem;"></i>
         </div>
         <div style="min-width:0;flex:1;">
-          <div class="fw-700 small" style="color:#142a6e;">KUCCPS Portal</div>
+          <div class="fw-700 small" style="color:var(--text);">KUCCPS Portal</div>
           <div class="text-muted" style="font-size:0.7rem;">students.kuccps.net</div>
         </div>
         <i class="fas fa-external-link-alt text-muted" style="font-size:0.6rem;"></i>
       </a>
       <a href="https://www.helb.co.ke" target="_blank" rel="noopener" class="ext-link-row">
         <div class="rounded-circle flex-shrink-0 d-flex align-items-center justify-content-center"
-             style="width:32px;height:32px;background:#dcfce7;">
-          <i class="fas fa-hand-holding-usd" style="color:#15803d;font-size:0.8rem;"></i>
+             style="width:32px;height:32px;background:var(--surface-2);">
+          <i class="fas fa-hand-holding-usd" style="color:var(--text-2);font-size:0.8rem;"></i>
         </div>
         <div style="min-width:0;flex:1;">
-          <div class="fw-700 small" style="color:#14532d;">HELB</div>
+          <div class="fw-700 small" style="color:var(--text);">HELB</div>
           <div class="text-muted" style="font-size:0.7rem;">Higher Education Loans Board</div>
         </div>
         <i class="fas fa-external-link-alt text-muted" style="font-size:0.6rem;"></i>
       </a>
       <a href="https://www.knec.ac.ke" target="_blank" rel="noopener" class="ext-link-row">
         <div class="rounded-circle flex-shrink-0 d-flex align-items-center justify-content-center"
-             style="width:32px;height:32px;background:#fef3c7;">
-          <i class="fas fa-graduation-cap" style="color:#b45309;font-size:0.8rem;"></i>
+             style="width:32px;height:32px;background:var(--surface-2);">
+          <i class="fas fa-graduation-cap" style="color:var(--text-2);font-size:0.8rem;"></i>
         </div>
         <div style="min-width:0;flex:1;">
-          <div class="fw-700 small" style="color:#92400e;">KNEC</div>
+          <div class="fw-700 small" style="color:var(--text);">KNEC</div>
           <div class="text-muted" style="font-size:0.7rem;">National Examinations Council</div>
         </div>
         <i class="fas fa-external-link-alt text-muted" style="font-size:0.6rem;"></i>
       </a>
       <a href="https://www.universitiesfund.ac.ke" target="_blank" rel="noopener" class="ext-link-row">
         <div class="rounded-circle flex-shrink-0 d-flex align-items-center justify-content-center"
-             style="width:32px;height:32px;background:#f3e8ff;">
-          <i class="fas fa-landmark" style="color:#7c3aed;font-size:0.8rem;"></i>
+             style="width:32px;height:32px;background:var(--surface-2);">
+          <i class="fas fa-landmark" style="color:var(--text-2);font-size:0.8rem;"></i>
         </div>
         <div style="min-width:0;flex:1;">
-          <div class="fw-700 small" style="color:#581c87;">Universities Fund</div>
+          <div class="fw-700 small" style="color:var(--text);">Universities Fund</div>
           <div class="text-muted" style="font-size:0.7rem;">universitiesfund.ac.ke</div>
         </div>
         <i class="fas fa-external-link-alt text-muted" style="font-size:0.6rem;"></i>
       </a>
       <a href="https://www.education.go.ke" target="_blank" rel="noopener" class="ext-link-row">
         <div class="rounded-circle flex-shrink-0 d-flex align-items-center justify-content-center"
-             style="width:32px;height:32px;background:#fee2e2;">
-          <i class="fas fa-flag" style="color:#b91c1c;font-size:0.8rem;"></i>
+             style="width:32px;height:32px;background:var(--surface-2);">
+          <i class="fas fa-flag" style="color:var(--text-2);font-size:0.8rem;"></i>
         </div>
         <div style="min-width:0;flex:1;">
-          <div class="fw-700 small" style="color:#7f1d1d;">Ministry of Education</div>
+          <div class="fw-700 small" style="color:var(--text);">Ministry of Education</div>
           <div class="text-muted" style="font-size:0.7rem;">education.go.ke</div>
         </div>
         <i class="fas fa-external-link-alt text-muted" style="font-size:0.6rem;"></i>
@@ -2295,17 +2285,17 @@ body.dark .reco-hint, body.dark .reco-counter { background: rgba(129,140,248,0.1
 
 
   {# ── WHATSAPP COMMUNITY ── #}
-  <div class="sidebar-card reveal" style="background:#dcfce7;border:1.5px solid #86efac !important;">
+  <div class="sidebar-card reveal" style="background:var(--surface);border:1px solid var(--border) !important;">
     <div class="sidebar-card-body">
       <div class="d-flex align-items-center gap-2 mb-2">
-        <i class="bi bi-whatsapp" style="color:#16a34a;font-size:1.2rem;"></i>
-        <span class="fw-800 small" style="color:#14532d;">Join Our Community</span>
+        <i class="bi bi-whatsapp" style="color:#15803d;font-size:1.2rem;"></i>
+        <span class="fw-800 small" style="color:var(--text);">Join Our Community</span>
       </div>
-      <p class="small mb-3" style="color:#166534;opacity:0.85;">
+      <p class="small mb-3" style="color:var(--text-2);">
         KUCCPS tips, deadline reminders and peer support in our free WhatsApp group.
       </p>
       <a href="https://chat.whatsapp.com/careernext-community" target="_blank" rel="noopener"
-         class="btn w-100 fw-700" style="background:#25d366;color:#fff;border-radius:10px;font-size:0.83rem;">
+         class="btn w-100 fw-700" style="background:#15803d;color:#fff;border-radius:10px;font-size:0.83rem;">
         <i class="bi bi-whatsapp me-1"></i>Join Free WhatsApp Group
       </a>
     </div>
@@ -2314,17 +2304,17 @@ body.dark .reco-hint, body.dark .reco-counter { background: rgba(129,140,248,0.1
 
   {# ── REFER A FRIEND ── #}
   {% if not guest %}
-  <div class="sidebar-card" style="background:#fefce8;border:1.5px solid #fde68a !important;">
+  <div class="sidebar-card" style="background:var(--surface);border:1px solid var(--border) !important;">
     <div class="sidebar-card-body">
       <div class="d-flex align-items-center gap-2 mb-2">
-        <i class="bi bi-gift-fill" style="color:#ca8a04;font-size:1.2rem;"></i>
-        <span class="fw-800 small" style="color:#92400e;">Invite Friends, Earn Rewards</span>
+        <i class="bi bi-gift-fill" style="color:var(--text-2);font-size:1.2rem;"></i>
+        <span class="fw-800 small" style="color:var(--text);">Invite Friends, Earn Rewards</span>
       </div>
-      <p class="small mb-3" style="color:#78350f;opacity:0.85;">
+      <p class="small mb-3" style="color:var(--text-2);">
         Share your referral link and earn rewards every time a friend joins CareerNext.
       </p>
       <a href="{% url 'accounts:referral' %}"
-         class="btn w-100 fw-700" style="background:#ca8a04;color:#fff;border-radius:10px;font-size:0.83rem;">
+         class="btn w-100 fw-700" style="background:#1e3a8a;color:#fff;border-radius:10px;font-size:0.83rem;">
         <i class="bi bi-share-fill me-1"></i>Get Your Referral Link
       </a>
     </div>

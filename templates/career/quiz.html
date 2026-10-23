@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load static %}
 {% block title %}Career Assessment Quiz: Find Best KUCCPS Courses for You in Kenya | CareerNext{% endblock %}
 
 {% block meta %}<meta name="description" content="Not sure what to study after KCSE? Answer a short quiz about what you enjoy and how you like to work, and get career and course suggestions matched to your interests and grades.">{% endblock %}
@@ -128,7 +129,7 @@ body.dark .quiz-progress-bar { background: var(--surface-2); }
 </style>
 
 <!-- Hero -->
-<div class="quiz-hero">
+<div class="quiz-hero photo-hero" style="--photo:url('{% static 'images/photos/students-quiz.jpg' %}');--photo-sm:url('{% static 'images/photos/students-quiz-800.jpg' %}');">
   <div class="container position-relative">
     <div class="mb-3">
       <span class="badge rounded-pill fw-700" style="background:rgba(129,140,248,0.2);color:#a5b4fc;font-size:0.8rem;padding:6px 16px;">
@@ -138,7 +139,7 @@ body.dark .quiz-progress-bar { background: var(--surface-2); }
     <h1 class="text-white fw-900 mb-2" style="font-size:clamp(1.8rem,4vw,2.4rem);">
       Discover Your Ideal Career
     </h1>
-    <p class="mb-0" style="color:rgba(255,255,255,0.7);font-size:0.95rem;max-width:480px;margin:0 auto;">
+    <p class="mb-0" style="color:rgba(255,255,255,0.9);font-size:0.95rem;max-width:480px;margin:0 auto;">
       Answer 10 quick questions and we'll match you to careers that fit your personality, strengths, and interests.
     </p>
     {% if questions %}

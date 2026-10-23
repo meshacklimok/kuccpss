@@ -14,7 +14,7 @@
 {% block content %}
 <style>
 /* ── base ── */
-body { background: #f5f7ff; }
+body { background: var(--bg); }
 
 /* ── hero ── */
 .ct-hero {
@@ -22,16 +22,9 @@ body { background: #f5f7ff; }
     padding: 3rem 0 4rem;
     position: relative; overflow: hidden;
 }
-.ct-hero::before {
-    content: ''; position: absolute;
-    width: 600px; height: 600px; border-radius: 50%;
-    background: rgba(99,102,241,0.18);
-    top: -200px; right: -150px; pointer-events: none;
-}
 .ct-hero-eyebrow {
     display: inline-flex; align-items: center; gap: 0.4rem;
-    background: rgba(255,255,255,0.12); backdrop-filter: blur(8px);
-    border: 1px solid rgba(255,255,255,0.2);
+    background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2);
     color: rgba(255,255,255,0.9); border-radius: 999px;
     padding: 5px 16px; font-size: 0.76rem; font-weight: 700;
     letter-spacing: 0.04em; margin-bottom: 1.1rem;
@@ -117,11 +110,10 @@ body { background: #f5f7ff; }
     min-height: 180px;
 }
 .ct-main-card:hover {
-    transform: translateY(-7px) scale(1.02);
     box-shadow: 0 18px 45px rgba(0,0,0,0.14);
     text-decoration: none; color: inherit;
 }
-.ct-main-card:active { transform: translateY(-2px) scale(0.98); transition-duration: 0.08s; }
+.ct-main-card:active { transition-duration: 0.08s; }
 
 /* card inner */
 .ct-mc-bg {
@@ -133,11 +125,7 @@ body { background: #f5f7ff; }
     background-position: center;
 }
 /* flat scrim for text legibility over the photo */
-.ct-mc-bg::after {
-    content: ''; position: absolute; inset: 0;
-    background: rgba(15,23,42,0.5);
-    pointer-events: none;
-}
+.ct-mc-bg::after { content: ''; position: absolute; inset: 0; border-radius: inherit; background: rgba(15,23,42,0.55); }
 .ct-mc-inner {
     position: relative; z-index: 1;
     padding: 1.5rem 1.35rem 1.25rem;
@@ -271,7 +259,7 @@ body { background: #f5f7ff; }
     font-size: 0.84rem; font-weight: 700; text-decoration: none;
     transition: all 0.2s; white-space: nowrap;
 }
-.ct-action-btn:hover { transform: translateY(-2px); text-decoration: none; }
+.ct-action-btn:hover { text-decoration: none; }
 .ct-action-primary { background: #1e3a8a; color: #fff; box-shadow: 0 4px 16px rgba(30,58,138,0.3); }
 .ct-action-primary:hover { background: #2563eb; box-shadow: 0 6px 20px rgba(30,58,138,0.4); color: #fff; }
 .ct-action-success { background: #059669; color: #fff; box-shadow: 0 4px 16px rgba(5,150,105,0.28); }
@@ -394,7 +382,7 @@ body.dark .ct-empty { background: var(--surface); border-color: transparent; }
            {% elif 'tvet-certificate' in sl %}cc-cert
            {% else %}cc-ttc
            {% endif %}"
-       style="animation-delay: {{ forloop.counter0 }}00ms;">
+      >
 
         <div class="ct-mc-bg"></div>
         <div class="ct-mc-inner">

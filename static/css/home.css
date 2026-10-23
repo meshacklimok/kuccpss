@@ -14,17 +14,8 @@
 /* ── Hero ── */
 .hm-hero {
   position: relative; overflow: hidden; color: #fff;
-  background:
-    radial-gradient(900px 420px at 85% -10%, rgba(59,130,246,.45), transparent 60%),
-    radial-gradient(600px 360px at -10% 110%, rgba(22,163,74,.28), transparent 60%),
-    linear-gradient(160deg, #1E3A8A 0%, #172c6b 100%);
+  background: #1E3A8A;
   padding: 1.75rem 0 0;
-}
-.hm-hero::after { /* subtle grid texture */
-  content: ''; position: absolute; inset: 0; pointer-events: none; opacity: .5;
-  background-image: linear-gradient(rgba(255,255,255,.04) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.04) 1px, transparent 1px);
-  background-size: 40px 40px;
-  -webkit-mask-image: linear-gradient(to bottom, #000, transparent 85%); mask-image: linear-gradient(to bottom, #000, transparent 85%);
 }
 .hm-hero > .container { position: relative; z-index: 1; }
 .hm-pill {
@@ -38,7 +29,7 @@
   color: #fff; font-weight: 800; letter-spacing: -.03em; line-height: 1.12;
   font-size: clamp(1.9rem, 8.4vw, 3.4rem); margin: 1rem 0 .85rem;
 }
-.hm-hero h1 .hl { background: linear-gradient(90deg, #93c5fd, #86efac); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.hm-hero h1 .hl { color: #86efac; }
 .hm-hero .hm-lead { color: rgba(255,255,255,.85); font-size: 1rem; line-height: 1.6; max-width: 34rem; }
 .hm-cta { display: grid; gap: .65rem; margin: 1.4rem 0 1rem; }
 .hm-cta .btn { min-height: 52px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; gap: .55rem; border-radius: 14px; }
@@ -107,7 +98,7 @@
   transition: transform .2s ease, box-shadow .2s ease, border-color .2s;
 }
 .hm-path::before { content: ''; position: absolute; left: 0; right: 0; top: 0; height: 3px; background: var(--pw); }
-.hm-path:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); border-color: var(--pw); text-decoration: none; }
+.hm-path:hover { box-shadow: var(--shadow-md); border-color: var(--pw); text-decoration: none; }
 .hm-path .ic { width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; color: var(--pw); background: color-mix(in srgb, var(--pw) 13%, transparent); margin-bottom: .7rem; }
 .hm-path h3 { font-size: .98rem; font-weight: 800; margin: 0 0 .25rem; color: var(--text); }
 .hm-path p { font-size: .78rem; line-height: 1.5; color: var(--text-2); margin: 0 0 .6rem; flex: 1; }
@@ -122,7 +113,7 @@
   background: var(--surface); border: 1.5px solid var(--border); border-radius: 16px; padding: .9rem 1rem;
   box-shadow: var(--shadow-xs); min-height: 72px; transition: transform .2s ease, box-shadow .2s ease, border-color .2s;
 }
-.hm-feat:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); border-color: var(--primary-light); text-decoration: none; }
+.hm-feat:hover { box-shadow: var(--shadow-md); border-color: var(--primary-light); text-decoration: none; }
 .hm-feat .feature-icon { flex-shrink: 0; margin: 0; }
 .hm-feat h3 { font-size: .93rem; font-weight: 800; margin: 0 0 .15rem; color: var(--text); }
 .hm-feat p { font-size: .8rem; line-height: 1.45; margin: 0; color: var(--text-2); }
@@ -164,7 +155,7 @@ body.dark .hm-badge.paid { background: rgba(217,119,6,.14); border-color: rgba(2
 
 /* ── Final CTA ── */
 .hm-final { border-radius: 22px; padding: 2rem 1.25rem; text-align: center; color: #fff;
-  background: radial-gradient(500px 220px at 90% 0, rgba(59,130,246,.5), transparent 60%), linear-gradient(160deg, #1E3A8A, #172c6b); }
+  background: #1E3A8A; }
 .hm-final h2 { color: #fff; font-weight: 800; font-size: clamp(1.4rem, 5.5vw, 2rem); }
 .hm-final p { color: rgba(255,255,255,.85); max-width: 460px; margin: .6rem auto 1.4rem; }
 .hm-final .hm-cta { justify-content: center; margin: 0; }

@@ -148,8 +148,8 @@ SETTINGS_DATA = [
     # Contact
     ("contact_email",    "Contact Email",          "hello@careernext.co.ke", "email",    "contact"),
     ("whatsapp_number",  "WhatsApp Number",         "254700000000",          "phone",    "contact"),
-    ("instagram_handle", "Instagram Handle",        "careernext_ke",         "text",     "social"),
-    ("twitter_handle",   "Twitter / X Handle",      "careernext_ke",         "text",     "social"),
+    ("instagram_handle", "Instagram Handle",        "meshacklimok",         "text",     "social"),
+    ("twitter_handle",   "Twitter / X Handle",      "meshacklimok",         "text",     "social"),
     ("facebook_url",     "Facebook URL",            "",                      "url",      "social"),
     # Hero / branding
     ("hero_badge_text",  "Hero Badge Text",         "Kenya's #1 Placement Guide", "text", "hero"),

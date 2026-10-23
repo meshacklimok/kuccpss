@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load custom_filters %}
+{% load custom_filters static %}
 {% block title %}Career Ideas for KCSE Students: KUCCPS Pathways in Kenya | CareerNext{% endblock %}
 
 {% block meta %}<meta name="description" content="Explore real careers in Kenya in plain language: what each job actually involves, what it pays, and which KUCCPS courses and grades get you there.">{% endblock %}
@@ -29,7 +29,6 @@
   font-size: 0.95rem;
   width: 100%;
   max-width: 480px;
-  backdrop-filter: blur(8px);
   transition: border-color 0.2s;
 }
 .hero-search::placeholder { color: rgba(255,255,255,0.6); }
@@ -75,7 +74,6 @@
   height: 100%;
 }
 .career-card:hover {
-  transform: translateY(-5px);
   box-shadow: 0 16px 40px rgba(30,58,138,0.12);
   border-color: #c7d2fe;
 }
@@ -104,7 +102,6 @@
   transition: transform 0.2s, box-shadow 0.2s;
 }
 .career-card:hover .career-icon-tile {
-  transform: translateY(-3px);
   box-shadow: 0 2px 4px rgba(15,23,42,0.06), 0 10px 22px color-mix(in srgb, var(--ink) 26%, transparent);
 }
 .career-card-body { padding: 1.1rem; flex: 1; display: flex; flex-direction: column; }
@@ -144,7 +141,7 @@ body.dark .demand-low { background: var(--surface-2); color: var(--text-2); }
 </style>
 
 <!-- Hero -->
-<div class="careers-hero">
+<div class="careers-hero photo-hero" style="--photo:url('{% static 'images/photos/campus-study.jpg' %}');--photo-sm:url('{% static 'images/photos/campus-study-800.jpg' %}');">
   <div class="container position-relative">
     <div class="row align-items-center g-4">
       <div class="col-lg-7">
@@ -156,7 +153,7 @@ body.dark .demand-low { background: var(--surface-2); color: var(--text-2); }
         </div>
         <h1 class="fw-900 text-white mb-2" style="font-size:clamp(1.8rem,4vw,2.5rem);line-height:1.15;">
           Discover Your<br>
-          <span style="color:#818cf8;">
+          <span style="color:#c7d2fe;">
             Perfect Career Path
           </span>
         </h1>

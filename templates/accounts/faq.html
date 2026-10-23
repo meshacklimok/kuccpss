@@ -729,6 +729,11 @@ body.dark .faq-help-card.primary { background: var(--surface-2); }
   items.forEach(function(item) {
     item.querySelector('.faq-q').addEventListener('click', function() {
       var willOpen = !item.classList.contains('open');
+      if (willOpen) {
+        document.querySelectorAll('.faq-item.open').forEach(function(other) {
+          if (other !== item) setOpen(other, false);
+        });
+      }
       setOpen(item, willOpen);
       if (willOpen && history.replaceState) history.replaceState(null, '', '#' + item.id);
     });

@@ -331,19 +331,25 @@ def kcse_calculator_view(request):
     cluster_course_counts = {} # {cluster_id: int}
     if results:
         from courses.models import Course as _Course
+        from django.db.models import Count, F, Window
+        from django.db.models.functions import RowNumber
         cluster_ids = [r.cluster.id for r in results if r.cluster]
-        _all_courses = (
-            _Course.objects
-            .filter(cluster_id__in=cluster_ids, course_type__name__iexact='Degree')
+        _degrees = _Course.objects.filter(cluster_id__in=cluster_ids, course_type__name__iexact='Degree')
+        # Counts in one grouped query, and only the first 5 courses per cluster are fetched
+        # (previously every degree course in every cluster was loaded just to slice it in Python).
+        cluster_course_counts = {
+            row['cluster_id']: row['n']
+            for row in _degrees.values('cluster_id').annotate(n=Count('id'))
+        }
+        _top = (
+            _degrees
+            .annotate(_rn=Window(RowNumber(), partition_by=[F('cluster_id')], order_by=F('name').asc()))
+            .filter(_rn__lte=5)
             .select_related('course_type')
             .order_by('cluster_id', 'name')
         )
-        for _c in _all_courses:
-            cid = _c.cluster_id  # type: ignore[attr-defined]
-            cluster_course_counts[cid] = cluster_course_counts.get(cid, 0) + 1
-            lst = cluster_courses_map.setdefault(cid, [])
-            if len(lst) < 5:
-                lst.append(_c)
+        for _c in _top:
+            cluster_courses_map.setdefault(_c.cluster_id, []).append(_c)  # type: ignore[attr-defined]
 
         # Attach to each result so the template needs no extra queries
         for _r in results:
